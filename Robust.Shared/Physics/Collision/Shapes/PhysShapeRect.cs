@@ -67,6 +67,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [field: NonSerialized]
         public event Action? OnDataChanged;
 
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        {
+            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
+            return bounds.Intersects(worldAABB);
+        }
+
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             _cachedBounds = new Box2Rotated(Rectangle, rotation.Opposite(), Vector2.Zero).CalcBoundingBox().Scale(1 + Radius);

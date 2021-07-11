@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -521,15 +522,13 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            foreach (var mapGrid in _grids.Values)
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
+
+            foreach (var broady in broadphase.GetBroadphases(mapId, worldPos))
             {
-                if (mapGrid.ParentMapId != mapId)
-                    continue;
+                if (!broady.Owner.TryGetComponent(out MapGridComponent? mapGridComponent)) continue;
 
-                if (!mapGrid.WorldBounds.Contains(worldPos))
-                    continue;
-
-                grid = mapGrid;
+                grid = mapGridComponent.Grid;
                 return true;
             }
 
@@ -550,26 +549,21 @@ namespace Robust.Shared.Map
 
         public IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false)
         {
-            foreach (var (_, grid) in _grids)
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
+
+            foreach (var broady in broadphase.GetBroadphases(mapId, worldArea))
             {
-                if (grid.ParentMapId != mapId) continue;
+                if (!broady.Owner.TryGetComponent(out MapGridComponent? mapGridComponent)) continue;
 
-                var gridBounds = grid.WorldBounds;
-                // If the worldArea is wholly contained within a grid then no need to get invalid
-                if (gridBounds.Encloses(worldArea))
+                yield return mapGridComponent.GridIndex;
+
+                if (broady.Owner.GetComponent<PhysicsComponent>().GetWorldAABB().Encloses(worldArea))
                 {
-                    yield return grid.Index;
                     yield break;
-                }
-
-                if (gridBounds.Intersects(worldArea))
-                {
-                    yield return grid.Index;
                 }
             }
 
-            if (includeInvalid)
-                yield return GridId.Invalid;
+            yield return GridId.Invalid;
         }
 
         public virtual void DeleteGrid(GridId gridID)

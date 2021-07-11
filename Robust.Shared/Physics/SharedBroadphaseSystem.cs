@@ -730,13 +730,44 @@ namespace Robust.Shared.Physics
 
             if (mapId == MapId.Nullspace) yield break;
 
-            // TODO: Doesn't supported nested broadphase but future sloth problem coz fuck that guy
-            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, aabb))
+            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<BroadphaseComponent>();
+                if (broadphase.Owner.Transform.MapID != mapId) continue;
+                if (broadphase.Owner.HasComponent<MapComponent>())
+                {
+                    yield return broadphase;
+                    continue;
+                }
+
+                if (broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent) &&
+                    Intersects(physicsComponent, aabb))
+                {
+                    yield return broadphase;
+                }
             }
 
             yield return _mapManager.GetMapEntity(mapId).GetComponent<BroadphaseComponent>();
+        }
+
+        internal IEnumerable<BroadphaseComponent> GetBroadphases(MapId mapId, Vector2 worldPos)
+        {
+            return GetBroadphases(mapId, new Box2(worldPos, worldPos));
+        }
+
+        private bool Intersects(PhysicsComponent physicsComponent, Box2 aabb)
+        {
+            var worldPos = physicsComponent.Owner.Transform.WorldPosition;
+            var worldRot = physicsComponent.Owner.Transform.WorldRotation;
+            var bodyAABB = physicsComponent.GetWorldAABB(worldPos, worldRot);
+
+            if (!aabb.Intersects(bodyAABB)) return false;
+
+            foreach (var fixture in physicsComponent.Fixtures)
+            {
+                if (fixture.Shape.Intersects(aabb, worldPos, worldRot)) return true;
+            }
+
+            return false;
         }
 
         /// <summary>

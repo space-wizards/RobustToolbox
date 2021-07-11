@@ -199,6 +199,15 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return true;
         }
 
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        {
+            var aabb = CalculateLocalBounds(worldRot).Translated(worldPos);
+            if (!worldAABB.Intersects(aabb)) return false;
+
+            // TODO
+            return true;
+        }
+
         public Box2 CalculateLocalBounds(Angle rotation)
         {
             if (Vertices.Count == 0) return new Box2();

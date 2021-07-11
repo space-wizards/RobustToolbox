@@ -171,8 +171,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            // physics is ensured when grids are created, but we don't need it
-            entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
+            // Setup for grid physics hasn't been done yet so if that behavior changes revert this back to what it was.
+            Assert.That(!entMan.ComponentManager.HasComponent<PhysicsComponent>(grid.GridEntityId));
 
             // Act
             ent1.Transform.Anchored = true;

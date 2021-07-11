@@ -166,10 +166,18 @@ namespace Robust.Shared.GameObjects
             var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / (float) GrowthRate) * GrowthRate);
 
             component.Tree = new DynamicTree<IEntity>(
-                GetWorldAabbFromEntity,
+                GetRelativeAABBFromEntity,
                 capacity: capacity,
                 growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
             );
+        }
+
+        private static Box2 GetRelativeAABBFromEntity(in IEntity entity)
+        {
+            var aabb = GetWorldAABB(entity);
+            var tree = GetLookup(entity);
+
+            return aabb.Translated(-tree?.Owner.Transform.WorldPosition ?? Vector2.Zero);
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -226,20 +234,10 @@ namespace Robust.Shared.GameObjects
         {
             if (mapId == MapId.Nullspace) yield break;
 
-            var canBeEnclosed = true;
-
             // TODO: Recursive and all that.
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_lookupEnlargementRange)))
             {
                 yield return _entityManager.GetEntity(grid.GridEntityId).GetComponent<EntityLookupComponent>();
-
-                // If wholly enclosed no point checking others.
-                if (canBeEnclosed && grid.WorldBounds.Encloses(worldAABB))
-                {
-                    yield break;
-                }
-
-                canBeEnclosed = false;
             }
 
             yield return _mapManager.GetMapEntity(mapId).GetComponent<EntityLookupComponent>();
@@ -482,7 +480,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private EntityLookupComponent? GetLookup(IEntity entity)
+        private static EntityLookupComponent? GetLookup(IEntity entity)
         {
             if (entity.Transform.MapID == MapId.Nullspace)
             {
@@ -546,10 +544,12 @@ namespace Robust.Shared.GameObjects
             var transform = entity.Transform;
             DebugTools.Assert(transform.Initialized);
 
+            var aabb = worldAABB.Value.Translated(-lookup.Owner.Transform.WorldPosition);
+
             // for debugging
             var necessary = 0;
 
-            if (lookup.Tree.AddOrUpdate(entity, worldAABB))
+            if (lookup.Tree.AddOrUpdate(entity, aabb))
             {
                 ++necessary;
             }
@@ -580,6 +580,11 @@ namespace Robust.Shared.GameObjects
         }
 
         public Box2 GetWorldAabbFromEntity(in IEntity ent)
+        {
+            return GetWorldAABB(ent);
+        }
+
+        private static Box2 GetWorldAABB(in IEntity ent)
         {
             var pos = ent.Transform.WorldPosition;
 

@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -16,11 +18,12 @@ namespace Robust.Server.Physics
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        // TODO: Need to add a cvar for update cd so people can have immediate ones if they want.
+        private SharedBroadphaseSystem _broadphase = default!;
 
-        // also TODO: Need a way to disable this / increase it for performance reasons if people want it + event whenever the fixture changes.
-        private float _cooldown = 0.4f;
-
+        // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
+        // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
+        // (and at specific times due to race condition stuff).
+        private float _cooldown;
         private float _accumulator;
 
         private HashSet<MapChunk> _queuedChunks = new();
@@ -29,6 +32,10 @@ namespace Robust.Server.Physics
         {
             base.Initialize();
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
+            _broadphase = Get<SharedBroadphaseSystem>();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.GridFixtureUpdateRate, value => _cooldown = value, true);
         }
 
         public override void Update(float frameTime)
@@ -100,9 +107,9 @@ namespace Robust.Server.Physics
             if (oldFixture?.Equals(newFixture) == true) return;
 
             if (oldFixture != null)
-                Get<SharedBroadphaseSystem>().DestroyFixture(physicsComponent, oldFixture);
+                _broadphase.DestroyFixture(physicsComponent, oldFixture);
 
-            Get<SharedBroadphaseSystem>().CreateFixture(physicsComponent, newFixture);
+            _broadphase.CreateFixture(physicsComponent, newFixture);
             chunk.Fixture = newFixture;
 
             EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});

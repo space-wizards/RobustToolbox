@@ -527,6 +527,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [ViewVariables]
         public int FixtureCount { get; internal set; }
 
         [DataField("fixtures")]

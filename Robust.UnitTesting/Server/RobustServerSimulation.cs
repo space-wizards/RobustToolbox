@@ -201,6 +201,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IIslandManager, IslandManager>();
             container.Register<ICollisionManager, CollisionManager>();
+            container.Register<IMapManagerInternal, MapManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             _diFactory?.Invoke(container);
@@ -233,6 +234,7 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();

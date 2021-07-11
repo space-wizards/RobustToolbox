@@ -11,7 +11,6 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public class PhysicsSystem : SharedPhysicsSystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         public override void Initialize()

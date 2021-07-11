@@ -100,6 +100,7 @@ namespace Robust.Shared.GameObjects
             _mapManager.MapCreated += HandleMapCreated;
             _mapManager.MapDestroyed += HandleMapDestroyed;
 
+            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
             SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
             SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
@@ -113,6 +114,12 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IIslandManager>().Initialize();
         }
 
+        private void HandleGridInit(GridInitializeEvent ev)
+        {
+            if (!EntityManager.TryGetEntity(ev.EntityUid, out var gridEntity)) return;
+            var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
+            collideComp.BodyType = BodyType.Static;
+        }
 
         private void BuildControllers()
         {

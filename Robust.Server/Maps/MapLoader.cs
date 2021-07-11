@@ -44,6 +44,8 @@ namespace Robust.Server.Maps
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
+        private GridFixtureSystem _gridFixtures = default!;
+
         public event Action<YamlStream, string>? LoadedMapData;
 
         /// <inheritdoc />
@@ -52,7 +54,7 @@ namespace Robust.Server.Maps
             var grid = _mapManager.GetGrid(gridId);
 
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                _componentManager, _prototypeManager);
+                _componentManager, _prototypeManager, _gridFixtures);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -120,7 +122,7 @@ namespace Robust.Server.Maps
                 }
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                    _componentManager, _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
+                    _componentManager, _prototypeManager, _gridFixtures, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
                 grid = context.Grids[0];
 
@@ -149,7 +151,7 @@ namespace Robust.Server.Maps
         {
             Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
             var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                _componentManager, _prototypeManager);
+                _componentManager, _prototypeManager, _gridFixtures;
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 context.RegisterGrid(grid);
@@ -215,7 +217,7 @@ namespace Robust.Server.Maps
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                    _componentManager, _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
+                    _componentManager, _prototypeManager, _gridFixtures, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
 
                 if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
@@ -242,6 +244,8 @@ namespace Robust.Server.Maps
             private readonly IPauseManager _pauseManager;
             private readonly IComponentManager _componentManager;
             private readonly IPrototypeManager _prototypeManager;
+
+            private GridFixtureSystem _gridFixtures = default!;
 
             private readonly MapLoadOptions? _loadOptions;
             private readonly Dictionary<GridId, int> GridIDMap = new();
@@ -273,9 +277,14 @@ namespace Robust.Server.Maps
 
             public bool MapIsPostInit { get; private set; }
 
-            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
-                IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentManager componentManager,
-                IPrototypeManager prototypeManager)
+            public MapContext(
+                IMapManagerInternal maps,
+                ITileDefinitionManager tileDefs,
+                IServerEntityManagerInternal entities,
+                IPauseManager pauseManager,
+                IComponentManager componentManager,
+                IPrototypeManager prototypeManager,
+                GridFixtureSystem gridFixtures)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
@@ -283,6 +292,8 @@ namespace Robust.Server.Maps
                 _pauseManager = pauseManager;
                 _componentManager = componentManager;
                 _prototypeManager = prototypeManager;
+
+                _gridFixtures = gridFixtures;
 
                 RootNode = new YamlMappingNode();
                 TypeWriters = new Dictionary<Type, object>()
@@ -299,9 +310,14 @@ namespace Robust.Server.Maps
                 };
             }
 
-            public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
+            public MapContext(
+                IMapManagerInternal maps,
+                ITileDefinitionManager tileDefs,
                 IServerEntityManagerInternal entities,
-                IPauseManager pauseManager, IComponentManager componentManager, IPrototypeManager prototypeManager,
+                IPauseManager pauseManager,
+                IComponentManager componentManager,
+                IPrototypeManager prototypeManager,
+                GridFixtureSystem gridFixtures,
                 YamlMappingNode node, MapId targetMapId, MapLoadOptions options)
             {
                 _mapManager = maps;
@@ -310,6 +326,8 @@ namespace Robust.Server.Maps
                 _pauseManager = pauseManager;
                 _componentManager = componentManager;
                 _loadOptions = options;
+
+                _gridFixtures = gridFixtures;
 
                 RootNode = node;
                 TargetMap = targetMapId;
@@ -367,9 +385,8 @@ namespace Robust.Server.Maps
                 FinishEntitiesInitialization();
 
                 // Regardless of what the frequency is we'll process fixtures sometime on map load.
-                // Here seems like the least amount of fuckery involved in deferring things content-side.
-                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                gridFixtures.Process();
+                // Here seems like the least amount of tomfoolery involved in deferring things content-side.
+                _gridFixtures.Process();
 
                 // Run Startup on all components.
                 FinishEntitiesStartup();

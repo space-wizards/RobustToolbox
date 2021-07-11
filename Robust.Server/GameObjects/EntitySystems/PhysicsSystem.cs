@@ -34,7 +34,6 @@ namespace Robust.Server.GameObjects
             var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
             collideComp.BodyType = BodyType.Static;
-            // TODO: Need to generate chunk fixtures here?
         }
 
         /// <inheritdoc />

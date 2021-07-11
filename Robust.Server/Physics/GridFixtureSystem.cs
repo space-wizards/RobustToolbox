@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -24,6 +25,7 @@ namespace Robust.Server.Physics
         // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
         // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
         // (and at specific times due to race condition stuff).
+        // At any rate, cooldown given here if someone wants it. CD of 0 just runs it every tick.
         private float _cooldown;
         private float _accumulator;
 
@@ -32,6 +34,7 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
+            UpdatesBefore.Add(typeof(PhysicsSystem));
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
             _broadphase = Get<SharedBroadPhaseSystem>();
 
@@ -50,6 +53,9 @@ namespace Robust.Server.Physics
             Process();
         }
 
+        /// <summary>
+        /// Go through every dirty chunk and re-generate their fixtures.
+        /// </summary>
         public void Process()
         {
             foreach (var chunk in _queuedChunks)
@@ -60,6 +66,10 @@ namespace Robust.Server.Physics
             _queuedChunks.Clear();
         }
 
+        /// <summary>
+        /// Queue the chunk to generate (if cooldown > 0) or immediately process it.
+        /// </summary>
+        /// <param name="ev"></param>
         private void HandleCollisionRegenerate(RegenerateChunkCollisionEvent ev)
         {
             if (_cooldown <= 0f)
@@ -104,13 +114,14 @@ namespace Robust.Server.Physics
                 MapGridHelpers.CollisionGroup,
                 true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}"};
 
+            newFixture.Body = physicsComponent;
+
             // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
             if (oldFixture?.Equals(newFixture) == true) return;
 
             if (oldFixture != null)
                 physicsComponent.RemoveFixture(oldFixture);
 
-            newFixture.Body = physicsComponent;
             physicsComponent.AddFixture(newFixture);
             chunk.Fixture = newFixture;
 

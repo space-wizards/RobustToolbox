@@ -104,7 +104,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
             SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
-
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
@@ -130,6 +129,7 @@ namespace Robust.Shared.GameObjects
             if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
+
                 linearVelocityDiff += linear;
                 angularVelocityDiff += angular;
             }
@@ -137,6 +137,7 @@ namespace Robust.Shared.GameObjects
             if (entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
             {
                 var (linear, angular) = newBody.MapVelocities;
+
                 linearVelocityDiff -= linear;
                 angularVelocityDiff -= angular;
             }

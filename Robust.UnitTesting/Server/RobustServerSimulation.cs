@@ -235,6 +235,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+            entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

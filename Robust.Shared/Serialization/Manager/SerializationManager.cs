@@ -115,6 +115,8 @@ namespace Robust.Shared.Serialization.Manager
                 _copyByRefRegistrations.Add(type);
             }
 
+            _copyByRefRegistrations.Add(typeof(Type));
+
             _initialized = true;
             _initializing = false;
         }
@@ -299,6 +301,11 @@ namespace Robust.Shared.Serialization.Manager
 
         public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
         {
+            if (type.IsNullable() && node is ValueDataNode {Value: "null"})
+            {
+                return DeserializationResult.Value(type, null);
+            }
+
             var underlyingType = type.EnsureNotNullableType();
 
             if (underlyingType.IsArray)

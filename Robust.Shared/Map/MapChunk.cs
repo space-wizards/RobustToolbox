@@ -236,18 +236,7 @@ namespace Robust.Shared.Map
         {
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, out _cachedBounds);
-
-            // TODO: Ideally we wouldn't have LocalBounds on the grid and we could just treat it like a physics object
-            // (eventually, well into the future).
-            // For now we'll just attach a fixture to each chunk.
-
-            // Not raising directed because the grid's EntityUid isn't set yet.
-            IoCManager
-                .Resolve<IEntityManager>()
-                .EventBus
-                .RaiseEvent(EventSource.Local, new RegenerateChunkCollisionEvent(this));
-
-            _grid.NotifyChunkCollisionRegenerated();
+            _grid.NotifyChunkCollisionRegenerated(this);
         }
 
         /// <inheritdoc />

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Robust.Server.GameObjects;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -6,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 
@@ -18,11 +20,12 @@ namespace Robust.Server.Physics
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private SharedBroadphaseSystem _broadphase = default!;
+        private SharedBroadPhaseSystem _broadphase = default!;
 
         // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
         // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
         // (and at specific times due to race condition stuff).
+        // At any rate, cooldown given here if someone wants it. CD of 0 just runs it every tick.
         private float _cooldown;
         private float _accumulator;
 
@@ -31,8 +34,9 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
+            UpdatesBefore.Add(typeof(PhysicsSystem));
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
-            _broadphase = Get<SharedBroadphaseSystem>();
+            _broadphase = Get<SharedBroadPhaseSystem>();
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.GridFixtureUpdateRate, value => _cooldown = value, true);
@@ -49,6 +53,9 @@ namespace Robust.Server.Physics
             Process();
         }
 
+        /// <summary>
+        /// Go through every dirty chunk and re-generate their fixtures.
+        /// </summary>
         public void Process()
         {
             foreach (var chunk in _queuedChunks)
@@ -59,6 +66,10 @@ namespace Robust.Server.Physics
             _queuedChunks.Clear();
         }
 
+        /// <summary>
+        /// Queue the chunk to generate (if cooldown > 0) or immediately process it.
+        /// </summary>
+        /// <param name="ev"></param>
         private void HandleCollisionRegenerate(RegenerateChunkCollisionEvent ev)
         {
             if (_cooldown <= 0f)
@@ -81,7 +92,7 @@ namespace Robust.Server.Physics
             var bounds = chunk.CalcLocalBounds();
 
             // So something goes on with the chunk's internal bounds caching where if there's no data the bound is 0 or something?
-            if (bounds.Bottom == bounds.Top || bounds.Left == bounds.Right) return;
+            if (bounds.IsEmpty()) return;
 
             var origin = chunk.Indices * chunk.ChunkSize;
             bounds = bounds.Translated(origin);
@@ -101,15 +112,16 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}"};
+                true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
+                Body = physicsComponent};
 
             // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
             if (oldFixture?.Equals(newFixture) == true) return;
 
             if (oldFixture != null)
-                _broadphase.DestroyFixture(physicsComponent, oldFixture);
+                physicsComponent.RemoveFixture(oldFixture);
 
-            _broadphase.CreateFixture(physicsComponent, newFixture);
+            physicsComponent.AddFixture(newFixture);
             chunk.Fixture = newFixture;
 
             EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});

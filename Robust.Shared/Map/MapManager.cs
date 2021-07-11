@@ -7,6 +7,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -522,7 +523,11 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
+            // TODO: this won't actually "work" but we need the broadphase refactor to finish it.
+            foreach (var mapGrid in _grids.Values)
+            {
+                if (mapGrid.ParentMapId != mapId)
+                    continue;
 
             foreach (var broady in broadphase.GetBroadphases(mapId, worldPos))
             {

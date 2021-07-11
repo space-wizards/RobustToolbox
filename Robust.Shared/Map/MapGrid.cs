@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -40,7 +41,7 @@ namespace Robust.Shared.Map
         private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
-        private readonly IEntityManager _entityManager;     
+        private readonly IEntityManager _entityManager;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.
@@ -146,8 +147,18 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void NotifyChunkCollisionRegenerated()
+        public void NotifyChunkCollisionRegenerated(MapChunk chunk)
         {
+            // TODO: Ideally we wouldn't have LocalBounds on the grid and we could just treat it like a physics object
+            // (eventually, well into the future).
+            // For now we'll just attach a fixture to each chunk.
+
+            // Not raising directed because the grid's EntityUid isn't set yet.
+            IoCManager
+                .Resolve<IEntityManager>()
+                .EventBus
+                .RaiseEvent(EventSource.Local, new RegenerateChunkCollisionEvent(chunk));
+
             UpdateAABB();
         }
 

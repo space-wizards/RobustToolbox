@@ -523,11 +523,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            // TODO: this won't actually "work" but we need the broadphase refactor to finish it.
-            foreach (var mapGrid in _grids.Values)
-            {
-                if (mapGrid.ParentMapId != mapId)
-                    continue;
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
 
             foreach (var broady in broadphase.GetBroadphases(mapId, worldPos))
             {

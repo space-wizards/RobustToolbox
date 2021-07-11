@@ -212,22 +212,25 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             if (Vertices.Count == 0) return new Box2();
 
-            var aabb = new Box2();
-            Vector2 lower = Vertices[0];
-            Vector2 upper = lower;
+            var lower = Vertices[0];
+            var upper = lower;
 
-            for (int i = 1; i < Vertices.Count; ++i)
+            for (var i = 1; i < Vertices.Count; ++i)
             {
-                Vector2 v = Vertices[i];
+                var v = Vertices[i];
                 lower = Vector2.ComponentMin(lower, v);
                 upper = Vector2.ComponentMax(upper, v);
             }
 
-            Vector2 r = new Vector2(Radius, Radius);
-            aabb.BottomLeft = lower - r;
-            aabb.TopRight = upper + r;
+            var r = new Vector2(Radius, Radius);
 
-            return aabb;
+            var aabb = new Box2
+            {
+                BottomLeft = lower - r,
+                TopRight = upper + r
+            };
+
+            return rotation == Angle.Zero ? aabb : new Box2Rotated(aabb, rotation).CalcBoundingBox();
         }
 
         public void ApplyState()

@@ -96,8 +96,8 @@ namespace Robust.Shared.Physics.Dynamics
             Fixture fixtureA = proxyA.Fixture;
             Fixture fixtureB = proxyB.Fixture;
 
-            int indexA = proxyA.ChildIndex;
-            int indexB = proxyB.ChildIndex;
+            var indexA = proxyA.ChildIndex;
+            var indexB = proxyB.ChildIndex;
 
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
@@ -109,8 +109,7 @@ namespace Robust.Shared.Physics.Dynamics
             // so no point duplicating
 
             // Does a contact already exist?
-
-            for (ContactEdge? ceB = bodyB.ContactEdges; ceB != null; ceB = ceB?.Next)
+            for (var ceB = bodyB.ContactEdges; ceB != null; ceB = ceB?.Next)
             {
                 if (ceB.Other == bodyA)
                 {

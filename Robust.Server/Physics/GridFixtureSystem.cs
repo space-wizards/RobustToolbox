@@ -92,7 +92,7 @@ namespace Robust.Server.Physics
             var bounds = chunk.CalcLocalBounds();
 
             // So something goes on with the chunk's internal bounds caching where if there's no data the bound is 0 or something?
-            if (bounds.Bottom == bounds.Top || bounds.Left == bounds.Right) return;
+            if (bounds.IsEmpty()) return;
 
             var origin = chunk.Indices * chunk.ChunkSize;
             bounds = bounds.Translated(origin);

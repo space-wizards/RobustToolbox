@@ -15,10 +15,6 @@ namespace Robust.Shared.Physics.Broadphase
 
         private readonly DynamicTree<FixtureProxy>.ExtractAabbDelegate _extractAabb = ExtractAabbFunc;
 
-        private DynamicTree.Proxy[] _moveBuffer;
-        private int _moveCapacity;
-        private int _moveCount;
-
         private (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB)[] _pairBuffer;
         private int _pairCapacity;
         private int _pairCount;
@@ -35,10 +31,6 @@ namespace Robust.Shared.Physics.Broadphase
             _pairCapacity = 16;
             _pairCount = 0;
             _pairBuffer = new (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB)[_pairCapacity];
-
-            _moveCapacity = 16;
-            _moveCount = 0;
-            _moveBuffer = new DynamicTree.Proxy[_moveCapacity];
         }
 
         public DynamicTreeBroadPhase() : this(256) {}
@@ -46,62 +38,6 @@ namespace Robust.Shared.Physics.Broadphase
         private static Box2 ExtractAabbFunc(in FixtureProxy proxy)
         {
             return proxy.AABB;
-        }
-
-        public void UpdatePairs(BroadPhaseDelegate callback)
-        {
-            // Reset pair buffer
-            _pairCount = 0;
-
-            // Perform tree queries for all moving proxies.
-            for (int j = 0; j < _moveCount; ++j)
-            {
-                _queryProxyId = _moveBuffer[j];
-                if (_queryProxyId == DynamicTree.Proxy.Free)
-                {
-                    continue;
-                }
-
-                // We have to query the tree with the fat AABB so that
-                // we don't fail to create a pair that may touch later.
-                Box2 fatAABB;
-                _tree.GetFatAABB(_queryProxyId, out fatAABB);
-
-                // Query tree, create pairs and add them pair buffer.
-                _tree.Query(_queryCallback, in fatAABB);
-            }
-
-            // Reset move buffer
-            _moveCount = 0;
-
-            // Sort the pair buffer to expose duplicates.
-            Array.Sort(_pairBuffer, 0, _pairCount);
-
-            // Send the pairs back to the client.
-            int i = 0;
-            while (i < _pairCount)
-            {
-                var primaryPair = _pairBuffer[i];
-                FixtureProxy userDataA = _tree.GetUserData(primaryPair.ProxyA)!;
-                FixtureProxy userDataB = _tree.GetUserData(primaryPair.ProxyB)!;
-
-                callback(in userDataA, in userDataB);
-                ++i;
-
-                // Skip any duplicate pairs.
-                while (i < _pairCount)
-                {
-                    (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB) pair = _pairBuffer[i];
-                    if (pair.ProxyA != primaryPair.ProxyA || pair.ProxyB != primaryPair.ProxyB)
-                    {
-                        break;
-                    }
-                    ++i;
-                }
-            }
-
-            // Try to keep the tree balanced.
-            //_tree.Rebalance(4);
         }
 
         /// <summary>
@@ -154,52 +90,16 @@ namespace Robust.Shared.Physics.Broadphase
         {
             var proxyID = _tree.CreateProxy(proxy.AABB, proxy);
             _proxyCount++;
-            BufferMove(proxyID);
             return proxyID;
         }
 
         public void MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb, Vector2 displacement)
         {
-            var buffer = _tree.MoveProxy(proxy, in aabb, displacement);
-            if (buffer)
-            {
-                BufferMove(proxy);
-            }
-        }
-
-        public void TouchProxy(DynamicTree.Proxy proxy)
-        {
-            BufferMove(proxy);
-        }
-
-        private void BufferMove(DynamicTree.Proxy proxyId)
-        {
-            if (_moveCount == _moveCapacity)
-            {
-                DynamicTree.Proxy[] oldBuffer = _moveBuffer;
-                _moveCapacity *= 2;
-                _moveBuffer = new DynamicTree.Proxy[_moveCapacity];
-                Array.Copy(oldBuffer, _moveBuffer, _moveCount);
-            }
-
-            _moveBuffer[_moveCount] = proxyId;
-            _moveCount++;
-        }
-
-        private void UnBufferMove(int proxyId)
-        {
-            for (int i = 0; i < _moveCount; ++i)
-            {
-                if (_moveBuffer[i] == proxyId)
-                {
-                    _moveBuffer[i] = DynamicTree.Proxy.Free;
-                }
-            }
+            _tree.MoveProxy(proxy, in aabb, displacement);
         }
 
         public void RemoveProxy(DynamicTree.Proxy proxy)
         {
-            UnBufferMove(proxy);
             _proxyCount--;
             _tree.DestroyProxy(proxy);
         }

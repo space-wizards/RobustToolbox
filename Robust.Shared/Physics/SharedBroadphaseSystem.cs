@@ -167,6 +167,9 @@ namespace Robust.Shared.Physics
                 {
                     var otherFixture = other.Fixture;
 
+                    // 99% of the time it's just going to be the broadphase (for now the grid) itself.
+                    // hence this body check makes this run significantly better.
+                    // Also check if it's not already on the movebuffer.
                     if (otherFixture.Body == body || moveBuffer.ContainsKey(otherFixture)) continue;
 
                     moveBuffer[otherFixture] = other.AABB.Translated(offset);
@@ -194,6 +197,7 @@ namespace Robust.Shared.Physics
                 }
             }
 
+            // Find any entities being driven over that might need to be considered
             FindGridContacts(mapId);
 
             if (_moveBuffer[mapId].Count == 0) return;
@@ -204,19 +208,17 @@ namespace Robust.Shared.Physics
             // This means we can generate contacts across different broadphases.
             // If you have a better way of allowing for broadphases attached to grids then by all means code it yourself.
 
-            // TODO: Need to fuck around with optimising this a lot.
-
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
             var contactManager = _physicsSystem.Maps[mapId].ContactManager;
 
             // TODO: Could store fixtures by broadphase for more perf
-
             foreach (var (fixture, worldAABB) in _moveBuffer[mapId])
             {
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, offset) in _offsets)
                 {
+                    // Broadphase can't intersect with entities on itself so skip.
                     if (fixture.Body.Owner == broadphase.Owner) continue;
 
                     // If we're a map / our BB intersects then we'll do the work
@@ -239,9 +241,10 @@ namespace Robust.Shared.Physics
                                 .Translated(-offset);
                         }
 
-                        // TODO: Approx or not?
                         foreach (var other in broadphase.Tree.QueryAabb(aabb))
                         {
+                            // Do fast checks first and slower checks after.
+                            // TODO: Do Body check here?
                             if (proxy == other || !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
 
                             _pairBuffer.Add((proxy, other));
@@ -345,14 +348,11 @@ namespace Robust.Shared.Physics
 
             if (broadphase != null)
             {
+                var mapId = body.Owner.Transform.MapID;
+
                 foreach (var fixture in body.Fixtures)
                 {
-                    var proxyCount = fixture.ProxyCount;
-
-                    for (var i = 0; i < proxyCount; i++)
-                    {
-                        broadphase.Tree.TouchProxy(fixture.Proxies[i].ProxyId);
-                    }
+                    TouchProxies(mapId, broadphase, fixture);
                 }
             }
         }
@@ -386,10 +386,21 @@ namespace Robust.Shared.Physics
             // If nullspace or whatever ignore it.
             if (broadphase == null) return;
 
-            for (var i = 0; i < fixture.ProxyCount; i++)
+            TouchProxies(fixture.Body.Owner.Transform.MapID, broadphase, fixture);
+        }
+
+        private void TouchProxies(MapId mapId, BroadphaseComponent broadphase, Fixture fixture)
+        {
+            // TODO: When movebuffer is changed to use proxies instead then update this mega hard
+            var fixtureAABB = new Box2();
+
+            foreach (var proxy in fixture.Proxies)
             {
-                broadphase.Tree.TouchProxy(fixture.Proxies[i].ProxyId);
+                fixtureAABB = fixtureAABB.Union(proxy.AABB);
             }
+
+            if (!fixtureAABB.IsEmpty())
+                AddToMoveBuffer(mapId, fixture, fixtureAABB.Translated(broadphase.Owner.Transform.WorldPosition));
         }
 
         private void HandleMove(EntityUid uid, PhysicsComponent component, MoveEvent args)
@@ -526,11 +537,16 @@ namespace Robust.Shared.Physics
                 fixtureAABB = fixtureAABB.Union(proxy.AABB.Translated(broadphaseOffset));
             }
 
-            _moveBuffer[broadphaseTransform.MapID][fixture] = fixtureAABB;
+            AddToMoveBuffer(broadphaseTransform.MapID, fixture, fixtureAABB);
+        }
+
+        private void AddToMoveBuffer(MapId mapId, Fixture fixture, Box2 aabb)
+        {
+            _moveBuffer[mapId][fixture] = aabb;
 
             if (fixture.Body.Owner.HasComponent<BroadphaseComponent>())
             {
-                _broadphaseMoveBuffer[broadphaseTransform.MapID][fixture] = fixtureAABB;
+                _broadphaseMoveBuffer[mapId][fixture] = aabb;
             }
         }
 
@@ -613,12 +629,7 @@ namespace Robust.Shared.Physics
                 fixtureAABB = fixtureAABB.Union(aabb).Translated(broadphasePos);
             }
 
-            _moveBuffer[broadphase.Owner.Transform.MapID][fixture] = fixtureAABB;
-
-            if (fixture.Body.Owner.HasComponent<BroadphaseComponent>())
-            {
-                _broadphaseMoveBuffer[broadphase.Owner.Transform.MapID][fixture] = fixtureAABB;
-            }
+            AddToMoveBuffer(broadphase.Owner.Transform.MapID, fixture, fixtureAABB);
         }
 
         /// <summary>
@@ -640,9 +651,10 @@ namespace Robust.Shared.Physics
                 proxy.ProxyId = DynamicTree.Proxy.Free;
             }
 
-            _moveBuffer[broadphase.Owner.Transform.MapID].Remove(fixture);
-            // TODO: Check HasComponent maybe? Just wanted to prevent leaks juusssttt in case.
-            _broadphaseMoveBuffer[broadphase.Owner.Transform.MapID].Remove(fixture);
+            var mapId = broadphase.Owner.Transform.MapID;
+            _moveBuffer[mapId].Remove(fixture);
+            // Wanted to prevent leaks juusssttt in case.
+            _broadphaseMoveBuffer[mapId].Remove(fixture);
 
             fixture.ProxyCount = 0;
         }

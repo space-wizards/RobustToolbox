@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -86,9 +86,15 @@ namespace Robust.UnitTesting
 
             // Required components for the engine to work
             var compFactory = IoCManager.Resolve<IComponentFactory>();
+
             if (!compFactory.AllRegisteredTypes.Contains(typeof(MetaDataComponent)))
             {
                 compFactory.RegisterClass<MetaDataComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
+            {
+                compFactory.RegisterClass<EntityLookupComponent>();
             }
 
             if(entMan.EventBus == null)

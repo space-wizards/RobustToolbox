@@ -194,9 +194,9 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
-            container.Register<IEntityLookup, EntityLookup>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IComponentManager, ComponentManager>();
+            container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
@@ -225,6 +225,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<EntityLookupComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

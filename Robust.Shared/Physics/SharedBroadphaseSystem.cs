@@ -259,7 +259,7 @@ namespace Robust.Shared.Physics
                                 .Translated(-offset);
                         }
 
-                        foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
+                        foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb, true))
                         {
                             // Do fast checks first and slower checks after (in ContactManager).
                             if (proxy == other || !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;

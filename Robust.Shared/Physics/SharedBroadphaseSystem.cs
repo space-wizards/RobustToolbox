@@ -91,7 +91,7 @@ namespace Robust.Shared.Physics
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            ProcessUpdates();
+            //ProcessUpdates();
         }
 
         /// <summary>
@@ -133,17 +133,22 @@ namespace Robust.Shared.Physics
                     !move.Sender.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
-                SynchronizeFixtures(body);
+                // TODO: Also need WorldRot here?
+                var worldPos = move.NewPosition.ToMapPos(EntityManager);
+
+                SynchronizeFixtures(body, worldPos);
             }
 
-            while (_queuedRotates.TryDequeue(out var move))
+            while (_queuedRotates.TryDequeue(out var rotate))
             {
-                if (!_handledThisTick.Add(move.Sender.Uid) ||
-                    move.Sender.Deleted ||
-                    !move.Sender.TryGetComponent(out PhysicsComponent? body) ||
+                if (!_handledThisTick.Add(rotate.Sender.Uid) ||
+                    rotate.Sender.Deleted ||
+                    !rotate.Sender.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
-                SynchronizeFixtures(body);
+                var worldPos = rotate.Sender.Transform.WorldPosition;
+
+                SynchronizeFixtures(body, worldPos);
             }
         }
 
@@ -507,14 +512,14 @@ namespace Robust.Shared.Physics
             body.ResetMassData();
         }
 
-        private void SynchronizeFixtures(PhysicsComponent body)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos)
         {
             // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
+            var xf = new Transform(worldPos, (float) body.Owner.Transform.WorldRotation.Theta);
 
             if (body.Awake)
             {
                 // TODO: SWEPT HERE
-                var xf = body.GetTransform();
                 // Check if we need to use the normal synchronize which also supports TOI
                 // Otherwise, use the slightly faster one.
 
@@ -530,8 +535,6 @@ namespace Robust.Shared.Physics
             }
             else
             {
-                var xf = body.GetTransform();
-
                 foreach (var fixture in body.Fixtures)
                 {
                     if (fixture.ProxyCount == 0) continue;

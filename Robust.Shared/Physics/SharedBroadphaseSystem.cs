@@ -49,7 +49,7 @@ namespace Robust.Shared.Physics
         private Dictionary<MapId, Dictionary<Fixture, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
-        private List<(FixtureProxy, FixtureProxy)> _pairBuffer = new(64);
+        private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
         private Dictionary<BroadphaseComponent, Vector2> _offsets = new(8);
         private Dictionary<BroadphaseComponent, Box2> _broadphaseBounding = new(8);
         private HashSet<EntityUid> _broadphases = new(8);
@@ -256,12 +256,25 @@ namespace Robust.Shared.Physics
                                 .Translated(-offset);
                         }
 
-                        foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb, true))
+                        foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
                         {
                             // Do fast checks first and slower checks after (in ContactManager).
                             if (proxy == other || !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
 
-                            _pairBuffer.Add((proxy, other));
+                            // Don't add duplicates. Probably a faster way to do it but here seemed okay I guess.
+                            if (_pairBuffer.TryGetValue(other, out var existing) &&
+                                existing.Contains(proxy))
+                            {
+                                continue;
+                            }
+
+                            if (!_pairBuffer.TryGetValue(proxy, out var proxyExisting))
+                            {
+                                proxyExisting = new HashSet<FixtureProxy>();
+                                _pairBuffer[proxy] = proxyExisting;
+                            }
+
+                            proxyExisting.Add(other);
                         }
 
                         _queryBuffer.Clear();
@@ -269,9 +282,12 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            foreach (var (proxyA, proxyB) in _pairBuffer)
+            foreach (var (proxyA, proxies) in _pairBuffer)
             {
-                contactManager.AddPair(proxyA, proxyB);
+                foreach (var other in proxies)
+                {
+                    contactManager.AddPair(proxyA, other);
+                }
             }
 
             _pairBuffer.Clear();

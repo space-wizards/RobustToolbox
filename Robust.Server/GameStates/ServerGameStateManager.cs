@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Server.Map;
 using Robust.Server.Player;
@@ -21,6 +22,7 @@ using Robust.Shared.Utility;
 namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
+    [UsedImplicitly]
     public class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
@@ -51,6 +53,11 @@ namespace Robust.Server.GameStates
         {
             get => _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
             set => _configurationManager.SetCVar(CVars.NetMaxUpdateRange, value);
+        }
+
+        public void SetTransformNetId(ushort netId)
+        {
+            _entityView.SetTransformNetId(netId);
         }
 
         public void PostInject()
@@ -249,38 +256,44 @@ namespace Robust.Server.GameStates
         /// <returns>New entity State for the given entity.</returns>
         internal static EntityState GetEntityState(IComponentManager compMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
-            var compStates = new List<ComponentState>();
-            var changed = new List<ComponentChanged>();
+            var changed = new List<ComponentChange>();
 
-            foreach (var comp in compMan.GetNetComponents(entityUid))
+            foreach (var (netId, component) in compMan.GetNetComponents(entityUid))
             {
-                DebugTools.Assert(comp.Initialized);
+                DebugTools.Assert(component.Initialized);
 
                 // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
                 // "not different from entity creation".
                 // i.e. when the client spawns the entity and loads the entity prototype,
                 // the data it deserializes from the prototype SHOULD be equal
-                // to what the component state / ComponentChanged would send.
+                // to what the component state / ComponentChange would send.
                 // As such, we can avoid sending this data in this case since the client "already has it".
 
-                if (comp.NetSyncEnabled && comp.LastModifiedTick != GameTick.Zero && comp.LastModifiedTick >= fromTick)
-                    compStates.Add(comp.GetComponentState(player));
+                DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
 
-                if (comp.CreationTick != GameTick.Zero && comp.CreationTick >= fromTick && !comp.Deleted)
+                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
                 {
+                    ComponentState? state = null;
+                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+                        state = component.GetComponentState(player);
+
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Added(comp.NetID!.Value, comp.Name));
+                    changed.Add(ComponentChange.Added(netId, state));
                 }
-                else if (comp.Deleted && comp.LastModifiedTick >= fromTick)
+                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+                {
+                    changed.Add(ComponentChange.Changed(netId, component.GetComponentState(player)));
+                }
+                else if (component.Deleted && component.LastModifiedTick >= fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChanged.Removed(comp.NetID!.Value));
+                    changed.Add(ComponentChange.Removed(netId));
                 }
             }
 
-            return new EntityState(entityUid, changed.ToArray(), compStates.ToArray());
+            return new EntityState(entityUid, changed.ToArray());
         }
 
         /// <summary>

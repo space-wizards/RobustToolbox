@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -17,6 +18,7 @@ namespace Robust.Shared.Containers
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
+    [NetworkedComponent()]
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [Dependency] private readonly IRobustSerializer _serializer = default!;
@@ -28,9 +30,6 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         public sealed override string Name => "ContainerContainer";
-
-        /// <inheritdoc />
-        public sealed override uint? NetID => NetIDs.CONTAINER_MANAGER;
 
         /// <inheritdoc />
         protected override void OnRemove()
@@ -281,7 +280,7 @@ namespace Robust.Shared.Containers
         {
             public List<ContainerData> ContainerSet;
 
-            public ContainerManagerComponentState(List<ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
+            public ContainerManagerComponentState(List<ContainerData> containers)
             {
                 ContainerSet = containers;
             }

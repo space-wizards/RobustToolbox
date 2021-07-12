@@ -46,13 +46,15 @@ namespace Robust.Client
             IoCManager.Register<IClientMapManager, ClientMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
             IoCManager.Register<IEntityLookup, EntityLookup>();
+            IoCManager.Register<IReflectionManager, ClientReflectionManager>();
+            IoCManager.Register<IConsoleHost, ClientConsoleHost>();
+            IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<GameController, GameController>();
             IoCManager.Register<IGameController, GameController>();
             IoCManager.Register<IGameControllerInternal, GameController>();
-            IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceCache>();
             IoCManager.Register<IResourceManagerInternal, ResourceCache>();
             IoCManager.Register<IResourceCache, ResourceCache>();
@@ -72,8 +74,6 @@ namespace Robust.Client
             IoCManager.Register<IDebugDrawingManager, DebugDrawingManager>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
-            IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
-            IoCManager.Register<IConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IMidiManager, MidiManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
             switch (mode)

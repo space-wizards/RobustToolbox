@@ -409,7 +409,7 @@ namespace Robust.Server.Maps
                         continue;
                     }
 
-                    foreach (var component in _componentManager.GetNetComponents(entity.Uid))
+                    foreach (var (netId, component) in _componentManager.GetNetComponents(entity.Uid))
                     {
                         var castComp = (Component) component;
 

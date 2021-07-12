@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in ComponentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, component) in ComponentManager.GetNetComponents(entity.Uid))
                 {
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
@@ -143,13 +143,15 @@ namespace Robust.Server.GameObjects
             if (_networkManager.IsClient)
                 return;
 
-            if (!component.NetID.HasValue)
+            var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
+
+            if (!netId.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
 
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;
             msg.EntityUid = entity.Uid;
-            msg.NetId = component.NetID.Value;
+            msg.NetId = netId.Value;
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
 

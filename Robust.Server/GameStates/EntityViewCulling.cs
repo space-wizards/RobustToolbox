@@ -39,6 +39,8 @@ namespace Robust.Server.GameStates
         private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
 
+        private ushort _transformNetId = 0;
+
         /// <summary>
         /// Is view culling enabled, or will we send the whole map?
         /// </summary>
@@ -56,6 +58,11 @@ namespace Robust.Server.GameStates
             _mapManager = mapManager;
             _compMan = _entMan.ComponentManager;
             _lookup = lookup;
+        }
+
+        public void SetTransformNetId(ushort value)
+        {
+            _transformNetId = value;
         }
 
         // Not thread safe
@@ -204,17 +211,14 @@ namespace Robust.Server.GameStates
                 var oldState = (TransformComponent.TransformComponentState) xform.GetComponentState(session);
 
                 entityStates.Add(new EntityState(entityUid,
-                    new ComponentChanged[]
+                    new[]
                     {
-                        new(false, NetIDs.TRANSFORM, "Transform")
-                    },
-                    new ComponentState[]
-                    {
-                        new TransformComponent.TransformComponentState(Vector2NaN,
-                            oldState.Rotation,
-                            oldState.ParentID,
-                            oldState.NoLocalRotation,
-                            oldState.Anchored)
+                        ComponentChange.Changed(_transformNetId,
+                            new TransformComponent.TransformComponentState(Vector2NaN,
+                                oldState.Rotation,
+                                oldState.ParentID,
+                                oldState.NoLocalRotation,
+                                oldState.Anchored)),
                     }));
             }
 

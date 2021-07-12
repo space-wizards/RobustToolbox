@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
 using Robust.Client.Map;
@@ -25,6 +26,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
+    [UsedImplicitly]
     public class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor = default!;
@@ -35,6 +37,8 @@ namespace Robust.Client.GameStates
         private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
+
+        private uint _metaCompNetId;
 
         [Dependency] private readonly IComponentFactory _compFactory = default!;
         [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
@@ -99,6 +103,12 @@ namespace Robust.Client.GameStates
             Predicting = _config.GetCVar(CVars.NetPredict);
             PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
             PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
+
+            var metaId = _compFactory.GetRegistration(typeof(MetaDataComponent)).NetID;
+            if (!metaId.HasValue)
+                throw new InvalidOperationException("MetaDataComponent does not have a NetId.");
+
+            _metaCompNetId = metaId.Value;
         }
 
         /// <inheritdoc />
@@ -343,11 +353,11 @@ namespace Robust.Client.GameStates
                 }
 
                 // TODO: handle component deletions/creations.
-                foreach (var comp in _componentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, comp) in _componentManager.GetNetComponents(entity.Uid))
                 {
-                    DebugTools.AssertNotNull(comp.NetID);
+                    DebugTools.AssertNotNull(netId);
 
-                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(comp.NetID!.Value, out var compState))
+                    if (comp.LastModifiedTick < curTick || !last.TryGetValue(netId, out var compState))
                     {
                         continue;
                     }
@@ -368,24 +378,22 @@ namespace Robust.Client.GameStates
             // so that we can later roll back to it (if necessary).
             var outputData = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
 
+            Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
+            var player = _players.LocalPlayer.Session;
+
             foreach (var createdEntity in createdEntities)
             {
                 var compData = new Dictionary<uint, ComponentState>();
                 outputData.Add(createdEntity, compData);
 
-                foreach (var component in _componentManager.GetNetComponents(createdEntity))
+                foreach (var (netId, component) in _componentManager.GetNetComponents(createdEntity))
                 {
-                    Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
-
-                    var player = _players.LocalPlayer.Session;
                     var state = component.GetComponentState(player);
 
-                    if (state.GetType() == typeof(ComponentState))
-                    {
+                    if(state.GetType() == typeof(ComponentState))
                         continue;
-                    }
 
-                    compData.Add(state.NetID, state);
+                    compData.Add(netId, state);
                 }
             }
 
@@ -432,8 +440,7 @@ namespace Robust.Client.GameStates
                     }
                     else //Unknown entities
                     {
-                        var metaState = (MetaDataComponentState?) es.ComponentStates
-                            ?.FirstOrDefault(c => c.NetID == NetIDs.META_DATA);
+                        var metaState = (MetaDataComponentState?) es.ComponentChanges?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                         if (metaState == null)
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
@@ -543,7 +550,7 @@ namespace Robust.Client.GameStates
         private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityEventBus bus, EntityState? curState,
             EntityState? nextState)
         {
-            var compStateWork = new Dictionary<uint, (ComponentState? curState, ComponentState? nextState)>();
+            var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
             var entityUid = entity.Uid;
 
             if (curState?.ComponentChanges != null)
@@ -559,42 +566,46 @@ namespace Robust.Client.GameStates
                     }
                     else
                     {
+                        //Right now we just assume every state from an unseen entity is added
+
                         if (compMan.HasComponent(entityUid, compChange.NetID))
                             continue;
 
-                        var newComp = (Component) _compFactory.GetComponent(compChange.ComponentName!);
+                        var newComp = (Component) _compFactory.GetComponent(compChange.NetID);
                         newComp.Owner = entity;
                         compMan.AddComponent(entity, newComp, true);
+
+                        compStateWork[compChange.NetID] = (compChange.State, null);
                     }
                 }
             }
 
-            if (curState?.ComponentStates != null)
+            if (curState?.ComponentChanges != null)
             {
-                foreach (var compState in curState.ComponentStates)
+                foreach (var compChange in curState.ComponentChanges)
                 {
-                    compStateWork[compState.NetID] = (compState, null);
+                    compStateWork[compChange.NetID] = (compChange.State, null);
                 }
             }
 
-            if (nextState?.ComponentStates != null)
+            if (nextState?.ComponentChanges != null)
             {
-                foreach (var compState in nextState.ComponentStates)
+                foreach (var compState in nextState.ComponentChanges)
                 {
                     if (compStateWork.TryGetValue(compState.NetID, out var state))
                     {
-                        compStateWork[compState.NetID] = (state.curState, compState);
+                        compStateWork[compState.NetID] = (state.curState, compState.State);
                     }
                     else
                     {
-                        compStateWork[compState.NetID] = (null, compState);
+                        compStateWork[compState.NetID] = (null, compState.State);
                     }
                 }
             }
 
             foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (compMan.TryGetComponent(entityUid, netId, out var component))
+                if (compMan.TryGetComponent(entityUid, (ushort) netId, out var component))
                 {
                     try
                     {

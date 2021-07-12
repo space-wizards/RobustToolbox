@@ -197,7 +197,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // Pull out a spare contact object
             contactManager.ContactPoolList.TryPop(out var contact);
 
-            // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
+            // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
             if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
             {
                 if (contact == null)

@@ -69,7 +69,11 @@ namespace Robust.Shared.Physics.Broadphase
             return true;
         }
 
-        // TODO: Refactor to use fatAABB
+        public Box2 GetFatAabb(DynamicTree.Proxy proxy)
+        {
+            return _tree.GetFatAabb(proxy);
+        }
+
         /// <summary>
         ///     Already assumed to be within the same broadphase.
         /// </summary>

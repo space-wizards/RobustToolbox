@@ -7,6 +7,8 @@ namespace Robust.Shared.Physics {
 
     public interface IBroadPhase
     {
+        Box2 GetFatAabb(DynamicTree.Proxy proxy);
+
         bool TestOverlap(DynamicTree.Proxy proxyA, DynamicTree.Proxy proxyB);
 
         DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);

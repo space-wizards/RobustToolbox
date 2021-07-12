@@ -30,6 +30,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -333,17 +334,23 @@ namespace Robust.Shared.Physics.Dynamics
                 var broadphaseA = fixtureA.Body.Broadphase;
                 var broadphaseB = fixtureB.Body.Broadphase;
 
+                // TODO: IT MIGHT BE THE FATAABB STUFF FOR MOVEPROXY SO TRY THAT
                 var overlap = false;
+                throw new InvalidOperationException();
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace
                 if (broadphaseA != null && broadphaseB != null)
                 {
                     if (broadphaseA == broadphaseB)
                     {
-                        overlap = proxyA.AABB.Intersects(proxyB.AABB);
+                        var aabbA = broadphaseA.Tree.GetFatAabb(proxyA.ProxyId);
+                        var aabbB = broadphaseA.Tree.GetFatAabb(proxyB.ProxyId);
+
+                        overlap = aabbA.Intersects(aabbB);
                     }
                     else
                     {
+                        throw new InvalidOperationException();
                         var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
                         var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);

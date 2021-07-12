@@ -334,9 +334,16 @@ namespace Robust.Shared.Physics.Dynamics
                 // We can have cross-broadphase proxies hence need to change them to worldspace
                 if (broadphaseA != null && broadphaseB != null)
                 {
-                    var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
-                    var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
-                    overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
+                    if (broadphaseA == broadphaseB)
+                    {
+                        overlap = proxyA.AABB.Intersects(proxyB.AABB);
+                    }
+                    else
+                    {
+                        var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
+                        var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
+                        overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
+                    }
                 }
                 // BIG TODO: Log if else? I think this can happen due to PVS fuckery?
 

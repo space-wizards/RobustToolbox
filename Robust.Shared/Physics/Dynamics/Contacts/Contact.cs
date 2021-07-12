@@ -295,15 +295,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (FixtureA == null || FixtureB == null)
                 return;
 
-            Manifold oldManifold = Manifold;
+            var oldManifold = Manifold;
 
             // Re-enable this contact.
             Enabled = true;
 
             bool touching;
-            bool wasTouching = IsTouching;
+            var wasTouching = IsTouching;
 
-            bool sensor = !(FixtureA.Hard && FixtureB.Hard);
+            var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
             // Is this contact a sensor?
             if (sensor)
@@ -324,14 +324,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // stored impulses to warm start the solver.
                 for (int i = 0; i < Manifold.PointCount; ++i)
                 {
-                    ManifoldPoint mp2 = Manifold.Points[i];
+                    var mp2 = Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
-                    ContactID id2 = mp2.Id;
+                    var id2 = mp2.Id;
 
-                    for (int j = 0; j < oldManifold.PointCount; ++j)
+                    for (var j = 0; j < oldManifold.PointCount; ++j)
                     {
-                        ManifoldPoint mp1 = oldManifold.Points[j];
+                        var mp1 = oldManifold.Points[j];
 
                         if (mp1.Id.Key == id2.Key)
                         {

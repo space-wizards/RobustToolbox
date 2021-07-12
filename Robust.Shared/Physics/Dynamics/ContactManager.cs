@@ -345,10 +345,9 @@ namespace Robust.Shared.Physics.Dynamics
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }
-                // BIG TODO: Log if else? I think this can happen due to PVS fuckery?
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
-                if (overlap == false)
+                if (!overlap)
                 {
                     Contact cNuke = contact;
                     contact = contact.Next;

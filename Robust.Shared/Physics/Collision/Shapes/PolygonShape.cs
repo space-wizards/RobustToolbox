@@ -64,14 +64,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 _normals = new List<Vector2>(_vertices.Count);
 
                 // Compute normals. Ensure the edges have non-zero length.
-                for (int i = 0; i < _vertices.Count; ++i)
+                for (var i = 0; i < _vertices.Count; ++i)
                 {
-                    int next = i + 1 < _vertices.Count ? i + 1 : 0;
-                    Vector2 edge = _vertices[next] - _vertices[i];
+                    var next = i + 1 < _vertices.Count ? i + 1 : 0;
+                    var edge = _vertices[next] - _vertices[i];
                     DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
 
                     //FPE optimization: Normals.Add(MathHelper.Cross(edge, 1.0f));
-                    Vector2 temp = new Vector2(edge.Y, -edge.X);
+                    var temp = new Vector2(edge.Y, -edge.X);
                     _normals.Add(temp.Normalized);
                 }
 
@@ -86,7 +86,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private List<Vector2> _vertices = new();
 
-        private Box2 _cachedAABB = new();
+        private Box2 _cachedAABB;
 
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 

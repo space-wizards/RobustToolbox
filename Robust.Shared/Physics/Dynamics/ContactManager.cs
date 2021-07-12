@@ -33,6 +33,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
@@ -214,6 +215,8 @@ namespace Robust.Shared.Physics.Dynamics
             Fixture fixtureB = contact.FixtureB!;
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
+
+            Logger.DebugS("physics", $"Destroyed contact between {bodyA.Owner} & {bodyB.Owner}");
 
             if (contact.IsTouching)
             {

@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
@@ -64,6 +62,7 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
+            UpdatesAfter.Add(typeof(SharedTransformSystem));
             _physicsSystem = Get<SharedPhysicsSystem>();
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(HandleBroadphaseInit);
@@ -146,8 +145,6 @@ namespace Robust.Shared.Physics
 
                 SynchronizeFixtures(body);
             }
-
-
         }
 
         /// <summary>

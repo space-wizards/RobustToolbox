@@ -23,6 +23,8 @@ namespace Robust.Shared.Physics {
 
         IEnumerable<FixtureProxy> QueryAabb(Box2 aabb, bool approx = false);
 
+        IEnumerable<FixtureProxy> QueryAabb(List<FixtureProxy> proxies, Box2 aabb, bool approx = false);
+
         void QueryPoint(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
             Vector2 point,
             bool approx = false);

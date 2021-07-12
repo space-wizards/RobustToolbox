@@ -76,6 +76,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 }
 
                 Centroid = ComputeCentroid(_vertices);
+                _cachedAABB = CalculateAABB();
 
                 // Compute the polygon mass data
                 // TODO: Update fixture. Maybe use events for it? Who tf knows.
@@ -84,6 +85,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private List<Vector2> _vertices = new();
+
+        private Box2 _cachedAABB = new();
 
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
@@ -208,9 +211,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return true;
         }
 
-        public Box2 CalculateLocalBounds(Angle rotation)
+        /// <summary>
+        /// Calculating the AABB for a polyshape isn't cheap so we'll just cache it whenever its vertices change.
+        /// </summary>
+        private Box2 CalculateAABB()
         {
-            if (Vertices.Count == 0) return new Box2();
+            if (_vertices.Count == 0) return new Box2();
 
             var lower = Vertices[0];
             var upper = lower;
@@ -224,13 +230,16 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
             var r = new Vector2(Radius, Radius);
 
-            var aabb = new Box2
+            return new Box2
             {
                 BottomLeft = lower - r,
                 TopRight = upper + r
             };
+        }
 
-            return rotation == Angle.Zero ? aabb : new Box2Rotated(aabb, rotation).CalcBoundingBox();
+        public Box2 CalculateLocalBounds(Angle rotation)
+        {
+            return rotation == Angle.Zero ? _cachedAABB : new Box2Rotated(_cachedAABB, rotation).CalcBoundingBox();
         }
 
         public void ApplyState()

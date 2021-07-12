@@ -48,13 +48,18 @@ namespace Robust.Shared.Physics
         // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
         // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
         // TODO: These need to be FixtureProxy instead retard.
-        private Dictionary<MapId, Dictionary<Fixture, Box2>> _broadphaseMoveBuffer = new();
         private Dictionary<MapId, Dictionary<Fixture, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
         private List<(FixtureProxy, FixtureProxy)> _pairBuffer = new(64);
         private Dictionary<BroadphaseComponent, Vector2> _offsets = new(8);
         private Dictionary<BroadphaseComponent, Box2> _broadphaseBounding = new(8);
+        private HashSet<EntityUid> _broadphases = new(8);
+        private Dictionary<Fixture, Box2> _gridMoveBuffer = new(64);
+        private List<FixtureProxy> _queryBuffer = new(32);
+
+        // Caching for Synchronize
+        private Dictionary<BroadphaseComponent, (Vector2 Position, float Rotation)> _broadphasePositions = new();
 
         public override void Initialize()
         {
@@ -141,6 +146,8 @@ namespace Robust.Shared.Physics
 
                 SynchronizeFixtures(body);
             }
+
+
         }
 
         /// <summary>
@@ -152,18 +159,20 @@ namespace Robust.Shared.Physics
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
             var moveBuffer = _moveBuffer[mapId];
 
-            // Suss on whether we should just do the broadphases entire AABB at once or each fixture
-            // the former will fall over if there's a lot of stuff just outside of fixtures but still in the grid's
-            // bounds.
+            // Rather than doing a HasComponent up front when adding to the moveBuffer we'll just do it here
+            // This way we can reduce the amount of HasComponent<BroadphaseComponent> calls being done
 
-            foreach (var (fixture, worldAABB) in _broadphaseMoveBuffer[mapId])
+            foreach (var (fixture, worldAABB) in moveBuffer)
             {
+                if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
+
                 var broadphase = fixture.Body.Broadphase!;
                 var offset = _offsets[broadphase];
                 var body = fixture.Body;
+                var translatedAABB = worldAABB.Translated(-offset);
 
                 // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
-                foreach (var other in broadphase!.Tree.QueryAabb(worldAABB.Translated(-offset)))
+                foreach (var other in broadphase!.Tree.QueryAabb(_queryBuffer, translatedAABB))
                 {
                     var otherFixture = other.Fixture;
 
@@ -172,15 +181,25 @@ namespace Robust.Shared.Physics
                     // Also check if it's not already on the movebuffer.
                     if (otherFixture.Body == body || moveBuffer.ContainsKey(otherFixture)) continue;
 
-                    moveBuffer[otherFixture] = other.AABB.Translated(offset);
+                    // To avoid updating during iteration.
+                    _gridMoveBuffer[otherFixture] = other.AABB.Translated(offset);
                 }
+
+                _queryBuffer.Clear();
             }
 
-            _broadphaseMoveBuffer[mapId].Clear();
+            foreach (var (fixture, worldAABB) in _gridMoveBuffer)
+            {
+                moveBuffer[fixture] = worldAABB;
+            }
         }
 
         internal void FindNewContacts(MapId mapId)
         {
+            var moveBuffer = _moveBuffer[mapId];
+
+            if (moveBuffer.Count == 0) return;
+
             // Cache as much broadphase data as we can up front for this map.
             foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
             {
@@ -188,6 +207,7 @@ namespace Robust.Shared.Physics
 
                 if (transform.MapID != mapId) continue;
 
+                _broadphases.Add(broadphase.Owner.Uid);
                 var worldPos = transform.WorldPosition;
                 _offsets[broadphase] = worldPos;
 
@@ -200,8 +220,6 @@ namespace Robust.Shared.Physics
             // Find any entities being driven over that might need to be considered
             FindGridContacts(mapId);
 
-            if (_moveBuffer[mapId].Count == 0) return;
-
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
             // broadphase intersecting a particular proxy instead of just on the 1 broadphase.
@@ -213,7 +231,7 @@ namespace Robust.Shared.Physics
             var contactManager = _physicsSystem.Maps[mapId].ContactManager;
 
             // TODO: Could store fixtures by broadphase for more perf
-            foreach (var (fixture, worldAABB) in _moveBuffer[mapId])
+            foreach (var (fixture, worldAABB) in moveBuffer)
             {
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, offset) in _offsets)
@@ -241,14 +259,15 @@ namespace Robust.Shared.Physics
                                 .Translated(-offset);
                         }
 
-                        foreach (var other in broadphase.Tree.QueryAabb(aabb))
+                        foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
                         {
-                            // Do fast checks first and slower checks after.
-                            // TODO: Do Body check here?
+                            // Do fast checks first and slower checks after (in ContactManager).
                             if (proxy == other || !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
 
                             _pairBuffer.Add((proxy, other));
                         }
+
+                        _queryBuffer.Clear();
                     }
                 }
             }
@@ -262,6 +281,8 @@ namespace Robust.Shared.Physics
             _moveBuffer[mapId].Clear();
             _offsets.Clear();
             _broadphaseBounding.Clear();
+            _broadphases.Clear();
+            _gridMoveBuffer.Clear();
         }
 
         private void HandleBroadphaseShutdown(EntityUid uid, BroadphaseComponent component, ComponentShutdown args)
@@ -481,10 +502,17 @@ namespace Robust.Shared.Physics
             {
                 // TODO: SWEPT HERE
                 var xf = body.GetTransform();
+                // Check if we need to use the normal synchronize which also supports TOI
+                // Otherwise, use the slightly faster one.
 
+                // For now we'll just use the normal one as no TOI support
                 foreach (var fixture in body.Fixtures)
                 {
-                    Synchronize(fixture, xf, xf);
+                    if (fixture.ProxyCount == 0) continue;
+
+                    // SynchronizezTOI(fixture, xf1, xf2);
+
+                    Synchronize(fixture, xf);
                 }
             }
             else
@@ -493,48 +521,95 @@ namespace Robust.Shared.Physics
 
                 foreach (var fixture in body.Fixtures)
                 {
-                    Synchronize(fixture, xf, xf);
+                    if (fixture.ProxyCount == 0) continue;
+
+                    Synchronize(fixture, xf);
                 }
             }
         }
 
-        private void Synchronize(Fixture fixture, Transform transform1, Transform transform2)
+        /// <summary>
+        /// The standard Synchronize from Box2D
+        /// </summary>
+        private void SynchronizeTOI(Fixture fixture, Transform transform1, Transform transform2)
         {
+            var broadphase = fixture.Body.Broadphase!;
             var proxyCount = fixture.ProxyCount;
-
-            if (proxyCount == 0) return;
-
-            var broadphase = fixture.Body.Broadphase;
-
-            if (broadphase == null)
-            {
-                throw new InvalidBroadphaseException($"Unable to find broadphase for Synchronize for {fixture.Body}");
-            }
 
             var fixtureAABB = new Box2(transform1.Position, transform1.Position);
             // TODO: Inefficient as fuck
             var broadphaseTransform = broadphase.Owner.Transform;
-            var broadphaseOffset = broadphaseTransform.WorldPosition;
-            var broadphaseRot = broadphaseTransform.WorldRotation;
 
-            var relativePos1 = new Transform(transform1.Position - broadphaseOffset,
-                transform1.Quaternion2D.Angle - (float) broadphaseRot.Theta);
+            if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
+            {
+                broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);
+                _broadphasePositions[broadphase] = broadphaseOffset;
+            }
 
-            var relativePos2 = new Transform(transform2.Position - broadphaseOffset,
-                transform2.Quaternion2D.Angle - (float) broadphaseRot.Theta);
+            var relativePos1 = new Transform(transform1.Position - broadphaseOffset.Position,
+                transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
+
+            var relativePos2 = new Transform(transform2.Position - broadphaseOffset.Position,
+                transform2.Quaternion2D.Angle - broadphaseOffset.Rotation);
+
+            var angle1 = new Angle(relativePos1.Quaternion2D.Angle);
+            var angle2 = new Angle(relativePos2.Quaternion2D.Angle);
+
+            for (var i = 0; i < proxyCount; i++)
+            {
+                 var proxy = fixture.Proxies[i];
+
+                 var aabb1 = fixture.Shape.CalculateLocalBounds(angle1).Translated(relativePos1.Position);
+                 var aabb2 = fixture.Shape.CalculateLocalBounds(angle2).Translated(relativePos2.Position);
+
+                 var aabb = aabb1.Union(aabb2);
+                 proxy.AABB = aabb;
+                 var displacement = aabb2.Center - aabb1.Center;
+                 var worldAABB = aabb.Translated(broadphaseOffset.Position);
+
+                 broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
+                 fixtureAABB = proxyCount > 1 ? fixtureAABB.Union(worldAABB) : worldAABB;
+            }
+
+            AddToMoveBuffer(broadphaseTransform.MapID, fixture, fixtureAABB);
+        }
+
+        /// <summary>
+        /// A more efficient Synchronize for 1 transform.
+        /// </summary>
+        private void Synchronize(Fixture fixture, Transform transform1)
+        {
+            // tl;dr update our bounding boxes stored in broadphase.
+            var broadphase = fixture.Body.Broadphase!;
+            var proxyCount = fixture.ProxyCount;
+
+            // TODO: Inefficient as fuck
+            var broadphaseTransform = broadphase.Owner.Transform;
+
+            if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
+            {
+                broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);
+                _broadphasePositions[broadphase] = broadphaseOffset;
+            }
+
+            var relativePos1 = new Transform(transform1.Position - broadphaseOffset.Position,
+                transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
+
+            var angle1 = new Angle(relativePos1.Quaternion2D.Angle);
+
+            var fixtureAABB = new Box2(transform1.Position, transform1.Position);
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
+                var aabb = fixture.Shape.CalculateLocalBounds(angle1).Translated(relativePos1.Position);
 
-                var aabb1 = fixture.Shape.CalculateLocalBounds(relativePos1.Quaternion2D.Angle).Translated(relativePos1.Position);
-                var aabb2 = fixture.Shape.CalculateLocalBounds(relativePos2.Quaternion2D.Angle).Translated(relativePos2.Position);
+                proxy.AABB = aabb;
+                var worldAABB = aabb.Translated(broadphaseOffset.Position);
+                var displacement = Vector2.Zero;
 
-                proxy.AABB = aabb1.Union(aabb2);
-                var displacement = aabb2.Center - aabb1.Center;
-
-                broadphase.Tree.MoveProxy(proxy.ProxyId, proxy.AABB, displacement);
-                fixtureAABB = fixtureAABB.Union(proxy.AABB.Translated(broadphaseOffset));
+                broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
+                fixtureAABB = proxyCount > 1 ? fixtureAABB.Union(worldAABB) : worldAABB;
             }
 
             AddToMoveBuffer(broadphaseTransform.MapID, fixture, fixtureAABB);
@@ -543,11 +618,6 @@ namespace Robust.Shared.Physics
         private void AddToMoveBuffer(MapId mapId, Fixture fixture, Box2 aabb)
         {
             _moveBuffer[mapId][fixture] = aabb;
-
-            if (fixture.Body.Owner.HasComponent<BroadphaseComponent>())
-            {
-                _broadphaseMoveBuffer[mapId][fixture] = aabb;
-            }
         }
 
         private void CreateProxies(PhysicsComponent body)
@@ -653,8 +723,6 @@ namespace Robust.Shared.Physics
 
             var mapId = broadphase.Owner.Transform.MapID;
             _moveBuffer[mapId].Remove(fixture);
-            // Wanted to prevent leaks juusssttt in case.
-            _broadphaseMoveBuffer[mapId].Remove(fixture);
 
             fixture.ProxyCount = 0;
         }
@@ -682,7 +750,6 @@ namespace Robust.Shared.Physics
             var mapEnt = _mapManager.GetMapEntity(e.Map);
             mapEnt.EnsureComponent<BroadphaseComponent>();
             _moveBuffer[e.Map] = new Dictionary<Fixture, Box2>(64);
-            _broadphaseMoveBuffer[e.Map] = new Dictionary<Fixture, Box2>(64);
         }
 
         public override void Shutdown()

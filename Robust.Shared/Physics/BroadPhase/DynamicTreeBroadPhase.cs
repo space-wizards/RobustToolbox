@@ -124,14 +124,18 @@ namespace Robust.Shared.Physics.Broadphase
         public IEnumerable<FixtureProxy> QueryAabb(Box2 aabb, bool approx = false)
         {
             var list = new List<FixtureProxy>();
+            return QueryAabb(list, aabb, approx);
+        }
 
-            QueryAabb(ref list, (ref List<FixtureProxy> lst, in FixtureProxy i) =>
+        public IEnumerable<FixtureProxy> QueryAabb(List<FixtureProxy> proxies, Box2 aabb, bool approx = false)
+        {
+            QueryAabb(ref proxies, (ref List<FixtureProxy> lst, in FixtureProxy i) =>
             {
                 lst.Add(i);
                 return true;
             }, aabb, approx);
 
-            return list;
+            return proxies;
         }
 
         public void QueryPoint(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback, Vector2 point, bool approx = false)

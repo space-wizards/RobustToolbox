@@ -66,6 +66,7 @@ namespace Robust.Shared.Physics.Dynamics
         // TODO: CollideMultiCore
         private List<Contact> _startCollisions = new();
         private List<Contact> _endCollisions = new();
+        private Dictionary<PhysicsComponent, Transform> _transformCache = new(64);
 
         public ContactManager()
         {
@@ -355,11 +356,43 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                // The contact persists.
-                contact.Update(this, _startCollisions, _endCollisions);
+                contact = contact.Next;
+            }
+
+            // Cache transforms as world-stuff is expensive to calc.
+            for (var contact = ContactList.Next; contact != ContactList;)
+            {
+                if (contact == null) break;
+
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
+
+                if (!_transformCache.ContainsKey(bodyA))
+                {
+                    _transformCache[bodyA] = bodyA.GetTransform();
+                }
+
+                if (!_transformCache.ContainsKey(bodyB))
+                {
+                    _transformCache[bodyB] = bodyB.GetTransform();
+                }
 
                 contact = contact.Next;
             }
+
+            for (var contact = ContactList.Next; contact != ContactList;)
+            {
+                if (contact == null) break;
+
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
+
+                contact.Update(this, _startCollisions, _endCollisions, _transformCache[fixtureA.Body], _transformCache[fixtureB.Body]);
+
+                contact = contact.Next;
+            }
+
+            _transformCache.Clear();
 
             foreach (var contact in _startCollisions)
             {

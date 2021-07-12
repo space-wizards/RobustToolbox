@@ -287,7 +287,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
         /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
+        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions, Transform bodyATransform, Transform bodyBTransform)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -310,14 +310,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 IPhysShape shapeA = FixtureA.Shape;
                 IPhysShape shapeB = FixtureB.Shape;
-                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyA.GetTransform(), bodyB.GetTransform());
+                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.
                 Manifold.PointCount = 0;
             }
             else
             {
-                Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
+                Evaluate(ref Manifold, bodyATransform, bodyBTransform);
                 touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the

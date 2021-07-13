@@ -10,6 +10,7 @@ using Robust.Server.Reflection;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -190,11 +191,12 @@ namespace Robust.UnitTesting.Server
             container.RegisterInstance<IGameTiming>(new Mock<IGameTiming>().Object); // TODO: get timing working similar to RobustIntegrationTest
 
             //Tier 2: Simulation
+            container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
-            container.Register<IEntityLookup, EntityLookup>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IComponentManager, ComponentManager>();
+            container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
@@ -223,8 +225,11 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<EntityLookupComponent>();
 
             _regDelegate?.Invoke(compFactory);
+
+            compFactory.GenerateNetIds();
 
             var entityMan = container.Resolve<IEntityManager>();
             entityMan.Initialize();

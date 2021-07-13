@@ -22,8 +22,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        // Wait for it.
-        private sealed partial class GlfwWindowingImpl
+        private unsafe sealed partial class GlfwWindowingImpl
         {
             private readonly List<GlfwWindowReg> _windows = new();
 
@@ -36,45 +35,23 @@ namespace Robust.Client.Graphics.Clyde
             private int _nextWindowId = 1;
             private static bool _eglLoaded;
 
-            public async Task<WindowHandle> WindowCreate(WindowCreateParameters parameters)
+            public WindowHandle WindowCreate(WindowCreateParameters parameters)
             {
-                // tfw await not allowed in unsafe contexts
-
-                // GL APIs don't take kindly to making a new window without unbinding the main context. Great.
-                // Leaving code for async path in, in case it works on like GLX.
-                var unbindContextAndBlock = true;
-
                 DebugTools.AssertNotNull(_mainWindow);
 
-                Task<GlfwWindowCreateResult> task;
-                unsafe
-                {
-                    if (unbindContextAndBlock)
-                        GLFW.MakeContextCurrent(null);
+                GLFW.MakeContextCurrent(null);
 
-                    task = SharedWindowCreate(
-                        _clyde._chosenRenderer,
-                        parameters,
-                        _mainWindow!.GlfwWindow);
-                }
+                var task = SharedWindowCreate(
+                    _clyde._chosenRenderer,
+                    parameters,
+                    _mainWindow!.GlfwWindow);
 
-                if (unbindContextAndBlock)
-                {
-                    unsafe
-                    {
-                        // Block the main thread (to avoid stuff like texture uploads being problematic).
-                        WaitWindowCreate(task);
+                // Block the main thread (to avoid stuff like texture uploads being problematic).
+                WaitWindowCreate(task);
 
-                        if (unbindContextAndBlock)
-                            GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
-                    }
-                }
-                else
-                {
-                    await task;
-                }
+                GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
 
-                var (reg, error) = await task;
+                var (reg, error) = task.Result;
 
                 if (reg == null)
                 {
@@ -85,18 +62,11 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.CreateWindowRenderTexture(reg);
                 _clyde.InitWindowBlitThread(reg);
 
-                unsafe
-                {
-                    GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
-                }
+                GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
 
                 return reg.Handle;
             }
-        }
 
-        // Yes, you read that right.
-        private sealed unsafe partial class GlfwWindowingImpl
-        {
             public bool TryInitMainWindow(Renderer renderer, [NotNullWhen(false)] out string? error)
             {
                 var width = _cfg.GetCVar(CVars.DisplayWidth);
@@ -167,6 +137,21 @@ namespace Robust.Client.Graphics.Clyde
                 WindowCreateParameters parameters,
                 Window* share)
             {
+                //
+                // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
+                // I originally wanted this to be async so we could avoid blocking the main thread
+                // while the OS takes its stupid 100~ms just to initialize a fucking GL context.
+                // This doesn't *work* because
+                // we have to release the GL context while the shared context is being created.
+                // (at least on WGL, I didn't test other platforms and I don't care to.)
+                // Not worth it to avoid a main thread blockage by allowing Clyde to temporarily release the GL context,
+                // because rendering would be locked up *anyways*.
+                //
+                // Basically what I'm saying is that everything about OpenGL is a fucking mistake
+                // and I should get on either Veldrid or Vulkan some time.
+                // Probably Veldrid tbh.
+                //
+
                 // Yes we ping-pong this TCS through the window thread and back, deal with it.
                 var tcs = new TaskCompletionSource<GlfwWindowCreateResult>();
                 SendCmd(new CmdWinCreate(
@@ -539,7 +524,6 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     GLFW.ShowWindow(window);
                 }
-
 
 
                 return window;

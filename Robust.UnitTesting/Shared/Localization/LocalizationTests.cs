@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NUnit.Framework;
@@ -21,7 +21,9 @@ namespace Robust.UnitTesting.Shared.Localization
         public void Setup()
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
-            IoCManager.Resolve<IComponentFactory>().RegisterClass<GrammarComponent>();
+            var componentFactory = IoCManager.Resolve<IComponentFactory>();
+            componentFactory.RegisterClass<GrammarComponent>();
+            componentFactory.GenerateNetIds();
 
             var res = IoCManager.Resolve<IResourceManagerInternal>();
             res.MountString("/Locale/en-US/a.ftl", FluentCode);

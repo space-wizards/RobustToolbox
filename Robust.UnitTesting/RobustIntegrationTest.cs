@@ -430,8 +430,12 @@ namespace Robust.UnitTesting
                 };
 
                 // Autoregister components if options are null or we're NOT starting from content.
-                if(!_options?.ContentStart ?? true)
-                    IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations();
+                if (!_options?.ContentStart ?? true)
+                {
+                    var componentFactory = IoCManager.Resolve<IComponentFactory>();
+                    componentFactory.DoAutoRegistrations();
+                    componentFactory.GenerateNetIds();
+                }
 
                 if (_options?.ContentAssemblies != null)
                 {
@@ -551,8 +555,12 @@ namespace Robust.UnitTesting
                 };
 
                 // Autoregister components if options are null or we're NOT starting from content.
-                if(!_options?.ContentStart ?? true)
-                    IoCManager.Resolve<IComponentFactory>().DoAutoRegistrations();
+                if (!_options?.ContentStart ?? true)
+                {
+                    var componentFactory = IoCManager.Resolve<IComponentFactory>();
+                    componentFactory.DoAutoRegistrations();
+                    componentFactory.GenerateNetIds();
+                }
 
                 if (_options?.ContentAssemblies != null)
                 {

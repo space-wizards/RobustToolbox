@@ -26,6 +26,11 @@
         string SpriteName { get; }
 
         /// <summary>
+        ///     Path to the folder where the tile sprite is contained.
+        /// </summary>
+        string Path { get; }
+
+        /// <summary>
         ///     Physics objects that are interacting on this tile are slowed down by this float.
         /// </summary>
         float Friction { get; }

@@ -44,7 +44,6 @@ namespace Robust.Shared.GameObjects
             Vector2 linearVelocity,
             float angularVelocity,
             BodyType bodyType)
-            : base(NetIDs.PHYSICS)
         {
             CanCollide = canCollide;
             SleepingAllowed = sleepingAllowed;

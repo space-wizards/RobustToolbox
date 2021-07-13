@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -25,6 +26,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
+    [NetworkedComponent()]
     internal class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -35,9 +37,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "MapGrid";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.MAP_GRID;
 
         /// <inheritdoc />
         public GridId GridIndex
@@ -145,7 +144,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
         public MapGridComponentState(GridId gridIndex)
-            : base(NetIDs.MAP_GRID)
         {
             GridIndex = gridIndex;
         }

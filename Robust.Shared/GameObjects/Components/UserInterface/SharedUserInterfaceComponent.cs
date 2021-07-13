@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
@@ -6,10 +7,10 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.GameObjects
 {
+    [NetworkedComponent()]
     public abstract class SharedUserInterfaceComponent : Component
     {
         public sealed override string Name => "UserInterface";
-        public sealed override uint? NetID => NetIDs.USERINTERFACE;
 
         [DataDefinition]
         public sealed class PrototypeData : ISerializationHooks

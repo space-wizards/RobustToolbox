@@ -272,19 +272,14 @@ namespace Robust.UnitTesting
             public event EventHandler<NetChannelArgs>? Connected;
             public event EventHandler<NetDisconnectedArgs>? Disconnect;
 
-            public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
-                NetMessageAccept accept = NetMessageAccept.Both) where T : NetMessage
+            public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null, NetMessageAccept accept = NetMessageAccept.Both) where T : NetMessage, new()
             {
+                var name = new T().MsgName;
                 var thisSide = IsServer ? NetMessageAccept.Server : NetMessageAccept.Client;
 
                 _registeredMessages.Add(typeof(T));
                 if (rxCallback != null && (accept & thisSide) != 0)
                     _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
-            }
-
-            public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null, NetMessageAccept accept = NetMessageAccept.Both) where T : NetMessage, new()
-            {
-                RegisterNetMessage(new T().MsgName, rxCallback, accept);
             }
 
             public T CreateNetMessage<T>() where T : NetMessage

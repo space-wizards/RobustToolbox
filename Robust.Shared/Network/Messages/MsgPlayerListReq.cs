@@ -1,7 +1,5 @@
 ﻿using Lidgren.Network;
 
-#nullable disable
-
 namespace Robust.Shared.Network.Messages
 {
     public class MsgPlayerListReq : NetMessage

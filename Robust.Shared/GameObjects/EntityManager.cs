@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
 
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [IoC.Dependency] private readonly IComponentFactory ComponentFactory = default!;
+        [IoC.Dependency] protected readonly IComponentFactory ComponentFactory = default!;
         [IoC.Dependency] private readonly IComponentManager _componentManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
@@ -31,6 +31,8 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public GameTick CurrentTick => _gameTiming.CurTick;
+
+        IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
         public IComponentManager ComponentManager => _componentManager;
@@ -479,7 +481,7 @@ namespace Robust.Shared.GameObjects
             var uid = netMsg.EntityUid;
             if (compMsg.Directed)
             {
-                if (_componentManager.TryGetComponent(uid, netMsg.NetId, out var component))
+                if (_componentManager.TryGetComponent(uid, (ushort) netMsg.NetId, out var component))
                     component.HandleNetworkMessage(compMsg, compChannel, session);
             }
             else

@@ -1,6 +1,7 @@
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.ContentPack;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -61,6 +62,9 @@ namespace Robust.UnitTesting.Shared.ContentPack
         [OneTimeSetUp]
         public void Setup()
         {
+            var componentFactory = IoCManager.Resolve<IComponentFactory>();
+            componentFactory.GenerateNetIds();
+
             var stream = new MemoryStream(Data);
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
             resourceManager.MountStreamAt(stream, new ResourcePath("/a/b/c.dat"));

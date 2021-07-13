@@ -581,9 +581,8 @@ namespace Robust.Shared.Physics
                  var aabb = aabb1.Union(aabb2);
                  proxy.AABB = aabb;
                  var displacement = aabb2.Center - aabb1.Center;
-                 var worldAABB = aabb.Translated(broadphaseOffset.Position);
-
                  broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
+                 var worldAABB = proxy.AABB.Translated(broadphaseOffset.Position);
                  fixtureAABB = proxyCount > 1 ? fixtureAABB.Union(worldAABB) : worldAABB;
             }
 
@@ -619,12 +618,10 @@ namespace Robust.Shared.Physics
             {
                 var proxy = fixture.Proxies[i];
                 var aabb = fixture.Shape.CalculateLocalBounds(angle1).Translated(relativePos1.Position);
-
                 proxy.AABB = aabb;
-                var worldAABB = aabb.Translated(broadphaseOffset.Position);
                 var displacement = Vector2.Zero;
-
                 broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
+                var worldAABB = proxy.AABB.Translated(broadphaseOffset.Position);
                 fixtureAABB = proxyCount > 1 ? fixtureAABB.Union(worldAABB) : worldAABB;
             }
 

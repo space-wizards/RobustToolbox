@@ -106,20 +106,22 @@ namespace Robust.Shared.Physics.Dynamics
             PhysicsComponent bodyB = fixtureB.Body;
 
             // Are the fixtures on the same body?
-            if (bodyA.Owner.Uid.Equals(bodyB.Owner.Uid)) return;
+            if (bodyA == bodyB) return;
 
             // Broadphase has already done the faster check for collision mask / layers
             // so no point duplicating
 
             // Does a contact already exist?
-            for (var ceB = bodyB.ContactEdges; ceB != null; ceB = ceB?.Next)
+            var edge = bodyB.ContactEdges;
+
+            while (edge != null)
             {
-                if (ceB.Other == bodyA)
+                if (edge.Other == bodyA)
                 {
-                    Fixture fA = ceB.Contact?.FixtureA!;
-                    Fixture fB = ceB.Contact?.FixtureB!;
-                    var iA = ceB.Contact!.ChildIndexA;
-                    var iB = ceB.Contact!.ChildIndexB;
+                    var fA = edge.Contact!.FixtureA;
+                    var fB = edge.Contact!.FixtureB;
+                    var iA = edge.Contact.ChildIndexA;
+                    var iB = edge.Contact.ChildIndexB;
 
                     if (fA == fixtureA && fB == fixtureB && iA == indexA && iB == indexB)
                     {
@@ -134,7 +136,7 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
 
-                ceB = ceB.Next;
+                edge = edge.Next;
             }
 
             // Does a joint override collision? Is at least one body dynamic?
@@ -336,17 +338,13 @@ namespace Robust.Shared.Physics.Dynamics
 
                 // TODO: IT MIGHT BE THE FATAABB STUFF FOR MOVEPROXY SO TRY THAT
                 var overlap = false;
-                throw new InvalidOperationException();
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace
                 if (broadphaseA != null && broadphaseB != null)
                 {
                     if (broadphaseA == broadphaseB)
                     {
-                        var aabbA = broadphaseA.Tree.GetFatAabb(proxyA.ProxyId);
-                        var aabbB = broadphaseA.Tree.GetFatAabb(proxyB.ProxyId);
-
-                        overlap = aabbA.Intersects(aabbB);
+                        overlap = proxyA.AABB.Intersects(proxyB.AABB);
                     }
                     else
                     {

@@ -105,9 +105,6 @@ namespace Robust.Shared.Physics.Dynamics
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
 
-            // Are the fixtures on the same body?
-            if (bodyA == bodyB) return;
-
             // Broadphase has already done the faster check for collision mask / layers
             // so no point duplicating
 

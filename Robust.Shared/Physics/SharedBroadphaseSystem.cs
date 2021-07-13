@@ -264,7 +264,9 @@ namespace Robust.Shared.Physics
                         foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
                         {
                             // Do fast checks first and slower checks after (in ContactManager).
-                            if (proxy == other || !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
+                            if (proxy == other ||
+                                proxy.Fixture.Body == other.Fixture.Body ||
+                                !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
 
                             // Don't add duplicates. Probably a faster way to do it but here seemed okay I guess.
                             if (_pairBuffer.TryGetValue(other, out var existing) &&

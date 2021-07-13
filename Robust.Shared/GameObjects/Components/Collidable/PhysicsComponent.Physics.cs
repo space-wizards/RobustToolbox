@@ -73,6 +73,23 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnoreCCD { get; set; }
 
+        [ViewVariables]
+        public int ContactCount
+        {
+            get
+            {
+                var count = 0;
+                var edge = ContactEdges;
+                while (edge != null)
+                {
+                    edge = edge.Next;
+                    count++;
+                }
+
+                return count;
+            }
+        }
+
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>

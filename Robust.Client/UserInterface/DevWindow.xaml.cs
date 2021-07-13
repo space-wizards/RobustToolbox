@@ -24,7 +24,7 @@ namespace Robust.Client.UserInterface
                 monitor = clyde.EnumerateMonitors().Single(m => m.Id == id);
             }
 
-            var window = await clyde.CreateWindow(new WindowCreateParameters
+            var window = clyde.CreateWindow(new WindowCreateParameters
             {
                 Maximized = true,
                 Title = "SS14 Debug Window",

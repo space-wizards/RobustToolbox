@@ -210,7 +210,7 @@ namespace Robust.Client.Graphics.Clyde
             yield break;
         }
 
-        public Task<IClydeWindow> CreateWindow(WindowCreateParameters parameters)
+        public IClydeWindow CreateWindow(WindowCreateParameters parameters)
         {
             var window = new DummyWindow(CreateRenderTarget((123, 123), default))
             {
@@ -218,7 +218,7 @@ namespace Robust.Client.Graphics.Clyde
             };
             _windows.Add(window);
 
-            return Task.FromResult<IClydeWindow>(window);
+            return window;
         }
 
         public ClydeHandle LoadShader(ParsedShader shader, string? name = null)

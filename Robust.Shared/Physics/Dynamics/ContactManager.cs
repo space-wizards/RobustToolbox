@@ -68,7 +68,6 @@ namespace Robust.Shared.Physics.Dynamics
         // TODO: CollideMultiCore
         private List<Contact> _startCollisions = new();
         private List<Contact> _endCollisions = new();
-        private Dictionary<PhysicsComponent, Transform> _transformCache = new(64);
 
         public ContactManager()
         {
@@ -216,8 +215,6 @@ namespace Robust.Shared.Physics.Dynamics
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
 
-            Logger.DebugS("physics", $"Destroyed contact between {bodyA.Owner} & {bodyB.Owner}");
-
             if (contact.IsTouching)
             {
                 //Report the separation to both participants:
@@ -345,9 +342,11 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                     else
                     {
-                        throw new InvalidOperationException();
-                        var proxyAWorldAABB = proxyA.AABB.Translated(fixtureA.Body.Broadphase!.Owner.Transform.WorldPosition);
-                        var proxyBWorldAABB = proxyB.AABB.Translated(fixtureB.Body.Broadphase!.Owner.Transform.WorldPosition);
+                        // These should really be destroyed before map changes.
+                        DebugTools.Assert(broadphaseA.Owner.Transform.MapID == broadphaseB.Owner.Transform.MapID);
+
+                        var proxyAWorldAABB = proxyA.AABB.Translated(broadphaseA.Owner.Transform.WorldPosition);
+                        var proxyBWorldAABB = proxyB.AABB.Translated(broadphaseB.Owner.Transform.WorldPosition);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }
@@ -361,43 +360,16 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
+                contact.Update(this, _startCollisions, _endCollisions);
                 contact = contact.Next;
             }
 
-            // Cache transforms as world-stuff is expensive to calc.
-            for (var contact = ContactList.Next; contact != ContactList;)
-            {
-                if (contact == null) break;
-
-                var bodyA = contact.FixtureA!.Body;
-                var bodyB = contact.FixtureB!.Body;
-
-                if (!_transformCache.ContainsKey(bodyA))
-                {
-                    _transformCache[bodyA] = bodyA.GetTransform();
-                }
-
-                if (!_transformCache.ContainsKey(bodyB))
-                {
-                    _transformCache[bodyB] = bodyB.GetTransform();
-                }
-
-                contact = contact.Next;
-            }
-
-            for (var contact = ContactList.Next; contact != ContactList;)
-            {
-                if (contact == null) break;
-
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
-
-                contact.Update(this, _startCollisions, _endCollisions, _transformCache[fixtureA.Body], _transformCache[fixtureB.Body]);
-
-                contact = contact.Next;
-            }
-
-            _transformCache.Clear();
+            // TODO: Look at making a manager to cache world positions + rotations during physics step
+            // Ideally: Set them here (once we know what contacts we need)
+            // Re-use in Physics island.
+            // Maybbbeee also have broadphase use it too?
+            // This will actually be decently big savings.
+            // Aether multi-threads the Update too so potentially look at making the manager thread-safe.
 
             foreach (var contact in _startCollisions)
             {

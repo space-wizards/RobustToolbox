@@ -837,6 +837,9 @@ namespace Robust.Shared.Physics
             return bodyA.GetWorldAABB().IntersectPercentage(bodyB.GetWorldAABB());
         }
 
+        // TODO: The below is slow and should just query the map's broadphase directly. The problem is that
+        // there's some ordering stuff going on where the broadphase has queued all of its updates but hasn't applied
+        // them yet so this query will fail on initialization which chains into a whole lot of issues.
         internal IEnumerable<BroadphaseComponent> GetBroadphases(MapId mapId, Box2 aabb)
         {
             // TODO Okay so problem: If we just do Encloses that's a lot faster BUT it also means we don't return the

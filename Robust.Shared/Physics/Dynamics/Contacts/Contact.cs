@@ -287,7 +287,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
         /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions, Transform bodyATransform, Transform bodyBTransform)
+        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -304,6 +304,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             var wasTouching = IsTouching;
 
             var sensor = !(FixtureA.Hard && FixtureB.Hard);
+
+            var bodyATransform = bodyA.GetTransform();
+            var bodyBTransform = bodyB.GetTransform();
 
             // Is this contact a sensor?
             if (sensor)

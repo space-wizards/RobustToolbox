@@ -523,9 +523,11 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
+            // TODO: Need entitysystem injection for this as otherwise you need to do some funny shit.
+            // Important coz this resolve is called a lot
+            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
-            foreach (var broady in broadphase.GetBroadphases(mapId, worldPos))
+            foreach (var broady in broadphaseSystem.GetBroadphases(mapId, worldPos))
             {
                 if (!broady.Owner.TryGetComponent(out MapGridComponent? mapGridComponent)) continue;
 
@@ -545,6 +547,8 @@ namespace Robust.Shared.Map
 
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
+            // TODO: Unfortunately can't use BroadphaseSystem here as it will explode. Need to suss it out with DI
+            // TryFindGridAt works as is and helps with grid traversals.
             return _grids.Values.Where(g => g.ParentMapId == mapId && g.WorldBounds.Intersects(worldArea));
         }
 
@@ -558,6 +562,8 @@ namespace Robust.Shared.Map
 
                 yield return mapGridComponent.GridIndex;
 
+                // TODO: Optimise this. Need to avoid returning invalid unless absolutely necessary but still this check
+                // be hella expensive. Also doesn't account for rotation so.
                 if (broady.Owner.GetComponent<PhysicsComponent>().GetWorldAABB().Encloses(worldArea))
                 {
                     yield break;

@@ -29,6 +29,12 @@ namespace Robust.UnitTesting.Shared.Map
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
 
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
+        }
+
         [Test]
         public void GetTileRefCoords()
         {

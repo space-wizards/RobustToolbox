@@ -80,6 +80,7 @@ entities:
         {
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             compFactory.RegisterClass<MapDeserializeTestComponent>();
+            compFactory.GenerateNetIds();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();

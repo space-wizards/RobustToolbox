@@ -1,10 +1,16 @@
-﻿namespace Robust.Client.UserInterface.Controls
+﻿using System;
+
+namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
     ///     Container that lays its children out vertically: from top to bottom.
     /// </summary>
+    [Obsolete("Use BoxContainer and set Orientation instead")]
     public class VBoxContainer : BoxContainer
     {
-        private protected override bool Vertical => true;
+        public VBoxContainer()
+        {
+            Orientation = LayoutOrientation.Vertical;
+        }
     }
 }

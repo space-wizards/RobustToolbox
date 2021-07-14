@@ -26,6 +26,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -44,6 +46,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(IPhysBody))]
+    [NetworkedComponent()]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
     {
         [DataField("status", readOnly: true)]
@@ -51,9 +54,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "Physics";
-
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.PHYSICS;
 
         /// <summary>
         ///     Has this body been added to an island previously in this tick.
@@ -82,11 +82,10 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var count = 0;
-
-                var contactEdge = ContactEdges;
-                while (contactEdge != null)
+                var edge = ContactEdges;
+                while (edge != null)
                 {
-                    contactEdge = contactEdge.Next;
+                    edge = edge.Next;
                     count++;
                 }
 

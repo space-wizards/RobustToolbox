@@ -63,6 +63,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
+            IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
+
             EntityManager = IoCManager.Resolve<IServerEntityManagerInternal>();
             MapManager = IoCManager.Resolve<IMapManager>();
             MapManager.CreateMap();

@@ -5,6 +5,7 @@ using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.UnitTesting.Shared.Map
 {
@@ -32,6 +33,7 @@ namespace Robust.UnitTesting.Shared.Map
                 // Should be nothing if grid empty
                 Assert.That(entManager.ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent gridBody));
                 Assert.That(gridBody.Fixtures.Count, Is.EqualTo(0));
+                Assert.That(gridBody.BodyType, Is.EqualTo(BodyType.Static));
 
                 // 1 fixture if we only ever update the 1 chunk
                 grid.SetTile(Vector2i.Zero, new Tile(1));
@@ -56,6 +58,9 @@ namespace Robust.UnitTesting.Shared.Map
                 grid.SetTile(new Vector2i(-1, -1), new Tile(1));
                 gridFixtures.Process();
                 Assert.That(gridBody.Fixtures.Count, Is.EqualTo(2));
+
+                gridBody.LinearVelocity = Vector2.One;
+                Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
             });
         }
     }

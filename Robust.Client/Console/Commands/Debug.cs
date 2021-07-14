@@ -77,7 +77,7 @@ namespace Robust.Client.Console.Commands
                     message.Append($"net ID: {registration.NetID}");
                 }
 
-                message.Append($", NSE: {registration.NetworkSynchronizeExistence}, references:");
+                message.Append($", References:");
 
                 shell.WriteLine(message.ToString());
 

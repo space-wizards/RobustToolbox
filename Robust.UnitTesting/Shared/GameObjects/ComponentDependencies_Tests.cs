@@ -164,6 +164,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             componentFactory.RegisterClass<TestFiveComponent>();
             componentFactory.RegisterClass<TestSixComponent>();
             componentFactory.RegisterClass<TestSevenComponent>();
+            componentFactory.GenerateNetIds();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();

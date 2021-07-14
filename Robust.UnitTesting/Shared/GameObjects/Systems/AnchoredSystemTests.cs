@@ -19,7 +19,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
         private class Subscriber : IEntityEventSubscriber { }
 
-
         private const string Prototypes = @"
 - type: entity
   name: anchoredEnt

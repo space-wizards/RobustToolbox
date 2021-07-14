@@ -1,12 +1,15 @@
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Physics;
+using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 
 namespace Robust.Client.GameObjects
 {
-    public class ClientComponentFactory : ComponentFactory
+    internal class ClientComponentFactory : ComponentFactory
     {
-        public ClientComponentFactory()
+        public ClientComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
+            : base(typeFactory, reflectionManager, conHost)
         {
             // Required for the engine to work
             RegisterIgnore("KeyBindingInput");

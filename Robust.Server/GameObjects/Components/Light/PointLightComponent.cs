@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
@@ -10,6 +11,7 @@ namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(IPointLightComponent))]
+    [NetworkedComponent()]
     public class PointLightComponent : Component, IPointLightComponent
     {
         [DataField("color")]
@@ -22,7 +24,6 @@ namespace Robust.Server.GameObjects
         private Vector2 _offset = Vector2.Zero;
 
         public override string Name => "PointLight";
-        public override uint? NetID => NetIDs.POINT_LIGHT;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color

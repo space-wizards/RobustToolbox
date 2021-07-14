@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -7,10 +8,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [NetworkedComponent()]
     public abstract class SharedSpriteComponent : Component
     {
         public override string Name => "Sprite";
-        public override uint? NetID => NetIDs.SPRITE;
 
         public abstract bool Visible { get; set; }
 
@@ -42,7 +43,6 @@ namespace Robust.Shared.GameObjects
                 string? baseRsiPath,
                 List<PrototypeLayerData> layers,
                 uint renderOrder)
-                : base(NetIDs.SPRITE)
             {
                 Visible = visible;
                 DrawDepth = drawDepth;

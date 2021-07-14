@@ -3,31 +3,33 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.Serialization;
+using JetBrains.Annotations;
+using Robust.Shared.Console;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    public class ComponentFactory : IComponentFactory
+    internal class ComponentFactory : IComponentFactory
     {
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
-        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        private readonly IDynamicTypeFactoryInternal _typeFactory;
+        private readonly IReflectionManager _reflectionManager;
 
         private class ComponentRegistration : IComponentRegistration
         {
             public string Name { get; }
-            public uint? NetID { get; }
-            public bool NetworkSynchronizeExistence { get; }
+            public ushort? NetID { get; set; }
             public Type Type { get; }
             internal readonly List<Type> References = new();
             IReadOnlyList<Type> IComponentRegistration.References => References;
 
-            public ComponentRegistration(string name, Type type, uint? netID, bool networkSynchronizeExistence)
+            public ComponentRegistration(string name, Type type)
             {
                 Name = name;
-                NetID = netID;
-                NetworkSynchronizeExistence = networkSynchronizeExistence;
+                NetID = null;
                 Type = type;
                 References.Add(type);
             }
@@ -52,7 +54,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Mapping of network ID to type.
         /// </summary>
-        private readonly Dictionary<uint, ComponentRegistration> netIDs = new();
+        private List<IComponentRegistration>? _networkedComponents;
 
         /// <summary>
         /// Mapping of concrete component types to their registration.
@@ -76,7 +78,33 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
 
+        /// <inheritdoc />
+        public IReadOnlyList<IComponentRegistration>? NetworkedComponents => _networkedComponents;
+
         private IEnumerable<ComponentRegistration> AllRegistrations => types.Values;
+
+        public ComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
+        {
+            _typeFactory = typeFactory;
+            _reflectionManager = reflectionManager;
+
+            conHost.RegisterCommand("dump_net_comps", "Prints the table of networked components.", "dump_net_comps", (shell, argStr, args) =>
+            {
+                if (_networkedComponents is null)
+                {
+                    shell.WriteError("Registration still writeable, network ids have not been generated.");
+                    return;
+                }
+
+                shell.WriteLine("Networked Component Registrations:");
+
+                for (int netId = 0; netId < _networkedComponents.Count; netId++)
+                {
+                    var registration = _networkedComponents[netId];
+                    shell.WriteLine($"  [{netId,4}] {registration.Name,-16} {registration.Type.Name}");
+                }
+            });
+        }
 
         [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
         public void Register<T>(bool overwrite = false) where T : IComponent, new()
@@ -86,6 +114,9 @@ namespace Robust.Shared.GameObjects
 
         private void Register(Type type, bool overwrite = false)
         {
+            if (_networkedComponents is not null)
+                throw new ComponentRegistrationLockException();
+
             if (types.ContainsKey(type))
             {
                 throw new InvalidOperationException($"Type is already registered: {type}");
@@ -97,8 +128,6 @@ namespace Robust.Shared.GameObjects
 
             var name = dummy.Name;
             var lowerCaseName = name.ToLowerInvariant();
-            var netID = dummy.NetID;
-            var netSyncExist = dummy.NetworkSynchronizeExistence;
 
             if (IgnoredComponentNames.Contains(name))
             {
@@ -128,24 +157,11 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            if (netID != null && netIDs.ContainsKey(netID.Value))
-            {
-                if (!overwrite)
-                {
-                    throw new InvalidOperationException($"{name} has duplicate network ID {netID}, previous: {netIDs[netID.Value]}");
-                }
-
-                RemoveComponent(netIDs[netID.Value].Name);
-            }
-
-            var registration = new ComponentRegistration(name, type, netID, netSyncExist);
+            var registration = new ComponentRegistration(name, type);
             names[name] = registration;
             _lowerCaseNames[lowerCaseName] = name;
             types[type] = registration;
-            if (netID != null)
-            {
-                netIDs[netID.Value] = registration;
-            }
+
             ComponentAdded?.Invoke(registration);
         }
 
@@ -157,6 +173,9 @@ namespace Robust.Shared.GameObjects
 
         private void RegisterReference(Type target, Type @interface)
         {
+            if (_networkedComponents is not null)
+                throw new ComponentRegistrationLockException();
+
             if (!types.ContainsKey(target))
             {
                 throw new InvalidOperationException($"Unregistered type: {target}");
@@ -194,15 +213,14 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveComponent(string name)
         {
+            if (_networkedComponents is not null)
+                throw new ComponentRegistrationLockException();
+
             var registration = names[name];
             
             names.Remove(registration.Name);
             _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);
-            if (registration.NetID != null)
-            {
-                netIDs.Remove(registration.NetID.Value);
-            }
         }
 
         public ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false)
@@ -253,7 +271,7 @@ namespace Robust.Shared.GameObjects
             return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(componentName).Type);
         }
 
-        public IComponent GetComponent(uint netId)
+        public IComponent GetComponent(ushort netId)
         {
             return _typeFactory.CreateInstanceUnchecked<IComponent>(GetRegistration(netId).Type);
         }
@@ -275,11 +293,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IComponentRegistration GetRegistration(uint netID)
+        public IComponentRegistration GetRegistration(ushort netID)
         {
+            if (_networkedComponents is null)
+                throw new ComponentRegistrationLockException();
+
             try
             {
-                return netIDs[netID];
+                return _networkedComponents[netID];
             }
             catch (KeyNotFoundException)
             {
@@ -343,9 +364,9 @@ namespace Robust.Shared.GameObjects
             return TryGetRegistration(typeof(T), out registration);
         }
 
-        public bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration)
+        public bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out IComponentRegistration? registration)
         {
-            if (netIDs.TryGetValue(netID, out var tempRegistration))
+            if (_networkedComponents is not null && _networkedComponents.TryGetValue(netID, out var tempRegistration))
             {
                 registration = tempRegistration;
                 return true;
@@ -406,15 +427,36 @@ namespace Robust.Shared.GameObjects
             return AllRegistrations.SelectMany(r => r.References).Distinct();
         }
 
-        public IEnumerable<uint> GetAllNetIds()
+        /// <inheritdoc />
+        public void GenerateNetIds()
         {
-            foreach (var registration in AllRegistrations)
+            // assumptions:
+            // component names are guaranteed to be unique
+            // component names are 1:1 with component concrete types
+
+            // a subset of component names are networked
+            var networkedRegs = new List<IComponentRegistration>(names.Count);
+
+            foreach (var kvRegistration in names)
             {
-                if (registration.NetID != null)
+                var registration = kvRegistration.Value;
+                if (Attribute.GetCustomAttribute(registration.Type, typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute)
                 {
-                    yield return registration.NetID.Value;
+                    networkedRegs.Add(registration);
                 }
             }
+
+            // The sorting implementation is unstable, but there are no duplicate names, so that isn't a problem.
+            // Ordinal comparison is used so that the resulting order is always identical on every computer.
+            networkedRegs.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
+
+            for (ushort i = 0; i < networkedRegs.Count; i++)
+            {
+                var registration = (ComponentRegistration) networkedRegs[i];
+                registration.NetID = i;
+            }
+
+            _networkedComponents = networkedRegs;
         }
     }
 
@@ -434,4 +476,6 @@ namespace Robust.Shared.GameObjects
           SerializationInfo info,
           StreamingContext context) : base(info, context) { }
     }
+
+    public class ComponentRegistrationLockException : Exception { }
 }

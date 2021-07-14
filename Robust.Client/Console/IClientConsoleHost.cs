@@ -11,11 +11,6 @@ namespace Robust.Client.Console
         /// </summary>
         void Initialize();
 
-        /// <summary>
-        /// Resets the console to a post-initialized state.
-        /// </summary>
-        void Reset();
-
         event EventHandler<AddStringArgs> AddString;
         event EventHandler<AddFormattedMessageArgs> AddFormatted;
 

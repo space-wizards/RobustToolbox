@@ -902,10 +902,11 @@ namespace Robust.Shared.Network
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+        public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
             NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage
+            where T : NetMessage, new()
         {
+            var name = new T().MsgName;
             var id = _strings.AddString(name);
 
             _messages.Add(name, typeof(T));
@@ -926,14 +927,6 @@ namespace Robust.Shared.Network
             // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
             // so it no thread safety crap.
             CacheBlankFunction(typeof(T));
-        }
-
-        /// <inheritdoc />
-        public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
-            NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage, new()
-        {
-            RegisterNetMessage(new T().MsgName, rxCallback, accept);
         }
 
         /// <inheritdoc />

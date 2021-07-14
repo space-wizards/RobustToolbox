@@ -272,7 +272,7 @@ namespace Robust.Shared.Physics.Dynamics
                 PhysicsComponent bodyA = fixtureA.Body;
                 PhysicsComponent bodyB = fixtureB.Body;
 
-                //Do no try to collide disabled bodies
+                // Do not try to collide disabled bodies
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
                     contact = contact.Next;

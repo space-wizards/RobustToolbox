@@ -268,7 +268,9 @@ namespace Robust.Shared.Physics
                                 proxy.Fixture.Body == other.Fixture.Body ||
                                 !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
 
-                            // Don't add duplicates. Probably a faster way to do it but here seemed okay I guess.
+                            // Don't add duplicates.
+                            // Look it disgusts me but we can't do it Box2D's way because we're getting pairs
+                            // with different broadphases so can't use Proxy sorting to skip duplicates.
                             if (_pairBuffer.TryGetValue(other, out var existing) &&
                                 existing.Contains(proxy))
                             {
@@ -401,7 +403,6 @@ namespace Robust.Shared.Physics
         public void Refilter(Fixture fixture)
         {
             // TODO: Call this method whenever collisionmask / collisionlayer changes
-
             if (fixture.Body == null) return;
 
             var body = fixture.Body;
@@ -416,7 +417,7 @@ namespace Robust.Shared.Physics
 
                 if (fixtureA == fixture || fixtureB == fixture)
                 {
-                    // TODO: Flag for filtering
+                    contact.FilterFlag = true;
                 }
 
                 edge = edge.Next;

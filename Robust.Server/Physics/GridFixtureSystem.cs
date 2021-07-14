@@ -115,8 +115,38 @@ namespace Robust.Server.Physics
                 true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
                 Body = physicsComponent};
 
+            // Check if we have an existing fixture on MapGrid
+            var existingFixture = physicsComponent.GetFixture(newFixture.ID);
+            var same = true;
+
+            // Some fucky shit but we gotta handle map deserialization.
+            if (existingFixture is {Shape: PolygonShape poly})
+            {
+                var newPoly = (PolygonShape) newFixture.Shape;
+
+                if (newPoly.Vertices.Count == poly.Vertices.Count)
+                {
+                    for (var i = 0; i < poly.Vertices.Count; i++)
+                    {
+                        if (!poly.Vertices[i].EqualsApprox(newPoly.Vertices[0]))
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    same = false;
+                }
+            }
+            else
+            {
+                same = false;
+            }
+
             // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
-            if (oldFixture?.Equals(newFixture) == true) return;
+            if (!same) return;
 
             if (oldFixture != null)
                 _broadphase.DestroyFixture(physicsComponent, oldFixture);

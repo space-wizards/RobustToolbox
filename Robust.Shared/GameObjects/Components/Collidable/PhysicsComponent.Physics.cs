@@ -1157,6 +1157,9 @@ namespace Robust.Shared.GameObjects
                 _awake = false;
             }
 
+            // TODO: Ordering fuckery need a new PR to fix some of this stuff
+            PhysicsMap = EntitySystem.Get<SharedPhysicsSystem>().Maps[Owner.Transform.MapID];
+
             Dirty();
             // Yeah yeah TODO Combine these
             // Implicitly assume that stuff doesn't cover if a non-collidable is initialized.

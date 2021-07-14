@@ -146,7 +146,7 @@ namespace Robust.Server.Physics
             }
 
             // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
-            if (!same) return;
+            if (same) return;
 
             if (oldFixture != null)
                 _broadphase.DestroyFixture(physicsComponent, oldFixture);

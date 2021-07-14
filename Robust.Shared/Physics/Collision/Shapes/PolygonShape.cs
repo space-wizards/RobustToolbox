@@ -75,6 +75,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
                     _normals.Add(temp.Normalized);
                 }
 
+                Centroid = ComputeCentroid(_vertices);
+
                 // Compute the polygon mass data
                 // TODO: Update fixture. Maybe use events for it? Who tf knows.
                 // If we get grid polys then we'll actually need runtime updating of bbs.
@@ -82,6 +84,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private List<Vector2> _vertices = new();
+
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadOnly)]
         public List<Vector2> Normals => _normals;
@@ -106,6 +110,44 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private float _radius;
+
+        public static Vector2 ComputeCentroid(List<Vector2> vertices)
+        {
+            DebugTools.Assert(vertices.Count >= 3);
+
+            var c = new Vector2(0.0f, 0.0f);
+            float area = 0.0f;
+
+            // Get a reference point for forming triangles.
+            // Use the first vertex to reduce round-off errors.
+            var s = vertices[0];
+
+            const float inv3 = 1.0f / 3.0f;
+
+            for (var i = 0; i < vertices.Count; ++i)
+            {
+                // Triangle vertices.
+                var p1 = vertices[0] - s;
+                var p2 = vertices[i] - s;
+                var p3 = i + 1 < vertices.Count ? vertices[i+1] - s : vertices[0] - s;
+
+                var e1 = p2 - p1;
+                var e2 = p3 - p1;
+
+                float D = Vector2.Cross(e1, e2);
+
+                float triangleArea = 0.5f * D;
+                area += triangleArea;
+
+                // Area weighted centroid
+                c += (p1 + p2 + p3) * triangleArea * inv3;
+            }
+
+            // Centroid
+            DebugTools.Assert(area > float.Epsilon);
+            c = c * (1.0f / area) + s;
+            return c;
+        }
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
@@ -154,6 +196,15 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 if (!vert.EqualsApprox(poly.Vertices[i])) return false;
             }
 
+            return true;
+        }
+
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        {
+            var aabb = CalculateLocalBounds(worldRot).Translated(worldPos);
+            if (!worldAABB.Intersects(aabb)) return false;
+
+            // TODO
             return true;
         }
 

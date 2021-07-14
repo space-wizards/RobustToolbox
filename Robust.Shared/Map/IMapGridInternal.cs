@@ -24,7 +24,7 @@ namespace Robust.Shared.Map
         ///     This wouldn't even be separate if not for the whole "ability to suppress automatic collision regeneration" thing.
         ///     As it is, YamlGridSerializer performs manual collision regeneration and that wasn't properly getting propagated to the grid. Thus, this needs to exist.
         /// </summary>
-        void NotifyChunkCollisionRegenerated();
+        void NotifyChunkCollisionRegenerated(MapChunk chunk);
 
         /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,

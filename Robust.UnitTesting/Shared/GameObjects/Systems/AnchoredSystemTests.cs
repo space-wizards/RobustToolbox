@@ -170,7 +170,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            // physics is ensured when grids are created, but we don't need it
+            // Don't need the default grid for this.
             entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
 
             // Act

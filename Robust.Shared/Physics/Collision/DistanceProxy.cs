@@ -114,17 +114,6 @@ namespace Robust.Shared.Physics.Collision
 
                     Radius = rectangle.Radius;
                     break;
-                case ShapeType.Grid:
-                    var grid = (PhysShapeGrid) shape;
-                    var gridBounds = grid.LocalBounds;
-
-                    Vertices.Add(gridBounds.BottomRight);
-                    Vertices.Add(gridBounds.TopRight);
-                    Vertices.Add(gridBounds.TopLeft);
-                    Vertices.Add(gridBounds.BottomLeft);
-
-                    Radius = grid.Radius;
-                    break;
                 default:
                     throw new InvalidOperationException($"Invalid shapetype specified {shape.ShapeType}");
             }

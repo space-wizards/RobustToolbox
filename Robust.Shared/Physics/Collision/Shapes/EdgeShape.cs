@@ -33,6 +33,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
     [DataDefinition]
     public sealed class EdgeShape : IPhysShape
     {
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+
         /// <summary>
         ///     Edge start vertex
         /// </summary>
@@ -117,6 +119,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
                     Vertex1 == edge.Vertex1 &&
                     Vertex2 == edge.Vertex2 &&
                     Vertex3 == edge.Vertex3);
+        }
+
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        {
+            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
+            return bounds.Intersects(worldAABB);
         }
 
         public Box2 CalculateLocalBounds(Angle rotation)

@@ -1,14 +1,18 @@
 using System.Linq;
+using System.Threading.Tasks;
+using Castle.Core.Resource;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Physics;
+using Robust.Server.Player;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
@@ -19,7 +23,7 @@ using Robust.Shared.Utility;
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public class MapLoaderTest : RobustUnitTest
+    public class MapLoaderTest : RobustIntegrationTest
     {
         private const string MapData = @"
 meta:
@@ -60,48 +64,32 @@ entities:
 
 ";
 
-        protected override void OverrideIoC()
+        [Test]
+        public async Task TestDataLoadPriority()
         {
-            base.OverrideIoC();
-            //var mockFormat = new Mock<ICustomFormatManager>();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+            var sim = StartServer();
 
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-            //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
-        }
+            await sim.WaitIdleAsync();
 
-
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            var compFactory = IoCManager.Resolve<IComponentFactory>();
+            var compFactory = sim.ResolveDependency<IComponentFactory>();
             compFactory.RegisterClass<MapDeserializeTestComponent>();
-            compFactory.GenerateNetIds();
-            IoCManager.Resolve<ISerializationManager>().Initialize();
 
-            var resourceManager = IoCManager.Resolve<IResourceManagerInternal>();
+            sim.ResolveDependency<IPrototypeManager>().LoadString(Prototype);
+
+            var resourceManager = sim.ResolveDependency<IResourceManagerInternal>();
             resourceManager.Initialize(null);
             resourceManager.MountString("/TestMap.yml", MapData);
             resourceManager.MountString("/Prototypes/TestMapEntity.yml", Prototype);
 
-            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
-        }
+            sim.ResolveDependency<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
 
-        [Test]
-        public void TestDataLoadPriority()
-        {
             // TODO: Fix after serv3
-            var map = IoCManager.Resolve<IMapManager>();
+            var entMan = sim.ResolveDependency<IEntityManager>();
+            var mapMan = sim.ResolveDependency<IMapManager>();
 
-            var entMan = IoCManager.Resolve<IEntityManager>();
-
-            var mapId = map.CreateMap();
-            var mapLoad = IoCManager.Resolve<IMapLoader>();
-            var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
+            var mapid = mapMan.CreateMap();
+            var mapLoad = sim.ResolveDependency<IMapLoader>();
+            var grid = mapLoad.LoadBlueprint(mapid, "/TestMap.yml");
 
             Assert.That(grid, NUnit.Framework.Is.Not.Null);
 

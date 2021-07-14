@@ -523,15 +523,19 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            // TODO: Need entitysystem injection for this as otherwise you need to do some funny shit.
-            // Important coz this resolve is called a lot
-            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-
-            foreach (var broady in broadphaseSystem.GetBroadphases(mapId, worldPos))
+            // TODO: this won't actually "work" but tests are fucking me hard
+            // We probably need to move these methods over to SharedBroadphaseSystem as they need to go through
+            // physics to find grids intersecting a point anyway but the level of refactoring required for that
+            // will kill me.
+            foreach (var mapGrid in _grids.Values)
             {
-                if (!broady.Owner.TryGetComponent(out MapGridComponent? mapGridComponent)) continue;
+                if (mapGrid.ParentMapId != mapId)
+                    continue;
 
-                grid = mapGridComponent.Grid;
+                if (!mapGrid.WorldBounds.Contains(worldPos))
+                    continue;
+
+                grid = mapGrid;
                 return true;
             }
 

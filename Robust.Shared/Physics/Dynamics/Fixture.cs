@@ -55,7 +55,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </remarks>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("id", true)]
+        [DataField("id")]
         public string ID { get; set; } = string.Empty;
 
         [field: NonSerialized]

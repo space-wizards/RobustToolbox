@@ -97,6 +97,14 @@ namespace Robust.Server.Physics
             var origin = chunk.Indices * chunk.ChunkSize;
             bounds = bounds.Translated(origin);
 
+            // So we store a reference to the fixture on the chunk because it's easier to cross-reference it.
+            // This is because when we get multiple fixtures per chunk there's no easy way to tell which the old one
+            // corresponds with.
+            // We also ideally want to avoid re-creating the fixture every time a tile changes and pushing that data
+            // to the client hence we diff it.
+
+            // Additionally, we need to handle map deserialization where content may have stored its own data
+            // on the grid (e.g. mass) which we want to preserve.
             var oldFixture = chunk.Fixture;
 
             var newFixture = new Fixture(
@@ -112,7 +120,7 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
+                true) {ID = $"grid_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
                 Body = physicsComponent};
 
             // Check if we have an existing fixture on MapGrid
@@ -145,8 +153,19 @@ namespace Robust.Server.Physics
                 same = false;
             }
 
-            // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
-            if (same) return;
+            // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao idiot
+            if (same)
+            {
+                // If we're deserializing map this can occur so just update it.
+                if (oldFixture == null && existingFixture != null)
+                {
+                    chunk.Fixture = existingFixture;
+                    existingFixture.CollisionMask = MapGridHelpers.CollisionGroup;
+                    existingFixture.CollisionLayer = MapGridHelpers.CollisionGroup;
+                }
+
+                return;
+            }
 
             if (oldFixture != null)
                 _broadphase.DestroyFixture(physicsComponent, oldFixture);

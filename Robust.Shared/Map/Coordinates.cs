@@ -365,11 +365,10 @@ namespace Robust.Shared.Map
         /// <summary>
         ///    Creates a set of EntityCoordinates given some MapCoordinates.
         /// </summary>
-        /// <param name="entityManager"></param>
         /// <param name="mapManager"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        public static EntityCoordinates FromMap(IEntityManager entityManager, IMapManager mapManager, MapCoordinates coordinates)
+        public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             var mapId = coordinates.MapId;
             var mapEntity = mapManager.GetMapEntity(mapId);

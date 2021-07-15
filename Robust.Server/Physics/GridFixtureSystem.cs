@@ -128,7 +128,7 @@ namespace Robust.Server.Physics
                 {
                     for (var i = 0; i < poly.Vertices.Count; i++)
                     {
-                        if (!poly.Vertices[i].EqualsApprox(newPoly.Vertices[0]))
+                        if (!poly.Vertices[i].EqualsApprox(newPoly.Vertices[i]))
                         {
                             same = false;
                             break;

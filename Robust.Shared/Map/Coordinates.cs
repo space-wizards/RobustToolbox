@@ -368,6 +368,20 @@ namespace Robust.Shared.Map
         /// <param name="mapManager"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
+        [Obsolete("Use FromMap(IMapManager mapManager, MapCoordinates coordinates) instead.")]
+        public static EntityCoordinates FromMap(IEntityManager entityManager, IMapManager mapManager, MapCoordinates coordinates)
+        {
+            var mapId = coordinates.MapId;
+            var mapEntity = mapManager.GetMapEntity(mapId);
+
+            return new EntityCoordinates(mapEntity.Uid, coordinates.Position);
+        }
+
+        /// <summary>
+        ///    Creates a set of EntityCoordinates given some MapCoordinates.
+        /// </summary>
+        /// <param name="mapManager"></param>
+        /// <param name="coordinates"></param>
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             var mapId = coordinates.MapId;

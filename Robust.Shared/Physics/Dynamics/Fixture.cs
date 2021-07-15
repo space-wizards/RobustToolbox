@@ -55,13 +55,11 @@ namespace Robust.Shared.Physics.Dynamics
         /// </remarks>
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [DataField("id", true)]
+        [DataField("id")]
         public string ID { get; set; } = string.Empty;
 
-        public IReadOnlyDictionary<GridId, FixtureProxy[]> Proxies => _proxies;
-
-        [NonSerialized]
-        private readonly Dictionary<GridId, FixtureProxy[]> _proxies = new();
+        [field: NonSerialized]
+        public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();
 
         [ViewVariables]
         [NonSerialized]
@@ -130,8 +128,8 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_hard == value)
                     return;
 
-                Body.RegenerateContacts();
                 _hard = value;
+                Body.Awake = true;
                 Body.FixtureChanged(this);
             }
         }
@@ -142,10 +140,6 @@ namespace Robust.Shared.Physics.Dynamics
         // MassData
         // The reason these aren't a struct is because Serv3 + doing MassData in yaml everywhere would suck.
         // Plus now it's WAYYY easier to share shapes even among different prototypes.
-        public Vector2 Centroid => _centroid;
-
-        private Vector2 _centroid = Vector2.Zero;
-
         public float Inertia => _inertia;
 
         private float _inertia;
@@ -161,8 +155,11 @@ namespace Robust.Shared.Physics.Dynamics
             set
             {
                 if (MathHelper.CloseTo(value, _mass)) return;
-                _mass = value;
+
+                _mass = MathF.Max(0f, value);
                 Body.FixtureChanged(this);
+                Body.ResetMassData();
+                ComputeProperties();
             }
         }
 
@@ -181,9 +178,9 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionLayer == value)
                     return;
 
-                Body.RegenerateContacts();
                 _collisionLayer = value;
                 Body.FixtureChanged(this);
+                EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
 
@@ -202,14 +199,36 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionMask == value)
                     return;
 
-                Body.RegenerateContacts();
                 _collisionMask = value;
                 Body.FixtureChanged(this);
+                EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
 
         [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>))]
         private int _collisionMask;
+
+        public float Area
+        {
+            get
+            {
+                switch (Shape)
+                {
+                    case PhysShapeAabb aabb:
+                        return aabb.LocalBounds.Width * aabb.LocalBounds.Height;
+                    case PhysShapeRect rect:
+                        return rect.Rectangle.Width * rect.Rectangle.Height;
+                    case PhysShapeCircle circle:
+                        return MathF.PI * circle.Radius * circle.Radius;
+                    case PolygonShape poly:
+                        ComputePoly(poly, out var area);
+                        return area;
+                    default:
+                        return 0.0f;
+                }
+            }
+
+        }
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -261,158 +280,6 @@ namespace Robust.Shared.Physics.Dynamics
             fixture._collisionMask = _collisionMask;
         }
 
-        internal void SetProxies(GridId gridId, FixtureProxy[] proxies)
-        {
-            DebugTools.Assert(!_proxies.ContainsKey(gridId));
-            _proxies[gridId] = proxies;
-        }
-
-        /// <summary>
-        ///     Clear this fixture's proxies from the broadphase.
-        ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
-        /// </summary>
-        /// <remarks>
-        ///     Broadphase system will also need cleaning up for the cached broadphases for the body.
-        /// </remarks>
-        /// <param name="mapId"></param>
-        /// <param name="broadPhaseSystem"></param>
-        public void ClearProxies(MapId? mapId = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
-        {
-            mapId ??= Body.Owner.Transform.MapID;
-            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
-
-            foreach (var (gridId, proxies) in _proxies)
-            {
-                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId.Value, gridId);
-                if (broadPhase == null) continue;
-
-                foreach (var proxy in proxies)
-                {
-                    broadPhase.RemoveProxy(proxy.ProxyId);
-                }
-            }
-
-            _proxies.Clear();
-        }
-
-        /// <summary>
-        ///     Clears the particular grid's proxies for this fixture.
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="broadPhaseSystem"></param>
-        /// <param name="gridId"></param>
-        public void ClearProxies(MapId mapId, SharedBroadPhaseSystem broadPhaseSystem, GridId gridId)
-        {
-            if (!Proxies.TryGetValue(gridId, out var proxies)) return;
-
-            var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
-
-            if (broadPhase != null)
-            {
-                foreach (var proxy in proxies)
-                {
-                    broadPhase.RemoveProxy(proxy.ProxyId);
-                }
-            }
-
-            _proxies.Remove(gridId);
-        }
-
-        /// <summary>
-        ///     Creates FixtureProxies on the relevant broadphases.
-        ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
-        /// </summary>
-        /// <remarks>
-        ///     You will need to manually add this to the body's broadphases.
-        /// </remarks>
-        public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
-        {
-            DebugTools.Assert(_proxies.Count == 0);
-            ProxyCount = Shape.ChildCount;
-
-            var mapId = Body.Owner.Transform.MapID;
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
-
-            var worldPosition = Body.Owner.Transform.WorldPosition;
-            var worldRotation = Body.Owner.Transform.WorldRotation;
-            var worldAABB = Body.GetWorldAABB(worldPosition, worldRotation);
-
-            foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
-            {
-                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
-                if (broadPhase == null) continue;
-
-                Vector2 offset = worldPosition;
-                double gridRotation = worldRotation;
-
-                if (gridId != GridId.Invalid)
-                {
-                    var grid = mapManager.GetGrid(gridId);
-                    offset -= grid.WorldPosition;
-                    // TODO: Should probably have a helper for this
-                    gridRotation = worldRotation - Body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
-                }
-
-                var proxies = new FixtureProxy[Shape.ChildCount];
-                _proxies[gridId] = proxies;
-
-                for (var i = 0; i < ProxyCount; i++)
-                {
-                    // TODO: Will need to pass in childIndex to this as well
-                    var aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
-
-                    var proxy = new FixtureProxy(aabb, this, i);
-
-                    proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-                    proxies[i] = proxy;
-                    DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Creates FixtureProxies on the relevant broadphase.
-        ///     If doing this for every fixture at once consider using the method on PhysicsComponent instead.
-        /// </summary>
-        public void CreateProxies(IBroadPhase broadPhase, IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
-        {
-            // TODO: Combine with the above method to be less DRY.
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
-
-            var gridId = broadPhaseSystem.GetGridId(broadPhase);
-
-            Vector2 offset = Body.Owner.Transform.WorldPosition;
-            var worldRotation = Body.Owner.Transform.WorldRotation;
-            double gridRotation = worldRotation;
-
-            if (gridId != GridId.Invalid)
-            {
-                var grid = mapManager.GetGrid(gridId);
-                offset -= grid.WorldPosition;
-                // TODO: Should probably have a helper for this
-                gridRotation = worldRotation - Body.Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
-            }
-
-            var proxies = new FixtureProxy[Shape.ChildCount];
-            _proxies[gridId] = proxies;
-
-            for (var i = 0; i < ProxyCount; i++)
-            {
-                // TODO: Will need to pass in childIndex to this as well
-                var aabb = Shape.CalculateLocalBounds(gridRotation).Translated(offset);
-
-                var proxy = new FixtureProxy(aabb, this, i);
-
-                proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-                proxies[i] = proxy;
-                DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
-            }
-
-            broadPhaseSystem.AddBroadPhase(Body, broadPhase);
-        }
-
         // Moved from Shape because no MassData on Shape anymore (due to serv3 and physics ease-of-use etc etc.)
         internal void ComputeProperties()
         {
@@ -431,7 +298,7 @@ namespace Robust.Shared.Physics.Dynamics
                     ComputeRect(rect);
                     break;
                 case PolygonShape poly:
-                    ComputePoly(poly);
+                    ComputePoly(poly, out _);
                     break;
                 default:
                     throw new NotImplementedException();
@@ -452,7 +319,7 @@ namespace Robust.Shared.Physics.Dynamics
             var density = area > 0.0f ? Mass / area : 0.0f;
 
             // Center of mass
-            _centroid = Vector2.Zero;
+            aabb.Centroid = Vector2.Zero;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;
@@ -471,13 +338,13 @@ namespace Robust.Shared.Physics.Dynamics
             var density = area > 0.0f ? Mass / area : 0.0f;
 
             // Center of mass
-            _centroid = Vector2.Zero;
+            rect.Centroid = Vector2.Zero;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;
         }
 
-        private void ComputePoly(PolygonShape poly)
+        private void ComputePoly(PolygonShape poly, out float area)
         {
             // Polygon mass, centroid, and inertia.
             // Let rho be the polygon density in mass per unit area.
@@ -507,7 +374,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             //FPE optimization: Consolidated the calculate centroid and mass code to a single method.
             Vector2 center = Vector2.Zero;
-            var area = 0.0f;
+            area = 0.0f;
             float I = 0.0f;
 
             // pRef is the reference point for forming triangles.
@@ -555,27 +422,26 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Center of mass
             center *= 1.0f / area;
-            _centroid = center + s;
+            poly.Centroid = center + s;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;
 
             // Shift to center of mass then to original body origin.
-            _inertia += Mass * (Vector2.Dot(_centroid, _centroid) - Vector2.Dot(center, center));
+            _inertia += Mass * (Vector2.Dot(poly.Centroid, poly.Centroid) - Vector2.Dot(center, center));
         }
 
         private void ComputeCircle(PhysShapeCircle circle)
         {
             var radSquared = MathF.Pow(circle.Radius, 2);
-            _centroid = circle.Position;
 
             // inertia about the local origin
-            _inertia = Mass * (0.5f * radSquared + Vector2.Dot(_centroid, _centroid));
+            _inertia = Mass * (0.5f * radSquared + Vector2.Dot(circle.Position, circle.Position));
         }
 
         private void ComputeEdge(EdgeShape edge)
         {
-            _centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
+            edge.Centroid = (edge.Vertex1 + edge.Vertex2) * 0.5f;
         }
         #endregion
 

@@ -186,7 +186,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Gets a new contact to use, using the contact pool if relevant.
         /// </summary>
-        internal static Contact Create(ContactManager contactManager, GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact Create(ContactManager contactManager, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
             var type2 = fixtureB.Shape.ShapeType;
@@ -197,7 +197,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // Pull out a spare contact object
             contactManager.ContactPoolList.TryPop(out var contact);
 
-            // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
+            // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
             if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
             {
                 if (contact == null)
@@ -213,7 +213,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     contact.Reset(fixtureB, indexB, fixtureA, indexA);
             }
 
-            contact.GridId = gridId;
             contact._type = _registers[(int)type1, (int)type2];
 
             return contact;
@@ -296,43 +295,46 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             if (FixtureA == null || FixtureB == null)
                 return;
 
-            Manifold oldManifold = Manifold;
+            var oldManifold = Manifold;
 
             // Re-enable this contact.
             Enabled = true;
 
             bool touching;
-            bool wasTouching = IsTouching;
+            var wasTouching = IsTouching;
 
-            bool sensor = !(FixtureA.Hard && FixtureB.Hard);
+            var sensor = !(FixtureA.Hard && FixtureB.Hard);
+
+            var bodyATransform = bodyA.GetTransform();
+            var bodyBTransform = bodyB.GetTransform();
 
             // Is this contact a sensor?
             if (sensor)
             {
                 IPhysShape shapeA = FixtureA.Shape;
                 IPhysShape shapeB = FixtureB.Shape;
-                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyA.GetTransform(), bodyB.GetTransform());
+                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.
                 Manifold.PointCount = 0;
             }
             else
             {
-                Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
+                Evaluate(ref Manifold, bodyATransform, bodyBTransform);
                 touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the
                 // stored impulses to warm start the solver.
                 for (int i = 0; i < Manifold.PointCount; ++i)
                 {
-                    ManifoldPoint mp2 = Manifold.Points[i];
+                    var mp2 = Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
-                    ContactID id2 = mp2.Id;
+                    var id2 = mp2.Id;
 
-                    for (int j = 0; j < oldManifold.PointCount; ++j)
+                    for (var j = 0; j < oldManifold.PointCount; ++j)
                     {
-                        ManifoldPoint mp1 = oldManifold.Points[j];
+                        var mp1 = oldManifold.Points[j];
 
                         if (mp1.Id.Key == id2.Key)
                         {

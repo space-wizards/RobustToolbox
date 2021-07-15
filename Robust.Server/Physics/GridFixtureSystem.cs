@@ -20,7 +20,7 @@ namespace Robust.Server.Physics
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        private SharedBroadPhaseSystem _broadphase = default!;
+        private SharedBroadphaseSystem _broadphase = default!;
 
         // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
         // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
@@ -36,7 +36,7 @@ namespace Robust.Server.Physics
             base.Initialize();
             UpdatesBefore.Add(typeof(PhysicsSystem));
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
-            _broadphase = Get<SharedBroadPhaseSystem>();
+            _broadphase = Get<SharedBroadphaseSystem>();
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.GridFixtureUpdateRate, value => _cooldown = value, true);
@@ -97,6 +97,14 @@ namespace Robust.Server.Physics
             var origin = chunk.Indices * chunk.ChunkSize;
             bounds = bounds.Translated(origin);
 
+            // So we store a reference to the fixture on the chunk because it's easier to cross-reference it.
+            // This is because when we get multiple fixtures per chunk there's no easy way to tell which the old one
+            // corresponds with.
+            // We also ideally want to avoid re-creating the fixture every time a tile changes and pushing that data
+            // to the client hence we diff it.
+
+            // Additionally, we need to handle map deserialization where content may have stored its own data
+            // on the grid (e.g. mass) which we want to preserve.
             var oldFixture = chunk.Fixture;
 
             var newFixture = new Fixture(
@@ -112,16 +120,57 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = $"grid-{grid.Index}_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
+                true) {ID = $"grid_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
                 Body = physicsComponent};
 
-            // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao fucking dickhead
-            if (oldFixture?.Equals(newFixture) == true) return;
+            // Check if we have an existing fixture on MapGrid
+            var existingFixture = physicsComponent.GetFixture(newFixture.ID);
+            var same = true;
+
+            // Some fucky shit but we gotta handle map deserialization.
+            if (existingFixture is {Shape: PolygonShape poly})
+            {
+                var newPoly = (PolygonShape) newFixture.Shape;
+
+                if (newPoly.Vertices.Count == poly.Vertices.Count)
+                {
+                    for (var i = 0; i < poly.Vertices.Count; i++)
+                    {
+                        if (!poly.Vertices[i].EqualsApprox(newPoly.Vertices[i]))
+                        {
+                            same = false;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    same = false;
+                }
+            }
+            else
+            {
+                same = false;
+            }
+
+            // TODO: Chunk will likely need multiple fixtures but future sloth problem lmao idiot
+            if (same)
+            {
+                // If we're deserializing map this can occur so just update it.
+                if (oldFixture == null && existingFixture != null)
+                {
+                    chunk.Fixture = existingFixture;
+                    existingFixture.CollisionMask = MapGridHelpers.CollisionGroup;
+                    existingFixture.CollisionLayer = MapGridHelpers.CollisionGroup;
+                }
+
+                return;
+            }
 
             if (oldFixture != null)
-                physicsComponent.RemoveFixture(oldFixture);
+                _broadphase.DestroyFixture(physicsComponent, oldFixture);
 
-            physicsComponent.AddFixture(newFixture);
+            _broadphase.CreateFixture(physicsComponent, newFixture);
             chunk.Fixture = newFixture;
 
             EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});

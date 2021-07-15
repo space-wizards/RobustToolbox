@@ -30,13 +30,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -46,18 +49,13 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal MapId MapId { get; set; }
 
-        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
-
-        /// <summary>
-        ///     Called when the broadphase finds two fixtures close to each other.
-        /// </summary>
-        public BroadPhaseDelegate OnBroadPhaseCollision;
+        private SharedBroadphaseSystem _broadPhaseSystem = default!;
 
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
         private const int ContactPoolInitialSize = 64;
 
-        internal Stack<Contact> ContactPoolList = new Stack<Contact>(ContactPoolInitialSize);
+        internal Stack<Contact> ContactPoolList = new(ContactPoolInitialSize);
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
@@ -75,13 +73,12 @@ namespace Robust.Shared.Physics.Dynamics
         {
             ContactList = new ContactHead();
             ContactCount = 0;
-            OnBroadPhaseCollision = AddPair;
         }
 
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             InitializePool();
         }
 
@@ -93,49 +90,34 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        public void FindNewContacts(MapId mapId)
-        {
-            foreach (var broadPhase in _broadPhaseSystem.GetBroadPhases(mapId))
-            {
-                broadPhase.UpdatePairs(OnBroadPhaseCollision);
-            }
-        }
-
         /// <summary>
         ///     Go through the cached broadphase movement and update contacts.
         /// </summary>
-        /// <param name="gridId"></param>
-        /// <param name="proxyA"></param>
-        /// <param name="proxyB"></param>
-        private void AddPair(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB)
+        internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
         {
             Fixture fixtureA = proxyA.Fixture;
             Fixture fixtureB = proxyB.Fixture;
 
-            int indexA = proxyA.ChildIndex;
-            int indexB = proxyB.ChildIndex;
+            var indexA = proxyA.ChildIndex;
+            var indexB = proxyB.ChildIndex;
 
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
 
-            // Are the fixtures on the same body?
-            if (bodyA.Owner.Uid.Equals(bodyB.Owner.Uid)) return;
-
-            // Box2D checks the mask / layer below but IMO doing it before contact is better.
-            // Check default filter
-            if (!ShouldCollide(fixtureA, fixtureB))
-                return;
+            // Broadphase has already done the faster check for collision mask / layers
+            // so no point duplicating
 
             // Does a contact already exist?
+            var edge = bodyB.ContactEdges;
 
-            for (ContactEdge? ceB = bodyB.ContactEdges; ceB != null; ceB = ceB?.Next)
+            while (edge != null)
             {
-                if (ceB.Other == bodyA)
+                if (edge.Other == bodyA)
                 {
-                    Fixture fA = ceB.Contact?.FixtureA!;
-                    Fixture fB = ceB.Contact?.FixtureB!;
-                    var iA = ceB.Contact!.ChildIndexA;
-                    var iB = ceB.Contact!.ChildIndexB;
+                    var fA = edge.Contact!.FixtureA;
+                    var fB = edge.Contact!.FixtureB;
+                    var iA = edge.Contact.ChildIndexA;
+                    var iB = edge.Contact.ChildIndexB;
 
                     if (fA == fixtureA && fB == fixtureB && iA == indexA && iB == indexB)
                     {
@@ -150,7 +132,7 @@ namespace Robust.Shared.Physics.Dynamics
                     }
                 }
 
-                ceB = ceB.Next;
+                edge = edge.Next;
             }
 
             // Does a joint override collision? Is at least one body dynamic?
@@ -167,7 +149,7 @@ namespace Robust.Shared.Physics.Dynamics
             */
 
             // Call the factory.
-            Contact c = Contact.Create(this, gridId, fixtureA, indexA, fixtureB, indexB);
+            Contact c = Contact.Create(this, fixtureA, indexA, fixtureB, indexB);
 
             // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
             if (c == null) return;
@@ -219,7 +201,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
         }
 
-        private bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
+        internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
         {
             // TODO: Should we only be checking one side's mask? I think maybe fixtureB? IDK
             return !((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
@@ -290,7 +272,7 @@ namespace Robust.Shared.Physics.Dynamics
                 PhysicsComponent bodyA = fixtureA.Body;
                 PhysicsComponent bodyB = fixtureB.Body;
 
-                //Do no try to collide disabled bodies
+                // Do not try to collide disabled bodies
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
                     contact = contact.Next;
@@ -343,22 +325,34 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                bool? overlap = false;
+                var proxyA = fixtureA.Proxies[indexA];
+                var proxyB = fixtureB.Proxies[indexB];
+                var broadphaseA = bodyA.Broadphase;
+                var broadphaseB = bodyB.Broadphase;
 
-                // Sloth addition: Kind of hacky and might need to be removed at some point.
-                // One of the bodies was probably put into nullspace so we need to remove I think.
-                if (fixtureA.Proxies.ContainsKey(contact.GridId) && fixtureB.Proxies.ContainsKey(contact.GridId))
+                // TODO: IT MIGHT BE THE FATAABB STUFF FOR MOVEPROXY SO TRY THAT
+                var overlap = false;
+
+                // We can have cross-broadphase proxies hence need to change them to worldspace
+                if (broadphaseA != null && broadphaseB != null)
                 {
-                    var proxyIdA = fixtureA.Proxies[contact.GridId][indexA].ProxyId;
-                    var proxyIdB = fixtureB.Proxies[contact.GridId][indexB].ProxyId;
+                    if (broadphaseA == broadphaseB)
+                    {
+                        overlap = proxyA.AABB.Intersects(proxyB.AABB);
+                    }
+                    else
+                    {
+                        // These should really be destroyed before map changes.
+                        DebugTools.Assert(broadphaseA.Owner.Transform.MapID == broadphaseB.Owner.Transform.MapID);
 
-                    var broadPhase = _broadPhaseSystem.GetBroadPhase(MapId, contact.GridId);
-
-                    overlap = broadPhase?.TestOverlap(proxyIdA, proxyIdB);
+                        var proxyAWorldAABB = proxyA.AABB.Translated(broadphaseA.Owner.Transform.WorldPosition);
+                        var proxyBWorldAABB = proxyB.AABB.Translated(broadphaseB.Owner.Transform.WorldPosition);
+                        overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
+                    }
                 }
 
                 // Here we destroy contacts that cease to overlap in the broad-phase.
-                if (overlap == false)
+                if (!overlap)
                 {
                     Contact cNuke = contact;
                     contact = contact.Next;
@@ -366,11 +360,16 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                // The contact persists.
                 contact.Update(this, _startCollisions, _endCollisions);
-
                 contact = contact.Next;
             }
+
+            // TODO: Look at making a manager to cache world positions + rotations during physics step
+            // Ideally: Set them here (once we know what contacts we need)
+            // Re-use in Physics island.
+            // Maybbbeee also have broadphase use it too?
+            // This will actually be decently big savings.
+            // Aether multi-threads the Update too so potentially look at making the manager thread-safe.
 
             foreach (var contact in _startCollisions)
             {
@@ -464,7 +463,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
     }
 
-    public delegate void BroadPhaseDelegate(GridId gridId, in FixtureProxy proxyA, in FixtureProxy proxyB);
+    public delegate void BroadPhaseDelegate(in FixtureProxy proxyA, in FixtureProxy proxyB);
 
     #region Collide Events Classes
 

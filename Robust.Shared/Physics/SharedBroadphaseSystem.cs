@@ -4,6 +4,7 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
@@ -150,6 +151,8 @@ namespace Robust.Shared.Physics
 
                 SynchronizeFixtures(body, worldPos);
             }
+
+            _broadphasePositions.Clear();
         }
 
         /// <summary>
@@ -245,6 +248,7 @@ namespace Robust.Shared.Physics
                     if (_broadphaseBounding.TryGetValue(broadphase, out var broadphaseAABB) &&
                         !broadphaseAABB.Intersects(worldAABB)) continue;
 
+                    // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
                     Box2 aabb;
                     var proxyBroad = proxy.Fixture.Body.Broadphase;
 
@@ -262,6 +266,8 @@ namespace Robust.Shared.Physics
 
                     foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
                     {
+                        // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
+
                         // Do fast checks first and slower checks after (in ContactManager).
                         if (proxy == other ||
                             proxy.Fixture.Body == other.Fixture.Body ||

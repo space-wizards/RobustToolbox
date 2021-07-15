@@ -327,8 +327,8 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
-                var broadphaseA = fixtureA.Body.Broadphase;
-                var broadphaseB = fixtureB.Body.Broadphase;
+                var broadphaseA = bodyA.Broadphase;
+                var broadphaseB = bodyB.Broadphase;
 
                 // TODO: IT MIGHT BE THE FATAABB STUFF FOR MOVEPROXY SO TRY THAT
                 var overlap = false;

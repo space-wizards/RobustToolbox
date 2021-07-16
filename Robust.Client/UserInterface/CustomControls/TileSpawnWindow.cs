@@ -105,7 +105,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 Texture? texture = null;
                 if (!string.IsNullOrEmpty(entry.SpriteName))
                 {
-                    texture = _resourceCache.GetResource<TextureResource>($"/Textures/Constructible/Tiles/{entry.SpriteName}.png");
+                    texture = _resourceCache.GetResource<TextureResource>($"/Textures/Tiles/{entry.SpriteName}.png");
                 }
                 TileList.AddItem(entry.DisplayName, texture);
             }

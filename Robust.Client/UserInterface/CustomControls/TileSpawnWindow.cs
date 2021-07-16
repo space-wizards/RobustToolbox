@@ -38,7 +38,10 @@ namespace Robust.Client.UserInterface.CustomControls
             	Orientation = LayoutOrientation.Vertical
             };
             Contents.AddChild(vBox);
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Horizontal
+            };
             vBox.AddChild(hBox);
             SearchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;

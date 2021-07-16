@@ -78,8 +78,9 @@ namespace Robust.Client.UserInterface.CustomControls
                 Name = "AAAAAA",
                 Children =
                 {
-                    new HBoxContainer
+                    new BoxContainer
                     {
+                    	Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (SearchBar = new LineEdit
@@ -104,8 +105,9 @@ namespace Robust.Client.UserInterface.CustomControls
                             (PrototypeList = new PrototypeListContainer())
                         }
                     },
-                    new HBoxContainer
+                    new BoxContainer
                     {
+                    	Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (EraseButton = new Button
@@ -474,8 +476,9 @@ namespace Robust.Client.UserInterface.CustomControls
                     ToggleMode = true,
                 });
 
-                AddChild(new HBoxContainer
+                AddChild(new BoxContainer
                 {
+                	Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         (EntityTextureRects = new LayeredTextureRect

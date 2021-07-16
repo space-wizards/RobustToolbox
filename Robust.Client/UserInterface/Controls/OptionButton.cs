@@ -50,7 +50,10 @@ namespace Robust.Client.UserInterface.Controls
             Prefix = "";
             OnPressed += OnPressedInternal;
 
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Horizontal
+            };
             AddChild(hBox);
 
             _popup = new Popup();

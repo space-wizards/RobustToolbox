@@ -42,7 +42,10 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 case RadioOptionsLayout.Horizontal:
                 default:
-                    _container = new HBoxContainer();
+                    _container = new BoxContainer
+                    {
+                    	Orientation = LayoutOrientation.Horizontal
+                    };
                     break;
             }
 

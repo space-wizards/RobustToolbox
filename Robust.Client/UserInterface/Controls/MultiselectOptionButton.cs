@@ -61,7 +61,10 @@ namespace Robust.Client.UserInterface.Controls
             AddStyleClass(StyleClassButton);
             OnPressed += OnPressedInternal;
 
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Horizontal
+            };
             AddChild(hBox);
 
             _popup = new Popup();

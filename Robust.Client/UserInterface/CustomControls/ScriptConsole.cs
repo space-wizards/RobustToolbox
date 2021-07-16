@@ -31,8 +31,9 @@ namespace Robust.Client.UserInterface.CustomControls
                         },
                         VerticalExpand = true,
                     },
-                    new HBoxContainer
+                    new BoxContainer
                     {
+                    	Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (InputBar = new HistoryLineEdit

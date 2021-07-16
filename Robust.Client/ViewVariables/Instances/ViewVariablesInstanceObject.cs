@@ -75,7 +75,10 @@ namespace Robust.Client.ViewVariables.Instances
 
             // Handle top bar.
             {
-                var headBox = new HBoxContainer();
+                var headBox = new BoxContainer
+                {
+                	Orientation = LayoutOrientation.Horizontal
+                };
                 var name = MakeTopBar(top, bottom);
                 name.HorizontalExpand = true;
                 headBox.AddChild(name);

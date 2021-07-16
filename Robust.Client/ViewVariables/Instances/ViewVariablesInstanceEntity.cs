@@ -110,7 +110,10 @@ namespace Robust.Client.ViewVariables.Instances
 
                 if (_entity.TryGetComponent(out ISpriteComponent? sprite))
                 {
-                    var hBox = new HBoxContainer();
+                    var hBox = new BoxContainer
+                    {
+                    	Orientation = LayoutOrientation.Horizontal
+                    };
                     top.HorizontalExpand = true;
                     hBox.AddChild(top);
                     hBox.AddChild(new SpriteView {Sprite = sprite});

@@ -26,7 +26,7 @@ namespace Robust.Client.ViewVariables.Traits
         private Button _leftButton = default!;
         private Button _rightButton = default!;
         private LineEdit _pageLabel = default!;
-        private HBoxContainer _controlsHBox = default!;
+        private BoxContainer _controlsHBox = default!;
         private BoxContainer _elementsVBox = default!;
 
         private int HighestKnownPage => Math.Max(0, ((_cache.Count + ElementsPerPage - 1) / ElementsPerPage) - 1);
@@ -52,8 +52,9 @@ namespace Robust.Client.ViewVariables.Traits
             {
             	Orientation = LayoutOrientation.Vertical
             };
-            _controlsHBox = new HBoxContainer
+            _controlsHBox = new BoxContainer
             {
+            	Orientation = LayoutOrientation.Horizontal,
                 HorizontalAlignment = Control.HAlignment.Center
             };
 

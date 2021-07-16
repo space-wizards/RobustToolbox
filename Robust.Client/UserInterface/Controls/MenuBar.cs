@@ -14,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
     {
         private readonly List<Menu> _menus = new();
         private readonly List<MenuBarTopButton> _buttons = new();
-        private readonly HBoxContainer _hBox;
+        private readonly BoxContainer _hBox;
         private readonly Popup _popup;
         private readonly BoxContainer _popupVBox;
         private bool _popupOpen;
@@ -37,7 +37,11 @@ namespace Robust.Client.UserInterface.Controls
             _popup.OnPopupHide += PopupHidden;
             UserInterfaceManager.ModalRoot.AddChild(_popup);
             Menus = new MenuCollection(this);
-            AddChild(_hBox = new HBoxContainer {SeparationOverride = 8});
+            AddChild(_hBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Horizontal,
+                SeparationOverride = 8
+            });
         }
 
         private void AddMenu(Menu menu)

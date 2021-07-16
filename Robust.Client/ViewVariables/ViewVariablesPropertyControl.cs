@@ -15,8 +15,8 @@ namespace Robust.Client.ViewVariables
     internal class ViewVariablesPropertyControl : PanelContainer
     {
         public BoxContainer VBox { get; }
-        public HBoxContainer TopContainer { get; }
-        public HBoxContainer BottomContainer { get; }
+        public BoxContainer TopContainer { get; }
+        public BoxContainer BottomContainer { get; }
         public Label NameLabel { get; }
 
         private readonly Label _bottomLabel;
@@ -42,11 +42,16 @@ namespace Robust.Client.ViewVariables
             };
             AddChild(VBox);
 
-            TopContainer = new HBoxContainer {VerticalExpand = true};
+            TopContainer = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Horizontal,
+                VerticalExpand = true
+            };
             VBox.AddChild(TopContainer);
 
-            BottomContainer = new HBoxContainer
+            BottomContainer = new BoxContainer
             {
+            	Orientation = LayoutOrientation.Horizontal,
                 Visible = false
             };
             VBox.AddChild(BottomContainer);

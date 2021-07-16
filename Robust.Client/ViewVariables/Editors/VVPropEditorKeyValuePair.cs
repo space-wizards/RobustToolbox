@@ -20,7 +20,10 @@ namespace Robust.Client.ViewVariables.Editors
 
         protected override Control MakeUI(object? value)
         {
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Horizontal
+            };
 
             dynamic d = value!;
 

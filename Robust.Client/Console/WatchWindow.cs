@@ -43,8 +43,9 @@ namespace Robust.Client.Console
                     	Orientation = LayoutOrientation.Vertical,
                         VerticalExpand = true
                     }),
-                    new HBoxContainer
+                    new BoxContainer
                     {
+                    	Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (_addWatchEdit = new HistoryLineEdit
@@ -108,8 +109,9 @@ namespace Robust.Client.Console
                 Button delButton;
                 _runner = runner;
 
-                AddChild(new HBoxContainer
+                AddChild(new BoxContainer
                 {
+                	Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         (_outputLabel = new Label
@@ -169,8 +171,9 @@ namespace Robust.Client.Console
             public CompilationErrorControl(string message)
             {
                 Button delButton;
-                AddChild(new HBoxContainer
+                AddChild(new BoxContainer
                 {
+                	Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         new Label

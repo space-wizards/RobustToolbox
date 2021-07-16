@@ -216,7 +216,7 @@ namespace Robust.Shared.Network
 
         private static byte[] MakeAuthHash(byte[] sharedSecret, byte[] pkBytes)
         {
-            Logger.DebugS("auth", "shared: {0}, pk: {1}", Convert.ToBase64String(sharedSecret), Convert.ToBase64String(pkBytes));
+            // Logger.DebugS("auth", "shared: {0}, pk: {1}", Convert.ToBase64String(sharedSecret), Convert.ToBase64String(pkBytes));
 
             var incHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
             incHash.AppendData(sharedSecret);

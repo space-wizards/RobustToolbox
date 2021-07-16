@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables
 {
@@ -126,7 +127,11 @@ namespace Robust.Client.ViewVariables
             //        10);
 
             // Custom ToString() implementation.
-            var headBox = new VBoxContainer {SeparationOverride = 0};
+            var headBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             headBox.AddChild(new Label {Text = top, ClipText = true});
             headBox.AddChild(new Label
             {

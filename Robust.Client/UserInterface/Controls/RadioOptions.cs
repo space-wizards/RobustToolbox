@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using static Robust.Client.UserInterface.Controls.BaseButton;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -34,7 +35,10 @@ namespace Robust.Client.UserInterface.Controls
             switch (layout)
             {
                 case RadioOptionsLayout.Vertical:
-                    _container = new VBoxContainer();
+                    _container = new BoxContainer
+                    {
+                    	Orientation = LayoutOrientation.Vertical
+                    };
                     break;
                 case RadioOptionsLayout.Horizontal:
                 default:

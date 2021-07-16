@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -15,7 +16,7 @@ namespace Robust.Client.UserInterface.Controls
         private readonly List<MenuBarTopButton> _buttons = new();
         private readonly HBoxContainer _hBox;
         private readonly Popup _popup;
-        private readonly VBoxContainer _popupVBox;
+        private readonly BoxContainer _popupVBox;
         private bool _popupOpen;
 
         public IList<Menu> Menus { get; }
@@ -26,7 +27,11 @@ namespace Robust.Client.UserInterface.Controls
             {
                 Children =
                 {
-                    (_popupVBox = new VBoxContainer {MinSize = (300, 0)})
+                    (_popupVBox = new BoxContainer
+                    {
+                    	Orientation = LayoutOrientation.Vertical,
+                        MinSize = (300, 0)
+                    })
                 }
             };
             _popup.OnPopupHide += PopupHidden;

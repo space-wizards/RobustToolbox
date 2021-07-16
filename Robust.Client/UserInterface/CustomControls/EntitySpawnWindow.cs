@@ -12,6 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -21,7 +22,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
 
-        private VBoxContainer MainVBox;
+        private BoxContainer MainVBox;
         private PrototypeListContainer PrototypeList;
         private LineEdit SearchBar;
         private OptionButton OverrideMenu;
@@ -71,8 +72,9 @@ namespace Robust.Client.UserInterface.CustomControls
             SetSize = (250, 300);
             MinSize = (250, 200);
 
-            Contents.AddChild(MainVBox = new VBoxContainer
+            Contents.AddChild(MainVBox = new BoxContainer
             {
+            	Orientation = LayoutOrientation.Vertical,
                 Name = "AAAAAA",
                 Children =
                 {

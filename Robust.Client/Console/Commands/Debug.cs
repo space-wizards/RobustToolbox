@@ -27,6 +27,7 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console.Commands
 {
@@ -536,7 +537,10 @@ namespace Robust.Client.Console.Commands
             var scroll = new ScrollContainer();
             tabContainer.AddChild(scroll);
             //scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
-            var vBox = new VBoxContainer();
+            var vBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Vertical
+            };
             scroll.AddChild(vBox);
 
             var progressBar = new ProgressBar { MaxValue = 10, Value = 5 };
@@ -594,7 +598,10 @@ namespace Robust.Client.Console.Commands
             }
 
             var group = new ButtonGroup();
-            var vBoxRadioButtons = new VBoxContainer();
+            var vBoxRadioButtons = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Vertical
+            };
             for (var i = 0; i < 10; i++)
             {
                 vBoxRadioButtons.AddChild(new Button
@@ -610,8 +617,9 @@ namespace Robust.Client.Console.Commands
 
             TabContainer.SetTabTitle(vBoxRadioButtons, "Radio buttons!!");
 
-            tabContainer.AddChild(new VBoxContainer
+            tabContainer.AddChild(new BoxContainer
             {
+            	Orientation = LayoutOrientation.Vertical,
                 Name = "Slider",
                 Children =
                 {

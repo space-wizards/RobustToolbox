@@ -11,6 +11,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Timing;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console
 {
@@ -18,7 +19,7 @@ namespace Robust.Client.Console
     {
         private readonly IReflectionManager _reflectionManager;
 
-        private readonly VBoxContainer _watchesVBox;
+        private readonly BoxContainer _watchesVBox;
         private readonly LineEdit _addWatchEdit;
         private readonly Button _addWatchButton;
 
@@ -31,13 +32,15 @@ namespace Robust.Client.Console
 
             Title = "Watch Window";
 
-            var mainVBox = new VBoxContainer
+            var mainVBox = new BoxContainer
             {
+            	Orientation = LayoutOrientation.Vertical,
                 MinSize = (500, 300),
                 Children =
                 {
-                    (_watchesVBox = new VBoxContainer
+                    (_watchesVBox = new BoxContainer
                     {
+                    	Orientation = LayoutOrientation.Vertical,
                         VerticalExpand = true
                     }),
                     new HBoxContainer

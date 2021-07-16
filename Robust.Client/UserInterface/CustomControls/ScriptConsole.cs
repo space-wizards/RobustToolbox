@@ -1,6 +1,7 @@
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -12,8 +13,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         protected ScriptConsole()
         {
-            Contents.AddChild(new VBoxContainer
+            Contents.AddChild(new BoxContainer
             {
+            	Orientation = LayoutOrientation.Vertical,
                 Children =
                 {
                     new PanelContainer

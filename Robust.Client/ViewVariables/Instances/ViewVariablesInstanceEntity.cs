@@ -17,6 +17,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Control;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.ViewVariables.Instances
@@ -48,10 +49,10 @@ namespace Robust.Client.ViewVariables.Instances
 
         private ViewVariablesBlobMembers? _membersBlob;
 
-        private VBoxContainer _clientComponents = default!;
+        private BoxContainer _clientComponents = default!;
 
-        private VBoxContainer _serverVariables = default!;
-        private VBoxContainer _serverComponents = default!;
+        private BoxContainer _serverVariables = default!;
+        private BoxContainer _serverComponents = default!;
 
         private Button _clientComponentsAddButton = default!;
         private Button _serverComponentsAddButton = default!;
@@ -73,7 +74,10 @@ namespace Robust.Client.ViewVariables.Instances
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
-            var vBoxContainer = new VBoxContainer();
+            var vBoxContainer = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Vertical
+            };
             scrollContainer.AddChild(vBoxContainer);
 
             // Handle top bar displaying type and ToString().
@@ -84,7 +88,11 @@ namespace Robust.Client.ViewVariables.Instances
                 {
                     //var smallFont = new VectorFont(_resourceCache.GetResource<FontResource>("/Fonts/CALIBRI.TTF"), 10);
                     // Custom ToString() implementation.
-                    var headBox = new VBoxContainer {SeparationOverride = 0};
+                    var headBox = new BoxContainer
+                    {
+                    	Orientation = LayoutOrientation.Vertical,
+                        SeparationOverride = 0
+                    };
                     headBox.AddChild(new Label {Text = stringified, ClipText = true});
                     headBox.AddChild(new Label
                     {
@@ -118,7 +126,11 @@ namespace Robust.Client.ViewVariables.Instances
             _tabs.OnTabChanged += _tabsOnTabChanged;
             vBoxContainer.AddChild(_tabs);
 
-            var clientVBox = new VBoxContainer {SeparationOverride = 0};
+            var clientVBox = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             _tabs.AddChild(clientVBox);
             _tabs.SetTabTitle(TabClientVars, Loc.GetString("view-variable-instance-entity-client-variables-tab-title"));
 
@@ -136,7 +148,11 @@ namespace Robust.Client.ViewVariables.Instances
                 }
             }
 
-            _clientComponents = new VBoxContainer {SeparationOverride = 0};
+            _clientComponents = new BoxContainer
+            {
+            	Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             _tabs.AddChild(_clientComponents);
             _tabs.SetTabTitle(TabClientComponents, Loc.GetString("view-variable-instance-entity-client-components-tab-title"));
 
@@ -144,11 +160,19 @@ namespace Robust.Client.ViewVariables.Instances
 
             if (!_entity.Uid.IsClientSide())
             {
-                _serverVariables = new VBoxContainer {SeparationOverride = 0};
+                _serverVariables = new BoxContainer
+                {
+                	Orientation = LayoutOrientation.Vertical,
+                    SeparationOverride = 0
+                };
                 _tabs.AddChild(_serverVariables);
                 _tabs.SetTabTitle(TabServerVars, Loc.GetString("view-variable-instance-entity-server-variables-tab-title"));
 
-                _serverComponents = new VBoxContainer {SeparationOverride = 0};
+                _serverComponents = new BoxContainer
+                {
+                	Orientation = LayoutOrientation.Vertical,
+                    SeparationOverride = 0
+                };
                 _tabs.AddChild(_serverComponents);
                 _tabs.SetTabTitle(TabServerComponents, Loc.GetString("view-variable-instance-entity-server-components-tab-title"));
 

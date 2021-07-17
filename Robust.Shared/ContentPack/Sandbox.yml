@@ -871,6 +871,7 @@ Types:
     IEquatable`1: { }
     IFormatProvider: { All: True }
     IFormattable: { All: True }
+    Index: { All: True }
     IndexOutOfRangeException: { All: True }
     Int16: { All: True }
     Int32: { All: True }
@@ -912,6 +913,7 @@ Types:
     ParamArrayAttribute: { All: True }
     Predicate`1: { All: True } # Delegate
     Random: { All: True }
+    Range: { All: True }
     ReadOnlyMemory`1:
       Methods:
       - "!0[] ToArray()"

@@ -491,7 +491,7 @@ namespace Robust.Shared.Physics
             if (!body._fixtures.Remove(fixture))
             {
                 DebugTools.Assert(false);
-                // TODO: Log
+                Logger.ErrorS("physics", $"Tried to remove fixture from {body.Owner} that was already removed.");
                 return;
             }
 
@@ -603,10 +603,10 @@ namespace Robust.Shared.Physics
             // tl;dr update our bounding boxes stored in broadphase.
             var broadphase = fixture.Body.Broadphase!;
             var proxyCount = fixture.ProxyCount;
-
-            // TODO: Inefficient as fuck
             var broadphaseTransform = broadphase.Owner.Transform;
 
+            // TODO: Cache these up front. Probably use the same thing you're gonna use for the
+            // physics worldtransform caching.
             if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
             {
                 broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);

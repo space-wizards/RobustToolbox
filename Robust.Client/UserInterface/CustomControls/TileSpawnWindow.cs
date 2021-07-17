@@ -2,12 +2,14 @@
 using Robust.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -105,7 +107,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 Texture? texture = null;
                 if (!string.IsNullOrEmpty(entry.SpriteName))
                 {
-                    texture = _resourceCache.GetResource<TextureResource>($"/Textures/Tiles/{entry.SpriteName}.png");
+                    texture = _resourceCache.GetResource<TextureResource>(new ResourcePath(entry.Path) / $"{entry.SpriteName}.png");
                 }
                 TileList.AddItem(entry.DisplayName, texture);
             }

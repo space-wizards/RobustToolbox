@@ -301,7 +301,7 @@ namespace Robust.Client.GameObjects
             if (!source.SetPosition(coordinates.ToMapPos(EntityManager)))
             {
                 source.Dispose();
-                Logger.Warning("Can't play positional audio \"{stream.Name}\", can't set position.");
+                Logger.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
                 return null;
             }
 

@@ -46,6 +46,8 @@ namespace Robust.Shared.Network
             [ViewVariables] public NetUserId UserId => UserData.UserId;
             [ViewVariables] public NetUserData UserData { get; }
 
+            public bool IsHandshakeComplete { get; set; }
+
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
 

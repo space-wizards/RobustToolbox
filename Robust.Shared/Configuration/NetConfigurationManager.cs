@@ -97,7 +97,7 @@ namespace Robust.Shared.Configuration
 
         private void HandleNetVarMessage(MsgConVars message)
         {
-            if(!_receivedInitialNwVars)
+            if (_netManager.IsClient && !_receivedInitialNwVars)
             {
                 _receivedInitialNwVars = true;
 

@@ -9,8 +9,6 @@ namespace Robust.Shared.Physics {
     {
         Box2 GetFatAabb(DynamicTree.Proxy proxy);
 
-        bool TestOverlap(DynamicTree.Proxy proxyA, DynamicTree.Proxy proxyB);
-
         DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);
 
         void MoveProxy(DynamicTree.Proxy proxyId, in Box2 aabb, Vector2 displacement);

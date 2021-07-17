@@ -42,11 +42,8 @@ namespace Robust.Shared.Physics
          * Hence we need to check which broadphases it does intersect and checkar for colliding bodies.
          */
 
-        // TODO: Document the shit out of this madness internally. Also refactor DynamicTreeBroadphase.
-
         // We keep 2 move buffers as we need to handle the broadphase moving behavior first.
         // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
-        // TODO: These need to be FixtureProxy instead.
         private Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
 
         // Caching for FindNewContacts
@@ -68,7 +65,6 @@ namespace Robust.Shared.Physics
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(HandleBroadphaseInit);
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
-            SubscribeLocalEvent<BroadphaseComponent, ComponentShutdown>(HandleBroadphaseShutdown);
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
@@ -199,6 +195,9 @@ namespace Robust.Shared.Physics
             }
         }
 
+        /// <summary>
+        /// Go through every single created, moved, or touched proxy on the map and try to find any new contacts that should be created.
+        /// </summary>
         internal void FindNewContacts(MapId mapId)
         {
             var moveBuffer = _moveBuffer[mapId];
@@ -310,11 +309,6 @@ namespace Robust.Shared.Physics
             _offsets.Clear();
             _broadphaseBounding.Clear();
             _broadphases.Clear();
-        }
-
-        private void HandleBroadphaseShutdown(EntityUid uid, BroadphaseComponent component, ComponentShutdown args)
-        {
-            // TODO: Cleanup and remove all children.
         }
 
         private void HandleParentChange(EntityUid uid, PhysicsComponent component, EntParentChangedMessage args)

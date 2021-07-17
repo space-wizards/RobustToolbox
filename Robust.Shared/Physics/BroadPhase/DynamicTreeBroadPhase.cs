@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 
@@ -9,8 +7,6 @@ namespace Robust.Shared.Physics.Broadphase
 {
     public class DynamicTreeBroadPhase : IBroadPhase
     {
-        // TODO: DynamicTree seems slow at updates when we have large entity counts so when we have boxstation
-        // need to suss out whether chunking it might be useful.
         private B2DynamicTree<FixtureProxy> _tree = default!;
 
         private readonly DynamicTree<FixtureProxy>.ExtractAabbDelegate _extractAabb = ExtractAabbFunc;
@@ -72,22 +68,6 @@ namespace Robust.Shared.Physics.Broadphase
         public Box2 GetFatAabb(DynamicTree.Proxy proxy)
         {
             return _tree.GetFatAabb(proxy);
-        }
-
-        /// <summary>
-        ///     Already assumed to be within the same broadphase.
-        /// </summary>
-        /// <param name="proxyIdA"></param>
-        /// <param name="proxyIdB"></param>
-        /// <returns></returns>
-        public bool TestOverlap(DynamicTree.Proxy proxyIdA, DynamicTree.Proxy proxyIdB)
-        {
-            var proxyA = _tree.GetUserData(proxyIdA);
-            var proxyB = _tree.GetUserData(proxyIdB);
-
-            if (proxyA == null || proxyB == null) return false;
-
-            return proxyB.AABB.Intersects(proxyA.AABB);
         }
 
         public DynamicTree.Proxy AddProxy(ref FixtureProxy proxy)

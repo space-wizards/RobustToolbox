@@ -148,45 +148,50 @@ namespace Robust.Shared.Configuration
 
         private void ApplyNetVarChange(INetChannel msgChannel, List<(string name, object value)> networkedVars)
         {
-            Logger.DebugS("cfg", "Handling replicated cvars...");
+            Logger.DebugS("cfg", $"{msgChannel} Handling replicated cvars...");
 
-            foreach (var (name, value) in networkedVars)
+            if (_netManager.IsClient)
             {
-                if (_netManager.IsClient) // Server sent us a CVar update.
+                // Server sent us a CVar update.
+                foreach (var (name, value) in networkedVars)
                 {
                     // Actually set the CVar
                     base.SetCVar(name, value);
                     Logger.DebugS("cfg", $"name={name}, val={value}");
                 }
-                else // Client sent us a CVar update
+
+                return;
+            }
+
+            // Client sent us a CVar update
+            if (!_replicatedCVars.TryGetValue(msgChannel, out var clientCVars))
+            {
+                Logger.WarningS("cfg", $"{msgChannel} tried to replicate CVars but is not in _replicatedCVars.");
+                return;
+            }
+
+            foreach (var (name, value) in networkedVars)
+            {
+                if (!_configVars.TryGetValue(name, out var cVar))
                 {
-                    if (!_configVars.TryGetValue(name, out var cVar))
-                    {
-                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unknown CVar '{name}.'");
-                        continue;
-                    }
+                    Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unknown CVar '{name}.'");
+                    continue;
+                }
 
-                    if (!cVar.Registered)
-                    {
-                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
-                        continue;
-                    }
+                if (!cVar.Registered)
+                {
+                    Logger.WarningS("cfg", $"{msgChannel} tried to replicate an unregistered CVar '{name}.'");
+                    continue;
+                }
 
-                    if((cVar.Flags & CVar.REPLICATED) != 0)
-                    {
-                        var clientCVars = _replicatedCVars[msgChannel];
-
-                        if (clientCVars.ContainsKey(name))
-                            clientCVars[name] = value;
-                        else
-                            clientCVars.Add(name, value);
-
-                        Logger.DebugS("cfg", $"name={name}, val={value}");
-                    }
-                    else
-                    {
-                        Logger.WarningS("cfg", $"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
-                    }
+                if((cVar.Flags & CVar.REPLICATED) != 0)
+                {
+                    clientCVars[name] = value;
+                    Logger.DebugS("cfg", $"name={name}, val={value}");
+                }
+                else
+                {
+                    Logger.WarningS("cfg", $"{msgChannel} tried to replicate an un-replicated CVar '{name}.'");
                 }
             }
         }

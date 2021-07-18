@@ -5,6 +5,7 @@ using Robust.Client.UserInterface.Controls;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
@@ -20,7 +21,11 @@ namespace Robust.Client.ViewVariables.Editors
         {
             _localValue = value;
 
-            var hbox = new HBoxContainer() { HorizontalExpand = true };
+            var hbox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
+                HorizontalExpand = true
+            };
 
             _lineEdit = new LineEdit()
             {

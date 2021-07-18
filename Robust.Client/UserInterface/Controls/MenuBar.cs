@@ -29,7 +29,7 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     (_popupVBox = new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Vertical,
+                        Orientation = LayoutOrientation.Vertical,
                         MinSize = (300, 0)
                     })
                 }
@@ -39,7 +39,7 @@ namespace Robust.Client.UserInterface.Controls
             Menus = new MenuCollection(this);
             AddChild(_hBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Horizontal,
                 SeparationOverride = 8
             });
         }

@@ -37,14 +37,14 @@ namespace Robust.Client.UserInterface.Controls
                 case RadioOptionsLayout.Vertical:
                     _container = new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Vertical
+                        Orientation = LayoutOrientation.Vertical
                     };
                     break;
                 case RadioOptionsLayout.Horizontal:
                 default:
                     _container = new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Horizontal
+                        Orientation = LayoutOrientation.Horizontal
                     };
                     break;
             }

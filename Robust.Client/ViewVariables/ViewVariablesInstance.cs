@@ -129,7 +129,7 @@ namespace Robust.Client.ViewVariables
             // Custom ToString() implementation.
             var headBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 SeparationOverride = 0
             };
             headBox.AddChild(new Label {Text = top, ClipText = true});

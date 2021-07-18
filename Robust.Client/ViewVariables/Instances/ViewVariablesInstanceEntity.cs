@@ -76,7 +76,7 @@ namespace Robust.Client.ViewVariables.Instances
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical
             };
             scrollContainer.AddChild(vBoxContainer);
 
@@ -90,7 +90,7 @@ namespace Robust.Client.ViewVariables.Instances
                     // Custom ToString() implementation.
                     var headBox = new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Vertical,
+                        Orientation = LayoutOrientation.Vertical,
                         SeparationOverride = 0
                     };
                     headBox.AddChild(new Label {Text = stringified, ClipText = true});
@@ -112,7 +112,7 @@ namespace Robust.Client.ViewVariables.Instances
                 {
                     var hBox = new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Horizontal
+                        Orientation = LayoutOrientation.Horizontal
                     };
                     top.HorizontalExpand = true;
                     hBox.AddChild(top);
@@ -131,7 +131,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             var clientVBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 SeparationOverride = 0
             };
             _tabs.AddChild(clientVBox);
@@ -153,7 +153,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             _clientComponents = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 SeparationOverride = 0
             };
             _tabs.AddChild(_clientComponents);
@@ -165,7 +165,7 @@ namespace Robust.Client.ViewVariables.Instances
             {
                 _serverVariables = new BoxContainer
                 {
-                	Orientation = LayoutOrientation.Vertical,
+                    Orientation = LayoutOrientation.Vertical,
                     SeparationOverride = 0
                 };
                 _tabs.AddChild(_serverVariables);
@@ -173,7 +173,7 @@ namespace Robust.Client.ViewVariables.Instances
 
                 _serverComponents = new BoxContainer
                 {
-                	Orientation = LayoutOrientation.Vertical,
+                    Orientation = LayoutOrientation.Vertical,
                     SeparationOverride = 0
                 };
                 _tabs.AddChild(_serverComponents);

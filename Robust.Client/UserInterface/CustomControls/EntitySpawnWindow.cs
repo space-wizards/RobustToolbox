@@ -74,13 +74,13 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Contents.AddChild(MainVBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 Name = "AAAAAA",
                 Children =
                 {
                     new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Horizontal,
+                        Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (SearchBar = new LineEdit
@@ -107,7 +107,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     },
                     new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Horizontal,
+                        Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (EraseButton = new Button
@@ -478,7 +478,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 AddChild(new BoxContainer
                 {
-                	Orientation = LayoutOrientation.Horizontal,
+                    Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         (EntityTextureRects = new LayeredTextureRect

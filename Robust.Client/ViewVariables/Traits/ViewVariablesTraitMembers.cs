@@ -21,7 +21,7 @@ namespace Robust.Client.ViewVariables.Traits
             base.Initialize(instance);
             _memberList = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 SeparationOverride = 0
             };
             instance.AddTab("Members", _memberList);

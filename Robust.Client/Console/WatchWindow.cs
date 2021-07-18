@@ -34,18 +34,18 @@ namespace Robust.Client.Console
 
             var mainVBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 MinSize = (500, 300),
                 Children =
                 {
                     (_watchesVBox = new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Vertical,
+                        Orientation = LayoutOrientation.Vertical,
                         VerticalExpand = true
                     }),
                     new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Horizontal,
+                        Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (_addWatchEdit = new HistoryLineEdit
@@ -111,7 +111,7 @@ namespace Robust.Client.Console
 
                 AddChild(new BoxContainer
                 {
-                	Orientation = LayoutOrientation.Horizontal,
+                    Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         (_outputLabel = new Label
@@ -173,7 +173,7 @@ namespace Robust.Client.Console
                 Button delButton;
                 AddChild(new BoxContainer
                 {
-                	Orientation = LayoutOrientation.Horizontal,
+                    Orientation = LayoutOrientation.Horizontal,
                     Children =
                     {
                         new Label

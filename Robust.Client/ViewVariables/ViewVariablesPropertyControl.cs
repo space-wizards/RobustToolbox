@@ -37,21 +37,21 @@ namespace Robust.Client.ViewVariables
 
             VBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 SeparationOverride = 0
             };
             AddChild(VBox);
 
             TopContainer = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Horizontal,
                 VerticalExpand = true
             };
             VBox.AddChild(TopContainer);
 
             BottomContainer = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Horizontal,
                 Visible = false
             };
             VBox.AddChild(BottomContainer);

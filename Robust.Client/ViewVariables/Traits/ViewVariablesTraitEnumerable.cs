@@ -50,11 +50,11 @@ namespace Robust.Client.ViewVariables.Traits
 
             var outerVBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical
             };
             _controlsHBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Horizontal,
                 HorizontalAlignment = Control.HAlignment.Center
             };
 
@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Traits
 
             _elementsVBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical
             };
             outerVBox.AddChild(_elementsVBox);
 

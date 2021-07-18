@@ -63,14 +63,14 @@ namespace Robust.Client.UserInterface.Controls
 
             var hBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal
+                Orientation = LayoutOrientation.Horizontal
             };
             AddChild(hBox);
 
             _popup = new Popup();
             _popupVBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical
             };
             _popup.AddChild(_popupVBox);
             _popup.OnPopupHide += OnPopupHide;

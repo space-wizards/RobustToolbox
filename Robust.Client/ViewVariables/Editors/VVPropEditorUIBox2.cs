@@ -20,7 +20,7 @@ namespace Robust.Client.ViewVariables.Editors
         {
             var hBoxContainer = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Horizontal,
                 MinSize = new Vector2(200, 0),
             };
 

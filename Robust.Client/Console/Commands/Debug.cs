@@ -539,7 +539,7 @@ namespace Robust.Client.Console.Commands
             //scroll.SetAnchorAndMarginPreset(Control.LayoutPreset.Wide);
             var vBox = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical
             };
             scroll.AddChild(vBox);
 
@@ -600,7 +600,7 @@ namespace Robust.Client.Console.Commands
             var group = new ButtonGroup();
             var vBoxRadioButtons = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical
+                Orientation = LayoutOrientation.Vertical
             };
             for (var i = 0; i < 10; i++)
             {
@@ -619,7 +619,7 @@ namespace Robust.Client.Console.Commands
 
             tabContainer.AddChild(new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 Name = "Slider",
                 Children =
                 {

@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface.CustomControls
         {
             Contents.AddChild(new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 Children =
                 {
                     new PanelContainer
@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface.CustomControls
                     },
                     new BoxContainer
                     {
-                    	Orientation = LayoutOrientation.Horizontal,
+                        Orientation = LayoutOrientation.Horizontal,
                         Children =
                         {
                             (InputBar = new HistoryLineEdit

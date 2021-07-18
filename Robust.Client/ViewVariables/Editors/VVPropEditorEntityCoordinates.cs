@@ -16,7 +16,7 @@ namespace Robust.Client.ViewVariables.Editors
             var coords = (EntityCoordinates) value!;
             var hBoxContainer = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Horizontal,
+                Orientation = LayoutOrientation.Horizontal,
                 MinSize = new Vector2(240, 0),
             };
 

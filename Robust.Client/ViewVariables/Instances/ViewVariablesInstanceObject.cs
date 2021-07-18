@@ -67,7 +67,7 @@ namespace Robust.Client.ViewVariables.Instances
             window.Contents.AddChild(scrollContainer);
             var vBoxContainer = new BoxContainer
             {
-            	Orientation = LayoutOrientation.Vertical,
+                Orientation = LayoutOrientation.Vertical,
                 HorizontalExpand = true,
                 VerticalExpand = true,
             };
@@ -77,7 +77,7 @@ namespace Robust.Client.ViewVariables.Instances
             {
                 var headBox = new BoxContainer
                 {
-                	Orientation = LayoutOrientation.Horizontal
+                    Orientation = LayoutOrientation.Horizontal
                 };
                 var name = MakeTopBar(top, bottom);
                 name.HorizontalExpand = true;

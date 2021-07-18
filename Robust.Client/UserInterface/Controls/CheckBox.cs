@@ -18,8 +18,9 @@ namespace Robust.Client.UserInterface.Controls
         {
             ToggleMode = true;
 
-            var hBox = new HBoxContainer
+            var hBox = new BoxContainer
             {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
                 StyleClasses = { StyleClassCheckBox },
             };
             AddChild(hBox);

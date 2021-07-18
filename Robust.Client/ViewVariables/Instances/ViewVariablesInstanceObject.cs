@@ -8,6 +8,7 @@ using Robust.Shared.Input;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Utility;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.ViewVariables.Instances
@@ -64,8 +65,9 @@ namespace Robust.Client.ViewVariables.Instances
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
             window.Contents.AddChild(scrollContainer);
-            var vBoxContainer = new VBoxContainer
+            var vBoxContainer = new BoxContainer
             {
+                Orientation = LayoutOrientation.Vertical,
                 HorizontalExpand = true,
                 VerticalExpand = true,
             };
@@ -73,7 +75,10 @@ namespace Robust.Client.ViewVariables.Instances
 
             // Handle top bar.
             {
-                var headBox = new HBoxContainer();
+                var headBox = new BoxContainer
+                {
+                    Orientation = LayoutOrientation.Horizontal
+                };
                 var name = MakeTopBar(top, bottom);
                 name.HorizontalExpand = true;
                 headBox.AddChild(name);

@@ -1,8 +1,8 @@
 <cc:SS14Window xmlns:cc="clr-namespace:Robust.Client.UserInterface.CustomControls"
                xmlns:c="clr-namespace:Robust.Client.UserInterface.Controls">
-    <c:VBoxContainer VerticalExpand="True">
+    <c:BoxContainer Orientation="Vertical" VerticalExpand="True">
         <c:LineEdit Name="SearchLineEdit" PlaceHolder="Search..." HorizontalExpand="True" />
         <c:ItemList Name="EntryItemList" VerticalExpand="True" HorizontalExpand="True" SelectMode="Single" />
         <c:Button Name="AddButton" Text="Select" TextAlign="Center" HorizontalExpand="True"/>
-    </c:VBoxContainer>
+    </c:BoxContainer>
 </cc:SS14Window>

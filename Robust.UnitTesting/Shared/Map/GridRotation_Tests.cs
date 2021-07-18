@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Map
     {
         // Because integration tests are ten billion percent easier we'll just do all the rotation tests here.
         // These are mainly looking out for situations where the grid is rotated 90 / 180 degrees and we
-        // need rotate poinst about the grid's origin which is a /very/ common source of bugs.
+        // need to rotate points about the grid's origin which is a /very/ common source of bugs.
 
         [Test]
         public async Task Test()

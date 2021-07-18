@@ -114,19 +114,29 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
-        public Angle WorldRotation
+        public Matrix3 WorldMatrix
         {
             get
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
-                return Angle.Zero;
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldMatrix;
+
+                return Matrix3.Identity;
             }
-            set
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public Matrix3 InvWorldMatrix
+        {
+            get
             {
-                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
-                LastModifiedTick = _mapManager.GameTiming.CurTick;
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.InvWorldMatrix;
+
+                return Matrix3.Identity;
             }
         }
 
@@ -507,10 +517,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 WorldToLocal(Vector2 posWorld)
         {
-            var worldPos = WorldPosition;
-            var worldRot = WorldRotation;
-            var relativePos = new Angle(-worldRot.Theta).RotateVec(posWorld - worldPos);
-            return relativePos + worldPos;
+            return InvWorldMatrix.Transform(posWorld);
         }
 
         /// <inheritdoc />
@@ -530,11 +537,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 LocalToWorld(Vector2 posLocal)
         {
-            var worldPos = WorldPosition;
-            var worldRot = WorldRotation;
-            // Rotate the point about our origin
-            var relativePos = new Angle(worldRot.Theta).RotateVec(posLocal);
-            return relativePos + worldPos;
+            return WorldMatrix.Transform(posLocal);
         }
 
         public Vector2i WorldToTile(Vector2 posWorld)

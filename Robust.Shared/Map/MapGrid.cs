@@ -530,7 +530,11 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 LocalToWorld(Vector2 posLocal)
         {
-            return posLocal + WorldPosition;
+            var worldPos = WorldPosition;
+            var worldRot = WorldRotation;
+            // Rotate the point about our origin
+            var relativePos = new Angle(worldRot.Theta).RotateVec(posLocal);
+            return relativePos + worldPos;
         }
 
         public Vector2i WorldToTile(Vector2 posWorld)

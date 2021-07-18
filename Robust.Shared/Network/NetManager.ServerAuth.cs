@@ -234,7 +234,7 @@ namespace Robust.Shared.Network
 
                 Logger.InfoS("net",
                     "Approved {ConnectionEndpoint} with username {Username} user ID {userId} into the server",
-                    connection.RemoteEndPoint, userData.UserName, userData.UserName);
+                    connection.RemoteEndPoint, userData.UserName, userData.UserId);
 
                 // Handshake complete!
                 HandleInitialHandshakeComplete(peer, connection, userData, encryption, type);

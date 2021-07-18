@@ -20,7 +20,7 @@ namespace Robust.Shared.Network.Messages
     [UsedImplicitly]
     internal class MsgMapStrClientHandshake : NetMessage
     {
-        public override MsgGroups MsgGroup => MsgGroups.Core;
+        public override MsgGroups MsgGroup => MsgGroups.String;
 
         /// <value>
         /// <c>true</c> if the client needs a new copy of the mapping,

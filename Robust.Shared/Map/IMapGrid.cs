@@ -47,6 +47,11 @@ namespace Robust.Shared.Map
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
+        /// <summary>
+        ///     The rotation of the grid relative to the world.
+        /// </summary>
+        Angle WorldRotation { get; set; }
+
         #region TileAccess
 
         /// <summary>

@@ -112,6 +112,24 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public Angle WorldRotation
+        {
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
+                return Angle.Zero;
+            }
+            set
+            {
+                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
+            }
+        }
+
         /// <summary>
         /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
         /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
@@ -489,7 +507,10 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 WorldToLocal(Vector2 posWorld)
         {
-            return posWorld - WorldPosition;
+            var worldPos = WorldPosition;
+            var worldRot = WorldRotation;
+            var relativePos = new Angle(-worldRot.Theta).RotateVec(posWorld - worldPos);
+            return relativePos + worldPos;
         }
 
         /// <inheritdoc />

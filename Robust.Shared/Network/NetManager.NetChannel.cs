@@ -46,6 +46,8 @@ namespace Robust.Shared.Network
             [ViewVariables] public NetUserId UserId => UserData.UserId;
             [ViewVariables] public NetUserData UserData { get; }
 
+            public bool IsHandshakeComplete { get; set; }
+
             // Only used on server, contains the encryption to use for this channel.
             public NetEncryption? Encryption { get; set; }
 
@@ -87,6 +89,11 @@ namespace Robust.Shared.Network
             {
                 if (_connection.Status == NetConnectionStatus.Connected)
                     _connection.Disconnect(reason);
+            }
+
+            public override string ToString()
+            {
+                return $"{RemoteEndPoint}/{UserId}";
             }
         }
     }

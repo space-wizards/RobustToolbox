@@ -57,6 +57,11 @@ namespace Robust.Shared.Network
         NetUserData UserData { get; }
 
         /// <summary>
+        ///     Has the serializer handshake completed and <see cref="INetManager.Connected"/> been ran?
+        /// </summary>
+        bool IsHandshakeComplete { get; }
+
+        /// <summary>
         ///     Creates a new NetMessage to be filled up and sent.
         /// </summary>
         /// <typeparam name="T">The derived NetMessage type to send.</typeparam>

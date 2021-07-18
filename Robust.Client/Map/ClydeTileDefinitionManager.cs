@@ -8,6 +8,7 @@ using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -62,7 +63,7 @@ namespace Robust.Client.Map
                 var row = i / dimensionX;
 
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead(Path.Join(def.Path, $"{def.SpriteName}.png")))
+                using (var stream = _resourceCache.ContentFileRead(new ResourcePath(def.Path) / $"{def.SpriteName}.png"))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }

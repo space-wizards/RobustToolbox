@@ -250,7 +250,7 @@ namespace Robust.Client.Placement
             var mapCoords = pManager.eyeManager.ScreenToMap(coords.Position);
             if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
             {
-                return EntityCoordinates.FromMap(pManager.EntityManager, pManager.MapManager, mapCoords);
+                return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
             return EntityCoordinates.FromMap(pManager.EntityManager, grid.GridEntityId, mapCoords);

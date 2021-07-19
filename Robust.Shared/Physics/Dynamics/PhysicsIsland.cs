@@ -28,6 +28,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -359,6 +360,10 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var position = transform.Position;
                 // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
                 var angle = transform.Quaternion2D.Angle;
+
+                // var bodyTransform = body.GetTransform();
+                // DebugTools.Assert(bodyTransform.Position.EqualsApprox(position) && MathHelper.CloseTo(angle, bodyTransform.Quaternion2D.Angle));
+
                 var linearVelocity = body.LinearVelocity;
                 var angularVelocity = body.AngularVelocity;
 
@@ -491,7 +496,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(List<(ITransformComponent, IPhysBody)> deferredUpdates)
+        internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body, Vector2 Position, float Angle)> deferredUpdates)
         {
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
@@ -525,7 +530,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                     if (transform.UpdatesDeferred)
                     {
-                        deferredUpdates.Add((transform, body));
+                        deferredUpdates.Add((transform, body, bodyPos, angle));
                     }
                 }
 

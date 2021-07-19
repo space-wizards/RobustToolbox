@@ -43,6 +43,7 @@ namespace Robust.Shared.Physics.Dynamics
     internal sealed class ContactManager
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         internal MapId MapId { get; set; }
 
@@ -367,7 +368,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 // The contact persists.
-                contact.Update(this, _startCollisions, _endCollisions);
+                contact.Update(_physicsManager, _startCollisions, _endCollisions);
 
                 contact = contact.Next;
             }

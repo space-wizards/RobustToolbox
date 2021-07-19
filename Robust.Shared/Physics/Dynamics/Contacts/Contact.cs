@@ -273,22 +273,23 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
-        public void GetWorldManifold(out Vector2 normal, Span<Vector2> points)
+        public void GetWorldManifold(IPhysicsManager physicsManager, out Vector2 normal, Span<Vector2> points)
         {
             PhysicsComponent bodyA = FixtureA?.Body!;
             PhysicsComponent bodyB = FixtureB?.Body!;
             IPhysShape shapeA = FixtureA?.Shape!;
             IPhysShape shapeB = FixtureB?.Shape!;
+            var bodyATransform = physicsManager.GetTransform(bodyA);
+            var bodyBTransform = physicsManager.GetTransform(bodyB);
 
-            ContactSolver.InitializeManifold(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, points);
+            ContactSolver.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
-        /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
+        internal void Update(IPhysicsManager physicsManager, List<Contact> startCollisions, List<Contact> endCollisions)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -306,19 +307,22 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             bool sensor = !(FixtureA.Hard && FixtureB.Hard);
 
+            var bodyATransform = physicsManager.GetTransform(bodyA);
+            var bodyBTransform = physicsManager.GetTransform(bodyB);
+
             // Is this contact a sensor?
             if (sensor)
             {
                 IPhysShape shapeA = FixtureA.Shape;
                 IPhysShape shapeB = FixtureB.Shape;
-                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyA.GetTransform(), bodyB.GetTransform());
+                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.
                 Manifold.PointCount = 0;
             }
             else
             {
-                Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
+                Evaluate(ref Manifold, bodyATransform, bodyBTransform);
                 touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the

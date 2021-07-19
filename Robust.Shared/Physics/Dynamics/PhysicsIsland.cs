@@ -23,14 +23,11 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -141,6 +138,7 @@ stored in a single array since multiple arrays lead to multiple misses.
     public sealed class PhysicsIsland
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 #if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
         private List<IPhysBody> _debugBodies = new(8);
@@ -162,7 +160,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
 
-        public IPhysBody[] Bodies = Array.Empty<IPhysBody>();
+        public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
         private Joint[] _joints = Array.Empty<Joint>();
 
@@ -260,7 +258,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _configManager.OnValueChanged(CVars.TimeToSleep, value => _timeToSleep = value);
         }
 
-        public void Append(List<IPhysBody> bodies, List<Contact> contacts, List<Joint> joints)
+        public void Append(List<PhysicsComponent> bodies, List<Contact> contacts, List<Joint> joints)
         {
             Resize(BodyCount + bodies.Count, ContactCount + contacts.Count, JointCount + joints.Count);
             foreach (var body in bodies)
@@ -279,7 +277,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        public void Add(IPhysBody body)
+        public void Add(PhysicsComponent body)
         {
             body.IslandIndex[ID] = BodyCount;
             Bodies[BodyCount++] = body;
@@ -357,9 +355,10 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 // In future we'll set these to existing
                 // Didn't use the old variable names because they're hard to read
-                var position = body.Owner.Transform.WorldPosition;
+                var transform = _physicsManager.GetTransform(body);
+                var position = transform.Position;
                 // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
-                var angle = (float) body.Owner.Transform.WorldRotation.Theta;
+                var angle = transform.Quaternion2D.Angle;
                 var linearVelocity = body.LinearVelocity;
                 var angularVelocity = body.AngularVelocity;
 

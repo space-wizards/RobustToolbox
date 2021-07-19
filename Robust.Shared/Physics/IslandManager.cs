@@ -10,7 +10,11 @@ subject to the following restrictions:
 2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
 3. This notice may not be removed or altered from any source distribution.
 */
+
+using System;
 using System.Collections.Generic;
+using Robust.Shared.Configuration;
+using Robust.Shared.IoC;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
@@ -31,6 +35,8 @@ namespace Robust.Shared.Physics
     /// </summary>
     internal sealed class IslandManager : IIslandManager
     {
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
+
         private static readonly IslandBodyCapacitySort CapacitySort = new();
         private static readonly IslandBodyCountSort CountSort = new();
 
@@ -67,11 +73,81 @@ namespace Robust.Shared.Physics
             }
         }
 
+        private int _tickRate;
+        private float _maxLinearVelocityRaw;
+        private float _maxAngularVelocityRaw;
+        private IslandCfg _islandCfg;
+
         public void Initialize()
         {
+            InitConfig();
+
             _loneIsland.Initialize();
             // Set an initial size so we don't spam a bunch of array resizes at the start
             _loneIsland.Resize(64, 32, 8);
+        }
+
+        private void InitConfig()
+        {
+            // Config stuff.
+            CfgVar(CVars.AngularSleepTolerance, value => _islandCfg.AngTolSqr = value * value);
+            CfgVar(CVars.LinearSleepTolerance, value => _islandCfg.LinTolSqr = value * value);
+            CfgVar(CVars.WarmStarting, value => _islandCfg.WarmStarting = value);
+            CfgVar(CVars.VelocityIterations, value => _islandCfg.VelocityIterations = value);
+            CfgVar(CVars.PositionIterations, value => _islandCfg.PositionIterations = value);
+            CfgVar(CVars.SleepAllowed, value => _islandCfg.SleepAllowed = value);
+            CfgVar(CVars.TimeToSleep, value => _islandCfg.TimeToSleep = value);
+            CfgVar(CVars.VelocityThreshold, value => _islandCfg.VelocityThreshold = value);
+            CfgVar(CVars.Baumgarte, value => _islandCfg.Baumgarte = value);
+            CfgVar(CVars.LinearSlop, value => _islandCfg.LinearSlop = value);
+            CfgVar(CVars.MaxLinearCorrection, value => _islandCfg.MaxLinearCorrection = value);
+            CfgVar(CVars.MaxLinVelocity, value =>
+            {
+                _maxLinearVelocityRaw = value;
+                UpdateMaxLinearVelocity();
+            });
+            CfgVar(CVars.MaxAngVelocity, value =>
+            {
+                _maxAngularVelocityRaw = value;
+                UpdateMaxAngularVelocity();
+            });
+            CfgVar(CVars.NetTickrate, value =>
+            {
+                _tickRate = value;
+                UpdateMaxLinearVelocity();
+                UpdateMaxAngularVelocity();
+            });
+
+            void UpdateMaxLinearVelocity()
+            {
+                _islandCfg.MaxLinearVelocity = _maxLinearVelocityRaw / _tickRate;
+            }
+
+            void UpdateMaxAngularVelocity()
+            {
+                _islandCfg.MaxAngularVelocity = (MathF.PI * 2 * _maxAngularVelocityRaw) / _tickRate;
+            }
+
+            void CfgVar<T>(CVarDef<T> cVar, Action<T> callback) where T : notnull
+            {
+                _cfg.OnValueChanged(cVar, value =>
+                {
+                    callback(value);
+                    UpdateIslandCfg();
+                }, true);
+            }
+        }
+
+        private void UpdateIslandCfg()
+        {
+            // OOP bad
+
+            _loneIsland.LoadConfig(_islandCfg);
+
+            foreach (var island in _allocatedIslands)
+            {
+                island.LoadConfig(_islandCfg);
+            }
         }
 
         public void InitializePools()
@@ -159,6 +235,7 @@ namespace Robust.Shared.Physics
             {
                 island = new PhysicsIsland();
                 island.Initialize();
+                island.LoadConfig(_islandCfg);
                 _allocatedIslands.Add(island);
             }
 

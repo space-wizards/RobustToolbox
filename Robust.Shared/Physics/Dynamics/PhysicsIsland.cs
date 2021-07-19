@@ -22,15 +22,12 @@
 
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
+using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -140,13 +137,13 @@ stored in a single array since multiple arrays lead to multiple misses.
 */
     public sealed class PhysicsIsland
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
+        // if you add new deps to this, the IoCManager inject dependencies is behind #if too.
 #if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
         private List<IPhysBody> _debugBodies = new(8);
 #endif
 
-        private ContactSolver _contactSolver = default!;
+        private readonly ContactSolver _contactSolver = new();
 
         internal int ID { get; set; } = -1;
 
@@ -211,53 +208,25 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// </summary>
         public int JointCount { get; private set; }
 
-        public void Initialize()
+        [Conditional("DEBUG")]
+        internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _contactSolver = new ContactSolver();
-            _contactSolver.Initialize();
+        }
 
-            // Values
-            _angTolSqr = MathF.Pow(_configManager.GetCVar(CVars.AngularSleepTolerance), 2);
-            _configManager.OnValueChanged(CVars.AngularSleepTolerance, value => _angTolSqr = MathF.Pow(value, 2));
+        internal void LoadConfig(in IslandCfg cfg)
+        {
+            _angTolSqr = cfg.AngTolSqr;
+            _linTolSqr = cfg.LinTolSqr;
+            _warmStarting = cfg.WarmStarting;
+            _velocityIterations = cfg.VelocityIterations;
+            _maxLinearVelocity = cfg.MaxLinearVelocity;
+            _maxAngularVelocity = cfg.MaxAngularVelocity;
+            _positionIterations = cfg.PositionIterations;
+            _sleepAllowed = cfg.SleepAllowed;
+            _timeToSleep = cfg.TimeToSleep;
 
-            _linTolSqr = MathF.Pow(_configManager.GetCVar(CVars.LinearSleepTolerance), 2);
-            _configManager.OnValueChanged(CVars.LinearSleepTolerance, value => _linTolSqr = MathF.Pow(value, 2));
-
-            _warmStarting = _configManager.GetCVar(CVars.WarmStarting);
-            _configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value);
-
-            _velocityIterations = _configManager.GetCVar(CVars.VelocityIterations);
-            _configManager.OnValueChanged(CVars.VelocityIterations, value => _velocityIterations = value);
-
-            _configManager.OnValueChanged(CVars.MaxLinVelocity, value => SetMaxLinearVelocity(value, null));
-            _configManager.OnValueChanged(CVars.NetTickrate, value => SetMaxLinearVelocity(null, value));
-            void SetMaxLinearVelocity(float? maxLinVelocity = null, int? tickrate = null)
-            {
-                maxLinVelocity ??= _configManager.GetCVar(CVars.MaxLinVelocity);
-                tickrate ??= _configManager.GetCVar(CVars.NetTickrate);
-                _maxLinearVelocity = (float)(maxLinVelocity / tickrate);
-            }
-            SetMaxLinearVelocity();
-
-            _configManager.OnValueChanged(CVars.MaxAngVelocity, value => SetMaxAngularVelocity(value, null));
-            _configManager.OnValueChanged(CVars.NetTickrate, value => SetMaxAngularVelocity(null, value));
-            void SetMaxAngularVelocity(float? maxAngVelocity = null, int? tickrate = null)
-            {
-                maxAngVelocity ??= _configManager.GetCVar(CVars.MaxAngVelocity);
-                tickrate ??= _configManager.GetCVar(CVars.NetTickrate);
-                _maxAngularVelocity = (float)((MathF.PI * 2 * maxAngVelocity) / tickrate);
-            }
-            SetMaxAngularVelocity();
-
-            _positionIterations = _configManager.GetCVar(CVars.PositionIterations);
-            _configManager.OnValueChanged(CVars.PositionIterations, value => _positionIterations = value);
-
-            _sleepAllowed = _configManager.GetCVar(CVars.SleepAllowed);
-            _configManager.OnValueChanged(CVars.SleepAllowed, value => _sleepAllowed = value);
-
-            _timeToSleep = _configManager.GetCVar(CVars.TimeToSleep);
-            _configManager.OnValueChanged(CVars.TimeToSleep, value => _timeToSleep = value);
+            _contactSolver.LoadConfig(cfg);
         }
 
         public void Append(List<IPhysBody> bodies, List<Contact> contacts, List<Joint> joints)
@@ -630,5 +599,25 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         public Vector2[] Positions { get; set; } = default!;
         public float[] Angles { get; set; } = default!;
+    }
+
+    /// <summary>
+    ///     Contains all configuration parameters that need to be passed to physics islands.
+    /// </summary>
+    internal struct IslandCfg
+    {
+        public float AngTolSqr;
+        public float LinTolSqr;
+        public bool SleepAllowed;
+        public bool WarmStarting;
+        public int VelocityIterations;
+        public float MaxLinearVelocity;
+        public float MaxAngularVelocity;
+        public int PositionIterations;
+        public float TimeToSleep;
+        public float VelocityThreshold;
+        public float Baumgarte;
+        public float LinearSlop;
+        public float MaxLinearCorrection;
     }
 }

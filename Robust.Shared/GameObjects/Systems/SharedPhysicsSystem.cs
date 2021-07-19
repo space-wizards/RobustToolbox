@@ -83,7 +83,7 @@ namespace Robust.Shared.GameObjects
         internal IReadOnlyList<VirtualController> Controllers => _controllers;
         private List<VirtualController> _controllers = new();
 
-        public Action<Fixture, Fixture, float, Manifold>? KinematicControllerCollision;
+        public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
         public bool MetricsEnabled;
         private readonly Stopwatch _stopwatch = new();
@@ -146,7 +146,7 @@ namespace Robust.Shared.GameObjects
             body.LinearVelocity += linearVelocityDiff;
             body.AngularVelocity += angularVelocityDiff;
         }
-        
+
         private void HandleGridInit(GridInitializeEvent ev)
         {
             if (!EntityManager.TryGetEntity(ev.EntityUid, out var gridEntity)) return;

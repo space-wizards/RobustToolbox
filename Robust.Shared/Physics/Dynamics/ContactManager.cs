@@ -34,6 +34,7 @@ using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Contacts;
@@ -63,7 +64,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     Invoked whenever a KinematicController body collides. The first body is always guaranteed to be a KinematicController
         /// </summary>
-        internal event Action<Fixture, Fixture, float, Manifold>? KinematicControllerCollision;
+        internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
         // TODO: Need to migrate the interfaces to comp bus when possible
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
@@ -434,26 +435,29 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void PreSolve(float frameTime)
         {
+            Span<Vector2> points = stackalloc Vector2[2];
+
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
             for (var contact = ContactList.Next; contact != ContactList; contact = contact?.Next)
             {
-                if (contact == null || !contact.IsTouching || !contact.Enabled)
+                if (contact is not {IsTouching: true, Enabled: true})
                 {
                     continue;
                 }
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
+                contact.GetWorldManifold(out var worldNormal, points);
 
                 // Didn't use an EntitySystemMessage as this is called FOR EVERY COLLISION AND IS REALLY EXPENSIVE
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.
                 if (bodyA.BodyType == BodyType.KinematicController)
                 {
-                    KinematicControllerCollision?.Invoke(contact.FixtureA!, contact.FixtureB!, frameTime, contact.Manifold);
+                    KinematicControllerCollision?.Invoke(contact.FixtureA!, contact.FixtureB!, frameTime, -worldNormal);
                 }
                 else if (bodyB.BodyType == BodyType.KinematicController)
                 {
-                    KinematicControllerCollision?.Invoke(contact.FixtureB!, contact.FixtureA!, frameTime, contact.Manifold);
+                    KinematicControllerCollision?.Invoke(contact.FixtureB!, contact.FixtureA!, frameTime, worldNormal);
                 }
             }
         }
@@ -472,20 +476,18 @@ namespace Robust.Shared.Physics.Dynamics
     {
         public Fixture OurFixture { get; }
         public Fixture OtherFixture { get; }
-        public Manifold Manifold { get; }
 
-        public CollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        public CollideEvent(Fixture ourFixture, Fixture otherFixture)
         {
             OurFixture = ourFixture;
             OtherFixture = otherFixture;
-            Manifold = manifold;
         }
     }
 
     public sealed class StartCollideEvent : CollideEvent
     {
         public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
-            : base(ourFixture, otherFixture, manifold)
+            : base(ourFixture, otherFixture)
         {
         }
     }
@@ -493,7 +495,7 @@ namespace Robust.Shared.Physics.Dynamics
     public sealed class EndCollideEvent : CollideEvent
     {
         public EndCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
-            : base(ourFixture, otherFixture, manifold)
+            : base(ourFixture, otherFixture)
         {
         }
     }

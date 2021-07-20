@@ -413,20 +413,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                 _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB, manifold));
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA, manifold));
-
-#pragma warning disable 618
-                foreach (var comp in bodyA.Owner.GetAllComponents<IEndCollide>().ToArray())
-                {
-                    if (bodyB.Deleted) break;
-                    comp.CollideWith(fixtureA, fixtureB, manifold);
-                }
-
-                foreach (var comp in bodyB.Owner.GetAllComponents<IEndCollide>().ToArray())
-                {
-                    if (bodyA.Deleted) break;
-                    comp.CollideWith(fixtureB, fixtureA, manifold);
-                }
-#pragma warning restore 618
             }
 
             _startCollisions.Clear();

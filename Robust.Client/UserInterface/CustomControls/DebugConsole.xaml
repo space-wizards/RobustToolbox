@@ -1,6 +1,6 @@
 <Control xmlns="https://spacestation14.io"
          xmlns:gfx="clr-namespace:Robust.Client.Graphics">
-    <VBoxContainer>
+    <BoxContainer Orientation="Vertical">
         <OutputPanel Name="Output" VerticalExpand="True">
             <OutputPanel.StyleBoxOverride>
                 <gfx:StyleBoxFlat BackgroundColor="#25252add"
@@ -9,5 +9,5 @@
             </OutputPanel.StyleBoxOverride>
         </OutputPanel>
         <HistoryLineEdit Name="CommandBar" PlaceHolder="{Loc 'console-line-edit-placeholder'}" />
-    </VBoxContainer>
+    </BoxContainer>
 </Control>

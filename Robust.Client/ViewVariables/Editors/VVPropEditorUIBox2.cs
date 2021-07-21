@@ -3,6 +3,7 @@ using System.Globalization;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
@@ -17,8 +18,9 @@ namespace Robust.Client.ViewVariables.Editors
 
         protected override Control MakeUI(object? value)
         {
-            var hBoxContainer = new HBoxContainer
+            var hBoxContainer = new BoxContainer
             {
+                Orientation = LayoutOrientation.Horizontal,
                 MinSize = new Vector2(200, 0),
             };
 

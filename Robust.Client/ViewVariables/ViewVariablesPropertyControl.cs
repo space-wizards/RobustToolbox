@@ -8,14 +8,15 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables
 {
     internal class ViewVariablesPropertyControl : PanelContainer
     {
-        public VBoxContainer VBox { get; }
-        public HBoxContainer TopContainer { get; }
-        public HBoxContainer BottomContainer { get; }
+        public BoxContainer VBox { get; }
+        public BoxContainer TopContainer { get; }
+        public BoxContainer BottomContainer { get; }
         public Label NameLabel { get; }
 
         private readonly Label _bottomLabel;
@@ -34,14 +35,23 @@ namespace Robust.Client.ViewVariables
             ToolTip = "Click to expand";
             MinHeight = 25;
 
-            VBox = new VBoxContainer {SeparationOverride = 0};
+            VBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             AddChild(VBox);
 
-            TopContainer = new HBoxContainer {VerticalExpand = true};
+            TopContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
+                VerticalExpand = true
+            };
             VBox.AddChild(TopContainer);
 
-            BottomContainer = new HBoxContainer
+            BottomContainer = new BoxContainer
             {
+                Orientation = LayoutOrientation.Horizontal,
                 Visible = false
             };
             VBox.AddChild(BottomContainer);

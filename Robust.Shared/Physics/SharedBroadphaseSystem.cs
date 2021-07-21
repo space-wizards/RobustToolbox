@@ -297,8 +297,12 @@ namespace Robust.Shared.Physics
 
             foreach (var (proxyA, proxies) in _pairBuffer)
             {
+                if (proxyA.Fixture.Body.Deleted) continue;
+
                 foreach (var other in proxies)
                 {
+                    if (other.Fixture.Body.Deleted) continue;
+
                     contactManager.AddPair(proxyA, other);
                 }
             }

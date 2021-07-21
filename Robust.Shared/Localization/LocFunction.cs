@@ -142,6 +142,14 @@ namespace Robust.Shared.Localization
         }
     }
 
+    public sealed record LocValueTimeSpan(TimeSpan Value) : LocValue<TimeSpan>(Value)
+    {
+        public override string Format(LocContext ctx)
+        {
+            return Value.ToString("g", ctx.Culture);
+        }
+    }
+
     public sealed record LocValueString(string Value) : LocValue<string>(Value)
     {
         public override string Format(LocContext ctx)

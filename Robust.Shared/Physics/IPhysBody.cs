@@ -49,10 +49,6 @@ namespace Robust.Shared.Physics
         /// </summary>
         int CollisionMask { get; }
 
-        void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null);
-
-        void ClearProxies();
-
         /// <summary>
         ///     Removes all of the currently active contacts for this body.
         /// </summary>

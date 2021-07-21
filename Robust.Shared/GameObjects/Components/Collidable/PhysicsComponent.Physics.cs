@@ -33,6 +33,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
@@ -58,6 +59,8 @@ namespace Robust.Shared.GameObjects
         ///     Has this body been added to an island previously in this tick.
         /// </summary>
         public bool Island { get; set; }
+
+        internal BroadphaseComponent? Broadphase { get; set; }
 
         /// <summary>
         ///     Store the body's index within the island so we can lookup its data.
@@ -136,7 +139,7 @@ namespace Robust.Shared.GameObjects
                 Force = Vector2.Zero;
                 Torque = 0.0f;
 
-                RegenerateContacts();
+                EntitySystem.Get<SharedBroadphaseSystem>().RegenerateContacts(this);
 
                 Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
             }
@@ -242,39 +245,10 @@ namespace Robust.Shared.GameObjects
             Awake = true;
         }
 
-        /// <summary>
-        ///     Removes all of our contacts and flags them as requiring regeneration next physics tick.
-        /// </summary>
-        public void RegenerateContacts()
-        {
-            var contactEdge = ContactEdges;
-            while (contactEdge != null)
-            {
-                var contactEdge0 = contactEdge;
-                contactEdge = contactEdge.Next;
-                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
-            }
-
-            ContactEdges = null;
-            var broadphaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-
-            foreach (var fixture in Fixtures)
-            {
-                var proxyCount = fixture.ProxyCount;
-                foreach (var (gridId, proxies) in fixture.Proxies)
-                {
-                    var broadPhase = broadphaseSystem.GetBroadPhase(Owner.Transform.MapID, gridId);
-                    if (broadPhase == null) continue;
-                    for (var i = 0; i < proxyCount; i++)
-                    {
-                        broadPhase.TouchProxy(proxies[i].ProxyId);
-                    }
-                }
-            }
-        }
-
         void ISerializationHooks.AfterDeserialization()
         {
+            FixtureCount = _fixtures.Count;
+
             foreach (var fixture in _fixtures)
             {
                 fixture.Body = this;
@@ -446,17 +420,19 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
+            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;
-                RemoveFixture(fixture);
+                broadphaseSystem.DestroyFixture(this, fixture);
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
             foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
-                AddFixture(fixture);
+                broadphaseSystem.CreateFixture(this, fixture);
                 fixture.Shape.ApplyState();
             }
 
@@ -568,9 +544,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [ViewVariables]
+        public int FixtureCount { get; internal set; }
+
         [DataField("fixtures")]
         [NeverPushInheritance]
-        private List<Fixture> _fixtures = new();
+        internal List<Fixture> _fixtures = new();
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -656,9 +635,6 @@ namespace Robust.Shared.GameObjects
                 return mask;
             }
         }
-
-        [ViewVariables]
-        public bool HasProxies { get; set; }
 
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
@@ -1027,17 +1003,9 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public MapId BroadphaseMapId { get; set; }
 
-        public IEnumerable<PhysicsComponent> GetCollidingBodies()
-        {
-            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, Vector2.Zero))
-            {
-                yield return entity;
-            }
-        }
-
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -1064,24 +1032,6 @@ namespace Robust.Shared.GameObjects
             return Transform.Mul(GetTransform(), localPoint);
         }
 
-        /// <summary>
-        ///     Remove the proxies from all the broadphases.
-        /// </summary>
-        public void ClearProxies()
-        {
-            if (!HasProxies) return;
-
-            var broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
-            var mapId = BroadphaseMapId;
-
-            foreach (var fixture in Fixtures)
-            {
-                fixture.ClearProxies(mapId, broadPhaseSystem);
-            }
-
-            HasProxies = false;
-        }
-
         public void FixtureChanged(Fixture fixture)
         {
             // TODO: Optimise this a LOT
@@ -1089,12 +1039,32 @@ namespace Robust.Shared.GameObjects
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
         }
 
-        private string GetFixtureName(Fixture fixture)
+        public string GetFixtureName(Fixture fixture)
         {
             if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
 
-            // For any fixtures that aren't named in the code we will assign one.
-            return $"fixture-{_fixtures.IndexOf(fixture)}";
+            var i = 0;
+
+            while (true)
+            {
+                var found = false;
+                ++i;
+                var name = $"fixture_{i}";
+
+                foreach (var existing in _fixtures)
+                {
+                    if (existing.ID.Equals(name))
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                {
+                    return name;
+                }
+            }
         }
 
         private string GetJointName(Joint joint)
@@ -1158,73 +1128,6 @@ namespace Robust.Shared.GameObjects
             Force += force;
         }
 
-        /// <summary>
-        ///     Get the proxies for each of our fixtures and add them to the broadphases.
-        /// </summary>
-        /// <param name="mapManager"></param>
-        /// <param name="broadPhaseSystem"></param>
-        public void CreateProxies(IMapManager? mapManager = null, SharedBroadPhaseSystem? broadPhaseSystem = null)
-        {
-            if (HasProxies) return;
-
-            BroadphaseMapId = Owner.Transform.MapID;
-
-            if (BroadphaseMapId == MapId.Nullspace)
-            {
-                HasProxies = true;
-                return;
-            }
-
-            broadPhaseSystem ??= EntitySystem.Get<SharedBroadPhaseSystem>();
-            mapManager ??= IoCManager.Resolve<IMapManager>();
-            var worldPosition = Owner.Transform.WorldPosition;
-            var mapId = Owner.Transform.MapID;
-            var worldAABB = GetWorldAABB();
-            var worldRotation = Owner.Transform.WorldRotation.Theta;
-
-            // TODO: For singularity and shuttles: Any fixtures that have a MapGrid layer / mask needs to be added to the default broadphase (so it can collide with grids).
-
-            foreach (var gridId in mapManager.FindGridIdsIntersecting(mapId, worldAABB, true))
-            {
-                var broadPhase = broadPhaseSystem.GetBroadPhase(mapId, gridId);
-                DebugTools.AssertNotNull(broadPhase);
-                if (broadPhase == null) continue; // TODO
-
-                Vector2 offset = worldPosition;
-                double gridRotation = worldRotation;
-
-                if (gridId != GridId.Invalid)
-                {
-                    var grid = mapManager.GetGrid(gridId);
-                    offset -= grid.WorldPosition;
-                    // TODO: Should probably have a helper for this
-                    gridRotation = worldRotation - Owner.EntityManager.GetEntity(grid.GridEntityId).Transform.WorldRotation;
-                }
-
-                foreach (var fixture in Fixtures)
-                {
-                    fixture.ProxyCount = fixture.Shape.ChildCount;
-                    var proxies = new FixtureProxy[fixture.ProxyCount];
-
-                    // TODO: Will need to pass in childIndex to this as well
-                    for (var i = 0; i < fixture.ProxyCount; i++)
-                    {
-                        var aabb = fixture.Shape.CalculateLocalBounds(gridRotation).Translated(offset);
-
-                        var proxy = new FixtureProxy(aabb, fixture, i);
-
-                        proxy.ProxyId = broadPhase.AddProxy(ref proxy);
-                        proxies[i] = proxy;
-                        DebugTools.Assert(proxies[i].ProxyId != DynamicTree.Proxy.Free);
-                    }
-
-                    fixture.SetProxies(gridId, proxies);
-                }
-            }
-
-            HasProxies = true;
-        }
-
         // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
         public void DestroyContacts()
         {
@@ -1241,7 +1144,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
         {
-            return EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(this, offset, approx);
+            return EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(this, offset, approx);
         }
 
         /// <inheritdoc />
@@ -1253,6 +1156,9 @@ namespace Robust.Shared.GameObjects
             {
                 _awake = false;
             }
+
+            // TODO: Ordering fuckery need a new PR to fix some of this stuff
+            PhysicsMap = EntitySystem.Get<SharedPhysicsSystem>().Maps[Owner.Transform.MapID];
 
             Dirty();
             // Yeah yeah TODO Combine these
@@ -1290,45 +1196,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void AddFixture(Fixture fixture)
-        {
-            // TODO: SynchronizeFixtures could be more optimally done. Maybe just eventbus it
-            // Also we need to queue updates and also not teardown completely every time.
-            _fixtures.Add(fixture);
-            Dirty();
-            EntitySystem.Get<SharedBroadPhaseSystem>().AddFixture(this, fixture);
-        }
-
-        public void RemoveFixture(Fixture fixture)
-        {
-            if (!_fixtures.Contains(fixture))
-            {
-                Logger.ErrorS("physics", $"Tried to remove fixture that isn't attached to the body {Owner.Uid}");
-                return;
-            }
-
-            ContactEdge? edge = ContactEdges;
-            while (edge != null)
-            {
-                var contact = edge.Contact!;
-                edge = edge.Next;
-
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixture == fixtureA || fixture == fixtureB)
-                {
-                    PhysicsMap.ContactManager.Destroy(contact);
-                }
-            }
-
-            _fixtures.Remove(fixture);
-            EntitySystem.Get<SharedBroadPhaseSystem>().RemoveFixture(this, fixture);
-            ResetMassData();
-
-            Dirty();
-        }
-
         public void AddJoint(Joint joint)
         {
             var id = GetJointName(joint);
@@ -1356,7 +1223,7 @@ namespace Robust.Shared.GameObjects
             // Need to do these immediately in case collision behaviors deleted the body
             // TODO: Could be more optimal as currently broadphase will call this ANYWAY
             DestroyContacts();
-            ClearProxies();
+            EntitySystem.Get<SharedBroadphaseSystem>().RemoveBody(this);
             CanCollide = false;
         }
 
@@ -1382,7 +1249,27 @@ namespace Robust.Shared.GameObjects
                 var fixMass = fixture.Mass;
 
                 _mass += fixMass;
-                localCenter += fixture.Centroid * fixMass;
+
+                var center = Vector2.Zero;
+
+                // TODO: God this is garbage
+                switch (fixture.Shape)
+                {
+                    case PhysShapeAabb aabb:
+                        center = aabb.Centroid;
+                        break;
+                    case PhysShapeRect rect:
+                        center = rect.Centroid;
+                        break;
+                    case PolygonShape poly:
+                        center = poly.Centroid;
+                        break;
+                    case PhysShapeCircle circle:
+                        center = circle.Position;
+                        break;
+                }
+
+                localCenter += center * fixMass;
                 _inertia += fixture.Inertia;
             }
 

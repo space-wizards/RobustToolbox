@@ -258,7 +258,7 @@ namespace Robust.Shared.Map
                 localBounds.Left * ts,
                 localBounds.Bottom * ts,
                 localBounds.Right * ts,
-                localBounds.Top * ts).Translated(worldPos), gridRot.Value);
+                localBounds.Top * ts).Translated(worldPos), gridRot.Value, worldPos);
 
             return scaledLocalBounds;
         }

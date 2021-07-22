@@ -5,6 +5,7 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -773,24 +774,13 @@ namespace Robust.Client.Graphics.Clyde
                 var ii = 0;
                 var imi = 0;
 
-                foreach (var gridId in _mapManager.FindGridIdsIntersecting(map, expandedBounds, true))
+                foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    if (!occluderSystem.TryGetOccluderTreeForGrid(map, gridId, out var occluderTree)) continue;
+                    // TODO: I know this doesn't work with rotated grids but when I come back to these I'm adding tests
+                    // because rotation bugs are common.
+                    var treeBounds = expandedBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                    Box2 gridBounds;
-
-                    if (gridId == GridId.Invalid)
-                    {
-                        gridBounds = expandedBounds;
-                    }
-                    else
-                    {
-                        // TODO: Ideally this would clamp to the outer border of what we can see
-                        var grid = _mapManager.GetGrid(gridId);
-                        gridBounds = expandedBounds.Translated(-grid.WorldPosition);
-                    }
-
-                    occluderTree.QueryAabb((in OccluderComponent sOccluder) =>
+                    comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
                         var occluder = (ClientOccluderComponent)sOccluder;
                         var transform = occluder.Owner.Transform;
@@ -919,7 +909,7 @@ namespace Robust.Client.Graphics.Clyde
                         ami += 4;
 
                         return true;
-                    }, gridBounds);
+                    }, treeBounds);
                 }
 
                 _occlusionDataLength = ii;

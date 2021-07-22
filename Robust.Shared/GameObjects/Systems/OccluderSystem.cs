@@ -91,6 +91,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
             _mapManager.MapCreated -= OnMapCreated;
+            _updates.Clear();
         }
 
         public override void FrameUpdate(float frameTime)

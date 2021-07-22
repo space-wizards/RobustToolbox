@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -92,7 +90,6 @@ namespace Robust.Shared.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-
             _mapManager.MapCreated -= OnMapCreated;
         }
 

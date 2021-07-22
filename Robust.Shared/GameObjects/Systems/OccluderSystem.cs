@@ -6,49 +6,87 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
     public abstract class OccluderSystem : EntitySystem
     {
-
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
 
-        private readonly Dictionary<MapId, Dictionary<GridId, DynamicTree<OccluderComponent>>> _gridTrees =
-                     new();
+        private const float TreeGrowthRate = 256;
 
-        private readonly List<(OccluderComponent Occluder, EntityCoordinates Coordinates)> _occluderAddQueue =
-                     new();
-
-        private readonly List<(OccluderComponent Occluder, EntityCoordinates Coordinates)> _occluderRemoveQueue =
-            new();
-
-        internal bool TryGetOccluderTreeForGrid(MapId mapId, GridId gridId, [NotNullWhen(true)] out DynamicTree<OccluderComponent>? gridTree)
-        {
-            gridTree = null;
-
-            if (!_gridTrees.TryGetValue(mapId, out var grids))
-                return false;
-
-            if (!grids.TryGetValue(gridId, out gridTree))
-                return false;
-
-            return true;
-        }
+        private Queue<OccluderEvent> _updates = new(64);
 
         public override void Initialize()
         {
             base.Initialize();
 
             _mapManager.MapCreated += OnMapCreated;
-            _mapManager.MapDestroyed += OnMapDestroyed;
-            _mapManager.OnGridCreated += OnGridCreated;
-            _mapManager.OnGridRemoved += OnGridRemoved;
 
-            SubscribeLocalEvent<MoveEvent>(EntMoved);
-            SubscribeLocalEvent<EntParentChangedMessage>(EntParentChanged);
-            SubscribeLocalEvent<OccluderBoundingBoxChangedMessage>(OccluderBoundingBoxChanged);
-            SubscribeLocalEvent<OccluderTreeRemoveOccluderMessage>(RemoveOccluder);
+            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
+            SubscribeLocalEvent<OccluderTreeComponent, ComponentInit>(HandleOccluderTreeInit);
+            SubscribeLocalEvent<OccluderComponent, ComponentInit>(HandleOccluderInit);
+            SubscribeLocalEvent<OccluderComponent, ComponentShutdown>(HandleOccluderShutdown);
+
+            SubscribeLocalEvent<OccluderComponent, MoveEvent>(EntMoved);
+            SubscribeLocalEvent<OccluderComponent, EntParentChangedMessage>(EntParentChanged);
+            SubscribeLocalEvent<OccluderEvent>(ev => _updates.Enqueue(ev));
+        }
+
+        internal IEnumerable<OccluderTreeComponent> GetOccluderTrees(MapId mapId, Box2 worldAABB)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<OccluderTreeComponent>();
+            }
+
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<OccluderTreeComponent>();
+        }
+
+        private void HandleOccluderInit(EntityUid uid, OccluderComponent component, ComponentInit args)
+        {
+            if (!component.Enabled) return;
+            _updates.Enqueue(new OccluderAddEvent(component));
+        }
+
+        private void HandleOccluderShutdown(EntityUid uid, OccluderComponent component, ComponentShutdown args)
+        {
+            if (!component.Enabled) return;
+            _updates.Enqueue(new OccluderRemoveEvent(component));
+        }
+
+        private void HandleOccluderTreeInit(EntityUid uid, OccluderTreeComponent component, ComponentInit args)
+        {
+            var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / TreeGrowthRate) * TreeGrowthRate);
+
+            component.Tree = new DynamicTree<OccluderComponent>(ExtractAabbFunc, capacity: capacity);
+        }
+
+        private void HandleGridInit(GridInitializeEvent ev)
+        {
+            EntityManager.GetEntity(ev.EntityUid).EnsureComponent<OccluderTreeComponent>();
+        }
+
+        private OccluderTreeComponent? GetOccluderTree(OccluderComponent component)
+        {
+            var entity = component.Owner;
+
+            if (entity.Transform.MapID == MapId.Nullspace) return null;
+
+            var parent = entity.Transform.Parent?.Owner;
+
+            while (true)
+            {
+                if (parent == null) break;
+
+                if (parent.TryGetComponent(out OccluderTreeComponent? comp)) return comp;
+                parent = parent.Transform.Parent?.Owner;
+            }
+
+            return null;
         }
 
         public override void Shutdown()
@@ -56,9 +94,6 @@ namespace Robust.Shared.GameObjects
             base.Shutdown();
 
             _mapManager.MapCreated -= OnMapCreated;
-            _mapManager.MapDestroyed -= OnMapDestroyed;
-            _mapManager.OnGridCreated -= OnGridCreated;
-            _mapManager.OnGridRemoved -= OnGridRemoved;
         }
 
         public override void FrameUpdate(float frameTime)
@@ -73,143 +108,59 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateTrees()
         {
-            // Only care about stuff parented to a grid I think?
-            foreach (var (occluder, coordinates) in _occluderRemoveQueue)
+            while (_updates.TryDequeue(out var occluderUpdate))
             {
-                if (coordinates.TryGetParent(EntityManager, out var parent) &&
-                    parent.HasComponent<MapGridComponent>())
-                {
-                    var gridTree = _gridTrees[parent.Transform.MapID][parent.Transform.GridID];
+                OccluderTreeComponent? tree;
+                var component = occluderUpdate.Component;
 
-                    gridTree.Remove(occluder);
+                switch (occluderUpdate)
+                {
+                    case OccluderAddEvent:
+                        if (component.Tree != null) break;
+                        tree = GetOccluderTree(component);
+                        if (tree == null) break;
+                        component.Tree = tree;
+                        tree.Tree.Add(component);
+                        break;
+                    case OccluderUpdateEvent:
+                        var oldTree = component.Tree;
+                        tree = GetOccluderTree(component);
+                        if (oldTree != tree)
+                        {
+                            oldTree?.Tree.Remove(component);
+                            tree?.Tree.Add(component);
+                            component.Tree = tree;
+                            break;
+                        }
+
+                        tree?.Tree.Update(component);
+
+                        break;
+                    case OccluderRemoveEvent:
+                        tree = component.Tree;
+                        tree?.Tree.Remove(component);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"No implemented occluder update for {occluderUpdate.GetType()}");
                 }
             }
-
-            _occluderRemoveQueue.Clear();
-
-            foreach (var (occluder, coordinates) in _occluderAddQueue)
-            {
-                if (occluder.Deleted) continue;
-
-                if (coordinates.TryGetParent(EntityManager, out var parent) &&
-                    parent.HasComponent<MapGridComponent>() || occluder.Owner.Transform.GridID == GridId.Invalid)
-                {
-                    parent ??= EntityManager.GetEntity(occluder.Owner.Transform.ParentUid);
-                    var gridTree = _gridTrees[parent.Transform.MapID][parent.Transform.GridID];
-
-                    gridTree.AddOrUpdate(occluder);
-                }
-            }
-
-            _occluderAddQueue.Clear();
         }
 
-        // If the Transform is removed BEFORE the Occluder,
-        // then the MapIdChanged code will handle and remove it (because MapId gets set to nullspace).
-        // Otherwise these will still have their past MapId and that's all we need..
-        private void RemoveOccluder(OccluderTreeRemoveOccluderMessage ev)
+        private void EntMoved(EntityUid uid, OccluderComponent component, MoveEvent args)
         {
-            _gridTrees[ev.MapId][ev.GridId].Remove(ev.Occluder);
+            _updates.Enqueue(new OccluderUpdateEvent(component));
         }
 
-        private void OccluderBoundingBoxChanged(OccluderBoundingBoxChangedMessage ev)
+        private void EntParentChanged(EntityUid uid, OccluderComponent component, EntParentChangedMessage args)
         {
-            QueueUpdateOccluder(ev.Occluder, ev.Occluder.Owner.Transform.Coordinates);
-        }
-
-        private void EntMoved(MoveEvent ev)
-        {
-            ev.OldPosition.TryGetParent(EntityManager, out var oldParent);
-            ev.NewPosition.TryGetParent(EntityManager, out var newParent);
-
-            if (oldParent?.Uid != newParent?.Uid)
-                RemoveEntity(ev.Sender, ev.OldPosition);
-
-            AddOrUpdateEntity(ev.Sender, ev.NewPosition);
-        }
-
-        private void EntParentChanged(EntParentChangedMessage message)
-        {
-            if (!message.Entity.TryGetComponent(out OccluderComponent? occluder))
-                return;
-
-            // Really only care if it's a map or grid
-            if (message.OldParent != null && message.OldParent.TryGetComponent(out MapGridComponent? oldGrid))
-            {
-                var map = message.OldParent.Transform.MapID;
-                if (_gridTrees[map].TryGetValue(oldGrid.GridIndex, out var tree))
-                {
-                    tree.Remove(occluder);
-                }
-            }
-
-            var newParent = EntityManager.GetEntity(message.Entity.Transform.ParentUid);
-
-            newParent.TryGetComponent(out MapGridComponent? newGrid);
-            var newGridIndex = newGrid?.GridIndex ?? GridId.Invalid;
-            var newMap = newParent.Transform.MapID;
-
-            if (!_gridTrees.TryGetValue(newMap, out var newMapGrids))
-            {
-                newMapGrids = new Dictionary<GridId, DynamicTree<OccluderComponent>>();
-                _gridTrees[newMap] = newMapGrids;
-            }
-
-            if (!newMapGrids.TryGetValue(newGridIndex, out var newTree))
-            {
-                newTree = new DynamicTree<OccluderComponent>(ExtractAabbFunc);
-                newMapGrids[newGridIndex] = newTree;
-            }
-
-            newTree.AddOrUpdate(occluder);
-        }
-
-        private void RemoveEntity(IEntity entity, EntityCoordinates coordinates)
-        {
-            if (entity.TryGetComponent(out OccluderComponent? occluder))
-            {
-                QueueRemoveOccluder(occluder, coordinates);
-            }
-        }
-
-        internal void AddOrUpdateEntity(IEntity entity, EntityCoordinates coordinates)
-        {
-            if (entity.TryGetComponent(out OccluderComponent? occluder))
-            {
-                QueueUpdateOccluder(occluder, coordinates);
-            }
-            // Do we even need the children update? Coz they be slow af and allocate a lot.
-            // If you do end up adding children back in then for the love of GOD check if the entity has a mapgridcomponent
-        }
-
-        private void OnMapDestroyed(object? sender, MapEventArgs e)
-        {
-            _gridTrees.Remove(e.Map);
+            _updates.Enqueue(new OccluderUpdateEvent(component));
         }
 
         private void OnMapCreated(object? sender, MapEventArgs e)
         {
-            if (e.Map == MapId.Nullspace)
-                return;
+            if (e.Map == MapId.Nullspace) return;
 
-            _gridTrees[e.Map] = new Dictionary<GridId, DynamicTree<OccluderComponent>>();
-        }
-
-        private void OnGridRemoved(MapId mapId, GridId gridId)
-        {
-            foreach (var (_, gridIds) in _gridTrees)
-            {
-                if (gridIds.Remove(gridId))
-                    break;
-            }
-        }
-
-        private void OnGridCreated(MapId mapId, GridId gridId)
-        {
-            if (!_gridTrees.TryGetValue(mapId, out var gridTree))
-                return;
-
-            gridTree.Add(gridId, new DynamicTree<OccluderComponent>(ExtractAabbFunc));
+            _mapManager.GetMapEntity(e.Map).EnsureComponent<OccluderTreeComponent>();
         }
 
         private static Box2 ExtractAabbFunc(in OccluderComponent o)
@@ -217,28 +168,26 @@ namespace Robust.Shared.GameObjects
             return o.BoundingBox.Translated(o.Owner.Transform.LocalPosition);
         }
 
-        private void QueueUpdateOccluder(OccluderComponent occluder, EntityCoordinates coordinates)
-        {
-            _occluderAddQueue.Add((occluder, coordinates));
-        }
-
-        private void QueueRemoveOccluder(OccluderComponent occluder, EntityCoordinates coordinates)
-        {
-            _occluderRemoveQueue.Add((occluder, coordinates));
-        }
-
-        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId originMapId, in Ray ray, float maxLength,
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
             Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
         {
-            if (originMapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
+            if (mapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
             var list = new List<RayCastResults>();
-            var worldBox = new Box2();
 
-            foreach (var gridId in _mapManager.FindGridIdsIntersecting(originMapId, worldBox, true))
+            var endPoint = ray.Position + ray.Direction * maxLength;
+            var worldBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint), Vector2.ComponentMax(ray.Position, endPoint));
+
+            foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
-                var gridTree = _gridTrees[originMapId][gridId];
+                var transform = comp.Owner.Transform;
+                var treePos = transform.WorldPosition;
+                var treeRot = transform.WorldRotation;
 
-                gridTree.QueryRay(ref list,
+                var relativePos = new Angle(-treeRot.Theta).RotateVec(ray.Position - treePos);
+
+                var treeRay = new Ray(relativePos, new Angle(-treeRot).RotateVec(ray.Direction));
+
+                comp.Tree.QueryRay(ref list,
                     (ref List<RayCastResults> state, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
                     {
                         if (distFromOrigin > maxLength)
@@ -253,24 +202,35 @@ namespace Robust.Shared.GameObjects
                         var result = new RayCastResults(distFromOrigin, point, value.Owner);
                         state.Add(result);
                         return !returnOnFirstHit;
-                    }, ray);
+                    }, treeRay);
             }
 
             return list;
         }
     }
 
-    internal readonly struct OccluderTreeRemoveOccluderMessage
+    internal sealed class OccluderAddEvent : OccluderEvent
     {
-        public readonly OccluderComponent Occluder;
-        public readonly MapId MapId;
-        public readonly GridId GridId;
+        public OccluderAddEvent(OccluderComponent component) : base(component) {}
+    }
 
-        public OccluderTreeRemoveOccluderMessage(OccluderComponent occluder, MapId mapId, GridId gridId)
+    internal sealed class OccluderUpdateEvent : OccluderEvent
+    {
+        public OccluderUpdateEvent(OccluderComponent component) : base(component) {}
+    }
+
+    internal sealed class OccluderRemoveEvent : OccluderEvent
+    {
+        public OccluderRemoveEvent(OccluderComponent component) : base(component) {}
+    }
+
+    internal abstract class OccluderEvent : EntityEventArgs
+    {
+        public OccluderComponent Component { get; }
+
+        public OccluderEvent(OccluderComponent component)
         {
-            Occluder = occluder;
-            MapId = mapId;
-            GridId = gridId;
+            Component = component;
         }
     }
 }

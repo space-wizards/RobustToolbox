@@ -72,7 +72,8 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
-        public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
+        public Box2 WorldBounds =>
+            new Box2Rotated(LocalBounds, WorldRotation).CalcBoundingBox().Translated(WorldPosition);
 
         /// <inheritdoc />
         [ViewVariables]
@@ -108,6 +109,24 @@ namespace Robust.Shared.Map
             set
             {
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
+            }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public Angle WorldRotation
+        {
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
+                return Angle.Zero;
+            }
+            set
+            {
+                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
                 LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

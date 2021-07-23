@@ -141,9 +141,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public bool IsTouching { get; internal set; }
 
-        // Some day we'll refactor it to be more like EntityCoordinates
-        public GridId GridId { get; internal set; } = GridId.Invalid;
-
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
         /// time step (or sub-step in continuous collisions).
@@ -525,7 +522,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                    Equals(FixtureB, other.FixtureB) &&
                    Manifold.Equals(other.Manifold) &&
                    _type == other._type &&
-                   GridId.Equals(other.GridId) &&
                    Enabled == other.Enabled &&
                    ChildIndexA == other.ChildIndexA &&
                    ChildIndexB == other.ChildIndexB &&
@@ -541,7 +537,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine(GridId.Value, FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
+            return HashCode.Combine(FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
         }
     }
 }

@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
@@ -46,8 +47,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal MapId MapId { get; set; }
 
-        private SharedBroadphaseSystem _broadPhaseSystem = default!;
-
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
         private const int ContactPoolInitialSize = 64;
@@ -60,7 +59,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
-        // TODO: Need to migrate the interfaces to comp bus when possible
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
         // TODO: CollideMultiCore
         private List<Contact> _startCollisions = new();
@@ -75,7 +73,6 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             InitializePool();
         }
 
@@ -400,8 +397,18 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var contact in _endCollisions)
             {
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
+
+                // Just a safeguard in case this happens
+                // Content /should/ be using QueueDelete for StartCollideEvent but if the body is deleted then its
+                // contacts can be nuked.
+                if (fixtureA == null || fixtureB == null)
+                {
+                    Logger.ErrorS("physics", $"Tried to run EndCollision for a contact that's already been removed!");
+                    continue;
+                }
+
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
                 var manifold = contact.Manifold;

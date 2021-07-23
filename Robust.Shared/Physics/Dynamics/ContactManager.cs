@@ -375,10 +375,9 @@ namespace Robust.Shared.Physics.Dynamics
                 var fixtureB = contact.FixtureB!;
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
-                var manifold = contact.Manifold;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB, manifold));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA, manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA));
 
 #pragma warning disable 618
                 foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
@@ -411,10 +410,9 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
-                var manifold = contact.Manifold;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB, manifold));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA, manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
             }
 
             _startCollisions.Clear();
@@ -474,7 +472,7 @@ namespace Robust.Shared.Physics.Dynamics
 
     public sealed class StartCollideEvent : CollideEvent
     {
-        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture)
             : base(ourFixture, otherFixture)
         {
         }
@@ -482,7 +480,7 @@ namespace Robust.Shared.Physics.Dynamics
 
     public sealed class EndCollideEvent : CollideEvent
     {
-        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture)
             : base(ourFixture, otherFixture)
         {
         }

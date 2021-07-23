@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
@@ -290,7 +291,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             PhysicsComponent bodyB = FixtureB!.Body;
 
             if (FixtureA == null || FixtureB == null)
+            {
+                Logger.ErrorS("physics", $"Tried to update a contact with null fixtures?");
+                DebugTools.Assert(false);
                 return;
+            }
 
             var oldManifold = Manifold;
 

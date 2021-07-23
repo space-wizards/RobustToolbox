@@ -405,6 +405,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (fixtureA == null || fixtureB == null)
                 {
                     Logger.ErrorS("physics", $"Tried to run EndCollision for a contact that's already been removed!");
+                    DebugTools.Assert(false);
                     continue;
                 }
 

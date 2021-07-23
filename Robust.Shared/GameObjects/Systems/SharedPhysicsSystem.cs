@@ -189,6 +189,11 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
+            foreach (var controller in _controllers)
+            {
+                controller.Shutdown();
+            }
+
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
         }

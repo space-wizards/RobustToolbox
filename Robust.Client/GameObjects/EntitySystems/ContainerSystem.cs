@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.GameObjects
 {
-    public class ClientContainerSystem : ContainerSystem
+    public class ContainerSystem : SharedContainerSystem
     {
         private readonly HashSet<IEntity> _updateQueue = new();
 
@@ -13,6 +13,8 @@ namespace Robust.Client.GameObjects
             base.Initialize();
 
             SubscribeLocalEvent<UpdateContainerOcclusionMessage>(UpdateContainerOcclusion);
+            SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
+            SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
         }
@@ -20,6 +22,27 @@ namespace Robust.Client.GameObjects
         private void UpdateContainerOcclusion(UpdateContainerOcclusionMessage ev)
         {
             _updateQueue.Add(ev.Entity);
+        }
+
+        private void HandleEntityDeleted(EntityDeletedMessage ev)
+        {
+            if (!ExpectedEntities.TryGetValue(ev.Entity.Uid, out var container))
+                return;
+
+            ExpectedEntities.Remove(ev.Entity.Uid);
+        }
+
+        private void HandleEntityInitialized(EntityInitializedMessage ev)
+        {
+            if (!ExpectedEntities.TryGetValue(ev.Entity.Uid, out var container))
+                return;
+
+            ExpectedEntities.Remove(ev.Entity.Uid);
+
+            if (container.Deleted)
+                return;
+
+            container.Insert(ev.Entity);
         }
 
         public override void FrameUpdate(float frameTime)

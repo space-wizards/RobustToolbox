@@ -1,12 +1,18 @@
+using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Containers
 {
-    public class ContainerSystem : EntitySystem
+    public abstract class SharedContainerSystem : EntitySystem
     {
+        public readonly Dictionary<EntityUid, IContainer> ExpectedEntities = new();
+
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
+
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
         }
 
@@ -20,6 +26,13 @@ namespace Robust.Shared.Containers
 
             if (oldParentEntity.TryGetComponent(out IContainerManager? containerManager))
                 containerManager.ForceRemove(message.Entity);
+        }
+
+        public void AddExpectedEntity(EntityUid uid, IContainer container)
+        {
+            if (ExpectedEntities.ContainsKey(uid))
+                return;
+            ExpectedEntities.Add(uid, container);
         }
     }
 }

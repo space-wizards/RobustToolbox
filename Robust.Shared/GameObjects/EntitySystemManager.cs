@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.GameObjects.Attributes;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
@@ -26,6 +27,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
+        private DependencyCollection<EntitySystemDependencyAttribute> _systemDependencyCollection = new();
+        private List<IEntitySystem> _systems = new();
+
         private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
             "Amount of time spent processing each entity system", new HistogramConfiguration
             {
@@ -38,23 +42,12 @@ namespace Robust.Shared.GameObjects
 
         private readonly Stopwatch _stopwatch = new();
 
-        /// <summary>
-        /// Maps system types to instances.
-        /// </summary>
-        [ViewVariables]
-        private readonly Dictionary<Type, IEntitySystem> _systems = new();
-        /// <summary>
-        /// Maps system supertypes to instances.
-        /// </summary>
-        [ViewVariables]
-        private readonly Dictionary<Type, IEntitySystem> _supertypeSystems = new();
-
         private bool _initialized;
 
         [ViewVariables] private UpdateReg[] _updateOrder = Array.Empty<UpdateReg>();
         [ViewVariables] private IEntitySystem[] _frameUpdateOrder = Array.Empty<IEntitySystem>();
 
-        [ViewVariables] public IReadOnlyCollection<IEntitySystem> AllSystems => _systems.Values;
+        [ViewVariables] public IReadOnlyCollection<IEntitySystem> AllSystems => _systems;
 
         public bool MetricsEnabled { get; set; }
 
@@ -68,41 +61,14 @@ namespace Robust.Shared.GameObjects
         public T GetEntitySystem<T>()
             where T : IEntitySystem
         {
-            var type = typeof(T);
-            // check using exact match first, then check using the supertype
-            if (!_systems.ContainsKey(type))
-            {
-                if (!_supertypeSystems.ContainsKey(type))
-                {
-                    throw new InvalidEntitySystemException();
-                }
-                else
-                {
-                    return (T) _supertypeSystems[type];
-                }
-            }
-
-            return (T)_systems[type];
+            return _systemDependencyCollection.Resolve<T>();
         }
 
         /// <inheritdoc />
         public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
             where T : IEntitySystem
         {
-            if (_systems.TryGetValue(typeof(T), out var system))
-            {
-                entitySystem = (T) system;
-                return true;
-            }
-
-            if (_supertypeSystems.TryGetValue(typeof(T), out var systemFromSupertype))
-            {
-                entitySystem = (T) systemFromSupertype;
-                return true;
-            }
-
-            entitySystem = default;
-            return false;
+            return _systemDependencyCollection.TryResolveType<T>(out entitySystem);
         }
 
         /// <inheritdoc />
@@ -110,14 +76,16 @@ namespace Robust.Shared.GameObjects
         {
             HashSet<Type> excludedTypes = new();
 
+            _systems.Clear();
+            var subTypes = new Dictionary<Type, IEntitySystem>();
             foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes))
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
                 // Force IoC inject of all systems
                 var instance = _typeFactory.CreateInstanceUnchecked<IEntitySystem>(type, oneOff: true);
 
-                _systems.Add(type, instance);
-
+                _systemDependencyCollection.RegisterInstance(type, instance);
+                _systems.Add(instance);
                 // also register systems under their supertypes, so they can be retrieved by their supertype.
                 // We don't do this if there are multiple subtype systems of that supertype though, otherwise
                 // it wouldn't be clear which instance to return when asking for the supertype
@@ -127,27 +95,38 @@ namespace Robust.Shared.GameObjects
                     // so don't register under the supertype because it would be unclear
                     // which instance to return if we retrieved it by the supertype
                     if (excludedTypes.Contains(baseType)) continue;
-                    if (_supertypeSystems.ContainsKey(baseType))
+                    if (subTypes.ContainsKey(baseType))
                     {
-                        _supertypeSystems.Remove(baseType);
+                        subTypes.Remove(baseType);
                         excludedTypes.Add(baseType);
                     }
                     else
                     {
-                        _supertypeSystems.Add(baseType, instance);
+                        subTypes.Add(baseType, instance);
                     }
                 }
-
             }
 
-            foreach (var system in _systems.Values)
+            foreach (var (baseType, instance) in subTypes)
+            {
+                _systemDependencyCollection.RegisterInstance(baseType, instance);
+            }
+
+            _systemDependencyCollection.BuildGraph();
+
+            foreach (var system in _systems)
+            {
+                _systemDependencyCollection.InjectDependencies(system);
+            }
+
+            foreach (var system in _systems)
             {
                 system.Initialize();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
 
             // Create update order for entity systems.
-            var (fUpdate, update) = CalculateUpdateOrder(_systems.Values, _supertypeSystems);
+            var (fUpdate, update) = CalculateUpdateOrder(_systems, subTypes);
 
             _frameUpdateOrder = fUpdate.ToArray();
             _updateOrder = update
@@ -163,8 +142,8 @@ namespace Robust.Shared.GameObjects
 
         private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)
             CalculateUpdateOrder(
-                Dictionary<Type, IEntitySystem>.ValueCollection systems,
-                Dictionary<Type, IEntitySystem> supertypeSystems)
+                List<IEntitySystem> systems,
+                Dictionary<Type, IEntitySystem> subTypes)
         {
             var allNodes = new List<TopologicalSort.GraphNode<IEntitySystem>>();
             var typeToNode = new Dictionary<Type, TopologicalSort.GraphNode<IEntitySystem>>();
@@ -177,7 +156,7 @@ namespace Robust.Shared.GameObjects
                 allNodes.Add(node);
             }
 
-            foreach (var (type, system) in supertypeSystems)
+            foreach (var (type, system) in subTypes)
             {
                 var node = typeToNode[system.GetType()];
                 typeToNode[type] = node;
@@ -220,7 +199,7 @@ namespace Robust.Shared.GameObjects
         public void Shutdown()
         {
             // System.Values is modified by RemoveSystem
-            foreach (var system in _systems.Values)
+            foreach (var system in _systems)
             {
                 SystemUnloaded?.Invoke(this, new SystemChangedArgs(system));
                 system.Shutdown();
@@ -230,8 +209,8 @@ namespace Robust.Shared.GameObjects
             _systems.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();
-            _supertypeSystems.Clear();
             _initialized = false;
+            _systemDependencyCollection.Clear();
         }
 
         /// <inheritdoc />

@@ -13,8 +13,10 @@ namespace Robust.Shared.IoC
     public delegate T DependencyFactoryDelegate<out T>()
         where T : class;
 
+    internal class DependencyCollection : DependencyCollection<DependencyAttribute> {}
+
     /// <inheritdoc />
-    internal class DependencyCollection : IDependencyCollection
+    internal class DependencyCollection<TAttribute> : IDependencyCollection where TAttribute : Attribute
     {
         private delegate void InjectorDelegate(object target, object[] services);
         private static readonly Type[] InjectorParameters = {typeof(object), typeof(object[])};
@@ -46,6 +48,22 @@ namespace Robust.Shared.IoC
         public DependencyCollection(IDependencyCollection parentCollection)
         {
             _parentCollection = parentCollection;
+        }
+
+        /// <inheritdoc />
+        public bool TryResolveType<T>([NotNullWhen(true)] out T? instance)
+        {
+            if (TryResolveType(typeof(T), out object? rawInstance))
+            {
+                if (rawInstance is T typedInstance)
+                {
+                    instance = typedInstance;
+                    return true;
+                }
+            }
+
+            instance = default;
+            return false;
         }
 
         /// <inheritdoc />
@@ -175,18 +193,24 @@ namespace Robust.Shared.IoC
         /// <inheritdoc />
         public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
         {
+            RegisterInstance(typeof(TInterface), implementation, overwrite);
+        }
+
+        /// <inheritdoc />
+        public void RegisterInstance(Type type, object implementation, bool overwrite = false)
+        {
             if (implementation == null)
                 throw new ArgumentNullException(nameof(implementation));
 
-            if (!(implementation is TInterface))
+            if (!implementation.GetType().IsAssignableTo(type))
                 throw new InvalidOperationException(
-                    $"Implementation type {implementation.GetType()} is not assignable to interface type {typeof(TInterface)}");
+                    $"Implementation type {implementation.GetType()} is not assignable to type {type}");
 
-            CheckRegisterInterface(typeof(TInterface), implementation.GetType(), overwrite);
+            CheckRegisterInterface(type, implementation.GetType(), overwrite);
 
             // do the equivalent of BuildGraph with a single type.
-            _resolveTypes[typeof(TInterface)] = implementation.GetType();
-            _services[typeof(TInterface)] = implementation;
+            _resolveTypes[type] = implementation.GetType();
+            _services[type] = implementation;
 
             InjectDependencies(implementation, true);
 
@@ -326,7 +350,7 @@ namespace Robust.Shared.IoC
             var type = obj.GetType();
             foreach (var field in type.GetAllFields())
             {
-                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
+                if (!Attribute.IsDefined(field, typeof(TAttribute)))
                 {
                     continue;
                 }
@@ -357,7 +381,7 @@ namespace Robust.Shared.IoC
 
             foreach (var field in type.GetAllFields())
             {
-                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
+                if (!Attribute.IsDefined(field, typeof(TAttribute)))
                 {
                     continue;
                 }

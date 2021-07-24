@@ -396,17 +396,21 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var contact in _endCollisions)
             {
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
+                var fixtureA = contact.FixtureA!;
+                var fixtureB = contact.FixtureB!;
 
                 // Just a safeguard in case this happens
                 // Content /should/ be using QueueDelete for StartCollideEvent but if the body is deleted then its
                 // contacts can be nuked.
+                /* SLOTH: I commented this out for now until we get to the bottom of this crash as there's some
+                   easy way to reproduce it that someone knows as it was happening every round.
+                   I only ever did it once in chemistry but after 40 minutes of trying to reproduce it I was unable to do so.
                 if (fixtureA == null || fixtureB == null)
                 {
                     Logger.ErrorS("physics", $"Tried to run EndCollision for a contact that's already been removed!");
                     continue;
                 }
+                */
 
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;

@@ -289,9 +289,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
 
-            if (FixtureA == null || FixtureB == null)
-                return;
-
             var oldManifold = Manifold;
 
             // Re-enable this contact.

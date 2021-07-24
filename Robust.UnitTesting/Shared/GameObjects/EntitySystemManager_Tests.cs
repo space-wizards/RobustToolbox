@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -24,6 +25,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public class ESystemC : ESystemA { }
         public abstract class ESystemBase2 : ESystemBase { }
         public class ESystemB : ESystemBase2 { }
+
+        public class ESystemDepA : ESystemBase
+        {
+            [EntitySystemDependency] public readonly ESystemDepB ESystemDepB = default!;
+        }
+
+        public class ESystemDepB : ESystemBase
+        {
+            [EntitySystemDependency] public readonly ESystemDepA ESystemDepA = default!;
+        }
 
         /*
          ESystemBase (Abstract)
@@ -59,10 +70,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // this should not work - it's abstract and there are multiple
             // concrete subtypes
-            Assert.Throws<InvalidEntitySystemException>(() =>
+            Assert.Throws<UnregisteredTypeException>(() =>
             {
                 esm.GetEntitySystem<ESystemBase>();
             });
+        }
+
+        [Test]
+        public void DependencyTest()
+        {
+            var esm = IoCManager.Resolve<IEntitySystemManager>();
+            esm.Initialize();
+
+            var sysA = esm.GetEntitySystem<ESystemDepA>();
+            var sysB = esm.GetEntitySystem<ESystemDepB>();
+
+            Assert.That(sysA.ESystemDepB, Is.EqualTo(sysB));
+            Assert.That(sysB.ESystemDepA, Is.EqualTo(sysA));
         }
 
     }

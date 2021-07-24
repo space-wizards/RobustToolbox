@@ -8,10 +8,8 @@ namespace Robust.Shared.Map
     /// </summary>
     internal static class GridChunkPartition
     {
-        public static void PartitionChunk(IMapChunk chunk, ref IList<Box2> rectangles, out Box2i bounds)
+        public static void PartitionChunk(IMapChunk chunk, out Box2i bounds)
         {
-            rectangles.Clear();
-
             var size = chunk.ChunkSize;
 
             // copy 2d img
@@ -36,8 +34,6 @@ namespace Robust.Shared.Map
                 var right = block.y2 + 1;
                 var bottom = block.x1;
                 var top = block.x2 + 1;
-
-                rectangles.Add(new Box2(left, bottom, right, top));
 
                 if(bounds.Size.Equals(Vector2i.Zero))
                     bounds = new Box2i(left, bottom, right, top);

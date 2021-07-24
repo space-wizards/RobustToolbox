@@ -214,9 +214,9 @@ namespace Robust.Shared.Serialization
         /// <seealso cref="OnClientCompleteHandshake"/>
         private void NetworkInitialize()
         {
-            _net.RegisterNetMessage<MsgMapStrServerHandshake>(HandleServerHandshake, NetMessageAccept.Client);
-            _net.RegisterNetMessage<MsgMapStrClientHandshake>(HandleClientHandshake, NetMessageAccept.Server);
-            _net.RegisterNetMessage<MsgMapStrStrings>(HandleStringsMessage, NetMessageAccept.Client);
+            _net.RegisterNetMessage<MsgMapStrServerHandshake>(HandleServerHandshake, NetMessageAccept.Client | NetMessageAccept.Handshake);
+            _net.RegisterNetMessage<MsgMapStrClientHandshake>(HandleClientHandshake, NetMessageAccept.Server | NetMessageAccept.Handshake);
+            _net.RegisterNetMessage<MsgMapStrStrings>(HandleStringsMessage, NetMessageAccept.Client | NetMessageAccept.Handshake);
 
             _net.Disconnect += NetOnDisconnect;
         }

@@ -64,16 +64,19 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 _normals = new List<Vector2>(_vertices.Count);
 
                 // Compute normals. Ensure the edges have non-zero length.
-                for (int i = 0; i < _vertices.Count; ++i)
+                for (var i = 0; i < _vertices.Count; ++i)
                 {
-                    int next = i + 1 < _vertices.Count ? i + 1 : 0;
-                    Vector2 edge = _vertices[next] - _vertices[i];
+                    var next = i + 1 < _vertices.Count ? i + 1 : 0;
+                    var edge = _vertices[next] - _vertices[i];
                     DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
 
                     //FPE optimization: Normals.Add(MathHelper.Cross(edge, 1.0f));
-                    Vector2 temp = new Vector2(edge.Y, -edge.X);
+                    var temp = new Vector2(edge.Y, -edge.X);
                     _normals.Add(temp.Normalized);
                 }
+
+                Centroid = ComputeCentroid(_vertices);
+                _cachedAABB = CalculateAABB();
 
                 // Compute the polygon mass data
                 // TODO: Update fixture. Maybe use events for it? Who tf knows.
@@ -82,6 +85,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private List<Vector2> _vertices = new();
+
+        private Box2 _cachedAABB;
+
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadOnly)]
         public List<Vector2> Normals => _normals;
@@ -106,6 +113,44 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private float _radius;
+
+        public static Vector2 ComputeCentroid(List<Vector2> vertices)
+        {
+            DebugTools.Assert(vertices.Count >= 3);
+
+            var c = new Vector2(0.0f, 0.0f);
+            float area = 0.0f;
+
+            // Get a reference point for forming triangles.
+            // Use the first vertex to reduce round-off errors.
+            var s = vertices[0];
+
+            const float inv3 = 1.0f / 3.0f;
+
+            for (var i = 0; i < vertices.Count; ++i)
+            {
+                // Triangle vertices.
+                var p1 = vertices[0] - s;
+                var p2 = vertices[i] - s;
+                var p3 = i + 1 < vertices.Count ? vertices[i+1] - s : vertices[0] - s;
+
+                var e1 = p2 - p1;
+                var e2 = p3 - p1;
+
+                float D = Vector2.Cross(e1, e2);
+
+                float triangleArea = 0.5f * D;
+                area += triangleArea;
+
+                // Area weighted centroid
+                c += (p1 + p2 + p3) * triangleArea * inv3;
+            }
+
+            // Centroid
+            DebugTools.Assert(area > float.Epsilon);
+            c = c * (1.0f / area) + s;
+            return c;
+        }
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
@@ -157,26 +202,44 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return true;
         }
 
-        public Box2 CalculateLocalBounds(Angle rotation)
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
         {
-            if (Vertices.Count == 0) return new Box2();
+            var aabb = CalculateLocalBounds(worldRot).Translated(worldPos);
+            if (!worldAABB.Intersects(aabb)) return false;
 
-            var aabb = new Box2();
-            Vector2 lower = Vertices[0];
-            Vector2 upper = lower;
+            // TODO
+            return true;
+        }
 
-            for (int i = 1; i < Vertices.Count; ++i)
+        /// <summary>
+        /// Calculating the AABB for a polyshape isn't cheap so we'll just cache it whenever its vertices change.
+        /// </summary>
+        private Box2 CalculateAABB()
+        {
+            if (_vertices.Count == 0) return new Box2();
+
+            var lower = Vertices[0];
+            var upper = lower;
+
+            for (var i = 1; i < Vertices.Count; ++i)
             {
-                Vector2 v = Vertices[i];
+                var v = Vertices[i];
                 lower = Vector2.ComponentMin(lower, v);
                 upper = Vector2.ComponentMax(upper, v);
             }
 
-            Vector2 r = new Vector2(Radius, Radius);
-            aabb.BottomLeft = lower - r;
-            aabb.TopRight = upper + r;
+            var r = new Vector2(Radius, Radius);
 
-            return aabb;
+            return new Box2
+            {
+                BottomLeft = lower - r,
+                TopRight = upper + r
+            };
+        }
+
+        public Box2 CalculateLocalBounds(Angle rotation)
+        {
+            return rotation == Angle.Zero ? _cachedAABB : new Box2Rotated(_cachedAABB, rotation).CalcBoundingBox();
         }
 
         public void ApplyState()

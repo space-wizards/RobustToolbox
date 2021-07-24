@@ -66,6 +66,11 @@ namespace Robust.Shared.Maths
             return xOk && yOk;
         }
 
+        public readonly bool IsEmpty()
+        {
+            return Bottom == Top || Left == Right;
+        }
+
         /// <summary>Returns a UIBox2 translated by the given amount.</summary>
         public readonly Box2i Translated(Vector2i point)
         {

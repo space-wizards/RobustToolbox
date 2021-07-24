@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -40,7 +41,7 @@ namespace Robust.Shared.Map
         private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
-        private readonly IEntityManager _entityManager;     
+        private readonly IEntityManager _entityManager;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.
@@ -111,6 +112,34 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public Matrix3 WorldMatrix
+        {
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldMatrix;
+
+                return Matrix3.Identity;
+            }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public Matrix3 InvWorldMatrix
+        {
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.InvWorldMatrix;
+
+                return Matrix3.Identity;
+            }
+        }
+
         /// <summary>
         /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
         /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
@@ -146,8 +175,18 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public void NotifyChunkCollisionRegenerated()
+        public void NotifyChunkCollisionRegenerated(MapChunk chunk)
         {
+            // TODO: Ideally we wouldn't have LocalBounds on the grid and we could just treat it like a physics object
+            // (eventually, well into the future).
+            // For now we'll just attach a fixture to each chunk.
+
+            // Not raising directed because the grid's EntityUid isn't set yet.
+            IoCManager
+                .Resolve<IEntityManager>()
+                .EventBus
+                .RaiseEvent(EventSource.Local, new RegenerateChunkCollisionEvent(chunk));
+
             UpdateAABB();
         }
 
@@ -478,7 +517,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 WorldToLocal(Vector2 posWorld)
         {
-            return posWorld - WorldPosition;
+            return InvWorldMatrix.Transform(posWorld);
         }
 
         /// <inheritdoc />
@@ -498,7 +537,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2 LocalToWorld(Vector2 posLocal)
         {
-            return posLocal + WorldPosition;
+            return WorldMatrix.Transform(posLocal);
         }
 
         public Vector2i WorldToTile(Vector2 posWorld)

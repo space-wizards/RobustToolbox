@@ -7,21 +7,13 @@ namespace Robust.Shared.Physics {
 
     public interface IBroadPhase
     {
-        void UpdatePairs(BroadPhaseDelegate callback);
-
-        bool TestOverlap(DynamicTree.Proxy proxyA, DynamicTree.Proxy proxyB);
+        Box2 GetFatAabb(DynamicTree.Proxy proxy);
 
         DynamicTree.Proxy AddProxy(ref FixtureProxy proxy);
 
         void MoveProxy(DynamicTree.Proxy proxyId, in Box2 aabb, Vector2 displacement);
 
         void RemoveProxy(DynamicTree.Proxy proxy);
-
-        void TouchProxy(DynamicTree.Proxy proxy);
-
-        void QueryAABB(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
-            Box2 aabb,
-            bool approx = false);
 
         void QueryAabb<TState>(
             ref TState state,
@@ -30,6 +22,8 @@ namespace Robust.Shared.Physics {
             bool approx = false);
 
         IEnumerable<FixtureProxy> QueryAabb(Box2 aabb, bool approx = false);
+
+        IEnumerable<FixtureProxy> QueryAabb(List<FixtureProxy> proxies, Box2 aabb, bool approx = false);
 
         void QueryPoint(DynamicTree<FixtureProxy>.QueryCallbackDelegate callback,
             Vector2 point,

@@ -83,6 +83,8 @@ namespace Robust.Client.Console
             OutputText(text, true, true);
         }
 
+        public override event ConAnyCommandCallback? AnyCommandExecuted;
+
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
@@ -103,7 +105,11 @@ namespace Robust.Client.Console
             {
                 var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
-                command1.Execute(new ConsoleShell(this, null), command, args.ToArray());
+                var shell = new ConsoleShell(this, null);
+                var cmdArgs = args.ToArray();
+
+                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+                command1.Execute(shell, command, cmdArgs);
             }
             else
                 WriteError(null, "Unknown command: " + commandName);

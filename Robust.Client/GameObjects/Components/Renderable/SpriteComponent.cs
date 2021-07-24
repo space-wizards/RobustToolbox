@@ -365,7 +365,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath);
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
                     }
                 }
             }

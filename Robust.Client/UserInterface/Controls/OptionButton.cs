@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -13,7 +14,7 @@ namespace Robust.Client.UserInterface.Controls
         private readonly List<ButtonData> _buttonData = new();
         private readonly Dictionary<int, int> _idMap = new();
         private readonly Popup _popup;
-        private readonly VBoxContainer _popupVBox;
+        private readonly BoxContainer _popupVBox;
         private readonly Label _label;
         private readonly TextureRect _triangle;
 
@@ -49,11 +50,17 @@ namespace Robust.Client.UserInterface.Controls
             Prefix = "";
             OnPressed += OnPressedInternal;
 
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal
+            };
             AddChild(hBox);
 
             _popup = new Popup();
-            _popupVBox = new VBoxContainer();
+            _popupVBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical
+            };
             _popup.AddChild(_popupVBox);
             _popup.OnPopupHide += OnPopupHide;
 

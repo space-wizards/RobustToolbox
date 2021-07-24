@@ -369,17 +369,6 @@ namespace Robust.Shared.Physics
             return _nodes[proxy].UserData;
         }
 
-        /// <summary>
-        ///     Get the fat AABB for a proxy.
-        /// </summary>
-        /// <param name="proxyId">The proxy id.</param>
-        /// <param name="fatAABB">The fat AABB.</param>
-        public void GetFatAABB(Proxy proxy, out Box2 fatAABB)
-        {
-            DebugTools.Assert(0 <= proxy && proxy < Capacity);
-            fatAABB = _nodes[proxy].Aabb;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool WasMoved(Proxy proxy)
         {

@@ -10,6 +10,7 @@ using Robust.Client.ViewVariables.Editors;
 using Robust.Client.ViewVariables.Instances;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Traits
 {
@@ -25,8 +26,8 @@ namespace Robust.Client.ViewVariables.Traits
         private Button _leftButton = default!;
         private Button _rightButton = default!;
         private LineEdit _pageLabel = default!;
-        private HBoxContainer _controlsHBox = default!;
-        private VBoxContainer _elementsVBox = default!;
+        private BoxContainer _controlsHBox = default!;
+        private BoxContainer _elementsVBox = default!;
 
         private int HighestKnownPage => Math.Max(0, ((_cache.Count + ElementsPerPage - 1) / ElementsPerPage) - 1);
 
@@ -47,9 +48,13 @@ namespace Robust.Client.ViewVariables.Traits
                 _enumerator = enumerable.GetEnumerator();
             }
 
-            var outerVBox = new VBoxContainer();
-            _controlsHBox = new HBoxContainer
+            var outerVBox = new BoxContainer
             {
+                Orientation = LayoutOrientation.Vertical
+            };
+            _controlsHBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal,
                 HorizontalAlignment = Control.HAlignment.Center
             };
 
@@ -70,7 +75,10 @@ namespace Robust.Client.ViewVariables.Traits
 
             outerVBox.AddChild(_controlsHBox);
 
-            _elementsVBox = new VBoxContainer();
+            _elementsVBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical
+            };
             outerVBox.AddChild(_elementsVBox);
 
             instance.AddTab("IEnumerable", outerVBox);

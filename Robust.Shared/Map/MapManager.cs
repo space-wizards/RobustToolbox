@@ -6,6 +6,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -521,6 +523,10 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
+            // TODO: this won't actually "work" but tests are fucking me hard
+            // We probably need to move these methods over to SharedBroadphaseSystem as they need to go through
+            // physics to find grids intersecting a point anyway but the level of refactoring required for that
+            // will kill me.
             foreach (var mapGrid in _grids.Values)
             {
                 if (mapGrid.ParentMapId != mapId)
@@ -545,31 +551,30 @@ namespace Robust.Shared.Map
 
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
+            // TODO: Unfortunately can't use BroadphaseSystem here as it will explode. Need to suss it out with DI
+            // TryFindGridAt works as is and helps with grid traversals.
             return _grids.Values.Where(g => g.ParentMapId == mapId && g.WorldBounds.Intersects(worldArea));
         }
 
         public IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false)
         {
-            foreach (var (_, grid) in _grids)
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
+
+            foreach (var broady in broadphase.GetBroadphases(mapId, worldArea))
             {
-                if (grid.ParentMapId != mapId) continue;
+                if (!broady.Owner.TryGetComponent(out MapGridComponent? mapGridComponent)) continue;
 
-                var gridBounds = grid.WorldBounds;
-                // If the worldArea is wholly contained within a grid then no need to get invalid
-                if (gridBounds.Encloses(worldArea))
+                yield return mapGridComponent.GridIndex;
+
+                // TODO: Optimise this. Need to avoid returning invalid unless absolutely necessary but still this check
+                // be hella expensive. Also doesn't account for rotation so.
+                if (broady.Owner.GetComponent<PhysicsComponent>().GetWorldAABB().Encloses(worldArea))
                 {
-                    yield return grid.Index;
                     yield break;
-                }
-
-                if (gridBounds.Intersects(worldArea))
-                {
-                    yield return grid.Index;
                 }
             }
 
-            if (includeInvalid)
-                yield return GridId.Invalid;
+            yield return GridId.Invalid;
         }
 
         public virtual void DeleteGrid(GridId gridID)

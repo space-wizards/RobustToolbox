@@ -9,6 +9,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -40,11 +41,6 @@ entities:
     type: Transform
   - index: 0
     type: MapGrid
-  - fixtures:
-    - shape:
-        !type:PhysShapeGrid
-          grid: 0
-    type: Physics
 - uid: 1
   type: MapDeserializeTest
   components:
@@ -71,8 +67,10 @@ entities:
             var mock = new Mock<IEntitySystemManager>();
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            var gridFixtures = new GridFixtureSystem();
+            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+            mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
             //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);

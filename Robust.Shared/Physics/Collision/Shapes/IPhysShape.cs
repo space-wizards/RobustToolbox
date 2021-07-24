@@ -12,8 +12,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         Chain = 3,
         Aabb = 4,
         Rectangle = 5, // Look you might be able to replace this with polys but for now I have done the thing
-        Grid = 6,
-        TypeCount = 7, // Obviously increment this if you add something
+        TypeCount = 6, // Obviously increment this if you add something
     }
 
     /// <summary>
@@ -36,6 +35,9 @@ namespace Robust.Shared.Physics.Collision.Shapes
         // If you really want it back then code it yaself (and also probably put it on the fixture).
 
         ShapeType ShapeType { get; }
+
+        // TODO: Like raycasts these aren't using exact shapes so need to do that.
+        bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot);
 
         /// <summary>
         /// Calculates the AABB of the shape.

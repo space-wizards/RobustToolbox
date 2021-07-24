@@ -67,6 +67,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         private ContactType _type;
 
+        // TODO: Jesus we should really have a test for this
         /// <summary>
         ///     Ordering is under <see cref="ShapeType"/>
         ///     uses enum to work out which collision evaluation to use.
@@ -80,7 +81,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.ChainAndCircle,
                                                                ContactType.AabbAndCircle,
                                                                ContactType.RectAndCircle,
-                                                               ContactType.NotSupported,
                                                            },
                                                            {
                                                                // Edge register
@@ -90,7 +90,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.NotSupported, // Chain
                                                                ContactType.NotSupported, // Aabb
                                                                ContactType.NotSupported, // Rect
-                                                               ContactType.NotSupported,
                                                            },
                                                            {
                                                                // Polygon register
@@ -100,7 +99,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.ChainAndPolygon,
                                                                ContactType.AabbAndPolygon,
                                                                ContactType.RectAndPolygon,
-                                                               ContactType.NotSupported,
                                                            },
                                                            {
                                                                // Chain register
@@ -110,7 +108,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.NotSupported, // Chain
                                                                ContactType.NotSupported, // Aabb - TODO Just cast to poly
                                                                ContactType.NotSupported, // Rect - TODO Just cast to poly
-                                                               ContactType.NotSupported,
                                                            },
                                                            {
                                                                // Aabb register
@@ -120,7 +117,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.NotSupported, // Chain - TODO Just cast to poly
                                                                ContactType.Aabb,
                                                                ContactType.AabbAndRect,
-                                                               ContactType.NotSupported,
                                                            },
                                                            {
                                                                // Rectangle register
@@ -130,18 +126,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.NotSupported, // Chain - TODO Just cast to poly
                                                                ContactType.AabbAndRect,
                                                                ContactType.Rect,
-                                                               ContactType.NotSupported,
-                                                           },
-                                                           {
-                                                               // Grid register
-                                                               ContactType.NotSupported,
-                                                               ContactType.NotSupported,
-                                                               ContactType.NotSupported,
-                                                               ContactType.NotSupported,
-                                                               ContactType.NotSupported,
-                                                               ContactType.NotSupported,
-                                                               ContactType.Grids,
-                                                           },
+                                                           }
                                                        };
 
         /// <summary>
@@ -155,9 +140,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         ///     Determines whether the contact is touching.
         /// </summary>
         public bool IsTouching { get; internal set; }
-
-        // Some day we'll refactor it to be more like EntityCoordinates
-        public GridId GridId { get; internal set; } = GridId.Invalid;
 
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
@@ -201,7 +183,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Gets a new contact to use, using the contact pool if relevant.
         /// </summary>
-        internal static Contact Create(ContactManager contactManager, GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact Create(ContactManager contactManager, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
             var type2 = fixtureB.Shape.ShapeType;
@@ -212,7 +194,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // Pull out a spare contact object
             contactManager.ContactPoolList.TryPop(out var contact);
 
-            // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
+            // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
             if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
             {
                 if (contact == null)
@@ -228,7 +210,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     contact.Reset(fixtureB, indexB, fixtureA, indexA);
             }
 
-            contact.GridId = gridId;
             contact._type = _registers[(int)type1, (int)type2];
 
             return contact;
@@ -308,46 +289,46 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
 
-            if (FixtureA == null || FixtureB == null)
-                return;
-
-            Manifold oldManifold = Manifold;
+            var oldManifold = Manifold;
 
             // Re-enable this contact.
             Enabled = true;
 
             bool touching;
-            bool wasTouching = IsTouching;
+            var wasTouching = IsTouching;
 
-            bool sensor = !(FixtureA.Hard && FixtureB.Hard);
+            var sensor = !(FixtureA.Hard && FixtureB.Hard);
+
+            var bodyATransform = bodyA.GetTransform();
+            var bodyBTransform = bodyB.GetTransform();
 
             // Is this contact a sensor?
             if (sensor)
             {
                 IPhysShape shapeA = FixtureA.Shape;
                 IPhysShape shapeB = FixtureB.Shape;
-                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyA.GetTransform(), bodyB.GetTransform());
+                touching = _collisionManager.TestOverlap(shapeA, ChildIndexA, shapeB, ChildIndexB, bodyATransform, bodyBTransform);
 
                 // Sensors don't generate manifolds.
                 Manifold.PointCount = 0;
             }
             else
             {
-                Evaluate(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform());
+                Evaluate(ref Manifold, bodyATransform, bodyBTransform);
                 touching = Manifold.PointCount > 0;
 
                 // Match old contact ids to new contact ids and copy the
                 // stored impulses to warm start the solver.
                 for (int i = 0; i < Manifold.PointCount; ++i)
                 {
-                    ManifoldPoint mp2 = Manifold.Points[i];
+                    var mp2 = Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
-                    ContactID id2 = mp2.Id;
+                    var id2 = mp2.Id;
 
-                    for (int j = 0; j < oldManifold.PointCount; ++j)
+                    for (var j = 0; j < oldManifold.PointCount; ++j)
                     {
-                        ManifoldPoint mp1 = oldManifold.Points[j];
+                        var mp1 = oldManifold.Points[j];
 
                         if (mp1.Id.Key == id2.Key)
                         {
@@ -494,9 +475,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 case ContactType.RectAndPolygon:
                     _collisionManager.CollideRectAndPolygon(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
-                case ContactType.Grids:
-                    // TODO: Dis
-                    throw new NotImplementedException();
                 default:
                     throw new ArgumentOutOfRangeException($"Collision between {FixtureA!.Shape.GetType()} and {FixtureB!.Shape.GetType()} not supported");
             }
@@ -531,7 +509,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Rect,
             RectAndCircle,
             RectAndPolygon,
-            Grids,
         }
 
         public bool Equals(Contact? other)
@@ -542,7 +519,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                    Equals(FixtureB, other.FixtureB) &&
                    Manifold.Equals(other.Manifold) &&
                    _type == other._type &&
-                   GridId.Equals(other.GridId) &&
                    Enabled == other.Enabled &&
                    ChildIndexA == other.ChildIndexA &&
                    ChildIndexB == other.ChildIndexB &&
@@ -558,7 +534,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine(GridId.Value, FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
+            return HashCode.Combine(FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
         }
     }
 }

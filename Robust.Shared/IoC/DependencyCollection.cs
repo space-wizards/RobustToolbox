@@ -13,10 +13,8 @@ namespace Robust.Shared.IoC
     public delegate T DependencyFactoryDelegate<out T>()
         where T : class;
 
-    internal class DependencyCollection : DependencyCollection<DependencyAttribute> {}
-
     /// <inheritdoc />
-    internal class DependencyCollection<TAttribute> : IDependencyCollection where TAttribute : Attribute
+    internal class DependencyCollection : IDependencyCollection
     {
         private delegate void InjectorDelegate(object target, object[] services);
         private static readonly Type[] InjectorParameters = {typeof(object), typeof(object[])};
@@ -113,6 +111,8 @@ namespace Robust.Shared.IoC
             }, overwrite);
         }
 
+
+
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
@@ -126,9 +126,12 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
-        public void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false)
+        public void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null,
+            bool overwrite = false) => Register(implementation, implementation, factory, overwrite);
+
+        public void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false)
         {
-            CheckRegisterInterface(implementation, implementation, overwrite);
+            CheckRegisterInterface(interfaceType, implementation, overwrite);
 
             object DefaultFactory()
             {
@@ -162,9 +165,9 @@ namespace Robust.Shared.IoC
                 return Activator.CreateInstance(implementation, parameters)!;
             }
 
-            _resolveTypes[implementation] = implementation;
+            _resolveTypes[interfaceType] = implementation;
             _resolveFactories[implementation] = factory ?? DefaultFactory;
-            _pendingResolves.Enqueue(implementation);
+            _pendingResolves.Enqueue(interfaceType);
         }
 
         [AssertionMethod]
@@ -350,7 +353,7 @@ namespace Robust.Shared.IoC
             var type = obj.GetType();
             foreach (var field in type.GetAllFields())
             {
-                if (!Attribute.IsDefined(field, typeof(TAttribute)))
+                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
                 {
                     continue;
                 }
@@ -381,7 +384,7 @@ namespace Robust.Shared.IoC
 
             foreach (var field in type.GetAllFields())
             {
-                if (!Attribute.IsDefined(field, typeof(TAttribute)))
+                if (!Attribute.IsDefined(field, typeof(DependencyAttribute)))
                 {
                     continue;
                 }

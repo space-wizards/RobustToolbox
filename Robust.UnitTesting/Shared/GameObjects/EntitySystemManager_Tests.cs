@@ -28,12 +28,12 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         public class ESystemDepA : ESystemBase
         {
-            [EntitySystemDependency] public readonly ESystemDepB ESystemDepB = default!;
+            [Dependency] public readonly ESystemDepB ESystemDepB = default!;
         }
 
         public class ESystemDepB : ESystemBase
         {
-            [EntitySystemDependency] public readonly ESystemDepA ESystemDepA = default!;
+            [Dependency] public readonly ESystemDepA ESystemDepA = default!;
         }
 
         /*
@@ -45,11 +45,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
          */
 
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<IEntitySystemManager>().Initialize();
+        }
+
         [Test]
         public void GetsByTypeOrSupertype()
         {
             var esm = IoCManager.Resolve<IEntitySystemManager>();
-            esm.Initialize();
 
             // getting type by the exact type should work fine
             Assert.That(esm.GetEntitySystem<ESystemB>(), Is.TypeOf<ESystemB>());
@@ -80,7 +85,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public void DependencyTest()
         {
             var esm = IoCManager.Resolve<IEntitySystemManager>();
-            esm.Initialize();
 
             var sysA = esm.GetEntitySystem<ESystemDepA>();
             var sysB = esm.GetEntitySystem<ESystemDepB>();

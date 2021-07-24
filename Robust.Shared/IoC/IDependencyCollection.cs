@@ -76,6 +76,19 @@ namespace Robust.Shared.IoC
         void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false);
 
         /// <summary>
+        /// Registers a simple implementation without an interface.
+        /// </summary>
+        /// <param name="interfaceType">The type that will be resolvable.</param>
+        /// <param name="implementation">The type that will be resolvable.</param>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate<object>? factory = null,
+            bool overwrite = false);
+
+        /// <summary>
         ///     Registers an interface to an existing instance of an implementation,
         ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
         ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,

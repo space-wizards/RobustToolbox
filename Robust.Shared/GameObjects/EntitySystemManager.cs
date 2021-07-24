@@ -203,6 +203,7 @@ namespace Robust.Shared.GameObjects
             // System.Values is modified by RemoveSystem
             foreach (var systemType in _systemTypes)
             {
+                if(_systemDependencyCollection == null) continue;
                 var system = (IEntitySystem)_systemDependencyCollection.ResolveType(systemType);
                 SystemUnloaded?.Invoke(this, new SystemChangedArgs(system));
                 system.Shutdown();
@@ -213,7 +214,7 @@ namespace Robust.Shared.GameObjects
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();
             _initialized = false;
-            _systemDependencyCollection.Clear();
+            _systemDependencyCollection?.Clear();
         }
 
         /// <inheritdoc />

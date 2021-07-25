@@ -211,15 +211,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (contact.IsTouching)
             {
-                //Report the separation to both participants:
-                // TODO: Needs to do like a comp message and system message
-                // fixtureA?.OnSeparation(fixtureA, fixtureB);
-
-                //Reverse the order of the reported fixtures. The first fixture is always the one that the
-                //user subscribed to.
-                // fixtureB.OnSeparation(fixtureB, fixtureA);
-
-                // EndContact(contact);
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
             }
 
             // Remove from the world
@@ -354,14 +347,12 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                contact.Update(this, _startCollisions, _endCollisions);
+                contact.Update(_startCollisions, _endCollisions);
                 contact = contact.Next;
             }
 
             foreach (var contact in _startCollisions)
             {
-                // It's possible for contacts to get nuked by other collision behaviors running on an entity deleting it
-                // so we'll do this (TODO: Maybe it's shitty design and we should move to PostCollide? Though we still need to check for each contact anyway I guess).
                 if (!contact.IsTouching) continue;
 
                 var fixtureA = contact.FixtureA!;
@@ -375,8 +366,12 @@ namespace Robust.Shared.Physics.Dynamics
 
             foreach (var contact in _endCollisions)
             {
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
+
+                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                // then we'll just skip the EndCollide.
+                if (fixtureA == null || fixtureB == null) continue;
 
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
@@ -423,8 +418,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         }
     }
-
-    public delegate void BroadPhaseDelegate(in FixtureProxy proxyA, in FixtureProxy proxyB);
 
     #region Collide Events Classes
 

@@ -72,7 +72,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<(ITransformComponent Transform, PhysicsComponent Body, Vector2 Position, float Angle)> _deferredUpdates = new();
+        private List<(ITransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -426,10 +426,9 @@ namespace Robust.Shared.Physics.Dynamics
         public void ProcessQueue()
         {
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var (transform, physics, position, angle) in _deferredUpdates)
+            foreach (var (transform, physics) in _deferredUpdates)
             {
-                // DebugTools.Assert(position.EqualsApprox(transform.WorldPosition));
-                transform.RunDeferred(physics.GetWorldAABB(position, angle));
+                transform.RunDeferred(physics.GetWorldAABB());
             }
 
             _deferredUpdates.Clear();

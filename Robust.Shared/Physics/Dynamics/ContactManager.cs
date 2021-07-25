@@ -440,7 +440,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
-                contact.GetWorldManifold(out var worldNormal, points);
+                contact.GetWorldManifold(_physicsManager, out var worldNormal, points);
 
                 // Didn't use an EntitySystemMessage as this is called FOR EVERY COLLISION AND IS REALLY EXPENSIVE
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.

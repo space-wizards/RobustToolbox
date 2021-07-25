@@ -300,9 +300,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
-            var bodyATransform = bodyA.GetTransform();
-            var bodyBTransform = bodyB.GetTransform();
-
             var bodyATransform = physicsManager.GetTransform(bodyA);
             var bodyBTransform = physicsManager.GetTransform(bodyB);
 

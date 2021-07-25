@@ -29,6 +29,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -468,7 +469,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body, Vector2 Position, float Angle)> deferredUpdates)
+        internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
         {
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
@@ -500,9 +501,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                     transform.WorldRotation = angle;
                     transform.DeferUpdates = false;
 
+                    // Unfortunately we can't cache the position and angle here because if our parent's position
+                    // changes then this is immediately invalidated.
                     if (transform.UpdatesDeferred)
                     {
-                        deferredUpdates.Add((transform, body, bodyPos, angle));
+                        deferredUpdates.Add((transform, body));
                     }
                 }
 

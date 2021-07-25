@@ -33,6 +33,16 @@ namespace Robust.Shared.Containers
             if (ExpectedEntities.ContainsKey(uid))
                 return;
             ExpectedEntities.Add(uid, container);
+            container.ExpectedEntities.Add(uid);
+        }
+
+        public void RemoveExpectedEntity(EntityUid uid)
+        {
+            if (!ExpectedEntities.ContainsKey(uid))
+                return;
+            var container = ExpectedEntities[uid];
+            ExpectedEntities.Remove(uid);
+            container.ExpectedEntities.Add(uid);
         }
     }
 }

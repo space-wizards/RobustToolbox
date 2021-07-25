@@ -119,6 +119,23 @@ namespace Robust.Shared.Containers
 
                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedContainerSystem>();
 
+                List<EntityUid>? unexpected = null;
+
+                foreach (var uid in container.ExpectedEntities)
+                {
+                    if (!entityUids.Contains(uid))
+                    {
+                        unexpected ??= new List<EntityUid>();
+                        unexpected.Add(uid);
+                    }
+                }
+
+                if (unexpected != null)
+                {
+                    foreach (var uid in unexpected)
+                        containerSystem.RemoveExpectedEntity(uid);
+                }
+
                 // Add new entities.
                 foreach (var uid in entityUids)
                 {

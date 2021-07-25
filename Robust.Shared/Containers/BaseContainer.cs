@@ -16,6 +16,9 @@ namespace Robust.Shared.Containers
         [ViewVariables]
         public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
 
+        [ViewVariables]
+        public abstract List<EntityUid> ExpectedEntities { get; }
+
         /// <inheritdoc />
         public abstract string ContainerType { get; }
 

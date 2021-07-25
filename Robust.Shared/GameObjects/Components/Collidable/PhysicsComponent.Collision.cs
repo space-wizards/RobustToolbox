@@ -18,18 +18,6 @@ namespace Robust.Shared.GameObjects
         void CollideWith(Fixture ourFixture, Fixture otherFixture, in Manifold manifold);
     }
 
-    /// <summary>
-    ///     Called once when a collision ends.
-    /// </summary>
-    public interface IEndCollide
-    {
-        /// <summary>
-        ///     Run behaviour after all other collision behaviors have run.
-        /// </summary>
-        [Obsolete("Use EndCollideEvent instead")]
-        void CollideWith(Fixture ourFixture, Fixture otherFixture, in Manifold manifold);
-    }
-
     [Serializable, NetSerializable]
     public enum BodyStatus: byte
     {

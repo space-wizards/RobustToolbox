@@ -47,6 +47,10 @@ namespace Robust.Shared.Map
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
+        Matrix3 WorldMatrix { get; }
+
+        Matrix3 InvWorldMatrix { get; }
+
         #region TileAccess
 
         /// <summary>

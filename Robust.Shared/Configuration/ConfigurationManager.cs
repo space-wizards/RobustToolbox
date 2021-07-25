@@ -83,7 +83,7 @@ namespace Robust.Shared.Configuration
                 {
                     // overwrite the value with the saved one
                     cfgVar.Value = tomlValue;
-                    cfgVar.ValueChanged?.Invoke(cfgVar.Value);
+                    InvokeValueChanged(cfgVar, cfgVar.Value);
                 }
                 else
                 {
@@ -189,16 +189,13 @@ namespace Robust.Shared.Configuration
         public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
             where T : notnull
         {
-            Action<object>? valueChangedDelegate = null;
-            if (onValueChanged != null)
-            {
-                valueChangedDelegate = v => onValueChanged((T) v);
-            }
+            RegisterCVar(name, typeof(T), defaultValue, flags);
 
-            RegisterCVar(name, typeof(T), defaultValue, flags, valueChangedDelegate);
+            if (onValueChanged != null)
+                OnValueChanged(name, onValueChanged);
         }
 
-        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags, Action<object>? onValueChanged)
+        private void RegisterCVar(string name, Type type, object defaultValue, CVar flags)
         {
             DebugTools.Assert(!type.IsEnum || type.GetEnumUnderlyingType() == typeof(int),
                 $"{name}: Enum cvars must have int as underlying type.");
@@ -219,7 +216,6 @@ namespace Robust.Shared.Configuration
                 cVar.DefaultValue = defaultValue;
                 cVar.Flags = flags;
                 cVar.Registered = true;
-                cVar.ValueChanged = onValueChanged;
 
                 if (cVar.OverrideValue != null)
                 {
@@ -233,7 +229,6 @@ namespace Robust.Shared.Configuration
             {
                 Registered = true,
                 Value = defaultValue,
-                ValueChanged = onValueChanged
             });
         }
 
@@ -247,12 +242,29 @@ namespace Robust.Shared.Configuration
             where T : notnull
         {
             var reg = _configVars[name];
-            reg.ValueChanged += o => onValueChanged((T) o);
+            var exDel = (Action<T>?) reg.ValueChanged;
+            exDel += onValueChanged;
+            reg.ValueChanged = exDel;
+
+            reg.ValueChangedInvoker ??= (del, v) => ((Action<T>) del)((T) v);
 
             if (invokeImmediately)
             {
                 onValueChanged(GetCVar<T>(name));
             }
+        }
+
+        public void UnsubValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged) where T : notnull
+        {
+            UnsubValueChanged(cVar.Name, onValueChanged);
+        }
+
+        public void UnsubValueChanged<T>(string name, Action<T> onValueChanged) where T : notnull
+        {
+            var reg = _configVars[name];
+            var exDel = (Action<T>?) reg.ValueChanged;
+            exDel -= onValueChanged;
+            reg.ValueChanged = exDel;
         }
 
         public void LoadCVarsFromAssembly(Assembly assembly)
@@ -282,7 +294,7 @@ namespace Robust.Shared.Configuration
                     throw new InvalidOperationException($"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
                 }
 
-                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags, null);
+                RegisterCVar(def.Name, type, def.DefaultValue, def.Flags);
             }
         }
 
@@ -316,7 +328,7 @@ namespace Robust.Shared.Configuration
                     cVar.OverrideValueParsed = null;
 
                     cVar.Value = value;
-                    cVar.ValueChanged?.Invoke(value);
+                    InvokeValueChanged(cVar, value);
                 }
             }
             else
@@ -362,7 +374,7 @@ namespace Robust.Shared.Configuration
                 {
                     cfgVar.OverrideValue = value;
                     cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
-                    cfgVar.ValueChanged?.Invoke(cfgVar.OverrideValueParsed);
+                    InvokeValueChanged(cfgVar, cfgVar.OverrideValueParsed);
                 }
                 else
                 {
@@ -422,6 +434,11 @@ namespace Robust.Shared.Configuration
             }
         }
 
+        private static void InvokeValueChanged(ConfigVar var, object value)
+        {
+            var.ValueChangedInvoker?.Invoke(var.ValueChanged!, value);
+        }
+
         /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>
@@ -476,7 +493,9 @@ namespace Robust.Shared.Configuration
             /// <summary>
             ///     Invoked when the value of this CVar is changed.
             /// </summary>
-            public Action<object>? ValueChanged { get; set; }
+            public Delegate? ValueChanged { get; set; }
+
+            public Action<Delegate, object>? ValueChangedInvoker { get; set; }
 
             // We don't know what the type of the var is until it's registered.
             // So we can't actually parse them until then.

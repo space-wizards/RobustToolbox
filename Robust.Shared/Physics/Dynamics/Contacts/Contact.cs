@@ -141,9 +141,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public bool IsTouching { get; internal set; }
 
-        // Some day we'll refactor it to be more like EntityCoordinates
-        public GridId GridId { get; internal set; } = GridId.Invalid;
-
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
         /// time step (or sub-step in continuous collisions).
@@ -186,7 +183,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         ///     Gets a new contact to use, using the contact pool if relevant.
         /// </summary>
-        internal static Contact Create(ContactManager contactManager, GridId gridId, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal static Contact Create(ContactManager contactManager, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
             var type1 = fixtureA.Shape.ShapeType;
             var type2 = fixtureB.Shape.ShapeType;
@@ -197,7 +194,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // Pull out a spare contact object
             contactManager.ContactPoolList.TryPop(out var contact);
 
-            // Edge+Polygon is non-symetrical due to the way Erin handles collision type registration.
+            // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
             if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
             {
                 if (contact == null)
@@ -213,7 +210,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     contact.Reset(fixtureB, indexB, fixtureA, indexA);
             }
 
-            contact.GridId = gridId;
             contact._type = _registers[(int)type1, (int)type2];
 
             return contact;
@@ -294,18 +290,18 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
 
-            if (FixtureA == null || FixtureB == null)
-                return;
-
-            Manifold oldManifold = Manifold;
+            var oldManifold = Manifold;
 
             // Re-enable this contact.
             Enabled = true;
 
             bool touching;
-            bool wasTouching = IsTouching;
+            var wasTouching = IsTouching;
 
-            bool sensor = !(FixtureA.Hard && FixtureB.Hard);
+            var sensor = !(FixtureA.Hard && FixtureB.Hard);
+
+            var bodyATransform = bodyA.GetTransform();
+            var bodyBTransform = bodyB.GetTransform();
 
             var bodyATransform = physicsManager.GetTransform(bodyA);
             var bodyBTransform = physicsManager.GetTransform(bodyB);
@@ -329,14 +325,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // stored impulses to warm start the solver.
                 for (int i = 0; i < Manifold.PointCount; ++i)
                 {
-                    ManifoldPoint mp2 = Manifold.Points[i];
+                    var mp2 = Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
                     mp2.TangentImpulse = 0.0f;
-                    ContactID id2 = mp2.Id;
+                    var id2 = mp2.Id;
 
-                    for (int j = 0; j < oldManifold.PointCount; ++j)
+                    for (var j = 0; j < oldManifold.PointCount; ++j)
                     {
-                        ManifoldPoint mp1 = oldManifold.Points[j];
+                        var mp1 = oldManifold.Points[j];
 
                         if (mp1.Id.Key == id2.Key)
                         {
@@ -527,7 +523,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                    Equals(FixtureB, other.FixtureB) &&
                    Manifold.Equals(other.Manifold) &&
                    _type == other._type &&
-                   GridId.Equals(other.GridId) &&
                    Enabled == other.Enabled &&
                    ChildIndexA == other.ChildIndexA &&
                    ChildIndexB == other.ChildIndexB &&
@@ -543,7 +538,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine(GridId.Value, FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
+            return HashCode.Combine(FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
         }
     }
 }

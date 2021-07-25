@@ -11,46 +11,74 @@ namespace Robust.Shared.GameObjects
 
         protected void SubscribeNetworkEvent<T>(
             EntityEventHandler<T> handler,
-            Type[]? before=null, Type[]? after=null)
+            Type[]? before = null, Type[]? after = null)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeEvent(EventSource.Network, this, handler, GetType(), before, after);
-
-            _subscriptions ??= new();
-            _subscriptions.Add(new SubBroadcast<T>(EventSource.Network));
-        }
-
-        protected void SubscribeNetworkEvent<T>(
-            EntitySessionEventHandler<T> handler,
-            Type[]? before=null, Type[]? after=null)
-            where T : notnull
-        {
-            EntityManager.EventBus.SubscribeSessionEvent(EventSource.Network, this, handler);
-
-            _subscriptions ??= new();
-            _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(EventSource.Network));
+            SubEvent(EventSource.Network, handler, before, after);
         }
 
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
-            Type[]? before=null, Type[]? after=null)
+            Type[]? before = null, Type[]? after = null)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeEvent(EventSource.Local, this, handler, GetType(), before, after);
+            SubEvent(EventSource.Local, handler, before, after);
+        }
 
-            _subscriptions ??= new();
-            _subscriptions.Add(new SubBroadcast<T>(EventSource.Local));
+        protected void SubscribeAllEvent<T>(
+            EntityEventHandler<T> handler,
+            Type[]? before = null, Type[]? after = null)
+            where T : notnull
+        {
+            SubEvent(EventSource.All, handler, before, after);
+        }
+
+        protected void SubscribeNetworkEvent<T>(
+            EntitySessionEventHandler<T> handler,
+            Type[]? before = null, Type[]? after = null)
+            where T : notnull
+        {
+            SubSessionEvent(EventSource.Network, handler, before, after);
         }
 
         protected void SubscribeLocalEvent<T>(
             EntitySessionEventHandler<T> handler,
-            Type[]? before=null, Type[]? after=null)
+            Type[]? before = null, Type[]? after = null)
             where T : notnull
         {
-            EntityManager.EventBus.SubscribeSessionEvent(EventSource.Local, this, handler);
+            SubSessionEvent(EventSource.Local, handler, before, after);
+        }
+
+        protected void SubscribeAllEvent<T>(
+            EntitySessionEventHandler<T> handler,
+            Type[]? before = null, Type[]? after = null)
+            where T : notnull
+        {
+            SubSessionEvent(EventSource.All, handler, before, after);
+        }
+
+        private void SubEvent<T>(
+            EventSource src,
+            EntityEventHandler<T> handler,
+            Type[]? before, Type[]? after)
+            where T : notnull
+        {
+            EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
 
             _subscriptions ??= new();
-            _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(EventSource.Local));
+            _subscriptions.Add(new SubBroadcast<T>(src));
+        }
+
+        private void SubSessionEvent<T>(
+            EventSource src,
+            EntitySessionEventHandler<T> handler,
+            Type[]? before, Type[]? after)
+            where T : notnull
+        {
+            EntityManager.EventBus.SubscribeSessionEvent(src, this, handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
 
         [Obsolete("Unsubscribing of entity system events is now automatic")]
@@ -69,7 +97,7 @@ namespace Robust.Shared.GameObjects
 
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
-            Type[]? before=null, Type[]? after=null)
+            Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
             where TEvent : EntityEventArgs
         {

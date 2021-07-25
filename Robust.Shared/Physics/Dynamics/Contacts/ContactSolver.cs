@@ -21,9 +21,6 @@
 */
 
 using System;
-using System.IO;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Utility;
@@ -32,8 +29,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     internal sealed class ContactSolver
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-
         private bool _warmStarting;
         private float _velocityThreshold;
         private float _baumgarte;
@@ -52,24 +47,13 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private ContactVelocityConstraint[] _velocityConstraints = Array.Empty<ContactVelocityConstraint>();
         private ContactPositionConstraint[] _positionConstraints = Array.Empty<ContactPositionConstraint>();
 
-        public void Initialize()
+        public void LoadConfig(in IslandCfg cfg)
         {
-            IoCManager.InjectDependencies(this);
-
-            _warmStarting = _configManager.GetCVar(CVars.WarmStarting);
-            _configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value);
-
-            _velocityThreshold = _configManager.GetCVar(CVars.VelocityThreshold);
-            _configManager.OnValueChanged(CVars.VelocityThreshold, value => _velocityThreshold = value);
-
-            _baumgarte = _configManager.GetCVar(CVars.Baumgarte);
-            _configManager.OnValueChanged(CVars.Baumgarte, value => _baumgarte = value);
-
-            _linearSlop = _configManager.GetCVar(CVars.LinearSlop);
-            _configManager.OnValueChanged(CVars.LinearSlop, value => _linearSlop = value);
-
-            _maxLinearCorrection = _configManager.GetCVar(CVars.MaxLinearCorrection);
-            _configManager.OnValueChanged(CVars.MaxLinearCorrection, value => _maxLinearCorrection = value);
+            _warmStarting = cfg.WarmStarting;
+            _velocityThreshold = cfg.VelocityThreshold;
+            _baumgarte = cfg.Baumgarte;
+            _linearSlop = cfg.LinearSlop;
+            _maxLinearCorrection = cfg.MaxLinearCorrection;
         }
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)

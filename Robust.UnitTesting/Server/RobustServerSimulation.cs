@@ -228,6 +228,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<EntityLookupComponent>();
+            compFactory.RegisterClass<BroadphaseComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -244,6 +245,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
+            entitySystemMan.LoadExtraSystemType<SharedTransformSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

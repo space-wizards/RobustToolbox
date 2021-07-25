@@ -31,10 +31,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterEntitySystems(factory =>
-                {
-                    factory.LoadExtraSystemType<SharedTransformSystem>();
-                })
                 .RegisterComponents(factory =>
                 {
                     factory.RegisterClass<ContainerManagerComponent>();

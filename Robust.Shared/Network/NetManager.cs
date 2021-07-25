@@ -1002,6 +1002,9 @@ namespace Robust.Shared.Network
 
             foreach (var channel in _channels.Values)
             {
+                if (!channel.IsHandshakeComplete)
+                    continue;
+
                 ServerSendMessage(message, channel);
             }
         }

@@ -1,12 +1,35 @@
+using System;
+
 namespace Robust.Shared.GameObjects
 {
     public static class EventBusExt
     {
-        public static void SubscribeSessionEvent<T>(this IEventBus eventBus, EventSource source,
-            IEntityEventSubscriber subscriber, EntitySessionEventHandler<T> handler)
+        public static void SubscribeSessionEvent<T>(
+            this IEventBus eventBus,
+            EventSource source,
+            IEntityEventSubscriber subscriber,
+            EntitySessionEventHandler<T> handler)
         {
             var wrapper = new HandlerWrapper<T>(handler);
             eventBus.SubscribeEvent<EntitySessionMessage<T>>(source, subscriber, wrapper.Invoke);
+        }
+
+        public static void SubscribeSessionEvent<T>(
+            this IEventBus eventBus,
+            EventSource source,
+            IEntityEventSubscriber subscriber,
+            EntitySessionEventHandler<T> handler,
+            Type orderType,
+            Type[]? before=null,
+            Type[]? after=null)
+        {
+            var wrapper = new HandlerWrapper<T>(handler);
+            eventBus.SubscribeEvent<EntitySessionMessage<T>>(
+                source,
+                subscriber,
+                wrapper.Invoke,
+                orderType,
+                before, after);
         }
 
         private sealed class HandlerWrapper<T>

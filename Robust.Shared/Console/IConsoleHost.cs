@@ -12,6 +12,8 @@ namespace Robust.Shared.Console
     /// <param name="args">An array of all the parsed arguments.</param>
     public delegate void ConCommandCallback(IConsoleShell shell, string argStr, string[] args);
 
+    public delegate void ConAnyCommandCallback(IConsoleShell shell, string commandName, string argStr, string[] args);
+
     /// <summary>
     /// The console host exists as a singleton subsystem that provides all of the features of the console API.
     /// It will register console commands, spawn console shells and execute command strings.
@@ -38,7 +40,10 @@ namespace Robust.Shared.Console
         /// </summary>
         IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands { get; }
 
-
+        /// <summary>
+        /// Invoked before any console command is executed.
+        /// </summary>
+        event ConAnyCommandCallback AnyCommandExecuted;
         event EventHandler ClearText;
 
         /// <summary>

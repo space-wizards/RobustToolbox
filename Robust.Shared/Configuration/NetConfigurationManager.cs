@@ -125,7 +125,7 @@ namespace Robust.Shared.Configuration
 
                 ApplyNetVarChange(msg.MsgChannel, msg.NetworkedVars);
 
-                if(msg.Tick < _timing.LastRealTick)
+                if(msg.Tick != default && msg.Tick < _timing.LastRealTick)
                     Logger.WarningS("cfg", $"{msg.MsgChannel}: Received late nwVar message ({msg.Tick} < {_timing.LastRealTick} ).");
 
                 _netVarsMessages.RemoveSwap(i);
@@ -295,7 +295,7 @@ namespace Robust.Shared.Configuration
             Logger.InfoS("cfg", "Sending client info...");
 
             var msg = _netManager.CreateNetMessage<MsgConVars>();
-            msg.Tick = _timing.CurTick;
+            msg.Tick = default;
             msg.NetworkedVars = GetReplicatedVars();
             _netManager.ClientSendMessage(msg);
         }

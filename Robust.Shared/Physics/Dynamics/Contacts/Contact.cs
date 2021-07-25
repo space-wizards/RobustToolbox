@@ -283,8 +283,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
-        /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
+        internal void Update(List<Contact> startCollisions, List<Contact> endCollisions)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -354,30 +353,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 if (touching)
                 {
-                    var enabledA = true;
-                    var enabledB = true;
-
-                    /*
-                    // Report the collision to both participants. Track which ones returned true so we can
-                    // later call OnSeparation if the contact is disabled for a different reason.
-                    if (FixtureA.OnCollision != null)
-                        foreach (OnCollisionEventHandler handler in FixtureA.OnCollision.GetInvocationList())
-                            enabledA = handler(FixtureA, FixtureB, this) && enabledA;
-
-                    // Reverse the order of the reported fixtures. The first fixture is always the one that the
-                    // user subscribed to.
-                    if (FixtureB.OnCollision != null)
-                        foreach (OnCollisionEventHandler handler in FixtureB.OnCollision.GetInvocationList())
-                            enabledB = handler(FixtureB, FixtureA, this) && enabledB;
-                    */
-
-                    Enabled = enabledA && enabledB;
-
-                    // BeginContact can also return false and disable the contact
-                    /*
-                    if (enabledA && enabledB && contactManager.BeginContact != null)
-                        Enabled = contactManager.BeginContact(this);
-                    */
                     startCollisions.Add(this);
                 }
             }
@@ -385,20 +360,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 if (!touching)
                 {
-                    /*
-                    //Report the separation to both participants:
-                    if (FixtureA != null && FixtureA.OnSeparation != null)
-                        FixtureA.OnSeparation(FixtureA, FixtureB);
-
-                    //Reverse the order of the reported fixtures. The first fixture is always the one that the
-                    //user subscribed to.
-                    if (FixtureB != null && FixtureB.OnSeparation != null)
-                        FixtureB.OnSeparation(FixtureB, FixtureA);
-
-                    if (contactManager.EndContact != null)
-                        contactManager.EndContact(this);
-                    */
-
                     endCollisions.Add(this);
                 }
             }

@@ -224,20 +224,32 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            switch (message.Type)
+#if EXCEPTION_TOLERANCE
+            try
+#endif
             {
-                case EntityMessageType.ComponentMessage:
-                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
-                    return;
+                switch (message.Type)
+                {
+                    case EntityMessageType.ComponentMessage:
+                        ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
+                        return;
 
-                case EntityMessageType.SystemMessage:
-                    var msg = message.SystemMessage;
-                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
-                    ReceivedSystemMessage?.Invoke(this, msg);
-                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
-                    return;
+                    case EntityMessageType.SystemMessage:
+                        var msg = message.SystemMessage;
+                        var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                        var sessionMsg =
+                            Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
+                        ReceivedSystemMessage?.Invoke(this, msg);
+                        ReceivedSystemMessage?.Invoke(this, sessionMsg);
+                        return;
+                }
             }
+#if EXCEPTION_TOLERANCE
+            catch (Exception e)
+            {
+                Logger.ErrorS("net.ent", $"Caught exception while dispatching {message.Type}: {e}");
+            }
+#endif
         }
 
         private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)

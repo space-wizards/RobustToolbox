@@ -24,6 +24,7 @@ namespace Robust.Server.GameObjects
             RegisterClass<CollisionWakeComponent>();
             RegisterClass<ContainerManagerComponent>();
             RegisterClass<OccluderComponent>();
+            RegisterClass<OccluderTreeComponent>();
             RegisterClass<SpriteComponent>();
             RegisterClass<AppearanceComponent>();
             RegisterClass<SnapGridComponent>();

@@ -65,7 +65,7 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IConfigurationManager _cfgMan = default!;
 
-        private SharedBroadPhaseSystem _broadPhaseSystem = default!;
+        private SharedBroadphaseSystem _broadPhaseSystem = default!;
 
         [ViewVariables]
         public bool IsAvailable
@@ -175,7 +175,7 @@ namespace Robust.Client.Audio.Midi
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
 
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadPhaseSystem>();
+            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             FluidsynthInitialized = true;
         }
 

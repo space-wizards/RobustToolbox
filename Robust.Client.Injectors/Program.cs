@@ -29,26 +29,27 @@ namespace Robust.Build.Tasks
         }
     }
 
+    //formatted according to https://github.com/dotnet/msbuild/blob/main/src/Shared/CanonicalError.cs#L57
     class ConsoleBuildEngine : IBuildEngine
     {
         public void LogErrorEvent(BuildErrorEventArgs e)
         {
-            Console.WriteLine($"ERROR: {e.Code} {e.Message} in {e.File} {e.LineNumber}:{e.ColumnNumber}-{e.EndLineNumber}:{e.EndColumnNumber}");
+            Console.WriteLine($"{e.File} ({e.LineNumber},{e.ColumnNumber},{e.EndLineNumber},{e.EndColumnNumber}): XAMLIL ERROR {e.Code}: {e.Message}");
         }
 
         public void LogWarningEvent(BuildWarningEventArgs e)
         {
-            Console.WriteLine($"WARNING: {e.Code} {e.Message} in {e.File} {e.LineNumber}:{e.ColumnNumber}-{e.EndLineNumber}:{e.EndColumnNumber}");
+            Console.WriteLine($"{e.File} ({e.LineNumber},{e.ColumnNumber},{e.EndLineNumber},{e.EndColumnNumber}): XAMLIL WARNING {e.Code}: {e.Message}");
         }
 
         public void LogMessageEvent(BuildMessageEventArgs e)
         {
-            Console.WriteLine($"MESSAGE: {e.Code} {e.Message} in {e.File} {e.LineNumber}:{e.ColumnNumber}-{e.EndLineNumber}:{e.EndColumnNumber}");
+            Console.WriteLine($"{e.File} ({e.LineNumber},{e.ColumnNumber},{e.EndLineNumber},{e.EndColumnNumber}): XAMLIL MESSAGE {e.Code}: {e.Message}");
         }
 
         public void LogCustomEvent(CustomBuildEventArgs e)
         {
-            Console.WriteLine($"CUSTOM: {e.Message}");
+            Console.WriteLine(e.Message);
         }
 
         public bool BuildProjectFile(string projectFileName, string[] targetNames, IDictionary globalProperties,

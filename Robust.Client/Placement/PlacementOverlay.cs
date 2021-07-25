@@ -1,5 +1,5 @@
 using Robust.Shared.Enums;
-﻿using Robust.Client.Graphics;
+ using Robust.Client.Graphics;
 
 
 namespace Robust.Client.Placement

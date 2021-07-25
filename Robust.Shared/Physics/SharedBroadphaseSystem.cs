@@ -787,7 +787,7 @@ namespace Robust.Shared.Physics
             component.Tree = new DynamicTreeBroadPhase(capacity);
         }
 
-        private BroadphaseComponent? GetBroadphase(PhysicsComponent body)
+        internal BroadphaseComponent? GetBroadphase(PhysicsComponent body)
         {
             return GetBroadphase(body.Owner);
         }

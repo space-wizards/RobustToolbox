@@ -248,7 +248,6 @@ namespace Robust.Server.GameObjects
             catch (Exception e)
             {
                 Logger.ErrorS("net.ent", $"Caught exception while dispatching {message.Type}: {e}");
-                brokenEnts.Add(entity);
             }
 #endif
         }

@@ -87,8 +87,6 @@ namespace Robust.Shared.Physics.Collision
          * should also profile just using FixedArray2 / FixedArray3
          */
 
-        private DistanceInput _input = new();
-
         /// <summary>
         /// Test overlap between the two shapes.
         /// </summary>
@@ -102,15 +100,16 @@ namespace Robust.Shared.Physics.Collision
         bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
-            _input.ProxyA.Set(shapeA, indexA);
-            _input.ProxyB.Set(shapeB, indexB);
-            _input.TransformA = xfA;
-            _input.TransformB = xfB;
-            _input.UseRadii = true;
+            // TODO: Make this a struct.
+            var input = new DistanceInput();
 
-            SimplexCache cache;
-            DistanceOutput output;
-            DistanceManager.ComputeDistance(out output, out cache, _input);
+            input.ProxyA.Set(shapeA, indexA);
+            input.ProxyB.Set(shapeB, indexB);
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+
+            DistanceManager.ComputeDistance(out var output, out _, input);
 
             return output.Distance < 10.0f * float.Epsilon;
         }

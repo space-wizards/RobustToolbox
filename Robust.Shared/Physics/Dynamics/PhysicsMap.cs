@@ -37,9 +37,7 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public sealed class PhysicsMap
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
         private SharedPhysicsSystem _physicsSystem = default!;
@@ -134,8 +132,21 @@ namespace Robust.Shared.Physics.Dynamics
             ContactManager.Initialize();
             ContactManager.MapId = MapId;
 
-            _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
-            _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
+        }
+
+        public void Shutdown()
+        {
+            ContactManager.Shutdown();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+        }
+
+        private void OnAutoClearChange(bool value)
+        {
+            _autoClearForces = value;
         }
 
         #region AddRemove

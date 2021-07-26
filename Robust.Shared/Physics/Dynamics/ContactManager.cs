@@ -32,6 +32,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -61,6 +62,9 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
+        private int _contactMultithreadThreshold = 16;
+        private int _contactMinimumThreads = 2;
+
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
 
         public ContactManager()
@@ -72,7 +76,28 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
+            configManager.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
+
             InitializePool();
+        }
+
+        public void Shutdown()
+        {
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold);
+            configManager.UnsubValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads);
+        }
+
+        private void OnContactMultithreadThreshold(int value)
+        {
+            _contactMultithreadThreshold = value;
+        }
+
+        private void OnContactMinimumThreads(int value)
+        {
+            _contactMinimumThreads = value;
         }
 
         private void InitializePool()
@@ -361,6 +386,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Update contacts all at once.
             BuildManifolds(contacts, index, status);
 
+            // Single-threaded so content doesn't need to worry about race conditions.
             for (var i = 0; i < status.Length; i++)
             {
                 var contact = contacts[i];
@@ -411,14 +437,9 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status)
         {
-            var contactMultithreadThreshold = 16;
-            var contactMinimumThreads = 2;
-
-            if (count > contactMultithreadThreshold * contactMinimumThreads)
+            if (count > _contactMultithreadThreshold * _contactMinimumThreads)
             {
-                // Deduct 1 for networking thread I guess?
-                var batches = Math.Min((int) MathF.Floor((float) count / contactMinimumThreads), Math.Max(1, Environment.ProcessorCount - 1));
-                var batchSize = (int) MathF.Ceiling((float) count / batches);
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMinimumThreads);
 
                 Parallel.For(0, batches, i =>
                 {

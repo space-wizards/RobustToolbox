@@ -210,6 +210,7 @@ namespace Robust.Shared.GameObjects
             var map = _maps[eventArgs.Map];
             map.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
 
+            map.Shutdown();
             _maps.Remove(eventArgs.Map);
             Logger.DebugS("physics", $"Destroyed physics map for {eventArgs.Map}");
         }
@@ -355,6 +356,15 @@ namespace Robust.Shared.GameObjects
                 if (mapId == MapId.Nullspace) continue;
                 map.ProcessQueue();
             }
+        }
+
+        internal static (int Batches, int BatchSize) GetBatch(int count, int minimumThreads)
+        {
+            // Deduct 1 for networking thread I guess?
+            var batches = Math.Min((int) MathF.Floor((float) count / minimumThreads), Math.Max(1, Environment.ProcessorCount - 1));
+            var batchSize = (int) MathF.Ceiling((float) count / batches);
+
+            return (batches, batchSize);
         }
     }
 }

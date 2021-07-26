@@ -275,8 +275,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             PhysicsComponent bodyB = FixtureB?.Body!;
             IPhysShape shapeA = FixtureA?.Shape!;
             IPhysShape shapeB = FixtureB?.Shape!;
-            var bodyATransform = physicsManager.GetTransform(bodyA);
-            var bodyBTransform = physicsManager.GetTransform(bodyB);
+            var bodyATransform = physicsManager.GetOrCreateTransform(bodyA);
+            var bodyBTransform = physicsManager.GetOrCreateTransform(bodyB);
 
             ContactSolver.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
         }
@@ -286,7 +286,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
         /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
-        internal ContactStatus Update()
+        internal ContactStatus Update(IPhysicsManager physicsManager)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;

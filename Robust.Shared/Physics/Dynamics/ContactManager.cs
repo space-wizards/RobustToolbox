@@ -30,15 +30,12 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
 
@@ -384,6 +381,19 @@ namespace Robust.Shared.Physics.Dynamics
 
             var status = ArrayPool<ContactStatus>.Shared.Rent(index);
 
+            // To avoid race conditions with the dictionary we'll cache all of the transforms up front.
+            // Caching should provide better perf than multi-threading the GetTransform() as we can also re-use
+            // these in PhysicsIsland as well.
+            for (var i = 0; i < index; i++)
+            {
+                var contact = contacts[i];
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
+
+                _physicsManager.CreateTransform(bodyA);
+                _physicsManager.CreateTransform(bodyB);
+            }
+
             // Update contacts all at once.
             BuildManifolds(contacts, index, status);
 
@@ -460,7 +470,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             for (var i = start; i < end; i++)
             {
-                status[i] = contacts[i].Update();
+                status[i] = contacts[i].Update(_physicsManager);
             }
         }
 

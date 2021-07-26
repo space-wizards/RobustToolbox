@@ -10,8 +10,12 @@ namespace Robust.Shared.Physics
         /// </summary>
         void ClearTransforms();
 
+        public bool CreateTransform(PhysicsComponent body);
+
+        public Transform GetOrCreateTransform(PhysicsComponent body);
+
         /// <summary>
-        /// Get / create a cached transform for physics use.
+        /// Get a cached transform for physics use.
         /// </summary>
         public Transform GetTransform(PhysicsComponent body);
     }
@@ -26,18 +30,24 @@ namespace Robust.Shared.Physics
             _transforms.Clear();
         }
 
+        public bool CreateTransform(PhysicsComponent body)
+        {
+            if (_transforms.ContainsKey(body)) return false;
+
+            _transforms[body] = body.GetTransform();
+            return true;
+        }
+
+        public Transform GetOrCreateTransform(PhysicsComponent body)
+        {
+            CreateTransform(body);
+            return _transforms[body];
+        }
+
         /// <inheritdoc />
         public Transform GetTransform(PhysicsComponent body)
         {
-            if (_transforms.TryGetValue(body, out var transform))
-            {
-                return transform;
-            }
-
-            transform = body.GetTransform();
-            _transforms[body] = transform;
-
-            return transform;
+            return _transforms[body];
         }
     }
 }

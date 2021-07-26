@@ -139,7 +139,6 @@ stored in a single array since multiple arrays lead to multiple misses.
 */
     public sealed class PhysicsIsland
     {
-        // if you add new deps to this, the IoCManager inject dependencies is behind #if too.
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 #if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -211,7 +210,6 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// </summary>
         public int JointCount { get; private set; }
 
-        [Conditional("DEBUG")]
         internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
@@ -327,7 +325,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 var body = Bodies[i];
 
-                // In future we'll set these to existing
                 // Didn't use the old variable names because they're hard to read
                 var transform = _physicsManager.GetTransform(body);
                 var position = transform.Position;

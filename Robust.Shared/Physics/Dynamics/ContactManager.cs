@@ -28,8 +28,10 @@
 */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -60,9 +62,6 @@ namespace Robust.Shared.Physics.Dynamics
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
-        // TODO: CollideMultiCore
-        private List<Contact> _startCollisions = new();
-        private List<Contact> _endCollisions = new();
 
         public ContactManager()
         {
@@ -246,8 +245,14 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal void Collide()
         {
+            // Due to the fact some contacts may be removed (and we need to update this array as we iterate).
+            // the length may not match the actual contact count, hence we track the index.
+            var contacts = ArrayPool<Contact>.Shared.Rent(ContactCount);
+            var index = 0;
+
             // Can be changed while enumerating
             // TODO: check for null instead?
+            // Work out which contacts are still valid before we decide to update manifolds.
             for (var contact = ContactList.Next; contact != ContactList;)
             {
                 if (contact == null) break;
@@ -347,41 +352,94 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                contact.Update(_startCollisions, _endCollisions);
+                contacts[index++] = contact;
                 contact = contact.Next;
             }
 
-            foreach (var contact in _startCollisions)
+            var status = ArrayPool<ContactStatus>.Shared.Rent(index);
+
+            // Update contacts all at once.
+            BuildManifolds(contacts, index, status);
+
+            for (var i = 0; i < status.Length; i++)
             {
-                if (!contact.IsTouching) continue;
+                var contact = contacts[i];
 
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
-                var bodyA = fixtureA.Body;
-                var bodyB = fixtureB.Body;
+                switch (status[i])
+                {
+                    case ContactStatus.StartTouching:
+                    {
+                        if (!contact.IsTouching) continue;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA));
+                        var fixtureA = contact.FixtureA!;
+                        var fixtureB = contact.FixtureB!;
+                        var bodyA = fixtureA.Body;
+                        var bodyB = fixtureB.Body;
+
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA));
+                        break;
+                    }
+                    case ContactStatus.Touching:
+                        break;
+                    case ContactStatus.EndTouching:
+                    {
+                        var fixtureA = contact.FixtureA;
+                        var fixtureB = contact.FixtureB;
+
+                        // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                        // then we'll just skip the EndCollide.
+                        if (fixtureA == null || fixtureB == null) continue;
+
+                        var bodyA = fixtureA.Body;
+                        var bodyB = fixtureB.Body;
+
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
+                        break;
+                    }
+                    case ContactStatus.NoContact:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
 
-            foreach (var contact in _endCollisions)
+            ArrayPool<Contact>.Shared.Return(contacts);
+            ArrayPool<ContactStatus>.Shared.Return(status);
+        }
+
+        private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status)
+        {
+            var contactMultithreadThreshold = 16;
+            var contactMinimumThreads = 2;
+
+            if (count > contactMultithreadThreshold * contactMinimumThreads)
             {
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
+                // Deduct 1 for networking thread I guess?
+                var batches = Math.Min((int) MathF.Floor((float) count / contactMinimumThreads), Math.Max(1, Environment.ProcessorCount - 1));
+                var batchSize = (int) MathF.Ceiling((float) count / batches);
 
-                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
-                // then we'll just skip the EndCollide.
-                if (fixtureA == null || fixtureB == null) continue;
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, count);
+                    UpdateContacts(contacts, start, end, status);
+                });
 
-                var bodyA = fixtureA.Body;
-                var bodyB = fixtureB.Body;
-
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
             }
+            else
+            {
+                UpdateContacts(contacts, 0, count, status);
+            }
+        }
 
-            _startCollisions.Clear();
-            _endCollisions.Clear();
+        private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status)
+        {
+            for (var i = start; i < end; i++)
+            {
+                status[i] = contacts[i].Update();
+            }
         }
 
         public void PreSolve(float frameTime)
@@ -462,4 +520,12 @@ namespace Robust.Shared.Physics.Dynamics
     }
 
     #endregion
+
+    internal enum ContactStatus : byte
+    {
+        NoContact = 0,
+        StartTouching = 1,
+        Touching = 2,
+        EndTouching = 3,
+    }
 }

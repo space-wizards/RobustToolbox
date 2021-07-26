@@ -364,6 +364,7 @@ namespace Robust.Shared.Physics.Collision
         private class EPCollider
         {
             private float _polygonRadius;
+            private float _angularSlop;
 
             private TempPolygon _polygonB;
 
@@ -379,6 +380,7 @@ namespace Robust.Shared.Physics.Collision
             internal EPCollider(IConfigurationManager configManager)
             {
                 _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
 
@@ -639,7 +641,7 @@ namespace Robust.Shared.Physics.Collision
                     primaryAxis = edgeAxis;
                 }
 
-                ClipVertex[] ie = new ClipVertex[2];
+                Span<ClipVertex> ie = stackalloc ClipVertex[2];
                 ReferenceFace rf;
                 if (primaryAxis.Type == EPAxisType.EdgeA)
                 {
@@ -837,19 +839,17 @@ namespace Robust.Shared.Physics.Collision
                         return axis;
                     }
 
-                    var angularSlop = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop);
-
                     // Adjacency
                     if (Vector2.Dot(n, perp) >= 0.0f)
                     {
-                        if (Vector2.Dot(n - _upperLimit, _normal) < -angularSlop)
+                        if (Vector2.Dot(n - _upperLimit, _normal) < -_angularSlop)
                         {
                             continue;
                         }
                     }
                     else
                     {
-                        if (Vector2.Dot(n - _lowerLimit, _normal) < -angularSlop)
+                        if (Vector2.Dot(n - _lowerLimit, _normal) < -_angularSlop)
                         {
                             continue;
                         }

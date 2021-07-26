@@ -283,7 +283,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
-        internal void Update(List<Contact> startCollisions, List<Contact> endCollisions)
+        /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
+        internal ContactStatus Update()
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -318,7 +319,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 // Match old contact ids to new contact ids and copy the
                 // stored impulses to warm start the solver.
-                for (int i = 0; i < Manifold.PointCount; ++i)
+                for (var i = 0; i < Manifold.PointCount; ++i)
                 {
                     var mp2 = Manifold.Points[i];
                     mp2.NormalImpulse = 0.0f;
@@ -348,28 +349,31 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
 
             IsTouching = touching;
+            var status = ContactStatus.NoContact;
 
             if (!wasTouching)
             {
                 if (touching)
                 {
-                    startCollisions.Add(this);
+                    status = ContactStatus.StartTouching;
                 }
             }
             else
             {
                 if (!touching)
                 {
-                    endCollisions.Add(this);
+                    status = ContactStatus.EndTouching;
                 }
             }
 
-            if (sensor)
-                return;
-
 #if DEBUG
-            _debugPhysics.HandlePreSolve(this, oldManifold);
+            if (!sensor)
+            {
+                _debugPhysics.HandlePreSolve(this, oldManifold);
+            }
 #endif
+
+            return status;
         }
 
         /// <summary>

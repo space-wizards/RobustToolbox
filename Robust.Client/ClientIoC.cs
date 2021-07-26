@@ -25,6 +25,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -76,6 +77,7 @@ namespace Robust.Client
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IMidiManager, MidiManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
+            IoCManager.Register<IPhysicsManager, PhysicsManager>();
             switch (mode)
             {
                 case GameController.DisplayMode.Headless:

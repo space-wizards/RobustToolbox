@@ -141,9 +141,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public bool IsTouching { get; internal set; }
 
-        // Some day we'll refactor it to be more like EntityCoordinates
-        public GridId GridId { get; internal set; } = GridId.Invalid;
-
         /// Enable/disable this contact. This can be used inside the pre-solve
         /// contact listener. The contact is only disabled for the current
         /// time step (or sub-step in continuous collisions).
@@ -272,28 +269,26 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
-        public void GetWorldManifold(out Vector2 normal, Span<Vector2> points)
+        public void GetWorldManifold(IPhysicsManager physicsManager, out Vector2 normal, Span<Vector2> points)
         {
             PhysicsComponent bodyA = FixtureA?.Body!;
             PhysicsComponent bodyB = FixtureB?.Body!;
             IPhysShape shapeA = FixtureA?.Shape!;
             IPhysShape shapeB = FixtureB?.Shape!;
+            var bodyATransform = physicsManager.GetTransform(bodyA);
+            var bodyBTransform = physicsManager.GetTransform(bodyB);
 
-            ContactSolver.InitializeManifold(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, points);
+            ContactSolver.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
-        /// <param name="contactManager">The contact manager.</param>
-        internal void Update(ContactManager contactManager, List<Contact> startCollisions, List<Contact> endCollisions)
+        internal void Update(IPhysicsManager physicsManager, List<Contact> startCollisions, List<Contact> endCollisions)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
-
-            if (FixtureA == null || FixtureB == null)
-                return;
 
             var oldManifold = Manifold;
 
@@ -305,8 +300,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
-            var bodyATransform = bodyA.GetTransform();
-            var bodyBTransform = bodyB.GetTransform();
+            var bodyATransform = physicsManager.GetTransform(bodyA);
+            var bodyBTransform = physicsManager.GetTransform(bodyB);
 
             // Is this contact a sensor?
             if (sensor)
@@ -360,30 +355,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 if (touching)
                 {
-                    var enabledA = true;
-                    var enabledB = true;
-
-                    /*
-                    // Report the collision to both participants. Track which ones returned true so we can
-                    // later call OnSeparation if the contact is disabled for a different reason.
-                    if (FixtureA.OnCollision != null)
-                        foreach (OnCollisionEventHandler handler in FixtureA.OnCollision.GetInvocationList())
-                            enabledA = handler(FixtureA, FixtureB, this) && enabledA;
-
-                    // Reverse the order of the reported fixtures. The first fixture is always the one that the
-                    // user subscribed to.
-                    if (FixtureB.OnCollision != null)
-                        foreach (OnCollisionEventHandler handler in FixtureB.OnCollision.GetInvocationList())
-                            enabledB = handler(FixtureB, FixtureA, this) && enabledB;
-                    */
-
-                    Enabled = enabledA && enabledB;
-
-                    // BeginContact can also return false and disable the contact
-                    /*
-                    if (enabledA && enabledB && contactManager.BeginContact != null)
-                        Enabled = contactManager.BeginContact(this);
-                    */
                     startCollisions.Add(this);
                 }
             }
@@ -391,20 +362,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             {
                 if (!touching)
                 {
-                    /*
-                    //Report the separation to both participants:
-                    if (FixtureA != null && FixtureA.OnSeparation != null)
-                        FixtureA.OnSeparation(FixtureA, FixtureB);
-
-                    //Reverse the order of the reported fixtures. The first fixture is always the one that the
-                    //user subscribed to.
-                    if (FixtureB != null && FixtureB.OnSeparation != null)
-                        FixtureB.OnSeparation(FixtureB, FixtureA);
-
-                    if (contactManager.EndContact != null)
-                        contactManager.EndContact(this);
-                    */
-
                     endCollisions.Add(this);
                 }
             }
@@ -525,7 +482,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                    Equals(FixtureB, other.FixtureB) &&
                    Manifold.Equals(other.Manifold) &&
                    _type == other._type &&
-                   GridId.Equals(other.GridId) &&
                    Enabled == other.Enabled &&
                    ChildIndexA == other.ChildIndexA &&
                    ChildIndexB == other.ChildIndexB &&
@@ -541,7 +497,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine(GridId.Value, FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
+            return HashCode.Combine(FixtureA?.Body.Owner.Uid, FixtureB?.Body.Owner.Uid);
         }
     }
 }

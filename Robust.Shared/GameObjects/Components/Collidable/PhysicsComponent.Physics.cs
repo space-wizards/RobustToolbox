@@ -93,6 +93,47 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        [ViewVariables]
+        public Box2 LocalAABB
+        {
+            get
+            {
+                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+                var broadphase = broadphaseSystem.GetBroadphase(this);
+
+                if (broadphase == null) return new Box2();
+
+                var worldPos = Owner.Transform.WorldPosition;
+                var aabb = new Box2(worldPos, worldPos);
+
+                foreach (var fixture in Fixtures)
+                {
+                    foreach (var proxy in fixture.Proxies)
+                    {
+                        aabb = aabb.Union(proxy.AABB);
+                    }
+                }
+
+                return aabb;
+            }
+        }
+
+        [ViewVariables]
+        public Box2 WorldAABB
+        {
+            get
+            {
+                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+                var broadphase = broadphaseSystem.GetBroadphase(this);
+
+                if (broadphase == null) return new Box2();
+                var localAABB = LocalAABB;
+                var center = broadphase.Owner.Transform.WorldMatrix.Transform(localAABB.Center);
+
+                return new Box2Rotated(localAABB.Translated(center), broadphase.Owner.Transform.WorldRotation, center).CalcBoundingBox();
+            }
+        }
+
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>

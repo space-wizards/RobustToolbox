@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
@@ -43,10 +44,9 @@ namespace Robust.Shared.Physics.Dynamics
     internal sealed class ContactManager
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         internal MapId MapId { get; set; }
-
-        private SharedBroadphaseSystem _broadPhaseSystem = default!;
 
         public readonly ContactHead ContactList;
         public int ContactCount { get; private set; }
@@ -60,7 +60,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
-        // TODO: Need to migrate the interfaces to comp bus when possible
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
         // TODO: CollideMultiCore
         private List<Contact> _startCollisions = new();
@@ -75,7 +74,6 @@ namespace Robust.Shared.Physics.Dynamics
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             InitializePool();
         }
 
@@ -214,15 +212,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (contact.IsTouching)
             {
-                //Report the separation to both participants:
-                // TODO: Needs to do like a comp message and system message
-                // fixtureA?.OnSeparation(fixtureA, fixtureB);
-
-                //Reverse the order of the reported fixtures. The first fixture is always the one that the
-                //user subscribed to.
-                // fixtureB.OnSeparation(fixtureB, fixtureA);
-
-                // EndContact(contact);
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
             }
 
             // Remove from the world
@@ -357,57 +348,39 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                contact.Update(this, _startCollisions, _endCollisions);
+                // The contact persists.
+                contact.Update(_physicsManager, _startCollisions, _endCollisions);
+
                 contact = contact.Next;
             }
 
-            // TODO: Look at making a manager to cache world positions + rotations during physics step
-            // Ideally: Set them here (once we know what contacts we need)
-            // Re-use in Physics island.
-            // Maybbbeee also have broadphase use it too?
-            // This will actually be decently big savings.
-            // Aether multi-threads the Update too so potentially look at making the manager thread-safe.
-
             foreach (var contact in _startCollisions)
             {
-                // It's possible for contacts to get nuked by other collision behaviors running on an entity deleting it
-                // so we'll do this (TODO: Maybe it's shitty design and we should move to PostCollide? Though we still need to check for each contact anyway I guess).
                 if (!contact.IsTouching) continue;
 
                 var fixtureA = contact.FixtureA!;
                 var fixtureB = contact.FixtureB!;
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
-                var manifold = contact.Manifold;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB, manifold));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA, manifold));
-
-#pragma warning disable 618
-                foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
-                {
-                    if (bodyB.Deleted) break;
-                    comp.CollideWith(fixtureA, fixtureB, contact.Manifold);
-                }
-
-                foreach (var comp in bodyB.Owner.GetAllComponents<IStartCollide>().ToArray())
-                {
-                    if (bodyA.Deleted) break;
-                    comp.CollideWith(fixtureB, fixtureA, contact.Manifold);
-                }
-#pragma warning restore 618
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA));
             }
 
             foreach (var contact in _endCollisions)
             {
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
+
+                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                // then we'll just skip the EndCollide.
+                if (fixtureA == null || fixtureB == null) continue;
+
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
-                var manifold = contact.Manifold;
 
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB, manifold));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA, manifold));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
             }
 
             _startCollisions.Clear();
@@ -428,7 +401,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
-                contact.GetWorldManifold(out var worldNormal, points);
+                contact.GetWorldManifold(_physicsManager, out var worldNormal, points);
 
                 // Didn't use an EntitySystemMessage as this is called FOR EVERY COLLISION AND IS REALLY EXPENSIVE
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.
@@ -449,8 +422,6 @@ namespace Robust.Shared.Physics.Dynamics
         }
     }
 
-    public delegate void BroadPhaseDelegate(in FixtureProxy proxyA, in FixtureProxy proxyB);
-
     #region Collide Events Classes
 
     public abstract class CollideEvent : EntityEventArgs
@@ -467,7 +438,7 @@ namespace Robust.Shared.Physics.Dynamics
 
     public sealed class StartCollideEvent : CollideEvent
     {
-        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture)
             : base(ourFixture, otherFixture)
         {
         }
@@ -475,7 +446,7 @@ namespace Robust.Shared.Physics.Dynamics
 
     public sealed class EndCollideEvent : CollideEvent
     {
-        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture, Manifold manifold)
+        public EndCollideEvent(Fixture ourFixture, Fixture otherFixture)
             : base(ourFixture, otherFixture)
         {
         }

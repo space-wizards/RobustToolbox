@@ -23,11 +23,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
@@ -137,7 +139,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 */
     public sealed class PhysicsIsland
     {
-        // if you add new deps to this, the IoCManager inject dependencies is behind #if too.
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 #if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
         private List<IPhysBody> _debugBodies = new(8);
@@ -159,7 +161,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
 
-        public IPhysBody[] Bodies = Array.Empty<IPhysBody>();
+        public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
         private Joint[] _joints = Array.Empty<Joint>();
 
@@ -208,7 +210,6 @@ stored in a single array since multiple arrays lead to multiple misses.
         /// </summary>
         public int JointCount { get; private set; }
 
-        [Conditional("DEBUG")]
         internal void Initialize()
         {
             IoCManager.InjectDependencies(this);
@@ -229,7 +230,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             _contactSolver.LoadConfig(cfg);
         }
 
-        public void Append(List<IPhysBody> bodies, List<Contact> contacts, List<Joint> joints)
+        public void Append(List<PhysicsComponent> bodies, List<Contact> contacts, List<Joint> joints)
         {
             Resize(BodyCount + bodies.Count, ContactCount + contacts.Count, JointCount + joints.Count);
             foreach (var body in bodies)
@@ -248,7 +249,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        public void Add(IPhysBody body)
+        public void Add(PhysicsComponent body)
         {
             body.IslandIndex[ID] = BodyCount;
             Bodies[BodyCount++] = body;
@@ -324,11 +325,15 @@ stored in a single array since multiple arrays lead to multiple misses.
             {
                 var body = Bodies[i];
 
-                // In future we'll set these to existing
                 // Didn't use the old variable names because they're hard to read
-                var position = body.Owner.Transform.WorldPosition;
+                var transform = _physicsManager.GetTransform(body);
+                var position = transform.Position;
                 // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
-                var angle = (float) body.Owner.Transform.WorldRotation.Theta;
+                var angle = transform.Quaternion2D.Angle;
+
+                // var bodyTransform = body.GetTransform();
+                // DebugTools.Assert(bodyTransform.Position.EqualsApprox(position) && MathHelper.CloseTo(angle, bodyTransform.Quaternion2D.Angle));
+
                 var linearVelocity = body.LinearVelocity;
                 var angularVelocity = body.AngularVelocity;
 
@@ -461,7 +466,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(List<(ITransformComponent, IPhysBody)> deferredUpdates)
+        internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
         {
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
@@ -493,6 +498,8 @@ stored in a single array since multiple arrays lead to multiple misses.
                     transform.WorldRotation = angle;
                     transform.DeferUpdates = false;
 
+                    // Unfortunately we can't cache the position and angle here because if our parent's position
+                    // changes then this is immediately invalidated.
                     if (transform.UpdatesDeferred)
                     {
                         deferredUpdates.Add((transform, body));

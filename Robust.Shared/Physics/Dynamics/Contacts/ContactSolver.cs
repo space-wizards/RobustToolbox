@@ -21,6 +21,9 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Utility;
@@ -359,8 +362,28 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void SolveVelocityConstraints()
         {
+            var constraintsPerThread = 16;
+
+            if (_contactCount > constraintsPerThread * 2)
+            {
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, 2);
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    SolveVelocityConstraints(start, end);
+                });
+            }
+            else
+            {
+                SolveVelocityConstraints(0, _contactCount);
+            }
+        }
+
+        public void SolveVelocityConstraints(int start, int end)
+        {
             // Here be dragons
-            for (var i = 0; i < _contactCount; ++i)
+            for (var i = start; i < end; ++i)
             {
                 var velocityConstraint = _velocityConstraints[i];
 
@@ -659,15 +682,38 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
         }
 
+        public bool SolvePositionConstraints()
+        {
+            var constraintsPerThread = 16;
+
+            if (_contactCount > constraintsPerThread * 2)
+            {
+                var unsolved = 0;
+
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, 2);
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    if (!SolvePositionConstraints(start, end))
+                        Interlocked.Increment(ref unsolved);
+                });
+
+                return unsolved > 0;
+            }
+
+            return SolvePositionConstraints(0, _contactCount);
+        }
+
         /// <summary>
         ///     Tries to solve positions for all contacts specified.
         /// </summary>
         /// <returns>true if all positions solved</returns>
-        public bool SolvePositionConstraints()
+        public bool SolvePositionConstraints(int start, int end)
         {
             float minSeparation = 0.0f;
 
-            for (int i = 0; i < _contactCount; ++i)
+            for (int i = start; i < end; ++i)
             {
                 ContactPositionConstraint pc = _positionConstraints[i];
 

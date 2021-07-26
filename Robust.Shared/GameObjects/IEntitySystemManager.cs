@@ -32,8 +32,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         event EventHandler<SystemChangedArgs> SystemUnloaded;
 
-        IReadOnlyCollection<IEntitySystem> AllSystems { get; }
-
         /// <summary>
         /// Get an entity system of the specified type.
         /// </summary>

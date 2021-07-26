@@ -269,14 +269,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// <summary>
         /// Gets the world manifold.
         /// </summary>
-        public void GetWorldManifold(out Vector2 normal, Span<Vector2> points)
+        public void GetWorldManifold(IPhysicsManager physicsManager, out Vector2 normal, Span<Vector2> points)
         {
             PhysicsComponent bodyA = FixtureA?.Body!;
             PhysicsComponent bodyB = FixtureB?.Body!;
             IPhysShape shapeA = FixtureA?.Shape!;
             IPhysShape shapeB = FixtureB?.Shape!;
+            var bodyATransform = physicsManager.GetTransform(bodyA);
+            var bodyBTransform = physicsManager.GetTransform(bodyB);
 
-            ContactSolver.InitializeManifold(ref Manifold, bodyA.GetTransform(), bodyB.GetTransform(), shapeA.Radius, shapeB.Radius, out normal, points);
+            ContactSolver.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
         }
 
         /// <summary>
@@ -299,8 +301,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
-            var bodyATransform = bodyA.GetTransform();
-            var bodyBTransform = bodyB.GetTransform();
+            var bodyATransform = physicsManager.GetTransform(bodyA);
+            var bodyBTransform = physicsManager.GetTransform(bodyB);
 
             // Is this contact a sensor?
             if (sensor)

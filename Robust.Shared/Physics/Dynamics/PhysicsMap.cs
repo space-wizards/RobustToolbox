@@ -71,7 +71,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<(ITransformComponent, IPhysBody)> _deferredUpdates = new();
+        private List<(ITransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -103,7 +103,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
 
-        private List<IPhysBody> _islandBodies = new(64);
+        private List<PhysicsComponent> _islandBodies = new(64);
         private List<Contact> _islandContacts = new(32);
         private List<Joint> _islandJoints = new(8);
 

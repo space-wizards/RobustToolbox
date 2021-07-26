@@ -76,6 +76,7 @@ namespace Robust.Shared.GameObjects
             });
 
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
         private Dictionary<MapId, PhysicsMap> _maps = new();
@@ -356,6 +357,8 @@ namespace Robust.Shared.GameObjects
                 if (mapId == MapId.Nullspace) continue;
                 map.ProcessQueue();
             }
+
+            _physicsManager.ClearTransforms();
         }
 
         internal static (int Batches, int BatchSize) GetBatch(int count, int minimumThreads)

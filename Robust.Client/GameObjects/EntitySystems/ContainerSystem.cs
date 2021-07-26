@@ -38,10 +38,7 @@ namespace Robust.Client.GameObjects
 
         private void HandleEntityDeleted(EntityDeletedMessage ev)
         {
-            if (!ExpectedEntities.TryGetValue(ev.Entity.Uid, out var container))
-                return;
-
-            ExpectedEntities.Remove(ev.Entity.Uid);
+            RemoveExpectedEntity(ev.Entity.Uid);
         }
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)
@@ -49,7 +46,7 @@ namespace Robust.Client.GameObjects
             if (!ExpectedEntities.TryGetValue(ev.Entity.Uid, out var container))
                 return;
 
-            ExpectedEntities.Remove(ev.Entity.Uid);
+            RemoveExpectedEntity(ev.Entity.Uid);
 
             if (container.Deleted)
                 return;
@@ -159,17 +156,18 @@ namespace Robust.Client.GameObjects
         {
             if (ExpectedEntities.ContainsKey(uid))
                 return;
+
             ExpectedEntities.Add(uid, container);
             container.ExpectedEntities.Add(uid);
         }
 
         public void RemoveExpectedEntity(EntityUid uid)
         {
-            if (!ExpectedEntities.ContainsKey(uid))
+            if (!ExpectedEntities.TryGetValue(uid, out var container))
                 return;
-            var container = ExpectedEntities[uid];
+
             ExpectedEntities.Remove(uid);
-            container.ExpectedEntities.Add(uid);
+            container.ExpectedEntities.Remove(uid);
         }
 
         public override void FrameUpdate(float frameTime)

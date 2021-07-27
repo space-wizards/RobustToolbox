@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -32,6 +34,8 @@ namespace Robust.Server.Player
         void OnConnect();
         void OnDisconnect();
 
+        IReadOnlySet<EntityUid> PvsEyes { get; }
+
         /// <summary>
         ///     Persistent data for this player.
         /// </summary>
@@ -43,5 +47,17 @@ namespace Robust.Server.Player
         ///     and <see cref="DetachFromEntity"/> instead.
         /// </summary>
         internal void SetAttachedEntity(IEntity? entity);
+
+        /// <summary>
+        ///     Internal method to add an entity Uid to <see cref="PvsEyes"/>.
+        ///     Do NOT use this outside of <see cref="PvsEyeSystem"/>.
+        /// </summary>
+        internal void AddPvsEyeSubscription(EntityUid eye);
+
+        /// <summary>
+        ///     Internal method to remove an entity Uid from <see cref="PvsEyes"/>.
+        ///     Do NOT use this outside of <see cref="PvsEyeSystem"/>.
+        /// </summary>
+        internal void RemovePvsEyeSubscription(EntityUid eye);
     }
 }

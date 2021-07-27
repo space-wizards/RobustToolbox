@@ -19,6 +19,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -71,6 +72,7 @@ namespace Robust.Server
             IoCManager.Register<IScriptHost, ScriptHost>();
             IoCManager.Register<IMetricsManager, MetricsManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
+            IoCManager.Register<IPhysicsManager, PhysicsManager>();
         }
     }
 }

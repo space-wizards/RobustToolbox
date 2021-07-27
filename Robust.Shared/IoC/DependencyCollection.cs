@@ -49,6 +49,22 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
+        public bool TryResolveType<T>([NotNullWhen(true)] out T? instance)
+        {
+            if (TryResolveType(typeof(T), out object? rawInstance))
+            {
+                if (rawInstance is T typedInstance)
+                {
+                    instance = typedInstance;
+                    return true;
+                }
+            }
+
+            instance = default;
+            return false;
+        }
+
+        /// <inheritdoc />
         public bool TryResolveType(Type objectType, [MaybeNullWhen(false)] out object instance)
         {
             if(!_services.TryGetValue(objectType, out instance))
@@ -95,6 +111,8 @@ namespace Robust.Shared.IoC
             }, overwrite);
         }
 
+
+
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
             where TImplementation : class, TInterface
@@ -108,9 +126,12 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
-        public void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false)
+        public void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null,
+            bool overwrite = false) => Register(implementation, implementation, factory, overwrite);
+
+        public void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false)
         {
-            CheckRegisterInterface(implementation, implementation, overwrite);
+            CheckRegisterInterface(interfaceType, implementation, overwrite);
 
             object DefaultFactory()
             {
@@ -144,9 +165,9 @@ namespace Robust.Shared.IoC
                 return Activator.CreateInstance(implementation, parameters)!;
             }
 
-            _resolveTypes[implementation] = implementation;
+            _resolveTypes[interfaceType] = implementation;
             _resolveFactories[implementation] = factory ?? DefaultFactory;
-            _pendingResolves.Enqueue(implementation);
+            _pendingResolves.Enqueue(interfaceType);
         }
 
         [AssertionMethod]
@@ -175,18 +196,24 @@ namespace Robust.Shared.IoC
         /// <inheritdoc />
         public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
         {
+            RegisterInstance(typeof(TInterface), implementation, overwrite);
+        }
+
+        /// <inheritdoc />
+        public void RegisterInstance(Type type, object implementation, bool overwrite = false)
+        {
             if (implementation == null)
                 throw new ArgumentNullException(nameof(implementation));
 
-            if (!(implementation is TInterface))
+            if (!implementation.GetType().IsAssignableTo(type))
                 throw new InvalidOperationException(
-                    $"Implementation type {implementation.GetType()} is not assignable to interface type {typeof(TInterface)}");
+                    $"Implementation type {implementation.GetType()} is not assignable to type {type}");
 
-            CheckRegisterInterface(typeof(TInterface), implementation.GetType(), overwrite);
+            CheckRegisterInterface(type, implementation.GetType(), overwrite);
 
             // do the equivalent of BuildGraph with a single type.
-            _resolveTypes[typeof(TInterface)] = implementation.GetType();
-            _services[typeof(TInterface)] = implementation;
+            _resolveTypes[type] = implementation.GetType();
+            _services[type] = implementation;
 
             InjectDependencies(implementation, true);
 

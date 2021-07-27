@@ -44,6 +44,7 @@ namespace Robust.Shared.Physics.Dynamics
     internal sealed class ContactManager
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         internal MapId MapId { get; set; }
 
@@ -347,7 +348,9 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                contact.Update(_startCollisions, _endCollisions);
+                // The contact persists.
+                contact.Update(_physicsManager, _startCollisions, _endCollisions);
+
                 contact = contact.Next;
             }
 
@@ -398,7 +401,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
-                contact.GetWorldManifold(out var worldNormal, points);
+                contact.GetWorldManifold(_physicsManager, out var worldNormal, points);
 
                 // Didn't use an EntitySystemMessage as this is called FOR EVERY COLLISION AND IS REALLY EXPENSIVE
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.

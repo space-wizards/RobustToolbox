@@ -16,8 +16,7 @@ namespace Robust.Shared.Physics
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-
-        private SharedPhysicsSystem _physicsSystem = default!;
+        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
         private const int MinimumBroadphaseCapacity = 256;
 
@@ -61,7 +60,6 @@ namespace Robust.Shared.Physics
         {
             base.Initialize();
             UpdatesAfter.Add(typeof(SharedTransformSystem));
-            _physicsSystem = Get<SharedPhysicsSystem>();
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(HandleBroadphaseInit);
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);

@@ -25,7 +25,6 @@ namespace Robust.Client.GameObjects
 
             SubscribeLocalEvent<UpdateContainerOcclusionMessage>(UpdateContainerOcclusion);
             SubscribeLocalEvent<EntityInitializedMessage>(HandleEntityInitialized);
-            SubscribeLocalEvent<EntityDeletedMessage>(HandleEntityDeleted);
             SubscribeLocalEvent<ContainerManagerComponent, ComponentHandleState>(HandleComponentState);
 
             UpdatesBefore.Add(typeof(SpriteSystem));
@@ -34,11 +33,6 @@ namespace Robust.Client.GameObjects
         private void UpdateContainerOcclusion(UpdateContainerOcclusionMessage ev)
         {
             _updateQueue.Add(ev.Entity);
-        }
-
-        private void HandleEntityDeleted(EntityDeletedMessage ev)
-        {
-            RemoveExpectedEntity(ev.Entity.Uid);
         }
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)

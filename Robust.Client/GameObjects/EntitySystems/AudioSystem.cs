@@ -23,8 +23,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClydeAudio _clyde = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-
-        private SharedBroadphaseSystem _broadPhaseSystem = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadPhaseSystem = default!;
 
         private readonly List<PlayingStream> _playingClydeStreams = new();
 
@@ -38,7 +37,6 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<StopAudioMessageClient>(StopAudioMessageHandler);
 
             SubscribeLocalEvent<SoundSystem.QueryAudioSystem>((ev => ev.Audio = this));
-            _broadPhaseSystem = Get<SharedBroadphaseSystem>();
         }
 
         private void StopAudioMessageHandler(StopAudioMessageClient ev)

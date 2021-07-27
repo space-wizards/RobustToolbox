@@ -4,6 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -25,6 +26,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
         public abstract class ESystemBase2 : ESystemBase { }
         public class ESystemB : ESystemBase2 { }
 
+        public class ESystemDepA : ESystemBase
+        {
+            [Dependency] public readonly ESystemDepB ESystemDepB = default!;
+        }
+
+        public class ESystemDepB : ESystemBase
+        {
+            [Dependency] public readonly ESystemDepA ESystemDepA = default!;
+        }
+
         /*
          ESystemBase (Abstract)
            - ESystemA
@@ -34,11 +45,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
          */
 
+        [OneTimeSetUp]
+        public void Setup()
+        {
+            IoCManager.Resolve<IEntitySystemManager>().Initialize();
+        }
+
         [Test]
         public void GetsByTypeOrSupertype()
         {
             var esm = IoCManager.Resolve<IEntitySystemManager>();
-            esm.Initialize();
 
             // getting type by the exact type should work fine
             Assert.That(esm.GetEntitySystem<ESystemB>(), Is.TypeOf<ESystemB>());
@@ -59,10 +75,22 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // this should not work - it's abstract and there are multiple
             // concrete subtypes
-            Assert.Throws<InvalidEntitySystemException>(() =>
+            Assert.Throws<UnregisteredTypeException>(() =>
             {
                 esm.GetEntitySystem<ESystemBase>();
             });
+        }
+
+        [Test]
+        public void DependencyTest()
+        {
+            var esm = IoCManager.Resolve<IEntitySystemManager>();
+
+            var sysA = esm.GetEntitySystem<ESystemDepA>();
+            var sysB = esm.GetEntitySystem<ESystemDepB>();
+
+            Assert.That(sysA.ESystemDepB, Is.EqualTo(sysB));
+            Assert.That(sysB.ESystemDepA, Is.EqualTo(sysA));
         }
 
     }

@@ -44,6 +44,7 @@ namespace Robust.Shared.Physics.Dynamics
     internal sealed class ContactManager
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         internal MapId MapId { get; set; }
 
@@ -211,15 +212,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (contact.IsTouching)
             {
-                //Report the separation to both participants:
-                // TODO: Needs to do like a comp message and system message
-                // fixtureA?.OnSeparation(fixtureA, fixtureB);
-
-                //Reverse the order of the reported fixtures. The first fixture is always the one that the
-                //user subscribed to.
-                // fixtureB.OnSeparation(fixtureB, fixtureA);
-
-                // EndContact(contact);
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
             }
 
             // Remove from the world
@@ -354,21 +348,14 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
-                contact.Update(this, _startCollisions, _endCollisions);
+                // The contact persists.
+                contact.Update(_physicsManager, _startCollisions, _endCollisions);
+
                 contact = contact.Next;
             }
 
-            // TODO: Look at making a manager to cache world positions + rotations during physics step
-            // Ideally: Set them here (once we know what contacts we need)
-            // Re-use in Physics island.
-            // Maybbbeee also have broadphase use it too?
-            // This will actually be decently big savings.
-            // Aether multi-threads the Update too so potentially look at making the manager thread-safe.
-
             foreach (var contact in _startCollisions)
             {
-                // It's possible for contacts to get nuked by other collision behaviors running on an entity deleting it
-                // so we'll do this (TODO: Maybe it's shitty design and we should move to PostCollide? Though we still need to check for each contact anyway I guess).
                 if (!contact.IsTouching) continue;
 
                 var fixtureA = contact.FixtureA!;
@@ -378,39 +365,16 @@ namespace Robust.Shared.Physics.Dynamics
 
                 _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB));
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA));
-
-#pragma warning disable 618
-                foreach (var comp in bodyA.Owner.GetAllComponents<IStartCollide>().ToArray())
-                {
-                    if (bodyB.Deleted) break;
-                    comp.CollideWith(fixtureA, fixtureB, contact.Manifold);
-                }
-
-                foreach (var comp in bodyB.Owner.GetAllComponents<IStartCollide>().ToArray())
-                {
-                    if (bodyA.Deleted) break;
-                    comp.CollideWith(fixtureB, fixtureA, contact.Manifold);
-                }
-#pragma warning restore 618
             }
 
             foreach (var contact in _endCollisions)
             {
-                var fixtureA = contact.FixtureA!;
-                var fixtureB = contact.FixtureB!;
+                var fixtureA = contact.FixtureA;
+                var fixtureB = contact.FixtureB;
 
-                // Just a safeguard in case this happens
-                // Content /should/ be using QueueDelete for StartCollideEvent but if the body is deleted then its
-                // contacts can be nuked.
-                /* SLOTH: I commented this out for now until we get to the bottom of this crash as there's some
-                   easy way to reproduce it that someone knows as it was happening every round.
-                   I only ever did it once in chemistry but after 40 minutes of trying to reproduce it I was unable to do so.
-                if (fixtureA == null || fixtureB == null)
-                {
-                    Logger.ErrorS("physics", $"Tried to run EndCollision for a contact that's already been removed!");
-                    continue;
-                }
-                */
+                // If something under StartCollideEvent potentially nukes other contacts (e.g. if the entity is deleted)
+                // then we'll just skip the EndCollide.
+                if (fixtureA == null || fixtureB == null) continue;
 
                 var bodyA = fixtureA.Body;
                 var bodyB = fixtureB.Body;
@@ -437,7 +401,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
-                contact.GetWorldManifold(out var worldNormal, points);
+                contact.GetWorldManifold(_physicsManager, out var worldNormal, points);
 
                 // Didn't use an EntitySystemMessage as this is called FOR EVERY COLLISION AND IS REALLY EXPENSIVE
                 // so we just use the Action. Also we'll sort out BodyA / BodyB for anyone listening first.
@@ -457,8 +421,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         }
     }
-
-    public delegate void BroadPhaseDelegate(in FixtureProxy proxyA, in FixtureProxy proxyB);
 
     #region Collide Events Classes
 

@@ -2,7 +2,8 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal sealed partial class Clyde
     {
-        private static readonly (string, uint)[] BaseShaderAttribLocations = {
+        private static readonly (string, uint)[] BaseShaderAttribLocations =
+        {
             ("aPos", 0),
             ("tCoord", 1)
         };
@@ -30,14 +31,21 @@ namespace Robust.Client.Graphics.Clyde
         // To be clear: You shouldn't change this. This just helps with understanding where Primitive Restart is being used.
         private const ushort PrimitiveRestartIndex = ushort.MaxValue;
 
-        private enum Renderer : short
+        private enum Renderer : sbyte
         {
-            // Default: Try all supported renderers (not necessarily the renderers shown here)
-            Default = default,
-            OpenGL33 = 1,
-            OpenGL31 = 2,
-            OpenGLES2 = 3,
+            // Auto: Try all supported renderers (not necessarily the renderers shown here)
+            Auto = default,
+            OpenGL = 1,
             Explode = -1,
+        }
+
+        private enum RendererOpenGLVersion : byte
+        {
+            Auto = default,
+            GL33 = 1,
+            GL31 = 2,
+            GLES3 = 3,
+            GLES2 = 4,
         }
     }
 }

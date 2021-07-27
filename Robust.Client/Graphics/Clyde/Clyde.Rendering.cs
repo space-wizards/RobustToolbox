@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
@@ -106,13 +105,19 @@ namespace Robust.Client.Graphics.Clyde
             UniformConstantsUBO.Reallocate(constants);
         }
 
-        private static void CalcScreenMatrices(in Vector2i screenSize, out Matrix3 proj, out Matrix3 view)
+        private void CalcScreenMatrices(in Vector2i screenSize, out Matrix3 proj, out Matrix3 view)
         {
             proj = Matrix3.Identity;
             proj.R0C0 = 2f / screenSize.X;
             proj.R1C1 = -2f / screenSize.Y;
             proj.R0C2 = -1;
             proj.R1C2 = 1;
+
+            if (_currentRenderTarget.FlipY)
+            {
+                proj.R1C1 *= -1;
+                proj.R1C2 *= -1;
+            }
 
             view = Matrix3.Identity;
         }
@@ -827,9 +832,11 @@ namespace Robust.Client.Graphics.Clyde
             _lightingReady = false;
             _currentMatrixModel = Matrix3.Identity;
             SetScissorFull(null);
-            BindRenderTargetFull(_mainMainWindowRenderMainTarget);
+            BindRenderTargetFull(_mainWindow!.RenderTarget);
             _batchMetaData = null;
             _queuedShader = _defaultShader.Handle;
+
+            GL.Viewport(0, 0, _mainWindow!.FramebufferSize.X, _mainWindow!.FramebufferSize.Y);
         }
 
         private void ResetBlendFunc()
@@ -839,98 +846,6 @@ namespace Robust.Client.Graphics.Clyde
                 BlendingFactorDest.OneMinusSrcAlpha,
                 BlendingFactorSrc.One,
                 BlendingFactorDest.OneMinusSrcAlpha);
-        }
-
-        private void BlitSecondaryWindows()
-        {
-            // Only got main window.
-            if (_windowing!.AllWindows.Count == 1)
-                return;
-
-            if (!_hasGLFenceSync && _cfg.GetCVar(CVars.DisplayForceSyncWindows))
-            {
-                GL.Finish();
-            }
-
-            if (EffectiveThreadWindowBlit)
-            {
-                foreach (var window in _windowing.AllWindows)
-                {
-                    if (window.IsMainWindow)
-                        continue;
-
-                    window.BlitDoneEvent!.Reset();
-                    window.BlitStartEvent!.Set();
-                    window.BlitDoneEvent.Wait();
-                }
-            }
-            else
-            {
-                foreach (var window in _windowing.AllWindows)
-                {
-                    if (window.IsMainWindow)
-                        continue;
-
-                    _windowing.GLMakeContextCurrent(window);
-                    BlitThreadDoSecondaryWindowBlit(window);
-                }
-
-                _windowing.GLMakeContextCurrent(_windowing.MainWindow!);
-            }
-        }
-
-        private void BlitThreadDoSecondaryWindowBlit(WindowReg window)
-        {
-            var rt = window.RenderTexture!;
-
-            if (_hasGLFenceSync)
-            {
-                // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
-                var sync = rt!.LastGLSync;
-                GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
-                CheckGlError();
-            }
-
-            GL.Viewport(0, 0, window.FramebufferSize.X, window.FramebufferSize.Y);
-            CheckGlError();
-
-            SetTexture(TextureUnit.Texture0, window.RenderTexture!.Texture);
-
-            GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
-            CheckGlError();
-
-            window.BlitDoneEvent?.Set();
-            _windowing!.WindowSwapBuffers(window);
-        }
-
-        private void BlitThreadInit(WindowReg reg)
-        {
-            _windowing!.GLMakeContextCurrent(reg);
-            _windowing.GLSwapInterval(0);
-
-            if (!_isGLES)
-                GL.Enable(EnableCap.FramebufferSrgb);
-
-            var vao = GL.GenVertexArray();
-            GL.BindVertexArray(vao);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, WindowVBO.ObjectHandle);
-            // Vertex Coords
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 0);
-            GL.EnableVertexAttribArray(0);
-            // Texture Coords.
-            GL.VertexAttribPointer(1, 2, VertexAttribPointerType.Float, false, Vertex2D.SizeOf, 2 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
-
-            var program = _compileProgram(_winBlitShaderVert, _winBlitShaderFrag, new (string, uint)[]
-            {
-                ("aPos", 0),
-                ("tCoord", 1),
-            }, includeLib: false);
-
-            GL.UseProgram(program.Handle);
-            var loc = GL.GetUniformLocation(program.Handle, "tex");
-            SetTexture(TextureUnit.Texture0, reg.RenderTexture!.Texture);
-            GL.Uniform1(loc, 0);
         }
 
         private void FenceRenderTarget(RenderTargetBase rt)

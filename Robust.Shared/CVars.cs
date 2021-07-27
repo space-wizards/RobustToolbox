@@ -298,15 +298,57 @@ namespace Robust.Shared
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        // Clyde related enums are in Clyde.Constants.cs.
+
+        /// <summary>
+        /// Which renderer to use to render the game.
+        /// </summary>
         public static readonly CVarDef<int> DisplayRenderer =
             CVarDef.Create("display.renderer", 0, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Which OpenGL version to use for the OpenGL renderer.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayOpenGLVersion =
+            CVarDef.Create("display.opengl_version", 0, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// On Windows, use ANGLE as OpenGL implementation.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngle =
+            CVarDef.Create("display.angle", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Use a custom swap chain when using ANGLE.
+        /// Should improve performance and fixes main window sRGB handling with ANGLE.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
+            CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Force usage of DXGI 1.1 when using custom swap chain setup.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleDxgi1 =
+            CVarDef.Create("display.angle_custom_dxgi1", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Try to use the display adapter with this name, if the current renderer supports selecting it.
+        /// </summary>
+        public static readonly CVarDef<string> DisplayAdapter =
+            CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> DisplayFontDpi =
             CVarDef.Create("display.fontdpi", 96, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Override detected OpenGL version, for testing.
+        /// </summary>
         public static readonly CVarDef<string> DisplayOGLOverrideVersion =
             CVarDef.Create("display.ogl_override_version", string.Empty, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Run <c>glCheckError()</c> after (almost) every GL call.
+        /// </summary>
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
 
@@ -321,6 +363,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayForceSyncWindows =
             CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Use a separate thread for multi-window blitting.
+        /// </summary>
         public static readonly CVarDef<bool> DisplayThreadWindowBlit =
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 

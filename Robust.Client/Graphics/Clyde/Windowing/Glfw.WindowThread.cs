@@ -204,7 +204,7 @@ namespace Robust.Client.Graphics.Clyde
             ) : CmdBase;
 
             private sealed record CmdWinCreate(
-                Renderer Renderer,
+                GLContextSpec? GLSpec,
                 WindowCreateParameters Parameters,
                 nint ShareWindow,
                 TaskCompletionSource<GlfwWindowCreateResult> Tcs

@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
     public abstract partial class EntitySystem
     {
         private List<SubBase>? _subscriptions;
+
+        /// <summary>
+        /// A handle to allow subscription on this entity system's behalf.
+        /// </summary>
+        protected Subscriptions Subs { get; }
 
         // NOTE: EntityEventHandler<T> and EntitySessionEventHandler<T> CANNOT BE ORDERED BETWEEN EACH OTHER.
 
@@ -134,6 +140,51 @@ namespace Robust.Shared.GameObjects
             }
 
             _subscriptions = null;
+        }
+
+        /// <summary>
+        /// API class to allow registering on an EntitySystem's behalf.
+        /// Intended to support creation of boilerplate-reduction-methods
+        /// that need to subscribe stuff on an entity system.
+        /// </summary>
+        [PublicAPI]
+        public sealed class Subscriptions
+        {
+            public EntitySystem System { get; }
+
+            internal Subscriptions(EntitySystem system)
+            {
+                System = system;
+            }
+
+            // Intended for helper methods, so minimal API.
+
+            public void SubEvent<T>(
+                EventSource src,
+                EntityEventHandler<T> handler,
+                Type[]? before = null, Type[]? after = null)
+                where T : notnull
+            {
+                System.SubEvent(src, handler, before, after);
+            }
+
+            public void SubSessionEvent<T>(
+                EventSource src,
+                EntitySessionEventHandler<T> handler,
+                Type[]? before = null, Type[]? after = null)
+                where T : notnull
+            {
+                System.SubSessionEvent(src, handler, before, after);
+            }
+
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                ComponentEventHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
         }
 
         private abstract class SubBase

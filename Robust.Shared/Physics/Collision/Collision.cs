@@ -82,9 +82,6 @@ namespace Robust.Shared.Physics.Collision
 
         /*
          * Farseer had this as a static class with a ThreadStatic DistanceInput
-         *
-         * I also had to add Point initializers everywhere for the manifold as I just used an array but
-         * should also profile just using FixedArray2 / FixedArray3
          */
 
         /// <summary>
@@ -225,12 +222,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
-                ManifoldPoint mp = new ManifoldPoint
-                {
-                    Id = {Key = 0, Features = cf},
-                    LocalPoint = circleB.Position
-                };
-                manifold.Points[0] = mp;
+                ref var mp = ref manifold.Points[0];
+                mp.Id.Key = 0;
+                mp.Id.Features = cf;
+                mp.LocalPoint = circleB.Position;
                 return;
             }
 
@@ -266,12 +261,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
-                ManifoldPoint mp = new ManifoldPoint
-                {
-                    Id = {Key = 0, Features = cf},
-                    LocalPoint = circleB.Position
-                };
-                manifold.Points[0] = mp;
+                ref var mp = ref manifold.Points[0];
+                mp.Id.Key = 0;
+                mp.Id.Features = cf;
+                mp.LocalPoint = circleB.Position;
                 return;
             }
 
@@ -300,13 +293,10 @@ namespace Robust.Shared.Physics.Collision
             manifold.Type = ManifoldType.FaceA;
             manifold.LocalNormal = n;
             manifold.LocalPoint = A;
-            ManifoldPoint mp2 = new ManifoldPoint
-            {
-                Id = {Key = 0, Features = cf},
-                LocalPoint = circleB.Position
-            };
-
-            manifold.Points[0] = mp2;
+            ref var mp2 = ref manifold.Points[0];
+            mp2.Id.Key = 0;
+            mp2.Id.Features = cf;
+            mp2.LocalPoint = circleB.Position;
         }
 
         public void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
@@ -331,12 +321,10 @@ namespace Robust.Shared.Physics.Collision
             manifold.LocalNormal = Vector2.Zero;
             manifold.PointCount = 1;
 
-            ManifoldPoint p0 = manifold.Points[0];
+            ref var p0 = ref manifold.Points[0];
 
             p0.LocalPoint = Vector2.Zero; // Also here
             p0.Id.Key = 0;
-
-            manifold.Points[0] = p0;
         }
 
         /// <summary>
@@ -757,7 +745,7 @@ namespace Robust.Shared.Physics.Collision
 
                     if (separation <= _radius)
                     {
-                        ManifoldPoint cp = manifold.Points[pointCount];
+                        ref var cp = ref manifold.Points[pointCount];
 
                         if (primaryAxis.Type == EPAxisType.EdgeA)
                         {
@@ -773,7 +761,6 @@ namespace Robust.Shared.Physics.Collision
                             cp.Id.Features.IndexB = clipPoints2[i].ID.Features.IndexA;
                         }
 
-                        manifold.Points[pointCount] = cp;
                         ++pointCount;
                     }
                 }
@@ -911,12 +898,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal = polygonA.Normals[normalIndex];
                 manifold.LocalPoint = (v1 + v2) * 0.5f;
 
-                ManifoldPoint p0 = manifold.Points[0];
+                ref var p0 = ref manifold.Points[0];
 
                 p0.LocalPoint = circleB.Position;
                 p0.Id.Key = 0;
-
-                manifold.Points[0] = p0;
 
                 return;
             }
@@ -943,12 +928,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal.Y = manifold.LocalNormal.Y * factor;
                 manifold.LocalPoint = v1;
 
-                ManifoldPoint p0b = manifold.Points[0];
+                ref var p0b = ref manifold.Points[0];
 
                 p0b.LocalPoint = circleB.Position;
                 p0b.Id.Key = 0;
-
-                manifold.Points[0] = p0b;
             }
             else if (u2 <= 0.0f)
             {
@@ -969,12 +952,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal.Y = manifold.LocalNormal.Y * factor;
                 manifold.LocalPoint = v2;
 
-                ManifoldPoint p0c = manifold.Points[0];
+                ref var p0c = ref manifold.Points[0];
 
                 p0c.LocalPoint = circleB.Position;
                 p0c.Id.Key = 0;
-
-                manifold.Points[0] = p0c;
             }
             else
             {
@@ -992,12 +973,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal = polygonA.Normals[vertIndex1];
                 manifold.LocalPoint = faceCenter;
 
-                ManifoldPoint p0d = manifold.Points[0];
+                ref var p0d = ref manifold.Points[0];
 
                 p0d.LocalPoint = circleB.Position;
                 p0d.Id.Key = 0;
-
-                manifold.Points[0] = p0d;
             }
         }
 
@@ -1118,7 +1097,7 @@ namespace Robust.Shared.Physics.Collision
 
                 if (separation <= totalRadius)
                 {
-                    ManifoldPoint cp = manifold.Points[pointCount];
+                    ref var cp = ref manifold.Points[pointCount];
                     cp.LocalPoint = Transform.MulT(xf2, clipPoints2[i].V);
                     cp.Id = clipPoints2[i].ID;
 
@@ -1131,8 +1110,6 @@ namespace Robust.Shared.Physics.Collision
                         cp.Id.Features.TypeA = cf.TypeB;
                         cp.Id.Features.TypeB = cf.TypeA;
                     }
-
-                    manifold.Points[pointCount] = cp;
 
                     pointCount++;
                 }

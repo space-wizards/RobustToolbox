@@ -177,6 +177,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 #if DEBUG
             _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
 #endif
+            Manifold = new Manifold
+            {
+                Points = new ManifoldPoint[2]
+            };
             Reset(fixtureA, indexA, fixtureB, indexB);
         }
 

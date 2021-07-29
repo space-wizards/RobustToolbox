@@ -351,6 +351,13 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        // - Contacts
+        public static readonly CVarDef<int> ContactMultithreadThreshold =
+            CVarDef.Create("physics.contact_multithread_threshold", 32);
+
+        public static readonly CVarDef<int> ContactMinimumThreads =
+            CVarDef.Create("physics.contact_minimum_threads", 2);
+
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
             CVarDef.Create("physics.angsleeptol", 2.0f / 180.0f * MathF.PI);

@@ -326,7 +326,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                 var body = Bodies[i];
 
                 // Didn't use the old variable names because they're hard to read
-                var transform = _physicsManager.GetTransform(body);
+                var transform = _physicsManager.EnsureTransform(body);
                 var position = transform.Position;
                 // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
                 var angle = transform.Quaternion2D.Angle;

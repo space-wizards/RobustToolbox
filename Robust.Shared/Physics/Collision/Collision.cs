@@ -84,8 +84,6 @@ namespace Robust.Shared.Physics.Collision
          * Farseer had this as a static class with a ThreadStatic DistanceInput
          */
 
-        private DistanceInput _input = new();
-
         /// <summary>
         /// Test overlap between the two shapes.
         /// </summary>
@@ -99,15 +97,16 @@ namespace Robust.Shared.Physics.Collision
         bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
-            _input.ProxyA.Set(shapeA, indexA);
-            _input.ProxyB.Set(shapeB, indexB);
-            _input.TransformA = xfA;
-            _input.TransformB = xfB;
-            _input.UseRadii = true;
+            // TODO: Make this a struct.
+            var input = new DistanceInput();
 
-            SimplexCache cache;
-            DistanceOutput output;
-            DistanceManager.ComputeDistance(out output, out cache, _input);
+            input.ProxyA.Set(shapeA, indexA);
+            input.ProxyB.Set(shapeB, indexB);
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+
+            DistanceManager.ComputeDistance(out var output, out _, input);
 
             return output.Distance < 10.0f * float.Epsilon;
         }
@@ -347,6 +346,7 @@ namespace Robust.Shared.Physics.Collision
         private class EPCollider
         {
             private float _polygonRadius;
+            private float _angularSlop;
 
             private TempPolygon _polygonB;
 
@@ -362,6 +362,7 @@ namespace Robust.Shared.Physics.Collision
             internal EPCollider(IConfigurationManager configManager)
             {
                 _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
 
@@ -813,19 +814,17 @@ namespace Robust.Shared.Physics.Collision
                         return axis;
                     }
 
-                    var angularSlop = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop);
-
                     // Adjacency
                     if (Vector2.Dot(n, perp) >= 0.0f)
                     {
-                        if (Vector2.Dot(n - _upperLimit, _normal) < -angularSlop)
+                        if (Vector2.Dot(n - _upperLimit, _normal) < -_angularSlop)
                         {
                             continue;
                         }
                     }
                     else
                     {
-                        if (Vector2.Dot(n - _lowerLimit, _normal) < -angularSlop)
+                        if (Vector2.Dot(n - _lowerLimit, _normal) < -_angularSlop)
                         {
                             continue;
                         }

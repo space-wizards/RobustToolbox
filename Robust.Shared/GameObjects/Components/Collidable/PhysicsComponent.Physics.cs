@@ -45,9 +45,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
     [NetworkedComponent()]
-    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
+    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
     {
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;

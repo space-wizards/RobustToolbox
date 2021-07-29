@@ -108,7 +108,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 velocityConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 velocityConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
 
-                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
+                var (invMassA, invMassB) = GetInvMass(bodyA, bodyB);
+
+                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = (invMassA, invMassB);
                 velocityConstraint.InvIA = bodyA.InvI;
                 velocityConstraint.InvIB = bodyB.InvI;
                 velocityConstraint.ContactIndex = i;
@@ -123,7 +125,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var positionConstraint = _positionConstraints[i];
                 positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
-                (positionConstraint.InvMassA, positionConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
+                (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
                 // TODO: Dis
                 // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;
                 // positionConstraint.LocalCenterB = bodyB._sweep.LocalCenter;

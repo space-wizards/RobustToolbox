@@ -734,7 +734,7 @@ namespace Robust.Shared.GameObjects
 
                 var newParentId = newState.ParentID;
                 var rebuildMatrices = false;
-                if (Parent?.Owner?.Uid != newParentId)
+                if (Parent?.Owner.Uid != newParentId)
                 {
                     if (newParentId != _parent)
                     {

@@ -450,7 +450,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             if (count > _contactMultithreadThreshold * _contactMinimumThreads)
             {
-                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMinimumThreads);
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMultithreadThreshold);
 
                 Parallel.For(0, batches, i =>
                 {

@@ -353,7 +353,7 @@ namespace Robust.Shared
 
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =
-            CVarDef.Create("physics.contact_multithread_threshold", 16);
+            CVarDef.Create("physics.contact_multithread_threshold", 32);
 
         public static readonly CVarDef<int> ContactMinimumThreads =
             CVarDef.Create("physics.contact_minimum_threads", 2);

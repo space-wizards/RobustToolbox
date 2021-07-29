@@ -20,6 +20,9 @@ namespace Robust.Client.Log
 
         public void Log(string sawmillName, LogEvent message)
         {
+            if (sawmillName == "CON")
+                return;
+
             var formatted = new FormattedMessage(8);
             var robustLevel = message.Level.ToRobust();
             formatted.PushColor(Color.DarkGray);

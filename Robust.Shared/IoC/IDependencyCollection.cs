@@ -76,19 +76,45 @@ namespace Robust.Shared.IoC
         void Register(Type implementation, DependencyFactoryDelegate<object>? factory = null, bool overwrite = false);
 
         /// <summary>
+        /// Registers a simple implementation without an interface.
+        /// </summary>
+        /// <param name="interfaceType">The type that will be resolvable.</param>
+        /// <param name="implementation">The type that will be resolvable.</param>
+        /// <param name="factory">A factory method to construct the instance of the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void Register(Type interfaceType, Type implementation, DependencyFactoryDelegate<object>? factory = null,
+            bool overwrite = false);
+
+        /// <summary>
         ///     Registers an interface to an existing instance of an implementation,
         ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
         ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
         ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
-        /// <typeparam name="TImplementation">The type that will be constructed as implementation.</typeparam>
         /// <param name="implementation">The existing instance to use as the implementation.</param>
         /// <param name="overwrite">
         /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
         /// replace the current implementation instead.
         /// </param>
         void RegisterInstance<TInterface>(object implementation, bool overwrite = false);
+
+        /// <summary>
+        ///     Registers an interface to an existing instance of an implementation,
+        ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
+        ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
+        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
+        /// </summary>
+        /// <param name="type">The type that will be resolvable.</param>
+        /// <param name="implementation">The existing instance to use as the implementation.</param>
+        /// <param name="overwrite">
+        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        /// replace the current implementation instead.
+        /// </param>
+        void RegisterInstance(Type type, object implementation, bool overwrite = false);
 
         /// <summary>
         /// Clear all services and types.
@@ -118,6 +144,11 @@ namespace Robust.Shared.IoC
         /// </exception>
         [Pure]
         object ResolveType(Type type);
+
+        /// <summary>
+        /// Resolve a dependency manually.
+        /// </summary>
+        bool TryResolveType<T>([NotNullWhen(true)] out T? instance);
 
         /// <summary>
         /// Resolve a dependency manually.

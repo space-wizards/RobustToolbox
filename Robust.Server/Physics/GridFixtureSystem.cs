@@ -19,8 +19,7 @@ namespace Robust.Server.Physics
     internal sealed class GridFixtureSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-
-        private SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
         // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
         // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
@@ -36,7 +35,6 @@ namespace Robust.Server.Physics
             base.Initialize();
             UpdatesBefore.Add(typeof(PhysicsSystem));
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
-            _broadphase = Get<SharedBroadphaseSystem>();
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.GridFixtureUpdateRate, value => _cooldown = value, true);

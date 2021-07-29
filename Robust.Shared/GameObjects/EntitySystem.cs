@@ -30,6 +30,11 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
+        protected EntitySystem()
+        {
+            Subs = new Subscriptions(this);
+        }
+
         /// <inheritdoc />
         public virtual void Initialize() { }
 

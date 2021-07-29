@@ -93,6 +93,11 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
 
+        protected void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true)
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+        }
+
         #endregion
 
         #region Static Helpers

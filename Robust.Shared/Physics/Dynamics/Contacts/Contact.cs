@@ -279,8 +279,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             PhysicsComponent bodyB = FixtureB?.Body!;
             IPhysShape shapeA = FixtureA?.Shape!;
             IPhysShape shapeB = FixtureB?.Shape!;
-            var bodyATransform = physicsManager.GetOrCreateTransform(bodyA);
-            var bodyBTransform = physicsManager.GetOrCreateTransform(bodyB);
+            var bodyATransform = physicsManager.EnsureTransform(bodyA);
+            var bodyBTransform = physicsManager.EnsureTransform(bodyB);
 
             ContactSolver.InitializeManifold(ref Manifold, bodyATransform, bodyBTransform, shapeA.Radius, shapeB.Radius, out normal, points);
         }

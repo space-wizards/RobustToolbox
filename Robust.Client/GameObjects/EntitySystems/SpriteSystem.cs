@@ -15,15 +15,14 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
 
-        private RenderingTreeSystem _treeSystem = default!;
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
 
         public override void Initialize()
         {
             base.Initialize();
 
-            _treeSystem = Get<RenderingTreeSystem>();
             SubscribeLocalEvent<SpriteUpdateInertEvent>(QueueUpdateInert);
         }
 

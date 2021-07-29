@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -41,6 +42,8 @@ namespace Robust.Shared.GameObjects
 
             foreach (var ent in anchoredEnts.ToList()) // changing anchored modifies this set
             {
+                if (!EntityManager.EntityExists(ent)) continue;
+
                 ComponentManager.GetComponent<TransformComponent>(ent).Anchored = false;
             }
         }
@@ -68,7 +71,13 @@ namespace Robust.Shared.GameObjects
                     if (ev.Sender.Deleted)
                         continue;
 
-                    RaiseLocalEvent(ev);
+                    // Hopefully we can remove this when PVS gets updated to not use NaNs
+                    if (!ev.NewPosition.IsValid(EntityManager))
+                    {
+                        continue;
+                    }
+
+                    RaiseLocalEvent(ev.Sender.Uid, ev);
                 }
             }
         }

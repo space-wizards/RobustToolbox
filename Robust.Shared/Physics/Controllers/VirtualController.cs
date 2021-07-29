@@ -26,6 +26,8 @@ namespace Robust.Shared.Physics.Controllers
             IoCManager.InjectDependencies(this);
         }
 
+        public virtual void Shutdown() {}
+
         /// <summary>
         ///     Run before any map processing starts.
         /// </summary>

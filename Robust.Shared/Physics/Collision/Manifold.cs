@@ -144,45 +144,9 @@ namespace Robust.Shared.Physics.Collision
         /// <summary>
         ///     Points of contact, can only be 0 -> 2.
         /// </summary>
-        internal FixedArray2<ManifoldPoint> Points;
+        internal ManifoldPoint[] Points;
 
         public ManifoldType Type;
-    }
-
-    internal struct FixedArray2<T>
-    {
-        private T _value0;
-        private T _value1;
-
-        public T this[int index]
-        {
-            get
-            {
-                switch (index)
-                {
-                    case 0:
-                        return _value0;
-                    case 1:
-                        return _value1;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
-            set
-            {
-                switch (index)
-                {
-                    case 0:
-                        _value0 = value;
-                        break;
-                    case 1:
-                        _value1 = value;
-                        break;
-                    default:
-                        throw new IndexOutOfRangeException();
-                }
-            }
-        }
     }
 
     public struct ManifoldPoint

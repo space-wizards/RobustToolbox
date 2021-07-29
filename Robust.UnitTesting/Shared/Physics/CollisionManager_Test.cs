@@ -83,10 +83,10 @@ namespace Robust.UnitTesting.Shared.Physics
                 LocalNormal = new Vector2(-1, 0),
                 LocalPoint = new Vector2(-0.5f, 0),
                 PointCount = 2,
-                Points = new FixedArray2<ManifoldPoint>
+                Points = new ManifoldPoint[]
                 {
-                    [0] = new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65538}},
-                    [1] = new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 65794}}
+                    new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65538}},
+                    new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 65794}}
                 }
             };
             _collisionManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);

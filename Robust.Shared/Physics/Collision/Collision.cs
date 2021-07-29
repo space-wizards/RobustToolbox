@@ -224,13 +224,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
-                ManifoldPoint mp = new ManifoldPoint
-                {
-                    Id = {Key = 0, Features = cf},
-                    //LocalPoint = circleB.Position
-                    LocalPoint = Vector2.Zero
-                };
-                manifold.Points[0] = mp;
+                ref var mp = ref manifold.Points[0];
+                mp.Id.Key = 0;
+                mp.Id.Features = cf;
+                mp.LocalPoint = Vector2.Zero;
                 return;
             }
 
@@ -266,13 +263,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
-                ManifoldPoint mp = new ManifoldPoint
-                {
-                    Id = {Key = 0, Features = cf},
-                    //LocalPoint = circleB.Position
-                    LocalPoint = Vector2.Zero
-                };
-                manifold.Points[0] = mp;
+                ref var mp = ref manifold.Points[0];
+                mp.Id.Key = 0;
+                mp.Id.Features = cf;
+                mp.LocalPoint = Vector2.Zero;
                 return;
             }
 
@@ -301,14 +295,10 @@ namespace Robust.Shared.Physics.Collision
             manifold.Type = ManifoldType.FaceA;
             manifold.LocalNormal = n;
             manifold.LocalPoint = A;
-            ManifoldPoint mp2 = new ManifoldPoint
-            {
-                Id = {Key = 0, Features = cf},
-                //LocalPoint = circleB.Position
-                LocalPoint = Vector2.Zero
-            };
-
-            manifold.Points[0] = mp2;
+            ref var mp2 = ref manifold.Points[0];
+            mp2.Id.Key = 0;
+            mp2.Id.Features = cf;
+            mp2.LocalPoint = Vector2.Zero;
         }
 
         public void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,

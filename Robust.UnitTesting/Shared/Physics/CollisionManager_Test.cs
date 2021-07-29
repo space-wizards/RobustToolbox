@@ -75,7 +75,10 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             var transformB = new Transform(Vector2.One, 0f);
             var transformA = new Transform(transformB.Position + new Vector2(0.5f, 0.0f), 0f);
-            var manifold = new Manifold();
+            var manifold = new Manifold()
+            {
+                Points = new ManifoldPoint[2]
+            };
 
             var expectedManifold = new Manifold
             {
@@ -90,6 +93,12 @@ namespace Robust.UnitTesting.Shared.Physics
                 }
             };
             _collisionManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);
+
+            for (var i = 0; i < manifold.Points.Length; i++)
+            {
+                Assert.That(manifold.Points[0], Is.EqualTo(expectedManifold.Points[i]));
+            }
+
             Assert.That(manifold, Is.EqualTo(expectedManifold));
         }
     }

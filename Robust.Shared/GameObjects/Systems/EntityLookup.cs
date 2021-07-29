@@ -588,10 +588,10 @@ namespace Robust.Shared.GameObjects
         {
             var pos = ent.Transform.WorldPosition;
 
-            if (ent.Deleted || !ent.TryGetComponent(out PhysicsComponent? physics))
+            if (ent.Deleted || !ent.TryGetComponent(out ILookupWorldBox2Component? lookup))
                 return new Box2(pos, pos);
 
-            return physics.GetWorldAABB(pos);
+            return lookup.GetWorldAABB(pos);
         }
 
         #endregion

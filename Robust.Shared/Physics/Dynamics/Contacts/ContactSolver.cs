@@ -111,7 +111,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 velocityConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 velocityConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
 
-                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
+                var (invMassA, invMassB) = GetInvMass(bodyA, bodyB);
+
+                (velocityConstraint.InvMassA, velocityConstraint.InvMassB) = (invMassA, invMassB);
                 velocityConstraint.InvIA = bodyA.InvI;
                 velocityConstraint.InvIB = bodyB.InvI;
                 velocityConstraint.ContactIndex = i;
@@ -126,7 +128,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var positionConstraint = _positionConstraints[i];
                 positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
-                (positionConstraint.InvMassA, positionConstraint.InvMassB) = GetInvMass(bodyA, bodyB);
+                (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
                 // TODO: Dis
                 // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;
                 // positionConstraint.LocalCenterB = bodyB._sweep.LocalCenter;
@@ -668,17 +670,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             for (int i = 0; i < _contactCount; ++i)
             {
                 ContactVelocityConstraint velocityConstraint = _velocityConstraints[i];
-                var manifold = _contacts[velocityConstraint.ContactIndex].Manifold;
+                ref var manifold = ref _contacts[velocityConstraint.ContactIndex].Manifold;
 
                 for (int j = 0; j < velocityConstraint.PointCount; ++j)
                 {
-                    ManifoldPoint point = manifold.Points[j];
+                    ref var point = ref manifold.Points[j];
                     point.NormalImpulse = velocityConstraint.Points[j].NormalImpulse;
                     point.TangentImpulse = velocityConstraint.Points[j].TangentImpulse;
-                    manifold.Points[j] = point;
                 }
-
-                _contacts[velocityConstraint.ContactIndex].Manifold = manifold;
             }
         }
 

@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Physics
@@ -12,7 +12,7 @@ namespace Robust.Shared.Physics
 
         public bool CreateTransform(PhysicsComponent body);
 
-        public Transform GetOrCreateTransform(PhysicsComponent body);
+        public Transform EnsureTransform(PhysicsComponent body);
 
         /// <summary>
         /// Get a cached transform for physics use.
@@ -38,7 +38,7 @@ namespace Robust.Shared.Physics
             return true;
         }
 
-        public Transform GetOrCreateTransform(PhysicsComponent body)
+        public Transform EnsureTransform(PhysicsComponent body)
         {
             CreateTransform(body);
             return _transforms[body];

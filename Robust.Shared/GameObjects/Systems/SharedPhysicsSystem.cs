@@ -190,6 +190,11 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
+            foreach (var controller in _controllers)
+            {
+                controller.Shutdown();
+            }
+
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
         }
@@ -361,10 +366,9 @@ namespace Robust.Shared.GameObjects
             _physicsManager.ClearTransforms();
         }
 
-        internal static (int Batches, int BatchSize) GetBatch(int count, int minimumThreads)
+        internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)
         {
-            // Deduct 1 for networking thread I guess?
-            var batches = Math.Min((int) MathF.Floor((float) count / minimumThreads), Math.Max(1, Environment.ProcessorCount - 1));
+            var batches = Math.Min((int) MathF.Floor((float) count / minimumBatchSize), Math.Max(1, Environment.ProcessorCount));
             var batchSize = (int) MathF.Ceiling((float) count / batches);
 
             return (batches, batchSize);

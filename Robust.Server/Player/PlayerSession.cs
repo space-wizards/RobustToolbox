@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -34,6 +35,8 @@ namespace Robust.Server.Player
 
             UpdatePlayerState();
         }
+
+        private readonly HashSet<EntityUid> _pvsEyes = new();
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
@@ -104,6 +107,7 @@ namespace Robust.Server.Player
         public NetUserId UserId { get; }
 
         private readonly PlayerData _data;
+
         [ViewVariables] public IPlayerData Data => _data;
 
         /// <inheritdoc />
@@ -160,9 +164,12 @@ namespace Robust.Server.Player
         {
             Status = SessionStatus.Disconnected;
 
+            UnsubscribeAllViews();
             DetachFromEntity();
             UpdatePlayerState();
         }
+
+        public IReadOnlySet<EntityUid> ViewSubscriptions => _pvsEyes;
 
         private void SetAttachedEntityName()
         {
@@ -191,6 +198,26 @@ namespace Robust.Server.Player
         {
             AttachedEntity = entity;
             UpdatePlayerState();
+        }
+
+        void IPlayerSession.AddViewSubscription(EntityUid eye)
+        {
+            _pvsEyes.Add(eye);
+        }
+
+        void IPlayerSession.RemoveViewSubscription(EntityUid eye)
+        {
+            _pvsEyes.Remove(eye);
+        }
+
+        private void UnsubscribeAllViews()
+        {
+            var pvsEyeSystem = EntitySystem.Get<ViewSubscriberSystem>();
+
+            foreach (var eye in _pvsEyes)
+            {
+                pvsEyeSystem.RemoveViewSubscriber(eye, this);
+            }
         }
 
         private void UpdatePlayerState()

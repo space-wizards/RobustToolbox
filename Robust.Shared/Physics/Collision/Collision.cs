@@ -639,7 +639,7 @@ namespace Robust.Shared.Physics.Collision
                     primaryAxis = edgeAxis;
                 }
 
-                ClipVertex[] ie = new ClipVertex[2];
+                Span<ClipVertex> ie = stackalloc ClipVertex[2];
                 ReferenceFace rf;
                 if (primaryAxis.Type == EPAxisType.EdgeA)
                 {
@@ -661,21 +661,19 @@ namespace Robust.Shared.Physics.Collision
                     int i1 = bestIndex;
                     int i2 = i1 + 1 < _polygonB.Count ? i1 + 1 : 0;
 
-                    ClipVertex c0 = ie[0];
+                    ref var c0 = ref ie[0];
                     c0.V = _polygonB.Vertices[i1];
                     c0.ID.Features.IndexA = 0;
                     c0.ID.Features.IndexB = (byte) i1;
                     c0.ID.Features.TypeA = (byte) ContactFeatureType.Face;
                     c0.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
-                    ie[0] = c0;
 
-                    ClipVertex c1 = ie[1];
+                    ref var c1 = ref ie[1];
                     c1.V = _polygonB.Vertices[i2];
                     c1.ID.Features.IndexA = 0;
                     c1.ID.Features.IndexB = (byte) i2;
                     c1.ID.Features.TypeA = (byte) ContactFeatureType.Face;
                     c1.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
-                    ie[1] = c1;
 
                     if (_front)
                     {
@@ -697,21 +695,19 @@ namespace Robust.Shared.Physics.Collision
                 else
                 {
                     manifold.Type = ManifoldType.FaceB;
-                    ClipVertex c0 = ie[0];
+                    ref var c0 = ref ie[0];
                     c0.V = _v1;
                     c0.ID.Features.IndexA = 0;
                     c0.ID.Features.IndexB = (byte) primaryAxis.Index;
                     c0.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
                     c0.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-                    ie[0] = c0;
 
-                    ClipVertex c1 = ie[1];
+                    ref var c1 = ref ie[1];
                     c1.V = _v2;
                     c1.ID.Features.IndexA = 0;
                     c1.ID.Features.IndexB = (byte) primaryAxis.Index;
                     c1.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
                     c1.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-                    ie[1] = c1;
 
                     rf.i1 = primaryAxis.Index;
                     rf.i2 = rf.i1 + 1 < _polygonB.Count ? rf.i1 + 1 : 0;
@@ -727,10 +723,9 @@ namespace Robust.Shared.Physics.Collision
 
                 // Clip incident edge against extruded edge1 side edges.
                 Span<ClipVertex> clipPoints1 = stackalloc ClipVertex[2];
-                int np;
 
                 // Clip to box side 1
-                np = ClipSegmentToLine(clipPoints1, ie, rf.sideNormal1, rf.sideOffset1, rf.i1);
+                var np = ClipSegmentToLine(clipPoints1, ie, rf.sideNormal1, rf.sideOffset1, rf.i1);
 
                 if (np < 2)
                 {
@@ -1233,9 +1228,9 @@ namespace Robust.Shared.Physics.Collision
             if (distance0 * distance1 < 0.0f)
             {
                 // Find intersection point of edge and plane
-                float interp = distance0 / (distance0 - distance1);
+                var interp = distance0 / (distance0 - distance1);
 
-                ClipVertex cv = vOut[numOut];
+                ref var cv = ref vOut[numOut];
 
                 cv.V.X = v0.V.X + interp * (v1.V.X - v0.V.X);
                 cv.V.Y = v0.V.Y + interp * (v1.V.Y - v0.V.Y);
@@ -1245,8 +1240,6 @@ namespace Robust.Shared.Physics.Collision
                 cv.ID.Features.IndexB = v0.ID.Features.IndexB;
                 cv.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
                 cv.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-
-                vOut[numOut] = cv;
 
                 ++numOut;
             }
@@ -1305,10 +1298,10 @@ namespace Robust.Shared.Physics.Collision
                 var v1 = Transform.Mul(xf, v1s[i]);
 
                 // Find deepest point for normal i.
-                float si = float.MaxValue;
+                var si = float.MaxValue;
                 for (var j = 0; j < count2; ++j)
                 {
-                    float sij = Vector2.Dot(n, v2s[j] - v1);
+                    var sij = Vector2.Dot(n, v2s[j] - v1);
                     if (sij < si)
                     {
                         si = sij;
@@ -1326,26 +1319,27 @@ namespace Robust.Shared.Physics.Collision
             return maxSeparation;
         }
 
-        private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1,
-            PolygonShape poly2, in Transform xf2)
+        private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1, PolygonShape poly2, in Transform xf2)
         {
             List<Vector2> normals1 = poly1.Normals;
 
-            int count2 = poly2.Vertices.Count;
+            var count2 = poly2.Vertices.Count;
             List<Vector2> vertices2 = poly2.Vertices;
             List<Vector2> normals2 = poly2.Normals;
 
             Debug.Assert(0 <= edge1 && edge1 < poly1.Vertices.Count);
 
             // Get the normal of the reference edge in poly2's frame.
-            Vector2 normal1 = Transform.MulT(xf2.Quaternion2D, Transform.Mul(xf1.Quaternion2D, normals1[edge1]));
+            var normal1 = Transform.MulT(xf2.Quaternion2D, Transform.Mul(xf1.Quaternion2D, normals1[edge1]));
 
             // Find the incident edge on poly2.
-            int index = 0;
-            float minDot = float.MaxValue;
+            var index = 0;
+            var minDot = float.MaxValue;
+
             for (int i = 0; i < count2; ++i)
             {
-                float dot = Vector2.Dot(normal1, normals2[i]);
+                var dot = Vector2.Dot(normal1, normals2[i]);
+
                 if (dot < minDot)
                 {
                     minDot = dot;
@@ -1354,10 +1348,10 @@ namespace Robust.Shared.Physics.Collision
             }
 
             // Build the clip vertices for the incident edge.
-            int i1 = index;
-            int i2 = i1 + 1 < count2 ? i1 + 1 : 0;
+            var i1 = index;
+            var i2 = i1 + 1 < count2 ? i1 + 1 : 0;
 
-            ClipVertex cv0 = c[0];
+            ref var cv0 = ref c[0];
 
             cv0.V = Transform.Mul(xf2, vertices2[i1]);
             cv0.ID.Features.IndexA = (byte) edge1;
@@ -1365,16 +1359,12 @@ namespace Robust.Shared.Physics.Collision
             cv0.ID.Features.TypeA = (byte) ContactFeatureType.Face;
             cv0.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
 
-            c[0] = cv0;
-
-            ClipVertex cv1 = c[1];
+            ref var cv1 = ref c[1];
             cv1.V = Transform.Mul(xf2, vertices2[i2]);
             cv1.ID.Features.IndexA = (byte) edge1;
             cv1.ID.Features.IndexB = (byte) i2;
             cv1.ID.Features.TypeA = (byte) ContactFeatureType.Face;
             cv1.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
-
-            c[1] = cv1;
         }
     }
 

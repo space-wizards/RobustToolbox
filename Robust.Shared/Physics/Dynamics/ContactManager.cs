@@ -60,8 +60,8 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         internal event Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
-        private int _contactMultithreadThreshold = 16;
-        private int _contactMinimumThreads = 2;
+        private int _contactMultithreadThreshold;
+        private int _contactMinimumThreads;
 
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
 

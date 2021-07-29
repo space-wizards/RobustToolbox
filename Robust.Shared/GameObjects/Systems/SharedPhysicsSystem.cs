@@ -368,8 +368,7 @@ namespace Robust.Shared.GameObjects
 
         internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)
         {
-            // Deduct 1 for networking thread I guess?
-            var batches = Math.Min((int) MathF.Floor((float) count / minimumBatchSize), Math.Max(1, Environment.ProcessorCount - 1));
+            var batches = Math.Min((int) MathF.Floor((float) count / minimumBatchSize), Math.Max(1, Environment.ProcessorCount));
             var batchSize = (int) MathF.Ceiling((float) count / batches);
 
             return (batches, batchSize);

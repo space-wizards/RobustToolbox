@@ -659,18 +659,15 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             for (var i = 0; i < _contactCount; ++i)
             {
-                var velocityConstraint = _velocityConstraints[i];
-                var manifold = _contacts[velocityConstraint.ContactIndex].Manifold;
+                ContactVelocityConstraint velocityConstraint = _velocityConstraints[i];
+                ref var manifold = ref _contacts[velocityConstraint.ContactIndex].Manifold;
 
                 for (var j = 0; j < velocityConstraint.PointCount; ++j)
                 {
-                    var point = manifold.Points[j];
+                    ref var point = ref manifold.Points[j];
                     point.NormalImpulse = velocityConstraint.Points[j].NormalImpulse;
                     point.TangentImpulse = velocityConstraint.Points[j].TangentImpulse;
-                    manifold.Points[j] = point;
                 }
-
-                _contacts[velocityConstraint.ContactIndex].Manifold = manifold;
             }
         }
 

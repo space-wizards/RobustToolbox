@@ -42,6 +42,8 @@ namespace Robust.Shared.GameObjects
 
             foreach (var ent in anchoredEnts.ToList()) // changing anchored modifies this set
             {
+                if (!EntityManager.EntityExists(ent)) continue;
+
                 ComponentManager.GetComponent<TransformComponent>(ent).Anchored = false;
             }
         }

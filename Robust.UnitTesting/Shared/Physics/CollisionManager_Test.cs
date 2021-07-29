@@ -96,7 +96,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             for (var i = 0; i < manifold.Points.Length; i++)
             {
-                Assert.That(manifold.Points[0], Is.EqualTo(expectedManifold.Points[i]));
+                Assert.That(manifold.Points[i], Is.EqualTo(expectedManifold.Points[i]));
             }
 
             Assert.That(manifold, Is.EqualTo(expectedManifold));

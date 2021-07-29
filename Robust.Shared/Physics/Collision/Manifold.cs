@@ -22,6 +22,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using Robust.Shared.Localization;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics.Collision
@@ -130,7 +131,7 @@ namespace Robust.Shared.Physics.Collision
     /// All contact scenarios must be expressed in one of these types.
     /// This structure is stored across time steps, so we keep it small.
     /// </summary>
-    public struct Manifold
+    public struct Manifold : IEquatable<Manifold>, IApproxEquatable<Manifold>
     {
         public Vector2 LocalNormal;
 
@@ -147,9 +148,54 @@ namespace Robust.Shared.Physics.Collision
         internal ManifoldPoint[] Points;
 
         public ManifoldType Type;
+
+        public bool Equals(Manifold other)
+        {
+            if (!(PointCount == other.PointCount &&
+                       Type == other.Type &&
+                       LocalNormal.Equals(other.LocalNormal) &&
+                       LocalPoint.Equals(other.LocalPoint))) return false;
+
+            for (var i = 0; i < PointCount; i++)
+            {
+                if (!Points[i].Equals(other.Points[i])) return false;
+            }
+
+            return true;
+        }
+
+        public bool EqualsApprox(Manifold other)
+        {
+            if (!(PointCount == other.PointCount &&
+                  Type == other.Type &&
+                  LocalNormal.EqualsApprox(other.LocalNormal) &&
+                  LocalPoint.EqualsApprox(other.LocalPoint))) return false;
+
+            for (var i = 0; i < PointCount; i++)
+            {
+                if (!Points[i].EqualsApprox(other.Points[i])) return false;
+            }
+
+            return true;
+        }
+
+        public bool EqualsApprox(Manifold other, double tolerance)
+        {
+            if (!(PointCount == other.PointCount &&
+                  Type == other.Type &&
+                  LocalNormal.EqualsApprox(other.LocalNormal, tolerance) &&
+                  LocalPoint.EqualsApprox(other.LocalPoint, tolerance))) return false;
+
+            for (var i = 0; i < PointCount; i++)
+            {
+                if (!Points[i].EqualsApprox(other.Points[i], tolerance)) return false;
+            }
+
+            return true;
+        }
     }
 
-    public struct ManifoldPoint
+    public struct ManifoldPoint : IEquatable<ManifoldPoint>, IApproxEquatable<ManifoldPoint>
     {
         /// <summary>
         ///     Unique identifier for the contact point between 2 shapes.
@@ -202,6 +248,22 @@ namespace Robust.Shared.Physics.Collision
             hashcode = (hashcode * 397) ^ NormalImpulse.GetHashCode();
             hashcode = (hashcode * 397) ^ TangentImpulse.GetHashCode();
             return hashcode;
+        }
+
+        public bool EqualsApprox(ManifoldPoint other)
+        {
+            return Id == other.Id &&
+                   LocalPoint.EqualsApprox(other.LocalPoint) &&
+                   MathHelper.CloseTo(NormalImpulse, other.NormalImpulse) &&
+                   MathHelper.CloseTo(TangentImpulse, other.TangentImpulse);
+        }
+
+        public bool EqualsApprox(ManifoldPoint other, double tolerance)
+        {
+            return Id == other.Id &&
+                   LocalPoint.EqualsApprox(other.LocalPoint, tolerance) &&
+                   MathHelper.CloseTo(NormalImpulse, other.NormalImpulse, tolerance) &&
+                   MathHelper.CloseTo(TangentImpulse, other.TangentImpulse, tolerance);
         }
     }
 }

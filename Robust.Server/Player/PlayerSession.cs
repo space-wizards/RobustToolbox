@@ -36,7 +36,7 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        private readonly HashSet<EntityUid> _pvsEyes = new();
+        private readonly HashSet<EntityUid> _viewSubscriptions = new();
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
@@ -169,7 +169,7 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        public IReadOnlySet<EntityUid> ViewSubscriptions => _pvsEyes;
+        public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
 
         private void SetAttachedEntityName()
         {
@@ -202,21 +202,21 @@ namespace Robust.Server.Player
 
         void IPlayerSession.AddViewSubscription(EntityUid eye)
         {
-            _pvsEyes.Add(eye);
+            _viewSubscriptions.Add(eye);
         }
 
         void IPlayerSession.RemoveViewSubscription(EntityUid eye)
         {
-            _pvsEyes.Remove(eye);
+            _viewSubscriptions.Remove(eye);
         }
 
         private void UnsubscribeAllViews()
         {
-            var pvsEyeSystem = EntitySystem.Get<ViewSubscriberSystem>();
+            var viewSubscriberSystem = EntitySystem.Get<ViewSubscriberSystem>();
 
-            foreach (var eye in _pvsEyes)
+            foreach (var eye in _viewSubscriptions)
             {
-                pvsEyeSystem.RemoveViewSubscriber(eye, this);
+                viewSubscriberSystem.RemoveViewSubscriber(eye, this);
             }
         }
 

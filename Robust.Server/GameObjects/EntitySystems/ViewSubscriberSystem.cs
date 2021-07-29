@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 namespace Robust.Server.GameObjects
 {
     /// <summary>
-    ///     Entity System that handles subscribing and unsubscribing regarding PVS Eyes.
+    ///     Entity System that handles subscribing and unsubscribing to PVS views.
     /// </summary>
     public class ViewSubscriberSystem : EntitySystem
     {
@@ -24,12 +24,12 @@ namespace Robust.Server.GameObjects
             var entity = EntityManager.GetEntity(uid);
 
             // If the entity doesn't have the component, it will be added.
-            var pvsEye = entity.EnsureComponent<ViewSubscriberComponent>();
+            var viewSubscriber = entity.EnsureComponent<ViewSubscriberComponent>();
 
-            if (pvsEye.SubscribedSessions.Contains(session))
+            if (viewSubscriber.SubscribedSessions.Contains(session))
                 return; // Already subscribed, do nothing else.
 
-            pvsEye.SubscribedSessions.Add(session);
+            viewSubscriber.SubscribedSessions.Add(session);
             session.AddViewSubscription(uid);
 
             RaiseLocalEvent(uid, new ViewSubscriberAddedEvent(entity, session));
@@ -40,10 +40,10 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public void RemoveViewSubscriber(EntityUid uid, IPlayerSession session)
         {
-            if(!ComponentManager.TryGetComponent(uid, out ViewSubscriberComponent? pvsEye))
+            if(!ComponentManager.TryGetComponent(uid, out ViewSubscriberComponent? viewSubscriber))
                 return; // Entity didn't have any subscriptions, do nothing.
 
-            if (!pvsEye.SubscribedSessions.Remove(session))
+            if (!viewSubscriber.SubscribedSessions.Remove(session))
                 return; // Session wasn't subscribed, do nothing.
 
             session.RemoveViewSubscription(uid);
@@ -60,7 +60,7 @@ namespace Robust.Server.GameObjects
     }
 
     /// <summary>
-    ///     Raised when a session subscribes to a PVS eye.
+    ///     Raised when a session subscribes to an entity's PVS view.
     /// </summary>
     public class ViewSubscriberAddedEvent : EntityEventArgs
     {
@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
     }
 
     /// <summary>
-    ///     Raised when a session is unsubscribed from a PVS eye.
+    ///     Raised when a session is unsubscribed from an entity's PVS view.
     ///     Not raised when sessions are unsubscribed due to the component being removed.
     /// </summary>
     public class ViewSubscriberRemovedEvent : EntityEventArgs

@@ -142,7 +142,7 @@ namespace Robust.Server.GameStates
 
             viewers.Add(session.AttachedEntityUid.Value);
 
-            // This is awful, but we're not gonna add the list of PVS eyes to common session.
+            // This is awful, but we're not gonna add the list of view subscriptions to common session.
             if (session is not IPlayerSession playerSession)
                 return viewers;
 

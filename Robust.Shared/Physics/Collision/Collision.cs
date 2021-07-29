@@ -177,8 +177,7 @@ namespace Robust.Shared.Physics.Collision
             manifold.PointCount = 0;
 
             // Compute circle in frame of edge
-            // TODO: Circle Position
-            Vector2 Q = Transform.MulT(transformA, Transform.Mul(transformB, Vector2.Zero));
+            Vector2 Q = Transform.MulT(transformA, Transform.Mul(transformB, circleB.Position));
 
             Vector2 A = edgeA.Vertex1, B = edgeA.Vertex2;
             Vector2 e = B - A;
@@ -230,8 +229,7 @@ namespace Robust.Shared.Physics.Collision
                 ManifoldPoint mp = new ManifoldPoint
                 {
                     Id = {Key = 0, Features = cf},
-                    //LocalPoint = circleB.Position
-                    LocalPoint = Vector2.Zero
+                    LocalPoint = circleB.Position
                 };
                 manifold.Points[0] = mp;
                 return;
@@ -272,8 +270,7 @@ namespace Robust.Shared.Physics.Collision
                 ManifoldPoint mp = new ManifoldPoint
                 {
                     Id = {Key = 0, Features = cf},
-                    //LocalPoint = circleB.Position
-                    LocalPoint = Vector2.Zero
+                    LocalPoint = circleB.Position
                 };
                 manifold.Points[0] = mp;
                 return;
@@ -307,8 +304,7 @@ namespace Robust.Shared.Physics.Collision
             ManifoldPoint mp2 = new ManifoldPoint
             {
                 Id = {Key = 0, Features = cf},
-                //LocalPoint = circleB.Position
-                LocalPoint = Vector2.Zero
+                LocalPoint = circleB.Position
             };
 
             manifold.Points[0] = mp2;
@@ -320,9 +316,8 @@ namespace Robust.Shared.Physics.Collision
         {
             manifold.PointCount = 0;
 
-            // TODO Circle / shape offsets
-            Vector2 pA = Transform.Mul(xfA, Vector2.Zero);
-            Vector2 pB = Transform.Mul(xfB, Vector2.Zero);
+            Vector2 pA = Transform.Mul(xfA, circleA.Position);
+            Vector2 pB = Transform.Mul(xfB, circleB.Position);
 
             Vector2 d = pB - pA;
             float distSqr = Vector2.Dot(d, d);
@@ -333,7 +328,7 @@ namespace Robust.Shared.Physics.Collision
             }
 
             manifold.Type = ManifoldType.Circles;
-            manifold.LocalPoint = Vector2.Zero; // Also here
+            manifold.LocalPoint = circleA.Position;
             manifold.LocalNormal = Vector2.Zero;
             manifold.PointCount = 1;
 
@@ -397,8 +392,7 @@ namespace Robust.Shared.Physics.Collision
 
                 _xf = Transform.MulT(xfA, xfB);
 
-                // TODO: Centroid
-                _centroidB = Transform.Mul(_xf, Vector2.Zero);
+                _centroidB = Transform.Mul(_xf, polygonB.Centroid);
 
                 _v0 = edgeA.Vertex0;
                 _v1 = edgeA.Vertex1;
@@ -881,7 +875,7 @@ namespace Robust.Shared.Physics.Collision
             manifold.PointCount = 0;
 
             // Compute circle position in the frame of the polygon.
-            Vector2 c = Transform.Mul(xfB, Vector2.Zero); // TODO pos
+            Vector2 c = Transform.Mul(xfB, circleB.Position);
             Vector2 cLocal = Transform.MulT(xfA, c);
 
             // Find the min separating edge.
@@ -925,7 +919,7 @@ namespace Robust.Shared.Physics.Collision
 
                 ManifoldPoint p0 = manifold.Points[0];
 
-                p0.LocalPoint = Vector2.Zero; // TODO pos
+                p0.LocalPoint = circleB.Position;
                 p0.Id.Key = 0;
 
                 manifold.Points[0] = p0;
@@ -957,7 +951,7 @@ namespace Robust.Shared.Physics.Collision
 
                 ManifoldPoint p0b = manifold.Points[0];
 
-                p0b.LocalPoint = Vector2.Zero; // TODO pos
+                p0b.LocalPoint = circleB.Position;
                 p0b.Id.Key = 0;
 
                 manifold.Points[0] = p0b;
@@ -983,7 +977,7 @@ namespace Robust.Shared.Physics.Collision
 
                 ManifoldPoint p0c = manifold.Points[0];
 
-                p0c.LocalPoint = Vector2.Zero; // TODO pos
+                p0c.LocalPoint = circleB.Position;
                 p0c.Id.Key = 0;
 
                 manifold.Points[0] = p0c;
@@ -1006,7 +1000,7 @@ namespace Robust.Shared.Physics.Collision
 
                 ManifoldPoint p0d = manifold.Points[0];
 
-                p0d.LocalPoint = Vector2.Zero; // TODO pos
+                p0d.LocalPoint = circleB.Position;
                 p0d.Id.Key = 0;
 
                 manifold.Points[0] = p0d;

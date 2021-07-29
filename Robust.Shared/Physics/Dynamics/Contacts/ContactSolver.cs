@@ -699,7 +699,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         Interlocked.Increment(ref unsolved);
                 });
 
-                return unsolved > 0;
+                return unsolved == 0;
             }
 
             return SolvePositionConstraints(0, _contactCount);

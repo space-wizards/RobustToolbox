@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent:EntityEventArgs;
 
-        public void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true);
+        void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true);
 
         void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent

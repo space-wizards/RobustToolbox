@@ -164,12 +164,12 @@ namespace Robust.Server.Player
         {
             Status = SessionStatus.Disconnected;
 
-            UnsubscribeAllPvsEyes();
+            UnsubscribeAllViews();
             DetachFromEntity();
             UpdatePlayerState();
         }
 
-        public IReadOnlySet<EntityUid> PvsEyes => _pvsEyes;
+        public IReadOnlySet<EntityUid> ViewSubscriptions => _pvsEyes;
 
         private void SetAttachedEntityName()
         {
@@ -200,23 +200,23 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        void IPlayerSession.AddPvsEyeSubscription(EntityUid eye)
+        void IPlayerSession.AddViewSubscription(EntityUid eye)
         {
             _pvsEyes.Add(eye);
         }
 
-        void IPlayerSession.RemovePvsEyeSubscription(EntityUid eye)
+        void IPlayerSession.RemoveViewSubscription(EntityUid eye)
         {
             _pvsEyes.Remove(eye);
         }
 
-        private void UnsubscribeAllPvsEyes()
+        private void UnsubscribeAllViews()
         {
-            var pvsEyeSystem = EntitySystem.Get<PvsEyeSystem>();
+            var pvsEyeSystem = EntitySystem.Get<ViewSubscriberSystem>();
 
             foreach (var eye in _pvsEyes)
             {
-                pvsEyeSystem.RemovePvsEyeSubscriber(eye, this);
+                pvsEyeSystem.RemoveViewSubscriber(eye, this);
             }
         }
 

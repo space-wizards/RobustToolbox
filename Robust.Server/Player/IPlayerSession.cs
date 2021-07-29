@@ -34,7 +34,7 @@ namespace Robust.Server.Player
         void OnConnect();
         void OnDisconnect();
 
-        IReadOnlySet<EntityUid> PvsEyes { get; }
+        IReadOnlySet<EntityUid> ViewSubscriptions { get; }
 
         /// <summary>
         ///     Persistent data for this player.
@@ -49,15 +49,15 @@ namespace Robust.Server.Player
         internal void SetAttachedEntity(IEntity? entity);
 
         /// <summary>
-        ///     Internal method to add an entity Uid to <see cref="PvsEyes"/>.
-        ///     Do NOT use this outside of <see cref="PvsEyeSystem"/>.
+        ///     Internal method to add an entity Uid to <see cref="ViewSubscriptions"/>.
+        ///     Do NOT use this outside of <see cref="ViewSubscriberSystem"/>.
         /// </summary>
-        internal void AddPvsEyeSubscription(EntityUid eye);
+        internal void AddViewSubscription(EntityUid eye);
 
         /// <summary>
-        ///     Internal method to remove an entity Uid from <see cref="PvsEyes"/>.
-        ///     Do NOT use this outside of <see cref="PvsEyeSystem"/>.
+        ///     Internal method to remove an entity Uid from <see cref="ViewSubscriptions"/>.
+        ///     Do NOT use this outside of <see cref="ViewSubscriberSystem"/>.
         /// </summary>
-        internal void RemovePvsEyeSubscription(EntityUid eye);
+        internal void RemoveViewSubscription(EntityUid eye);
     }
 }

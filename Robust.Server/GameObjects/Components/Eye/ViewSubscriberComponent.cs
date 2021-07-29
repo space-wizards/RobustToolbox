@@ -5,9 +5,9 @@ using Robust.Shared.GameObjects;
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
-    internal class PvsEyeComponent : Component
+    internal class ViewSubscriberComponent : Component
     {
-        public override string Name => "PvsEye";
+        public override string Name => "ViewSubscriber";
 
         internal readonly HashSet<IPlayerSession> SubscribedSessions = new();
     }

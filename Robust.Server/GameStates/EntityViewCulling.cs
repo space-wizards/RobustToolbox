@@ -146,7 +146,7 @@ namespace Robust.Server.GameStates
             if (session is not IPlayerSession playerSession)
                 return viewers;
 
-            foreach (var uid in playerSession.PvsEyes)
+            foreach (var uid in playerSession.ViewSubscriptions)
             {
                 viewers.Add(uid);
             }

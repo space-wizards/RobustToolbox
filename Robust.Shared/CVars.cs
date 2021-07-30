@@ -224,7 +224,7 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 20.0f, CVar.CLIENTONLY);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY);
 
         /*
          * Lookup

@@ -351,6 +351,12 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        /// <summary>
+        ///     How much physics frametime is multipled by. Reduce to slow down physics.
+        /// </summary>
+        public static readonly CVarDef<float> PhysicsTimescale =
+            CVarDef.Create("physics.timescale", 1.0f, CVar.REPLICATED);
+
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =
             CVarDef.Create("physics.contact_multithread_threshold", 32);

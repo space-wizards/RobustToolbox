@@ -89,9 +89,14 @@ namespace Robust.Shared.GameObjects
         public bool MetricsEnabled;
         private readonly Stopwatch _stopwatch = new();
 
+        private float _timescale;
+
         public override void Initialize()
         {
             base.Initialize();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.PhysicsTimescale, OnTimescaleChange, true);
 
             // Having a nullspace map just makes a bunch of code easier, we just don't iterate on it.
             var nullMap = new PhysicsMap(MapId.Nullspace);
@@ -114,6 +119,11 @@ namespace Robust.Shared.GameObjects
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
 
             IoCManager.Resolve<IIslandManager>().Initialize();
+        }
+
+        private void OnTimescaleChange(float value)
+        {
+            _timescale = value;
         }
 
         private void HandleParentChange(EntParentChangedMessage args)
@@ -189,6 +199,9 @@ namespace Robust.Shared.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.PhysicsTimescale, OnTimescaleChange);
 
             foreach (var controller in _controllers)
             {
@@ -324,13 +337,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
+            var adjustedDelta = deltaTime * _timescale;
+
             foreach (var controller in _controllers)
             {
                 if (MetricsEnabled)
                 {
                     _stopwatch.Restart();
                 }
-                controller.UpdateBeforeSolve(prediction, deltaTime);
+                controller.UpdateBeforeSolve(prediction, adjustedDelta);
                 if (MetricsEnabled)
                 {
                     controller.BeforeMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
@@ -340,7 +355,7 @@ namespace Robust.Shared.GameObjects
             foreach (var (mapId, map) in _maps)
             {
                 if (mapId == MapId.Nullspace) continue;
-                map.Step(deltaTime, prediction);
+                map.Step(adjustedDelta, prediction);
             }
 
             foreach (var controller in _controllers)
@@ -349,7 +364,7 @@ namespace Robust.Shared.GameObjects
                 {
                     _stopwatch.Restart();
                 }
-                controller.UpdateAfterSolve(prediction, deltaTime);
+                controller.UpdateAfterSolve(prediction, adjustedDelta);
                 if (MetricsEnabled)
                 {
                     controller.AfterMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);

@@ -284,20 +284,13 @@ namespace Robust.Shared.Map
         public IEnumerable<TileRef> GetTilesIntersecting(Circle worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
             var aabb = new Box2(worldArea.Position.X - worldArea.Radius, worldArea.Position.Y - worldArea.Radius, worldArea.Position.X + worldArea.Radius, worldArea.Position.Y + worldArea.Radius);
+            var circleGridPos = new EntityCoordinates(GridEntityId, WorldToLocal(worldArea.Position));
 
             foreach (var tile in GetTilesIntersecting(aabb, ignoreEmpty))
             {
                 var local = GridTileToLocal(tile.GridIndices);
-                var gridId = tile.GridIndex;
 
-                if (!_mapManager.TryGetGrid(gridId, out var grid))
-                {
-                    continue;
-                }
-
-                var to = new EntityCoordinates(grid.GridEntityId, worldArea.Position);
-
-                if (!local.TryDistance(_entityManager, to, out var distance))
+                if (!local.TryDistance(_entityManager, circleGridPos, out var distance))
                 {
                     continue;
                 }

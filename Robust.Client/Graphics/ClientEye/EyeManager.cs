@@ -111,10 +111,17 @@ namespace Robust.Client.Graphics
         public MapCoordinates ScreenToMap(ScreenCoordinates point)
         {
             var (pos, window) = point;
-            if (window != MainViewport.Window?.Id)
+
+            if (_uiManager.MouseGetControl(point) is not IViewportControl viewport)
                 return default;
 
-            return MainViewport.ScreenToMap(pos);
+            return viewport.ScreenToMap(pos);
+        }
+
+        /// <inheritdoc />
+        public MapCoordinates ScreenToMap(ScreenCoordinates point, IViewportControl viewport)
+        {
+            return viewport.ScreenToMap(point.Position);
         }
 
         /// <inheritdoc />

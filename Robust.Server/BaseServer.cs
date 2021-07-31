@@ -94,10 +94,6 @@ namespace Robust.Server
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
 
-        private TimeSpan _lastTitleUpdate;
-        private long _lastReceivedBytes;
-        private long _lastSentBytes;
-
         private string? _shutdownReason;
 
         private readonly ManualResetEventSlim _shutdownEvent = new(false);
@@ -515,28 +511,6 @@ namespace Robust.Server
             _mainLoop = gameLoop;
         }
 
-        /// <summary>
-        ///     Updates the console window title with performance statistics.
-        /// </summary>
-        private void UpdateTitle()
-        {
-            if (!Environment.UserInteractive || System.Console.IsInputRedirected)
-            {
-                return;
-            }
-
-            // every 1 second update stats in the console window title
-            if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
-                return;
-
-            var netStats = UpdateBps();
-            System.Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
-                Math.Round(_time.FramesPerSecondAvg, 2),
-                _time.RealFrameTimeStdDev.TotalMilliseconds,
-                netStats,
-                Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
-            _lastTitleUpdate = _time.RealTime;
-        }
 
         /// <summary>
         ///     Loads the server settings from the ConfigurationManager.
@@ -593,22 +567,9 @@ namespace Robust.Server
             }
         }
 
-        private string UpdateBps()
-        {
-            var stats = IoCManager.Resolve<IServerNetManager>().Statistics;
-
-            var bps =
-                $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
-
-            _lastSentBytes = stats.SentBytes;
-            _lastReceivedBytes = stats.ReceivedBytes;
-
-            return bps;
-        }
-
         private void Input(FrameEventArgs args)
         {
-            _systemConsole.Update();
+            _systemConsole.UpdateInput();
 
             _network.ProcessPackets();
             _taskManager.ProcessPendingTasks();
@@ -622,7 +583,7 @@ namespace Robust.Server
             // These are always the same on the server, there is no prediction.
             _time.LastRealTick = _time.CurTick;
 
-            UpdateTitle();
+            _systemConsole.UpdateTick();
 
             using (TickUsage.WithLabels("PreEngine").NewTimer())
             {

@@ -30,7 +30,6 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
-    [DataDefinition]
     public sealed class EdgeShape : IPhysShape
     {
         internal Vector2 Centroid { get; set; } = Vector2.Zero;

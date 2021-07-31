@@ -68,7 +68,7 @@ namespace Robust.Client.Graphics
         /// </summary>
         /// <param name="point">Point on screen to transform.</param>
         /// <param name="viewport">Viewport to use to calculate transformation.</param>
-        /// <returns></returns>
+        /// <returns>Corresponding point in the world.</returns>
         MapCoordinates ScreenToMap(ScreenCoordinates point, IViewportControl viewport);
 
         /// <summary>

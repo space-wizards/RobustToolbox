@@ -119,12 +119,6 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
-        public MapCoordinates ScreenToMap(ScreenCoordinates point, IViewportControl viewport)
-        {
-            return viewport.ScreenToMap(point.Position);
-        }
-
-        /// <inheritdoc />
         public MapCoordinates ScreenToMap(Vector2 point)
         {
             return MainViewport.ScreenToMap(point);

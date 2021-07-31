@@ -64,14 +64,6 @@ namespace Robust.Client.Graphics
         MapCoordinates ScreenToMap(ScreenCoordinates point);
 
         /// <summary>
-        /// Unprojects a point from UI screen space to world space using the specified viewport.
-        /// </summary>
-        /// <param name="point">Point on screen to transform.</param>
-        /// <param name="viewport">Viewport to use to calculate transformation.</param>
-        /// <returns>Corresponding point in the world.</returns>
-        MapCoordinates ScreenToMap(ScreenCoordinates point, IViewportControl viewport);
-
-        /// <summary>
         /// Unprojects a point from UI screen space to world space using the main viewport.
         /// </summary>
         /// <remarks>

@@ -81,10 +81,7 @@ namespace Robust.Server.Console
                 return;
 
             var netStats = UpdateBps();
-            var process = Process.GetCurrentProcess();
-            var privateSize = process.GetPrivateMemorySize64NotSlowHolyFuckingShitMicrosoft();
-
-            System.Console.WriteLine($"A: {privateSize} B: {process.PrivateMemorySize64}");
+            var privateSize = Process.GetCurrentProcess().GetPrivateMemorySize64NotSlowHolyFuckingShitMicrosoft();
 
             System.Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
                 Math.Round(_time.FramesPerSecondAvg, 2),

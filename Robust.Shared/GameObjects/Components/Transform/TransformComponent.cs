@@ -302,9 +302,10 @@ namespace Robust.Shared.GameObjects
                     _parent = newParentEnt.Uid;
                     ChangeMapId(newConcrete.MapID);
 
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
-
+                    // Cache new GridID before raising the event.
                     GridID = GetGridIndex();
+
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,

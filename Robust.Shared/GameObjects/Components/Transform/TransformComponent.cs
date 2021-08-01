@@ -673,7 +673,7 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)

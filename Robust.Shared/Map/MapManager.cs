@@ -566,6 +566,11 @@ namespace Robust.Shared.Map
             {
                 if (grid.ParentMapId != mapId) continue;
 
+                var found = false;
+
+                // TODO: Future optimisation; we can probably do a very fast check with no fixtures
+                // by just knowing the chunk bounds of the grid and then checking that first
+                // this will mainly be helpful once we get multiple grids.
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
@@ -579,9 +584,13 @@ namespace Robust.Shared.Map
                         if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
                         {
                             yield return grid;
+                            found = true;
                             break;
                         }
                     }
+
+                    if (found)
+                        break;
                 }
             }
         }

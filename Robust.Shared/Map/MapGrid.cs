@@ -182,6 +182,7 @@ namespace Robust.Shared.Map
             // For now we'll just attach a fixture to each chunk.
 
             // Not raising directed because the grid's EntityUid isn't set yet.
+            // Don't call GridFixtureSystem directly because it's server-only.
             IoCManager
                 .Resolve<IEntityManager>()
                 .EventBus
@@ -238,6 +239,26 @@ namespace Robust.Shared.Map
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
             chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+        }
+
+        /// <inheritdoc />
+        public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
+        {
+            var chunks = new HashSet<IMapChunkInternal>();
+
+            foreach (var (gridIndices, tile) in tiles)
+            {
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
+                chunks.Add(chunk);
+                chunk.SuppressCollisionRegeneration = true;
+                chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            }
+
+            foreach (var chunk in chunks)
+            {
+                chunk.SuppressCollisionRegeneration = false;
+                chunk.RegenerateCollision();
+            }
         }
 
         /// <inheritdoc />
@@ -413,7 +434,7 @@ namespace Robust.Shared.Map
             RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
         }
 
-        private (IMapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
+        private (IMapChunkInternal, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
         {
             var gridChunkIndices = GridTileToChunkIndices(pos);
             var chunk = GetChunk(gridChunkIndices);

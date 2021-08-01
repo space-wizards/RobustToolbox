@@ -2,6 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Collision.Shapes
@@ -58,21 +59,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
             }
         }
 
-        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
-        {
-            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
-            return bounds.Intersects(worldAABB);
-        }
-
-        /// <inheritdoc />
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            return new(-_radius, -_radius, _radius, _radius);
-        }
-
         public float CalculateArea()
         {
             return MathF.PI * _radius * _radius;
+        }
+
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+
+            var p = transform.Position + Transform.Mul(transform.Quaternion2D, Position);
+            return new Box2(p.X - _radius, p.Y - _radius, p.X + _radius, p.Y + _radius);
         }
 
         /// <inheritdoc />

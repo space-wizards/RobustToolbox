@@ -88,6 +88,12 @@ namespace Robust.Shared.Map
         void SetTile(Vector2i gridIndices, Tile tile);
 
         /// <summary>
+        ///     Modifies many tiles inside of a chunk. Avoids regenerating collision until the end.
+        /// </summary>
+        /// <param name="tiles"></param>
+        void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
+
+        /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
         /// </summary>
         /// <param name="worldArea">An area in the world to search for tiles.</param>

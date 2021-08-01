@@ -553,16 +553,17 @@ namespace Robust.Shared.GameObjects
         {
             worldPos ??= Owner.Transform.WorldPosition;
             worldRot ??= Owner.Transform.WorldRotation;
+            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
-            var worldPosValue = worldPos.Value;
-            var worldRotValue = worldRot.Value;
-
-            var bounds = new Box2(worldPosValue, worldPosValue);
+            var bounds = new Box2(transform.Position, transform.Position);
 
             foreach (var fixture in _fixtures)
             {
-                var boundy = fixture.Shape.CalculateLocalBounds(worldRotValue);
-                bounds = bounds.Union(boundy.Translated(worldPosValue));
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
             }
 
             return bounds;

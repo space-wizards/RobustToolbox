@@ -281,7 +281,6 @@ namespace Robust.Server.GameStates
                     visMask = eyeComp.VisibilityMask;
 
                 //Always include the map entity of the eye
-                //TODO: Add Map entity here
                 visibleEnts.Add(_mapManager.GetMapEntityId(eyeComp.Owner.Transform.MapID));
 
                 //Always include viewable ent itself

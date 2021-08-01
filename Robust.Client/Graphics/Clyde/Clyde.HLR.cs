@@ -201,9 +201,10 @@ namespace Robust.Client.Graphics.Clyde
         }
 
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds)
+        private void DrawEntities(Viewport viewport, Box2 worldBounds, IEye eye)
         {
-            if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
+            var mapId = eye.Position.MapId;
+            if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
             {
                 return;
             }
@@ -217,7 +218,7 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: Make this check more accurate.
             var widerBounds = worldBounds.Enlarged(5);
 
-            ProcessSpriteEntities(_eyeManager.CurrentMap, widerBounds, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, widerBounds, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -467,13 +468,13 @@ namespace Robust.Client.Graphics.Clyde
 
                     using (DebugGroup("Grids"))
                     {
-                        _drawGrids(worldBounds);
+                        _drawGrids(viewport, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds);
+                        DrawEntities(viewport, worldBounds, eye);
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldBounds);

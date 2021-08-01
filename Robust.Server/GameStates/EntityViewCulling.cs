@@ -282,6 +282,7 @@ namespace Robust.Server.GameStates
 
                 //Always include the map entity of the eye
                 //TODO: Add Map entity here
+                visibleEnts.Add(_mapManager.GetMapEntityId(eyeComp.Owner.Transform.MapID));
 
                 //Always include viewable ent itself
                 visibleEnts.Add(eyeEuid);

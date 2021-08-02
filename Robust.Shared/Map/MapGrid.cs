@@ -114,6 +114,24 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
+        public Angle WorldRotation
+        {
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
+                return Angle.Zero;
+            }
+            set
+            {
+                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
+            }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
         public Matrix3 WorldMatrix
         {
             get

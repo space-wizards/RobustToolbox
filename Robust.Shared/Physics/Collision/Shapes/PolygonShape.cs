@@ -161,15 +161,15 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = radius;
         }
 
-        public void SetAsBox(float width, float height)
+        public void SetAsBox(float halfWidth, float halfHeight)
         {
             // TODO: Just have this set normals directly; look at Box2D to see how it does
             Vertices = new List<Vector2>()
             {
-                new(-width, -height),
-                new(width, -height),
-                new(width, height),
-                new(-width, height),
+                new(-halfWidth, -halfHeight),
+                new(halfWidth, -halfHeight),
+                new(halfWidth, halfHeight),
+                new(-halfWidth, halfHeight),
             };
         }
 

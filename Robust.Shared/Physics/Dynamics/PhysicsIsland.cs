@@ -626,5 +626,9 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float Baumgarte;
         public float LinearSlop;
         public float MaxLinearCorrection;
+        public int VelocityConstraintsPerThread;
+        public int VelocityConstraintsMinimumThreads;
+        public int PositionConstraintsPerThread;
+        public int PositionConstraintsMinimumThreads;
     }
 }

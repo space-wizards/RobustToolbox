@@ -50,6 +50,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private ContactVelocityConstraint[] _velocityConstraints = Array.Empty<ContactVelocityConstraint>();
         private ContactPositionConstraint[] _positionConstraints = Array.Empty<ContactPositionConstraint>();
 
+        private int _velocityConstraintsPerThread;
+        private int _velocityConstraintsMinimumThreads;
+        private int _positionConstraintsPerThread;
+        private int _positionConstraintsMinimumThreads;
+
         public void LoadConfig(in IslandCfg cfg)
         {
             _warmStarting = cfg.WarmStarting;
@@ -57,6 +62,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _baumgarte = cfg.Baumgarte;
             _linearSlop = cfg.LinearSlop;
             _maxLinearCorrection = cfg.MaxLinearCorrection;
+            _positionConstraintsPerThread = cfg.PositionConstraintsPerThread;
+            _positionConstraintsMinimumThreads = cfg.PositionConstraintsMinimumThreads;
+            _velocityConstraintsPerThread = cfg.VelocityConstraintsPerThread;
+            _velocityConstraintsMinimumThreads = cfg.VelocityConstraintsMinimumThreads;
         }
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)
@@ -364,11 +373,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void SolveVelocityConstraints()
         {
-            var constraintsPerThread = 16;
-
-            if (_contactCount > constraintsPerThread * 2)
+            if (_contactCount > _velocityConstraintsPerThread * _velocityConstraintsMinimumThreads)
             {
-                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, 2);
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, _velocityConstraintsPerThread);
                 Parallel.For(0, batches, i =>
                 {
                     var start = i * batchSize;
@@ -683,13 +690,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public bool SolvePositionConstraints()
         {
-            var constraintsPerThread = 16;
-
-            if (_contactCount > constraintsPerThread * 2)
+            if (_contactCount > _positionConstraintsPerThread * _positionConstraintsMinimumThreads)
             {
                 var unsolved = 0;
 
-                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, 2);
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, _positionConstraintsPerThread);
                 Parallel.For(0, batches, i =>
                 {
                     var start = i * batchSize;

@@ -373,8 +373,21 @@ namespace Robust.Shared
             CVarDef.Create("physics.timetosleep", 0.2f);
 
         // - Solver
+        public static readonly CVarDef<int> PositionConstraintsPerThread =
+            CVarDef.Create("physics.position_constraints_per_thread", 32);
+
+        public static readonly CVarDef<int> PositionConstraintsMinimumThread =
+            CVarDef.Create("physics.position_constraints_minimum_threads", 2);
+
+        public static readonly CVarDef<int> VelocityConstraintsPerThread =
+            CVarDef.Create("physics.velocity_constraints_per_thread", 32);
+
+        public static readonly CVarDef<int> VelocityConstraintMinimumThreads =
+            CVarDef.Create("physics.velocity_constraints_minimum_threads", 2);
+
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
         // Trade-off is obviously performance vs how long it takes to stabilise.
+        // PhysX opts for fewer velocity iterations and more position but they also have a different solver.
         public static readonly CVarDef<int> PositionIterations =
             CVarDef.Create("physics.positer", 3);
 

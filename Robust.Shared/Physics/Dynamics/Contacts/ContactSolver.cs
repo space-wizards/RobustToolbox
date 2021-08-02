@@ -92,7 +92,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                     _velocityConstraints[i] = velocity;
 
-                    var position = new ContactPositionConstraint();
+                    var position = new ContactPositionConstraint()
+                    {
+                        LocalPoints = new Vector2[2],
+                    };
+
+                    for (var j = 0; j < 2; j++)
+                    {
+                        position.LocalPoints[j] = Vector2.Zero;
+                    }
+
                     _positionConstraints[i] = position;
                 }
             }
@@ -136,7 +145,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     velocityConstraint.NormalMass[x] = Vector2.Zero;
                 }
 
-                var positionConstraint = _positionConstraints[i];
+                ref var positionConstraint = ref _positionConstraints[i];
                 positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
                 (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
@@ -155,7 +164,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 positionConstraint.RadiusB = radiusB;
                 positionConstraint.Type = manifold.Type;
 
-                for (int j = 0; j < pointCount; ++j)
+                for (var j = 0; j < pointCount; ++j)
                 {
                     var contactPoint = manifold.Points[j];
                     ref var constraintPoint = ref velocityConstraint.Points[j];
@@ -681,7 +690,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             for (int i = 0; i < _contactCount; ++i)
             {
-                ContactPositionConstraint pc = _positionConstraints[i];
+                var pc = _positionConstraints[i];
 
                 int indexA = pc.IndexA;
                 int indexB = pc.IndexB;

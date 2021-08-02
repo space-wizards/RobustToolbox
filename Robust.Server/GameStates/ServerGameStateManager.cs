@@ -216,7 +216,7 @@ namespace Robust.Server.GameStates
                 }
                 catch (Exception e) // Catch EVERY exception
                 {
-                    _logger.Log(LogLevel.Error, e, string.Empty);
+                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
                 }
 
                 var msg = _networkManager.CreateNetMessage<MsgState>();

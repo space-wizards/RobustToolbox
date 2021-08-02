@@ -398,7 +398,7 @@ namespace Robust.Shared.Physics.Dynamics
             BuildManifolds(contacts, index, status);
 
             // Single-threaded so content doesn't need to worry about race conditions.
-            for (var i = 0; i < status.Length; i++)
+            for (var i = 0; i < index; i++)
             {
                 var contact = contacts[i];
 

@@ -17,7 +17,7 @@ namespace Robust.Shared.Utility
     /// <para>
     /// To use, call it like so:
     /// <code>
-    /// var span = FixedArray.Alloc32&lt;object&lt;(out _);
+    /// var span = FixedArray.Alloc32&lt;object&gt;(out _);
     /// </code>
     /// There is an <c>out</c> parameter that you should probably always discard (as shown in the example).
     /// This is so that stack space is properly allocated in your stack frame.

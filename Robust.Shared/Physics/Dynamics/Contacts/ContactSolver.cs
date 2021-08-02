@@ -90,8 +90,22 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 for (var i = oldLength; i < _velocityConstraints.Length; i++)
                 {
-                    _velocityConstraints[i] = new ContactVelocityConstraint();
-                    _positionConstraints[i] = new ContactPositionConstraint();
+                    var velocity = new ContactVelocityConstraint
+                    {
+                        K = new Vector2[2],
+                        Points = new VelocityConstraintPoint[2],
+                        NormalMass = new Vector2[2],
+                    };
+
+                    for (var j = 0; j < 2; j++)
+                    {
+                        velocity.Points[j] = new VelocityConstraintPoint();
+                    }
+
+                    _velocityConstraints[i] = velocity;
+
+                    var position = new ContactPositionConstraint();
+                    _positionConstraints[i] = position;
                 }
             }
 
@@ -113,7 +127,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 int pointCount = manifold.PointCount;
                 DebugTools.Assert(pointCount > 0);
 
-                var velocityConstraint = _velocityConstraints[i];
+                ref var velocityConstraint = ref _velocityConstraints[i];
                 velocityConstraint.Friction = contact.Friction;
                 velocityConstraint.Restitution = contact.Restitution;
                 velocityConstraint.TangentSpeed = contact.TangentSpeed;
@@ -156,7 +170,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 for (int j = 0; j < pointCount; ++j)
                 {
                     var contactPoint = manifold.Points[j];
-                    var constraintPoint = velocityConstraint.Points[j];
+                    ref var constraintPoint = ref velocityConstraint.Points[j];
 
                     if (_warmStarting)
                     {
@@ -225,7 +239,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             for (var i = 0; i < _contactCount; ++i)
             {
-                var velocityConstraint = _velocityConstraints[i];
+                ref var velocityConstraint = ref _velocityConstraints[i];
                 var positionConstraint = _positionConstraints[i];
 
                 var radiusA = positionConstraint.RadiusA;
@@ -254,13 +268,12 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 DebugTools.Assert(manifold.PointCount > 0);
 
-                Transform xfA = new Transform(angleA);
-                Transform xfB = new Transform(angleB);
+                var xfA = new Transform(angleA);
+                var xfB = new Transform(angleB);
                 xfA.Position = centerA - Transform.Mul(xfA.Quaternion2D, localCenterA);
                 xfB.Position = centerB - Transform.Mul(xfB.Quaternion2D, localCenterB);
 
-                Vector2 normal;
-                InitializeManifold(ref manifold, xfA, xfB, radiusA, radiusB, out normal, points);
+                InitializeManifold(ref manifold, xfA, xfB, radiusA, radiusB, out var normal, points);
 
                 velocityConstraint.Normal = normal;
 
@@ -268,7 +281,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 for (int j = 0; j < pointCount; ++j)
                 {
-                    VelocityConstraintPoint vcp = velocityConstraint.Points[j];
+                    ref var vcp = ref velocityConstraint.Points[j];
 
                     vcp.RelativeVelocityA = points[j] - centerA;
                     vcp.RelativeVelocityB = points[j] - centerB;
@@ -394,7 +407,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // Here be dragons
             for (var i = start; i < end; ++i)
             {
-                var velocityConstraint = _velocityConstraints[i];
+                ref var velocityConstraint = ref _velocityConstraints[i];
 
                 var indexA = velocityConstraint.IndexA;
                 var indexB = velocityConstraint.IndexB;
@@ -419,7 +432,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // than friction.
                 for (var j = 0; j < pointCount; ++j)
                 {
-                    VelocityConstraintPoint velConstraintPoint = velocityConstraint.Points[j];
+                    ref var velConstraintPoint = ref velocityConstraint.Points[j];
 
                     // Relative velocity at contact
                     var dv = vB + Vector2.Cross(wB, velConstraintPoint.RelativeVelocityB) - vA - Vector2.Cross(wA, velConstraintPoint.RelativeVelocityA);
@@ -447,7 +460,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 // Solve normal constraints
                 if (velocityConstraint.PointCount == 1)
                 {
-                    VelocityConstraintPoint vcp = velocityConstraint.Points[0];
+                    ref var vcp = ref velocityConstraint.Points[0];
 
                     // Relative velocity at contact
                     Vector2 dv = vB + Vector2.Cross(wB, vcp.RelativeVelocityB) - vA - Vector2.Cross(wA, vcp.RelativeVelocityA);
@@ -504,8 +517,8 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     //    = A * x + b'
                     // b' = b - A * a;
 
-                    VelocityConstraintPoint cp1 = velocityConstraint.Points[0];
-                    VelocityConstraintPoint cp2 = velocityConstraint.Points[1];
+                    ref var cp1 = ref velocityConstraint.Points[0];
+                    ref var cp2 = ref velocityConstraint.Points[1];
 
                     Vector2 a = new Vector2(cp1.NormalImpulse, cp2.NormalImpulse);
                     DebugTools.Assert(a.X >= 0.0f && a.Y >= 0.0f);
@@ -674,12 +687,12 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void StoreImpulses()
         {
-            for (int i = 0; i < _contactCount; ++i)
+            for (var i = 0; i < _contactCount; ++i)
             {
                 ContactVelocityConstraint velocityConstraint = _velocityConstraints[i];
                 ref var manifold = ref _contacts[velocityConstraint.ContactIndex].Manifold;
 
-                for (int j = 0; j < velocityConstraint.PointCount; ++j)
+                for (var j = 0; j < velocityConstraint.PointCount; ++j)
                 {
                     ref var point = ref manifold.Points[j];
                     point.NormalImpulse = velocityConstraint.Points[j].NormalImpulse;

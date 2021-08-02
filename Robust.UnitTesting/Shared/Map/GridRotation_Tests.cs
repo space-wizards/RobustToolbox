@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -15,7 +17,7 @@ namespace Robust.UnitTesting.Shared.Map
         // need to rotate points about the grid's origin which is a /very/ common source of bugs.
 
         [Test]
-        public async Task Test()
+        public async Task TestLocalWorldConversions()
         {
             var server = StartServer();
 
@@ -48,6 +50,68 @@ namespace Robust.UnitTesting.Shared.Map
                 Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(0, 10)));
                 // If grid facing down then local 10,0 pos should just return 0, -10 given it's aligned with the rotation.
                 Assert.That(grid.LocalToWorld(coordinates.Position).EqualsApprox(new Vector2(0, -10)));
+            });
+        }
+
+        [Test]
+        public async Task TestChunkRotations()
+        {
+            // This is mainly checking for the purposes of rendering at this stage.
+            var server = StartServer();
+
+            await server.WaitIdleAsync();
+
+            var entMan = server.ResolveDependency<IEntityManager>();
+            var mapMan = server.ResolveDependency<IMapManager>();
+            var gridSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
+
+            await server.WaitAssertion(() =>
+            {
+                var mapId = mapMan.CreateMap();
+                var grid = mapMan.CreateGrid(mapId);
+                var gridEnt = entMan.GetEntity(grid.GridEntityId);
+                var gridInternal = (IMapGridInternal) grid;
+
+                /* Test for map chunk rotations */
+                var tile = new Tile(1);
+
+                for (var x = 0; x < 2; x++)
+                {
+                    for (var y = 0; y < 10; y++)
+                    {
+                        grid.SetTile(new Vector2i(x, y), tile);
+                    }
+                }
+
+                var chunks = gridInternal.GetMapChunks().Select(c => c.Value).ToList();
+
+                gridSystem.Process();
+
+                Assert.That(chunks.Count, Is.EqualTo(1));
+                var chunk = chunks[0];
+                var aabb = chunk.CalcWorldAABB();
+                var bounds = new Box2(new Vector2(0, 0), new Vector2(2, 10));
+
+                // With all cardinal directions these should align.
+                Assert.That(aabb, Is.EqualTo(bounds));
+
+                gridEnt.Transform.LocalRotation = new Angle(Math.PI);
+                aabb = chunk.CalcWorldAABB();
+                bounds = new Box2(new Vector2(-2, -10), new Vector2(0, 0));
+
+                Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
+
+                gridEnt.Transform.LocalRotation = new Angle(-Math.PI / 2);
+                aabb = chunk.CalcWorldAABB();
+                bounds = new Box2(new Vector2(0, -2), new Vector2(10, 0));
+
+                Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
+
+                gridEnt.Transform.LocalRotation = new Angle(-Math.PI / 4);
+                aabb = chunk.CalcWorldAABB();
+                bounds = new Box2(new Vector2(0, -1.4142135f), new Vector2(8.485281f, 7.071068f));
+
+                Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
             });
         }
     }

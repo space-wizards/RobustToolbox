@@ -63,7 +63,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entMan = server.ResolveDependency<IEntityManager>();
             var mapMan = server.ResolveDependency<IMapManager>();
-            var gridSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
 
             await server.WaitAssertion(() =>
             {

@@ -86,7 +86,7 @@ namespace Robust.Shared.Physics
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            //ProcessUpdates();
+            ProcessUpdates();
         }
 
         /// <summary>

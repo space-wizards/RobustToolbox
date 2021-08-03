@@ -1040,11 +1040,6 @@ namespace Robust.Shared.GameObjects
 
         private bool _predict;
 
-        /// <summary>
-        ///     As we defer updates need to store the MapId we used for broadphase.
-        /// </summary>
-        public MapId BroadphaseMapId { get; set; }
-
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
             foreach (var entity in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
@@ -1061,7 +1056,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The corresponding local point relative to the body's origin.</returns>
         public Vector2 GetLocalPoint(in Vector2 worldPoint)
         {
-            return Physics.Transform.MulT(GetTransform(), worldPoint);
+            return Transform.MulT(GetTransform(), worldPoint);
         }
 
         /// <summary>

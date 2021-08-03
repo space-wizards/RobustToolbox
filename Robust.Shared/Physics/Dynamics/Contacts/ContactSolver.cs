@@ -21,6 +21,9 @@
 */
 
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Utility;
@@ -47,6 +50,11 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private ContactVelocityConstraint[] _velocityConstraints = Array.Empty<ContactVelocityConstraint>();
         private ContactPositionConstraint[] _positionConstraints = Array.Empty<ContactPositionConstraint>();
 
+        private int _velocityConstraintsPerThread;
+        private int _velocityConstraintsMinimumThreads;
+        private int _positionConstraintsPerThread;
+        private int _positionConstraintsMinimumThreads;
+
         public void LoadConfig(in IslandCfg cfg)
         {
             _warmStarting = cfg.WarmStarting;
@@ -54,6 +62,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _baumgarte = cfg.Baumgarte;
             _linearSlop = cfg.LinearSlop;
             _maxLinearCorrection = cfg.MaxLinearCorrection;
+            _positionConstraintsPerThread = cfg.PositionConstraintsPerThread;
+            _positionConstraintsMinimumThreads = cfg.PositionConstraintsMinimumThreads;
+            _velocityConstraintsPerThread = cfg.VelocityConstraintsPerThread;
+            _velocityConstraintsMinimumThreads = cfg.VelocityConstraintsMinimumThreads;
         }
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)
@@ -92,7 +104,16 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                     _velocityConstraints[i] = velocity;
 
-                    var position = new ContactPositionConstraint();
+                    var position = new ContactPositionConstraint()
+                    {
+                        LocalPoints = new Vector2[2],
+                    };
+
+                    for (var j = 0; j < 2; j++)
+                    {
+                        position.LocalPoints[j] = Vector2.Zero;
+                    }
+
                     _positionConstraints[i] = position;
                 }
             }
@@ -136,7 +157,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     velocityConstraint.NormalMass[x] = Vector2.Zero;
                 }
 
-                var positionConstraint = _positionConstraints[i];
+                ref var positionConstraint = ref _positionConstraints[i];
                 positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
                 (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
@@ -155,7 +176,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 positionConstraint.RadiusB = radiusB;
                 positionConstraint.Type = manifold.Type;
 
-                for (int j = 0; j < pointCount; ++j)
+                for (var j = 0; j < pointCount; ++j)
                 {
                     var contactPoint = manifold.Points[j];
                     ref var constraintPoint = ref velocityConstraint.Points[j];
@@ -374,8 +395,26 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         public void SolveVelocityConstraints()
         {
+            if (_contactCount > _velocityConstraintsPerThread * _velocityConstraintsMinimumThreads)
+            {
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, _velocityConstraintsPerThread);
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    SolveVelocityConstraints(start, end);
+                });
+            }
+            else
+            {
+                SolveVelocityConstraints(0, _contactCount);
+            }
+        }
+
+        public void SolveVelocityConstraints(int start, int end)
+        {
             // Here be dragons
-            for (var i = 0; i < _contactCount; ++i)
+            for (var i = start; i < end; ++i)
             {
                 ref var velocityConstraint = ref _velocityConstraints[i];
 
@@ -671,17 +710,38 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
         }
 
+        public bool SolvePositionConstraints()
+        {
+            if (_contactCount > _positionConstraintsPerThread * _positionConstraintsMinimumThreads)
+            {
+                var unsolved = 0;
+
+                var (batches, batchSize) = SharedPhysicsSystem.GetBatch(_contactCount, _positionConstraintsPerThread);
+                Parallel.For(0, batches, i =>
+                {
+                    var start = i * batchSize;
+                    var end = Math.Min(start + batchSize, _contactCount);
+                    if (!SolvePositionConstraints(start, end))
+                        Interlocked.Increment(ref unsolved);
+                });
+
+                return unsolved == 0;
+            }
+
+            return SolvePositionConstraints(0, _contactCount);
+        }
+
         /// <summary>
         ///     Tries to solve positions for all contacts specified.
         /// </summary>
         /// <returns>true if all positions solved</returns>
-        public bool SolvePositionConstraints()
+        public bool SolvePositionConstraints(int start, int end)
         {
             float minSeparation = 0.0f;
 
-            for (int i = 0; i < _contactCount; ++i)
+            for (int i = start; i < end; ++i)
             {
-                ContactPositionConstraint pc = _positionConstraints[i];
+                var pc = _positionConstraints[i];
 
                 int indexA = pc.IndexA;
                 int indexB = pc.IndexB;

@@ -40,6 +40,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
+        private SharedBroadphaseSystem _broadphaseSystem = default!;
         private SharedPhysicsSystem _physicsSystem = default!;
 
         internal ContactManager ContactManager = new();
@@ -123,6 +124,7 @@ namespace Robust.Shared.Physics.Dynamics
         public PhysicsMap(MapId mapId)
         {
             MapId = mapId;
+            _broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
         }
 
@@ -397,7 +399,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            EntitySystem.Get<SharedBroadphaseSystem>().FindNewContacts(MapId);
+            _broadphaseSystem.FindNewContacts(MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;

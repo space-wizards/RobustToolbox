@@ -85,8 +85,6 @@ namespace Robust.UnitTesting.Shared.Map
 
                 var chunks = gridInternal.GetMapChunks().Select(c => c.Value).ToList();
 
-                gridSystem.Process();
-
                 Assert.That(chunks.Count, Is.EqualTo(1));
                 var chunk = chunks[0];
                 var aabb = chunk.CalcWorldAABB();

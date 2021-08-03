@@ -13,6 +13,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public interface IMapComponent : IComponent
     {
+        bool LightingEnabled { get; set; }
         MapId WorldMap { get; }
         void ClearMapId();
     }
@@ -28,6 +29,10 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "Map";
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField(("lightingEnabled"))]
+        public bool LightingEnabled { get; set; } = true;
 
         /// <inheritdoc />
         public MapId WorldMap
@@ -46,7 +51,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new MapComponentState(_mapIndex);
+            return new MapComponentState(_mapIndex, LightingEnabled);
         }
 
         /// <inheritdoc />
@@ -54,10 +59,11 @@ namespace Robust.Shared.GameObjects
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is MapComponentState state))
+            if (curState is not MapComponentState state)
                 return;
 
             _mapIndex = state.MapId;
+            LightingEnabled = state.LightingEnabled;
 
             ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
         }
@@ -70,10 +76,12 @@ namespace Robust.Shared.GameObjects
     internal class MapComponentState : ComponentState
     {
         public MapId MapId { get; }
+        public bool LightingEnabled { get; }
 
-        public MapComponentState(MapId mapId)
+        public MapComponentState(MapId mapId, bool lightingEnabled)
         {
             MapId = mapId;
+            LightingEnabled = lightingEnabled;
         }
     }
 }

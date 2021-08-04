@@ -646,11 +646,6 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetWorldAABB(in IEntity ent)
         {
-            if (ent.TryGetContainerMan(out var containerManager))
-            {
-                return GetWorldAABB(containerManager.Owner);
-            }
-
             var pos = ent.Transform.WorldPosition;
 
             if (ent.Deleted || !ent.TryGetComponent(out ILookupWorldBox2Component? lookup))

@@ -31,10 +31,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory =>
-                {
-                    factory.RegisterClass<ContainerManagerComponent>();
-                })
                 .RegisterPrototypes(f=>
                 {
                     f.LoadString(Prototypes);

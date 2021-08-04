@@ -292,7 +292,7 @@ namespace Robust.Server.GameStates
 
                 // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask), LookupFlags.Uncontained);
+                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask), LookupFlags.None);
             }
 
             viewers.Clear();

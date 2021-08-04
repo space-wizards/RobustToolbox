@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.Contained);
 
-        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.All);
+        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.Contained);
 
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.Contained);
 
@@ -80,7 +80,6 @@ namespace Robust.Shared.GameObjects
         private readonly Stack<RotateEvent> _rotateQueue = new();
         private readonly Stack<ContainerModifiedMessage> _containerQueue = new();
         private readonly Queue<EntParentChangedMessage> _parentChangeQueue = new();
-        private readonly Queue<ContainerModifiedMessage> _containerQueue = new();
 
         /// <summary>
         /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
@@ -124,8 +123,6 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
             eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, ev => _parentChangeQueue.Enqueue(ev));
-            eventBus.SubscribeEvent<EntInsertedIntoContainerMessage>(EventSource.Local, this, ev => _containerQueue.Enqueue(ev));
-            eventBus.SubscribeEvent<EntRemovedFromContainerMessage>(EventSource.Local, this, ev => _containerQueue.Enqueue(ev));
 
             eventBus.SubscribeEvent<EntInsertedIntoContainerMessage>(EventSource.Local, this, ev => _containerQueue.Push(ev));
             eventBus.SubscribeEvent<EntRemovedFromContainerMessage>(EventSource.Local, this, ev => _containerQueue.Push(ev));
@@ -319,8 +316,10 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.All)
+        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.Contained)
         {
+            DebugTools.Assert((flags & LookupFlags.Approximate) == 0x0);
+
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
                 var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);

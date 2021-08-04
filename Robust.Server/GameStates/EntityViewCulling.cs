@@ -187,7 +187,8 @@ namespace Robust.Server.GameStates
 
         private List<EntityState> GenerateEntityStates(ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions, GameTick lastMapUpdate)
         {
-            var entityStates = new List<EntityState>(currentSet.Count);
+            // pretty big allocations :(
+            List<EntityState> entityStates = new(currentSet.Count);
             var previousSet = _playerVisibleSets[session];
 
             // complement set

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false);
 
-        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback);
+        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.All);
 
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
 
@@ -80,6 +81,7 @@ namespace Robust.Shared.GameObjects
         private readonly Stack<MoveEvent> _moveQueue = new();
         private readonly Stack<RotateEvent> _rotateQueue = new();
         private readonly Queue<EntParentChangedMessage> _parentChangeQueue = new();
+        private readonly Queue<ContainerModifiedMessage> _containerQueue = new();
 
         /// <summary>
         /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
@@ -123,6 +125,8 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
             eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, ev => _parentChangeQueue.Enqueue(ev));
+            eventBus.SubscribeEvent<EntInsertedIntoContainerMessage>(EventSource.Local, this, ev => _containerQueue.Enqueue(ev));
+            eventBus.SubscribeEvent<EntRemovedFromContainerMessage>(EventSource.Local, this, ev => _containerQueue.Enqueue(ev));
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
@@ -201,14 +205,35 @@ namespace Robust.Shared.GameObjects
         {
             // Acruid said he'd deal with Update being called around IEntityManager later.
 
+            // TODO: We should order all events and then run through them rather than this kinda spaghet. Thanks sloth.
+
             // Could be more efficient but essentially nuke their old lookup and add to new lookup if applicable.
             while (_parentChangeQueue.TryDequeue(out var mapChangeEvent))
             {
                 _handledThisTick.Add(mapChangeEvent.Entity.Uid);
                 RemoveFromEntityTrees(mapChangeEvent.Entity);
 
-                if (mapChangeEvent.Entity.Deleted) continue;
+                if (mapChangeEvent.Entity.Deleted ||
+                    mapChangeEvent.Entity.IsInContainer()) continue;
+
                 UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
+            }
+
+            while (_containerQueue.TryDequeue(out var containerEvent))
+            {
+                if (!_handledThisTick.Add(containerEvent.Entity.Uid)) continue;
+
+                switch (containerEvent)
+                {
+                    case EntInsertedIntoContainerMessage:
+                        RemoveFromEntityTrees(containerEvent.Entity);
+                        break;
+                    case EntRemovedFromContainerMessage:
+                        UpdateEntityTree(containerEvent.Entity);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
@@ -254,13 +279,10 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
-                    {
-                        found = true;
-                        return false;
-                    }
+                    if (ent.Deleted) return true;
+                    found = true;
+                    return false;
 
-                    return true;
                 }, offsetBox, approximate);
             }
 
@@ -269,13 +291,27 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback)
+        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.All)
         {
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
                 var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
 
-                lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
+                lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) =>
+                {
+                    callback(data);
+
+                    if ((flags & LookupFlags.Contained) != 0 && data.TryGetComponent(out ContainerManagerComponent? managerComponent))
+                    {
+                        foreach (var container in managerComponent.GetAllContainers())
+                        {
+                            foreach (var child in container.ContainedEntities)
+                            {
+                                callback(child);
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -292,10 +328,22 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
+                    if (ent.Deleted) return true;
+
+                    list.Add(ent);
+
+                    if (ent.TryGetComponent(out ContainerManagerComponent? containerManager))
                     {
-                        list.Add(ent);
+                        foreach (var container in containerManager.GetAllContainers())
+                        {
+                            foreach (var child in container.ContainedEntities)
+                            {
+                                if (child.Deleted) continue;
+                                list.Add(child);
+                            }
+                        }
                     }
+
                     return true;
                 }, offsetBox, approximate);
             }
@@ -308,20 +356,31 @@ namespace Robust.Shared.GameObjects
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
 
-            var aabb = new Box2(position, position).Enlarged(PointEnlargeRange);
             var list = new List<IEntity>();
             var state = (list, position);
 
-            foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
+            foreach (var lookup in GetLookupsIntersecting(mapId, new Box2(position, position)))
             {
-                var offsetBox = aabb.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = position -lookup.Owner.Transform.WorldPosition;
 
-                lookup.Tree.QueryAabb(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
+                lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
-                    if (Intersecting(ent, state.position))
+                    if (ent.Deleted) return true;
+
+                    state.list.Add(ent);
+
+                    if (ent.TryGetComponent(out ContainerManagerComponent? containerManager))
                     {
-                        state.list.Add(ent);
+                        foreach (var container in containerManager.GetAllContainers())
+                        {
+                            foreach (var child in container.ContainedEntities)
+                            {
+                                if (child.Deleted) continue;
+                                state.list.Add(child);
+                            }
+                        }
                     }
+
                     return true;
                 }, offsetBox, approximate);
             }
@@ -440,6 +499,18 @@ namespace Robust.Shared.GameObjects
                 {
                     if (entity.Deleted) continue;
 
+                    if (entity.TryGetComponent(out ContainerManagerComponent? containerManager))
+                    {
+                        foreach (var container in containerManager.GetAllContainers())
+                        {
+                            foreach (var child in container.ContainedEntities)
+                            {
+                                if (child.Deleted) continue;
+                                yield return child;
+                            }
+                        }
+                    }
+
                     yield return entity;
                 }
             }
@@ -462,6 +533,8 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
+                    // TODO: Jesus this won't work. I'm just glad nothing uses this yet.
+                    // Also needs container support
                     var transform = ent.Transform;
                     if (MathHelper.CloseTo(transform.Coordinates.X, state.position.X) &&
                         MathHelper.CloseTo(transform.Coordinates.Y, state.position.Y))
@@ -508,20 +581,17 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
+        public bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null)
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.
-            if (entity.Deleted)
+            if (entity.Deleted || entity.IsInContainer())
             {
                 RemoveFromEntityTrees(entity);
                 return true;
             }
 
-            if (!entity.Initialized)
-            {
-                return false;
-            }
+            DebugTools.Assert(entity.Initialized);
 
             var lookup = GetLookup(entity);
 
@@ -542,7 +612,6 @@ namespace Robust.Shared.GameObjects
             }
 
             var transform = entity.Transform;
-            DebugTools.Assert(transform.Initialized);
 
             var aabb = worldAABB.Value.Translated(-lookup.Owner.Transform.WorldPosition);
 
@@ -586,6 +655,11 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetWorldAABB(in IEntity ent)
         {
+            if (ent.TryGetContainerMan(out var containerManager))
+            {
+                return GetWorldAABB(containerManager.Owner);
+            }
+
             var pos = ent.Transform.WorldPosition;
 
             if (ent.Deleted || !ent.TryGetComponent(out ILookupWorldBox2Component? lookup))
@@ -595,5 +669,14 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+    }
+
+    [Flags]
+    public enum LookupFlags : byte
+    {
+        Invalid = 0,
+        Uncontained = 1 << 0,
+        Contained = 1 << 1,
+        All = Uncontained | Contained,
     }
 }

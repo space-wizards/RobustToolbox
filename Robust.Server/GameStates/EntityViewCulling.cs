@@ -1,9 +1,12 @@
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
+using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -184,8 +187,7 @@ namespace Robust.Server.GameStates
 
         private List<EntityState> GenerateEntityStates(ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions, GameTick lastMapUpdate)
         {
-            // pretty big allocations :(
-            List<EntityState> entityStates = new(currentSet.Count);
+            var entityStates = new List<EntityState>(currentSet.Count);
             var previousSet = _playerVisibleSets[session];
 
             // complement set
@@ -286,10 +288,11 @@ namespace Robust.Server.GameStates
 
                 //Always include viewable ent itself
                 visibleEnts.Add(eyeEuid);
+                IncludeContainers(eyeEuid, visibleEnts, visMask);
 
                 // grid entity should be added through this
                 // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
+                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask), LookupFlags.Uncontained);
             }
 
             viewers.Clear();
@@ -319,6 +322,9 @@ namespace Robust.Server.GameStates
 
         // Read Safe
 
+        /// <summary>
+        /// Recursively go through our parent transforms and add entities.
+        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, uint visMask)
         {
@@ -329,11 +335,7 @@ namespace Robust.Server.GameStates
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_compMan.TryGetComponent<VisibilityComponent>(xformUid, out var visComp))
-            {
-                if ((visMask & visComp.Layer) == 0)
-                    return false;
-            }
+            if (!EntityVisible(xformUid, visMask)) return false;
 
             var xformParentUid = xform.ParentUid;
 
@@ -341,6 +343,7 @@ namespace Robust.Server.GameStates
             if (!xformParentUid.IsValid())
             {
                 visSet.Add(xformUid);
+                IncludeContainers(xformUid, visSet, visMask);
                 return true;
             }
 
@@ -348,6 +351,7 @@ namespace Robust.Server.GameStates
             if (visSet.Contains(xformParentUid))
             {
                 visSet.Add(xformUid);
+                IncludeContainers(xformUid, visSet, visMask);
                 return true;
             }
 
@@ -358,7 +362,34 @@ namespace Robust.Server.GameStates
 
             // add us
             visSet.Add(xformUid);
+            IncludeContainers(xformUid, visSet, visMask);
+
             return true;
+        }
+
+        private bool EntityVisible(EntityUid uid, uint visMask)
+        {
+            if (!_compMan.TryGetComponent<VisibilityComponent>(uid, out var visComp)) return true;
+            return (visMask & visComp.Layer) != 0;
+        }
+
+        // In the future we'll have some way of flagging container contents as hidden but until then...
+        /// <summary>
+        /// Recursively go through our containers and add all entities.
+        /// </summary>
+        private void IncludeContainers(EntityUid uid, HashSet<EntityUid> visSet, uint visMask)
+        {
+            if (!_compMan.TryGetComponent(uid, out ContainerManagerComponent? containerManager)) return;
+
+            foreach (var container in containerManager.GetAllContainers())
+            {
+                foreach (var child in container.ContainedEntities)
+                {
+                    if (!EntityVisible(child.Uid, visMask)) continue;
+                    visSet.Add(child.Uid);
+                    IncludeContainers(child.Uid, visSet, visMask);
+                }
+            }
         }
 
         // Read Safe

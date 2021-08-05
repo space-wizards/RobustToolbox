@@ -86,7 +86,7 @@ namespace Robust.Shared.Physics
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            //ProcessUpdates();
+            ProcessUpdates();
         }
 
         /// <summary>
@@ -123,8 +123,7 @@ namespace Robust.Shared.Physics
 
             while (_queuedMoves.TryDequeue(out var move))
             {
-                if (!_handledThisTick.Add(move.Sender.Uid) ||
-                    move.Sender.Deleted ||
+                if (move.Sender.Deleted ||
                     !move.Sender.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 

@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Robust.Shared.IoC;
-using Robust.Shared.Network;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Timing
@@ -16,7 +13,8 @@ namespace Robust.Shared.Timing
         private const int NumFrames = 60;
 
         private readonly IStopwatch _realTimer = new Stopwatch();
-        private readonly List<long> _realFrameTimes = new(NumFrames);
+        private readonly long[] _realFrameTimes = new long[NumFrames];
+        private int _frameIdx;
         private TimeSpan _lastRealTime;
 
         /// <summary>
@@ -182,9 +180,8 @@ namespace Robust.Shared.Timing
             _lastRealTime = curRealTime;
 
             // update profiling
-            if (_realFrameTimes.Count >= NumFrames)
-                _realFrameTimes.RemoveAt(0);
-            _realFrameTimes.Add(RealFrameTime.Ticks);
+            _frameIdx = (1 + _frameIdx) % _realFrameTimes.Length;
+            _realFrameTimes[_frameIdx] = RealFrameTime.Ticks;
         }
 
         private TimeSpan CalcFrameTime()
@@ -257,9 +254,6 @@ namespace Robust.Shared.Timing
         /// <returns></returns>
         private double CalcFpsAvg()
         {
-            if (_realFrameTimes.Count == 0)
-                return 0;
-
             return 1 / (_realFrameTimes.Average() / TimeSpan.TicksPerSecond);
         }
 
@@ -270,7 +264,7 @@ namespace Robust.Shared.Timing
         private TimeSpan CalcRftStdDev()
         {
             var sum = _realFrameTimes.Sum();
-            var count = _realFrameTimes.Count;
+            var count = _realFrameTimes.Length;
             var avg = sum / (double)count;
             double devSquared = 0.0f;
             for (var i = 0; i < count; ++i)

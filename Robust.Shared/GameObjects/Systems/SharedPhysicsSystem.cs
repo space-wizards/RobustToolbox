@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
-using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Joints;
@@ -29,13 +26,11 @@ namespace Robust.Shared.GameObjects
          * Raycasts for non-box shapes.
          * SetTransformIgnoreContacts for teleports (and anything else left on the physics body in Farseer)
          * Actual center of mass for shapes (currently just assumes center coordinate)
-         * Circle offsets to entity.
          * TOI Solver (continuous collision detection)
          * Poly cutting
          * Chain shape
          * (Content) grenade launcher grenades that explode after time rather than impact.
          * pulling prediction
-         * PVS + Collide allocations / performance
          * When someone yeets out of disposals need to have no collision on that object until they stop colliding
          * A bunch of objects have collision on round start
          * Need a way to specify conditional non-hard collisions (i.e. so items collide with players for IThrowCollide but can still be moved through freely but walls can't collide with them)
@@ -190,6 +185,11 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
+            foreach (var controller in _controllers)
+            {
+                controller.Shutdown();
+            }
+
             _mapManager.MapCreated -= HandleMapCreated;
             _mapManager.MapDestroyed -= HandleMapDestroyed;
         }
@@ -211,6 +211,7 @@ namespace Robust.Shared.GameObjects
             var map = _maps[eventArgs.Map];
             map.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
 
+            map.Shutdown();
             _maps.Remove(eventArgs.Map);
             Logger.DebugS("physics", $"Destroyed physics map for {eventArgs.Map}");
         }
@@ -358,6 +359,14 @@ namespace Robust.Shared.GameObjects
             }
 
             _physicsManager.ClearTransforms();
+        }
+
+        internal static (int Batches, int BatchSize) GetBatch(int count, int minimumBatchSize)
+        {
+            var batches = Math.Min((int) MathF.Floor((float) count / minimumBatchSize), Math.Max(1, Environment.ProcessorCount));
+            var batchSize = (int) MathF.Ceiling((float) count / batches);
+
+            return (batches, batchSize);
         }
     }
 }

@@ -302,9 +302,10 @@ namespace Robust.Shared.GameObjects
                     _parent = newParentEnt.Uid;
                     ChangeMapId(newConcrete.MapID);
 
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
-
+                    // Cache new GridID before raising the event.
                     GridID = GetGridIndex();
+
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -673,7 +674,7 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -734,7 +735,7 @@ namespace Robust.Shared.GameObjects
 
                 var newParentId = newState.ParentID;
                 var rebuildMatrices = false;
-                if (Parent?.Owner?.Uid != newParentId)
+                if (Parent?.Owner.Uid != newParentId)
                 {
                     if (newParentId != _parent)
                     {

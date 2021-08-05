@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
+using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -139,12 +140,15 @@ namespace Robust.Server.GameStates
             if (session.Status != SessionStatus.InGame || session.AttachedEntityUid is null)
                 return viewers;
 
-            var query = _compMan.EntityQuery<ActorComponent>();
+            viewers.Add(session.AttachedEntityUid.Value);
 
-            foreach (var actorComp in query)
+            // This is awful, but we're not gonna add the list of view subscriptions to common session.
+            if (session is not IPlayerSession playerSession)
+                return viewers;
+
+            foreach (var uid in playerSession.ViewSubscriptions)
             {
-                if (actorComp.PlayerSession == session)
-                    viewers.Add(actorComp.Owner.Uid);
+                viewers.Add(uid);
             }
 
             return viewers;
@@ -276,8 +280,9 @@ namespace Robust.Server.GameStates
                 if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                //Always include the map entity of the eye
-                //TODO: Add Map entity here
+                //Always include the map entity of the eye, if it exists.
+                if(_mapManager.MapExists(mapId))
+                    visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
 
                 //Always include viewable ent itself
                 visibleEnts.Add(eyeEuid);

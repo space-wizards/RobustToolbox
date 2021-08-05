@@ -104,19 +104,20 @@ namespace Robust.Client.GameObjects
                         container.Remove(goner);
                 }
 
-                List<EntityUid>? unexpected = null;
+                // Remove entities that were expected, but have been removed from the container.
+                List<EntityUid>? removedExpected = null;
                 foreach (var entityUid in container.ExpectedEntities)
                 {
                     if (!entityUids.Contains(entityUid))
                     {
-                        unexpected ??= new List<EntityUid>();
-                        unexpected.Add(entityUid);
+                        removedExpected ??= new List<EntityUid>();
+                        removedExpected.Add(entityUid);
                     }
                 }
 
-                if (unexpected != null)
+                if (removedExpected != null)
                 {
-                    foreach (var entityUid in unexpected)
+                    foreach (var entityUid in removedExpected)
                         RemoveExpectedEntity(entityUid);
                 }
 

@@ -100,7 +100,7 @@ namespace Robust.Analyzers
                     // Not in a friend class! Report an error.
                     context.ReportDiagnostic(
                         Diagnostic.Create(Rule, context.Node.GetLocation(),
-                            $"{context.Node.ToString().Split('.')[^1]}", $"{type.Name}"));
+                            $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
                 }
             }
         }

@@ -103,6 +103,9 @@ namespace Robust.Shared.Maths
         [Pure]
         public Vector2 RotateVec(in Vector2 vec)
         {
+            // No calculation necessery when theta is zero
+            if (Theta == 0) return vec;
+
             var (x, y) = vec;
             var cos = Math.Cos(Theta);
             var sin = Math.Sin(Theta);

@@ -910,7 +910,7 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new AnchorStateChangedEvent());
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new AnchorStateChangedEvent(), false);
         }
     }
 
@@ -928,14 +928,14 @@ namespace Robust.Shared.GameObjects
             WorldAABB = worldAABB;
         }
 
-        public IEntity Sender { get; }
-        public EntityCoordinates OldPosition { get; }
-        public EntityCoordinates NewPosition { get; }
+        public readonly IEntity Sender;
+        public readonly EntityCoordinates OldPosition;
+        public readonly EntityCoordinates NewPosition;
 
         /// <summary>
         ///     New AABB of the entity.
         /// </summary>
-        public Box2? WorldAABB { get; }
+        public readonly Box2? WorldAABB;
     }
 
     /// <summary>
@@ -951,13 +951,14 @@ namespace Robust.Shared.GameObjects
             WorldAABB = worldAABB;
         }
 
-        public IEntity Sender { get; }
-        public Angle OldRotation { get; }
-        public Angle NewRotation { get; }
+        public readonly IEntity Sender;
+        public readonly Angle OldRotation;
+        public readonly Angle NewRotation;
+
         /// <summary>
         ///     New AABB of the entity.
         /// </summary>
-        public Box2? WorldAABB { get; }
+        public readonly Box2? WorldAABB;
     }
 
     /// <summary>

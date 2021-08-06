@@ -375,6 +375,8 @@ namespace Robust.Server.GameStates
         }
 
         // In the future we'll have some way of flagging container contents as hidden but until then...
+        // The alternative is when EntityLookup sets bounds, if it's contained, then it sets it to the parent's AABB
+        // that's not necessarily a bad idea I just think long-term this might be more relevant?
         /// <summary>
         /// Recursively go through our containers and add all entities.
         /// </summary>

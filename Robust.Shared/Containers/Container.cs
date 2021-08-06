@@ -24,8 +24,12 @@ namespace Robust.Shared.Containers
         [DataField("ents")]
         private readonly List<IEntity> _containerList = new();
 
+        private readonly List<EntityUid> _expectedEntities = new();
+
         /// <inheritdoc />
         public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+
+        public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;

@@ -595,12 +595,9 @@ namespace Robust.Shared.Map
                             break;
                     }
                 }
-                else
+                else if (worldArea.Contains(transform.Position))
                 {
-                    if (worldArea.Contains(transform.Position))
-                    {
-                        yield return grid;
-                    }
+                    yield return grid;
                 }
             }
         }

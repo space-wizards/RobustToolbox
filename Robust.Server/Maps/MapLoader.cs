@@ -366,11 +366,6 @@ namespace Robust.Server.Maps
                 // Run Initialize on all components.
                 FinishEntitiesInitialization();
 
-                // Regardless of what the frequency is we'll process fixtures sometime on map load for anything
-                // that needs it before MapInit.
-                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                gridFixtures.Process();
-
                 // Run Startup on all components.
                 FinishEntitiesStartup();
             }

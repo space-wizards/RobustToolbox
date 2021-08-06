@@ -105,7 +105,7 @@ namespace Robust.Shared.GameObjects
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             EntityManager.EventBus.SubscribeLocalEvent(handler);
 
@@ -116,7 +116,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Unsubscribing of entity system events is now automatic")]
         protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
@@ -124,7 +124,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Unsubscribing of entity system events is now automatic")]
         protected void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private sealed class SubLocal<TComp, TBase> : SubBase where TComp : IComponent where TBase : EntityEventArgs
+        private sealed class SubLocal<TComp, TBase> : SubBase where TComp : IComponent where TBase : notnull
         {
             public override void Unsubscribe(EntitySystem sys, IEventBus bus)
             {

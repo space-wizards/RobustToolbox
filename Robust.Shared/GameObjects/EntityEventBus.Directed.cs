@@ -10,33 +10,33 @@ namespace Robust.Shared.GameObjects
     public interface IDirectedEventBus
     {
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
-            where TEvent:EntityEventArgs;
+            where TEvent : notnull;
 
-        void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true);
+        void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = true);
 
         void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : EntityEventArgs;
+            where TEvent : notnull;
 
         void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type orderType, Type[]? before=null, Type[]? after=null)
             where TComp : IComponent
-            where TEvent : EntityEventArgs;
+            where TEvent : notnull;
 
         [Obsolete("Use the overload without the handler argument.")]
         void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : EntityEventArgs;
+            where TEvent : notnull;
 
         void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
-            where TEvent : EntityEventArgs;
+            where TEvent : notnull;
     }
 
     internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
     {
-        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, EntityEventArgs args);
+        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, object args);
 
         private IEntityManager _entMan;
         private EventTables _eventTables;
@@ -69,7 +69,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             if (_orderedEvents.Contains(typeof(TEvent)))
             {
@@ -85,7 +85,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true)
+        public void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = true)
         {
             var type = args.GetType();
 
@@ -105,9 +105,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, EntityEventArgs args)
+            void EventHandler(EntityUid uid, IComponent comp, object args)
                 => handler(uid, (TComp) comp, (TEvent) args);
 
             _eventTables.Subscribe(typeof(TComp), typeof(TEvent), EventHandler, null);
@@ -119,9 +119,9 @@ namespace Robust.Shared.GameObjects
             Type[]? before=null,
             Type[]? after=null)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, EntityEventArgs args)
+            void EventHandler(EntityUid uid, IComponent comp, object args)
                 => handler(uid, (TComp) comp, (TEvent) args);
 
             var orderData = new OrderingData(orderType, before, after);
@@ -134,7 +134,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Use the overload without the handler argument.")]
         public void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
@@ -282,7 +282,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            public void Dispatch(EntityUid euid, Type eventType, EntityEventArgs args)
+            public void Dispatch(EntityUid euid, Type eventType, object args)
             {
                 var eventTable = _eventTables[euid];
 
@@ -433,6 +433,6 @@ namespace Robust.Shared.GameObjects
 
     public delegate void ComponentEventHandler<in TComp, in TEvent>(EntityUid uid, TComp component, TEvent args)
         where TComp : IComponent
-        where TEvent : EntityEventArgs;
+        where TEvent : notnull;
 
 }

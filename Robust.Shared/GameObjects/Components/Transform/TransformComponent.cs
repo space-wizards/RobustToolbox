@@ -918,7 +918,7 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever an entity moves.
     ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
     /// </summary>
-    public class MoveEvent : HandledEntityEventArgs
+    public readonly struct MoveEvent
     {
         public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, Box2? worldAABB = null)
         {
@@ -941,7 +941,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Raised whenever this entity rotates in relation to their parent.
     /// </summary>
-    public class RotateEvent : EntityEventArgs
+    public readonly struct RotateEvent
     {
         public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
         {
@@ -963,5 +963,5 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
-    public class AnchorStateChangedEvent : EntityEventArgs { }
+    public readonly struct AnchorStateChangedEvent { }
 }

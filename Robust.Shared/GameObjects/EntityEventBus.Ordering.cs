@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
             EntityUid uid,
             TEvent args,
             bool broadcast)
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             var found = new List<(EventHandler, OrderingData?)>();
 

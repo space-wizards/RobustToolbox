@@ -166,16 +166,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            // Don't need the default grid for this.
-            entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
-
             // Act
             ent1.Transform.Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1.Uid));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
             Assert.That(ent1.HasComponent<PhysicsComponent>(), Is.False);
-            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.False);
+            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.True);
         }
 
         /// <summary>

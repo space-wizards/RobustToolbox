@@ -57,9 +57,8 @@ namespace Robust.Analyzers
                     return;
             }
 
-            // Get the friend attribute, if it can't be found do nothing...
-            if (context.Compilation.GetTypeByMetadataName(FriendAttribute) is not {} friendAttr)
-                return;
+            // Get the friend attribute
+            var friendAttr = context.Compilation.GetTypeByMetadataName(FriendAttribute);
 
             // Get the type that is containing this expression, or, the class where this is happening.
             if (context.ContainingSymbol?.ContainingType is not { } containingType)

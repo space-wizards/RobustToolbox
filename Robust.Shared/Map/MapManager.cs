@@ -575,22 +575,32 @@ namespace Robust.Shared.Map
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
 
-                // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
-                foreach (var fixture in body.Fixtures)
+                if (body.FixtureCount > 0)
                 {
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
+                    foreach (var fixture in body.Fixtures)
                     {
-                        // TODO: Need to use CollisionManager to test detailed overlap
-                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
-                            yield return grid;
-                            found = true;
-                            break;
+                            // TODO: Need to use CollisionManager to test detailed overlap
+                            if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
+                            {
+                                yield return grid;
+                                found = true;
+                                break;
+                            }
                         }
-                    }
 
-                    if (found)
-                        break;
+                        if (found)
+                            break;
+                    }
+                }
+                else
+                {
+                    if (worldArea.Contains(transform.Position))
+                    {
+                        yield return grid;
+                    }
                 }
             }
         }

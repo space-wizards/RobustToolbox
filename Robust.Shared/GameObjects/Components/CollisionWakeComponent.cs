@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (Owner.TryGetComponent(out IPhysBody? body))
+            if (Owner.TryGetComponent(out IPhysBody? body) && !body.Deleted)
             {
                 body.CanCollide = true;
             }

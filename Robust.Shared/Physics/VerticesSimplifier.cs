@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
@@ -18,7 +19,60 @@ namespace Robust.Shared.Physics
     }
 
     /// <inheritdoc />
-    public class RamerDouglasPeuckerSimplifier : IVerticesSimplifier
+    public sealed class CollinearSimplifier : IVerticesSimplifier
+    {
+        /// <summary>
+        /// Removes all collinear points on the polygon.
+        /// </summary>
+        public List<Vector2> Simplify(List<Vector2> vertices, float tolerance = 0)
+        {
+            if (vertices.Count <= 3)
+                return vertices;
+
+            var simplified = new List<Vector2>(vertices.Count);
+
+            for (var i = 0; i < vertices.Count; i++)
+            {
+                // No wraparound for negative sooooo
+                var prev = vertices[i == 0 ? vertices.Count - 1 : i - 1];
+                var current = vertices[i];
+                var next = vertices[(i + 1) % vertices.Count];
+
+                // If they collinear, continue
+                if (IsCollinear(in prev, in current, in next, tolerance))
+                    continue;
+
+                simplified.Add(current);
+            }
+
+            // Farseer didn't seem to handle straight lines and nuked all points
+            if (simplified.Count == 0)
+            {
+                simplified.Add(vertices[0]);
+                simplified.Add(vertices[^1]);
+            }
+
+            return simplified;
+        }
+
+        private bool IsCollinear(in Vector2 prev, in Vector2 current, in Vector2 next, float tolerance)
+        {
+            return FloatInRange(Area(in prev, in current, in next), -tolerance, tolerance);
+        }
+
+        private float Area(in Vector2 a, in Vector2 b, in Vector2 c)
+        {
+            return a.X * (b.Y - c.Y) + b.X * (c.Y - a.Y) + c.X * (a.Y - b.Y);
+        }
+
+        private bool FloatInRange(float value, float min, float max)
+        {
+            return (value >= min && value <= max);
+        }
+    }
+
+    /// <inheritdoc />
+    public sealed class RamerDouglasPeuckerSimplifier : IVerticesSimplifier
     {
         /// <summary>
         /// Ramer-Douglas-Peucker polygon simplification algorithm. This is the general recursive version that does not use the

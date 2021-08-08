@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -6,6 +7,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics
 {
@@ -17,10 +19,8 @@ namespace Robust.Server.Physics
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
-        /*
-         * Currently we won't defer grid updates because content may alter a bunch of tiles then decide
-         * to start anchroing entities for example.
-         */
+        // We'll defer gridfixture updates during deserialization because MapLoader is interesting
+        private Dictionary<GridId, HashSet<MapChunk>> _queuedFixtureUpdates = new();
 
         public override void Initialize()
         {
@@ -35,7 +35,42 @@ namespace Robust.Server.Physics
         /// <param name="ev"></param>
         private void HandleCollisionRegenerate(RegenerateChunkCollisionEvent ev)
         {
-           RegenerateCollision(ev.Chunk);
+            // TODO: Probably shouldn't do this but MapLoader can lead to a lot of ordering nonsense hence we
+            // need to defer for it to ensure the fixtures get attached to the chunks properly.
+            if (!EntityManager.EntityExists(_mapManager.GetGrid(ev.Chunk.GridId).GridEntityId))
+            {
+                if (!_queuedFixtureUpdates.TryGetValue(ev.Chunk.GridId, out var chunks))
+                {
+                    chunks = new HashSet<MapChunk>();
+                    _queuedFixtureUpdates[ev.Chunk.GridId] = chunks;
+                }
+
+                chunks.Add(ev.Chunk);
+                return;
+            }
+
+            RegenerateCollision(ev.Chunk);
+        }
+
+        public void ProcessGrid(GridId gridId)
+        {
+            if (!_queuedFixtureUpdates.TryGetValue(gridId, out var chunks))
+            {
+                return;
+            }
+
+            if (!_mapManager.GridExists(gridId))
+            {
+                _queuedFixtureUpdates.Remove(gridId);
+                return;
+            }
+
+            foreach (var chunk in chunks)
+            {
+                RegenerateCollision(chunk);
+            }
+
+            _queuedFixtureUpdates.Remove(gridId);
         }
 
         private void RegenerateCollision(MapChunk chunk)
@@ -89,21 +124,9 @@ namespace Robust.Server.Physics
             {
                 var newPoly = (PolygonShape) newFixture.Shape;
 
-                if (newPoly.Vertices.Count == poly.Vertices.Count)
-                {
-                    for (var i = 0; i < poly.Vertices.Count; i++)
-                    {
-                        if (!poly.Vertices[i].EqualsApprox(newPoly.Vertices[i]))
-                        {
-                            same = false;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
+                if (!poly.EqualsApprox(newPoly))
                     same = false;
-                }
+
             }
             else
             {

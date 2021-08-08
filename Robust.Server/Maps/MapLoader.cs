@@ -443,9 +443,11 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
+                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+
                 foreach (var gridId in _mapManager.GetAllGrids())
                 {
-                    EntitySystem.Get<GridFixtureSystem>().ProcessGrid(gridId.Index);
+                    gridFixtures.ProcessGrid(gridId.Index);
                 }
             }
 

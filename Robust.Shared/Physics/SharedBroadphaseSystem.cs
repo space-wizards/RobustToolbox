@@ -480,6 +480,7 @@ namespace Robust.Shared.Physics
 
             // Supposed to be wrapped in density but eh
             body.ResetMassData();
+            body.Dirty();
             // TODO: Set newcontacts to true.
         }
 
@@ -521,6 +522,7 @@ namespace Robust.Shared.Physics
 
             body.FixtureCount -= 1;
             body.ResetMassData();
+            body.Dirty();
         }
 
         private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos)

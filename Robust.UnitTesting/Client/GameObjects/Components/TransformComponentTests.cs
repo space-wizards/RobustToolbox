@@ -20,10 +20,6 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory =>
-                {
-                    factory.RegisterClass<ContainerManagerComponent>();
-                })
                 .InitializeInstance();
 
             var mapManager = sim.Resolve<IMapManager>();

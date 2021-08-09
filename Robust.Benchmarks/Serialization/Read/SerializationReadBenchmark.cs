@@ -1,10 +1,12 @@
 ﻿using System.IO;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Read
@@ -32,6 +34,10 @@ namespace Robust.Benchmarks.Serialization.Read
 
         private MappingDataNode SeedNode { get; }
 
+        private ValueDataNode FlagZero { get; } = new("Zero");
+
+        private ValueDataNode FlagThirtyOne { get; } = new("ThirtyOne");
+
         [Benchmark]
         public string? ReadString()
         {
@@ -54,6 +60,26 @@ namespace Robust.Benchmarks.Serialization.Read
         public SeedDataDefinition? ReadSeedDataDefinition()
         {
             return SerializationManager.ReadValue<SeedDataDefinition>(SeedNode);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public DeserializationResult ReadFlagZero()
+        {
+            return SerializationManager.ReadWithTypeSerializer(
+                typeof(int),
+                typeof(FlagSerializer<BenchmarkFlags>),
+                FlagZero);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public DeserializationResult ReadThirtyOne()
+        {
+            return SerializationManager.ReadWithTypeSerializer(
+                typeof(int),
+                typeof(FlagSerializer<BenchmarkFlags>),
+                FlagThirtyOne);
         }
     }
 }

@@ -553,16 +553,17 @@ namespace Robust.Shared.GameObjects
         {
             worldPos ??= Owner.Transform.WorldPosition;
             worldRot ??= Owner.Transform.WorldRotation;
+            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
-            var worldPosValue = worldPos.Value;
-            var worldRotValue = worldRot.Value;
-
-            var bounds = new Box2(worldPosValue, worldPosValue);
+            var bounds = new Box2(transform.Position, transform.Position);
 
             foreach (var fixture in _fixtures)
             {
-                var boundy = fixture.Shape.CalculateLocalBounds(worldRotValue);
-                bounds = bounds.Union(boundy.Translated(worldPosValue));
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
             }
 
             return bounds;
@@ -1040,11 +1041,6 @@ namespace Robust.Shared.GameObjects
 
         private bool _predict;
 
-        /// <summary>
-        ///     As we defer updates need to store the MapId we used for broadphase.
-        /// </summary>
-        public MapId BroadphaseMapId { get; set; }
-
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
             foreach (var entity in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
@@ -1061,7 +1057,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The corresponding local point relative to the body's origin.</returns>
         public Vector2 GetLocalPoint(in Vector2 worldPoint)
         {
-            return Physics.Transform.MulT(GetTransform(), worldPoint);
+            return Transform.MulT(GetTransform(), worldPoint);
         }
 
         /// <summary>

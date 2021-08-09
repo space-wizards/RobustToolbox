@@ -43,7 +43,7 @@ namespace Robust.UnitTesting
                 return;
 
             _writer.Flush();
-            Assert.Fail(line);
+            Assert.Fail($"{line} Exception: {message.Exception}");
         }
 
         private string GetPrefix()

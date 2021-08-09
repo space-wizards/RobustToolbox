@@ -39,7 +39,10 @@ namespace Robust.Shared.Containers
             }
         }
 
+        public override List<EntityUid> ExpectedEntities => _expectedEntities;
+
         private IEntity? _containedEntity;
+        private readonly List<EntityUid> _expectedEntities = new();
         // Used by ContainedEntities to avoid allocating.
         private readonly IEntity?[] _containedEntityArray = new IEntity[1];
 

@@ -1,12 +1,16 @@
+using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Containers
 {
-    public class ContainerSystem : EntitySystem
+    public abstract class SharedContainerSystem : EntitySystem
     {
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
+
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
         }
 

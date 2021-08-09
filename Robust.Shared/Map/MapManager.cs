@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -523,23 +524,33 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            // TODO: this won't actually "work" but tests are fucking me hard
-            // We probably need to move these methods over to SharedBroadphaseSystem as they need to go through
-            // physics to find grids intersecting a point anyway but the level of refactoring required for that
-            // will kill me.
-            foreach (var mapGrid in _grids.Values)
+            foreach (var (_, mapGrid) in _grids)
             {
                 if (mapGrid.ParentMapId != mapId)
                     continue;
 
-                if (!mapGrid.WorldBounds.Contains(worldPos))
-                    continue;
+                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
 
-                grid = mapGrid;
-                return true;
+                if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
+
+                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+
+                // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
+                foreach (var fixture in body.Fixtures)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        // TODO: Need TestPoint from Box2D
+                        if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
+                        {
+                            grid = mapGrid;
+                            return true;
+                        }
+                    }
+                }
             }
 
-            grid = default;
+            grid = null;
             return false;
         }
 
@@ -551,9 +562,44 @@ namespace Robust.Shared.Map
 
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
-            // TODO: Unfortunately can't use BroadphaseSystem here as it will explode. Need to suss it out with DI
-            // TryFindGridAt works as is and helps with grid traversals.
-            return _grids.Values.Where(g => g.ParentMapId == mapId && g.WorldBounds.Intersects(worldArea));
+            foreach (var (_, grid) in _grids)
+            {
+                if (grid.ParentMapId != mapId) continue;
+
+                var found = false;
+
+                // TODO: Future optimisation; we can probably do a very fast check with no fixtures
+                // by just knowing the chunk bounds of the grid and then checking that first
+                // this will mainly be helpful once we get multiple grids.
+                var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
+                var body = gridEnt.GetComponent<PhysicsComponent>();
+                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+
+                if (body.FixtureCount > 0)
+                {
+                    // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
+                    foreach (var fixture in body.Fixtures)
+                    {
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        {
+                            // TODO: Need to use CollisionManager to test detailed overlap
+                            if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
+                            {
+                                yield return grid;
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (found)
+                            break;
+                    }
+                }
+                else if (worldArea.Contains(transform.Position))
+                {
+                    yield return grid;
+                }
+            }
         }
 
         public IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false)

@@ -34,6 +34,8 @@ namespace Robust.Shared.Containers
         /// </summary>
         IReadOnlyList<IEntity> ContainedEntities { get; }
 
+        List<EntityUid> ExpectedEntities { get; }
+
         /// <summary>
         /// The type of this container.
         /// </summary>

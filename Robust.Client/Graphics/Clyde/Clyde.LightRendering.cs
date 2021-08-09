@@ -324,11 +324,17 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            var map = eye.Position.MapId;
+            var mapId = eye.Position.MapId;
 
-            var (lights, count, expandedBounds) = GetLightsToRender(map, worldBounds);
+            // If this map has lighting disabled, return
+            if (!_mapManager.GetMapEntity(mapId).GetComponent<IMapComponent>().LightingEnabled)
+            {
+                return;
+            }
 
-            UpdateOcclusionGeometry(map, expandedBounds, eye.Position.Position);
+            var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds);
+
+            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
 
             DrawFov(viewport, eye);
 

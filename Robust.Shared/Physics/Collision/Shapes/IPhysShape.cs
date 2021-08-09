@@ -36,15 +36,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         ShapeType ShapeType { get; }
 
-        // TODO: Like raycasts these aren't using exact shapes so need to do that.
-        bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot);
-
         /// <summary>
-        /// Calculates the AABB of the shape.
+        /// Calculate the AABB of the shape.
         /// </summary>
-        /// <param name="rotation"></param>
-        /// <returns></returns>
-        Box2 CalculateLocalBounds(Angle rotation);
+        Box2 ComputeAABB(Transform transform, int childIndex);
 
         void ApplyState();
 

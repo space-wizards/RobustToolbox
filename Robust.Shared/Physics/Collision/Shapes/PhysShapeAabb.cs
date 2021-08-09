@@ -72,6 +72,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            return new Box2Rotated(_localBounds.Translated(transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox().Enlarged(_radius);
+        }
+
         /// <inheritdoc />
         public void ApplyState() { }
 

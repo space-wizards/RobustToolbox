@@ -34,7 +34,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PolygonShape : IPhysShape, ISerializationHooks
+    public class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
     {
         /// <summary>
         ///     Counter-clockwise (CCW) order.
@@ -173,6 +173,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
             };
         }
 
+        // Don't need to check Centroid for these below as it's based off of the vertices below
+        // (unless you wanted a potentially faster check up front?)
         public bool Equals(IPhysShape? other)
         {
             if (other is not PolygonShape poly) return false;
@@ -180,7 +182,23 @@ namespace Robust.Shared.Physics.Collision.Shapes
             for (var i = 0; i < _vertices.Count; i++)
             {
                 var vert = _vertices[i];
-                if (!vert.EqualsApprox(poly.Vertices[i])) return false;
+                if (!vert.Equals(poly.Vertices[i])) return false;
+            }
+
+            return true;
+        }
+
+        public bool EqualsApprox(PolygonShape other)
+        {
+            return EqualsApprox(other, 0.001);
+        }
+
+        public bool EqualsApprox(PolygonShape other, double tolerance)
+        {
+            if (_vertices.Count != other._vertices.Count) return false;
+            for (var i = 0; i < _vertices.Count; i++)
+            {
+                if (!_vertices[i].EqualsApprox(other._vertices[i], tolerance)) return false;
             }
 
             return true;

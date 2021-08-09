@@ -248,6 +248,8 @@ namespace Robust.Shared.Serialization.Manager
 
         Type GetFlagTypeFromTag(Type tagType);
 
+        int GetFlagHighestBit(Type tagType);
+
         Type GetConstantTypeFromTag(Type tagType);
 
         #endregion

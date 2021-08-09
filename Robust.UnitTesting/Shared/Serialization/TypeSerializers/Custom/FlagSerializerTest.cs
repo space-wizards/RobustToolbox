@@ -49,6 +49,22 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
             Assert.That(value.Flag, Is.EqualTo(3));
         }
 
+        [Test]
+        public void NegativeFlagTest()
+        {
+            var definition = new TestDefinition {Flag = (int) TestFlagsEnum.NegativeFlag};
+
+            var node = Serialization.WriteValueAs<MappingDataNode>(definition);
+            Assert.That(node.Children.Count, Is.EqualTo(1));
+
+            var sequence = node.Cast<SequenceDataNode>("flag");
+            Assert.That(sequence.Sequence.Count, Is.EqualTo(1));
+            Assert.That(sequence.Cast<ValueDataNode>(0).Value, Is.EqualTo("NegativeFlag"));
+
+            var value = Serialization.ReadValueOrThrow<TestDefinition>(node);
+            Assert.That(value.Flag, Is.EqualTo(TestFlags.Negative));
+        }
+
         private class TestFlags
         {
             public const int Negative = 1 << 31;

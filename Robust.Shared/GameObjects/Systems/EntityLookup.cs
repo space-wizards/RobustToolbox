@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -586,6 +587,11 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetWorldAABB(in IEntity ent)
         {
+            if (ent.TryGetContainerMan(out var manager))
+            {
+                return GetWorldAABB(manager.Owner);
+            }
+
             var pos = ent.Transform.WorldPosition;
 
             if (ent.Deleted || !ent.TryGetComponent(out ILookupWorldBox2Component? lookup))

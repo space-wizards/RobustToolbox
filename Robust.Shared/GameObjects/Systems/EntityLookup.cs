@@ -587,17 +587,24 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetWorldAABB(in IEntity ent)
         {
+            Vector2 pos;
+
+            if (ent.Deleted)
+            {
+                pos = ent.Transform.WorldPosition;
+                return new Box2(pos, pos);
+            }
+
             if (ent.TryGetContainerMan(out var manager))
             {
                 return GetWorldAABB(manager.Owner);
             }
 
-            var pos = ent.Transform.WorldPosition;
+            pos = ent.Transform.WorldPosition;
 
-            if (ent.Deleted || !ent.TryGetComponent(out ILookupWorldBox2Component? lookup))
-                return new Box2(pos, pos);
-
-            return lookup.GetWorldAABB(pos);
+            return ent.TryGetComponent(out ILookupWorldBox2Component? lookup) ?
+                lookup.GetWorldAABB(pos) :
+                new Box2(pos, pos);
         }
 
         #endregion

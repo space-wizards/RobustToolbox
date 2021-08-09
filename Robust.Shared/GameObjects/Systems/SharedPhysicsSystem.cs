@@ -76,8 +76,8 @@ namespace Robust.Shared.GameObjects
         public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
         private Dictionary<MapId, PhysicsMap> _maps = new();
 
-        internal IReadOnlyList<VirtualController> Controllers => _controllers;
-        private List<VirtualController> _controllers = new();
+        internal IEnumerable<VirtualController> Controllers => _controllers.Values;
+        private readonly Dictionary<Type, VirtualController> _controllers = new();
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
@@ -109,6 +109,11 @@ namespace Robust.Shared.GameObjects
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
 
             IoCManager.Resolve<IIslandManager>().Initialize();
+        }
+
+        public T GetController<T>() where T : VirtualController
+        {
+            return (T) _controllers[typeof(T)];
         }
 
         private void HandleParentChange(EntParentChangedMessage args)
@@ -171,9 +176,14 @@ namespace Robust.Shared.GameObjects
                 c => c.UpdatesBefore,
                 c => c.UpdatesAfter);
 
-            _controllers = TopologicalSort.Sort(nodes).ToList();
+            var controllers = TopologicalSort.Sort(nodes).ToList();
 
-            foreach (var controller in _controllers)
+            foreach (var controller in controllers)
+            {
+                _controllers[controller.GetType()] = controller;
+            }
+
+            foreach (var (_, controller) in _controllers)
             {
                 controller.BeforeMonitor = _tickUsageControllerBeforeSolveHistogram.WithLabels(controller.GetType().Name);
                 controller.AfterMonitor = _tickUsageControllerAfterSolveHistogram.WithLabels(controller.GetType().Name);
@@ -185,7 +195,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            foreach (var controller in _controllers)
+            foreach (var (_, controller) in _controllers)
             {
                 controller.Shutdown();
             }
@@ -319,7 +329,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            foreach (var controller in _controllers)
+            foreach (var (_, controller) in _controllers)
             {
                 if (MetricsEnabled)
                 {
@@ -338,13 +348,15 @@ namespace Robust.Shared.GameObjects
                 map.Step(deltaTime, prediction);
             }
 
-            foreach (var controller in _controllers)
+            foreach (var (_, controller) in _controllers)
             {
                 if (MetricsEnabled)
                 {
                     _stopwatch.Restart();
                 }
+
                 controller.UpdateAfterSolve(prediction, deltaTime);
+
                 if (MetricsEnabled)
                 {
                     controller.AfterMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);

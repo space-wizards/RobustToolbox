@@ -7,6 +7,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics
 {
@@ -26,6 +27,15 @@ namespace Robust.Server.Physics
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
+        }
+
+        internal void RemoveChunk(MapChunk chunk)
+        {
+            if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
+                !ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
+                chunk.Fixture == null) return;
+
+            _broadphase.DestroyFixture(body, chunk.Fixture);
         }
 
         /// <summary>
@@ -77,13 +87,7 @@ namespace Robust.Server.Physics
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
                 !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
 
-            // May be better off having this in its own thing? We would need to make sure content is using the bulk SetTiles.
-            if (chunk.ValidTiles == 0)
-            {
-                var gridInternal = (IMapGridInternal) grid;
-                gridInternal.RemoveChunk(chunk.Indices);
-                return;
-            }
+            DebugTools.Assert(chunk.ValidTiles > 0);
 
             // Currently this is gonna be hella simple.
             if (!gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent))
@@ -124,7 +128,7 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = $"grid_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
+                true) {ID = GetChunkId(chunk.Indices),
                 Body = physicsComponent};
 
             // Check if we have an existing fixture on MapGrid
@@ -166,6 +170,11 @@ namespace Robust.Server.Physics
             chunk.Fixture = newFixture;
 
             EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});
+        }
+
+        private string GetChunkId(Vector2i indices)
+        {
+            return $"grid_chunk-{indices.X}-{indices.Y}";
         }
     }
 

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -360,15 +360,16 @@ namespace Robust.Shared.Map
 
         public void RemoveChunk(Vector2i origin)
         {
-            if (!_chunks.Remove(origin))
-            {
-                throw new InvalidOperationException(
-                    $"Tried to remove a chunk with origin {origin} that can't be found");
-            }
+            if (!_chunks.TryGetValue(origin, out var chunk)) return;
+
+            _chunks.Remove(origin);
+
+            _mapManager.ChunkRemoved((MapChunk) chunk);
+            Logger.Debug($"Removed chunk at {origin} for GridId: {Index}");
 
             if (_chunks.Count == 0)
             {
-                _mapManager.DeleteGrid(Index);
+                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index});
             }
         }
 
@@ -677,5 +678,13 @@ namespace Robust.Shared.Map
         }
 
         #endregion Transforms
+    }
+
+    /// <summary>
+    /// Raised whenever a grid becomes empty due to no more tiles with data.
+    /// </summary>
+    public sealed class EmptyGridEvent : EntityEventArgs
+    {
+        public GridId GridId { get; init;  }
     }
 }

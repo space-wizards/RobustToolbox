@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
@@ -153,12 +154,13 @@ namespace Robust.Shared.Map
 
             _tiles[xIndex, yIndex] = tile;
 
+            // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
+            _grid.NotifyTileChanged(newTileRef, oldTile);
+
             if (!SuppressCollisionRegeneration)
             {
                 RegenerateCollision();
             }
-
-            _grid.NotifyTileChanged(newTileRef, oldTile);
         }
 
         /// <summary>
@@ -253,6 +255,14 @@ namespace Robust.Shared.Map
 
         public void RegenerateCollision()
         {
+            if (ValidTiles == 0)
+            {
+                var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(GridId);
+
+                grid.RemoveChunk(_gridIndices);
+                return;
+            }
+
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, out _cachedBounds);
             _grid.NotifyChunkCollisionRegenerated(this);
@@ -314,5 +324,10 @@ namespace Robust.Shared.Map
         {
             Chunk = chunk;
         }
+    }
+
+    internal sealed class ChunkRemovedEvent : EntityEventArgs
+    {
+        public MapChunk Chunk = default!;
     }
 }

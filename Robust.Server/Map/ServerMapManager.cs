@@ -1,18 +1,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
+using Robust.Server.Physics;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
-using Robust.Shared.Network;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Map
 {
     [UsedImplicitly]
     internal sealed class ServerMapManager : MapManager, IServerMapManager
     {
+        private readonly Dictionary<GridId, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
         private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();
         private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new();
 
@@ -26,6 +28,21 @@ namespace Robust.Server.Map
         {
             base.DeleteGrid(gridID);
             _gridDeletionHistory.Add((GameTiming.CurTick, gridID));
+            // No point syncing chunk removals anymore!
+            _chunkDeletionHistory.Remove(gridID);
+        }
+
+        public override void ChunkRemoved(MapChunk chunk)
+        {
+            base.ChunkRemoved(chunk);
+            if (!_chunkDeletionHistory.TryGetValue(chunk.GridId, out var chunks))
+            {
+                chunks = new List<(GameTick tick, Vector2i indices)>();
+                _chunkDeletionHistory[chunk.GridId] = chunks;
+            }
+
+            EntitySystem.Get<GridFixtureSystem>().RemoveChunk(chunk);
+            chunks.Add((GameTiming.CurTick, chunk.Indices));
         }
 
         public GameStateMapData? GetStateData(GameTick fromTick)
@@ -38,7 +55,20 @@ namespace Robust.Server.Map
                     continue;
                 }
 
+                var deletedChunkData = new List<GameStateMapData.DeletedChunkDatum>();
+
+                if (_chunkDeletionHistory.TryGetValue(grid.Index, out var chunks))
+                {
+                    foreach (var (tick, indices) in chunks)
+                    {
+                        if (tick < fromTick) continue;
+
+                        deletedChunkData.Add(new GameStateMapData.DeletedChunkDatum(indices));
+                    }
+                }
+
                 var chunkData = new List<GameStateMapData.ChunkDatum>();
+
                 foreach (var (index, chunk) in grid.GetMapChunks())
                 {
                     if (chunk.LastModifiedTick < fromTick)
@@ -62,8 +92,10 @@ namespace Robust.Server.Map
                     chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
                 }
 
-                var gridDatum =
-                    new GameStateMapData.GridDatum(chunkData.ToArray(), new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
+                var gridDatum = new GameStateMapData.GridDatum(
+                        chunkData.ToArray(),
+                        deletedChunkData.ToArray(),
+                        new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
 
                 gridDatums.Add(grid.Index, gridDatum);
             }
@@ -86,11 +118,17 @@ namespace Robust.Server.Map
             if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
                 return default;
 
-            return new GameStateMapData(gridDatums?.ToArray(), gridDeletionsData?.ToArray(), mapDeletionsData?.ToArray(), mapCreations?.ToArray(), gridCreations?.ToArray());
+            return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(), gridDeletionsData?.ToArray(), mapDeletionsData?.ToArray(), mapCreations?.ToArray(), gridCreations?.ToArray<KeyValuePair<GridId, GameStateMapData.GridCreationDatum>>());
         }
 
         public void CullDeletionHistory(GameTick uptoTick)
         {
+            foreach (var (gridId, chunks) in _chunkDeletionHistory.ToArray())
+            {
+                chunks.RemoveAll(t => t.tick < uptoTick);
+                if (chunks.Count == 0) _chunkDeletionHistory.Remove(gridId);
+            }
+
             _mapDeletionHistory.RemoveAll(t => t.tick < uptoTick);
             _gridDeletionHistory.RemoveAll(t => t.tick < uptoTick);
         }

@@ -347,12 +347,6 @@ namespace Robust.Shared.Map
         #endregion TileAccess
 
         #region ChunkAccess
-
-        public void RegenerateCollision()
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         ///     The total number of allocated chunks in the grid.
         /// </summary>
@@ -362,6 +356,20 @@ namespace Robust.Shared.Map
         public IMapChunkInternal GetChunk(int xIndex, int yIndex)
         {
             return GetChunk(new Vector2i(xIndex, yIndex));
+        }
+
+        public void RemoveChunk(Vector2i origin)
+        {
+            if (!_chunks.Remove(origin))
+            {
+                throw new InvalidOperationException(
+                    $"Tried to remove a chunk with origin {origin} that can't be found");
+            }
+
+            if (_chunks.Count == 0)
+            {
+                _mapManager.DeleteGrid(Index);
+            }
         }
 
         /// <inheritdoc />

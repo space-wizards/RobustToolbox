@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -73,10 +74,23 @@ namespace Robust.Server.Physics
 
         private void RegenerateCollision(MapChunk chunk)
         {
-            // Currently this is gonna be hella simple.
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
-                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) ||
-                !gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
+
+            // May be better off having this in its own thing? We would need to make sure content is using the bulk SetTiles.
+            if (chunk.ValidTiles == 0)
+            {
+                var gridInternal = (IMapGridInternal) grid;
+                gridInternal.RemoveChunk(chunk.Indices);
+                return;
+            }
+
+            // Currently this is gonna be hella simple.
+            if (!gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent))
+            {
+                Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(physicsComponent)}");
+                return;
+            }
 
             // TODO: Lots of stuff here etc etc, make changes to mapgridchunk.
             var bounds = chunk.CalcLocalBounds();

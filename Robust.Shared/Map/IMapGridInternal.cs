@@ -36,6 +36,11 @@ namespace Robust.Shared.Map
         IMapChunkInternal GetChunk(int xIndex, int yIndex);
 
         /// <summary>
+        /// Removes the chunk with the specified origin.
+        /// </summary>
+        void RemoveChunk(Vector2i origin);
+
+        /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
         ///     then a new one is generated that is filled with empty space.
         /// </summary>

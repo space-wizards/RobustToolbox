@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
@@ -25,6 +24,11 @@ namespace Robust.Shared.Map
 
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
+
+        // We'll keep a running count of how many tiles are non-empty.
+        // If this ever hits 0 then we know the chunk can be deleted.
+        // The alternative is that every time we SetTile we iterate every tile in the chunk.
+        internal int ValidTiles { get; private set; }
 
         private Box2i _cachedBounds;
 
@@ -127,6 +131,21 @@ namespace Robust.Shared.Map
             if (_tiles[xIndex, yIndex].TypeId == tile.TypeId)
                 return;
 
+            var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
+
+            if (oldIsEmpty != tile.IsEmpty)
+            {
+                if (oldIsEmpty)
+                {
+                    ValidTiles += 1;
+                }
+                else
+                {
+                    ValidTiles -= 1;
+                }
+            }
+
+            DebugTools.Assert(ValidTiles >= 0);
             var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];

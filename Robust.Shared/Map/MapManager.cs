@@ -16,7 +16,8 @@ namespace Robust.Shared.Map
     internal class MapManager : IMapManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] protected readonly IEntityManager _entityManager = default!;
+        [Dependency] protected readonly IComponentManager ComponentManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public IGameTiming GameTiming => _gameTiming;
 

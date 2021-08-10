@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -41,8 +42,16 @@ namespace Robust.Server.Map
                 _chunkDeletionHistory[chunk.GridId] = chunks;
             }
 
-            EntitySystem.Get<GridFixtureSystem>().RemoveChunk(chunk);
             chunks.Add((GameTiming.CurTick, chunk.Indices));
+
+            // Seemed easier than having this method on GridFixtureSystem
+            if (!TryGetGrid(chunk.GridId, out var grid) ||
+                !ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
+                chunk.Fixture == null) return;
+
+            // TODO: Like MapManager injecting this is a PITA so need to work out an easy way to do it.
+            // Maybe just add like a PostInject method that gets called way later?
+            EntitySystem.Get<SharedBroadphaseSystem>().DestroyFixture(body, chunk.Fixture);
         }
 
         public GameStateMapData? GetStateData(GameTick fromTick)

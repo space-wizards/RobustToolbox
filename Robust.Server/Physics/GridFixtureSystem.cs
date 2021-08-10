@@ -29,15 +29,6 @@ namespace Robust.Server.Physics
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
         }
 
-        internal void RemoveChunk(MapChunk chunk)
-        {
-            if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
-                !ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
-                chunk.Fixture == null) return;
-
-            _broadphase.DestroyFixture(body, chunk.Fixture);
-        }
-
         /// <summary>
         /// Queue the chunk to generate (if cooldown > 0) or immediately process it.
         /// </summary>

@@ -201,7 +201,8 @@ namespace Robust.Shared.Map
 
             // Not raising directed because the grid's EntityUid isn't set yet.
             // Don't call GridFixtureSystem directly because it's server-only.
-            IoCManager
+            if (chunk.ValidTiles > 0)
+                IoCManager
                 .Resolve<IEntityManager>()
                 .EventBus
                 .RaiseEvent(EventSource.Local, new RegenerateChunkCollisionEvent(chunk));

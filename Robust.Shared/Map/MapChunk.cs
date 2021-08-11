@@ -133,6 +133,7 @@ namespace Robust.Shared.Map
                 return;
 
             var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
+            var oldValidTiles = ValidTiles;
 
             if (oldIsEmpty != tile.IsEmpty)
             {
@@ -157,7 +158,7 @@ namespace Robust.Shared.Map
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
             _grid.NotifyTileChanged(newTileRef, oldTile);
 
-            if (!SuppressCollisionRegeneration)
+            if (!SuppressCollisionRegeneration && oldValidTiles != ValidTiles)
             {
                 RegenerateCollision();
             }
@@ -255,12 +256,12 @@ namespace Robust.Shared.Map
 
         public void RegenerateCollision()
         {
+            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
             if (ValidTiles == 0)
             {
                 var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(GridId);
 
                 grid.RemoveChunk(_gridIndices);
-                return;
             }
 
             // generate collision rects

@@ -97,6 +97,7 @@ namespace Robust.Server.GameObjects
             {
                 FileName = filename,
                 Coordinates = entity.Transform.Coordinates,
+                MapCoordinates = entity.Transform.MapPosition,
                 EntityUid = entity.Uid,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
@@ -122,6 +123,7 @@ namespace Robust.Server.GameObjects
             {
                 FileName = filename,
                 Coordinates = coordinates,
+                MapCoordinates = coordinates.ToMap(EntityManager),
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };

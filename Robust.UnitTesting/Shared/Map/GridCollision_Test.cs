@@ -7,7 +7,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.UnitTesting.Shared.Map
 {
-    public class GridCollisionTest : RobustIntegrationTest
+    public class GridCollision_Test : RobustIntegrationTest
     {
         [Test]
         public async Task TestGridsCollide()

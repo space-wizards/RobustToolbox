@@ -82,46 +82,57 @@ namespace Robust.Server.Physics
         /// <returns></returns>
         private List<Box2i> GetRectangles(MapChunk chunk)
         {
-            var rectangles = new List<Box2i>();
-            var usedTiles = new HashSet<Vector2i>(chunk.ChunkSize * chunk.ChunkSize);
-
             // TODO: can skip tiles based on rectangles you fucking numpty so do that.
-            for (ushort x = 0; x < chunk.ChunkSize; x++)
+            var rectangles = new List<Box2i>();
+
+            // TODO: Use the existing PartitionChunk version because that one is likely faster and you can Span that shit.
+            // Convert each line into boxes as long as they can be.
+            for (ushort y = 0; y < chunk.ChunkSize; y++)
             {
-                for (ushort y = 0; y < chunk.ChunkSize; y++)
+                var origin = 0;
+                var running = false;
+
+                for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
-                    var origin = new Vector2i(x, y);
-                    var originTile = chunk.GetTile(x, y);
-                    if (!usedTiles.Add(origin) || originTile.IsEmpty) continue;
-
-                    var yStop = chunk.ChunkSize;
-                    var xStop = chunk.ChunkSize;
-
-                    // New origin point!
-                    // Go vertically up as far as we can, then horizontally
-                    for (var j = (ushort) (y + 1); j < chunk.ChunkSize; j++)
+                    if (!chunk.GetTile(x, y).IsEmpty)
                     {
-                        if (usedTiles.Add(new Vector2i(x, j)) && !chunk.GetTile(x, j).IsEmpty) continue;
-                        yStop = j;
-                        break;
+                        running = true;
+                        continue;
                     }
 
-                    // Now go horizontally across
-                    // We already know the vertical is all good
-                    for (var i = (ushort) (x + 1); i < chunk.ChunkSize; i++)
+                    // Still empty
+                    if (running)
                     {
-                        for (var j = (ushort) origin.Y; j < yStop; j++)
-                        {
-                            if (usedTiles.Add(new Vector2i(i, j)) && !chunk.GetTile(i, j).IsEmpty) continue;
-                            xStop = i;
-                            break;
-                        }
+                        rectangles.Add(new Box2i(origin, y, x, y + 1));
                     }
 
-                    var box = new Box2i(origin, new Vector2i(xStop, yStop));
-                    DebugTools.Assert(!box.IsEmpty());
-                    DebugTools.Assert(box.Left >= 0 && box.Right <= chunk.ChunkSize && box.Bottom >= 0 && box.Top <= chunk.ChunkSize);
-                    rectangles.Add(box);
+                    origin = x + 1;
+                    running = false;
+                }
+
+                if (running)
+                    rectangles.Add(new Box2i(origin, y, chunk.ChunkSize, y + 1));
+            }
+
+            // Patch them together as available
+            for (var i = rectangles.Count - 1; i >= 0; i--)
+            {
+                var box = rectangles[i];
+                for (var j = i - 1; j >= 0; j--)
+                {
+                    var other = rectangles[j];
+
+                    // Gone down as far as we can go.
+                    if (other.Top != box.Bottom) break;
+
+                    if (box.Left == other.Left && box.Right == other.Right)
+                    {
+                        box = new Box2i(box.Left, other.Bottom, box.Right, box.Top);
+                        rectangles[i] = box;
+                        rectangles.RemoveAt(j);
+                        i -= 1;
+                        continue;
+                    }
                 }
             }
 

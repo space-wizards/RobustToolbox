@@ -123,7 +123,7 @@ namespace Robust.Server.Physics
                     var other = rectangles[j];
 
                     // Gone down as far as we can go.
-                    if (other.Top != box.Bottom) break;
+                    if (other.Top < box.Bottom) break;
 
                     if (box.Left == other.Left && box.Right == other.Right)
                     {
@@ -133,6 +133,8 @@ namespace Robust.Server.Physics
                         i -= 1;
                         continue;
                     }
+
+                    // TODO: See if we can at least patch some kind of polygon out of it to reduce fixture count.
                 }
             }
 
@@ -200,19 +202,7 @@ namespace Robust.Server.Physics
                     break;
                 }
 
-                // Check if the body already has it then
-                if (!existing)
-                {
-                    var existingFixture = physicsComponent.GetFixture(oldFixture.ID);
-                    // Check if it's the same (otherwise remove anyway).
-                    if (existingFixture?.Shape is PolygonShape poly &&
-                        poly.EqualsApprox((PolygonShape) oldFixture.Shape))
-                    {
-                        existing = true;
-                        chunk.Fixtures.Add(existingFixture);
-                    }
-                }
-
+                // Doesn't align with any new fixtures so delete
                 if (existing) continue;
 
                 chunk.Fixtures.Remove(oldFixture);

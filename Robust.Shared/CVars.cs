@@ -192,6 +192,12 @@ namespace Robust.Shared
         public static readonly CVarDef<string> GameHostName =
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// If a grid is shrunk to include no more tiles should it be deleted.
+        /// </summary>
+        public static readonly CVarDef<bool> GameDeleteEmptyGrids =
+            CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
+
         /*
          * LOG
          */

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map

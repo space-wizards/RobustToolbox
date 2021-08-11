@@ -529,6 +529,14 @@ namespace Robust.Shared.Map
                 if (mapGrid.ParentMapId != mapId)
                     continue;
 
+                // TODO: We need a way more efficient way to get relevant chunks.
+
+                if (mapGrid.WorldBounds.Contains(worldPos))
+                {
+                    grid = mapGrid;
+                    return true;
+                }
+
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
 
                 if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;

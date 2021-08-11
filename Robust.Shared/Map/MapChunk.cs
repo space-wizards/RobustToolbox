@@ -28,7 +28,7 @@ namespace Robust.Shared.Map
 
         private Box2i _cachedBounds;
 
-        public Fixture? Fixture { get; set; }
+        public List<Fixture> Fixtures { get; set; } = new();
 
         /// <inheritdoc />
         public GameTick LastModifiedTick { get; private set; }

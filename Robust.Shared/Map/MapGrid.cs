@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -380,6 +381,7 @@ namespace Robust.Shared.Map
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
+            Logger.DebugS("map", $"Made new MapChunk at {chunkIndices}");
             return _chunks[chunkIndices] = new MapChunk(this, chunkIndices.X, chunkIndices.Y, ChunkSize);
         }
 
@@ -402,7 +404,13 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
-            var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
+            // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just
+            // create an entire chunk for it.
+            var gridChunkPos = GridTileToChunkIndices(pos);
+
+            if (!_chunks.TryGetValue(gridChunkPos, out var chunk)) return Enumerable.Empty<EntityUid>();
+
+            var chunkTile = chunk.GridTileToChunkTile(pos);
             return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
         }
 

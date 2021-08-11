@@ -367,7 +367,6 @@ namespace Robust.Shared.Map
             _chunks.Remove(origin);
 
             _mapManager.ChunkRemoved((MapChunk) chunk);
-            Logger.Debug($"Removed chunk at {origin} for GridId: {Index}");
 
             if (_chunks.Count == 0)
             {
@@ -381,7 +380,6 @@ namespace Robust.Shared.Map
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
-            Logger.DebugS("map", $"Made new MapChunk at {chunkIndices}");
             return _chunks[chunkIndices] = new MapChunk(this, chunkIndices.X, chunkIndices.Y, ChunkSize);
         }
 

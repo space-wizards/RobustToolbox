@@ -151,7 +151,6 @@ namespace Robust.Client.Map
 
                     foreach (var chunkData in gridDatum.DeletedChunkData)
                     {
-                        Logger.DebugS("map", $"Synced chunk {chunkData.Index} deletion");
                         grid.RemoveChunk(chunkData.Index);
                     }
                 }

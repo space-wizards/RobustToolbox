@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (Owner.TryGetComponent(out IPhysBody? body) && Owner.LifeStage != EntityLifeStage.Terminating)
+            if (Owner.TryGetComponent(out IPhysBody? body) && Owner.LifeStage < EntityLifeStage.Terminating)
             {
                 body.CanCollide = true;
             }

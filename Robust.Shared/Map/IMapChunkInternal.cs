@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
@@ -7,6 +8,8 @@ namespace Robust.Shared.Map
     /// <inheritdoc />
     internal interface IMapChunkInternal : IMapChunk
     {
+        Fixture? Fixture { get; set; }
+
         bool SuppressCollisionRegeneration { get; set; }
 
         void RegenerateCollision();

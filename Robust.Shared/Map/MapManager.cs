@@ -534,6 +534,8 @@ namespace Robust.Shared.Map
                 // Turn the worldPos into a localPos and work out the relevant chunk we need to check
                 // This is much faster than iterating over every chunk individually for obvious reasons
                 // (though now we need some extra calcs up front).
+
+                // Doesn't use WorldBounds because it's just an AABB.
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
                 var localPos = gridEnt.Transform.InvWorldMatrix.Transform(worldPos);
 

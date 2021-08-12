@@ -524,8 +524,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            var gridFixtureSystem = EntitySystem.Get<SharedGridFixtureSystem>();
-
             foreach (var (_, mapGrid) in _grids)
             {
                 if (mapGrid.ParentMapId != mapId)
@@ -545,23 +543,10 @@ namespace Robust.Shared.Map
                 if (!mapGrid.HasChunk(chunkIndices)) continue;
                 if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
 
-                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
-                // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.
-                var chunk = mapGrid.GetChunk(chunkIndices);
-                var id = gridFixtureSystem.GetChunkId((MapChunk) chunk);
-                var fixture = body.GetFixture(id);
-
-                if (fixture == null) continue;
-
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    // TODO: Use CollisionManager once it's done.
-                    if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
-                    {
-                        grid = mapGrid;
-                        return true;
-                    }
-                }
+                var tileRef = mapGrid.GetTileRef(tile);
+                if (tileRef.Tile.IsEmpty) continue;
+                grid = mapGrid;
+                return true;
             }
 
             grid = null;

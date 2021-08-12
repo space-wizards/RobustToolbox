@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -12,6 +13,9 @@ namespace Robust.Server.GameObjects
     [UsedImplicitly]
     public class AudioSystem : EntitySystem, IAudioSystem
     {
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         private const int AudioDistanceRange = 25;
 
         private uint _streamIndex;
@@ -93,11 +97,13 @@ namespace Robust.Server.GameObjects
 
             var id = CacheIdentifier();
 
+            var gridCoordinates = GetGridCoordinates(entity.Transform.MapPosition);
+
             var msg = new PlayAudioEntityMessage
             {
                 FileName = filename,
                 Coordinates = entity.Transform.Coordinates,
-                MapCoordinates = entity.Transform.MapPosition,
+                GridCoordinates = gridCoordinates,
                 EntityUid = entity.Uid,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
@@ -119,11 +125,14 @@ namespace Robust.Server.GameObjects
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
 
             var id = CacheIdentifier();
+
+            var gridCoordinates = GetGridCoordinates(coordinates.ToMap(_entityManager));
+
             var msg = new PlayAudioPositionalMessage
             {
                 FileName = filename,
                 Coordinates = coordinates,
-                MapCoordinates = coordinates.ToMap(EntityManager),
+                GridCoordinates = gridCoordinates,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
@@ -135,6 +144,23 @@ namespace Robust.Server.GameObjects
             RaiseNetworkEvent(msg, playerFilter);
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
+        }
+
+        private EntityCoordinates GetGridCoordinates(MapCoordinates mapCoordinates)
+        {
+            if (_mapManager.TryFindGridAt(mapCoordinates, out var mapGrid))
+            {
+                return new EntityCoordinates(mapGrid.GridEntityId,
+                    mapGrid.WorldToLocal(mapCoordinates.Position));
+            }
+
+            if (_mapManager.HasMapEntity(mapCoordinates.MapId))
+            {
+                return new EntityCoordinates(_mapManager.GetMapEntityId(mapCoordinates.MapId),
+                    mapCoordinates.Position);
+            }
+
+            return EntityCoordinates.Invalid;
         }
     }
 }

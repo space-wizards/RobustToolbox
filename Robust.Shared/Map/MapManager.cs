@@ -524,28 +524,40 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
+            var gridFixtureSystem = EntitySystem.Get<SharedGridFixtureSystem>();
+
             foreach (var (_, mapGrid) in _grids)
             {
                 if (mapGrid.ParentMapId != mapId)
                     continue;
 
+                // Turn the worldPos into a localPos and work out the relevant chunk we need to check
+                // This is much faster than iterating over every chunk individually for obvious reasons
+                // (though now we need some extra calcs up front).
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
+                var localPos = gridEnt.Transform.InvWorldMatrix.Transform(worldPos);
 
+                var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
+                var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
+
+                if (!mapGrid.HasChunk(chunkIndices)) continue;
                 if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
 
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+                // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.
+                var chunk = mapGrid.GetChunk(chunkIndices);
+                var id = gridFixtureSystem.GetChunkId((MapChunk) chunk);
+                var fixture = body.GetFixture(id);
 
-                // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
-                foreach (var fixture in body.Fixtures)
+                if (fixture == null) continue;
+
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    // TODO: Use CollisionManager once it's done.
+                    if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
                     {
-                        // TODO: Need TestPoint from Box2D
-                        if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
-                        {
-                            grid = mapGrid;
-                            return true;
-                        }
+                        grid = mapGrid;
+                        return true;
                     }
                 }
             }

@@ -229,7 +229,7 @@ namespace Robust.Shared.Physics
 
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
-            var contactManager = _physicsSystem.Maps[mapId].ContactManager;
+            var contactManager = _mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().ContactManager;
 
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
@@ -509,7 +509,7 @@ namespace Robust.Shared.Physics
 
                 if (fixture == fixtureA || fixture == fixtureB)
                 {
-                    body.PhysicsMap.ContactManager.Destroy(contact);
+                    body.PhysicsMap?.ContactManager.Destroy(contact);
                 }
             }
 

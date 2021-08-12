@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Robust.Server.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -34,6 +35,12 @@ namespace Robust.Server.GameObjects
             var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
             collideComp.CanCollide = true;
             collideComp.BodyType = BodyType.Static;
+        }
+
+        protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        {
+            if (eventArgs.Map == MapId.Nullspace) return;
+            MapManager.GetMapEntity(eventArgs.Map).AddComponent<PhysicsMapComponent>();
         }
 
         /// <inheritdoc />

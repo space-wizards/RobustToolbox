@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -7,6 +8,7 @@ using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -17,7 +19,7 @@ namespace Robust.Client.Map
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         private Texture? _tileTextureAtlas;
-        
+
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
         private readonly Dictionary<ushort, Box2> _tileRegions = new();
@@ -61,7 +63,7 @@ namespace Robust.Client.Map
                 var row = i / dimensionX;
 
                 Image<Rgba32> image;
-                using (var stream = _resourceCache.ContentFileRead($"/Textures/Constructible/Tiles/{def.SpriteName}.png"))
+                using (var stream = _resourceCache.ContentFileRead(new ResourcePath(def.Path) / $"{def.SpriteName}.png"))
                 {
                     image = Image.Load<Rgba32>(stream);
                 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
@@ -149,11 +149,6 @@ namespace Robust.Client.GameStates
                 {
                     Logger.DebugS("net.state", $"Applying State:  ext={curState!.Extrapolated}, cTick={_timing.CurTick}, fSeq={curState.FromSequence}, tSeq={curState.ToSequence}, buf={_stateBuffer.Count}");
                 }
-
-                if (!curState!.Extrapolated)
-                {
-                    UpdateFullRep(curState);
-                }
             }
 
             var cState = curState!;
@@ -162,8 +157,10 @@ namespace Robust.Client.GameStates
             return applyNextState;
         }
 
-        private void UpdateFullRep(GameState state)
+        public void UpdateFullRep(GameState state)
         {
+            // Logger.Debug($"UPDATE FULL REP: {string.Join(", ", state.EntityStates?.Select(e => e.Uid) ?? Enumerable.Empty<EntityUid>())}");
+
             if (state.FromSequence == GameTick.Zero)
             {
                 // Full state.
@@ -198,14 +195,10 @@ namespace Robust.Client.GameStates
                             {
                                 compData.Remove(change.NetID);
                             }
-                        }
-                    }
-
-                    if (entityState.ComponentStates != null)
-                    {
-                        foreach (var compState in entityState.ComponentStates)
-                        {
-                            compData[compState.NetID] = compState;
+                            else if (change.State is not null)
+                            {
+                                compData[change.NetID] = change.State;
+                            }
                         }
                     }
                 }

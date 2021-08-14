@@ -30,6 +30,11 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
+        protected EntitySystem()
+        {
+            Subs = new Subscriptions(this);
+        }
+
         /// <inheritdoc />
         public virtual void Initialize() { }
 
@@ -89,6 +94,11 @@ namespace Robust.Shared.GameObjects
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent : EntityEventArgs
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+        }
+
+        protected void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true)
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }

@@ -49,7 +49,11 @@ namespace Robust.Client.Console
             NetManager.RegisterNetMessage<MsgConCmdAck>(HandleConCmdAck);
             NetManager.RegisterNetMessage<MsgConCmd>(ProcessCommand);
 
-            Reset();
+            _requestedCommands = false;
+            NetManager.Connected += OnNetworkConnected;
+
+            LoadConsoleCommands();
+            SendServerCommandRequest();
             LogManager.RootSawmill.AddHandler(new DebugConsoleLogHandler(this));
         }
 
@@ -59,17 +63,6 @@ namespace Robust.Client.Console
             LogManager.GetSawmill(SawmillName).Info($"SERVER:{text}");
 
             ExecuteCommand(null, text);
-        }
-
-        /// <inheritdoc />
-        public void Reset()
-        {
-            AvailableCommands.Clear();
-            _requestedCommands = false;
-            NetManager.Connected += OnNetworkConnected;
-
-            LoadConsoleCommands();
-            SendServerCommandRequest();
         }
 
         /// <inheritdoc />
@@ -90,6 +83,8 @@ namespace Robust.Client.Console
             OutputText(text, true, true);
         }
 
+        public override event ConAnyCommandCallback? AnyCommandExecuted;
+
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
@@ -97,7 +92,7 @@ namespace Robust.Client.Console
                 return;
 
             // echo the command locally
-            WriteError(null, "> " + command);
+            WriteLine(null, "> " + command);
 
             //Commands are processed locally and then sent to the server to be processed there again.
             var args = new List<string>();
@@ -110,7 +105,11 @@ namespace Robust.Client.Console
             {
                 var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
-                command1.Execute(new ConsoleShell(this, null), command, args.ToArray());
+                var shell = new ConsoleShell(this, null);
+                var cmdArgs = args.ToArray();
+
+                AnyCommandExecuted?.Invoke(shell, commandName, command, cmdArgs);
+                command1.Execute(shell, command, cmdArgs);
             }
             else
                 WriteError(null, "Unknown command: " + commandName);
@@ -142,6 +141,9 @@ namespace Robust.Client.Console
         private void OutputText(string text, bool local, bool error)
         {
             AddString?.Invoke(this, new AddStringArgs(text, local, error));
+
+            var level = error ? LogLevel.Warning : LogLevel.Info;
+            Logger.LogS(level, "CON", text);
         }
 
         private void OnNetworkConnected(object? sender, NetChannelArgs netChannelArgs)

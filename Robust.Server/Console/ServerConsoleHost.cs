@@ -17,6 +17,8 @@ namespace Robust.Server.Console
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
 
+        public override event ConAnyCommandCallback? AnyCommandExecuted;
+
         /// <inheritdoc />
         public override void ExecuteCommand(ICommonSession? session, string command)
         {
@@ -87,20 +89,22 @@ namespace Robust.Server.Console
 
                 if (AvailableCommands.TryGetValue(cmdName, out var conCmd)) // command registered
                 {
+                    args.RemoveAt(0);
+                    var cmdArgs = args.ToArray();
                     if (shell.Player != null) // remote client
                     {
                         if (_groupController.CanCommand((IPlayerSession) shell.Player, cmdName)) // client has permission
                         {
-                            args.RemoveAt(0);
-                            conCmd.Execute(shell, command, args.ToArray());
+                            AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
+                            conCmd.Execute(shell, command, cmdArgs);
                         }
                         else
                             shell.WriteError($"Unknown command: '{cmdName}'");
                     }
                     else // system console
                     {
-                        args.RemoveAt(0);
-                        conCmd.Execute(shell, command, args.ToArray());
+                        AnyCommandExecuted?.Invoke(shell, cmdName, command, cmdArgs);
+                        conCmd.Execute(shell, command, cmdArgs);
                     }
                 }
                 else

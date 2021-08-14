@@ -51,6 +51,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             componentFactory.RegisterClass<BaseComponent>();
             componentFactory.RegisterClass<InheritorComponent>();
             componentFactory.RegisterClass<FinalComponent>();
+            componentFactory.GenerateNetIds();
 
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
             serializationManager.Initialize();

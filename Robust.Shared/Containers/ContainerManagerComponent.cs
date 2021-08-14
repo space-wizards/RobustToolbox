@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -17,20 +18,17 @@ namespace Robust.Shared.Containers
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
+    [NetworkedComponent()]
     public class ContainerManagerComponent : Component, IContainerManager
     {
-        [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
         [ViewVariables]
         [DataField("containers")]
-        private Dictionary<string, IContainer> _containers = new();
+        public Dictionary<string, IContainer> Containers = new();
 
         /// <inheritdoc />
         public sealed override string Name => "ContainerContainer";
-
-        /// <inheritdoc />
-        public sealed override uint? NetID => NetIDs.CONTAINER_MANAGER;
 
         /// <inheritdoc />
         protected override void OnRemove()
@@ -38,12 +36,12 @@ namespace Robust.Shared.Containers
             base.OnRemove();
 
             // IContianer.Shutdown modifies the _containers collection
-            foreach (var container in _containers.Values.ToArray())
+            foreach (var container in Containers.Values.ToArray())
             {
                 container.Shutdown();
             }
 
-            _containers.Clear();
+            Containers.Clear();
         }
 
         /// <inheritdoc />
@@ -51,7 +49,7 @@ namespace Robust.Shared.Containers
         {
             base.Initialize();
 
-            foreach (var container in _containers)
+            foreach (var container in Containers)
             {
                 var baseContainer = (BaseContainer)container.Value;
                 baseContainer.Manager = this;
@@ -60,92 +58,12 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (!(curState is ContainerManagerComponentState cast))
-                return;
-
-            // Delete now-gone containers.
-            List<string>? toDelete = null;
-            foreach (var (id, container) in _containers)
-            {
-                if (!cast.ContainerSet.Any(data => data.Id == id))
-                {
-                    container.Shutdown();
-                    toDelete ??= new List<string>();
-                    toDelete.Add(id);
-                }
-            }
-
-            if (toDelete != null)
-            {
-                foreach (var dead in toDelete)
-                {
-                    _containers.Remove(dead);
-                }
-            }
-
-            // Add new containers and update existing contents.
-
-            foreach (var (containerType, id, showEnts, occludesLight, entityUids) in cast.ContainerSet)
-            {
-                if (!_containers.TryGetValue(id, out var container))
-                {
-                    container = ContainerFactory(containerType, id);
-                    _containers.Add(id, container);
-                }
-
-                // sync show flag
-                container.ShowContents = showEnts;
-                container.OccludesLight = occludesLight;
-
-                // Remove gone entities.
-                List<IEntity>? toRemove = null;
-                foreach (var entity in container.ContainedEntities)
-                {
-                    if (!entityUids.Contains(entity.Uid))
-                    {
-                        toRemove ??= new List<IEntity>();
-                        toRemove.Add(entity);
-                    }
-                }
-
-                if (toRemove != null)
-                {
-                    foreach (var goner in toRemove)
-                    {
-                        container.Remove(goner);
-                    }
-                }
-
-                // Add new entities.
-                foreach (var uid in entityUids)
-                {
-                    var entity = Owner.EntityManager.GetEntity(uid);
-
-                    if (!container.ContainedEntities.Contains(entity)) container.Insert(entity);
-                }
-            }
-        }
-
-        private IContainer ContainerFactory(string containerType, string id)
-        {
-            var type = _serializer.FindSerializedType(typeof(IContainer), containerType);
-            if (type is null) throw new ArgumentException($"Container of type {containerType} for id {id} cannot be found.");
-
-            var newContainer = _dynFactory.CreateInstanceUnchecked<BaseContainer>(type);
-            newContainer.ID = id;
-            newContainer.Manager = this;
-            return newContainer;
-        }
-
-        /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
             // naive implementation that just sends the full state of the component
             List<ContainerManagerComponentState.ContainerData> containerSet = new();
 
-            foreach (var container in _containers.Values)
+            foreach (var container in Containers.Values)
             {
                 var uidArr = new EntityUid[container.ContainedEntities.Count];
 
@@ -172,19 +90,19 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public IContainer GetContainer(string id)
         {
-            return _containers[id];
+            return Containers[id];
         }
 
         /// <inheritdoc />
         public bool HasContainer(string id)
         {
-            return _containers.ContainsKey(id);
+            return Containers.ContainsKey(id);
         }
 
         /// <inheritdoc />
         public bool TryGetContainer(string id, [NotNullWhen(true)] out IContainer? container)
         {
-            var ret = _containers.TryGetValue(id, out var cont);
+            var ret = Containers.TryGetValue(id, out var cont);
             container = cont!;
             return ret;
         }
@@ -192,7 +110,7 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
-            foreach (var contain in _containers.Values)
+            foreach (var contain in Containers.Values)
             {
                 if (!contain.Deleted && contain.Contains(entity))
                 {
@@ -208,7 +126,7 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public bool ContainsEntity(IEntity entity)
         {
-            foreach (var container in _containers.Values)
+            foreach (var container in Containers.Values)
             {
                 if (!container.Deleted && container.Contains(entity)) return true;
             }
@@ -219,7 +137,7 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public void ForceRemove(IEntity entity)
         {
-            foreach (var container in _containers.Values)
+            foreach (var container in Containers.Values)
             {
                 if (container.Contains(entity)) container.ForceRemove(entity);
             }
@@ -228,13 +146,13 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public void InternalContainerShutdown(IContainer container)
         {
-            _containers.Remove(container.ID);
+            Containers.Remove(container.ID);
         }
 
         /// <inheritdoc />
         public bool Remove(IEntity entity)
         {
-            foreach (var containers in _containers.Values)
+            foreach (var containers in Containers.Values)
             {
                 if (containers.Contains(entity)) return containers.Remove(entity);
             }
@@ -248,7 +166,7 @@ namespace Robust.Shared.Containers
             base.Shutdown();
 
             // On shutdown we won't get to process remove events in the containers so this has to be manually done.
-            foreach (var container in _containers.Values)
+            foreach (var container in Containers.Values)
             {
                 foreach (var containerEntity in container.ContainedEntities)
                 {
@@ -266,7 +184,7 @@ namespace Robust.Shared.Containers
             container.ID = id;
             container.Manager = this;
 
-            _containers[id] = container;
+            Containers[id] = container;
             Dirty();
             return container;
         }
@@ -281,7 +199,7 @@ namespace Robust.Shared.Containers
         {
             public List<ContainerData> ContainerSet;
 
-            public ContainerManagerComponentState(List<ContainerData> containers) : base(NetIDs.CONTAINER_MANAGER)
+            public ContainerManagerComponentState(List<ContainerData> containers)
             {
                 ContainerSet = containers;
             }
@@ -367,7 +285,7 @@ namespace Robust.Shared.Containers
 
             public AllContainersEnumerator(ContainerManagerComponent manager)
             {
-                _enumerator = manager._containers.Values.GetEnumerator();
+                _enumerator = manager.Containers.Values.GetEnumerator();
                 Current = default;
             }
 

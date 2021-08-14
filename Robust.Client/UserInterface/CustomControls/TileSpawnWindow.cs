@@ -2,12 +2,15 @@
 using Robust.Shared.Enums;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
@@ -32,9 +35,15 @@ namespace Robust.Client.UserInterface.CustomControls
             _placementManager = placementManager;
             _resourceCache = resourceCache;
 
-            var vBox = new VBoxContainer();
+            var vBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical
+            };
             Contents.AddChild(vBox);
-            var hBox = new HBoxContainer();
+            var hBox = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Horizontal
+            };
             vBox.AddChild(hBox);
             SearchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
             SearchBar.OnTextChanged += OnSearchBarTextChanged;
@@ -105,7 +114,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 Texture? texture = null;
                 if (!string.IsNullOrEmpty(entry.SpriteName))
                 {
-                    texture = _resourceCache.GetResource<TextureResource>($"/Textures/Constructible/Tiles/{entry.SpriteName}.png");
+                    texture = _resourceCache.GetResource<TextureResource>(new ResourcePath(entry.Path) / $"{entry.SpriteName}.png");
                 }
                 TileList.AddItem(entry.DisplayName, texture);
             }

@@ -14,12 +14,13 @@ namespace Robust.Client.UserInterface.Controls
         public Label Label { get; }
         public TextureRect TextureRect { get; }
 
-        public CheckBox() : base()
+        public CheckBox()
         {
             ToggleMode = true;
 
-            var hBox = new HBoxContainer
+            var hBox = new BoxContainer
             {
+                Orientation = BoxContainer.LayoutOrientation.Horizontal,
                 StyleClasses = { StyleClassCheckBox },
             };
             AddChild(hBox);

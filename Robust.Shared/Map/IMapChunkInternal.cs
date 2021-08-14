@@ -20,10 +20,5 @@ namespace Robust.Shared.Map
         /// The last game simulation tick that an anchored entity on this chunk was modified.
         /// </summary>
         GameTick LastAnchoredModifiedTick { get; set; }
-
-        /// <summary>
-        /// The physical collision boxes of this chunk.
-        /// </summary>
-        IEnumerable<Box2> CollisionBoxes { get; }
     }
 }

@@ -61,7 +61,7 @@ namespace Robust.Shared.Network
 
             _callback = callback;
             _updateCallback = updateCallback;
-            _network.RegisterNetMessage<MsgStringTableEntries>(ReceiveEntries, NetMessageAccept.Client);
+            _network.RegisterNetMessage<MsgStringTableEntries>(ReceiveEntries, NetMessageAccept.Client | NetMessageAccept.Handshake);
 
             Reset();
         }

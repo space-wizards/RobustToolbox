@@ -30,6 +30,8 @@ namespace Robust.Shared.Console
         /// <inheritdoc />
         public IReadOnlyDictionary<string, IConsoleCommand> RegisteredCommands => AvailableCommands;
 
+        public abstract event ConAnyCommandCallback? AnyCommandExecuted;
+
         protected ConsoleHost()
         {
             LocalShell = new ConsoleShell(this, null);

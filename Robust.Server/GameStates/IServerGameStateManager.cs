@@ -17,5 +17,6 @@ namespace Robust.Server.GameStates
 
         bool PvsEnabled { get; set; }
         float PvsRange { get; set; }
+        void SetTransformNetId(ushort netId);
     }
 }

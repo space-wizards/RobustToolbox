@@ -82,12 +82,7 @@ namespace Robust.Shared.Physics.Collision
 
         /*
          * Farseer had this as a static class with a ThreadStatic DistanceInput
-         *
-         * I also had to add Point initializers everywhere for the manifold as I just used an array but
-         * should also profile just using FixedArray2 / FixedArray3
          */
-
-        private DistanceInput _input = new();
 
         /// <summary>
         /// Test overlap between the two shapes.
@@ -102,15 +97,16 @@ namespace Robust.Shared.Physics.Collision
         bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
-            _input.ProxyA.Set(shapeA, indexA);
-            _input.ProxyB.Set(shapeB, indexB);
-            _input.TransformA = xfA;
-            _input.TransformB = xfB;
-            _input.UseRadii = true;
+            // TODO: Make this a struct.
+            var input = new DistanceInput();
 
-            SimplexCache cache;
-            DistanceOutput output;
-            DistanceManager.ComputeDistance(out output, out cache, _input);
+            input.ProxyA.Set(shapeA, indexA);
+            input.ProxyB.Set(shapeB, indexB);
+            input.TransformA = xfA;
+            input.TransformB = xfB;
+            input.UseRadii = true;
+
+            DistanceManager.ComputeDistance(out var output, out _, input);
 
             return output.Distance < 10.0f * float.Epsilon;
         }
@@ -177,8 +173,7 @@ namespace Robust.Shared.Physics.Collision
             manifold.PointCount = 0;
 
             // Compute circle in frame of edge
-            // TODO: Circle Position
-            Vector2 Q = Transform.MulT(transformA, Transform.Mul(transformB, Vector2.Zero));
+            Vector2 Q = Transform.MulT(transformA, Transform.Mul(transformB, circleB.Position));
 
             Vector2 A = edgeA.Vertex1, B = edgeA.Vertex2;
             Vector2 e = B - A;
@@ -227,13 +222,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
-                ManifoldPoint mp = new ManifoldPoint
-                {
-                    Id = {Key = 0, Features = cf},
-                    //LocalPoint = circleB.Position
-                    LocalPoint = Vector2.Zero
-                };
-                manifold.Points[0] = mp;
+                ref var mp = ref manifold.Points[0];
+                mp.Id.Key = 0;
+                mp.Id.Features = cf;
+                mp.LocalPoint = circleB.Position;
                 return;
             }
 
@@ -269,13 +261,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.Type = ManifoldType.Circles;
                 manifold.LocalNormal = Vector2.Zero;
                 manifold.LocalPoint = P;
-                ManifoldPoint mp = new ManifoldPoint
-                {
-                    Id = {Key = 0, Features = cf},
-                    //LocalPoint = circleB.Position
-                    LocalPoint = Vector2.Zero
-                };
-                manifold.Points[0] = mp;
+                ref var mp = ref manifold.Points[0];
+                mp.Id.Key = 0;
+                mp.Id.Features = cf;
+                mp.LocalPoint = circleB.Position;
                 return;
             }
 
@@ -304,14 +293,10 @@ namespace Robust.Shared.Physics.Collision
             manifold.Type = ManifoldType.FaceA;
             manifold.LocalNormal = n;
             manifold.LocalPoint = A;
-            ManifoldPoint mp2 = new ManifoldPoint
-            {
-                Id = {Key = 0, Features = cf},
-                //LocalPoint = circleB.Position
-                LocalPoint = Vector2.Zero
-            };
-
-            manifold.Points[0] = mp2;
+            ref var mp2 = ref manifold.Points[0];
+            mp2.Id.Key = 0;
+            mp2.Id.Features = cf;
+            mp2.LocalPoint = circleB.Position;
         }
 
         public void CollideCircles(ref Manifold manifold, PhysShapeCircle circleA, in Transform xfA,
@@ -320,9 +305,8 @@ namespace Robust.Shared.Physics.Collision
         {
             manifold.PointCount = 0;
 
-            // TODO Circle / shape offsets
-            Vector2 pA = Transform.Mul(xfA, Vector2.Zero);
-            Vector2 pB = Transform.Mul(xfB, Vector2.Zero);
+            Vector2 pA = Transform.Mul(xfA, circleA.Position);
+            Vector2 pB = Transform.Mul(xfB, circleB.Position);
 
             Vector2 d = pB - pA;
             float distSqr = Vector2.Dot(d, d);
@@ -333,16 +317,14 @@ namespace Robust.Shared.Physics.Collision
             }
 
             manifold.Type = ManifoldType.Circles;
-            manifold.LocalPoint = Vector2.Zero; // Also here
+            manifold.LocalPoint = circleA.Position;
             manifold.LocalNormal = Vector2.Zero;
             manifold.PointCount = 1;
 
-            ManifoldPoint p0 = manifold.Points[0];
+            ref var p0 = ref manifold.Points[0];
 
             p0.LocalPoint = Vector2.Zero; // Also here
             p0.Id.Key = 0;
-
-            manifold.Points[0] = p0;
         }
 
         /// <summary>
@@ -364,6 +346,7 @@ namespace Robust.Shared.Physics.Collision
         private class EPCollider
         {
             private float _polygonRadius;
+            private float _angularSlop;
 
             private TempPolygon _polygonB;
 
@@ -379,6 +362,7 @@ namespace Robust.Shared.Physics.Collision
             internal EPCollider(IConfigurationManager configManager)
             {
                 _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
 
@@ -397,8 +381,7 @@ namespace Robust.Shared.Physics.Collision
 
                 _xf = Transform.MulT(xfA, xfB);
 
-                // TODO: Centroid
-                _centroidB = Transform.Mul(_xf, Vector2.Zero);
+                _centroidB = Transform.Mul(_xf, polygonB.Centroid);
 
                 _v0 = edgeA.Vertex0;
                 _v1 = edgeA.Vertex1;
@@ -639,7 +622,7 @@ namespace Robust.Shared.Physics.Collision
                     primaryAxis = edgeAxis;
                 }
 
-                ClipVertex[] ie = new ClipVertex[2];
+                Span<ClipVertex> ie = stackalloc ClipVertex[2];
                 ReferenceFace rf;
                 if (primaryAxis.Type == EPAxisType.EdgeA)
                 {
@@ -661,21 +644,19 @@ namespace Robust.Shared.Physics.Collision
                     int i1 = bestIndex;
                     int i2 = i1 + 1 < _polygonB.Count ? i1 + 1 : 0;
 
-                    ClipVertex c0 = ie[0];
+                    ref var c0 = ref ie[0];
                     c0.V = _polygonB.Vertices[i1];
                     c0.ID.Features.IndexA = 0;
                     c0.ID.Features.IndexB = (byte) i1;
                     c0.ID.Features.TypeA = (byte) ContactFeatureType.Face;
                     c0.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
-                    ie[0] = c0;
 
-                    ClipVertex c1 = ie[1];
+                    ref var c1 = ref ie[1];
                     c1.V = _polygonB.Vertices[i2];
                     c1.ID.Features.IndexA = 0;
                     c1.ID.Features.IndexB = (byte) i2;
                     c1.ID.Features.TypeA = (byte) ContactFeatureType.Face;
                     c1.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
-                    ie[1] = c1;
 
                     if (_front)
                     {
@@ -697,21 +678,19 @@ namespace Robust.Shared.Physics.Collision
                 else
                 {
                     manifold.Type = ManifoldType.FaceB;
-                    ClipVertex c0 = ie[0];
+                    ref var c0 = ref ie[0];
                     c0.V = _v1;
                     c0.ID.Features.IndexA = 0;
                     c0.ID.Features.IndexB = (byte) primaryAxis.Index;
                     c0.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
                     c0.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-                    ie[0] = c0;
 
-                    ClipVertex c1 = ie[1];
+                    ref var c1 = ref ie[1];
                     c1.V = _v2;
                     c1.ID.Features.IndexA = 0;
                     c1.ID.Features.IndexB = (byte) primaryAxis.Index;
                     c1.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
                     c1.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-                    ie[1] = c1;
 
                     rf.i1 = primaryAxis.Index;
                     rf.i2 = rf.i1 + 1 < _polygonB.Count ? rf.i1 + 1 : 0;
@@ -727,10 +706,9 @@ namespace Robust.Shared.Physics.Collision
 
                 // Clip incident edge against extruded edge1 side edges.
                 Span<ClipVertex> clipPoints1 = stackalloc ClipVertex[2];
-                int np;
 
                 // Clip to box side 1
-                np = ClipSegmentToLine(clipPoints1, ie, rf.sideNormal1, rf.sideOffset1, rf.i1);
+                var np = ClipSegmentToLine(clipPoints1, ie, rf.sideNormal1, rf.sideOffset1, rf.i1);
 
                 if (np < 2)
                 {
@@ -767,7 +745,7 @@ namespace Robust.Shared.Physics.Collision
 
                     if (separation <= _radius)
                     {
-                        ManifoldPoint cp = manifold.Points[pointCount];
+                        ref var cp = ref manifold.Points[pointCount];
 
                         if (primaryAxis.Type == EPAxisType.EdgeA)
                         {
@@ -783,7 +761,6 @@ namespace Robust.Shared.Physics.Collision
                             cp.Id.Features.IndexB = clipPoints2[i].ID.Features.IndexA;
                         }
 
-                        manifold.Points[pointCount] = cp;
                         ++pointCount;
                     }
                 }
@@ -837,19 +814,17 @@ namespace Robust.Shared.Physics.Collision
                         return axis;
                     }
 
-                    var angularSlop = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop);
-
                     // Adjacency
                     if (Vector2.Dot(n, perp) >= 0.0f)
                     {
-                        if (Vector2.Dot(n - _upperLimit, _normal) < -angularSlop)
+                        if (Vector2.Dot(n - _upperLimit, _normal) < -_angularSlop)
                         {
                             continue;
                         }
                     }
                     else
                     {
-                        if (Vector2.Dot(n - _lowerLimit, _normal) < -angularSlop)
+                        if (Vector2.Dot(n - _lowerLimit, _normal) < -_angularSlop)
                         {
                             continue;
                         }
@@ -881,7 +856,7 @@ namespace Robust.Shared.Physics.Collision
             manifold.PointCount = 0;
 
             // Compute circle position in the frame of the polygon.
-            Vector2 c = Transform.Mul(xfB, Vector2.Zero); // TODO pos
+            Vector2 c = Transform.Mul(xfB, circleB.Position);
             Vector2 cLocal = Transform.MulT(xfA, c);
 
             // Find the min separating edge.
@@ -923,12 +898,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal = polygonA.Normals[normalIndex];
                 manifold.LocalPoint = (v1 + v2) * 0.5f;
 
-                ManifoldPoint p0 = manifold.Points[0];
+                ref var p0 = ref manifold.Points[0];
 
-                p0.LocalPoint = Vector2.Zero; // TODO pos
+                p0.LocalPoint = circleB.Position;
                 p0.Id.Key = 0;
-
-                manifold.Points[0] = p0;
 
                 return;
             }
@@ -955,12 +928,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal.Y = manifold.LocalNormal.Y * factor;
                 manifold.LocalPoint = v1;
 
-                ManifoldPoint p0b = manifold.Points[0];
+                ref var p0b = ref manifold.Points[0];
 
-                p0b.LocalPoint = Vector2.Zero; // TODO pos
+                p0b.LocalPoint = circleB.Position;
                 p0b.Id.Key = 0;
-
-                manifold.Points[0] = p0b;
             }
             else if (u2 <= 0.0f)
             {
@@ -981,12 +952,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal.Y = manifold.LocalNormal.Y * factor;
                 manifold.LocalPoint = v2;
 
-                ManifoldPoint p0c = manifold.Points[0];
+                ref var p0c = ref manifold.Points[0];
 
-                p0c.LocalPoint = Vector2.Zero; // TODO pos
+                p0c.LocalPoint = circleB.Position;
                 p0c.Id.Key = 0;
-
-                manifold.Points[0] = p0c;
             }
             else
             {
@@ -1004,12 +973,10 @@ namespace Robust.Shared.Physics.Collision
                 manifold.LocalNormal = polygonA.Normals[vertIndex1];
                 manifold.LocalPoint = faceCenter;
 
-                ManifoldPoint p0d = manifold.Points[0];
+                ref var p0d = ref manifold.Points[0];
 
-                p0d.LocalPoint = Vector2.Zero; // TODO pos
+                p0d.LocalPoint = circleB.Position;
                 p0d.Id.Key = 0;
-
-                manifold.Points[0] = p0d;
             }
         }
 
@@ -1130,7 +1097,7 @@ namespace Robust.Shared.Physics.Collision
 
                 if (separation <= totalRadius)
                 {
-                    ManifoldPoint cp = manifold.Points[pointCount];
+                    ref var cp = ref manifold.Points[pointCount];
                     cp.LocalPoint = Transform.MulT(xf2, clipPoints2[i].V);
                     cp.Id = clipPoints2[i].ID;
 
@@ -1143,8 +1110,6 @@ namespace Robust.Shared.Physics.Collision
                         cp.Id.Features.TypeA = cf.TypeB;
                         cp.Id.Features.TypeB = cf.TypeA;
                     }
-
-                    manifold.Points[pointCount] = cp;
 
                     pointCount++;
                 }
@@ -1233,9 +1198,9 @@ namespace Robust.Shared.Physics.Collision
             if (distance0 * distance1 < 0.0f)
             {
                 // Find intersection point of edge and plane
-                float interp = distance0 / (distance0 - distance1);
+                var interp = distance0 / (distance0 - distance1);
 
-                ClipVertex cv = vOut[numOut];
+                ref var cv = ref vOut[numOut];
 
                 cv.V.X = v0.V.X + interp * (v1.V.X - v0.V.X);
                 cv.V.Y = v0.V.Y + interp * (v1.V.Y - v0.V.Y);
@@ -1245,8 +1210,6 @@ namespace Robust.Shared.Physics.Collision
                 cv.ID.Features.IndexB = v0.ID.Features.IndexB;
                 cv.ID.Features.TypeA = (byte) ContactFeatureType.Vertex;
                 cv.ID.Features.TypeB = (byte) ContactFeatureType.Face;
-
-                vOut[numOut] = cv;
 
                 ++numOut;
             }
@@ -1305,10 +1268,10 @@ namespace Robust.Shared.Physics.Collision
                 var v1 = Transform.Mul(xf, v1s[i]);
 
                 // Find deepest point for normal i.
-                float si = float.MaxValue;
+                var si = float.MaxValue;
                 for (var j = 0; j < count2; ++j)
                 {
-                    float sij = Vector2.Dot(n, v2s[j] - v1);
+                    var sij = Vector2.Dot(n, v2s[j] - v1);
                     if (sij < si)
                     {
                         si = sij;
@@ -1326,26 +1289,27 @@ namespace Robust.Shared.Physics.Collision
             return maxSeparation;
         }
 
-        private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1,
-            PolygonShape poly2, in Transform xf2)
+        private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1, PolygonShape poly2, in Transform xf2)
         {
             List<Vector2> normals1 = poly1.Normals;
 
-            int count2 = poly2.Vertices.Count;
+            var count2 = poly2.Vertices.Count;
             List<Vector2> vertices2 = poly2.Vertices;
             List<Vector2> normals2 = poly2.Normals;
 
             Debug.Assert(0 <= edge1 && edge1 < poly1.Vertices.Count);
 
             // Get the normal of the reference edge in poly2's frame.
-            Vector2 normal1 = Transform.MulT(xf2.Quaternion2D, Transform.Mul(xf1.Quaternion2D, normals1[edge1]));
+            var normal1 = Transform.MulT(xf2.Quaternion2D, Transform.Mul(xf1.Quaternion2D, normals1[edge1]));
 
             // Find the incident edge on poly2.
-            int index = 0;
-            float minDot = float.MaxValue;
+            var index = 0;
+            var minDot = float.MaxValue;
+
             for (int i = 0; i < count2; ++i)
             {
-                float dot = Vector2.Dot(normal1, normals2[i]);
+                var dot = Vector2.Dot(normal1, normals2[i]);
+
                 if (dot < minDot)
                 {
                     minDot = dot;
@@ -1354,10 +1318,10 @@ namespace Robust.Shared.Physics.Collision
             }
 
             // Build the clip vertices for the incident edge.
-            int i1 = index;
-            int i2 = i1 + 1 < count2 ? i1 + 1 : 0;
+            var i1 = index;
+            var i2 = i1 + 1 < count2 ? i1 + 1 : 0;
 
-            ClipVertex cv0 = c[0];
+            ref var cv0 = ref c[0];
 
             cv0.V = Transform.Mul(xf2, vertices2[i1]);
             cv0.ID.Features.IndexA = (byte) edge1;
@@ -1365,16 +1329,12 @@ namespace Robust.Shared.Physics.Collision
             cv0.ID.Features.TypeA = (byte) ContactFeatureType.Face;
             cv0.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
 
-            c[0] = cv0;
-
-            ClipVertex cv1 = c[1];
+            ref var cv1 = ref c[1];
             cv1.V = Transform.Mul(xf2, vertices2[i2]);
             cv1.ID.Features.IndexA = (byte) edge1;
             cv1.ID.Features.IndexB = (byte) i2;
             cv1.ID.Features.TypeA = (byte) ContactFeatureType.Face;
             cv1.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
-
-            c[1] = cv1;
         }
     }
 

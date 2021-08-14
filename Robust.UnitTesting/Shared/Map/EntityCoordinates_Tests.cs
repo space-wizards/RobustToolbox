@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
@@ -7,6 +7,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -31,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mock = new Mock<IEntitySystemManager>();
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
@@ -44,6 +45,9 @@ namespace Robust.UnitTesting.Shared.Map
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();
+
+            var factory = IoCManager.Resolve<IComponentFactory>();
+            factory.GenerateNetIds();
         }
 
         /// <summary>

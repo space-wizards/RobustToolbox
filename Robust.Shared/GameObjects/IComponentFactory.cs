@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameStates;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.GameObjects
@@ -57,6 +58,16 @@ namespace Robust.Shared.GameObjects
         ///     All IComponent types that are currently registered to this factory.
         /// </summary>
         IEnumerable<Type> AllRegisteredTypes { get; }
+
+        /// <summary>
+        /// The subset of all registered components that are networked, so that they can be
+        /// referenced between the client and the server.
+        /// </summary>
+        /// <remarks>
+        /// This will be null if the network Ids have not been generated yet.
+        /// </remarks>
+        /// <seealso cref="GenerateNetIds"/>
+        IReadOnlyList<IComponentRegistration>? NetworkedComponents { get; }
 
         /// <summary>
         /// Get whether a component is available right now.
@@ -142,7 +153,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component exists with the given id <see cref="netId"/>.
         /// </exception>
-        IComponent GetComponent(uint netId);
+        IComponent GetComponent(ushort netId);
 
         /// <summary>
         ///     Gets the registration belonging to a component, throwing an exception if it does not exist.
@@ -181,7 +192,7 @@ namespace Robust.Shared.GameObjects
         /// <exception cref="UnknownComponentException">
         ///     Thrown if no component with id <see cref="netID"/> exists.
         /// </exception>
-        IComponentRegistration GetRegistration(uint netID);
+        IComponentRegistration GetRegistration(ushort netID);
 
         /// <summary>
         ///     Gets the registration of a component, throwing an exception if
@@ -225,7 +236,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="netID">The network ID corresponding to the component.</param>
         /// <param name="registration">The registration if found, null otherwise.</param>
         /// <returns>true it found, false otherwise.</returns>
-        bool TryGetRegistration(uint netID, [NotNullWhen(true)] out IComponentRegistration? registration);
+        bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out IComponentRegistration? registration);
 
         /// <summary>
         ///     Tries to get the registration of a component.
@@ -241,8 +252,7 @@ namespace Robust.Shared.GameObjects
         void DoAutoRegistrations();
 
         IEnumerable<Type> GetAllRefTypes();
-
-        IEnumerable<uint> GetAllNetIds();
+        void GenerateNetIds();
     }
 
     /// <summary>
@@ -263,18 +273,8 @@ namespace Robust.Shared.GameObjects
         /// ID used to reference the component type across the network.
         /// If null, no network synchronization will be available for this component.
         /// </summary>
-        /// <seealso cref="IComponent.NetID" />
-        uint? NetID { get; }
-
-        /// <summary>
-        /// True if the addition and removal of the component will be synchronized to clients.
-        /// This means that if the server adds or removes the component outside of prototype-based creation,
-        /// the client will update accordingly.
-        /// If false the client will ignore missing components even when the net ID checks out and could be instantiated.
-        /// and the client won't delete the component if no state was sent for it.
-        /// </summary>
-        /// <seealso cref="IComponent.NetworkSynchronizeExistence" />
-        bool NetworkSynchronizeExistence { get; }
+        /// <seealso cref="NetworkedComponentAttribute" />
+        ushort? NetID { get; }
 
         /// <summary>
         /// The type that will be instantiated if this component is created.

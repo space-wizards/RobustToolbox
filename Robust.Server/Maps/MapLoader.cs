@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -362,6 +363,8 @@ namespace Robust.Server.Maps
                 // If we don't, initialization & startup can fail for some entities.
                 AttachMapEntities();
 
+                ApplyGridFixtures();
+
                 // Run Initialize on all components.
                 FinishEntitiesInitialization();
 
@@ -409,7 +412,7 @@ namespace Robust.Server.Maps
                         continue;
                     }
 
-                    foreach (var component in _componentManager.GetNetComponents(entity.Uid))
+                    foreach (var (netId, component) in _componentManager.GetNetComponents(entity.Uid))
                     {
                         var castComp = (Component) component;
 
@@ -432,6 +435,19 @@ namespace Robust.Server.Maps
                         // so the client will have the same data after instantiating it from prototype ID.
                         castComp.ClearTicks();
                     }
+                }
+            }
+
+            /// <summary>
+            /// Go through all of the queued chunks that need updating and make sure their bounds are set.
+            /// </summary>
+            private void ApplyGridFixtures()
+            {
+                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+
+                foreach (var gridId in _mapManager.GetAllGrids())
+                {
+                    gridFixtures.ProcessGrid(gridId.Index);
                 }
             }
 

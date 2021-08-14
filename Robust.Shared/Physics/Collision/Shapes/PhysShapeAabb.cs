@@ -38,6 +38,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private float _radius;
 
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
+
         public ShapeType ShapeType => ShapeType.Aabb;
 
         [DataField("bounds")]
@@ -70,6 +72,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
         }
 
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            return new Box2Rotated(_localBounds.Translated(transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox().Enlarged(_radius);
+        }
+
         /// <inheritdoc />
         public void ApplyState() { }
 
@@ -82,12 +89,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
             handle.SetTransform(m);
             handle.DrawRect(LocalBounds, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         // TODO
         [field: NonSerialized]
         public event Action? OnDataChanged;
+
+        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        {
+            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
+            return bounds.Intersects(worldAABB);
+        }
 
         /// <inheritdoc />
         public Box2 CalculateLocalBounds(Angle rotation)

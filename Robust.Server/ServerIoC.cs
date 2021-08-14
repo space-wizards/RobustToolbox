@@ -19,6 +19,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
@@ -39,10 +40,11 @@ namespace Robust.Server
             IoCManager.Register<IBaseServerInternal, BaseServer>();
             IoCManager.Register<BaseServer, BaseServer>();
             IoCManager.Register<IGameTiming, GameTiming>();
+            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
+            IoCManager.Register<IConsoleHost, ServerConsoleHost>();
+            IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IComponentFactory, ServerComponentFactory>();
             IoCManager.Register<IConGroupController, ConGroupController>();
-            IoCManager.Register<IServerConsoleHost, ServerConsoleHost>();
-            IoCManager.Register<IConsoleHost, ServerConsoleHost>();
             IoCManager.Register<IMapManager, ServerMapManager>();
             IoCManager.Register<IMapManagerInternal, ServerMapManager>();
             IoCManager.Register<IServerMapManager, ServerMapManager>();
@@ -55,7 +57,6 @@ namespace Robust.Server
             IoCManager.Register<IPlayerManager, PlayerManager>();
             IoCManager.Register<ISharedPlayerManager, PlayerManager>();
             IoCManager.Register<IPrototypeManager, ServerPrototypeManager>();
-            IoCManager.Register<IReflectionManager, ServerReflectionManager>();
             IoCManager.Register<IResourceManager, ResourceManager>();
             IoCManager.Register<IResourceManagerInternal, ResourceManager>();
             IoCManager.Register<IServerEntityManager, ServerEntityManager>();
@@ -71,6 +72,7 @@ namespace Robust.Server
             IoCManager.Register<IScriptHost, ScriptHost>();
             IoCManager.Register<IMetricsManager, MetricsManager>();
             IoCManager.Register<IAuthManager, AuthManager>();
+            IoCManager.Register<IPhysicsManager, PhysicsManager>();
         }
     }
 }

@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -16,6 +18,8 @@ namespace Robust.Shared.Map
         /// </summary>
         private const int SnapCellStartingCapacity = 1;
 
+        public GridId GridId => _grid.Index;
+
         private readonly IMapGridInternal _grid;
         private readonly Vector2i _gridIndices;
 
@@ -23,15 +27,14 @@ namespace Robust.Shared.Map
         private readonly SnapGridCell[,] _snapGrid;
 
         private Box2i _cachedBounds;
-        private IList<Box2> _colBoxes;
+
+        public Fixture? Fixture { get; set; }
 
         /// <inheritdoc />
         public GameTick LastTileModifiedTick { get; private set; }
 
         /// <inheritdoc />
         public GameTick LastAnchoredModifiedTick { get; set; }
-
-        public IEnumerable<Box2> CollisionBoxes => _colBoxes;
 
         /// <summary>
         ///     Constructs an instance of a MapGrid chunk.
@@ -49,7 +52,6 @@ namespace Robust.Shared.Map
 
             _tiles = new Tile[ChunkSize, ChunkSize];
             _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
-            _colBoxes = new List<Box2>(0);
         }
 
         /// <inheritdoc />
@@ -252,8 +254,8 @@ namespace Robust.Shared.Map
         public void RegenerateCollision()
         {
             // generate collision rects
-            GridChunkPartition.PartitionChunk(this, ref _colBoxes, out _cachedBounds);
-            _grid.NotifyChunkCollisionRegenerated();
+            GridChunkPartition.PartitionChunk(this, out _cachedBounds);
+            _grid.NotifyChunkCollisionRegenerated(this);
         }
 
         /// <inheritdoc />
@@ -262,31 +264,34 @@ namespace Robust.Shared.Map
             return _cachedBounds;
         }
 
-        public Box2 CalcWorldBounds()
+        public Box2Rotated CalcWorldBounds(Vector2? gridPos = null, Angle? gridRot = null)
         {
-            var worldPos = _grid.WorldPosition + Indices * _grid.TileSize * ChunkSize;
+            gridRot ??= _grid.WorldRotation;
+            gridPos ??= _grid.WorldPosition;
+            var worldPos = gridPos.Value + gridRot.Value.RotateVec(Indices * _grid.TileSize * ChunkSize);
+
             var localBounds = CalcLocalBounds();
             var ts = _grid.TileSize;
 
-            var scaledLocalBounds = new Box2(
+            var scaledLocalBounds = new Box2Rotated(new Box2(
                 localBounds.Left * ts,
                 localBounds.Bottom * ts,
                 localBounds.Right * ts,
-                localBounds.Top * ts);
+                localBounds.Top * ts).Translated(worldPos), gridRot.Value, worldPos);
 
-            return scaledLocalBounds.Translated(worldPos);
+            return scaledLocalBounds;
+        }
+
+        public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
+        {
+            var bounds = CalcWorldBounds(gridPos, gridRot);
+            return bounds.CalcBoundingBox();
         }
 
         /// <inheritdoc />
         public bool CollidesWithChunk(Vector2i localIndices)
         {
             return _tiles[localIndices.X, localIndices.Y].TypeId != Tile.Empty.TypeId;
-        }
-
-        /// <inheritdoc />
-        public bool CollidesWithChunk(Box2 pos)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
@@ -298,6 +303,16 @@ namespace Robust.Shared.Map
         private struct SnapGridCell
         {
             public List<EntityUid>? Center;
+        }
+    }
+
+    internal sealed class RegenerateChunkCollisionEvent : EntityEventArgs
+    {
+        public MapChunk Chunk { get; }
+
+        public RegenerateChunkCollisionEvent(MapChunk chunk)
+        {
+            Chunk = chunk;
         }
     }
 }

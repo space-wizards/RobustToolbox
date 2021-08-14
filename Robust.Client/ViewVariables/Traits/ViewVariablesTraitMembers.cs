@@ -5,6 +5,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Traits
 {
@@ -13,12 +14,16 @@ namespace Robust.Client.ViewVariables.Traits
         private readonly IViewVariablesManagerInternal _vvm;
         private readonly IRobustSerializer _robustSerializer;
 
-        private VBoxContainer _memberList = default!;
+        private BoxContainer _memberList = default!;
 
         public override void Initialize(ViewVariablesInstanceObject instance)
         {
             base.Initialize(instance);
-            _memberList = new VBoxContainer {SeparationOverride = 0};
+            _memberList = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                SeparationOverride = 0
+            };
             instance.AddTab("Members", _memberList);
         }
 

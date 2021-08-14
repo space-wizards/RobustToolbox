@@ -1,10 +1,16 @@
-﻿namespace Robust.Client.UserInterface.Controls
+﻿using System;
+
+namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
     ///     Container that lays its children out horizontally: from left to right.
     /// </summary>
+    [Obsolete("Use BoxContainer and set Orientation instead")]
     public class HBoxContainer : BoxContainer
     {
-        private protected override bool Vertical => false;
+        public HBoxContainer()
+        {
+            Orientation = LayoutOrientation.Horizontal;
+        }
     }
 }

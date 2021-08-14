@@ -13,10 +13,11 @@ using Microsoft.CodeAnalysis.Text;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Client.ViewVariables;
 using Robust.Shared.IoC;
-using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
+using SixLabors.ImageSharp;
+using Color = Robust.Shared.Maths.Color;
 
 #nullable enable
 
@@ -116,7 +117,7 @@ namespace Robust.Client.Console
             }
             else
             {
-                var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
+                var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager).AddReferences(typeof(Image).Assembly);
                 newScript = CSharpScript.Create(code, options, typeof(ScriptGlobals));
             }
 

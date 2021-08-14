@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var component in ComponentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, component) in ComponentManager.GetNetComponents(entity.Uid))
                 {
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
@@ -143,13 +143,15 @@ namespace Robust.Server.GameObjects
             if (_networkManager.IsClient)
                 return;
 
-            if (!component.NetID.HasValue)
+            var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
+
+            if (!netId.HasValue)
                 throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
 
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;
             msg.EntityUid = entity.Uid;
-            msg.NetId = component.NetID.Value;
+            msg.NetId = netId.Value;
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;
 
@@ -222,20 +224,32 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            switch (message.Type)
+#if EXCEPTION_TOLERANCE
+            try
+#endif
             {
-                case EntityMessageType.ComponentMessage:
-                    ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
-                    return;
+                switch (message.Type)
+                {
+                    case EntityMessageType.ComponentMessage:
+                        ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
+                        return;
 
-                case EntityMessageType.SystemMessage:
-                    var msg = message.SystemMessage;
-                    var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                    var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
-                    ReceivedSystemMessage?.Invoke(this, msg);
-                    ReceivedSystemMessage?.Invoke(this, sessionMsg);
-                    return;
+                    case EntityMessageType.SystemMessage:
+                        var msg = message.SystemMessage;
+                        var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                        var sessionMsg =
+                            Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
+                        ReceivedSystemMessage?.Invoke(this, msg);
+                        ReceivedSystemMessage?.Invoke(this, sessionMsg);
+                        return;
+                }
             }
+#if EXCEPTION_TOLERANCE
+            catch (Exception e)
+            {
+                Logger.ErrorS("net.ent", $"Caught exception while dispatching {message.Type}: {e}");
+            }
+#endif
         }
 
         private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)

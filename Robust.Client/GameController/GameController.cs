@@ -75,8 +75,6 @@ namespace Robust.Client
         public GameControllerOptions Options { get; private set; } = new();
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
-        public bool LoadConfigAndUserData { get; set; } = true;
-
         public void SetCommandLineArgs(CommandLineArgs args)
         {
             _commandLineArgs = args;
@@ -95,7 +93,7 @@ namespace Robust.Client
             _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), Options.ContentModulePrefix))
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
             {
                 Logger.Fatal("Errors while loading content assemblies.");
                 return false;
@@ -196,8 +194,9 @@ namespace Robust.Client
             return true;
         }
 
-        internal bool StartupSystemSplash(Func<ILogHandler>? logHandlerFactory)
+        internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
         {
+            Options = options;
             ReadInitialLaunchState();
 
             SetupLogging(_logManager, logHandlerFactory ?? (() => new ConsoleLogHandler()));
@@ -234,7 +233,7 @@ namespace Robust.Client
             _configurationManager.LoadCVarsFromAssembly(typeof(GameController).Assembly); // Client
             _configurationManager.LoadCVarsFromAssembly(typeof(IConfigurationManager).Assembly); // Shared
 
-            if (LoadConfigAndUserData)
+            if (Options.LoadConfigAndUserData)
             {
                 var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
                 if (File.Exists(configFile))
@@ -258,13 +257,13 @@ namespace Robust.Client
 
             ProfileOptSetup.Setup(_configurationManager);
 
-            _resourceCache.Initialize(LoadConfigAndUserData ? userDataDir : null);
+            _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
                 ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
 
-            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
-                _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
+            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory, Options.AssemblyDirectory,
+                Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
             if (_loaderArgs != null)
             {

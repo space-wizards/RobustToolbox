@@ -365,7 +365,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath);
+                        Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'.", rsiPath);
                     }
                 }
             }
@@ -1212,9 +1212,9 @@ namespace Robust.Client.GameObjects
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
 
         // Lobby SpriteView rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, Angle worldRotation, Direction? overrideDirection = null)
+        internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
         {
-            RenderInternal(drawingHandle, worldRotation, Vector2.Zero, overrideDirection);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection);
         }
 
         [DataField("noRot")]
@@ -1239,7 +1239,7 @@ namespace Robust.Client.GameObjects
         public bool EnableDirectionOverride { get => _enableOverrideDirection; set => _enableOverrideDirection = value; }
 
         // Sprite rendering path
-        internal void Render(DrawingHandleWorld drawingHandle, in Angle worldRotation, in Vector2 worldPosition)
+        internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, in Angle worldRotation, in Vector2 worldPosition)
         {
             Direction? overrideDir = null;
             if (_enableOverrideDirection)
@@ -1247,16 +1247,18 @@ namespace Robust.Client.GameObjects
                 overrideDir = _overrideDirection;
             }
 
-            RenderInternal(drawingHandle, worldRotation, worldPosition, overrideDir);
+            RenderInternal(drawingHandle, eyeRotation, worldRotation, worldPosition, overrideDir);
         }
 
-        private void CalcModelMatrix(int numDirs, Angle worldRotation, Vector2 worldPosition, out Matrix3 modelMatrix)
+        private void CalcModelMatrix(int numDirs, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, out Matrix3 modelMatrix)
         {
             Angle angle;
 
             if (_screenLock)
             {
-                angle = Angle.Zero;
+                // Negate the eye rotation in the model matrix, so that later when the view matrix is applied the
+                // sprite will be locked upright to the screen
+                angle = new Angle(-eyeRotation.Theta);
             }
             else
             {
@@ -1267,7 +1269,7 @@ namespace Robust.Client.GameObjects
             modelMatrix = Matrix3.CreateTransform(in worldPosition, in sWorldRotation);
         }
 
-        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
+        private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
             var localMatrix = GetLocalMatrix();
 
@@ -1280,7 +1282,7 @@ namespace Robust.Client.GameObjects
 
                 var numDirs = GetLayerDirectionCount(layer);
 
-                CalcModelMatrix(numDirs, worldRotation, worldPosition, out var modelMatrix);
+                CalcModelMatrix(numDirs, eyeRotation, worldRotation, worldPosition, out var modelMatrix);
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 

@@ -8,6 +8,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
@@ -53,7 +54,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var mock = new Mock<IEntitySystemManager>();
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadPhaseSystem>()).Returns(broady);
+            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
@@ -62,6 +63,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         [OneTimeSetUp]
         public void Setup()
         {
+            IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
+
             EntityManager = IoCManager.Resolve<IServerEntityManagerInternal>();
             MapManager = IoCManager.Resolve<IMapManager>();
             MapManager.CreateMap();

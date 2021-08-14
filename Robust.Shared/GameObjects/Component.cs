@@ -1,4 +1,5 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
@@ -17,14 +18,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public abstract string Name { get; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public virtual uint? NetID => null;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public virtual bool NetworkSynchronizeExistence => false;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -249,14 +242,16 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
+        private static readonly ComponentState DefaultComponentState = new();
+
         /// <param name="player"></param>
         /// <inheritdoc />
         public virtual ComponentState GetComponentState(ICommonSession player)
         {
-            if (NetID == null)
-                throw new InvalidOperationException($"Cannot make state for component without Net ID: {GetType()}");
+            if (!(Attribute.GetCustomAttribute(GetType(), typeof(NetworkedComponentAttribute)) is NetworkedComponentAttribute))
+                throw new InvalidOperationException($"Calling base {nameof(GetComponentState)} without being networked.");
 
-            return new ComponentState(NetID.Value);
+            return DefaultComponentState;
         }
 
         /// <inheritdoc />

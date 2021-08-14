@@ -60,11 +60,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     new EntityUid(512),
                     new []
                     {
-                        new ComponentChanged(false, NetIDs.MAP_GRID, nameof(MapGridComponent)),
-                    },
-                    new []
-                    {
-                        new MapGridComponentState(new GridId(0)),
+                        new ComponentChange(0, true, false, new MapGridComponentState(new GridId(0)))
                     });
 
                 serializer.Serialize(stream, payload);

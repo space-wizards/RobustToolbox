@@ -316,7 +316,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static float Area(in Box2 box)
+        public static float Area(in Box2 box)
             => box.Width * box.Height;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

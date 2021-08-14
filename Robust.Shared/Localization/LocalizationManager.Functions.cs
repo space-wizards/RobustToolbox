@@ -257,6 +257,7 @@ namespace Robust.Shared.Localization
                 ILocValue wrap => new FluentLocWrapperType(wrap),
                 IEntity entity => new FluentLocWrapperType(new LocValueEntity(entity)),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
+                TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan)),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),
                 string str => (FluentString)str,
                 byte num => (FluentNumber)num,
@@ -280,7 +281,6 @@ namespace Robust.Shared.Localization
                 LocValueNone => FluentNone.None,
                 LocValueNumber number => (FluentNumber)number.Value,
                 LocValueString str => (FluentString)str.Value,
-                LocValueDateTime dateTime => new FluentLocWrapperType(dateTime),
                 _ => new FluentLocWrapperType(locValue),
             };
         }

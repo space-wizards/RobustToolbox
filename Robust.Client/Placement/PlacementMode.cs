@@ -7,6 +7,7 @@ using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
@@ -232,7 +233,7 @@ namespace Robust.Client.Placement
                 bounds.Width,
                 bounds.Height);
 
-            return EntitySystem.Get<SharedBroadPhaseSystem>().TryCollideRect(collisionBox, mapCoords.MapId);
+            return EntitySystem.Get<SharedBroadphaseSystem>().TryCollideRect(collisionBox, mapCoords.MapId);
         }
 
         protected Vector2 ScreenToWorld(Vector2 point)
@@ -250,7 +251,7 @@ namespace Robust.Client.Placement
             var mapCoords = pManager.eyeManager.ScreenToMap(coords.Position);
             if (!pManager.MapManager.TryFindGridAt(mapCoords, out var grid))
             {
-                return EntityCoordinates.FromMap(pManager.EntityManager, pManager.MapManager, mapCoords);
+                return EntityCoordinates.FromMap(pManager.MapManager, mapCoords);
             }
 
             return EntityCoordinates.FromMap(pManager.EntityManager, grid.GridEntityId, mapCoords);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Enums;
+using Robust.Shared.GameStates;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -10,10 +11,10 @@ namespace Robust.Shared.GameObjects.Components.Localization
     ///     Overrides grammar attributes specified in prototypes or localization files.
     /// </summary>
     [RegisterComponent]
+    [NetworkedComponent()]
     public class GrammarComponent : Component
     {
         public override string Name => "Grammar";
-        public override uint? NetID => NetIDs.GRAMMAR;
 
         [ViewVariables]
         [DataField("attributes")]

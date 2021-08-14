@@ -2,6 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Collision.Shapes
@@ -58,15 +59,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
             }
         }
 
-        /// <inheritdoc />
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            return new(-_radius, -_radius, _radius, _radius);
-        }
-
         public float CalculateArea()
         {
             return MathF.PI * _radius * _radius;
+        }
+
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+
+            var p = transform.Position + Transform.Mul(transform.Quaternion2D, Position);
+            return new Box2(p.X - _radius, p.Y - _radius, p.X + _radius, p.Y + _radius);
         }
 
         /// <inheritdoc />
@@ -78,7 +81,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             handle.SetTransform(in modelMatrix);
             handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         public bool Equals(IPhysShape? other)

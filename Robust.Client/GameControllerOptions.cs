@@ -43,6 +43,11 @@ namespace Robust.Client
         public string ContentBuildDirectory { get; init; } = "Content.Client";
 
         /// <summary>
+        ///     Directory to load all assemblies from.
+        /// </summary>
+        public ResourcePath AssemblyDirectory { get; init; } = new(@"/Assemblies/");
+
+        /// <summary>
         ///     Directory to load all prototypes from.
         /// </summary>
         public ResourcePath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
@@ -51,6 +56,16 @@ namespace Robust.Client
         ///     Whether to disable mounting the "Resources/" folder on FULL_RELEASE.
         /// </summary>
         public bool ResourceMountDisabled { get; init; } = false;
+
+        /// <summary>
+        ///     Whether to mount content resources when not on FULL_RELEASE.
+        /// </summary>
+        public bool LoadContentResources { get; init; } = true;
+
+        /// <summary>
+        ///     Whether to load config and user data.
+        /// </summary>
+        public bool LoadConfigAndUserData { get; init; } = true;
 
         /// <summary>
         ///     Whether to disable command line args server auto-connecting.

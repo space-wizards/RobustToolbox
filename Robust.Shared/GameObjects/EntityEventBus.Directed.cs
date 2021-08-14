@@ -12,6 +12,8 @@ namespace Robust.Shared.GameObjects
         void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
             where TEvent:EntityEventArgs;
 
+        void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true);
+
         void SubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
             where TEvent : EntityEventArgs;
@@ -76,6 +78,24 @@ namespace Robust.Shared.GameObjects
             }
 
             _eventTables.Dispatch(uid, typeof(TEvent), args);
+
+            // we also broadcast it so the call site does not have to.
+            if(broadcast)
+                RaiseEvent(EventSource.Local, args);
+        }
+
+        /// <inheritdoc />
+        public void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true)
+        {
+            var type = args.GetType();
+
+            if (_orderedEvents.Contains(type))
+            {
+                RaiseLocalOrdered(uid, args, broadcast);
+                return;
+            }
+
+            _eventTables.Dispatch(uid, type, args);
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
@@ -400,7 +420,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void ClearEventTables()
         {
-            _eventTables.ClearEntities();
+            _eventTables.Clear();
         }
 
         public void Dispose()

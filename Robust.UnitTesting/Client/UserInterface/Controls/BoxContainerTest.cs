@@ -2,6 +2,7 @@ using NUnit.Framework;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
+using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.UnitTesting.Client.UserInterface.Controls
 {
@@ -15,7 +16,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestLayoutBasic()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {MinSize = (50, 60)};
+            var boxContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                MinSize = (50, 60)
+            };
             var control1 = new Control {MinSize = (20, 20)};
             var control2 = new Control {MinSize = (30, 30)};
 
@@ -37,7 +42,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestLayoutExpand()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {MinSize = (50, 60)};
+            var boxContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                MinSize = (50, 60)
+            };
             var control1 = new Control
             {
                 VerticalExpand = true
@@ -61,7 +70,10 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         [Test]
         public void TestCalcMinSize()
         {
-            var boxContainer = new VBoxContainer();
+            var boxContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical
+            };
             var control1 = new Control
             {
                 MinSize = (50, 30)
@@ -80,7 +92,11 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
         public void TestTwoExpand()
         {
             var root = new LayoutContainer();
-            var boxContainer = new VBoxContainer {MinSize = (30, 80)};
+            var boxContainer = new BoxContainer
+            {
+                Orientation = LayoutOrientation.Vertical,
+                MinSize = (30, 80)
+            };
             var control1 = new Control
             {
                 VerticalExpand = true,

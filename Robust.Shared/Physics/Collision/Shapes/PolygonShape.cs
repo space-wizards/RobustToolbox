@@ -34,7 +34,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PolygonShape : IPhysShape, ISerializationHooks
+    public class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
     {
         /// <summary>
         ///     Counter-clockwise (CCW) order.
@@ -64,16 +64,18 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 _normals = new List<Vector2>(_vertices.Count);
 
                 // Compute normals. Ensure the edges have non-zero length.
-                for (int i = 0; i < _vertices.Count; ++i)
+                for (var i = 0; i < _vertices.Count; ++i)
                 {
-                    int next = i + 1 < _vertices.Count ? i + 1 : 0;
-                    Vector2 edge = _vertices[next] - _vertices[i];
+                    var next = i + 1 < _vertices.Count ? i + 1 : 0;
+                    var edge = _vertices[next] - _vertices[i];
                     DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
 
                     //FPE optimization: Normals.Add(MathHelper.Cross(edge, 1.0f));
-                    Vector2 temp = new Vector2(edge.Y, -edge.X);
+                    var temp = new Vector2(edge.Y, -edge.X);
                     _normals.Add(temp.Normalized);
                 }
+
+                Centroid = ComputeCentroid(_vertices);
 
                 // Compute the polygon mass data
                 // TODO: Update fixture. Maybe use events for it? Who tf knows.
@@ -82,6 +84,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private List<Vector2> _vertices = new();
+
+        internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
         [ViewVariables(VVAccess.ReadOnly)]
         public List<Vector2> Normals => _normals;
@@ -107,6 +111,44 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         private float _radius;
 
+        public static Vector2 ComputeCentroid(List<Vector2> vertices)
+        {
+            DebugTools.Assert(vertices.Count >= 3);
+
+            var c = new Vector2(0.0f, 0.0f);
+            float area = 0.0f;
+
+            // Get a reference point for forming triangles.
+            // Use the first vertex to reduce round-off errors.
+            var s = vertices[0];
+
+            const float inv3 = 1.0f / 3.0f;
+
+            for (var i = 0; i < vertices.Count; ++i)
+            {
+                // Triangle vertices.
+                var p1 = vertices[0] - s;
+                var p2 = vertices[i] - s;
+                var p3 = i + 1 < vertices.Count ? vertices[i+1] - s : vertices[0] - s;
+
+                var e1 = p2 - p1;
+                var e2 = p3 - p1;
+
+                float D = Vector2.Cross(e1, e2);
+
+                float triangleArea = 0.5f * D;
+                area += triangleArea;
+
+                // Area weighted centroid
+                c += (p1 + p2 + p3) * triangleArea * inv3;
+            }
+
+            // Centroid
+            DebugTools.Assert(area > float.Epsilon);
+            c = c * (1.0f / area) + s;
+            return c;
+        }
+
         public ShapeType ShapeType => ShapeType.Polygon;
 
         public PolygonShape()
@@ -119,31 +161,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = radius;
         }
 
-        public void SetAsBox(float width, float height)
+        public void SetAsBox(float halfWidth, float halfHeight)
         {
+            // TODO: Just have this set normals directly; look at Box2D to see how it does
             Vertices = new List<Vector2>()
             {
-                new(-width, -height),
-                new(width, -height),
-                new(width, height),
-                new(-width, height),
+                new(-halfWidth, -halfHeight),
+                new(halfWidth, -halfHeight),
+                new(halfWidth, halfHeight),
+                new(-halfWidth, halfHeight),
             };
         }
 
-        /// <summary>
-        ///     A temporary optimisation that bypasses GiftWrapping until we get proper AABB and Rect collisions
-        /// </summary>
-        internal void SetVertices(List<Vector2> vertices)
-        {
-            DebugTools.Assert(vertices.Count == 4, "Vertices optimisation only usable on rectangles");
-
-            // TODO: Get what the normals should be
-            Vertices = vertices;
-            // _normals = new List<Vector2>()
-            // Verify on debug that the vertices skip was actually USEFUL
-            DebugTools.Assert(Vertices == vertices);
-        }
-
+        // Don't need to check Centroid for these below as it's based off of the vertices below
+        // (unless you wanted a potentially faster check up front?)
         public bool Equals(IPhysShape? other)
         {
             if (other is not PolygonShape poly) return false;
@@ -151,32 +182,43 @@ namespace Robust.Shared.Physics.Collision.Shapes
             for (var i = 0; i < _vertices.Count; i++)
             {
                 var vert = _vertices[i];
-                if (!vert.EqualsApprox(poly.Vertices[i])) return false;
+                if (!vert.Equals(poly.Vertices[i])) return false;
             }
 
             return true;
         }
 
-        public Box2 CalculateLocalBounds(Angle rotation)
+        public bool EqualsApprox(PolygonShape other)
         {
-            if (Vertices.Count == 0) return new Box2();
+            return EqualsApprox(other, 0.001);
+        }
 
-            var aabb = new Box2();
-            Vector2 lower = Vertices[0];
-            Vector2 upper = lower;
-
-            for (int i = 1; i < Vertices.Count; ++i)
+        public bool EqualsApprox(PolygonShape other, double tolerance)
+        {
+            if (_vertices.Count != other._vertices.Count) return false;
+            for (var i = 0; i < _vertices.Count; i++)
             {
-                Vector2 v = Vertices[i];
+                if (!_vertices[i].EqualsApprox(other._vertices[i], tolerance)) return false;
+            }
+
+            return true;
+        }
+
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+            var lower = Transform.Mul(transform, _vertices[0]);
+            var upper = lower;
+
+            for (var i = 1; i < _vertices.Count; ++i)
+            {
+                var v = Transform.Mul(transform, _vertices[i]);
                 lower = Vector2.ComponentMin(lower, v);
                 upper = Vector2.ComponentMax(upper, v);
             }
 
-            Vector2 r = new Vector2(Radius, Radius);
-            aabb.BottomLeft = lower - r;
-            aabb.TopRight = upper + r;
-
-            return aabb;
+            var r = new Vector2(_radius, _radius);
+            return new Box2(lower - r, upper + r);
         }
 
         public void ApplyState()
@@ -188,7 +230,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             handle.SetTransform(modelMatrix);
             handle.DrawPolygonShape(_vertices.ToArray(), handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)

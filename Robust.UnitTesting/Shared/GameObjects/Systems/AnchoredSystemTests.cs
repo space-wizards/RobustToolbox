@@ -19,7 +19,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
         private class Subscriber : IEntityEventSubscriber { }
 
-
         private const string Prototypes = @"
 - type: entity
   name: anchoredEnt
@@ -32,14 +31,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterEntitySystems(factory =>
-                {
-                    factory.LoadExtraSystemType<SharedTransformSystem>();
-                })
-                .RegisterComponents(factory =>
-                {
-                    factory.RegisterClass<ContainerManagerComponent>();
-                })
                 .RegisterPrototypes(f=>
                 {
                     f.LoadString(Prototypes);
@@ -98,31 +89,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             {
                 calledCount++;
             }
-        }
-
-        /// <summary>
-        /// When an entity is anchored to a grid tile, it's local rotation is rounded to the nearest cardinal 4 direction.
-        /// </summary>
-        [Test]
-        public void OnAnchored_WorldRotation_Cardinal()
-        {
-            var sim = SimulationFactory();
-            var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
-
-            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
-
-            // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
-            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
-
-            var ent1 = entMan.SpawnEntity(null, coordinates);
-            ent1.Transform.LocalRotation = Angle.FromDegrees(60);
-
-            // Act
-            ent1.Transform.Anchored = true;
-
-            Assert.That(ent1.Transform.LocalRotation.Degrees, Is.EqualTo(90));
         }
 
         /// <summary>
@@ -196,16 +162,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            // physics is ensured when grids are created, but we don't need it
-            entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
-
             // Act
             ent1.Transform.Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1.Uid));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
             Assert.That(ent1.HasComponent<PhysicsComponent>(), Is.False);
-            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.False);
+            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.True);
         }
 
         /// <summary>
@@ -248,47 +211,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         }
 
         /// <summary>
-        /// Local rotation of an anchored entity cannot be changed (can still rotate/orbit in word via parent).
-        /// Writing to the property is a no-op and is silently ignored.
-        /// Because the position cannot be changed, RotateEvents are not raised when setting the property.
-        /// </summary>
-        [Test]
-        public void Anchored_SetRotation_Nop()
-        {
-            var sim = SimulationFactory();
-            var entMan = sim.Resolve<IEntityManager>();
-            var mapMan = sim.Resolve<IMapManager>();
-
-            var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
-
-            // can only be anchored to a tile
-            var grid = mapMan.GetGrid(TestGridId);
-            grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
-
-            var subscriber = new Subscriber();
-            int calledCount = 0;
-            var ent1 = entMan.SpawnEntity(null, coordinates);
-            ent1.Transform.NoLocalRotation = false;
-            var testAngle = Angle.FromDegrees(90);
-            ent1.Transform.LocalRotation = testAngle;
-            entMan.EventBus.SubscribeEvent<RotateEvent>(EventSource.Local, subscriber, MoveEventHandler);
-
-            ent1.Transform.Anchored = true;
-
-            // Act
-            ent1.Transform.WorldRotation = Angle.FromDegrees(180);
-            ent1.Transform.LocalRotation = Angle.FromDegrees(180);
-
-            Assert.That(ent1.Transform.LocalRotation, Is.EqualTo(testAngle));
-            Assert.That(calledCount, Is.EqualTo(0));
-            void MoveEventHandler(RotateEvent ev)
-            {
-                Assert.Fail("RotateEvent raised when entity is anchored.");
-                calledCount++;
-            }
-        }
-
-        /// <summary>
         /// Changing the parent of the entity un-anchors it.
         /// </summary>
         [Test]
@@ -299,7 +221,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var mapMan = sim.Resolve<IMapManager>();
 
             var coordinates = new MapCoordinates(new Vector2(7, 7), TestMapId);
-            
+
             var grid = mapMan.GetGrid(TestGridId);
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
@@ -503,7 +425,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            
+
             var gridEnt = entMan.GetEntity(grid.GridEntityId);
             var containerMan = gridEnt.AddComponent<ContainerManagerComponent>();
             var container = containerMan.MakeContainer<Container>("TestContainer");

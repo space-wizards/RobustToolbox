@@ -7,6 +7,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Write
@@ -34,6 +35,10 @@ namespace Robust.Benchmarks.Serialization.Write
         private DataDefinitionWithString DataDefinitionWithString { get; }
 
         private SeedDataDefinition Seed { get; }
+
+        private BenchmarkFlagsEnum FlagZero = BenchmarkFlagsEnum.Zero;
+
+        private BenchmarkFlagsEnum FlagThirtyOne = BenchmarkFlagsEnum.ThirtyOne;
 
         [Benchmark]
         public DataNode WriteString()
@@ -93,6 +98,26 @@ namespace Robust.Benchmarks.Serialization.Write
             mapping.Add("chemicals", chemicals);
 
             return mapping;
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public DataNode WriteFlagZero()
+        {
+            return SerializationManager.WriteWithTypeSerializer(
+                typeof(int),
+                typeof(FlagSerializer<BenchmarkFlags>),
+                FlagZero);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public DataNode WriteThirtyOne()
+        {
+            return SerializationManager.WriteWithTypeSerializer(
+                typeof(int),
+                typeof(FlagSerializer<BenchmarkFlags>),
+                FlagThirtyOne);
         }
     }
 }

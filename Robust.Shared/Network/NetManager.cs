@@ -118,7 +118,7 @@ namespace Robust.Shared.Network
         /// <summary>
         ///     Holds lookup table for NetMessage.Id -> NetMessage.Type
         /// </summary>
-        private readonly Dictionary<string, Type> _messages = new();
+        private readonly Dictionary<string, (Type type, bool isHandshake)> _messages = new();
 
         /// <summary>
         /// The StringTable for transforming packet Ids to Packet name.
@@ -204,7 +204,9 @@ namespace Robust.Shared.Network
         public IReadOnlyDictionary<Type, ProcessMessage> CallbackAudit => _callbacks;
 
         /// <inheritdoc />
-        public INetChannel? ServerChannel
+        public INetChannel? ServerChannel => ServerChannelImpl;
+
+        private NetChannel? ServerChannelImpl
         {
             get
             {
@@ -261,7 +263,7 @@ namespace Robust.Shared.Network
             _serializer.ClientHandshakeComplete += () =>
             {
                 Logger.InfoS("net", "Client completed serializer handshake.");
-                OnConnected(ServerChannel!);
+                OnConnected(ServerChannelImpl!);
             };
 
             _initialized = true;
@@ -792,12 +794,22 @@ namespace Robust.Shared.Network
             var id = msg.ReadByte();
 
             ref var entry = ref _netMsgFunctions[id];
+
             if (entry.CreateFunction == null)
             {
                 Logger.WarningS("net",
                     $"{msg.SenderConnection.RemoteEndPoint}: Got net message with invalid ID {id}.");
 
                 channel.Disconnect("Got NetMessage with invalid ID");
+                return true;
+            }
+
+            if (!channel.IsHandshakeComplete && !entry.IsHandshake)
+            {
+                Logger.WarningS("net",
+                    $"{msg.SenderConnection.RemoteEndPoint}: Got non-handshake message {entry.Type.Name} before handshake completion.");
+
+                channel.Disconnect("Got unacceptable net message before handshake completion");
                 return true;
             }
 
@@ -837,6 +849,7 @@ namespace Robust.Shared.Network
             // Callback must be available or else construction delegate will not be registered.
             var callback = _callbacks[type];
 
+            // Logger.DebugS("net", $"RECV: {instance.GetType().Name}");
             try
             {
                 callback?.Invoke(instance);
@@ -857,10 +870,12 @@ namespace Robust.Shared.Network
                 return;
             }
 
-            if (!_messages.TryGetValue(name, out var packetType))
+            if (!_messages.TryGetValue(name, out var msgDat))
             {
                 return;
             }
+
+            var (packetType, isHandshake) = msgDat;
 
             if (!_callbacks.ContainsKey(packetType))
             {
@@ -897,18 +912,20 @@ namespace Robust.Shared.Network
             ref var entry = ref _netMsgFunctions[id];
             entry.CreateFunction = @delegate;
             entry.Type = packetType;
+            entry.IsHandshake = isHandshake;
         }
 
         #region NetMessages
 
         /// <inheritdoc />
-        public void RegisterNetMessage<T>(string name, ProcessMessage<T>? rxCallback = null,
+        public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
             NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage
+            where T : NetMessage, new()
         {
+            var name = new T().MsgName;
             var id = _strings.AddString(name);
 
-            _messages.Add(name, typeof(T));
+            _messages.Add(name, (typeof(T), (accept & NetMessageAccept.Handshake) != 0));
 
             var thisSide = IsServer ? NetMessageAccept.Server : NetMessageAccept.Client;
 
@@ -926,14 +943,6 @@ namespace Robust.Shared.Network
             // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
             // so it no thread safety crap.
             CacheBlankFunction(typeof(T));
-        }
-
-        /// <inheritdoc />
-        public void RegisterNetMessage<T>(ProcessMessage<T>? rxCallback = null,
-            NetMessageAccept accept = NetMessageAccept.Both)
-            where T : NetMessage, new()
-        {
-            RegisterNetMessage(new T().MsgName, rxCallback, accept);
         }
 
         /// <inheritdoc />
@@ -993,6 +1002,9 @@ namespace Robust.Shared.Network
 
             foreach (var channel in _channels.Values)
             {
+                if (!channel.IsHandshakeComplete)
+                    continue;
+
                 ServerSendMessage(message, channel);
             }
         }
@@ -1013,6 +1025,12 @@ namespace Robust.Shared.Network
 
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
+            LogSend(message, method, packet);
+        }
+
+        private static void LogSend(NetMessage message, NetDeliveryMethod method, NetOutgoingMessage packet)
+        {
+            // Logger.DebugS("net", $"SEND: {message.GetType().Name} {method} {packet.LengthBytes}");
         }
 
         /// <inheritdoc />
@@ -1049,6 +1067,7 @@ namespace Robust.Shared.Network
             }
 
             peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
+            LogSend(message, method, packet);
         }
 
         #endregion NetMessages
@@ -1075,8 +1094,10 @@ namespace Robust.Shared.Network
             ConnectFailed?.Invoke(this, args);
         }
 
-        private void OnConnected(INetChannel channel)
+        private void OnConnected(NetChannel channel)
         {
+            channel.IsHandshakeComplete = true;
+
             Connected?.Invoke(this, new NetChannelArgs(channel));
         }
 
@@ -1158,6 +1179,7 @@ namespace Robust.Shared.Network
         private struct NetMsgEntry
         {
             public Func<INetChannel, NetMessage>? CreateFunction;
+            public bool IsHandshake;
             public Type Type;
         }
     }

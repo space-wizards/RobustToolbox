@@ -25,7 +25,7 @@ namespace Robust.Client.UserInterface.CustomControls
             }
 
             var fps = _gameTiming.FramesPerSecondAvg;
-            Text = $"FPS: {fps:N1}";
+            Text = $"FPS: {fps:N0}";
         }
     }
 }

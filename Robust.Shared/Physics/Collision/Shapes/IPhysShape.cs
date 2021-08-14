@@ -12,8 +12,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         Chain = 3,
         Aabb = 4,
         Rectangle = 5, // Look you might be able to replace this with polys but for now I have done the thing
-        Grid = 6,
-        TypeCount = 7, // Obviously increment this if you add something
+        TypeCount = 6, // Obviously increment this if you add something
     }
 
     /// <summary>
@@ -38,11 +37,9 @@ namespace Robust.Shared.Physics.Collision.Shapes
         ShapeType ShapeType { get; }
 
         /// <summary>
-        /// Calculates the AABB of the shape.
+        /// Calculate the AABB of the shape.
         /// </summary>
-        /// <param name="rotation"></param>
-        /// <returns></returns>
-        Box2 CalculateLocalBounds(Angle rotation);
+        Box2 ComputeAABB(Transform transform, int childIndex);
 
         void ApplyState();
 

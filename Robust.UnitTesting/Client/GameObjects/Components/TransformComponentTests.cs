@@ -3,6 +3,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components
@@ -19,14 +20,6 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterEntitySystems(factory =>
-                {
-                    factory.LoadExtraSystemType<SharedTransformSystem>();
-                })
-                .RegisterComponents(factory =>
-                {
-                    factory.RegisterClass<ContainerManagerComponent>();
-                })
                 .InitializeInstance();
 
             var mapManager = sim.Resolve<IMapManager>();

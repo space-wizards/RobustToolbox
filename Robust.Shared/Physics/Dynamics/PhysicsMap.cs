@@ -37,11 +37,10 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public sealed class PhysicsMap
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
+        private SharedBroadphaseSystem _broadphaseSystem = default!;
         private SharedPhysicsSystem _physicsSystem = default!;
 
         internal ContactManager ContactManager = new();
@@ -73,7 +72,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<(ITransformComponent, IPhysBody)> _deferredUpdates = new();
+        private List<(ITransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -105,7 +104,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
 
-        private List<IPhysBody> _islandBodies = new(64);
+        private List<PhysicsComponent> _islandBodies = new(64);
         private List<Contact> _islandContacts = new(32);
         private List<Joint> _islandJoints = new(8);
 
@@ -125,6 +124,7 @@ namespace Robust.Shared.Physics.Dynamics
         public PhysicsMap(MapId mapId)
         {
             MapId = mapId;
+            _broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
         }
 
@@ -134,8 +134,21 @@ namespace Robust.Shared.Physics.Dynamics
             ContactManager.Initialize();
             ContactManager.MapId = MapId;
 
-            _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
-            _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
+        }
+
+        public void Shutdown()
+        {
+            ContactManager.Shutdown();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+        }
+
+        private void OnAutoClearChange(bool value)
+        {
+            _autoClearForces = value;
         }
 
         #region AddRemove
@@ -386,7 +399,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            ContactManager.FindNewContacts(MapId);
+            _broadphaseSystem.FindNewContacts(MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.Containers;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -16,6 +17,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(ITransformComponent))]
+    [NetworkedComponent()]
     internal class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [DataField("parent")]
@@ -53,9 +55,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "Transform";
-
-        /// <inheritdoc />
-        public sealed override uint? NetID => NetIDs.TRANSFORM;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -111,9 +110,6 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 if (_localRotation.EqualsApprox(value, 0.00001))
-                    return;
-
-                if(Anchored)
                     return;
 
                 var oldRotation = _localRotation;
@@ -306,9 +302,10 @@ namespace Robust.Shared.GameObjects
                     _parent = newParentEnt.Uid;
                     ChangeMapId(newConcrete.MapID);
 
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
-
+                    // Cache new GridID before raising the event.
                     GridID = GetGridIndex();
+
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -386,6 +383,11 @@ namespace Robust.Shared.GameObjects
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
                         _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                    }
+                    // If no grid found then unanchor it.
+                    else
+                    {
+                        _anchored = false;
                     }
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
@@ -677,7 +679,7 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntMapIdChangedMessage(Owner, oldId));
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -738,7 +740,7 @@ namespace Robust.Shared.GameObjects
 
                 var newParentId = newState.ParentID;
                 var rebuildMatrices = false;
-                if (Parent?.Owner?.Uid != newParentId)
+                if (Parent?.Owner.Uid != newParentId)
                 {
                     if (newParentId != _parent)
                     {
@@ -899,7 +901,6 @@ namespace Robust.Shared.GameObjects
             /// <param name="parentId">Current parent transform of this entity.</param>
             /// <param name="noLocalRotation"></param>
             public TransformComponentState(Vector2 localPosition, Angle rotation, EntityUid parentId, bool noLocalRotation, bool anchored)
-                : base(NetIDs.TRANSFORM)
             {
                 LocalPosition = localPosition;
                 Rotation = rotation;

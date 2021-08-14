@@ -94,13 +94,11 @@ namespace Robust.Server
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
 
-        private TimeSpan _lastTitleUpdate;
-        private long _lastReceivedBytes;
-        private long _lastSentBytes;
-
         private string? _shutdownReason;
 
         private readonly ManualResetEventSlim _shutdownEvent = new(false);
+
+        public ServerOptions Options { get; private set; } = new();
 
         /// <inheritdoc />
         public int MaxPlayers => _config.GetCVar(CVars.GameMaxPlayers);
@@ -114,7 +112,7 @@ namespace Robust.Server
             Logger.InfoS("srv", "Restarting Server...");
 
             Cleanup();
-            Start(_logHandlerFactory);
+            Start(Options, _logHandlerFactory);
         }
 
         /// <inheritdoc />
@@ -141,15 +139,16 @@ namespace Robust.Server
         }
 
         /// <inheritdoc />
-        public bool Start(Func<ILogHandler>? logHandlerFactory = null)
+        public bool Start(ServerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
+            Options = options;
             var profilePath = Path.Join(Environment.CurrentDirectory, "AAAAAAAA");
             ProfileOptimization.SetProfileRoot(profilePath);
             ProfileOptimization.StartProfile("AAAAAAAAAA");
 
             _config.Initialize(true);
 
-            if (LoadConfigAndUserData)
+            if (Options.LoadConfigAndUserData)
             {
                 // Sets up the configMgr
                 // If a config file path was passed, use it literally.
@@ -269,22 +268,26 @@ namespace Robust.Server
                 return true;
             }
 
-            var dataDir = LoadConfigAndUserData
+            var dataDir = Options.LoadConfigAndUserData
                 ? _commandLineArgs?.DataDir ?? PathHelpers.ExecutableRelativeFile("data")
                 : null;
 
             // Set up the VFS
             _resources.Initialize(dataDir);
 
-            ProgramShared.DoMounts(_resources, _commandLineArgs?.MountOptions, "Content.Server", contentStart:ContentStart);
+            var mountOptions = _commandLineArgs != null
+                ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
+
+            ProgramShared.DoMounts(_resources, mountOptions, Options.ContentBuildDirectory, Options.AssemblyDirectory,
+                Options.LoadContentResources, Options.ResourceMountDisabled, ContentStart);
 
             // When the game is ran with the startup executable being content,
             // we have to disable the separate load context.
             // Otherwise the content assemblies will be loaded twice which causes *many* fun bugs.
             _modLoader.SetUseLoadContext(!ContentStart);
-            _modLoader.SetEnableSandboxing(false);
+            _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(new ResourcePath("/Assemblies/"), "Content."))
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
             {
                 Logger.Fatal("Errors while loading content assemblies.");
                 return true;
@@ -335,13 +338,23 @@ namespace Robust.Server
             // otherwise the prototypes will be cleared
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.Initialize();
-            prototypeManager.LoadDirectory(new ResourcePath(@"/Prototypes"));
+            prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             prototypeManager.Resync();
 
             IoCManager.Resolve<IServerConsoleHost>().Initialize();
             _entityManager.Startup();
             IoCManager.Resolve<IEntityLookup>().Startup();
             _stateManager.Initialize();
+
+            // sometime after content init
+            {
+                var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
+                if (!reg.NetID.HasValue)
+                    throw new InvalidOperationException("TransformComponent does not have a NetId.");
+
+                _stateManager.SetTransformNetId(reg.NetID.Value);
+            }
+
             _scriptHost.Initialize();
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
@@ -492,35 +505,12 @@ namespace Robust.Server
         }
 
         public bool ContentStart { get; set; }
-        public bool LoadConfigAndUserData { private get; set; } = true;
 
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
             _mainLoop = gameLoop;
         }
 
-        /// <summary>
-        ///     Updates the console window title with performance statistics.
-        /// </summary>
-        private void UpdateTitle()
-        {
-            if (!Environment.UserInteractive || System.Console.IsInputRedirected)
-            {
-                return;
-            }
-
-            // every 1 second update stats in the console window title
-            if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
-                return;
-
-            var netStats = UpdateBps();
-            System.Console.Title = string.Format("FPS: {0:N2} SD: {1:N2}ms | Net: ({2}) | Memory: {3:N0} KiB",
-                Math.Round(_time.FramesPerSecondAvg, 2),
-                _time.RealFrameTimeStdDev.TotalMilliseconds,
-                netStats,
-                Process.GetCurrentProcess().PrivateMemorySize64 >> 10);
-            _lastTitleUpdate = _time.RealTime;
-        }
 
         /// <summary>
         ///     Loads the server settings from the ConfigurationManager.
@@ -577,22 +567,9 @@ namespace Robust.Server
             }
         }
 
-        private string UpdateBps()
-        {
-            var stats = IoCManager.Resolve<IServerNetManager>().Statistics;
-
-            var bps =
-                $"Send: {(stats.SentBytes - _lastSentBytes) >> 10:N0} KiB/s, Recv: {(stats.ReceivedBytes - _lastReceivedBytes) >> 10:N0} KiB/s";
-
-            _lastSentBytes = stats.SentBytes;
-            _lastReceivedBytes = stats.ReceivedBytes;
-
-            return bps;
-        }
-
         private void Input(FrameEventArgs args)
         {
-            _systemConsole.Update();
+            _systemConsole.UpdateInput();
 
             _network.ProcessPackets();
             _taskManager.ProcessPendingTasks();
@@ -606,7 +583,7 @@ namespace Robust.Server
             // These are always the same on the server, there is no prediction.
             _time.LastRealTick = _time.CurTick;
 
-            UpdateTitle();
+            _systemConsole.UpdateTick();
 
             using (TickUsage.WithLabels("PreEngine").NewTimer())
             {

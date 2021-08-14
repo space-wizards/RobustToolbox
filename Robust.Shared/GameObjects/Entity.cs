@@ -85,6 +85,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _paused = value;
+                EntityManager.EventBus.RaiseLocalEvent(Uid, new EntityPausedEvent(Uid, value));
             }
         }
 

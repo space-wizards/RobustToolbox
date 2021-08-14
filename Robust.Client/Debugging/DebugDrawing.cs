@@ -162,12 +162,13 @@ namespace Robust.Client.Debugging
                 if (viewport.IsEmpty()) return;
 
                 var mapId = _eyeManager.CurrentMap;
-                var sleepThreshold = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.TimeToSleep);
                 var colorEdge = Color.Red.WithAlpha(0.33f);
                 var drawnJoints = new HashSet<Joint>();
 
-                foreach (var physBody in EntitySystem.Get<SharedBroadPhaseSystem>().GetCollidingEntities(mapId, viewport))
+                foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewport))
                 {
+                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+
                     // all entities have a TransformComponent
                     var transform = physBody.Owner.Transform;
 
@@ -177,8 +178,9 @@ namespace Robust.Client.Debugging
                     foreach (var fixture in physBody.Fixtures)
                     {
                         var shape = fixture.Shape;
-                        var sleepPercent = physBody.Awake ? physBody.SleepTime / sleepThreshold : 1.0f;
+                        var sleepPercent = physBody.Awake ? 0.0f : 1.0f;
                         shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, sleepPercent);
+                        drawing.SetTransform(in Matrix3.Identity);
                     }
 
                     foreach (var joint in physBody.Joints)
@@ -187,6 +189,7 @@ namespace Robust.Client.Debugging
                         drawnJoints.Add(joint);
 
                         joint.DebugDraw(drawing, in viewport);
+                        drawing.SetTransform(in Matrix3.Identity);
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

@@ -84,7 +84,17 @@ namespace Robust.Shared.Map
 
         Box2i CalcLocalBounds();
 
-        Box2 CalcWorldBounds();
+        // TODO: We can rely on the fixture instead for the bounds in the future but we also need to
+        // update the rendering to account for it. Better working on accurate grid bounds after rotation IMO.
+        /// <summary>
+        /// Calculate the bounds of this chunk.
+        /// </summary>
+        Box2Rotated CalcWorldBounds(Vector2? worldPos = null, Angle? worldRot = null);
+
+        /// <summary>
+        /// Calculate the AABB for this chunk.
+        /// </summary>
+        Box2 CalcWorldAABB(Vector2? worldPos = null, Angle? worldRot = null);
 
         /// <summary>
         /// Tests if a point is on top of a non-empty tile.

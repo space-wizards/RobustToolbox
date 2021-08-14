@@ -6,19 +6,30 @@ namespace Robust.Client.UserInterface.Controls
 {
     /// <summary>
     ///     A container that lays out its children sequentially.
-    ///     Use <see cref="VBoxContainer"/> or <see cref="HBoxContainer"/> for an implementation.
     /// </summary>
-    public abstract class BoxContainer : Container
+    public class BoxContainer : Container
     {
+        private LayoutOrientation _orientation;
         public const string StylePropertySeparation = "separation";
 
         private const int DefaultSeparation = 0;
-        private protected abstract bool Vertical { get; }
 
         /// <summary>
         ///     Specifies "where" the controls should be laid out.
         /// </summary>
         public AlignMode Align { get; set; }
+
+        private bool Vertical => Orientation == LayoutOrientation.Vertical;
+
+        public LayoutOrientation Orientation
+        {
+            get => _orientation;
+            set
+            {
+                _orientation = value;
+                InvalidateMeasure();
+            }
+        }
 
         private int ActualSeparation
         {
@@ -236,6 +247,12 @@ namespace Robust.Client.UserInterface.Controls
             ///     Controls are laid out from the end of the box container.
             /// </summary>
             End = 2
+        }
+
+        public enum LayoutOrientation : byte
+        {
+            Horizontal,
+            Vertical
         }
     }
 }

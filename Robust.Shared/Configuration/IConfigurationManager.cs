@@ -63,10 +63,48 @@ namespace Robust.Shared.Configuration
         /// <param name="name">The name of the CVar</param>
         Type GetCVarType(string name);
 
+        /// <summary>
+        /// Listen for an event for if the config value changes.
+        /// </summary>
+        /// <param name="cVar">The CVar to listen for.</param>
+        /// <param name="onValueChanged">The delegate to run when the value was changed.</param>
+        /// <param name="invokeImmediately">
+        /// Whether to run the callback immediately in this method. Can help reduce boilerplate
+        /// </param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        /// <seealso cref="UnsubValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T})"/>
         void OnValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged, bool invokeImmediately = false)
             where T : notnull;
 
+        /// <summary>
+        /// Listen for an event for if the config value changes.
+        /// </summary>
+        /// <param name="name">The name of the CVar to listen for.</param>
+        /// <param name="onValueChanged">The delegate to run when the value was changed.</param>
+        /// <param name="invokeImmediately">
+        /// Whether to run the callback immediately in this method. Can help reduce boilerplate
+        /// </param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        /// <seealso cref="UnsubValueChanged{T}(string,System.Action{T})"/>
         void OnValueChanged<T>(string name, Action<T> onValueChanged, bool invokeImmediately = false)
+            where T : notnull;
+
+        /// <summary>
+        /// Unsubscribe an event previously registered with <see cref="OnValueChanged{T}(Robust.Shared.Configuration.CVarDef{T},System.Action{T},bool)"/>.
+        /// </summary>
+        /// <param name="cVar">The CVar to unsubscribe from.</param>
+        /// <param name="onValueChanged">The delegate to unsubscribe.</param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        void UnsubValueChanged<T>(CVarDef<T> cVar, Action<T> onValueChanged)
+            where T : notnull;
+
+        /// <summary>
+        /// Unsubscribe an event previously registered with <see cref="OnValueChanged{T}(string,System.Action{T},bool)"/>.
+        /// </summary>
+        /// <param name="name">The name of the CVar to unsubscribe from.</param>
+        /// <param name="onValueChanged">The delegate to unsubscribe.</param>
+        /// <typeparam name="T">The type of value contained in this CVar.</typeparam>
+        void UnsubValueChanged<T>(string name, Action<T> onValueChanged)
             where T : notnull;
     }
 }

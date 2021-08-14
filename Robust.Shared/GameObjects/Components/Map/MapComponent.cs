@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -12,12 +13,14 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public interface IMapComponent : IComponent
     {
+        bool LightingEnabled { get; set; }
         MapId WorldMap { get; }
         void ClearMapId();
     }
 
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
+    [NetworkedComponent()]
     public class MapComponent : Component, IMapComponent
     {
         [ViewVariables(VVAccess.ReadOnly)]
@@ -27,8 +30,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string Name => "Map";
 
-        /// <inheritdoc />
-        public override uint? NetID => NetIDs.MAP_MAP;
+        [ViewVariables(VVAccess.ReadWrite)]
+        [DataField(("lightingEnabled"))]
+        public bool LightingEnabled { get; set; } = true;
 
         /// <inheritdoc />
         public MapId WorldMap
@@ -47,7 +51,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new MapComponentState(_mapIndex);
+            return new MapComponentState(_mapIndex, LightingEnabled);
         }
 
         /// <inheritdoc />
@@ -55,10 +59,11 @@ namespace Robust.Shared.GameObjects
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is MapComponentState state))
+            if (curState is not MapComponentState state)
                 return;
 
             _mapIndex = state.MapId;
+            LightingEnabled = state.LightingEnabled;
 
             ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
         }
@@ -71,11 +76,12 @@ namespace Robust.Shared.GameObjects
     internal class MapComponentState : ComponentState
     {
         public MapId MapId { get; }
+        public bool LightingEnabled { get; }
 
-        public MapComponentState(MapId mapId)
-            : base(NetIDs.MAP_MAP)
+        public MapComponentState(MapId mapId, bool lightingEnabled)
         {
             MapId = mapId;
+            LightingEnabled = lightingEnabled;
         }
     }
 }

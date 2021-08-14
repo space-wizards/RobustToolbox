@@ -28,6 +28,7 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
@@ -39,6 +40,8 @@ namespace Robust.Client.Debugging
         /*
          * Used for debugging shapes, controllers, joints, contacts
          */
+
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private const int MaxContactPoints = 2048;
         internal int PointCount;
@@ -79,8 +82,7 @@ namespace Robust.Client.Debugging
                 CollisionManager.GetPointStates(out state1, out state2, oldManifold, manifold);
 
                 Span<Vector2> points = stackalloc Vector2[2];
-                Vector2 normal;
-                contact.GetWorldManifold(out normal, points);
+                contact.GetWorldManifold(_physicsManager, out var normal, points);
 
                 for (int i = 0; i < manifold.PointCount && PointCount < MaxContactPoints; ++i)
                 {

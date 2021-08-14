@@ -1,7 +1,13 @@
+using System;
+
 namespace Robust.Client.UserInterface.Controls
 {
+    [Obsolete("Use SplitContainer directly and set Orientation")]
     public class HSplitContainer : SplitContainer
     {
-        private protected sealed override bool Vertical => false;
+        public HSplitContainer()
+        {
+            Orientation = SplitOrientation.Horizontal;
+        }
     }
 }

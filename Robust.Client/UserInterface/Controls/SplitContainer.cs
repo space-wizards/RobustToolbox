@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
-    public abstract class SplitContainer : Container
+    public class SplitContainer : Container
     {
         /// <summary>
         /// Defines how user-initiated moving of the split should work. See documentation
@@ -22,11 +22,10 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public float SplitEdgeSeparation { get; set; }
 
-        private protected abstract bool Vertical { get; }
-
         private float _splitCenter;
         private SplitState _splitState;
         private bool _dragging;
+        private SplitOrientation _orientation;
 
         // min / max x and y extents in relative virtual pixels of where the split can go regardless
         // of anything else.
@@ -34,6 +33,18 @@ namespace Robust.Client.UserInterface.Controls
 
         private float SplitMax =>
             Vertical ? Height - (SplitWidth + SplitEdgeSeparation) : Width - (SplitWidth + SplitEdgeSeparation);
+
+        private bool Vertical => Orientation == SplitOrientation.Vertical;
+
+        public SplitOrientation Orientation
+        {
+            get => _orientation;
+            set
+            {
+                _orientation = value;
+                InvalidateMeasure();
+            }
+        }
 
         public SplitContainer()
         {
@@ -263,6 +274,12 @@ namespace Robust.Client.UserInterface.Controls
             /// Manually adjust the split by dragging it
             /// </summary>
             Manual = 1
+        }
+
+        public enum SplitOrientation : byte
+        {
+            Horizontal,
+            Vertical
         }
     }
 }

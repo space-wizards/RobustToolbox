@@ -1,11 +1,15 @@
+using Robust.Shared.Console;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Reflection;
 
 namespace Robust.Server.GameObjects
 {
-    public class ServerComponentFactory : ComponentFactory
+    internal class ServerComponentFactory : ComponentFactory
     {
-        public ServerComponentFactory()
+        public ServerComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
+            : base(typeFactory, reflectionManager, conHost)
         {
             RegisterIgnore("Input");
             RegisterIgnore("AnimationPlayer");
@@ -20,6 +24,7 @@ namespace Robust.Server.GameObjects
             RegisterClass<CollisionWakeComponent>();
             RegisterClass<ContainerManagerComponent>();
             RegisterClass<OccluderComponent>();
+            RegisterClass<OccluderTreeComponent>();
             RegisterClass<SpriteComponent>();
             RegisterClass<AppearanceComponent>();
             RegisterClass<SnapGridComponent>();

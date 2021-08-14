@@ -7,13 +7,13 @@ namespace Robust.Client
 #if FULL_RELEASE
             throw new System.InvalidOperationException("ContentStart.Start is not available on a full release.");
 #else
-            GameController.Start(args, true);
+            GameController.Start(args, new GameControllerOptions(), true);
 #endif
         }
 
         public static void StartLibrary(string[] args, GameControllerOptions options)
         {
-            GameController.Start(args, true, null, options);
+            GameController.Start(args, options, true, null);
         }
     }
 }

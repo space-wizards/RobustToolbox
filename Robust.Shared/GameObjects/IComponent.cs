@@ -1,7 +1,7 @@
 using System;
+using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
-using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -13,16 +13,6 @@ namespace Robust.Shared.GameObjects
     /// </remarks>
     public interface IComponent
     {
-        /// <summary>
-        ///     Represents the network ID for the component.
-        ///     The network ID is used to determine which component will receive the component state
-        ///     on the other side of the network.
-        ///     If this is <c>null</c>, the component is not replicated across the network.
-        /// </summary>
-        /// <seealso cref="NetworkSynchronizeExistence" />
-        /// <seealso cref="IComponentRegistration.NetID" />
-        uint? NetID { get; }
-
         /// <summary>
         ///     Name that this component is represented with in prototypes.
         /// </summary>
@@ -41,20 +31,10 @@ namespace Robust.Shared.GameObjects
         ComponentLifeStage LifeStage { get; }
 
         /// <summary>
-        ///     Whether the client should synchronize component additions and removals.
-        ///     If this is false and the component gets added or removed server side, the client will not do the same.
-        ///     If this is true and the server adds or removes the component, the client will do as such too.
-        ///     This flag has no effect if <see cref="NetID" /> is <c>null</c>.
-        ///     This is disabled by default, usually the client builds their instance from a prototype.
-        /// </summary>
-        /// <seealso cref="IComponentRegistration.NetworkSynchronizeExistence" />
-        bool NetworkSynchronizeExistence { get; }
-
-        /// <summary>
         ///     Whether this component should be synchronized with clients when modified.
         ///     If this is true, the server will synchronize all client instances with the data in this instance.
         ///     If this is false, clients can modify the data in their instances without being overwritten by the server.
-        ///     This flag has no effect if <see cref="NetID" /> is <c>null</c>.
+        ///     This flag has no effect if <see cref="NetworkedComponentAttribute" /> is not defined on the component.
         ///     This is enabled by default.
         /// </summary>
         bool NetSyncEnabled { get; }

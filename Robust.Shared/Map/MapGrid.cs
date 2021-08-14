@@ -126,7 +126,7 @@ namespace Robust.Shared.Map
             set
             {
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
-                LastModifiedTick = _mapManager.GameTiming.CurTick;
+                LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
 

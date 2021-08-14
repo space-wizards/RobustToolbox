@@ -202,19 +202,17 @@ namespace Robust.Server.GameStates
                         if(grid.LastAnchoredModifiedTick < fromTick)
                             continue;
 
+                        var xform = _compMan.GetComponent<TransformComponent>(grid.GridEntityId);
+
                         // for each grid, calculate the chunks that are inside the box
-                        foreach (var chunk in grid.GetMapChunks().Values)
+                        foreach (var chunk in grid.GetMapChunks(viewBox))
                         {
                             // for each chunk, check dirty
                             if (chunk.LastAnchoredModifiedTick < fromTick)
                                 continue;
 
-                            // for each chunk, check actually intersects view
-                            if (!chunk.CalcWorldBounds().Intersects(in viewBox))
-                                continue;
-
                             // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
-                            RecursiveAdd(_compMan.GetComponent<TransformComponent>(grid.GridEntityId), visibleEnts, visMask);
+                            RecursiveAdd(xform, visibleEnts, visMask);
 
                             foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
                             {

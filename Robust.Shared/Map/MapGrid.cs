@@ -381,6 +381,26 @@ namespace Robust.Shared.Map
             return _chunks;
         }
 
+        /// <inheritdoc />
+        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldBox)
+        {
+            var localArea = new Box2(WorldToLocal(worldBox.BottomLeft), WorldToLocal(worldBox.TopRight));
+            var chunkLb = new Vector2i((int)Math.Floor(localArea.Left) / ChunkSize, (int)Math.Floor(localArea.Bottom) / ChunkSize);
+            var chunkRt = new Vector2i((int)Math.Floor(localArea.Right) / ChunkSize, (int)Math.Floor(localArea.Top) / ChunkSize);
+
+            for (var x = chunkLb.X; x <= chunkRt.X; x++)
+            {
+                for (var y = chunkLb.Y; y <= chunkRt.Y; y++)
+                {
+                    var gridChunk = GridTileToChunkIndices(new Vector2i(x, y));
+
+                    if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
+
+                    yield return chunk;
+                }
+            }
+        }
+
         #endregion ChunkAccess
 
         #region SnapGridAccess

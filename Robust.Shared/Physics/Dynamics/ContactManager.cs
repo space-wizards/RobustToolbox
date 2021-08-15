@@ -412,9 +412,10 @@ namespace Robust.Shared.Physics.Dynamics
                         var fixtureB = contact.FixtureB!;
                         var bodyA = fixtureA.Body;
                         var bodyB = fixtureB.Body;
+                        var worldPoint = Transform.Mul(_physicsManager.EnsureTransform(bodyA), contact.Manifold.LocalPoint);
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB));
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB, worldPoint));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA, worldPoint));
                         break;
                     }
                     case ContactStatus.Touching:
@@ -525,9 +526,12 @@ namespace Robust.Shared.Physics.Dynamics
 
     public sealed class StartCollideEvent : CollideEvent
     {
-        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture)
+        public Vector2 WorldPoint;
+
+        public StartCollideEvent(Fixture ourFixture, Fixture otherFixture, Vector2 worldPoint)
             : base(ourFixture, otherFixture)
         {
+            WorldPoint = worldPoint;
         }
     }
 

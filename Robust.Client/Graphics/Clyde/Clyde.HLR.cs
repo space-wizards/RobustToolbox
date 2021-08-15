@@ -329,7 +329,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var matrix = entry.worldMatrix;
                 var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, in entry.worldRotation, in worldPosition);
+                entry.sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
                 {

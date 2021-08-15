@@ -528,16 +528,19 @@ namespace Robust.Shared.Map
 
             foreach (var (_, mapGrid) in _grids)
             {
-                if (mapGrid.ParentMapId != mapId)
+                if (mapGrid.ParentMapId != mapId || !mapGrid.WorldBounds.Contains(worldPos))
                     continue;
 
                 // Turn the worldPos into a localPos and work out the relevant chunk we need to check
-                // This is much faster than iterating over every chunk individually for obvious reasons
+                // This is much faster than iterating over every chunk individually.
                 // (though now we need some extra calcs up front).
 
                 // Doesn't use WorldBounds because it's just an AABB.
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
-                var localPos = gridEnt.Transform.InvWorldMatrix.Transform(worldPos);
+                var gridPos = gridEnt.Transform.WorldPosition;
+                var gridRot = -gridEnt.Transform.WorldRotation;
+
+                var localPos = new Angle(gridRot).RotateVec(worldPos - gridPos);
 
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
                 var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
@@ -545,7 +548,7 @@ namespace Robust.Shared.Map
                 if (!mapGrid.HasChunk(chunkIndices)) continue;
                 if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
 
-                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+                var transform = new Transform(gridPos, (float) gridRot);
                 // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.
                 var chunk = mapGrid.GetChunk(chunkIndices);
                 var id = gridFixtureSystem.GetChunkId((MapChunk) chunk);

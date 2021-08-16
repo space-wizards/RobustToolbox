@@ -20,6 +20,8 @@ namespace Robust.Shared.Map
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
+        private SharedGridFixtureSystem _gridFixtures = default!;
+
         public IGameTiming GameTiming => _gameTiming;
 
         public IEntityManager EntityManager => _entityManager;
@@ -83,6 +85,8 @@ namespace Robust.Shared.Map
 #endif
 
             Logger.DebugS("map", "Starting...");
+
+            _gridFixtures = EntitySystem.Get<SharedGridFixtureSystem>();
 
             if (!_maps.Contains(MapId.Nullspace))
             {
@@ -524,8 +528,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            var gridFixtureSystem = EntitySystem.Get<SharedGridFixtureSystem>();
-
             foreach (var (_, mapGrid) in _grids)
             {
                 if (mapGrid.ParentMapId != mapId || !mapGrid.WorldBounds.Contains(worldPos))
@@ -551,7 +553,7 @@ namespace Robust.Shared.Map
                 var transform = new Transform(gridPos, (float) gridRot);
                 // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.
                 var chunk = mapGrid.GetChunk(chunkIndices);
-                var id = gridFixtureSystem.GetChunkId((MapChunk) chunk);
+                var id = _gridFixtures.GetChunkId((MapChunk) chunk);
                 var fixture = body.GetFixture(id);
 
                 if (fixture == null) continue;

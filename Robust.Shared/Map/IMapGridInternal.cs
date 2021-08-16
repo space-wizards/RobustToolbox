@@ -58,9 +58,8 @@ namespace Robust.Shared.Map
         IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks();
 
         /// <summary>
-        ///     Returns chunks on this grid intersecting the box. Will not generate new chunks.
+        ///     Returns all the <see cref="IMapChunkInternal"/> intersecting the worldAABB.
         /// </summary>
-        /// <returns>All chunks in the grid.</returns>
-        IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldBox);
+        IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB);
     }
 }

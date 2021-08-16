@@ -381,18 +381,19 @@ namespace Robust.Shared.Map
             return _chunks;
         }
 
-        /// <inheritdoc />
-        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldBox)
+        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB)
         {
-            var localArea = new Box2(WorldToLocal(worldBox.BottomLeft), WorldToLocal(worldBox.TopRight));
-            var chunkLb = new Vector2i((int)Math.Floor(localArea.Left) / ChunkSize, (int)Math.Floor(localArea.Bottom) / ChunkSize);
-            var chunkRt = new Vector2i((int)Math.Floor(localArea.Right) / ChunkSize, (int)Math.Floor(localArea.Top) / ChunkSize);
+            var worldPos = WorldPosition;
+            var localArea = new Box2Rotated(worldAABB.Translated(-worldPos), -WorldRotation).CalcBoundingBox();
 
-            for (var x = chunkLb.X; x <= chunkRt.X; x++)
+            var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
+            var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
+
+            for (var x = chunkLB.X; x <= chunkRT.X; x++)
             {
-                for (var y = chunkLb.Y; y <= chunkRt.Y; y++)
+                for (var y = chunkLB.Y; y <= chunkRT.Y; y++)
                 {
-                    var gridChunk = GridTileToChunkIndices(new Vector2i(x, y));
+                    var gridChunk = new Vector2i(x, y);
 
                     if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
 

@@ -286,7 +286,7 @@ namespace Robust.Shared.GameObjects
 
             public void Dispatch<TEvent>(EntityUid euid, TEvent args) where TEvent : notnull
             {
-                var eventType = args.GetType();
+                var eventType = typeof(TEvent);
 
                 if (!_eventTables[euid].TryGetValue(eventType, out var subscribedComps))
                     return;
@@ -359,7 +359,7 @@ namespace Robust.Shared.GameObjects
                     if (!_subscriptions.TryGetValue(type, out var compSubs))
                         continue;
 
-                    if (!compSubs.TryGetValue(args.GetType(), out var reg))
+                    if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
                         continue;
 
                     var handler = (DirectedEventHandler<TEvent>)reg.Original;

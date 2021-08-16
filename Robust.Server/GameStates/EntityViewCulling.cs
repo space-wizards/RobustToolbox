@@ -39,9 +39,6 @@ namespace Robust.Server.GameStates
         private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
 
-        private readonly ObjectPool<Dictionary<GridId, HashSet<IMapChunkInternal>>> _includedChunksPool
-            = new DefaultObjectPool<Dictionary<GridId, HashSet<IMapChunkInternal>>>(new DefaultPooledObjectPolicy<Dictionary<GridId, HashSet<IMapChunkInternal>>>(), MaxVisPoolSize);
-
         private ushort _transformNetId = 0;
 
         /// <summary>
@@ -175,7 +172,7 @@ namespace Robust.Server.GameStates
             var visibleEnts = _visSetPool.Get();
             // As we may have entities parented to anchored entities on chunks we've never seen we need to make sure
             // they're included.
-            var includedChunks = _includedChunksPool.Get();
+            var includedChunks = new Dictionary<GridId, HashSet<IMapChunkInternal>>();
             List<EntityState> entityStates = new();
 
             //TODO: Refactor map system to not require every map and grid entity to function.
@@ -258,7 +255,6 @@ namespace Robust.Server.GameStates
                 }
 
                 viewers.Clear();
-                _includedChunksPool.Return(includedChunks);
                 _viewerEntsPool.Return(viewers);
             }
 

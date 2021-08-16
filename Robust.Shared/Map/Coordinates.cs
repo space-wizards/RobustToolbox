@@ -541,6 +541,12 @@ namespace Robust.Shared.Map
             if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
                 return false;
 
+            if (EntityId == otherCoordinates.EntityId)
+            {
+                distance = (Position - otherCoordinates.Position).Length;
+                return true;
+            }
+
             var mapCoordinates = ToMap(entityManager);
             var otherMapCoordinates = otherCoordinates.ToMap(entityManager);
 

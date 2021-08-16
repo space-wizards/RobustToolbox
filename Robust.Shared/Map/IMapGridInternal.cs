@@ -44,6 +44,11 @@ namespace Robust.Shared.Map
         IMapChunkInternal GetChunk(Vector2i chunkIndices);
 
         /// <summary>
+        /// Returns whether a chunk exists with the specified indices.
+        /// </summary>
+        bool HasChunk(Vector2i chunkIndices);
+
+        /// <summary>
         ///     Returns all chunks in this grid. This will not generate new chunks.
         /// </summary>
         /// <returns>All chunks in the grid.</returns>

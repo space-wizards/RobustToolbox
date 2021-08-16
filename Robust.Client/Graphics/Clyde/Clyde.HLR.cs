@@ -292,6 +292,9 @@ namespace Robust.Client.Graphics.Clyde
                     // scale can be passed with PostShader as variable in future
                     var postShadeScale = 1.25f;
                     var screenSpriteSize = (Vector2i) ((screenRT - screenLB) * postShadeScale).Rounded();
+
+                    // Rotate the vector by the eye angle, otherwise the bounding box will be incorrect
+                    screenSpriteSize = (Vector2i) eye.Rotation.RotateVec(screenSpriteSize).Rounded();
                     screenSpriteSize.Y = -screenSpriteSize.Y;
 
                     // I'm not 100% sure why it works, but without it post-shader
@@ -326,7 +329,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var matrix = entry.worldMatrix;
                 var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, in entry.worldRotation, in worldPosition);
+                entry.sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
                 {

@@ -200,6 +200,7 @@ namespace Robust.Shared.Map
             // For now we'll just attach a fixture to each chunk.
 
             // Not raising directed because the grid's EntityUid isn't set yet.
+            // Don't call GridFixtureSystem directly because it's server-only.
             IoCManager
                 .Resolve<IEntityManager>()
                 .EventBus
@@ -256,6 +257,26 @@ namespace Robust.Shared.Map
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
             chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+        }
+
+        /// <inheritdoc />
+        public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
+        {
+            var chunks = new HashSet<IMapChunkInternal>();
+
+            foreach (var (gridIndices, tile) in tiles)
+            {
+                var (chunk, chunkTile) = ChunkAndOffsetForTile(gridIndices);
+                chunks.Add(chunk);
+                chunk.SuppressCollisionRegeneration = true;
+                chunk.SetTile((ushort)chunkTile.X, (ushort)chunkTile.Y, tile);
+            }
+
+            foreach (var chunk in chunks)
+            {
+                chunk.SuppressCollisionRegeneration = false;
+                chunk.RegenerateCollision();
+            }
         }
 
         /// <inheritdoc />
@@ -358,6 +379,27 @@ namespace Robust.Shared.Map
             return _chunks;
         }
 
+        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB)
+        {
+            var worldPos = WorldPosition;
+            var localArea = new Box2Rotated(worldAABB.Translated(-worldPos), -WorldRotation).CalcBoundingBox();
+
+            var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
+            var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
+
+            for (var x = chunkLB.X; x <= chunkRT.X; x++)
+            {
+                for (var y = chunkLB.Y; y <= chunkRT.Y; y++)
+                {
+                    var gridChunk = new Vector2i(x, y);
+
+                    if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
+
+                    yield return chunk;
+                }
+            }
+        }
+
         #endregion ChunkAccess
 
         #region SnapGridAccess
@@ -431,7 +473,7 @@ namespace Robust.Shared.Map
             RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
         }
 
-        private (IMapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
+        private (IMapChunkInternal, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
         {
             var gridChunkIndices = GridTileToChunkIndices(pos);
             var chunk = GetChunk(gridChunkIndices);

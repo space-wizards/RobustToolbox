@@ -48,6 +48,7 @@ namespace Robust.Shared
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<ICollisionManager, CollisionManager>();
             IoCManager.Register<IIslandManager, IslandManager>();
+            IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
         }
     }
 }

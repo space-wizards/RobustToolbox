@@ -56,7 +56,7 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new(0, 1, "Master", 62.5f, 1, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, false, 0f);
 
         public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, bool loop, float playOffsetSeconds) : this()
         {
@@ -153,7 +153,7 @@ namespace Robust.Shared.Audio
         {
             PitchScale = 1f;
             BusName = "Master";
-            MaxDistance = 62.5f;
+            MaxDistance = SoundSystem.DefaultSoundRange;
             Attenuation = 1f;
         }
     }

@@ -482,13 +482,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
 
-        /// <summary>
-        /// How frequently grid fixtures are updated. Given grid updates can be expensive they aren't run immediately.
-        /// Set to 0 to run them immediately.
-        /// </summary>
-        public static readonly CVarDef<float> GridFixtureUpdateRate =
-            CVarDef.Create("physics.grid_fixture_update_rate", 0.2f);
-
         /*
          * DISCORD
          */

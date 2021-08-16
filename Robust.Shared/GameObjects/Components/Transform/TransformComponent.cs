@@ -384,6 +384,11 @@ namespace Robust.Shared.GameObjects
                     {
                         _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
                     }
+                    // If no grid found then unanchor it.
+                    else
+                    {
+                        _anchored = false;
+                    }
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {

@@ -1,13 +1,9 @@
 using System.Collections.Generic;
-using Robust.Server.GameObjects;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 
@@ -21,47 +17,14 @@ namespace Robust.Server.Physics
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
-        // Is delaying fixture updates a good idea? IDEK. We definitely can't do them on every tile changed
-        // because if someone changes 50 tiles that will kill perf. We could probably just run it every Update
-        // (and at specific times due to race condition stuff).
-        // At any rate, cooldown given here if someone wants it. CD of 0 just runs it every tick.
-        private float _cooldown;
-        private float _accumulator;
-
-        private HashSet<MapChunk> _queuedChunks = new();
+        // We'll defer gridfixture updates during deserialization because MapLoader is interesting
+        private Dictionary<GridId, HashSet<MapChunk>> _queuedFixtureUpdates = new();
 
         public override void Initialize()
         {
             base.Initialize();
-            UpdatesBefore.Add(typeof(PhysicsSystem));
+            UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
             SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
-
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.GridFixtureUpdateRate, value => _cooldown = value, true);
-        }
-
-        public override void Update(float frameTime)
-        {
-            base.Update(frameTime);
-
-            _accumulator += frameTime;
-            if (_accumulator < _cooldown) return;
-
-            _accumulator -= _cooldown;
-            Process();
-        }
-
-        /// <summary>
-        /// Go through every dirty chunk and re-generate their fixtures.
-        /// </summary>
-        public void Process()
-        {
-            foreach (var chunk in _queuedChunks)
-            {
-                RegenerateCollision(chunk);
-            }
-
-            _queuedChunks.Clear();
         }
 
         /// <summary>
@@ -70,13 +33,42 @@ namespace Robust.Server.Physics
         /// <param name="ev"></param>
         private void HandleCollisionRegenerate(RegenerateChunkCollisionEvent ev)
         {
-            if (_cooldown <= 0f)
+            // TODO: Probably shouldn't do this but MapLoader can lead to a lot of ordering nonsense hence we
+            // need to defer for it to ensure the fixtures get attached to the chunks properly.
+            if (!EntityManager.EntityExists(_mapManager.GetGrid(ev.Chunk.GridId).GridEntityId))
             {
-                RegenerateCollision(ev.Chunk);
+                if (!_queuedFixtureUpdates.TryGetValue(ev.Chunk.GridId, out var chunks))
+                {
+                    chunks = new HashSet<MapChunk>();
+                    _queuedFixtureUpdates[ev.Chunk.GridId] = chunks;
+                }
+
+                chunks.Add(ev.Chunk);
                 return;
             }
 
-            _queuedChunks.Add(ev.Chunk);
+            RegenerateCollision(ev.Chunk);
+        }
+
+        public void ProcessGrid(GridId gridId)
+        {
+            if (!_queuedFixtureUpdates.TryGetValue(gridId, out var chunks))
+            {
+                return;
+            }
+
+            if (!_mapManager.GridExists(gridId))
+            {
+                _queuedFixtureUpdates.Remove(gridId);
+                return;
+            }
+
+            foreach (var chunk in chunks)
+            {
+                RegenerateCollision(chunk);
+            }
+
+            _queuedFixtureUpdates.Remove(gridId);
         }
 
         private void RegenerateCollision(MapChunk chunk)
@@ -130,21 +122,9 @@ namespace Robust.Server.Physics
             {
                 var newPoly = (PolygonShape) newFixture.Shape;
 
-                if (newPoly.Vertices.Count == poly.Vertices.Count)
-                {
-                    for (var i = 0; i < poly.Vertices.Count; i++)
-                    {
-                        if (!poly.Vertices[i].EqualsApprox(newPoly.Vertices[i]))
-                        {
-                            same = false;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
+                if (!poly.EqualsApprox(newPoly))
                     same = false;
-                }
+
             }
             else
             {

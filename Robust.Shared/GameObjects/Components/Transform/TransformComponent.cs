@@ -122,7 +122,8 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, oldRotation, _localRotation));
+                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref rotateEvent);
                 }
                 else
                 {
@@ -321,7 +322,10 @@ namespace Robust.Shared.GameObjects
                     if (Running)
                     {
                         if(!oldPosition.Position.Equals(Coordinates.Position))
-                            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldPosition, Coordinates));
+                        {
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates);
+                            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
+                        }
                     }
                 }
                 else
@@ -357,7 +361,8 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldGridPos, Coordinates));
+                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
                 }
                 else
                 {
@@ -546,13 +551,15 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB));
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB));
+                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref rotateEvent);
                 _oldLocalRotation = null;
             }
         }
@@ -770,7 +777,7 @@ namespace Robust.Shared.GameObjects
                     _localPosition = newState.LocalPosition;
 
                     var ev = new MoveEvent(Owner, oldPos, Coordinates);
-                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ev);
+                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ref ev);
 
                     rebuildMatrices = true;
                 }
@@ -915,7 +922,8 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new AnchorStateChangedEvent(), false);
+            var anchorStateChangedEvent = default(AnchorStateChangedEvent);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent, false);
         }
     }
 

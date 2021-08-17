@@ -4,7 +4,9 @@ using System.Collections.Immutable;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {

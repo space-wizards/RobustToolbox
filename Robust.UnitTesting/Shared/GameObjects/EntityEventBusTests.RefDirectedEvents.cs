@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
+using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.UnitTesting.Server;
 
@@ -35,6 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(testEvent.TestNumber, Is.EqualTo(10));
         }
 
+        [Reflect(false)]
         private class SubscribeCompRefEventSystem : EntitySystem
         {
             public override void Initialize()
@@ -67,6 +69,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.Throws(typeof(InvalidOperationException), () => simulation.InitializeInstance());
         }
 
+        [Reflect(false)]
         private class SubscriptionNoMixedRefValueEventSystem : EntitySystem
         {
             public override void Initialize()
@@ -79,7 +82,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             private void MyValueHandler(EntityUid uid, DummyTwoComponent component, TestStructEvent args) { }
             private void MyRefHandler(EntityUid uid, DummyComponent component, ref TestStructEvent args) { }
         }
-
+        
         private class DummyTwoComponent : Component
         {
             public override string Name => "DummyTwo";

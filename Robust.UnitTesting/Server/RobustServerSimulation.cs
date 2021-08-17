@@ -251,12 +251,12 @@ namespace Robust.UnitTesting.Server
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            entityMan.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
-
             var mapManager = container.Resolve<IMapManager>();
             mapManager.Initialize();
+
+            entityMan.Startup();
             mapManager.Startup();
+            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 

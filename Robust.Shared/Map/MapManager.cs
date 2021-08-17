@@ -7,8 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Physics.Collision;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -19,6 +17,8 @@ namespace Robust.Shared.Map
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+
+        private SharedGridFixtureSystem _gridFixtures = default!;
 
         public IGameTiming GameTiming => _gameTiming;
 
@@ -83,6 +83,8 @@ namespace Robust.Shared.Map
 #endif
 
             Logger.DebugS("map", "Starting...");
+
+            _gridFixtures = EntitySystem.Get<SharedGridFixtureSystem>();
 
             if (!_maps.Contains(MapId.Nullspace))
             {
@@ -526,26 +528,41 @@ namespace Robust.Shared.Map
         {
             foreach (var (_, mapGrid) in _grids)
             {
-                if (mapGrid.ParentMapId != mapId)
+                if (mapGrid.ParentMapId != mapId || !mapGrid.WorldBounds.Contains(worldPos))
                     continue;
 
-                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
+                // Turn the worldPos into a localPos and work out the relevant chunk we need to check
+                // This is much faster than iterating over every chunk individually.
+                // (though now we need some extra calcs up front).
 
+                // Doesn't use WorldBounds because it's just an AABB.
+                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
+                var gridPos = gridEnt.Transform.WorldPosition;
+                var gridRot = -gridEnt.Transform.WorldRotation;
+
+                var localPos = new Angle(gridRot).RotateVec(worldPos - gridPos);
+
+                var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
+                var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
+
+                if (!mapGrid.HasChunk(chunkIndices)) continue;
                 if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
 
-                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+                var transform = new Transform(gridPos, (float) gridRot);
+                // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.
+                var chunk = mapGrid.GetChunk(chunkIndices);
+                var id = _gridFixtures.GetChunkId((MapChunk) chunk);
+                var fixture = body.GetFixture(id);
 
-                // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
-                foreach (var fixture in body.Fixtures)
+                if (fixture == null) continue;
+
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    // TODO: Use CollisionManager once it's done.
+                    if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
                     {
-                        // TODO: Need TestPoint from Box2D
-                        if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
-                        {
-                            grid = mapGrid;
-                            return true;
-                        }
+                        grid = mapGrid;
+                        return true;
                     }
                 }
             }

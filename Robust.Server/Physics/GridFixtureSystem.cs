@@ -12,7 +12,7 @@ namespace Robust.Server.Physics
     /// <summary>
     /// Handles generating fixtures for MapGrids.
     /// </summary>
-    internal sealed class GridFixtureSystem : EntitySystem
+    internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
@@ -110,7 +110,7 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = $"grid_chunk-{chunk.Indices.X}-{chunk.Indices.Y}",
+                true) {ID = GetChunkId(chunk),
                 Body = physicsComponent};
 
             // Check if we have an existing fixture on MapGrid

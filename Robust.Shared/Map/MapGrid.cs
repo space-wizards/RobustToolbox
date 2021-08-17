@@ -376,6 +376,12 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public bool HasChunk(Vector2i chunkIndices)
+        {
+            return _chunks.ContainsKey(chunkIndices);
+        }
+
+        /// <inheritdoc />
         public IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks()
         {
             return _chunks;

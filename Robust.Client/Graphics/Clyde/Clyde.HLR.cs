@@ -213,12 +213,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var screenSize = viewport.Size;
 
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            // TODO: Make this check more accurate.
-            var widerBounds = worldBounds.Enlarged(5);
-
-            ProcessSpriteEntities(mapId, widerBounds, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, worldBounds, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -280,7 +275,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (entry.sprite.PostShader != null)
                 {
                     // calculate world bounding box
-                    var spriteBB = entry.sprite.CalculateBoundingBox();
+                    var spriteBB = entry.sprite.CalculateBoundingBox(entry.worldMatrix.Transform(Vector2.Zero));
                     var spriteLB = spriteBB.BottomLeft;
                     var spriteRT = spriteBB.TopRight;
 
@@ -386,10 +381,12 @@ namespace Robust.Client.Graphics.Clyde
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
                     var worldPos = entry.matrix.Transform(transform.LocalPosition);
-                    entry.yWorldPos = worldPos.Y;
+                    // TODO: RETRIEVE IT FROM THE QUERY?
+                    var bounds = value.CalculateBoundingBox(worldPos);
+                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y / 2f;
                     return true;
 
-                }), bounds, true);
+                }), bounds);
             }
         }
 

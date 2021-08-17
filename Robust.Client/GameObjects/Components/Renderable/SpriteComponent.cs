@@ -1626,11 +1626,11 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc/>
-        public Box2 CalculateBoundingBox()
+        public Box2 CalculateBoundingBox(Vector2 worldPos)
         {
             // fast check for empty sprites
             if (Layers.Count == 0)
-                return new Box2();
+                return new Box2(worldPos, worldPos);
 
             // we need to calculate bounding box taking into account all nested layers
             // because layers can have offsets, scale or rotation we need to calculate a new BB
@@ -1653,9 +1653,19 @@ namespace Robust.Client.GameObjects
                 new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
 
             // move it all to world transform system (with sprite offset)
-            var worldPosition = Owner.Transform.WorldPosition;
-            var worldBB = spriteBB.Translated(Offset + worldPosition);
+            var worldBB = spriteBB.Translated(Offset + worldPos);
             return worldBB;
+        }
+
+        internal void UpdateBounds()
+        {
+            var bounds = CalculateBoundingBox(Owner.Transform.WorldPosition);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteBoundsUpdateEvent {Bounds = bounds});
+        }
+
+        public sealed class SpriteBoundsUpdateEvent : EntityEventArgs
+        {
+            public Box2 Bounds { get; init; }
         }
 
         /// <summary>
@@ -1713,7 +1723,19 @@ namespace Robust.Client.GameObjects
             public bool AutoAnimated = true;
 
             [ViewVariables(VVAccess.ReadWrite)]
-            public Vector2 Offset { get; set; }
+            public Vector2 Offset
+            {
+                get => _offset;
+                set
+                {
+                    if (_offset.EqualsApprox(value)) return;
+
+                    _offset = value;
+                    _parent.UpdateBounds();
+                }
+            }
+
+            private Vector2 _offset;
 
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
@@ -1982,10 +2004,10 @@ namespace Robust.Client.GameObjects
             /// <inheritdoc/>
             public Box2 CalculateBoundingBox()
             {
+                // TODO: Event if the RSI size ever updates
                 // TODO: scale & rotation for layers is currently unimplemented.
                 return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter);
             }
-
         }
 
         void IAnimationProperties.SetAnimatableProperty(string name, object value)

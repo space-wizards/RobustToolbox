@@ -385,7 +385,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
                     var worldPos = new Vector2(entry.matrix.R0C2, entry.matrix.R1C2);
-                    // TODO: RETRIEVE IT FROM THE QUERY?
+                    // Didn't use the bounds from the query as that has to be re-calculated (and is probably more expensive than this).
                     var bounds = value.CalculateBoundingBox(worldPos);
                     entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;

@@ -77,7 +77,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    RaiseLocalEvent(ev.Sender.Uid, ev);
+                    RaiseLocalEvent(ev.Sender.Uid, ref ev);
                 }
             }
         }

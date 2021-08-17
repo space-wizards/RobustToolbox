@@ -62,6 +62,7 @@ namespace Robust.Shared.Physics
 
         public delegate bool QueryCallbackDelegate(in T value);
         public delegate bool QueryCallbackDelegate<TState>(ref TState state, in T value);
+        public delegate bool QueryAABBCallbackDelegate<TState>(ref TState state, in T value, in Box2 valueAABB);
 
         public delegate bool RayQueryCallbackDelegate(in T value, in Vector2 point, float distFromOrigin);
         public delegate bool RayQueryCallbackDelegate<TState>(ref TState state, in T value, in Vector2 point, float distFromOrigin);
@@ -222,6 +223,18 @@ namespace Robust.Shared.Physics
             state = tuple.state;
         }
 
+        /// <summary>
+        /// Query the tree and also retrieve the precise AABB of the values (which are local to the tree).
+        /// You may wish to use <see cref="QueryAabb(Robust.Shared.Physics.DynamicTree{T}.QueryCallbackDelegate,Robust.Shared.Maths.Box2,bool)"/> instead.
+        /// </summary>
+        public void QueryAabb<TState>(ref TState state, QueryAABBCallbackDelegate<TState> callback, Box2 aabb)
+        {
+            // Doesn't take in approx as we need to get the entry's AABB back out which re-calculates it anyway.
+            var tuple = (state, _b2Tree, callback, aabb, _extractAabb);
+            _b2Tree.Query(ref tuple, DelegateCache<TState>.ValueAabbQueryState, aabb);
+            state = tuple.state;
+        }
+
         public IEnumerable<T> QueryAabb(Box2 aabb, bool approx = false)
         {
             var list = new List<T>();
@@ -301,6 +314,19 @@ namespace Robust.Shared.Physics
             return tuple.callback(ref tuple.state, item);
         }
 
+        private static bool ValueAabbQueryStateCallback<TState>(ref (TState state, B2DynamicTree<T> tree, QueryAABBCallbackDelegate<TState> callback, Box2 aabb, ExtractAabbDelegate extract) tuple, Proxy proxy)
+        {
+            var item = tuple.tree.GetUserData(proxy)!;
+            var precise = tuple.extract(item);
+
+            if (!precise.Intersects(tuple.aabb))
+            {
+                return true;
+            }
+
+            return tuple.callback(ref tuple.state, item, precise);
+        }
+
         private static bool RayQueryStateCallback<TState>(ref (TState state, RayQueryCallbackDelegate<TState> callback, B2DynamicTree<T> tree, ExtractAabbDelegate? extract, Ray srcRay) tuple, Proxy proxy, in Vector2 hitPos, float distance)
         {
             var item = tuple.tree.GetUserData(proxy)!;
@@ -363,6 +389,10 @@ namespace Robust.Shared.Physics
             public static readonly
                 B2DynamicTree<T>.QueryCallback<(TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, ExtractAabbDelegate extract)> AabbQueryState =
                     AabbQueryStateCallback;
+
+            public static readonly
+                B2DynamicTree<T>.QueryCallback<(TState state, B2DynamicTree<T> tree, QueryAABBCallbackDelegate<TState> callback, Box2 aabb, ExtractAabbDelegate extract)> ValueAabbQueryState =
+                    ValueAabbQueryStateCallback;
 
             public static readonly
                 B2DynamicTree<T>.RayQueryCallback<(TState state, RayQueryCallbackDelegate<TState> callback,

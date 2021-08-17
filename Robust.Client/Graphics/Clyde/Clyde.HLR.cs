@@ -375,7 +375,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
-                    in SpriteComponent value) =>
+                    in SpriteComponent value, in Box2 aabb) =>
                 {
                     var entity = value.Owner;
                     var transform = entity.Transform;
@@ -385,9 +385,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
                     var worldPos = new Vector2(entry.matrix.R0C2, entry.matrix.R1C2);
-                    // TODO: RETRIEVE IT FROM THE QUERY?
-                    var bounds = value.CalculateBoundingBox(worldPos);
-                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
+                    entry.yWorldPos = worldPos.Y - aabb.Extents.Y;
                     return true;
 
                 }, bounds);

@@ -10,6 +10,10 @@ using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -269,13 +273,15 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 }
 
+                var matrix = entry.worldMatrix;
+                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
 
                 RenderTexture? entityPostRenderTarget = null;
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
                     // calculate world bounding box
-                    var spriteBB = entry.sprite.CalculateBoundingBox(entry.worldMatrix.Transform(Vector2.Zero));
+                    var spriteBB = entry.sprite.CalculateBoundingBox(worldPosition);
                     var spriteLB = spriteBB.BottomLeft;
                     var spriteRT = spriteBB.TopRight;
 
@@ -322,8 +328,6 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                var matrix = entry.worldMatrix;
-                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
                 entry.sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
@@ -369,7 +373,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                comp.SpriteTree.QueryAabb(ref list, ((
+                comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
@@ -380,13 +384,13 @@ namespace Robust.Client.Graphics.Clyde
                     entry.sprite = value;
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
-                    var worldPos = entry.matrix.Transform(transform.LocalPosition);
+                    var worldPos = new Vector2(entry.matrix.R0C2, entry.matrix.R1C2);
                     // TODO: RETRIEVE IT FROM THE QUERY?
                     var bounds = value.CalculateBoundingBox(worldPos);
-                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y / 2f;
+                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }), bounds);
+                }, bounds);
             }
         }
 

@@ -10,10 +10,6 @@ using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics.Clyde
 {

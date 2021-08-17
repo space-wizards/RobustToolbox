@@ -2003,7 +2003,6 @@ namespace Robust.Client.GameObjects
             /// <inheritdoc/>
             public Box2 CalculateBoundingBox()
             {
-                // TODO: Event if the RSI size ever updates
                 // TODO: scale & rotation for layers is currently unimplemented.
                 return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter);
             }

@@ -144,7 +144,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void EntMoved(EntityUid uid, OccluderComponent component, MoveEvent args)
+        private void EntMoved(EntityUid uid, OccluderComponent component, ref MoveEvent args)
         {
             _updates.Enqueue(new OccluderUpdateEvent(component));
         }

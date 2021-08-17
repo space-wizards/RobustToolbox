@@ -276,6 +276,7 @@ namespace Robust.Shared.GameObjects
                 if (!_refEvents.TryGetValue(eventType, out var referenceEvent))
                 {
                     _refEvents.Add(eventType, registration.ReferenceEvent);
+                    referenceEvent = registration.ReferenceEvent;
                 }
 
                 if (referenceEvent != registration.ReferenceEvent)

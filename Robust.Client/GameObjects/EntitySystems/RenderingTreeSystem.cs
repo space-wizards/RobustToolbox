@@ -267,6 +267,11 @@ namespace Robust.Client.GameObjects
             return null;
         }
 
+        private bool IsVisible(SpriteComponent component)
+        {
+            return component.Visible && !component.ContainerOccluded;
+        }
+
         public override void FrameUpdate(float frameTime)
         {
             _checkedChildren.Clear();
@@ -274,7 +279,7 @@ namespace Robust.Client.GameObjects
             foreach (var sprite in _spriteQueue)
             {
                 sprite.TreeUpdateQueued = false;
-                if (!sprite.Visible || sprite.ContainerOccluded)
+                if (!IsVisible(sprite))
                 {
                     ClearSprite(sprite);
                     continue;

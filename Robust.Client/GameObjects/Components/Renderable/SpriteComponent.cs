@@ -1512,6 +1512,11 @@ namespace Robust.Client.GameObjects
 
         private void QueueUpdateIsInert()
         {
+            // Look this was an easy way to get bounds checks for layer updates.
+            // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
+            if (Owner?.EntityManager?.EventBus != null)
+                UpdateBounds();
+
             if (_inertUpdateQueued)
                 return;
 
@@ -1659,13 +1664,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            var bounds = CalculateBoundingBox(Owner.Transform.WorldPosition);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteBoundsUpdateEvent {Bounds = bounds});
-        }
-
-        public sealed class SpriteBoundsUpdateEvent : EntityEventArgs
-        {
-            public Box2 Bounds { get; init; }
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
         }
 
         /// <summary>

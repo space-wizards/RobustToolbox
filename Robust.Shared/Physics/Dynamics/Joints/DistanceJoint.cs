@@ -324,7 +324,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             handle.SetTransform(matrixB);
             handle.DrawRect(line, Color.Blue.WithAlpha(0.7f));
-            handle.SetTransform(in Matrix3.Identity);
         }
 
         public override JointState GetState()

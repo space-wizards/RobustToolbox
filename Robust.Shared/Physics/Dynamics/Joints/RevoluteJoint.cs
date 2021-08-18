@@ -1,11 +1,33 @@
+// MIT License
+
+// Copyright (c) 2019 Erin Catto
+
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+
 using System;
-using System.Threading.Tasks.Dataflow;
-using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
+    [Serializable, NetSerializable]
     public class RevoluteJoint : Joint
     {
         [NonSerialized] private Vector2 _impulse;
@@ -26,23 +48,25 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [NonSerialized] private float _lowerImpulse;
         [NonSerialized] private float _upperImpulse;
 
-        private Vector2 _localAnchorA;
-        private Vector2 _localAnchorB;
+        public Vector2 LocalAnchorA;
+        public Vector2 LocalAnchorB;
 
-        public bool _enableLimit;
-        public bool _enableMotor;
-        public float _referenceAngle;
-        public float _lowerAngle;
-        public float _upperAngle;
-        public float _motorSpeed;
-        public float _maxMotorTorque;
+        public bool EnableLimit;
+        public bool EnableMotor;
+        public float ReferenceAngle;
+        public float LowerAngle;
+        public float UpperAngle;
+        public float MotorSpeed;
+        public float MaxMotorTorque;
 
         public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA, bodyB)
         {
-            _localAnchorA = bodyA.GetLocalPoint(anchor);
-            _localAnchorB = bodyB.GetLocalPoint(anchor);
-            _referenceAngle = (float) (bodyB.Owner.Transform.WorldRotation - bodyA.Owner.Transform.WorldRotation).Theta;
+            LocalAnchorA = bodyA.GetLocalPoint(anchor);
+            LocalAnchorB = bodyB.GetLocalPoint(anchor);
+            ReferenceAngle = (float) (bodyB.Owner.Transform.WorldRotation - bodyA.Owner.Transform.WorldRotation).Theta;
         }
+
+        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB) : base(bodyA, bodyB) {}
 
         public override JointType JointType => JointType.Revolute;
 
@@ -81,8 +105,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
 	        Quaternion2D qA = new(aA), qB = new(aB);
 
-	        _rA = Transform.Mul(qA, _localAnchorA - _localCenterA);
-	        _rB = Transform.Mul(qB, _localAnchorB - _localCenterB);
+	        _rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
+	        _rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
 
 	        // J = [-I -r1_skew I r2_skew]
 	        // r_skew = [-ry; rx]
@@ -94,7 +118,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        float mA = _invMassA, mB = _invMassB;
 	        float iA = _invIA, iB = _invIB;
 
-	        _K.EX.X = mA + mB + _rA.Y * _rA.Y * iA + _rB.Y * _rB.Y * iB;
+            _K.EX.X = mA + mB + _rA.Y * _rA.Y * iA + _rB.Y * _rB.Y * iB;
 	        _K.EY.X = -_rA.Y * _rA.X * iA - _rB.Y * _rB.X * iB;
 	        _K.EX.Y = _K.EY.X;
 	        _K.EY.Y = mA + mB + _rA.X * _rA.X * iA + _rB.X * _rB.X * iB;
@@ -111,14 +135,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        fixedRotation = true;
 	        }
 
-	        _angle = aB - aA - _referenceAngle;
-	        if (_enableLimit == false || fixedRotation)
+	        _angle = aB - aA - ReferenceAngle;
+	        if (EnableLimit == false || fixedRotation)
 	        {
 		        _lowerImpulse = 0.0f;
 		        _upperImpulse = 0.0f;
 	        }
 
-	        if (_enableMotor == false || fixedRotation)
+	        if (EnableMotor == false || fixedRotation)
 	        {
 		        _motorImpulse = 0.0f;
 	        }
@@ -167,12 +191,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        bool fixedRotation = (iA + iB == 0.0f);
 
 	        // Solve motor constraint.
-	        if (_enableMotor && !fixedRotation)
+	        if (EnableMotor && !fixedRotation)
 	        {
-		        float Cdot = wB - wA - _motorSpeed;
+		        float Cdot = wB - wA - MotorSpeed;
 		        float impulse = -_axialMass * Cdot;
 		        float oldImpulse = _motorImpulse;
-		        float maxImpulse = data.FrameTime * _maxMotorTorque;
+		        float maxImpulse = data.FrameTime * MaxMotorTorque;
 		        _motorImpulse = Math.Clamp(_motorImpulse + impulse, -maxImpulse, maxImpulse);
 		        impulse = _motorImpulse - oldImpulse;
 
@@ -180,11 +204,11 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        wB += iB * impulse;
 	        }
 
-	        if (_enableLimit && fixedRotation == false)
+	        if (EnableLimit && fixedRotation == false)
 	        {
 		        // Lower limit
 		        {
-			        float C = _angle - _lowerAngle;
+			        float C = _angle - LowerAngle;
 			        float Cdot = wB - wA;
 			        float impulse = -_axialMass * (Cdot + MathF.Max(C, 0.0f) * data.InvDt);
 			        float oldImpulse = _lowerImpulse;
@@ -199,7 +223,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        // Note: signs are flipped to keep C positive when the constraint is satisfied.
 		        // This also keeps the impulse positive when the limit is active.
 		        {
-			        float C = _upperAngle - _angle;
+			        float C = UpperAngle - _angle;
 			        float Cdot = wA - wB;
 			        float impulse = -_axialMass * (Cdot + MathF.Max(C, 0.0f) * data.InvDt);
 			        float oldImpulse = _upperImpulse;
@@ -247,25 +271,25 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        bool fixedRotation = (_invIA + _invIB == 0.0f);
 
 	        // Solve angular limit constraint
-	        if (_enableLimit && fixedRotation == false)
+	        if (EnableLimit && fixedRotation == false)
 	        {
-		        float angle = aB - aA - _referenceAngle;
+		        float angle = aB - aA - ReferenceAngle;
 		        float C = 0.0f;
 
-		        if (Math.Abs(_upperAngle - _lowerAngle) < 2.0f * data.AngularSlop)
+		        if (Math.Abs(UpperAngle - LowerAngle) < 2.0f * data.AngularSlop)
 		        {
 			        // Prevent large angular corrections
-			        C = Math.Clamp(angle - _lowerAngle, -data.MaxAngularCorrection, data.MaxAngularCorrection);
+			        C = Math.Clamp(angle - LowerAngle, -data.MaxAngularCorrection, data.MaxAngularCorrection);
 		        }
-		        else if (angle <= _lowerAngle)
+		        else if (angle <= LowerAngle)
 		        {
 			        // Prevent large angular corrections and allow some slop.
-			        C = Math.Clamp(angle - _lowerAngle + data.AngularSlop, -data.MaxAngularCorrection, 0.0f);
+			        C = Math.Clamp(angle - LowerAngle + data.AngularSlop, -data.MaxAngularCorrection, 0.0f);
 		        }
-		        else if (angle >= _upperAngle)
+		        else if (angle >= UpperAngle)
 		        {
 			        // Prevent large angular corrections and allow some slop.
-			        C = Math.Clamp(angle - _upperAngle - data.AngularSlop, 0.0f, data.MaxAngularCorrection);
+			        C = Math.Clamp(angle - UpperAngle - data.AngularSlop, 0.0f, data.MaxAngularCorrection);
 		        }
 
 		        float limitImpulse = -_axialMass * C;
@@ -278,8 +302,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        {
 		        qA.Set(aA);
 		        qB.Set(aB);
-		        var rA = Transform.Mul(qA, _localAnchorA - _localCenterA);
-		        var rB = Transform.Mul(qB, _localAnchorB - _localCenterB);
+		        var rA = Transform.Mul(qA, LocalAnchorA - _localCenterA);
+		        var rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
 
 		        var C = cB + rB - cA - rA;
 		        positionError = C.Length;

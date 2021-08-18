@@ -34,6 +34,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private float _baumgarte;
         private float _linearSlop;
         private float _maxLinearCorrection;
+        private float _maxAngularCorrection;
 
         private Vector2[] _linearVelocities = Array.Empty<Vector2>();
         private float[] _angularVelocities = Array.Empty<float>();
@@ -54,6 +55,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _baumgarte = cfg.Baumgarte;
             _linearSlop = cfg.LinearSlop;
             _maxLinearCorrection = cfg.MaxLinearCorrection;
+            _maxAngularCorrection = cfg.MaxAngularCorrection;
         }
 
         public void Reset(SolverData data, int contactCount, Contact[] contacts)

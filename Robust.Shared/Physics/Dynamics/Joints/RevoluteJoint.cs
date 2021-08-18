@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks.Dataflow;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -9,9 +10,38 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     {
         [NonSerialized] private Vector2 _impulse;
         [NonSerialized] private int _indexA;
+        [NonSerialized] private int _indexB;
+        [NonSerialized] private Vector2 _localCenterA;
+        [NonSerialized] private Vector2 _localCenterB;
+        [NonSerialized] private float _invMassA;
+        [NonSerialized] private float _invMassB;
+        [NonSerialized] private float _invIA;
+        [NonSerialized] private float _invIB;
+        [NonSerialized] private Vector2 _rA;
+        [NonSerialized] private Vector2 _rB;
+        [NonSerialized] private Matrix22 _K;
+        [NonSerialized] private float _axialMass;
+        [NonSerialized] private float _angle;
+        [NonSerialized] private float _motorImpulse;
+        [NonSerialized] private float _lowerImpulse;
+        [NonSerialized] private float _upperImpulse;
 
-        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB) : base(bodyA, bodyB)
+        private Vector2 _localAnchorA;
+        private Vector2 _localAnchorB;
+
+        public bool _enableLimit;
+        public bool _enableMotor;
+        public float _referenceAngle;
+        public float _lowerAngle;
+        public float _upperAngle;
+        public float _motorSpeed;
+        public float _maxMotorTorque;
+
+        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA, bodyB)
         {
+            _localAnchorA = bodyA.GetLocalPoint(anchor);
+            _localAnchorB = bodyB.GetLocalPoint(anchor);
+            _referenceAngle = (float) (bodyB.Owner.Transform.WorldRotation - bodyA.Owner.Transform.WorldRotation).Theta;
         }
 
         public override JointType JointType => JointType.Revolute;
@@ -51,8 +81,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
 	        Quaternion2D qA = new(aA), qB = new(aB);
 
-	        m_rA = b2Mul(qA, m_localAnchorA - m_localCenterA);
-	        m_rB = b2Mul(qB, m_localAnchorB - m_localCenterB);
+	        _rA = Transform.Mul(qA, _localAnchorA - _localCenterA);
+	        _rB = Transform.Mul(qB, _localAnchorB - _localCenterB);
 
 	        // J = [-I -r1_skew I r2_skew]
 	        // r_skew = [-ry; rx]
@@ -61,19 +91,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        // K = [ mA+r1y^2*iA+mB+r2y^2*iB,  -r1y*iA*r1x-r2y*iB*r2x]
 	        //     [  -r1y*iA*r1x-r2y*iB*r2x, mA+r1x^2*iA+mB+r2x^2*iB]
 
-	        float mA = m_invMassA, mB = m_invMassB;
-	        float iA = m_invIA, iB = m_invIB;
+	        float mA = _invMassA, mB = _invMassB;
+	        float iA = _invIA, iB = _invIB;
 
-	        m_K.ex.x = mA + mB + m_rA.y * m_rA.y * iA + m_rB.y * m_rB.y * iB;
-	        m_K.ey.x = -m_rA.y * m_rA.x * iA - m_rB.y * m_rB.x * iB;
-	        m_K.ex.y = m_K.ey.x;
-	        m_K.ey.y = mA + mB + m_rA.x * m_rA.x * iA + m_rB.x * m_rB.x * iB;
+	        _K.EX.X = mA + mB + _rA.Y * _rA.Y * iA + _rB.Y * _rB.Y * iB;
+	        _K.EY.X = -_rA.Y * _rA.X * iA - _rB.Y * _rB.X * iB;
+	        _K.EX.Y = _K.EY.X;
+	        _K.EY.Y = mA + mB + _rA.X * _rA.X * iA + _rB.X * _rB.X * iB;
 
-	        m_axialMass = iA + iB;
+	        _axialMass = iA + iB;
 	        bool fixedRotation;
-	        if (m_axialMass > 0.0f)
+	        if (_axialMass > 0.0f)
 	        {
-		        m_axialMass = 1.0f / m_axialMass;
+		        _axialMass = 1.0f / _axialMass;
 		        fixedRotation = false;
 	        }
 	        else
@@ -81,47 +111,47 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        fixedRotation = true;
 	        }
 
-	        m_angle = aB - aA - m_referenceAngle;
-	        if (m_enableLimit == false || fixedRotation)
+	        _angle = aB - aA - _referenceAngle;
+	        if (_enableLimit == false || fixedRotation)
 	        {
-		        m_lowerImpulse = 0.0f;
-		        m_upperImpulse = 0.0f;
+		        _lowerImpulse = 0.0f;
+		        _upperImpulse = 0.0f;
 	        }
 
-	        if (m_enableMotor == false || fixedRotation)
+	        if (_enableMotor == false || fixedRotation)
 	        {
-		        m_motorImpulse = 0.0f;
+		        _motorImpulse = 0.0f;
 	        }
 
-	        if (data.step.warmStarting)
+	        if (data.WarmStarting)
 	        {
 		        // Scale impulses to support a variable time step.
-		        m_impulse *= data.step.dtRatio;
-		        m_motorImpulse *= data.step.dtRatio;
-		        m_lowerImpulse *= data.step.dtRatio;
-		        m_upperImpulse *= data.step.dtRatio;
+		        _impulse *= data.DtRatio;
+		        _motorImpulse *= data.DtRatio;
+		        _lowerImpulse *= data.DtRatio;
+		        _upperImpulse *= data.DtRatio;
 
-		        float axialImpulse = m_motorImpulse + m_lowerImpulse - m_upperImpulse;
-		        b2Vec2 P(m_impulse.x, m_impulse.y);
+		        float axialImpulse = _motorImpulse + _lowerImpulse - _upperImpulse;
+		        var P = new Vector2(_impulse.X, _impulse.Y);
 
-		        vA -= mA * P;
-		        wA -= iA * (b2Cross(m_rA, P) + axialImpulse);
+		        vA -= P * mA;
+		        wA -= iA * (Vector2.Cross(_rA, P) + axialImpulse);
 
-		        vB += mB * P;
-		        wB += iB * (b2Cross(m_rB, P) + axialImpulse);
+		        vB += P * mB;
+		        wB += iB * (Vector2.Cross(_rB, P) + axialImpulse);
 	        }
 	        else
-	        {
-		        m_impulse.SetZero();
-		        m_motorImpulse = 0.0f;
-		        m_lowerImpulse = 0.0f;
-		        m_upperImpulse = 0.0f;
+            {
+                _impulse = Vector2.Zero;
+		        _motorImpulse = 0.0f;
+		        _lowerImpulse = 0.0f;
+		        _upperImpulse = 0.0f;
 	        }
 
-	        data.velocities[m_indexA].v = vA;
-	        data.velocities[m_indexA].w = wA;
-	        data.velocities[m_indexB].v = vB;
-	        data.velocities[m_indexB].w = wB;
+	        data.LinearVelocities[_indexA] = vA;
+	        data.AngularVelocities[_indexA] = wA;
+	        data.LinearVelocities[_indexB] = vB;
+	        data.AngularVelocities[_indexB] = wB;
         }
 
         internal override void SolveVelocityConstraints(SolverData data)
@@ -142,24 +172,24 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        float Cdot = wB - wA - _motorSpeed;
 		        float impulse = -_axialMass * Cdot;
 		        float oldImpulse = _motorImpulse;
-		        float maxImpulse = data.step.dt * m_maxMotorTorque;
-		        m_motorImpulse = b2Clamp(m_motorImpulse + impulse, -maxImpulse, maxImpulse);
-		        impulse = m_motorImpulse - oldImpulse;
+		        float maxImpulse = data.FrameTime * _maxMotorTorque;
+		        _motorImpulse = Math.Clamp(_motorImpulse + impulse, -maxImpulse, maxImpulse);
+		        impulse = _motorImpulse - oldImpulse;
 
 		        wA -= iA * impulse;
 		        wB += iB * impulse;
 	        }
 
-	        if (m_enableLimit && fixedRotation == false)
+	        if (_enableLimit && fixedRotation == false)
 	        {
 		        // Lower limit
 		        {
-			        float C = m_angle - m_lowerAngle;
+			        float C = _angle - _lowerAngle;
 			        float Cdot = wB - wA;
-			        float impulse = -m_axialMass * (Cdot + b2Max(C, 0.0f) * data.step.inv_dt);
-			        float oldImpulse = m_lowerImpulse;
-			        m_lowerImpulse = b2Max(m_lowerImpulse + impulse, 0.0f);
-			        impulse = m_lowerImpulse - oldImpulse;
+			        float impulse = -_axialMass * (Cdot + MathF.Max(C, 0.0f) * data.InvDt);
+			        float oldImpulse = _lowerImpulse;
+			        _lowerImpulse = MathF.Max(_lowerImpulse + impulse, 0.0f);
+			        impulse = _lowerImpulse - oldImpulse;
 
 			        wA -= iA * impulse;
 			        wB += iB * impulse;
@@ -169,12 +199,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        // Note: signs are flipped to keep C positive when the constraint is satisfied.
 		        // This also keeps the impulse positive when the limit is active.
 		        {
-			        float C = m_upperAngle - m_angle;
+			        float C = _upperAngle - _angle;
 			        float Cdot = wA - wB;
-			        float impulse = -m_axialMass * (Cdot + b2Max(C, 0.0f) * data.step.inv_dt);
-			        float oldImpulse = m_upperImpulse;
-			        m_upperImpulse = b2Max(m_upperImpulse + impulse, 0.0f);
-			        impulse = m_upperImpulse - oldImpulse;
+			        float impulse = -_axialMass * (Cdot + MathF.Max(C, 0.0f) * data.InvDt);
+			        float oldImpulse = _upperImpulse;
+			        _upperImpulse = MathF.Max(_upperImpulse + impulse, 0.0f);
+			        impulse = _upperImpulse - oldImpulse;
 
 			        wA += iA * impulse;
 			        wB -= iB * impulse;
@@ -183,92 +213,94 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
 	        // Solve point-to-point constraint
 	        {
-		        b2Vec2 Cdot = vB + b2Cross(wB, m_rB) - vA - b2Cross(wA, m_rA);
-		        b2Vec2 impulse = m_K.Solve(-Cdot);
+		        var Cdot = vB + Vector2.Cross(wB, _rB) - vA - Vector2.Cross(wA, _rA);
+		        var impulse = _K.Solve(-Cdot);
 
-		        m_impulse.x += impulse.x;
-		        m_impulse.y += impulse.y;
+		        _impulse.X += impulse.X;
+		        _impulse.Y += impulse.Y;
 
-		        vA -= mA * impulse;
-		        wA -= iA * b2Cross(m_rA, impulse);
+		        vA -= impulse * mA;
+		        wA -= iA * Vector2.Cross(_rA, impulse);
 
-		        vB += mB * impulse;
-		        wB += iB * b2Cross(m_rB, impulse);
+		        vB += impulse * mB;
+		        wB += iB * Vector2.Cross(_rB, impulse);
 	        }
 
-	        data.velocities[m_indexA].v = vA;
-	        data.velocities[m_indexA].w = wA;
-	        data.velocities[m_indexB].v = vB;
-	        data.velocities[m_indexB].w = wB;
+	        data.LinearVelocities[_indexA] = vA;
+	        data.AngularVelocities[_indexA] = wA;
+	        data.LinearVelocities[_indexB] = vB;
+	        data.AngularVelocities[_indexB] = wB;
         }
 
         internal override bool SolvePositionConstraints(SolverData data)
         {
-            b2Vec2 cA = data.positions[m_indexA].c;
-	        float aA = data.positions[m_indexA].a;
-	        b2Vec2 cB = data.positions[m_indexB].c;
-	        float aB = data.positions[m_indexB].a;
+            var cA = data.Positions[_indexA];
+	        float aA = data.Angles[_indexA];
+	        var cB = data.Positions[_indexB];
+	        float aB = data.Angles[_indexB];
 
-	        b2Rot qA(aA), qB(aB);
+	        Quaternion2D qA = new(aA), qB = new(aB);
 
 	        float angularError = 0.0f;
 	        float positionError = 0.0f;
 
-	        bool fixedRotation = (m_invIA + m_invIB == 0.0f);
+	        bool fixedRotation = (_invIA + _invIB == 0.0f);
 
 	        // Solve angular limit constraint
-	        if (m_enableLimit && fixedRotation == false)
+	        if (_enableLimit && fixedRotation == false)
 	        {
-		        float angle = aB - aA - m_referenceAngle;
+		        float angle = aB - aA - _referenceAngle;
 		        float C = 0.0f;
 
-		        if (b2Abs(m_upperAngle - m_lowerAngle) < 2.0f * b2_angularSlop)
+		        if (Math.Abs(_upperAngle - _lowerAngle) < 2.0f * data.AngularSlop)
 		        {
 			        // Prevent large angular corrections
-			        C = b2Clamp(angle - m_lowerAngle, -b2_maxAngularCorrection, b2_maxAngularCorrection);
+			        C = Math.Clamp(angle - _lowerAngle, -data.MaxAngularCorrection, data.MaxAngularCorrection);
 		        }
-		        else if (angle <= m_lowerAngle)
+		        else if (angle <= _lowerAngle)
 		        {
 			        // Prevent large angular corrections and allow some slop.
-			        C = b2Clamp(angle - m_lowerAngle + b2_angularSlop, -b2_maxAngularCorrection, 0.0f);
+			        C = Math.Clamp(angle - _lowerAngle + data.AngularSlop, -data.MaxAngularCorrection, 0.0f);
 		        }
-		        else if (angle >= m_upperAngle)
+		        else if (angle >= _upperAngle)
 		        {
 			        // Prevent large angular corrections and allow some slop.
-			        C = b2Clamp(angle - m_upperAngle - b2_angularSlop, 0.0f, b2_maxAngularCorrection);
+			        C = Math.Clamp(angle - _upperAngle - data.AngularSlop, 0.0f, data.MaxAngularCorrection);
 		        }
 
-		        float limitImpulse = -m_axialMass * C;
-		        aA -= m_invIA * limitImpulse;
-		        aB += m_invIB * limitImpulse;
-		        angularError = b2Abs(C);
+		        float limitImpulse = -_axialMass * C;
+		        aA -= _invIA * limitImpulse;
+		        aB += _invIB * limitImpulse;
+		        angularError = Math.Abs(C);
 	        }
 
 	        // Solve point-to-point constraint.
 	        {
 		        qA.Set(aA);
 		        qB.Set(aB);
-		        b2Vec2 rA = b2Mul(qA, m_localAnchorA - m_localCenterA);
-		        b2Vec2 rB = b2Mul(qB, m_localAnchorB - m_localCenterB);
+		        var rA = Transform.Mul(qA, _localAnchorA - _localCenterA);
+		        var rB = Transform.Mul(qB, _localAnchorB - _localCenterB);
 
-		        b2Vec2 C = cB + rB - cA - rA;
-		        positionError = C.Length();
+		        var C = cB + rB - cA - rA;
+		        positionError = C.Length;
 
-		        float mA = m_invMassA, mB = m_invMassB;
-		        float iA = m_invIA, iB = m_invIB;
+		        float mA = _invMassA, mB = _invMassB;
+		        float iA = _invIA, iB = _invIB;
 
-		        b2Mat22 K;
-		        K.ex.x = mA + mB + iA * rA.y * rA.y + iB * rB.y * rB.y;
-		        K.ex.y = -iA * rA.x * rA.y - iB * rB.x * rB.y;
-		        K.ey.x = K.ex.y;
-		        K.ey.y = mA + mB + iA * rA.x * rA.x + iB * rB.x * rB.x;
+		        var K = new Matrix22(
+                    mA + mB + iA * rA.Y * rA.Y + iB * rB.Y * rB.Y,
+                    -iA * rA.X * rA.Y - iB * rB.X * rB.Y,
+                    0f,
+                    mA + mB + iA * rA.X * rA.X + iB * rB.X * rB.X);
 
-		        var impulse = -K.Solve(C);
+                K.EY.X = K.EX.Y;
 
-		        cA -= mA * impulse;
+                var impulse = -K.Solve(C);
+
+		        cA -= impulse * mA;
 		        aA -= iA * Vector2.Cross(rA, impulse);
 
-		        cB += mB * impulse;
+		        cB += impulse * mB;
 		        aB += iB * Vector2.Cross(rB, impulse);
 	        }
 
@@ -277,7 +309,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        data.Positions[_indexB] = cB;
 	        data.Angles[_indexB] = aB;
 
-	        return positionError <= _linearSlop && angularError <= _angularSlop;
+	        return positionError <= data.LinearSlop && angularError <= data.AngularSlop;
         }
     }
 }

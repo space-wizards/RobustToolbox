@@ -101,6 +101,7 @@ namespace Robust.Shared.Physics
             CfgVar(CVars.Baumgarte, value => _islandCfg.Baumgarte = value);
             CfgVar(CVars.LinearSlop, value => _islandCfg.LinearSlop = value);
             CfgVar(CVars.MaxLinearCorrection, value => _islandCfg.MaxLinearCorrection = value);
+            CfgVar(CVars.MaxAngularCorrection, value => _islandCfg.MaxAngularCorrection = value);
             CfgVar(CVars.MaxLinVelocity, value =>
             {
                 _maxLinearVelocityRaw = value;

@@ -157,6 +157,10 @@ stored in a single array since multiple arrays lead to multiple misses.
         private int _velocityIterations;
         private float _maxLinearVelocity;
         private float _maxAngularVelocity;
+        private float _maxLinearCorrection;
+        private float _maxAngularCorrection;
+        private float _linearSlop;
+        private float _angularSlop;
         private int _positionIterations;
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
@@ -223,6 +227,8 @@ stored in a single array since multiple arrays lead to multiple misses.
             _velocityIterations = cfg.VelocityIterations;
             _maxLinearVelocity = cfg.MaxLinearVelocity;
             _maxAngularVelocity = cfg.MaxAngularVelocity;
+            _maxLinearCorrection = cfg.MaxLinearCorrection;
+            _maxAngularCorrection = cfg.MaxAngularCorrection;
             _positionIterations = cfg.PositionIterations;
             _sleepAllowed = cfg.SleepAllowed;
             _timeToSleep = cfg.TimeToSleep;
@@ -362,6 +368,11 @@ stored in a single array since multiple arrays lead to multiple misses.
             SolverData.DtRatio = dtRatio;
             SolverData.InvDt = invDt;
             SolverData.IslandIndex = ID;
+            SolverData.WarmStarting = _warmStarting;
+            SolverData.LinearSlop = _linearSlop;
+            SolverData.AngularSlop = _angularSlop;
+            SolverData.MaxLinearCorrection = _maxLinearCorrection;
+            SolverData.MaxAngularCorrection = _maxAngularCorrection;
 
             SolverData.LinearVelocities = _linearVelocities;
             SolverData.AngularVelocities = _angularVelocities;
@@ -601,6 +612,12 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float DtRatio { get; set; }
         public float InvDt { get; set; }
 
+        public bool WarmStarting { get; set; }
+        public float LinearSlop { get; set; }
+        public float AngularSlop { get; set; }
+        public float MaxLinearCorrection { get; set; }
+        public float MaxAngularCorrection { get; set; }
+
         public Vector2[] LinearVelocities { get; set; } = default!;
         public float[] AngularVelocities { get; set; } = default!;
 
@@ -626,5 +643,6 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float Baumgarte;
         public float LinearSlop;
         public float MaxLinearCorrection;
+        public float MaxAngularCorrection;
     }
 }

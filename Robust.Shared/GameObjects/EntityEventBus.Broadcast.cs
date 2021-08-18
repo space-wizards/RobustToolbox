@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -223,7 +224,7 @@ namespace Robust.Shared.GameObjects
         {
             SubscribeEventCommon<T>(source, subscriber, eventHandler, (ref object ev) =>
             {
-                var tev = (T) ev;
+                ref var tev = ref Unsafe.As<object, T>(ref ev);
                 eventHandler(ref tev);
             }, eventHandler, null, true);
         }
@@ -235,7 +236,7 @@ namespace Robust.Shared.GameObjects
 
             SubscribeEventCommon<T>(source, subscriber, eventHandler, (ref object ev) =>
             {
-                var tev = (T) ev;
+                ref var tev = ref Unsafe.As<object, T>(ref ev);
                 eventHandler(ref tev);
             }, eventHandler, order, true);
             HandleOrderRegistration(typeof(T), order);
@@ -450,7 +451,7 @@ namespace Robust.Shared.GameObjects
 
             if (_orderedEvents.Contains(eventType))
             {
-                ProcessSingleEventOrdered(source, eventArgs, eventType);
+                ProcessSingleEventOrdered(source, ref eventArgs, eventType);
             }
             else if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
@@ -472,7 +473,8 @@ namespace Robust.Shared.GameObjects
 
             if (_orderedEvents.Contains(eventType))
             {
-                ProcessSingleEventOrdered(source, eventArgs, eventType);
+                ref var objArgs = ref Unsafe.As<T, object>(ref eventArgs);
+                ProcessSingleEventOrdered(source, ref objArgs, eventType);
             }
             else if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {

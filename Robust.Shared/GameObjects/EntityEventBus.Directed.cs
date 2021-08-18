@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -89,7 +90,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_orderedEvents.Contains(typeof(TEvent)))
             {
-                RaiseLocalOrdered(uid, args, broadcast);
+                RaiseLocalOrdered(uid, ref args, broadcast);
                 return;
             }
 
@@ -107,7 +108,7 @@ namespace Robust.Shared.GameObjects
 
             if (_orderedEvents.Contains(type))
             {
-                RaiseLocalOrdered(uid, args, broadcast);
+                RaiseLocalOrdered(uid, ref args, broadcast);
                 return;
             }
 
@@ -122,7 +123,7 @@ namespace Robust.Shared.GameObjects
         {
             if (_orderedEvents.Contains(typeof(TEvent)))
             {
-                RaiseLocalOrdered(uid, args, broadcast);
+                RaiseLocalOrdered(uid, ref args, broadcast);
                 return;
             }
 
@@ -139,7 +140,7 @@ namespace Robust.Shared.GameObjects
 
             if (_orderedEvents.Contains(type))
             {
-                RaiseLocalOrdered(uid, args, broadcast);
+                RaiseLocalOrdered(uid, ref args, broadcast);
                 return;
             }
 
@@ -277,7 +278,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (referenceEvent != registration.ReferenceEvent)
-                    throw new InvalidOperationException($"Attempted to subscribe by-ref and by-value to the same directed event!");
+                    throw new InvalidOperationException("Attempted to subscribe by-ref and by-value to the same directed event!");
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {
@@ -297,9 +298,8 @@ namespace Robust.Shared.GameObjects
                 AddSubscription(compType, eventType, new DirectedRegistration(handler, order,
                     (EntityUid uid, IComponent comp, ref object ev) =>
                     {
-                        var tev = (TEvent) ev;
+                        ref var tev = ref Unsafe.As<object, TEvent>(ref ev);
                         handler(uid, comp, ref tev);
-
                     }, byReference));
             }
 

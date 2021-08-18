@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -14,13 +15,13 @@ namespace Robust.Shared.GameObjects
         // Ordered event raising is slow so if this event has any ordering dependencies we use a slower path.
         private readonly HashSet<Type> _orderedEvents = new();
 
-        private void ProcessSingleEventOrdered(EventSource source, object eventArgs, Type eventType)
+        private void ProcessSingleEventOrdered(EventSource source, ref object eventArgs, Type eventType)
         {
             var found = new List<(EventHandler, OrderingData?)>();
 
             CollectBroadcastOrdered(source, eventType, found);
 
-            DispatchOrderedEvents(eventArgs, found);
+            DispatchOrderedEvents(ref eventArgs, found);
         }
 
         private void CollectBroadcastOrdered(
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
 
         private void RaiseLocalOrdered<TEvent>(
             EntityUid uid,
-            TEvent args,
+            ref TEvent args,
             bool broadcast)
             where TEvent : notnull
         {
@@ -51,13 +52,14 @@ namespace Robust.Shared.GameObjects
 
             _eventTables.CollectOrdered(uid, typeof(TEvent), found);
 
-            DispatchOrderedEvents(args, found);
+            ref var objArgs = ref Unsafe.As<TEvent, object>(ref args);
+            DispatchOrderedEvents(ref objArgs, found);
 
             if (broadcast)
                 ProcessAwaitingMessages(EventSource.Local, args, typeof(TEvent));
         }
 
-        private static void DispatchOrderedEvents(object eventArgs, List<(EventHandler, OrderingData?)> found)
+        private static void DispatchOrderedEvents(ref object eventArgs, List<(EventHandler, OrderingData?)> found)
         {
             var nodes = TopologicalSort.FromBeforeAfter(
                 found.Where(f => f.Item2 != null),

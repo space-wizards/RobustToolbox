@@ -15,11 +15,12 @@ namespace Robust.Client.GameObjects
         private static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
+            var bounds = value.CalculateBoundingBox(worldPos);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var offset = -tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
 
-            return new Box2(pos, pos);
+            return bounds.Translated(offset);
         }
 
         private static Box2 LightAabbFunc(in PointLightComponent value)
@@ -36,11 +37,12 @@ namespace Robust.Client.GameObjects
         internal static Box2 SpriteAabbFunc(SpriteComponent value, Vector2? worldPos = null)
         {
             worldPos ??= value.Owner.Transform.WorldPosition;
+            var bounds = value.CalculateBoundingBox(worldPos.Value);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var offset = -tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
 
-            return new Box2(pos, pos);
+            return bounds.Translated(offset);
         }
 
         internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)

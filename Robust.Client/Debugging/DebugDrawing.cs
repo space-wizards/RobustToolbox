@@ -189,9 +189,9 @@ namespace Robust.Client.Debugging
                         {
                             if (drawnJoints.Contains(joint)) continue;
                             drawnJoints.Add(joint);
-
-                        joint.DebugDraw(drawing, in viewport);
-                        drawing.SetTransform(in Matrix3.Identity);
+                            joint.DebugDraw(drawing, in viewport);
+                            drawing.SetTransform(in Matrix3.Identity);
+                        }
                     }
 
                     if (worldBox.Contains(mouseWorldPos))

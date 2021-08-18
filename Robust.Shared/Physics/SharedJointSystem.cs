@@ -245,7 +245,6 @@ namespace Robust.Shared.Physics
 
             ComponentManager.RemoveComponent<JointComponent>(body.Owner.Uid);
         }
-
         private void RemoveJoint(RemoveJointEvent @event)
         {
             var joint = @event.Joint;
@@ -253,27 +252,25 @@ namespace Robust.Shared.Physics
             var bodyA = joint.BodyA;
             var bodyB = joint.BodyB;
 
+            // Originally I logged these but because of prediction the client can just nuke them multiple times in a row
+            // because each body has its own JointComponent, bleh.
             if (!bodyA.Owner.TryGetComponent(out JointComponent? jointComponentA))
             {
-                Logger.ErrorS("physics", $"Unable to remove joint {joint} from {bodyA.Owner} as it doesn't have a component?");
                 return;
             }
 
             if (!bodyB.Owner.TryGetComponent(out JointComponent? jointComponentB))
             {
-                Logger.ErrorS("physics", $"Unable to remove joint {joint} from {bodyB.Owner} as it doesn't have a component?");
                 return;
             }
 
             if (!jointComponentA.Joints.Remove(joint.ID))
             {
-                Logger.ErrorS("physics", $"Unable to remove joint {joint} as it's not on body {bodyA.Owner}");
                 return;
             }
 
             if (!jointComponentB.Joints.Remove(joint.ID))
             {
-                Logger.ErrorS("physics", $"Unable to remove joint {joint} as it's not on body {bodyA.Owner}");
                 return;
             }
 
@@ -295,14 +292,16 @@ namespace Robust.Shared.Physics
             EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
+            /*
             if (jointComponentA.Joints.Count == 0)
                 bodyA.Owner.RemoveComponent<JointComponent>();
 
             if (jointComponentB.Joints.Count == 0)
                 bodyB.Owner.RemoveComponent<JointComponent>();
+            */
 
-            bodyA.Dirty();
-            bodyB.Dirty();
+            jointComponentA.Dirty();
+            jointComponentB.Dirty();
         }
         #endregion
 

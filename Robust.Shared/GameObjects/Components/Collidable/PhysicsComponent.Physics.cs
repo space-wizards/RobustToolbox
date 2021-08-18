@@ -465,6 +465,9 @@ namespace Robust.Shared.GameObjects
             return bounds;
         }
 
+        [ViewVariables]
+        public int FixtureCount { get; internal set; }
+
         /// <inheritdoc />
         [ViewVariables]
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
@@ -1196,14 +1199,9 @@ namespace Robust.Shared.GameObjects
 
                 ValueTuple<EntityUid, EntityUid> uids;
 
-                if (aUid.CompareTo(bUid) < 0)
-                {
-                    uids = new ValueTuple<EntityUid, EntityUid>(aUid, bUid);
-                }
-                else
-                {
-                    uids = new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
-                }
+                uids = aUid.CompareTo(bUid) < 0 ?
+                    new ValueTuple<EntityUid, EntityUid>(aUid, bUid) :
+                    new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
 
                 foreach (var (_, joint) in jointComponentA.Joints)
                 {

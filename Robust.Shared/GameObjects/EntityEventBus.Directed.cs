@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
+using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.GameObjects
 {
@@ -51,11 +53,8 @@ namespace Robust.Shared.GameObjects
 
     internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
     {
-        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, object args);
-        private delegate void DirectedEventHandler<in TEvent>(EntityUid uid, IComponent comp, TEvent args) where TEvent : notnull;
-
-        private delegate void DirectedEventRefHandler(EntityUid uid, IComponent comp, ref object args);
-        private delegate void DirectedEventRefHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args) where TEvent : notnull;
+        private delegate void DirectedEventHandler(EntityUid uid, IComponent comp, ref object args);
+        private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args) where TEvent : notnull;
 
         private IEntityManager _entMan;
         private EventTables _eventTables;
@@ -96,7 +95,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            _eventTables.Dispatch(uid, args);
+            _eventTables.Dispatch(uid, ref args, false);
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
@@ -114,7 +113,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            _eventTables.Dispatch(uid, type, args);
+            _eventTables.Dispatch(uid, type, ref args, false);
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
@@ -129,7 +128,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            _eventTables.Dispatch(uid, ref args);
+            _eventTables.Dispatch(uid, ref args, true);
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
@@ -146,7 +145,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            _eventTables.Dispatch(uid, type, ref args);
+            _eventTables.Dispatch(uid, type, ref args, true);
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
@@ -158,10 +157,10 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, TEvent args)
+            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp) comp, args);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, null);
+            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, null, false);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(
@@ -172,12 +171,12 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            void EventHandler(EntityUid uid, IComponent comp, TEvent args)
+            void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp) comp, args);
 
             var orderData = new OrderingData(orderType, before, after);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, orderData);
+            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, orderData, false);
             HandleOrderRegistration(typeof(TEvent), orderData);
         }
 
@@ -186,7 +185,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp) comp, ref args);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, null);
+            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, null, true);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler, Type orderType, Type[]? before = null,
@@ -197,7 +196,7 @@ namespace Robust.Shared.GameObjects
 
             var orderData = new OrderingData(orderType, before, after);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, orderData);
+            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, orderData, true);
             HandleOrderRegistration(typeof(TEvent), orderData);
         }
 
@@ -294,23 +293,16 @@ namespace Robust.Shared.GameObjects
                 compSubs.Add(eventType, registration);
             }
 
-            public void Subscribe<TEvent>(Type compType, Type eventType, DirectedEventHandler<TEvent> handler, OrderingData? order)
+            public void Subscribe<TEvent>(Type compType, Type eventType, DirectedEventHandler<TEvent> handler, OrderingData? order, bool byReference)
                 where TEvent : notnull
             {
                 AddSubscription(compType, eventType, new DirectedRegistration(handler, order,
-                    (DirectedEventHandler) ((uid, comp, ev) => handler(uid, comp, (TEvent) ev)), false));
-            }
+                    (EntityUid uid, IComponent comp, ref object ev) =>
+                    {
+                        var tev = (TEvent) ev;
+                        handler(uid, comp, ref tev);
 
-            public void Subscribe<TEvent>(Type compType, Type eventType, DirectedEventRefHandler<TEvent> handler, OrderingData? order)
-                where TEvent : notnull
-            {
-                AddSubscription(compType, eventType, new DirectedRegistration(handler, order,
-                    (DirectedEventRefHandler) ((EntityUid uid, IComponent comp, ref object ev) =>
-                        {
-                            var tev = (TEvent) ev;
-                            handler(uid, comp, ref tev);
-
-                        }), true));
+                    }, byReference));
             }
 
             public void Unsubscribe(Type compType, Type eventType)
@@ -379,9 +371,24 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            public void Dispatch<TEvent>(EntityUid euid, TEvent args) where TEvent : notnull
+            [Conditional("DEBUG")]
+            private void AssertDispatch(Type eventType, bool dispatchByReference)
+            {
+                if (!_refEvents.TryGetValue(eventType, out var eventReference))
+                    return; // Event never even subscribed to.
+
+                if(eventReference && !dispatchByReference)
+                  DebugTools.Assert(RefDispatchError);
+
+                if (!eventReference && dispatchByReference)
+                    DebugTools.Assert(ValueDispatchError);
+            }
+
+            public void Dispatch<TEvent>(EntityUid euid, ref TEvent args, bool dispatchByReference) where TEvent : notnull
             {
                 var eventType = typeof(TEvent);
+
+                AssertDispatch(eventType, dispatchByReference);
 
                 if (!TryGetSubscriptions(eventType, euid, out var enumerator))
                     return;
@@ -390,46 +397,15 @@ namespace Robust.Shared.GameObjects
                 {
                     var component = tuple.Value.Component;
                     var reg = tuple.Value.Registration;
-                    DebugTools.Assert(!reg.ReferenceEvent, ValueDispatchError);
                     var handler = (DirectedEventHandler<TEvent>) reg.Original;
-                    handler(euid, component, args);
-                }
-            }
-
-            public void Dispatch(EntityUid euid, Type eventType, object args)
-            {
-                if (!TryGetSubscriptions(eventType, euid, out var enumerator))
-                    return;
-
-                while (enumerator.MoveNext(out var tuple))
-                {
-                    var component = tuple.Value.Component;
-                    var reg = tuple.Value.Registration;
-                    DebugTools.Assert(!reg.ReferenceEvent, ValueDispatchError);
-                    var handler = (DirectedEventHandler) reg.Handler;
-                    handler(euid, component, args);
-                }
-            }
-
-            public void Dispatch<TEvent>(EntityUid euid, ref TEvent args) where TEvent : notnull
-            {
-                var eventType = typeof(TEvent);
-
-                if (!TryGetSubscriptions(eventType, euid, out var enumerator))
-                    return;
-
-                while (enumerator.MoveNext(out var tuple))
-                {
-                    var component = tuple.Value.Component;
-                    var reg = tuple.Value.Registration;
-                    DebugTools.Assert(reg.ReferenceEvent, RefDispatchError);
-                    var handler = (DirectedEventRefHandler<TEvent>) reg.Original;
                     handler(euid, component, ref args);
                 }
             }
 
-            public void Dispatch(EntityUid euid, Type eventType, ref object args)
+            public void Dispatch(EntityUid euid, Type eventType, ref object args, bool dispatchByReference)
             {
+                AssertDispatch(eventType, dispatchByReference);
+
                 if (!TryGetSubscriptions(eventType, euid, out var enumerator))
                     return;
 
@@ -437,9 +413,7 @@ namespace Robust.Shared.GameObjects
                 {
                     var component = tuple.Value.Component;
                     var reg = tuple.Value.Registration;
-                    DebugTools.Assert(reg.ReferenceEvent, RefDispatchError);
-                    var handler = (DirectedEventRefHandler) reg.Handler;
-                    handler(euid, component, ref args);
+                    reg.Handler(euid, component, ref args);
                 }
             }
 
@@ -463,10 +437,7 @@ namespace Robust.Shared.GameObjects
 
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
 
-                    if(reg.ReferenceEvent)
-                        found.Add((ev => ((DirectedEventRefHandler)reg.Handler)(euid, component, ref ev), reg.Ordering));
-                    else
-                        found.Add((ev => ((DirectedEventHandler)reg.Handler)(euid, component, ev), reg.Ordering));
+                    found.Add((ev => reg.Handler(euid, component, ref ev), reg.Ordering));
                 }
             }
 
@@ -482,7 +453,7 @@ namespace Robust.Shared.GameObjects
                         continue;
 
                     var handler = (DirectedEventHandler<TEvent>)reg.Original;
-                    handler(euid, component, args);
+                    handler(euid, component, ref args);
                 }
             }
 
@@ -645,10 +616,10 @@ namespace Robust.Shared.GameObjects
         {
             public readonly Delegate Original;
             public readonly OrderingData? Ordering;
-            public readonly Delegate Handler;
+            public readonly DirectedEventHandler Handler;
             public readonly bool ReferenceEvent;
 
-            public DirectedRegistration(Delegate original, OrderingData? ordering, Delegate handler, bool referenceEvent)
+            public DirectedRegistration(Delegate original, OrderingData? ordering, DirectedEventHandler handler, bool referenceEvent)
             {
                 Original = original;
                 Ordering = ordering;

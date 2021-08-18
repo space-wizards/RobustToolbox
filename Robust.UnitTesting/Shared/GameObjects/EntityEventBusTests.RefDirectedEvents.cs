@@ -82,7 +82,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             private void MyValueHandler(EntityUid uid, DummyTwoComponent component, TestStructEvent args) { }
             private void MyRefHandler(EntityUid uid, DummyComponent component, ref TestStructEvent args) { }
         }
-        
+
         private class DummyTwoComponent : Component
         {
             public override string Name => "DummyTwo";

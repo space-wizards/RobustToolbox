@@ -306,7 +306,8 @@ namespace Robust.Shared.GameObjects
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex();
 
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
+                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref entParentChangedMessage);
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -626,7 +627,8 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref entParentChangedMessage);
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
 

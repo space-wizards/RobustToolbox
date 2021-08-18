@@ -312,7 +312,7 @@ namespace Robust.Shared.Physics
             _broadphases.Clear();
         }
 
-        private void HandleParentChange(EntityUid uid, PhysicsComponent component, EntParentChangedMessage args)
+        private void HandleParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
         {
             _queuedParents.Enqueue(args);
         }

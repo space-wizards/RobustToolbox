@@ -278,7 +278,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (referenceEvent != registration.ReferenceEvent)
-                    throw new InvalidOperationException("Attempted to subscribe by-ref and by-value to the same directed event!");
+                    throw new InvalidOperationException($"Attempted to subscribe by-ref and by-value to the same directed event! comp={compType.Name}, event={eventType.Name}");
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {

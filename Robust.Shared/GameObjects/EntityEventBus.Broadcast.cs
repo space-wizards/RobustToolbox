@@ -270,7 +270,7 @@ namespace Robust.Shared.GameObjects
             }
 
             if (eventReference != byRef)
-                throw new InvalidOperationException("Attempted to subscribe by-ref and by-value to the same broadcast event!");
+                throw new InvalidOperationException($"Attempted to subscribe by-ref and by-value to the same broadcast event! event={eventType}");
 
             var subscriptionTuple = new Registration(source, originalEventHandler, handler, equalityToken, order, byRef);
             if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))

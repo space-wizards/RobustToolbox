@@ -140,8 +140,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
+            void TestEventHandler(TestEventArgs args) { }
+
             // Act
-            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)null!);
+            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)TestEventHandler);
 
             //Assert
             Assert.Throws<ArgumentOutOfRangeException>(Code);

@@ -14,6 +14,7 @@ namespace Robust.Shared.GameObjects
         protected Subscriptions Subs { get; }
 
         // NOTE: EntityEventHandler<T> and EntitySessionEventHandler<T> CANNOT BE ORDERED BETWEEN EACH OTHER.
+        // EntityEventRefHandler<T> and EntityEventHandler<T> can be, however. They're essentially the same.
 
         protected void SubscribeNetworkEvent<T>(
             EntityEventHandler<T> handler,
@@ -25,6 +26,14 @@ namespace Robust.Shared.GameObjects
 
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
+            Type[]? before = null, Type[]? after = null)
+            where T : notnull
+        {
+            SubEvent(EventSource.Local, handler, before, after);
+        }
+
+        protected void SubscribeLocalEvent<T>(
+            EntityEventRefHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
             where T : notnull
         {
@@ -66,6 +75,18 @@ namespace Robust.Shared.GameObjects
         private void SubEvent<T>(
             EventSource src,
             EntityEventHandler<T> handler,
+            Type[]? before, Type[]? after)
+            where T : notnull
+        {
+            EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubBroadcast<T>(src));
+        }
+
+        private void SubEvent<T>(
+            EventSource src,
+            EntityEventRefHandler<T> handler,
             Type[]? before, Type[]? after)
             where T : notnull
         {

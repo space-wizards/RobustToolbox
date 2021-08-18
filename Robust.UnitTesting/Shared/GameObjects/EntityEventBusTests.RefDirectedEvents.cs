@@ -12,13 +12,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
     {
 
         [Test]
-        public void SubscribeCompRefEvent()
+        public void SubscribeCompRefDirectedEvent()
         {
             // Arrange.
             var simulation = RobustServerSimulation
                 .NewSimulation()
                 .RegisterComponents(factory => factory.RegisterClass<DummyComponent>())
-                .RegisterEntitySystems(factory => factory.LoadExtraSystemType<SubscribeCompRefEventSystem>())
+                .RegisterEntitySystems(factory => factory.LoadExtraSystemType<SubscribeCompRefDirectedEventSystem>())
                 .InitializeInstance();
 
             var map = new MapId(1);
@@ -37,7 +37,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Reflect(false)]
-        private class SubscribeCompRefEventSystem : EntitySystem
+        private class SubscribeCompRefDirectedEventSystem : EntitySystem
         {
             public override void Initialize()
             {
@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         [Test]
-        public void SubscriptionNoMixedRefValueEvent()
+        public void SubscriptionNoMixedRefValueDirectedEvent()
         {
             // Arrange.
             var simulation = RobustServerSimulation
@@ -63,14 +63,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     factory.RegisterClass<DummyTwoComponent>();
                 })
                 .RegisterEntitySystems(factory =>
-                    factory.LoadExtraSystemType<SubscriptionNoMixedRefValueEventSystem>());
+                    factory.LoadExtraSystemType<SubscriptionNoMixedRefValueDirectedEventSystem>());
 
             // Act. No mixed ref and value subscriptions are allowed.
             Assert.Throws(typeof(InvalidOperationException), () => simulation.InitializeInstance());
         }
 
         [Reflect(false)]
-        private class SubscriptionNoMixedRefValueEventSystem : EntitySystem
+        private class SubscriptionNoMixedRefValueDirectedEventSystem : EntitySystem
         {
             public override void Initialize()
             {

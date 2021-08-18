@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Utility;
-using YamlDotNet.Core.Tokens;
 
 namespace Robust.Shared.GameObjects
 {
@@ -132,7 +130,7 @@ namespace Robust.Shared.GameObjects
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
-                RaiseEvent(EventSource.Local, args);
+                RaiseEvent(EventSource.Local, ref args);
         }
 
         public void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = true)
@@ -149,7 +147,7 @@ namespace Robust.Shared.GameObjects
 
             // we also broadcast it so the call site does not have to.
             if(broadcast)
-                RaiseEvent(EventSource.Local, args);
+                RaiseEvent(EventSource.Local, ref args);
         }
 
         /// <inheritdoc />
@@ -279,7 +277,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (referenceEvent != registration.ReferenceEvent)
-                    throw new InvalidOperationException($"Attempted to subscribe by-ref and by-value to the same event!");
+                    throw new InvalidOperationException($"Attempted to subscribe by-ref and by-value to the same directed event!");
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {
@@ -437,7 +435,7 @@ namespace Robust.Shared.GameObjects
 
                     var component = _entMan.ComponentManager.GetComponent(euid, compType);
 
-                    found.Add((ev => reg.Handler(euid, component, ref ev), reg.Ordering));
+                    found.Add(((ref object ev) => reg.Handler(euid, component, ref ev), reg.Ordering));
                 }
             }
 

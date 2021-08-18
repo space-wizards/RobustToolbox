@@ -69,14 +69,14 @@ namespace Robust.Shared.GameObjects
 
             foreach (var handler in TopologicalSort.Sort(nodes))
             {
-                handler(eventArgs);
+                handler(ref eventArgs);
             }
 
             // Go over all handlers that don't have ordering so weren't included in the sort.
             foreach (var (handler, orderData) in found)
             {
                 if (orderData == null)
-                    handler(eventArgs);
+                    handler(ref eventArgs);
             }
         }
 

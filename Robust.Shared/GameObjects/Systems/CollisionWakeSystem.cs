@@ -25,7 +25,9 @@ namespace Robust.Shared.GameObjects
 
         private void HandleJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
-            if (component.Owner.TryGetComponent(out PhysicsComponent? body) && body.Joints.Any()) return;
+            if (component.Owner.TryGetComponent(out PhysicsComponent? body) &&
+                body.Owner.TryGetComponent(out JointComponent? jointComponent) &&
+                jointComponent.Joints.Count > 0) return;
 
             // Force an update
             component.RaiseStateChange();
@@ -55,7 +57,7 @@ namespace Robust.Shared.GameObjects
         {
             if (!ComponentManager.TryGetComponent<PhysicsComponent>(uid, out var body)) return;
 
-            body.CanCollide = !component.Enabled || body.Awake || body.Joints.Any();
+            body.CanCollide = !component.Enabled || body.Awake || (body.Owner.TryGetComponent(out JointComponent? jointComponent) && jointComponent.Joints.Count > 0);
         }
     }
 

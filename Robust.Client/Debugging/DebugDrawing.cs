@@ -183,10 +183,12 @@ namespace Robust.Client.Debugging
                         drawing.SetTransform(in Matrix3.Identity);
                     }
 
-                    foreach (var joint in physBody.Joints)
+                    if (physBody.Owner.TryGetComponent(out JointComponent? jointComponent))
                     {
-                        if (drawnJoints.Contains(joint)) continue;
-                        drawnJoints.Add(joint);
+                        foreach (var (_, joint) in jointComponent.Joints)
+                        {
+                            if (drawnJoints.Contains(joint)) continue;
+                            drawnJoints.Add(joint);
 
                         joint.DebugDraw(drawing, in viewport);
                         drawing.SetTransform(in Matrix3.Identity);

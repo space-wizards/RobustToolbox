@@ -43,31 +43,55 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     // J = [0 0 -1 0 0 1]
     // K = invI1 + invI2
 
+    [Serializable, NetSerializable]
+    public sealed class FrictionJointState : JointState
+    {
+        public float MaxForce { get; }
+        public float MaxTorque { get; }
+        public Vector2 LocalAnchorA { get; }
+        public Vector2 LocalAnchorB { get; }
+
+        public override Joint GetJoint()
+        {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var bodyA = entityManager.GetEntity(UidA).GetComponent<PhysicsComponent>();
+            var bodyB = entityManager.GetEntity(UidB).GetComponent<PhysicsComponent>();
+
+            var joint = new FrictionJoint(bodyA, bodyB)
+            {
+                MaxForce = MaxForce,
+                MaxTorque = MaxTorque,
+                LocalAnchorA = LocalAnchorA,
+                LocalAnchorB = LocalAnchorB,
+            };
+            return joint;
+        }
+    }
+
     /// <summary>
     /// Friction joint. This is used for top-down friction.
     /// It provides 2D translational friction and angular friction.
     /// </summary>
-    [Serializable, NetSerializable]
     public sealed class FrictionJoint : Joint, IEquatable<FrictionJoint>
     {
         // Solver shared
-        [NonSerialized] private Vector2 _linearImpulse;
+        private Vector2 _linearImpulse;
 
-        [NonSerialized] private float _angularImpulse;
+        private float _angularImpulse;
 
         // Solver temp
-        [NonSerialized] private int _indexA;
-        [NonSerialized] private int _indexB;
-        [NonSerialized] private Vector2 _rA;
-        [NonSerialized] private Vector2 _rB;
-        [NonSerialized] private Vector2 _localCenterA;
-        [NonSerialized] private Vector2 _localCenterB;
-        [NonSerialized] private float _invMassA;
-        [NonSerialized] private float _invMassB;
-        [NonSerialized] private float _invIA;
-        [NonSerialized] private float _invIB;
-        [NonSerialized] private float _angularMass;
-        [NonSerialized] private Vector2[] _linearMass = new Vector2[2];
+        private int _indexA;
+        private int _indexB;
+        private Vector2 _rA;
+        private Vector2 _rB;
+        private Vector2 _localCenterA;
+        private Vector2 _localCenterB;
+        private float _invMassA;
+        private float _invMassB;
+        private float _invIA;
+        private float _invIB;
+        private float _angularMass;
+        private Vector2[] _linearMass = new Vector2[2];
 
         public override JointType JointType => JointType.Friction;
 
@@ -75,14 +99,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     The maximum friction force in N.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [field:DataField("maxForce")]
         public float MaxForce { get; set; }
 
         /// <summary>
         ///     The maximum friction torque in N-m.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        [field:DataField("maxTorque")]
         public float MaxTorque { get; set; }
 
         /// <summary>
@@ -144,6 +166,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 LocalAnchorA = Vector2.Zero;
                 LocalAnchorB = Vector2.Zero;
             }
+        }
+
+        public override JointState GetState()
+        {
+            var frictionState = new FrictionJointState();
+
+            base.GetState(frictionState);
+            return frictionState;
         }
 
         public override Vector2 GetReactionForce(float invDt)
@@ -298,11 +328,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other) &&
-                   MathHelper.CloseTo(MaxForce, other.MaxForce) &&
-                   MathHelper.CloseTo(MaxTorque, other.MaxTorque) &&
-                   LocalAnchorA.EqualsApprox(other.LocalAnchorA) &&
-                   LocalAnchorB.EqualsApprox(other.LocalAnchorB);
+            return base.Equals(other);
         }
     }
 }

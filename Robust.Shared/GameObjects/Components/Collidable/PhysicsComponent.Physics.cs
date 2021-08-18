@@ -36,7 +36,6 @@ using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -139,13 +138,6 @@ namespace Robust.Shared.GameObjects
         ///     Linked-list of all of our contacts.
         /// </summary>
         internal ContactEdge? ContactEdges { get; set; } = null;
-
-        /// <summary>
-        ///     Linked-list of all of our joints.
-        /// </summary>
-        internal JointEdge? JointEdges { get; set; } = null;
-        // TODO: Should there be a VV thing for joints? Would be useful. Same with contacts.
-        // Though not sure how to do it well with the linked-list.
 
         public bool IgnorePaused { get; set; }
 
@@ -309,14 +301,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession session)
         {
-            // TODO: Could optimise the shit out of this because only linear velocity and angular velocity are changing 99% of the time.
-            var joints = new List<Joint>();
-            for (var je = JointEdges; je != null; je = je.Next)
-            {
-                joints.Add(je.Joint);
-            }
-
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -332,72 +317,6 @@ namespace Robust.Shared.GameObjects
 
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-
-            // We will pray that this deferred joint is handled properly.
-
-            /*
-             * -- Joints --
-             */
-
-            // TODO: Iterating like this is inefficient and bloated as fuck but on the other hand the linked-list is very convenient
-            // for bodies with a large number of fixtures / joints.
-            // Probably store them in Dictionaries but still store the linked-list stuff on the fixture / joint itself.
-            var existingJoints = Joints.ToList();
-            var toAddJoints = new List<Joint>();
-            var toRemoveJoints = new List<Joint>();
-
-            foreach (var newJoint in newState.Joints)
-            {
-                var jointFound = false;
-
-                foreach (var joint in existingJoints)
-                {
-                    if (joint.ID.Equals(newJoint.ID))
-                    {
-                        if (!newJoint.Equals(joint) && TrySetupNetworkedJoint(newJoint))
-                        {
-                            toAddJoints.Add(newJoint);
-                            toRemoveJoints.Add(joint);
-                        }
-
-                        jointFound = true;
-                        break;
-                    }
-                }
-
-                if (!jointFound && TrySetupNetworkedJoint(newJoint))
-                {
-                    toAddJoints.Add(newJoint);
-                }
-            }
-
-            foreach (var joint in existingJoints)
-            {
-                var jointFound = false;
-
-                foreach (var newJoint in newState.Joints)
-                {
-                    if (joint.ID.Equals(newJoint.ID))
-                    {
-                        jointFound = true;
-                        break;
-                    }
-                }
-
-                if (jointFound) continue;
-
-                toRemoveJoints.Add(joint);
-            }
-
-            foreach (var joint in toRemoveJoints)
-            {
-                RemoveJoint(joint);
-            }
-
-            foreach (var joint in toAddJoints)
-            {
-                AddJoint(joint);
-            }
 
             /*
              * -- Fixtures --
@@ -495,29 +414,6 @@ namespace Robust.Shared.GameObjects
             Predict = false;
         }
 
-        private bool TrySetupNetworkedJoint(Joint joint)
-        {
-            // This can fail if we've already deleted the entity or remove physics from it I think?
-
-            if (!Owner.EntityManager.TryGetEntity(joint.BodyAUid, out var entityA) ||
-                !entityA.TryGetComponent(out PhysicsComponent? bodyA))
-            {
-                return false;
-            }
-
-            if (!Owner.EntityManager.TryGetEntity(joint.BodyBUid, out var entityB) ||
-                !entityB.TryGetComponent(out PhysicsComponent? bodyB))
-            {
-                return false;
-            }
-
-            joint.BodyA = bodyA;
-            joint.BodyB = bodyB;
-            joint.EdgeA = new JointEdge();
-            joint.EdgeB = new JointEdge();
-            return true;
-        }
-
         public Fixture? GetFixture(string name)
         {
             // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
@@ -572,23 +468,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
-
-        public IEnumerable<Joint> Joints
-        {
-            get
-            {
-                JointEdge? edge = JointEdges;
-
-                while (edge != null)
-                {
-                    yield return edge.Joint;
-                    edge = edge.Next;
-                }
-            }
-        }
-
-        [ViewVariables]
-        public int FixtureCount { get; internal set; }
 
         [DataField("fixtures")]
         [NeverPushInheritance]
@@ -1105,38 +984,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private string GetJointName(Joint joint)
-        {
-            var id = joint.ID;
-
-            if (!string.IsNullOrEmpty(id)) return id;
-
-            var jointCount = Joints.Count();
-
-            for (var i = 0; i < jointCount + 1; i++)
-            {
-                id = $"joint-{i}";
-                if (GetJoint(id) != null) continue;
-                return id;
-            }
-
-            Logger.WarningS("physics", $"Unable to get a joint ID; using its hashcode instead.");
-            return joint.GetHashCode().ToString();
-        }
-
-        /// <summary>
-        /// Get a joint with the specified ID.
-        /// </summary>
-        public Joint? GetJoint(string id)
-        {
-            foreach (var joint in Joints)
-            {
-                if (joint.ID == id) return joint;
-            }
-
-            return null;
-        }
-
         internal Transform GetTransform()
         {
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
@@ -1224,35 +1071,6 @@ namespace Robust.Shared.GameObjects
                     Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsUpdateMessage(this));
                 }
             }
-        }
-
-        public void ClearJoints()
-        {
-            for (var je = JointEdges; je != null; je = je.Next)
-            {
-                RemoveJoint(je.Joint);
-            }
-        }
-
-        public void AddJoint(Joint joint)
-        {
-            var id = GetJointName(joint);
-
-            foreach (var existing in Joints)
-            {
-                // This can happen if a server created joint is sent and applied before the client can create it locally elsewhere
-                if (existing.ID.Equals(id)) return;
-            }
-
-            PhysicsMap.AddJoint(joint);
-            joint.ID = id;
-            Logger.DebugS("physics", $"Added joint id: {joint.ID} type: {joint.GetType().Name} to {Owner}");
-        }
-
-        public void RemoveJoint(Joint joint)
-        {
-            PhysicsMap.RemoveJoint(joint);
-            Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
         protected override void OnRemove()
@@ -1368,11 +1186,34 @@ namespace Robust.Shared.GameObjects
             }
 
             // Does a joint prevent collision?
-            for (var jn = JointEdges; jn != null; jn = jn.Next)
+            // if one of them doesn't have jointcomp then they can't share a common joint.
+            // otherwise, only need to iterate over the joints of one component as they both store the same joint.
+            if (Owner.TryGetComponent(out JointComponent? jointComponentA) &&
+                other.Owner.TryGetComponent(out JointComponent? jointComponentB))
             {
-                if (jn.Other != other) continue;
-                if (jn.Joint.CollideConnected) continue;
-                return false;
+                var aUid = jointComponentA.Owner.Uid;
+                var bUid = jointComponentB.Owner.Uid;
+
+                ValueTuple<EntityUid, EntityUid> uids;
+
+                if (aUid.CompareTo(bUid) < 0)
+                {
+                    uids = new ValueTuple<EntityUid, EntityUid>(aUid, bUid);
+                }
+                else
+                {
+                    uids = new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
+                }
+
+                foreach (var (_, joint) in jointComponentA.Joints)
+                {
+                    // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
+                    if (joint.CollideConnected ||
+                        uids.Item1 != joint.BodyAUid ||
+                        uids.Item2 != joint.BodyBUid) continue;
+
+                    return false;
+                }
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);

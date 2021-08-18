@@ -363,13 +363,10 @@ namespace Robust.Server.Maps
                 // If we don't, initialization & startup can fail for some entities.
                 AttachMapEntities();
 
+                ApplyGridFixtures();
+
                 // Run Initialize on all components.
                 FinishEntitiesInitialization();
-
-                // Regardless of what the frequency is we'll process fixtures sometime on map load for anything
-                // that needs it before MapInit.
-                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                gridFixtures.Process();
 
                 // Run Startup on all components.
                 FinishEntitiesStartup();
@@ -438,6 +435,19 @@ namespace Robust.Server.Maps
                         // so the client will have the same data after instantiating it from prototype ID.
                         castComp.ClearTicks();
                     }
+                }
+            }
+
+            /// <summary>
+            /// Go through all of the queued chunks that need updating and make sure their bounds are set.
+            /// </summary>
+            private void ApplyGridFixtures()
+            {
+                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+
+                foreach (var gridId in _mapManager.GetAllGrids())
+                {
+                    gridFixtures.ProcessGrid(gridId.Index);
                 }
             }
 

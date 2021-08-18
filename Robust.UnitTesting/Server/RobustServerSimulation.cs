@@ -11,6 +11,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
+using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -229,6 +230,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
+            compFactory.RegisterClass<ContainerManagerComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -249,12 +251,12 @@ namespace Robust.UnitTesting.Server
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            entityMan.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
-
             var mapManager = container.Resolve<IMapManager>();
             mapManager.Initialize();
+
+            entityMan.Startup();
             mapManager.Startup();
+            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 

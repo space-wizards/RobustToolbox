@@ -280,8 +280,9 @@ namespace Robust.Server.GameStates
                 if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                //Always include the map entity of the eye
-                //TODO: Add Map entity here
+                //Always include the map entity of the eye, if it exists.
+                if(_mapManager.MapExists(mapId))
+                    visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
 
                 //Always include viewable ent itself
                 visibleEnts.Add(eyeEuid);

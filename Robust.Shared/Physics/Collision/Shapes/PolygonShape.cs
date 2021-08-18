@@ -34,7 +34,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PolygonShape : IPhysShape, ISerializationHooks
+    public class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
     {
         /// <summary>
         ///     Counter-clockwise (CCW) order.
@@ -76,7 +76,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 }
 
                 Centroid = ComputeCentroid(_vertices);
-                _cachedAABB = CalculateAABB();
 
                 // Compute the polygon mass data
                 // TODO: Update fixture. Maybe use events for it? Who tf knows.
@@ -85,8 +84,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         }
 
         private List<Vector2> _vertices = new();
-
-        private Box2 _cachedAABB;
 
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
@@ -164,31 +161,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
             _radius = radius;
         }
 
-        public void SetAsBox(float width, float height)
+        public void SetAsBox(float halfWidth, float halfHeight)
         {
+            // TODO: Just have this set normals directly; look at Box2D to see how it does
             Vertices = new List<Vector2>()
             {
-                new(-width, -height),
-                new(width, -height),
-                new(width, height),
-                new(-width, height),
+                new(-halfWidth, -halfHeight),
+                new(halfWidth, -halfHeight),
+                new(halfWidth, halfHeight),
+                new(-halfWidth, halfHeight),
             };
         }
 
-        /// <summary>
-        ///     A temporary optimisation that bypasses GiftWrapping until we get proper AABB and Rect collisions
-        /// </summary>
-        internal void SetVertices(List<Vector2> vertices)
-        {
-            DebugTools.Assert(vertices.Count == 4, "Vertices optimisation only usable on rectangles");
-
-            // TODO: Get what the normals should be
-            Vertices = vertices;
-            // _normals = new List<Vector2>()
-            // Verify on debug that the vertices skip was actually USEFUL
-            DebugTools.Assert(Vertices == vertices);
-        }
-
+        // Don't need to check Centroid for these below as it's based off of the vertices below
+        // (unless you wanted a potentially faster check up front?)
         public bool Equals(IPhysShape? other)
         {
             if (other is not PolygonShape poly) return false;
@@ -196,50 +182,43 @@ namespace Robust.Shared.Physics.Collision.Shapes
             for (var i = 0; i < _vertices.Count; i++)
             {
                 var vert = _vertices[i];
-                if (!vert.EqualsApprox(poly.Vertices[i])) return false;
+                if (!vert.Equals(poly.Vertices[i])) return false;
             }
 
             return true;
         }
 
-        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
+        public bool EqualsApprox(PolygonShape other)
         {
-            var aabb = CalculateLocalBounds(worldRot).Translated(worldPos);
-            if (!worldAABB.Intersects(aabb)) return false;
+            return EqualsApprox(other, 0.001);
+        }
 
-            // TODO
+        public bool EqualsApprox(PolygonShape other, double tolerance)
+        {
+            if (_vertices.Count != other._vertices.Count) return false;
+            for (var i = 0; i < _vertices.Count; i++)
+            {
+                if (!_vertices[i].EqualsApprox(other._vertices[i], tolerance)) return false;
+            }
+
             return true;
         }
 
-        /// <summary>
-        /// Calculating the AABB for a polyshape isn't cheap so we'll just cache it whenever its vertices change.
-        /// </summary>
-        private Box2 CalculateAABB()
+        public Box2 ComputeAABB(Transform transform, int childIndex)
         {
-            if (_vertices.Count == 0) return new Box2();
-
-            var lower = Vertices[0];
+            DebugTools.Assert(childIndex == 0);
+            var lower = Transform.Mul(transform, _vertices[0]);
             var upper = lower;
 
-            for (var i = 1; i < Vertices.Count; ++i)
+            for (var i = 1; i < _vertices.Count; ++i)
             {
-                var v = Vertices[i];
+                var v = Transform.Mul(transform, _vertices[i]);
                 lower = Vector2.ComponentMin(lower, v);
                 upper = Vector2.ComponentMax(upper, v);
             }
 
-            var r = new Vector2(Radius, Radius);
-
-            return new Box2
-            {
-                BottomLeft = lower - r,
-                TopRight = upper + r
-            };
-        }
-
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            return rotation == Angle.Zero ? _cachedAABB : new Box2Rotated(_cachedAABB, rotation).CalcBoundingBox();
+            var r = new Vector2(_radius, _radius);
+            return new Box2(lower - r, upper + r);
         }
 
         public void ApplyState()

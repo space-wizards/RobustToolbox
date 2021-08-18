@@ -53,6 +53,12 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [ViewVariables]
         private Box2 _cachedBounds;
 
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            return new Box2Rotated(_cachedBounds.Translated(transform.Position), transform.Quaternion2D.Angle,
+                transform.Position).CalcBoundingBox().Enlarged(_radius);
+        }
+
         /// <inheritdoc />
         public void ApplyState() { }
 

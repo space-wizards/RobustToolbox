@@ -153,6 +153,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Draw the entity.
                 sprite.Render(
                     DrawingHandleWorld,
+                    Angle.Zero,
                     overrideDirection == null
                         ? entity.Transform.WorldRotation
                         : Angle.Zero,

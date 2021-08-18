@@ -86,7 +86,7 @@ namespace Robust.Shared.Physics
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
-            //ProcessUpdates();
+            ProcessUpdates();
         }
 
         /// <summary>
@@ -480,6 +480,7 @@ namespace Robust.Shared.Physics
 
             // Supposed to be wrapped in density but eh
             body.ResetMassData();
+            body.Dirty();
             // TODO: Set newcontacts to true.
         }
 
@@ -521,6 +522,7 @@ namespace Robust.Shared.Physics
 
             body.FixtureCount -= 1;
             body.ResetMassData();
+            body.Dirty();
         }
 
         private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos)
@@ -585,8 +587,8 @@ namespace Robust.Shared.Physics
             {
                  var proxy = fixture.Proxies[i];
 
-                 var aabb1 = fixture.Shape.CalculateLocalBounds(angle1).Translated(relativePos1.Position);
-                 var aabb2 = fixture.Shape.CalculateLocalBounds(angle2).Translated(relativePos2.Position);
+                 var aabb1 = fixture.Shape.ComputeAABB(relativePos1, i);
+                 var aabb2 = fixture.Shape.ComputeAABB(relativePos2, i);
 
                  var aabb = aabb1.Union(aabb2);
                  proxy.AABB = aabb;
@@ -614,15 +616,14 @@ namespace Robust.Shared.Physics
                 _broadphasePositions[broadphase] = broadphaseOffset;
             }
 
+            // TODO: This needs a matrix transform ya dingus
             var relativePos1 = new Transform(transform1.Position - broadphaseOffset.Position,
                 transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
-
-            var angle1 = new Angle(relativePos1.Quaternion2D.Angle);
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
-                var aabb = fixture.Shape.CalculateLocalBounds(angle1).Translated(relativePos1.Position);
+                var aabb = fixture.Shape.ComputeAABB(relativePos1, i);
                 proxy.AABB = aabb;
                 var displacement = Vector2.Zero;
                 broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
@@ -704,11 +705,12 @@ namespace Robust.Shared.Physics
 
             var posDiff = worldPos - broadphasePos;
             var rotDiff = worldRot - broadphaseRot;
+            var transform = new Transform(posDiff, (float) rotDiff.Theta);
             var mapId = broadphase.Owner.Transform.MapID;
 
             for (var i = 0; i < proxyCount; i++)
             {
-                var aabb = fixture.Shape.CalculateLocalBounds(rotDiff).Translated(posDiff);
+                var aabb = fixture.Shape.ComputeAABB(transform, i);
                 var proxy = new FixtureProxy(aabb, fixture, i);
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
@@ -848,16 +850,32 @@ namespace Robust.Shared.Physics
             foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
             {
                 if (broadphase.Owner.Transform.MapID != mapId) continue;
+
+                // Always return map... for now
                 if (broadphase.Owner.HasComponent<MapComponent>())
                 {
                     yield return broadphase;
                     continue;
                 }
 
-                if (broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent) &&
-                    Intersects(physicsComponent, aabb))
+                if (!broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
+
+                var transform = physicsComponent.GetTransform();
+                var found = false;
+
+                // TODO: Need CollisionManager for accurate checks
+                foreach (var fixture in physicsComponent.Fixtures)
                 {
-                    yield return broadphase;
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        if (!fixture.Shape.ComputeAABB(transform, i).Intersects(aabb)) continue;
+                        yield return broadphase;
+                        found = true;
+                        break;
+                    }
+
+                    if (found)
+                        break;
                 }
             }
         }
@@ -865,22 +883,6 @@ namespace Robust.Shared.Physics
         internal IEnumerable<BroadphaseComponent> GetBroadphases(MapId mapId, Vector2 worldPos)
         {
             return GetBroadphases(mapId, new Box2(worldPos, worldPos));
-        }
-
-        private bool Intersects(PhysicsComponent physicsComponent, Box2 aabb)
-        {
-            var worldPos = physicsComponent.Owner.Transform.WorldPosition;
-            var worldRot = physicsComponent.Owner.Transform.WorldRotation;
-            var bodyAABB = physicsComponent.GetWorldAABB(worldPos, worldRot);
-
-            if (!aabb.Intersects(bodyAABB)) return false;
-
-            foreach (var fixture in physicsComponent.Fixtures)
-            {
-                if (fixture.Shape.Intersects(aabb, worldPos, worldRot)) return true;
-            }
-
-            return false;
         }
 
         /// <summary>

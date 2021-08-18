@@ -26,11 +26,11 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
-    [DataDefinition]
     public sealed class EdgeShape : IPhysShape
     {
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
@@ -139,6 +139,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 TopRight = upper + r
             };
             return aabb;
+        }
+
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+
+            var v1 = Transform.Mul(transform, Vertex1);
+            var v2 = Transform.Mul(transform, Vertex2);
+
+            var lower = Vector2.ComponentMin(v1, v2);
+            var upper = Vector2.ComponentMax(v1, v2);
+
+            var radius = new Vector2(_radius, _radius);
+            return new Box2(lower - radius, upper + radius);
         }
 
         public float CalculateArea()

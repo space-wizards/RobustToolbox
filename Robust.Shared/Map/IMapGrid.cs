@@ -47,6 +47,11 @@ namespace Robust.Shared.Map
         /// </summary>
         Vector2 WorldPosition { get; set; }
 
+        /// <summary>
+        ///     The rotation of the grid in world terms.
+        /// </summary>
+        Angle WorldRotation { get; set; }
+
         Matrix3 WorldMatrix { get; }
 
         Matrix3 InvWorldMatrix { get; }
@@ -86,6 +91,12 @@ namespace Robust.Shared.Map
         /// <param name="gridIndices"></param>
         /// <param name="tile">The tile to insert at the coordinates.</param>
         void SetTile(Vector2i gridIndices, Tile tile);
+
+        /// <summary>
+        ///     Modifies many tiles inside of a chunk. Avoids regenerating collision until the end.
+        /// </summary>
+        /// <param name="tiles"></param>
+        void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
 
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.

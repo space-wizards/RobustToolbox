@@ -108,7 +108,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        list.Add(new ErrorNode(componentMapping, "Unknown ComponentType."));
+                        list.Add(new ErrorNode(componentMapping, $"Unknown component type {compType}."));
                         continue;
                 }
 

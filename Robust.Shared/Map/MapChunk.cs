@@ -245,19 +245,28 @@ namespace Robust.Shared.Map
             return _cachedBounds;
         }
 
-        public Box2 CalcWorldBounds()
+        public Box2Rotated CalcWorldBounds(Vector2? gridPos = null, Angle? gridRot = null)
         {
-            var worldPos = _grid.WorldPosition + Indices * _grid.TileSize * ChunkSize;
+            gridRot ??= _grid.WorldRotation;
+            gridPos ??= _grid.WorldPosition;
+            var worldPos = gridPos.Value + gridRot.Value.RotateVec(Indices * _grid.TileSize * ChunkSize);
+
             var localBounds = CalcLocalBounds();
             var ts = _grid.TileSize;
 
-            var scaledLocalBounds = new Box2(
+            var scaledLocalBounds = new Box2Rotated(new Box2(
                 localBounds.Left * ts,
                 localBounds.Bottom * ts,
                 localBounds.Right * ts,
-                localBounds.Top * ts);
+                localBounds.Top * ts).Translated(worldPos), gridRot.Value, worldPos);
 
-            return scaledLocalBounds.Translated(worldPos);
+            return scaledLocalBounds;
+        }
+
+        public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
+        {
+            var bounds = CalcWorldBounds(gridPos, gridRot);
+            return bounds.CalcBoundingBox();
         }
 
         /// <inheritdoc />

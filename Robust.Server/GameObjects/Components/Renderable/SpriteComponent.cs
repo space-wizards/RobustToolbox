@@ -141,7 +141,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public uint _renderOrder;
+        private uint _renderOrder;
         [ViewVariables(VVAccess.ReadWrite)]
         public uint RenderOrder
         {

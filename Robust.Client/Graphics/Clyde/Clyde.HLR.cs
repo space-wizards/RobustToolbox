@@ -213,12 +213,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var screenSize = viewport.Size;
 
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            // TODO: Make this check more accurate.
-            var widerBounds = worldBounds.Enlarged(5);
-
-            ProcessSpriteEntities(mapId, widerBounds, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, worldBounds, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -274,13 +269,15 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 }
 
+                var matrix = entry.worldMatrix;
+                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
 
                 RenderTexture? entityPostRenderTarget = null;
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
                     // calculate world bounding box
-                    var spriteBB = entry.sprite.CalculateBoundingBox();
+                    var spriteBB = entry.sprite.CalculateBoundingBox(worldPosition);
                     var spriteLB = spriteBB.BottomLeft;
                     var spriteRT = spriteBB.TopRight;
 
@@ -327,8 +324,6 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                var matrix = entry.worldMatrix;
-                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
                 entry.sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
@@ -374,7 +369,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                comp.SpriteTree.QueryAabb(ref list, ((
+                comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
@@ -385,11 +380,13 @@ namespace Robust.Client.Graphics.Clyde
                     entry.sprite = value;
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
-                    var worldPos = entry.matrix.Transform(transform.LocalPosition);
-                    entry.yWorldPos = worldPos.Y;
+                    var worldPos = new Vector2(entry.matrix.R0C2, entry.matrix.R1C2);
+                    // Didn't use the bounds from the query as that has to be re-calculated (and is probably more expensive than this).
+                    var bounds = value.CalculateBoundingBox(worldPos);
+                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }), bounds, true);
+                }, bounds);
             }
         }
 

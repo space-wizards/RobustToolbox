@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
@@ -482,6 +483,19 @@ namespace Robust.Shared.Physics
             body.ResetMassData();
             body.Dirty();
             // TODO: Set newcontacts to true.
+        }
+
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape)
+        {
+            var fixture = new Fixture(body, shape);
+            CreateFixture(body, fixture);
+        }
+
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)
+        {
+            // TODO: Make it take in density instead
+            var fixture = new Fixture(body, shape) {Mass = mass};
+            CreateFixture(body, fixture);
         }
 
         public void DestroyFixture(PhysicsComponent body, Fixture fixture)

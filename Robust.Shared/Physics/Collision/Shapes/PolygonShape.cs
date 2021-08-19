@@ -212,24 +212,25 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
         {
-            // TODO: Like above just set normals directly but needs tests and stuff which I CBF to do in this PR.
-            Vertices = new List<Vector2>
-            {
-                new(-halfWidth, -halfHeight),
-                new(halfWidth, -halfHeight),
-                new(halfWidth, halfHeight),
-                new(-halfWidth, halfHeight),
-            };
+            Span<Vector2> verts = stackalloc Vector2[4];
+
+            verts[0] = new Vector2(-halfWidth, -halfHeight);
+            verts[1] = new Vector2(halfWidth, -halfHeight);
+            verts[2] = new Vector2(halfWidth, halfHeight);
+            verts[3] = new Vector2(-halfWidth, halfHeight);
 
             Centroid = center;
 
             var xf = new Transform(center, angle);
+            Array.Resize(ref Vertices, 4);
+            Array.Resize(ref Normals, 4);
 
             // Transform vertices and normals.
-            for (var i = 0; i < _vertices.Count; ++i)
+            for (var i = 0; i < verts.Length; ++i)
             {
-                _vertices[i] = Transform.Mul(xf, _vertices[i]);
-                _normals[i] = Transform.Mul(xf.Quaternion2D, _normals[i]);
+                var vector = verts[i];
+                Vertices[i] = Transform.Mul(xf, vector);
+                Normals[i] = Transform.Mul(xf.Quaternion2D, vector);
             }
         }
 

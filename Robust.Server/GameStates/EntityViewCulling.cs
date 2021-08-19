@@ -216,8 +216,9 @@ namespace Robust.Server.GameStates
                         if (grid.LastAnchoredModifiedTick < fromTick)
                             continue;
 
-                        // for each grid, calculate the chunks that are inside the box
-                        foreach (var chunk in grid.GetMapChunks(viewBox))
+                        // TODO: Ideally we'd be able to dump all the chunks on connection or whatever and just
+                        // iterate the viewbox ones after.
+                        foreach (var (_, chunk) in grid.GetMapChunks())
                         {
                             // for each chunk, check dirty
                             if (chunk.LastAnchoredModifiedTick < fromTick)

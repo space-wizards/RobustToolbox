@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -97,17 +98,16 @@ namespace Robust.Server.Physics
             // on the grid (e.g. mass) which we want to preserve.
             var oldFixture = chunk.Fixture;
 
+            var polyShape = new PolygonShape();
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = bounds.BottomLeft;
+            vertices[1] = bounds.BottomRight;
+            vertices[2] = bounds.TopRight;
+            vertices[3] = bounds.TopLeft;
+            polyShape.SetVertices(vertices);
+
             var newFixture = new Fixture(
-                new PolygonShape
-                {
-                    Vertices = new List<Vector2>
-                    {
-                        bounds.BottomRight,
-                        bounds.TopRight,
-                        bounds.TopLeft,
-                        bounds.BottomLeft,
-                    }
-                },
+                polyShape,
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
                 true) {ID = GetChunkId(chunk),

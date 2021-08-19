@@ -6,7 +6,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -26,7 +25,7 @@ namespace Robust.Server.GameStates
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
-        private IEntityLookup _lookup;
+        private readonly IEntityLookup _lookup;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
 
@@ -170,22 +169,105 @@ namespace Robust.Server.GameStates
             }
 
             var lastMapUpdate = _playerLastFullMap.GetValueOrDefault(session);
-            var currentViewSet = CalcCurrentViewSet(session);
+            var visibleEnts = _visSetPool.Get();
+            // As we may have entities parented to anchored entities on chunks we've never seen we need to make sure
+            // they're included.
+            var includedChunks = new Dictionary<GridId, HashSet<IMapChunkInternal>>();
+            List<EntityState> entityStates = new();
+
+            //TODO: Refactor map system to not require every map and grid entity to function.
+            IncludeMapCriticalEntities(visibleEnts);
+
+            // if you don't have an attached entity, you don't see the world.
+            if (session.AttachedEntityUid is not null)
+            {
+                var viewers = GetSessionViewers(session);
+
+                foreach (var eyeEuid in viewers)
+                {
+                    var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
+
+                    uint visMask = 0;
+                    if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
+                        visMask = eyeComp.VisibilityMask;
+
+                    //Always include the map entity of the eye
+                    //TODO: Add Map entity here
+
+                    //Always include viewable ent itself
+                    visibleEnts.Add(eyeEuid);
+
+                    // grid entity should be added through this
+                    // assume there are no deleted ents in here, cull them first in ent/comp manager
+                    _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity =>
+                    {
+                        // TODO: Need to not store these on the BVH, next PR. Should be a decent perf gain on PVS.
+                        if(entity.Transform.Anchored)
+                            return;
+
+                        RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, includedChunks, visMask);
+                    });
+
+                    //Calculate states for all visible anchored ents
+                    foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
+                    {
+                        var grid = (IMapGridInternal)publicMapGrid;
+
+                        if (grid.LastAnchoredModifiedTick < fromTick)
+                            continue;
+
+                        // for each grid, calculate the chunks that are inside the box
+                        foreach (var chunk in grid.GetMapChunks(viewBox))
+                        {
+                            // for each chunk, check dirty
+                            if (chunk.LastAnchoredModifiedTick < fromTick)
+                                continue;
+
+                            if (!includedChunks.TryGetValue(grid.Index, out var chunks))
+                            {
+                                chunks = new HashSet<IMapChunkInternal>();
+                                includedChunks[grid.Index] = chunks;
+                            }
+
+                            chunks.Add(chunk);
+                        }
+                    }
+
+                    foreach (var (gridId, chunks) in includedChunks)
+                    {
+                        var xform = (TransformComponent) _entMan.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).Transform;
+
+                        // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
+                        RecursiveAdd(xform, visibleEnts, includedChunks, visMask);
+
+                        foreach (var chunk in chunks)
+                        {
+                            foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
+                            {
+                                if (_entMan.GetEntity(anchoredEnt).LastModifiedTick < fromTick)
+                                    continue;
+
+                                var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, fromTick);
+                                entityStates.Add(newState);
+                            }
+                        }
+                    }
+                }
+
+                viewers.Clear();
+                _viewerEntsPool.Return(viewers);
+            }
 
             deletions = GetDeletedEntities(fromTick);
-            var entityStates = GenerateEntityStates(session, fromTick, currentViewSet, deletions, lastMapUpdate);
+            GenerateEntityStates(entityStates, session, lastMapUpdate, fromTick, visibleEnts, deletions);
 
             // no point sending an empty collection
-            entityStates = entityStates.Count == 0 ? default : entityStates;
-            deletions = deletions.Count == 0 ? default : deletions;
-
-            return (entityStates, deletions);
+            return (entityStates.Count == 0 ? default : entityStates, deletions.Count == 0 ? default : deletions);
         }
 
-        private List<EntityState> GenerateEntityStates(ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions, GameTick lastMapUpdate)
+        private void GenerateEntityStates(List<EntityState> entityStates, ICommonSession session, GameTick lastMapUpdate, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions)
         {
             // pretty big allocations :(
-            List<EntityState> entityStates = new(currentSet.Count);
             var previousSet = _playerVisibleSets[session];
 
             // complement set
@@ -231,6 +313,14 @@ namespace Robust.Server.GameStates
                 if (previousSet.Contains(entityUid))
                 {
                     //Still Visible
+
+                    // Nothing new to send
+                    if(_entMan.GetEntity(entityUid).LastModifiedTick < fromTick)
+                        continue;
+
+                    // skip sending anchored entities (walls)
+                    DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
+
                     // only send new changes
                     var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, fromTick);
 
@@ -243,8 +333,7 @@ namespace Robust.Server.GameStates
 
                     // skip sending anchored entities (walls)
                     var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
-                    if (xform.Anchored && _entMan.GetEntity(entityUid).LastModifiedTick <= lastMapUpdate)
-                        continue;
+                    DebugTools.Assert(!xform.Anchored);
 
                     // don't assume the client knows anything about us
                     var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, GameTick.Zero);
@@ -256,46 +345,6 @@ namespace Robust.Server.GameStates
             _playerVisibleSets[session] = currentSet;
             previousSet.Clear();
             _visSetPool.Return(previousSet);
-            return entityStates;
-        }
-
-        private HashSet<EntityUid> CalcCurrentViewSet(ICommonSession session)
-        {
-            var visibleEnts = _visSetPool.Get();
-
-            //TODO: Refactor map system to not require every map and grid entity to function.
-            IncludeMapCriticalEntities(visibleEnts);
-
-            // if you don't have an attached entity, you don't see the world.
-            if (session.AttachedEntityUid is null)
-                return visibleEnts;
-
-            var viewers = GetSessionViewers(session);
-
-            foreach (var eyeEuid in viewers)
-            {
-                var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
-
-                uint visMask = 0;
-                if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
-                    visMask = eyeComp.VisibilityMask;
-
-                //Always include the map entity of the eye, if it exists.
-                if(_mapManager.MapExists(mapId))
-                    visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
-
-                //Always include viewable ent itself
-                visibleEnts.Add(eyeEuid);
-
-                // grid entity should be added through this
-                // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
-            }
-
-            viewers.Clear();
-            _viewerEntsPool.Return(viewers);
-
-            return visibleEnts;
         }
 
         private void IncludeMapCriticalEntities(ISet<EntityUid> set)
@@ -320,7 +369,7 @@ namespace Robust.Server.GameStates
         // Read Safe
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, uint visMask)
+        private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, uint visMask)
         {
             var xformUid = xform.Owner.Uid;
 
@@ -347,18 +396,47 @@ namespace Robust.Server.GameStates
             // parent is already in the set
             if (visSet.Contains(xformParentUid))
             {
-                visSet.Add(xformUid);
+                EnsureAnchoredChunk(xform, includedChunks);
+                if (!xform.Anchored)
+                    visSet.Add(xformUid);
+
                 return true;
             }
 
             // parent was not added, so we are not either
             var xformParent = _compMan.GetComponent<TransformComponent>(xformParentUid);
-            if (!RecursiveAdd(xformParent, visSet, visMask))
+            if (!RecursiveAdd(xformParent, visSet, includedChunks, visMask))
                 return false;
 
+            EnsureAnchoredChunk(xform, includedChunks);
+
             // add us
-            visSet.Add(xformUid);
+            if (!xform.Anchored)
+                visSet.Add(xformUid);
+
             return true;
+        }
+
+        /// <summary>
+        /// If we recursively get an anchored entity need to ensure the entire chunk is included (as it may be out of view).
+        /// </summary>
+        private void EnsureAnchoredChunk(TransformComponent xform, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks)
+        {
+            // If we recursively get an anchored entity need to ensure the entire chunk is included (as it may be out of view).
+            if (!xform.Anchored) return;
+
+            // This is slow as but entities being parented to anchored ones is hopefully rare so shouldn't be hit too much.
+            var mapGrid = (IMapGridInternal) _mapManager.GetGrid(xform.GridID);
+            var local = mapGrid.MapToGrid(xform.MapPosition);
+            var chunk = mapGrid.GetChunk(mapGrid.LocalToChunkIndices(local));
+
+            if (!includedChunks.TryGetValue(xform.GridID, out var chunks))
+            {
+                chunks = new HashSet<IMapChunkInternal>();
+                includedChunks[xform.GridID] = chunks;
+            }
+
+            chunks.Add(chunk);
         }
 
         // Read Safe

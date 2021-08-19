@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             var chunk = MapChunkFactory(7, 9);
 
-            Assert.That(chunk.LastModifiedTick, Is.EqualTo(new GameTick(11)));
+            Assert.That(chunk.LastTileModifiedTick, Is.EqualTo(new GameTick(11)));
         }
 
         [Test]
@@ -62,7 +62,7 @@ namespace Robust.UnitTesting.Shared.Map
             curTick = new GameTick(13);
             chunk.SetTile(3, 5, new Tile(1, 3));
 
-            Assert.That(chunk.LastModifiedTick, Is.EqualTo(new GameTick(13)));
+            Assert.That(chunk.LastTileModifiedTick, Is.EqualTo(new GameTick(13)));
         }
 
         [Test]
@@ -81,7 +81,7 @@ namespace Robust.UnitTesting.Shared.Map
             curTick = new GameTick(14);
             chunk.SetTile(3, 5, new Tile(1, 3));
 
-            Assert.That(chunk.LastModifiedTick, Is.EqualTo(new GameTick(13)));
+            Assert.That(chunk.LastTileModifiedTick, Is.EqualTo(new GameTick(13)));
         }
 
         [Test]

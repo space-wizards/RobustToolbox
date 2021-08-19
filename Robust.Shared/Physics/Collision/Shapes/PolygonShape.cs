@@ -210,6 +210,29 @@ namespace Robust.Shared.Physics.Collision.Shapes
             Centroid = Vector2.Zero;
         }
 
+        public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
+        {
+            // TODO: Like above just set normals directly but needs tests and stuff which I CBF to do in this PR.
+            Vertices = new List<Vector2>
+            {
+                new(-halfWidth, -halfHeight),
+                new(halfWidth, -halfHeight),
+                new(halfWidth, halfHeight),
+                new(-halfWidth, halfHeight),
+            };
+
+            Centroid = center;
+
+            var xf = new Transform(center, angle);
+
+            // Transform vertices and normals.
+            for (var i = 0; i < _vertices.Count; ++i)
+            {
+                _vertices[i] = Transform.Mul(xf, _vertices[i]);
+                _normals[i] = Transform.Mul(xf.Quaternion2D, _normals[i]);
+            }
+        }
+
         // Don't need to check Centroid for these below as it's based off of the vertices below
         // (unless you wanted a potentially faster check up front?)
         public bool Equals(IPhysShape? other)

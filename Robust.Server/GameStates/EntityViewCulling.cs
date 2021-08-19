@@ -342,8 +342,7 @@ namespace Robust.Server.GameStates
                     // PVS enter message
 
                     // skip sending anchored entities (walls)
-                    var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
-                    DebugTools.Assert(!xform.Anchored);
+                    DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
 
                     // don't assume the client knows anything about us
                     var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, GameTick.Zero);

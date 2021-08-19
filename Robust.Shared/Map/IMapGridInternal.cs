@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -6,7 +6,7 @@ namespace Robust.Shared.Map
 {
     internal interface IMapGridInternal : IMapGrid
     {
-        GameTick LastModifiedTick { get; }
+        GameTick LastTileModifiedTick { get; }
 
         GameTick CurTick { get; }
 
@@ -17,7 +17,15 @@ namespace Robust.Shared.Map
         /// </summary>
         int ChunkCount { get; }
 
+        GameTick LastAnchoredModifiedTick { get; }
+
         void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
+
+        /// <summary>
+        /// Notifies the grid that an anchored entity is dirty.
+        /// </summary>
+        /// <param name="pos">Position of the entity in local tile indices.</param>
+        void AnchoredEntDirty(Vector2i pos);
 
         /// <summary>
         ///     Regenerates anything that is based on chunk collision data.

@@ -1,251 +1,14 @@
-﻿using Robust.Shared.Maths;
-using Robust.Shared.Serialization;
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Map
 {
     /// <summary>
-    ///     Contains the coordinates of a position on the rendering screen.
-    /// </summary>
-    [PublicAPI]
-    [Serializable, NetSerializable]
-    public readonly struct ScreenCoordinates : IEquatable<ScreenCoordinates>
-    {
-        /// <summary>
-        ///     Position on the rendering screen.
-        /// </summary>
-        public readonly Vector2 Position;
-
-        /// <summary>
-        ///     Screen position on the X axis.
-        /// </summary>
-        public float X => Position.X;
-
-        /// <summary>
-        ///     Screen position on the Y axis.
-        /// </summary>
-        public float Y => Position.Y;
-
-        /// <summary>
-        ///     The window which the coordinates are on.
-        /// </summary>
-        public readonly WindowId Window;
-
-        /// <summary>
-        ///     Constructs a new instance of <c>ScreenCoordinates</c>.
-        /// </summary>
-        /// <param name="position">Position on the rendering screen.</param>
-        /// <param name="window">Window for the coordinates.</param>
-        public ScreenCoordinates(Vector2 position, WindowId window)
-        {
-            Position = position;
-            Window = window;
-        }
-
-        /// <summary>
-        ///     Constructs a new instance of <c>ScreenCoordinates</c>.
-        /// </summary>
-        /// <param name="x">X axis of a position on the screen.</param>
-        /// <param name="y">Y axis of a position on the screen.</param>
-        /// <param name="window">Window for the coordinates.</param>
-        public ScreenCoordinates(float x, float y, WindowId window)
-        {
-            Position = new Vector2(x, y);
-            Window = window;
-        }
-
-        public bool IsValid => Window != WindowId.Invalid;
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"({Position.X}, {Position.Y}, W{Window.Value})";
-        }
-
-        /// <inheritdoc />
-        public bool Equals(ScreenCoordinates other)
-        {
-            return Position.Equals(other.Position) && Window == other.Window;
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            return obj is ScreenCoordinates other && Equals(other);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Position, Window);
-        }
-
-        /// <summary>
-        ///     Check for equality by value between two objects.
-        /// </summary>
-        public static bool operator ==(ScreenCoordinates a, ScreenCoordinates b)
-        {
-            return a.Equals(b);
-        }
-
-        /// <summary>
-        ///     Check for inequality by value between two objects.
-        /// </summary>
-        public static bool operator !=(ScreenCoordinates a, ScreenCoordinates b)
-        {
-            return !a.Equals(b);
-        }
-
-        public void Deconstruct(out Vector2 pos, out WindowId window)
-        {
-            pos = Position;
-            window = Window;
-        }
-    }
-
-    /// <summary>
-    ///     Coordinates relative to a specific map.
-    /// </summary>
-    [PublicAPI]
-    [Serializable, NetSerializable]
-    public readonly struct MapCoordinates : IEquatable<MapCoordinates>
-    {
-        public static readonly MapCoordinates Nullspace = new(Vector2.Zero, MapId.Nullspace);
-
-        /// <summary>
-        ///     World Position coordinates.
-        /// </summary>
-        public readonly Vector2 Position;
-
-        /// <summary>
-        ///     Map identifier relevant to this position.
-        /// </summary>
-        public readonly MapId MapId;
-
-        /// <summary>
-        ///     World position on the X axis.
-        /// </summary>
-        public float X => Position.X;
-
-        /// <summary>
-        ///     World position on the Y axis.
-        /// </summary>
-        public float Y => Position.Y;
-
-        /// <summary>
-        ///     Constructs a new instance of <c>MapCoordinates</c>.
-        /// </summary>
-        /// <param name="position">World position coordinates.</param>
-        /// <param name="mapId">Map identifier relevant to this position.</param>
-        public MapCoordinates(Vector2 position, MapId mapId)
-        {
-            Position = position;
-            MapId = mapId;
-        }
-
-        /// <summary>
-        ///     Constructs a new instance of <c>MapCoordinates</c>.
-        /// </summary>
-        /// <param name="x">World position coordinate on the X axis.</param>
-        /// <param name="y">World position coordinate on the Y axis.</param>
-        /// <param name="mapId">Map identifier relevant to this position.</param>
-        public MapCoordinates(float x, float y, MapId mapId)
-            : this(new Vector2(x, y), mapId) { }
-
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"Map={MapId}, X={Position.X:N2}, Y={Position.Y:N2}";
-        }
-
-        /// <summary>
-        ///     Checks that these coordinates are within a certain distance of another set.
-        /// </summary>
-        /// <param name="otherCoords">Other set of coordinates to use.</param>
-        /// <param name="range">maximum distance between the two sets of coordinates.</param>
-        /// <returns>True if the two points are within a given range.</returns>
-        public bool InRange(MapCoordinates otherCoords, float range)
-        {
-            if (otherCoords.MapId != MapId)
-            {
-                return false;
-            }
-
-            return (otherCoords.Position - Position).LengthSquared < range * range;
-        }
-
-        /// <inheritdoc />
-        public bool Equals(MapCoordinates other)
-        {
-            return Position.Equals(other.Position) && MapId.Equals(other.MapId);
-        }
-
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            return obj is MapCoordinates other && Equals(other);
-        }
-
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                return (Position.GetHashCode() * 397) ^ MapId.GetHashCode();
-            }
-        }
-
-        /// <summary>
-        ///     Check for equality by value between two objects.
-        /// </summary>
-        public static bool operator ==(MapCoordinates a, MapCoordinates b)
-        {
-            return a.Equals(b);
-        }
-
-        /// <summary>
-        ///     Check for inequality by value between two objects.
-        /// </summary>
-        public static bool operator !=(MapCoordinates a, MapCoordinates b)
-        {
-            return !a.Equals(b);
-        }
-
-
-        /// <summary>
-        /// Used to deconstruct this object into a tuple.
-        /// </summary>
-        /// <param name="x">World position coordinate on the X axis.</param>
-        /// <param name="y">World position coordinate on the Y axis.</param>
-        public void Deconstruct(out float x, out float y)
-        {
-            x = X;
-            y = Y;
-        }
-
-        /// <summary>
-        /// Used to deconstruct this object into a tuple.
-        /// </summary>
-        /// <param name="mapId">Map identifier relevant to this position.</param>
-        /// <param name="x">World position coordinate on the X axis.</param>
-        /// <param name="y">World position coordinate on the Y axis.</param>
-        public void Deconstruct(out MapId mapId, out float x, out float y)
-        {
-            mapId = MapId;
-            x = X;
-            y = Y;
-        }
-    }
-
-    /// <summary>
-    /// A set of coordinates relative to another entity.
+    ///     A set of coordinates relative to another entity.
     /// </summary>
     [PublicAPI]
     [Serializable, NetSerializable]
@@ -264,12 +27,12 @@ namespace Robust.Shared.Map
         public readonly Vector2 Position;
 
         /// <summary>
-        ///     Location of the X axis local to the parent.
+        ///     Location of the X axis local to the entity.
         /// </summary>
         public float X => Position.X;
 
         /// <summary>
-        ///     Location of the Y axis local to the parent.
+        ///     Location of the Y axis local to the entity.
         /// </summary>
         public float Y => Position.Y;
 
@@ -332,39 +95,40 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///    Creates EntityCoordinates given a parent and some MapCoordinates.
+        ///    Creates EntityCoordinates given an entity and some MapCoordinates.
         /// </summary>
-        /// <param name="parent"></param>
+        /// <param name="entity"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException">If <see cref="parent"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        public static EntityCoordinates FromMap(IEntity parent, MapCoordinates coordinates)
+        /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
+        public static EntityCoordinates FromMap(IEntity entity, MapCoordinates coordinates)
         {
-            if(parent.Transform.MapID != coordinates.MapId)
+            if(entity.Transform.MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
-            var localPos = parent.Transform.InvWorldMatrix.Transform(coordinates.Position);
-            return new EntityCoordinates(parent.Uid, localPos);
+            var localPos = entity.Transform.InvWorldMatrix.Transform(coordinates.Position);
+            return new EntityCoordinates(entity.Uid, localPos);
         }
 
         /// <summary>
-        ///    Creates EntityCoordinates given a parent Uid and some MapCoordinates.
+        ///    Creates EntityCoordinates given an entity Uid and some MapCoordinates.
         /// </summary>
         /// <param name="entityManager">Entity Manager containing the entity Id.</param>
-        /// <param name="parentUid"></param>
+        /// <param name="entityUid"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
-        /// <exception cref="InvalidOperationException">If <see cref="parentUid"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid parentUid, MapCoordinates coordinates)
+        /// <exception cref="InvalidOperationException">If <see cref="entityUid"/> is not on the same map as the <see cref="coordinates"/>.</exception>
+        public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
         {
-            var parent = entityManager.GetEntity(parentUid);
+            var entity = entityManager.GetEntity(entityUid);
 
-            return FromMap(parent, coordinates);
+            return FromMap(entity, coordinates);
         }
 
         /// <summary>
         ///    Creates a set of EntityCoordinates given some MapCoordinates.
         /// </summary>
+        /// <param name="entityManager"></param>
         /// <param name="mapManager"></param>
         /// <param name="coordinates"></param>
         /// <returns></returns>
@@ -456,47 +220,47 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Returns the Grid Id this entity is on.
+        ///     Returns the Grid Id these coordinates are on.
         ///     If none of the ancestors are a grid, returns <see cref="GridId.Invalid"/> grid instead.
         /// </summary>
-        /// <param name="entityManager">Entity Manager that contains the parent's Id</param>
+        /// <param name="entityManager"></param>
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? GridId.Invalid : GetParent(entityManager).Transform.GridID;
+            return !IsValid(entityManager) ? GridId.Invalid : GetEntity(entityManager).Transform.GridID;
         }
 
         /// <summary>
-        ///     Returns the Map Id this entity is on.
-        ///     If the parent entity is not valid, returns <see cref="MapId.Nullspace"/> instead.
+        ///     Returns the Map Id these coordinates are on.
+        ///     If the relative entity is not valid, returns <see cref="MapId.Nullspace"/> instead.
         /// </summary>
-        /// <param name="entityManager">Entity Manager that contains the parent's Id</param>
-        /// <returns>Map Id this entity is on or <see cref="MapId.Nullspace"/></returns>
+        /// <param name="entityManager"></param>
+        /// <returns>Map Id these coordinates are on or <see cref="MapId.Nullspace"/></returns>
         public MapId GetMapId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? MapId.Nullspace : GetParent(entityManager).Transform.MapID;
+            return !IsValid(entityManager) ? MapId.Nullspace : GetEntity(entityManager).Transform.MapID;
         }
 
         /// <summary>
-        ///     Returns the parent entity.
+        ///     Returns a reference to the relative entity.
         /// </summary>
-        /// <param name="entityManager">Entity Manager containing the parent entity</param>
-        /// <returns>Parent entity or throws if entity id doesn't exist</returns>
-        public IEntity GetParent(IEntityManager entityManager)
+        /// <param name="entityManager"></param>
+        /// <returns>Relative entity or throws if entity id doesn't exist</returns>
+        public IEntity GetEntity(IEntityManager entityManager)
         {
             return entityManager.GetEntity(EntityId);
         }
 
         /// <summary>
-        ///     Attempt to get the parent entity, returning whether or not the entity was gotten.
+        ///     Attempt to get the relative entity, returning whether or not the entity was gotten.
         /// </summary>
-        /// <param name="entityManager">Entity Manager containing the parent entity</param>
-        /// <param name="parent">The parent entity or null if not valid</param>
+        /// <param name="entityManager"></param>
+        /// <param name="entity">The relative entity or null if not valid</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetParent(IEntityManager entityManager, [NotNullWhen(true)] out IEntity? parent)
+        public bool TryGetEntity(IEntityManager entityManager, [NotNullWhen(true)] out IEntity? entity)
         {
-            parent = null;
-            return IsValid(entityManager) && entityManager.TryGetEntity(EntityId, out parent);
+            entity = null;
+            return IsValid(entityManager) && entityManager.TryGetEntity(EntityId, out entity);
         }
 
         /// <summary>
@@ -601,37 +365,37 @@ namespace Robust.Shared.Map
         #region Operators
 
         /// <summary>
-        ///     Returns the sum for both coordinates but only if they have the same parent.
+        ///     Returns the sum for both coordinates but only if they have the same relative entity.
         /// </summary>
-        /// <exception cref="ArgumentException">When the parents aren't the same</exception>
+        /// <exception cref="ArgumentException">Thrown when the relative entities aren't the same</exception>
         public static EntityCoordinates operator +(EntityCoordinates left, EntityCoordinates right)
         {
             if(left.EntityId != right.EntityId)
-                throw new ArgumentException("Can't sum EntityCoordinates with different parents.");
+                throw new ArgumentException("Can't sum EntityCoordinates with different relative entities.");
 
             return new EntityCoordinates(left.EntityId, left.Position + right.Position);
         }
 
         /// <summary>
-        ///     Returns the difference for both coordinates but only if they have the same parent.
+        ///     Returns the difference for both coordinates but only if they have the same relative entity.
         /// </summary>
-        /// <exception cref="ArgumentException">When the parents aren't the same</exception>
+        /// <exception cref="ArgumentException">Thrown when the relative entities aren't the same</exception>
         public static EntityCoordinates operator -(EntityCoordinates left, EntityCoordinates right)
         {
             if(left.EntityId != right.EntityId)
-                throw new ArgumentException("Can't substract EntityCoordinates with different parents.");
+                throw new ArgumentException("Can't subtract EntityCoordinates with different relative entities.");
 
             return new EntityCoordinates(left.EntityId, left.Position - right.Position);
         }
 
         /// <summary>
-        ///     Returns the multiplication of both coordinates but only if they have the same parent.
+        ///     Returns the multiplication of both coordinates but only if they have the same relative entity.
         /// </summary>
-        /// <exception cref="ArgumentException">When the parents aren't the same</exception>
+        /// <exception cref="ArgumentException">When the relative entities aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, EntityCoordinates right)
         {
             if(left.EntityId != right.EntityId)
-                throw new ArgumentException("Can't multiply EntityCoordinates with different parents.");
+                throw new ArgumentException("Can't multiply EntityCoordinates with different relative entities.");
 
             return new EntityCoordinates(left.EntityId, left.Position * right.Position);
         }
@@ -639,7 +403,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Scales the coordinates by a given factor.
         /// </summary>
-        /// <exception cref="ArgumentException">When the parents aren't the same</exception>
+        /// <exception cref="ArgumentException">When the relative entities aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, float right)
         {
             return new(left.EntityId, left.Position * right);
@@ -648,7 +412,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Scales the coordinates by a given factor.
         /// </summary>
-        /// <exception cref="ArgumentException">When the parents aren't the same</exception>
+        /// <exception cref="ArgumentException">When the relative entities aren't the same</exception>
         public static EntityCoordinates operator *(EntityCoordinates left, int right)
         {
             return new(left.EntityId, left.Position * right);

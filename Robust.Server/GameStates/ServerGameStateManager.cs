@@ -271,21 +271,21 @@ namespace Robust.Server.GameStates
 
                 DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
 
-                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+                if (component.CreationTick != GameTick.Zero && component.CreationTick > fromTick && !component.Deleted)
                 {
                     ComponentState? state = null;
-                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick > fromTick)
                         state = component.GetComponentState(player);
 
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
                     changed.Add(ComponentChange.Added(netId, state));
                 }
-                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick > fromTick)
                 {
                     changed.Add(ComponentChange.Changed(netId, component.GetComponentState(player)));
                 }
-                else if (component.Deleted && component.LastModifiedTick >= fromTick)
+                else if (component.Deleted && component.LastModifiedTick > fromTick)
                 {
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException

@@ -1244,7 +1244,7 @@ namespace Robust.Shared.GameObjects
                 if (existing.ID.Equals(id)) return;
             }
 
-            PhysicsMap.AddJoint(joint);
+            PhysicsMap?.AddJoint(joint);
             joint.ID = id;
             Logger.DebugS("physics", $"Added joint id: {joint.ID} type: {joint.GetType().Name} to {Owner}");
         }

@@ -176,7 +176,7 @@ namespace Robust.Shared.Map
                 return false;
             }
 
-            return ((otherCoords.Position - Position).LengthSquared < range * range);
+            return (otherCoords.Position - Position).LengthSquared < range * range;
         }
 
         /// <inheritdoc />
@@ -521,6 +521,9 @@ namespace Robust.Shared.Map
             if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
                 return false;
 
+            if (EntityId == otherCoordinates.EntityId)
+                return (otherCoordinates.Position - Position).LengthSquared < range * range;
+
             var mapCoordinates = ToMap(entityManager);
             var otherMapCoordinates = otherCoordinates.ToMap(entityManager);
 
@@ -540,6 +543,12 @@ namespace Robust.Shared.Map
 
             if (!IsValid(entityManager) || !otherCoordinates.IsValid(entityManager))
                 return false;
+
+            if (EntityId == otherCoordinates.EntityId)
+            {
+                distance = (Position - otherCoordinates.Position).Length;
+                return true;
+            }
 
             var mapCoordinates = ToMap(entityManager);
             var otherMapCoordinates = otherCoordinates.ToMap(entityManager);

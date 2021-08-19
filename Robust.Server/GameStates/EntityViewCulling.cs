@@ -217,7 +217,7 @@ namespace Robust.Server.GameStates
                             continue;
 
                         // for each grid, calculate the chunks that are inside the box
-                        foreach (var chunk in grid.GetMapChunks(viewBox))
+                        foreach (var (_, chunk) in grid.GetMapChunks())
                         {
                             // for each chunk, check dirty
                             if (chunk.LastAnchoredModifiedTick < fromTick)

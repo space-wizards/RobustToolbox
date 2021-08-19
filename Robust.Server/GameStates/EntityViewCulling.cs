@@ -252,7 +252,10 @@ namespace Robust.Server.GameStates
 
                             foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
                             {
-                                if (_entMan.GetEntity(anchoredEnt).LastModifiedTick < lastSeenChunk)
+                                var ent = _entMan.GetEntity(anchoredEnt);
+                                DebugTools.Assert(!ent.Transform.Anchored);
+
+                                if (ent.LastModifiedTick < lastSeenChunk)
                                     continue;
 
                                 var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, lastSeenChunk);
@@ -320,6 +323,10 @@ namespace Robust.Server.GameStates
 
             foreach (var entityUid in currentSet)
             {
+
+                // skip sending anchored entities (walls)
+                DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
+
                 if (previousSet.Contains(entityUid))
                 {
                     //Still Visible
@@ -327,9 +334,6 @@ namespace Robust.Server.GameStates
                     // Nothing new to send
                     if(_entMan.GetEntity(entityUid).LastModifiedTick < fromTick)
                         continue;
-
-                    // skip sending anchored entities (walls)
-                    DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
 
                     // only send new changes
                     var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, fromTick);
@@ -340,9 +344,6 @@ namespace Robust.Server.GameStates
                 else
                 {
                     // PVS enter message
-
-                    // skip sending anchored entities (walls)
-                    DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
 
                     // don't assume the client knows anything about us
                     var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, GameTick.Zero);

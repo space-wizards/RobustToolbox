@@ -14,7 +14,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates
 {
-    internal class EntityViewCulling
+    internal sealed class EntityViewCulling
     {
         private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
@@ -28,6 +28,7 @@ namespace Robust.Server.GameStates
         private readonly IEntityLookup _lookup;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
+        internal readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> PlayerChunks = new(PlayerSetSize);
 
         private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
@@ -93,12 +94,14 @@ namespace Robust.Server.GameStates
         public void AddPlayer(ICommonSession session)
         {
             _playerVisibleSets.Add(session, new HashSet<EntityUid>(ViewSetCapacity));
+            PlayerChunks.Add(session, new Dictionary<IMapChunkInternal, GameTick>(32));
         }
 
         // Not thread safe
         public void RemovePlayer(ICommonSession session)
         {
             _playerVisibleSets.Remove(session);
+            PlayerChunks.Remove(session);
             _playerLastFullMap.Remove(session, out _);
         }
 
@@ -168,7 +171,6 @@ namespace Robust.Server.GameStates
                 return (allStates, deletions);
             }
 
-            var lastMapUpdate = _playerLastFullMap.GetValueOrDefault(session);
             var visibleEnts = _visSetPool.Get();
             // As we may have entities parented to anchored entities on chunks we've never seen we need to make sure
             // they're included.
@@ -182,6 +184,7 @@ namespace Robust.Server.GameStates
             if (session.AttachedEntityUid is not null)
             {
                 var viewers = GetSessionViewers(session);
+                var chunksSeen = PlayerChunks[session];
 
                 foreach (var eyeEuid in viewers)
                 {
@@ -213,15 +216,13 @@ namespace Robust.Server.GameStates
                     {
                         var grid = (IMapGridInternal)publicMapGrid;
 
-                        if (grid.LastAnchoredModifiedTick < fromTick)
-                            continue;
+                        // Can't really check when grid was modified here because we may need to dump new chunks on the person
+                        // as right now if you make a new chunk the client never actually gets these entities here.
 
-                        // TODO: Ideally we'd be able to dump all the chunks on connection or whatever and just
-                        // iterate the viewbox ones after.
-                        foreach (var (_, chunk) in grid.GetMapChunks())
+                        foreach (var chunk in grid.GetMapChunks(viewBox))
                         {
                             // for each chunk, check dirty
-                            if (chunk.LastAnchoredModifiedTick < fromTick)
+                            if (chunksSeen.TryGetValue(chunk, out var chunkSeen) && chunk.LastAnchoredModifiedTick < chunkSeen)
                                 continue;
 
                             if (!includedChunks.TryGetValue(grid.Index, out var chunks))
@@ -243,14 +244,22 @@ namespace Robust.Server.GameStates
 
                         foreach (var chunk in chunks)
                         {
+                            if (!chunksSeen.TryGetValue(chunk, out var lastSeenChunk))
+                            {
+                                // Dump the whole thing on them.
+                                lastSeenChunk = GameTick.Zero;
+                            }
+
                             foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
                             {
-                                if (_entMan.GetEntity(anchoredEnt).LastModifiedTick < fromTick)
+                                if (_entMan.GetEntity(anchoredEnt).LastModifiedTick < lastSeenChunk)
                                     continue;
 
-                                var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, fromTick);
+                                var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, lastSeenChunk);
                                 entityStates.Add(newState);
                             }
+
+                            chunksSeen[chunk] = fromTick;
                         }
                     }
                 }
@@ -260,13 +269,13 @@ namespace Robust.Server.GameStates
             }
 
             deletions = GetDeletedEntities(fromTick);
-            GenerateEntityStates(entityStates, session, lastMapUpdate, fromTick, visibleEnts, deletions);
+            GenerateEntityStates(entityStates, session, fromTick, visibleEnts, deletions);
 
             // no point sending an empty collection
             return (entityStates.Count == 0 ? default : entityStates, deletions.Count == 0 ? default : deletions);
         }
 
-        private void GenerateEntityStates(List<EntityState> entityStates, ICommonSession session, GameTick lastMapUpdate, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions)
+        private void GenerateEntityStates(List<EntityState> entityStates, ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions)
         {
             // pretty big allocations :(
             var previousSet = _playerVisibleSets[session];
@@ -372,6 +381,11 @@ namespace Robust.Server.GameStates
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, uint visMask)
         {
+            if (xform.Owner.Prototype?.ID.Equals("AMEControllerUnanchored") == true)
+            {
+
+            }
+
             var xformUid = xform.Owner.Uid;
 
             // we are done, this ent has already been checked and is visible

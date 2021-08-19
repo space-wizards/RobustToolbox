@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var timer in timers)
             {
-                if (!timer.Deleted && timer.RemoveOnEmpty && timer.TimerCount == 0)
+                if (!timer.Deleted && !timer.Owner.Deleted && timer.RemoveOnEmpty && timer.TimerCount == 0)
                 {
                     ComponentManager.RemoveComponent<TimerComponent>(timer.Owner.Uid);
                 }

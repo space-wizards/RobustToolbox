@@ -272,16 +272,21 @@ namespace Robust.Shared.GameObjects
                 if(value.EntityId == _parent && _anchored)
                     return;
 
-                var oldPosition = Coordinates;
-                _localPosition = value.Position;
+                var sameParent = value.EntityId == _parent;
 
-                var changedParent = false;
-
-                if (value.EntityId != _parent)
+                if (!sameParent)
                 {
+                    // Need to set anchored before we update position so that we can clear snapgrid cells correctly.
                     if(_parent != EntityUid.Invalid) // Allow setting Transform.Parent in Prototypes
                         Anchored = false; // changing the parent un-anchors the entity
+                }
 
+                var oldPosition = Coordinates;
+                _localPosition = value.Position;
+                var changedParent = false;
+
+                if (!sameParent)
+                {
                     changedParent = true;
                     var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
                     var newParent = newParentEnt.Transform;

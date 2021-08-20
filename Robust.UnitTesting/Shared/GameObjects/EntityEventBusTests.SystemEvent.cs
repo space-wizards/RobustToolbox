@@ -221,22 +221,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
 
         /// <summary>
-        /// Trying to queue a null event causes a <see cref="ArgumentNullException"/> to be thrown.
-        /// </summary>
-        [Test]
-        public void RaiseEvent_NullEvent_ArgumentNullException()
-        {
-            // Arrange
-            var bus = BusFactory();
-
-            // Act
-            void Code() => bus.RaiseEvent(EventSource.Local, null!);
-
-            // Assert
-            Assert.Throws<ArgumentNullException>(Code);
-        }
-
-        /// <summary>
         /// Raising an event with no handlers subscribed to it does nothing.
         /// </summary>
         [Test]

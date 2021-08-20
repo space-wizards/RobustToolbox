@@ -1,13 +1,11 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -33,8 +31,8 @@ namespace Robust.Shared.GameObjects
             IEntityEventSubscriber subscriber,
             EntityEventHandler<T> eventHandler,
             Type orderType,
-            Type[]? before=null,
-            Type[]? after=null)
+            Type[]? before = null,
+            Type[]? after = null)
             where T : notnull;
 
         void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
@@ -45,8 +43,8 @@ namespace Robust.Shared.GameObjects
             IEntityEventSubscriber subscriber,
             EntityEventRefHandler<T> eventHandler,
             Type orderType,
-            Type[]? before=null,
-            Type[]? after=null)
+            Type[]? before = null,
+            Type[]? after = null)
             where T : notnull;
 
         /// <summary>
@@ -65,8 +63,6 @@ namespace Robust.Shared.GameObjects
         void RaiseEvent(EventSource source, object toRaise);
 
         void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull;
-
-        void RaiseEvent(EventSource source, ref object toRaise);
 
         void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull;
 
@@ -95,23 +91,6 @@ namespace Robust.Shared.GameObjects
         Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken) where T : notnull;
 
         /// <summary>
-        /// Waits for an event to be raised. You do not have to subscribe to the event.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="type">Event type being waited for.</param>
-        /// <returns></returns>
-        Task<object> AwaitEvent(EventSource source, Type type);
-
-        /// <summary>
-        /// Waits for an event to be raised. You do not have to subscribe to the event.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="type">Event type being waited for.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        Task<object> AwaitEvent(EventSource source, Type type, CancellationToken cancellationToken);
-
-        /// <summary>
         /// Unsubscribes all event handlers for a given subscriber.
         /// </summary>
         /// <param name="subscriber">Owner of the handlers being removed.</param>
@@ -130,8 +109,8 @@ namespace Robust.Shared.GameObjects
     [Flags]
     public enum EventSource : byte
     {
-        None    = 0b0000,
-        Local   = 0b0001,
+        None = 0b0000,
+        Local = 0b0001,
         Network = 0b0010,
 
         All = Local | Network,
@@ -142,10 +121,12 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     internal partial class EntityEventBus : IBroadcastEventBusInternal
     {
-        private const string ValueDispatchError = "Tried to dispatch a value event to a by-reference subscription.";
-        private const string RefDispatchError = "Tried to dispatch a ref event to a by-value subscription.";
+        // Inside this class we pass a lot of things around as "ref Unit unitRef".
+        // The idea behind this is to avoid using type arguments in core dispatch that only needs to pass around a ref*
+        // Type arguments require the JIT to compile a new method implementation for every event type,
+        // which would start to weigh a LOT.
 
-        private delegate void EventHandler(ref object ev);
+        private delegate void RefEventHandler(ref Unit ev);
 
         private readonly Dictionary<Type, bool> _refEvents = new();
         private readonly Dictionary<Type, List<Registration>> _eventSubscriptions = new();
@@ -155,9 +136,8 @@ namespace Robust.Shared.GameObjects
 
         private readonly Queue<(EventSource source, object args)> _eventQueue = new();
 
-        private readonly Dictionary<Type, (EventSource, CancellationTokenRegistration, TaskCompletionSource<object>)>
-            _awaitingMessages
-                = new();
+        private readonly Dictionary<Type, (EventSource, CancellationTokenRegistration, RefEventHandler)>
+            _awaitingMessages = new();
 
         /// <inheritdoc />
         public void UnsubscribeEvents(IEntityEventSubscriber subscriber)
@@ -180,8 +160,11 @@ namespace Robust.Shared.GameObjects
         {
             while (_eventQueue.Count != 0)
             {
-                var eventTuple = _eventQueue.Dequeue();
-                ProcessSingleEvent(eventTuple.source, ref eventTuple.args, false);
+                var (source, args) = _eventQueue.Dequeue();
+                var type = args.GetType();
+                ref var unitRef = ref ExtractUnitRef(ref args, type);
+
+                ProcessSingleEvent(source, ref unitRef, type, false);
             }
         }
 
@@ -195,9 +178,8 @@ namespace Robust.Shared.GameObjects
             if (eventHandler == null)
                 throw new ArgumentNullException(nameof(eventHandler));
 
-            void EventHandler(ref T ev) => eventHandler(ev);
-
-            SubscribeEventCommon<T>(source, subscriber, (EntityEventRefHandler<T>) EventHandler, (ref object ev) => eventHandler((T) ev), eventHandler, null, false);
+            SubscribeEventCommon<T>(source, subscriber,
+                (ref Unit ev) => eventHandler(Unsafe.As<Unit, T>(ref ev)), eventHandler, null, false);
         }
 
         public void SubscribeEvent<T>(
@@ -205,8 +187,8 @@ namespace Robust.Shared.GameObjects
             IEntityEventSubscriber subscriber,
             EntityEventHandler<T> eventHandler,
             Type orderType,
-            Type[]? before=null,
-            Type[]? after=null)
+            Type[]? before = null,
+            Type[]? after = null)
             where T : notnull
         {
             if (eventHandler == null)
@@ -214,29 +196,31 @@ namespace Robust.Shared.GameObjects
 
             var order = new OrderingData(orderType, before, after);
 
-            void EventHandler(ref T ev) => eventHandler(ev);
+            SubscribeEventCommon<T>(source, subscriber,
+                (ref Unit ev) => eventHandler(Unsafe.As<Unit, T>(ref ev)), eventHandler, order, false);
 
-            SubscribeEventCommon<T>(source, subscriber, (EntityEventRefHandler<T>) EventHandler, (ref object ev) => eventHandler((T) ev), eventHandler, order, false);
             HandleOrderRegistration(typeof(T), order);
         }
 
-        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventRefHandler<T> eventHandler) where T : notnull
+        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
+            EntityEventRefHandler<T> eventHandler) where T : notnull
         {
-            SubscribeEventCommon<T>(source, subscriber, eventHandler, (ref object ev) =>
+            SubscribeEventCommon<T>(source, subscriber, (ref Unit ev) =>
             {
-                ref var tev = ref Unsafe.As<object, T>(ref ev);
+                ref var tev = ref Unsafe.As<Unit, T>(ref ev);
                 eventHandler(ref tev);
             }, eventHandler, null, true);
         }
 
-        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber, EntityEventRefHandler<T> eventHandler,
+        public void SubscribeEvent<T>(EventSource source, IEntityEventSubscriber subscriber,
+            EntityEventRefHandler<T> eventHandler,
             Type orderType, Type[]? before = null, Type[]? after = null) where T : notnull
         {
             var order = new OrderingData(orderType, before, after);
 
-            SubscribeEventCommon<T>(source, subscriber, eventHandler, (ref object ev) =>
+            SubscribeEventCommon<T>(source, subscriber, (ref Unit ev) =>
             {
-                ref var tev = ref Unsafe.As<object, T>(ref ev);
+                ref var tev = ref Unsafe.As<Unit, T>(ref ev);
                 eventHandler(ref tev);
             }, eventHandler, order, true);
             HandleOrderRegistration(typeof(T), order);
@@ -245,8 +229,7 @@ namespace Robust.Shared.GameObjects
         private void SubscribeEventCommon<T>(
             EventSource source,
             IEntityEventSubscriber subscriber,
-            Delegate originalEventHandler,
-            EventHandler handler,
+            RefEventHandler handler,
             object equalityToken,
             OrderingData? order,
             bool byRef)
@@ -255,10 +238,7 @@ namespace Robust.Shared.GameObjects
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            if (originalEventHandler == null)
-                throw new ArgumentNullException(nameof(originalEventHandler));
-
-            if(subscriber == null)
+            if (subscriber == null)
                 throw new ArgumentNullException(nameof(subscriber));
 
             var eventType = typeof(T);
@@ -270,11 +250,13 @@ namespace Robust.Shared.GameObjects
             }
 
             if (eventReference != byRef)
-                throw new InvalidOperationException($"Attempted to subscribe by-ref and by-value to the same broadcast event! event={eventType}");
+                throw new InvalidOperationException(
+                    $"Attempted to subscribe by-ref and by-value to the same broadcast event! event={eventType}");
 
-            var subscriptionTuple = new Registration(source, originalEventHandler, handler, equalityToken, order, byRef);
+            var subscriptionTuple = new Registration(source, handler, equalityToken, order, byRef);
+
             if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
-                _eventSubscriptions.Add(eventType, new List<Registration> {subscriptionTuple});
+                _eventSubscriptions.Add(eventType, new List<Registration> { subscriptionTuple });
             else if (!subscriptions.Any(p => p.Equals(subscriptionTuple)))
                 subscriptions.Add(subscriptionTuple);
 
@@ -282,7 +264,7 @@ namespace Robust.Shared.GameObjects
             {
                 inverseSubscription = new Dictionary<Type, Registration>
                 {
-                    {eventType, subscriptionTuple}
+                    { eventType, subscriptionTuple }
                 };
 
                 _inverseEventSubscriptions.Add(
@@ -318,10 +300,10 @@ namespace Robust.Shared.GameObjects
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            if (toRaise == null)
-                throw new ArgumentNullException(nameof(toRaise));
+            var eventType = toRaise.GetType();
+            ref var unitRef = ref ExtractUnitRef(ref toRaise, eventType);
 
-            ProcessSingleEvent(source, ref toRaise, false);
+            ProcessSingleEvent(source, ref unitRef, eventType, false);
         }
 
         public void RaiseEvent<T>(EventSource source, T toRaise) where T : notnull
@@ -329,21 +311,7 @@ namespace Robust.Shared.GameObjects
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            if (toRaise == null)
-                throw new ArgumentNullException(nameof(toRaise));
-
-            ProcessSingleEvent(source, ref toRaise, false);
-        }
-
-        public void RaiseEvent(EventSource source, ref object toRaise)
-        {
-            if (source == EventSource.None)
-                throw new ArgumentOutOfRangeException(nameof(source));
-
-            if (toRaise == null)
-                throw new ArgumentNullException(nameof(toRaise));
-
-            ProcessSingleEvent(source, ref toRaise, true);
+            ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T), false);
         }
 
         public void RaiseEvent<T>(EventSource source, ref T toRaise) where T : notnull
@@ -351,62 +319,36 @@ namespace Robust.Shared.GameObjects
             if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            if (toRaise == null)
-                throw new ArgumentNullException(nameof(toRaise));
-
-            ProcessSingleEvent(source, ref toRaise, true);
+            ProcessSingleEvent(source, ref Unsafe.As<T, Unit>(ref toRaise), typeof(T), true);
         }
 
         /// <inheritdoc />
         public void QueueEvent(EventSource source, EntityEventArgs toRaise)
         {
-            if(source == EventSource.None)
+            if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            if(toRaise == null)
+            if (toRaise == null)
                 throw new ArgumentNullException(nameof(toRaise));
 
             _eventQueue.Enqueue((source, toRaise));
         }
 
         /// <inheritdoc />
-        public Task<T> AwaitEvent<T>(EventSource source) where T : notnull
-        {
-            return AwaitEvent<T>(source, default);
-        }
-
-        /// <inheritdoc />
-        public Task<object> AwaitEvent(EventSource source, Type type)
-        {
-            return AwaitEvent(source, type, default);
-        }
+        public Task<T> AwaitEvent<T>(EventSource source) where T : notnull => AwaitEvent<T>(source, default);
 
         /// <inheritdoc />
         public Task<T> AwaitEvent<T>(EventSource source, CancellationToken cancellationToken) where T : notnull
         {
-            var type = typeof(T);
-
-            // Tiny trick so we can return T while the tcs is passed an EntitySystemMessage.
-            static async Task<T> DoCast(Task<object> task)
-            {
-                return (T)await task;
-            }
-
-            return DoCast(AwaitEvent(source, type, cancellationToken));
-        }
-
-        /// <inheritdoc />
-        public Task<object> AwaitEvent(EventSource source, Type type, CancellationToken cancellationToken)
-        {
-            if(source == EventSource.None)
+            if (source == EventSource.None)
                 throw new ArgumentOutOfRangeException(nameof(source));
 
-            if (_awaitingMessages.ContainsKey(type))
-            {
-                throw new InvalidOperationException("Cannot await the same message type twice at once.");
-            }
+            var type = typeof(T);
 
-            var tcs = new TaskCompletionSource<object>();
+            if (_awaitingMessages.ContainsKey(type))
+                throw new InvalidOperationException("Cannot await the same message type twice at once.");
+
+            var tcs = new TaskCompletionSource<T>();
             CancellationTokenRegistration reg = default;
             if (cancellationToken != default)
             {
@@ -417,7 +359,12 @@ namespace Robust.Shared.GameObjects
                 });
             }
 
-            _awaitingMessages.Add(type, (source, reg, tcs));
+            _awaitingMessages.Add(type, (source, reg, (ref Unit unCast) =>
+            {
+                var msg = Unsafe.As<Unit, T>(ref unCast);
+                tcs.SetResult(msg);
+            }));
+
             return tcs.Task;
         }
 
@@ -430,70 +377,29 @@ namespace Robust.Shared.GameObjects
                 inverse.Remove(eventType);
         }
 
-        [Conditional("DEBUG")]
-        private void AssertDispatch(Type eventType, bool dispatchByReference)
+        private void ProcessSingleEvent(EventSource source, ref Unit unitRef, Type eventType, bool byRef)
         {
-            if (!_refEvents.TryGetValue(eventType, out var eventReference))
-                return; // Event never even subscribed to.
-
-            if(eventReference && !dispatchByReference)
-                DebugTools.Assert(RefDispatchError);
-
-            if (!eventReference && dispatchByReference)
-                DebugTools.Assert(ValueDispatchError);
-        }
-
-        private void ProcessSingleEvent(EventSource source, ref object eventArgs, bool byRef)
-        {
-            var eventType = eventArgs.GetType();
-
-            AssertDispatch(eventType, byRef);
-
             if (_orderedEvents.Contains(eventType))
             {
-                ProcessSingleEventOrdered(source, ref eventArgs, eventType);
+                ProcessSingleEventOrdered(source, ref unitRef, eventType, byRef);
             }
             else if (_eventSubscriptions.TryGetValue(eventType, out var subs))
             {
                 foreach (var handler in subs)
                 {
-                    if((handler.Mask & source) != 0)
-                        handler.Handler(ref eventArgs);
-                }
-            }
+                    if (handler.ReferenceEvent != byRef)
+                        ThrowByRefMisMatch();
 
-            ProcessAwaitingMessages(source, eventArgs, eventType);
-        }
-
-        private void ProcessSingleEvent<T>(EventSource source, ref T eventArgs, bool byRef) where T : notnull
-        {
-            var eventType = typeof(T);
-
-            AssertDispatch(eventType, byRef);
-
-            if (_orderedEvents.Contains(eventType))
-            {
-                ref var objArgs = ref Unsafe.As<T, object>(ref eventArgs);
-                ProcessSingleEventOrdered(source, ref objArgs, eventType);
-            }
-            else if (_eventSubscriptions.TryGetValue(eventType, out var subs))
-            {
-                foreach (var handler in subs)
-                {
                     if ((handler.Mask & source) != 0)
-                    {
-                        var foo = (EntityEventRefHandler<T>) handler.Original;
-                        foo(ref eventArgs);
-                    }
+                        handler.Handler(ref unitRef);
                 }
             }
 
-            ProcessAwaitingMessages(source, eventArgs, eventType);
+            ProcessAwaitingMessages(source, ref unitRef, eventType);
         }
 
         // Generic here so we can avoid boxing alloc unless actually awaiting.
-        private void ProcessAwaitingMessages<T>(EventSource source, T eventArgs, Type eventType)
-            where T : notnull
+        private void ProcessAwaitingMessages(EventSource source, ref Unit untypedArgs, Type eventType)
         {
             if (_awaitingMessages.TryGetValue(eventType, out var awaiting))
             {
@@ -501,10 +407,25 @@ namespace Robust.Shared.GameObjects
 
                 if ((source & mask1) != 0)
                 {
-                    tcs.TrySetResult(eventArgs);
+                    tcs(ref untypedArgs);
                     _awaitingMessages.Remove(eventType);
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowByRefMisMatch() =>
+            throw new InvalidOperationException("Mismatching by-ref ness on event!");
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ref Unit ExtractUnitRef(ref object obj, Type objType)
+        {
+            // If it's a boxed value type we have to do some trickery to return the INTERIOR reference,
+            // not the reference to the boxed object.
+            // Otherwise the unit points to the reference to the reference type.
+            return ref objType.IsValueType
+                ? ref Unsafe.As<object, UnitBox>(ref obj).Value
+                : ref Unsafe.As<object, Unit>(ref obj);
         }
 
         private readonly struct Registration : IEquatable<Registration>
@@ -512,21 +433,18 @@ namespace Robust.Shared.GameObjects
             public readonly EventSource Mask;
             public readonly object EqualityToken;
 
-            public readonly Delegate Original;
-            public readonly EventHandler Handler;
+            public readonly RefEventHandler Handler;
             public readonly OrderingData? Ordering;
             public readonly bool ReferenceEvent;
 
             public Registration(
                 EventSource mask,
-                Delegate original,
-                EventHandler handler,
+                RefEventHandler handler,
                 object equalityToken,
                 OrderingData? ordering,
                 bool referenceEvent)
             {
                 Mask = mask;
-                Original = original;
                 Handler = handler;
                 EqualityToken = equalityToken;
                 Ordering = ordering;
@@ -547,7 +465,7 @@ namespace Robust.Shared.GameObjects
             {
                 unchecked
                 {
-                    return ((int) Mask * 397) ^ (EqualityToken != null ? EqualityToken.GetHashCode() : 0);
+                    return ((int)Mask * 397) ^ EqualityToken.GetHashCode();
                 }
             }
 
@@ -560,18 +478,18 @@ namespace Robust.Shared.GameObjects
             {
                 return !left.Equals(right);
             }
+        }
 
-            public void Deconstruct(
-                out EventSource mask,
-                out Delegate originalHandler,
-                out EventHandler handler,
-                out OrderingData? order)
-            {
-                mask = Mask;
-                originalHandler = Original;
-                handler = Handler;
-                order = Ordering;
-            }
+        // This is not a real type. Whenever you see a "ref Unit" it means it's a ref to *some* kind of other type.
+        // It should always be cast to/from with Unsafe.As<,>
+        private readonly struct Unit
+        {
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private class UnitBox
+        {
+            [UsedImplicitly] public Unit Value;
         }
     }
 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -15,11 +14,11 @@ namespace Robust.Shared.GameObjects
         // Ordered event raising is slow so if this event has any ordering dependencies we use a slower path.
         private readonly HashSet<Type> _orderedEvents = new();
 
-        private void ProcessSingleEventOrdered(EventSource source, ref object eventArgs, Type eventType)
+        private void ProcessSingleEventOrdered(EventSource source, ref Unit eventArgs, Type eventType, bool byRef)
         {
-            var found = new List<(EventHandler, OrderingData?)>();
+            var found = new List<(RefEventHandler, OrderingData?)>();
 
-            CollectBroadcastOrdered(source, eventType, found);
+            CollectBroadcastOrdered(source, eventType, found, byRef);
 
             DispatchOrderedEvents(ref eventArgs, found);
         }
@@ -27,39 +26,41 @@ namespace Robust.Shared.GameObjects
         private void CollectBroadcastOrdered(
             EventSource source,
             Type eventType,
-            List<(EventHandler, OrderingData?)> found)
+            List<(RefEventHandler, OrderingData?)> found,
+            bool byRef)
         {
             if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
                 return;
 
             foreach (var handler in subs)
             {
+                if (handler.ReferenceEvent != byRef)
+                    ThrowByRefMisMatch();
+
                 if ((handler.Mask & source) != 0)
                     found.Add((handler.Handler, handler.Ordering));
             }
         }
 
-        private void RaiseLocalOrdered<TEvent>(
-            EntityUid uid,
-            ref TEvent args,
-            bool broadcast)
-            where TEvent : notnull
+        private void RaiseLocalOrdered(EntityUid uid,
+            Type eventType,
+            ref Unit unitRef,
+            bool broadcast, bool byRef)
         {
-            var found = new List<(EventHandler, OrderingData?)>();
+            var found = new List<(RefEventHandler, OrderingData?)>();
 
             if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, typeof(TEvent), found);
+                CollectBroadcastOrdered(EventSource.Local, eventType, found, byRef);
 
-            _eventTables.CollectOrdered(uid, typeof(TEvent), found);
+            _eventTables.CollectOrdered(uid, eventType, found, byRef);
 
-            ref var objArgs = ref Unsafe.As<TEvent, object>(ref args);
-            DispatchOrderedEvents(ref objArgs, found);
+            DispatchOrderedEvents(ref unitRef, found);
 
             if (broadcast)
-                ProcessAwaitingMessages(EventSource.Local, args, typeof(TEvent));
+                ProcessAwaitingMessages(EventSource.Local, ref unitRef, eventType);
         }
 
-        private static void DispatchOrderedEvents(ref object eventArgs, List<(EventHandler, OrderingData?)> found)
+        private static void DispatchOrderedEvents(ref Unit eventArgs, List<(RefEventHandler, OrderingData?)> found)
         {
             var nodes = TopologicalSort.FromBeforeAfter(
                 found.Where(f => f.Item2 != null),

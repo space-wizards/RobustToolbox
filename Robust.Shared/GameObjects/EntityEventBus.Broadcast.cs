@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -255,27 +256,13 @@ namespace Robust.Shared.GameObjects
 
             var subscriptionTuple = new Registration(source, handler, equalityToken, order, byRef);
 
-            if (!_eventSubscriptions.TryGetValue(eventType, out var subscriptions))
-                _eventSubscriptions.Add(eventType, new List<Registration> { subscriptionTuple });
-            else if (!subscriptions.Any(p => p.Equals(subscriptionTuple)))
+            var subscriptions = _eventSubscriptions.GetOrNew(eventType);
+            if (!subscriptions.Any(p => p.Equals(subscriptionTuple)))
                 subscriptions.Add(subscriptionTuple);
 
-            if (!_inverseEventSubscriptions.TryGetValue(subscriber, out var inverseSubscription))
-            {
-                inverseSubscription = new Dictionary<Type, Registration>
-                {
-                    { eventType, subscriptionTuple }
-                };
-
-                _inverseEventSubscriptions.Add(
-                    subscriber,
-                    inverseSubscription
-                );
-            }
-            else if (!inverseSubscription.ContainsKey(eventType))
-            {
+            var inverseSubscription = _inverseEventSubscriptions.GetOrNew(subscriber);
+            if (!inverseSubscription.ContainsKey(eventType))
                 inverseSubscription.Add(eventType, subscriptionTuple);
-            }
         }
 
         /// <inheritdoc />

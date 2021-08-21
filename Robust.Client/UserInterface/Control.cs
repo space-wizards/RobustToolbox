@@ -824,10 +824,15 @@ namespace Robust.Client.UserInterface
             UserInterfaceManager.ReleaseKeyboardFocus(this);
         }
 
+        public event Action? OnResized;
+
         /// <summary>
         ///     Called when the size of the control changes.
         /// </summary>
-        protected virtual void Resized() { }
+        protected virtual void Resized()
+        {
+            OnResized?.Invoke();
+        }
 
         internal void DoFrameUpdate(FrameEventArgs args)
         {

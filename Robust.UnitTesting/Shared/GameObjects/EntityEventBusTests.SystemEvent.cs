@@ -140,8 +140,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var bus = BusFactory();
             var subscriber = new TestEventSubscriber();
 
+            void TestEventHandler(TestEventArgs args) { }
+
             // Act
-            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)null!);
+            void Code() => bus.SubscribeEvent(EventSource.None, subscriber, (EntityEventHandler<TestEventArgs>)TestEventHandler);
 
             //Assert
             Assert.Throws<ArgumentOutOfRangeException>(Code);
@@ -216,22 +218,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Assert
             Assert.Throws<ArgumentOutOfRangeException>(Code);
-        }
-
-        /// <summary>
-        /// Trying to queue a null event causes a <see cref="ArgumentNullException"/> to be thrown.
-        /// </summary>
-        [Test]
-        public void RaiseEvent_NullEvent_ArgumentNullException()
-        {
-            // Arrange
-            var bus = BusFactory();
-
-            // Act
-            void Code() => bus.RaiseEvent(EventSource.Local, null!);
-
-            // Assert
-            Assert.Throws<ArgumentNullException>(Code);
         }
 
         /// <summary>

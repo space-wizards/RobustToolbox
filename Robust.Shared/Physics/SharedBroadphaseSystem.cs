@@ -313,7 +313,7 @@ namespace Robust.Shared.Physics
             _broadphases.Clear();
         }
 
-        private void HandleParentChange(EntityUid uid, PhysicsComponent component, EntParentChangedMessage args)
+        private void HandleParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
         {
             _queuedParents.Enqueue(args);
         }
@@ -454,12 +454,12 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void HandleMove(EntityUid uid, PhysicsComponent component, MoveEvent args)
+        private void HandleMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
         {
             _queuedMoves.Enqueue(args);
         }
 
-        private void HandleRotate(EntityUid uid, PhysicsComponent component, RotateEvent args)
+        private void HandleRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
         {
             _queuedRotates.Enqueue(args);
         }

@@ -126,6 +126,7 @@ namespace Robust.Client.UserInterface
         private void _initializeCommon()
         {
             RootControl = CreateWindowRoot(_clyde.MainWindow);
+            RootControl.Name = "MainWindowRoot";
 
             RootControl.InvalidateMeasure();
             QueueMeasureUpdate(RootControl);

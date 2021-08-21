@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -103,5 +104,7 @@ namespace Robust.Client.UserInterface
         void PushModal(Control modal);
         WindowRoot CreateWindowRoot(IClydeWindow window);
         void DestroyWindowRoot(IClydeWindow window);
+
+        IEnumerable<UIRoot> AllRoots { get; }
     }
 }

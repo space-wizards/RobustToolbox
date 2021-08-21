@@ -216,6 +216,8 @@ namespace Robust.Client.UserInterface
             root.RemoveAllChildren();
         }
 
+        public IEnumerable<UIRoot> AllRoots => _roots;
+
         private void WindowDestroyed(WindowDestroyedEventArgs args)
         {
             DestroyWindowRoot(args.Window);

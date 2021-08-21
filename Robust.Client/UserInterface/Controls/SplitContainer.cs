@@ -1,6 +1,7 @@
 using System;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -36,6 +37,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool Vertical => Orientation == SplitOrientation.Vertical;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public SplitOrientation Orientation
         {
             get => _orientation;

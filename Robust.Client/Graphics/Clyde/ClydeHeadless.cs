@@ -396,6 +396,11 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Just do nothing on mutate.
             }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
+            {
+                // Just do nothing on mutate.
+            }
         }
 
         private sealed class DummyShaderInstance : ShaderInstance

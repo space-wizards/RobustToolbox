@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface
 {
@@ -103,5 +103,21 @@ namespace Robust.Client.UserInterface
         void PushModal(Control modal);
         WindowRoot CreateWindowRoot(IClydeWindow window);
         void DestroyWindowRoot(IClydeWindow window);
+
+        IEnumerable<UIRoot> AllRoots { get; }
+
+        event Action<PostDrawUIRootEventArgs> OnPostDrawUIRoot;
+    }
+
+    public readonly struct PostDrawUIRootEventArgs
+    {
+        public readonly UIRoot Root;
+        public readonly DrawingHandleScreen DrawingHandle;
+
+        public PostDrawUIRootEventArgs(UIRoot root, DrawingHandleScreen drawingHandle)
+        {
+            Root = root;
+            DrawingHandle = drawingHandle;
+        }
     }
 }

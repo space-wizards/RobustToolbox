@@ -537,6 +537,7 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
+            _modLoader.Shutdown();
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
 
             // shut down networking, kicking all players.

@@ -460,13 +460,18 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var root = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
+            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             var res = IoCManager.Resolve<IResourceManager>();
 
             using (var stream = res.UserData.Create(new ResourcePath("/guidump.txt")))
             using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
-                _writeNode(root, 0, writer);
+                foreach (var root in uiMgr.AllRoots)
+                {
+                    writer.WriteLine($"ROOT: {root}");
+                    _writeNode(root, 0, writer);
+                    writer.WriteLine("---------------");
+                }
             }
 
             shell.WriteLine("Saved guidump");
@@ -476,7 +481,7 @@ namespace Robust.Client.Console.Commands
         {
             var indentation = new string(' ', indents * 2);
             writer.WriteLine("{0}{1}", indentation, control);
-            foreach (var (key, value) in _propertyValuesFor(control))
+            foreach (var (key, value) in PropertyValuesFor(control))
             {
                 writer.WriteLine("{2} * {0}: {1}", key, value, indentation);
             }
@@ -487,7 +492,7 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        private static List<(string, string)> _propertyValuesFor(Control control)
+        internal static List<(string, string)> PropertyValuesFor(Control control)
         {
             var members = new List<(string, string)>();
             var type = control.GetType();

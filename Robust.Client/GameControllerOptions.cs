@@ -53,6 +53,16 @@ namespace Robust.Client
         public ResourcePath PrototypeDirectory { get; init; } = new(@"/Prototypes/");
 
         /// <summary>
+        /// Directory resource path containing window icons to load.
+        /// </summary>
+        public ResourcePath WindowIconSet { get; init; } = new("/Textures/Logo/icon");
+
+        /// <summary>
+        /// Resource path for splash image to show when the game starts up.
+        /// </summary>
+        public ResourcePath SplashLogo { get; init; } = new("/Textures/Logo/logo.png");
+
+        /// <summary>
         ///     Whether to disable mounting the "Resources/" folder on FULL_RELEASE.
         /// </summary>
         public bool ResourceMountDisabled { get; init; } = false;

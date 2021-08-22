@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
 using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Clyde
@@ -392,7 +393,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawSplash(IRenderHandle handle)
         {
-            var texture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
+            var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
+            var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }

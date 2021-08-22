@@ -25,6 +25,7 @@ namespace Robust.Client.Graphics.Clyde
         private IWindowingImpl? _windowing;
         private Renderer _chosenRenderer;
 
+        private ResourcePath? _windowIconPath;
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;
@@ -86,6 +87,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindowing()
         {
+            var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
+            if (!string.IsNullOrWhiteSpace(iconPath))
+                _windowIconPath = new ResourcePath(iconPath);
+
             _windowingThread = Thread.CurrentThread;
 
             _windowing = new GlfwWindowingImpl(this);
@@ -163,13 +168,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private IEnumerable<Image<Rgba32>> LoadWindowIcons()
         {
-            if (OperatingSystem.IsMacOS())
+            if (OperatingSystem.IsMacOS() || _windowIconPath == null)
             {
                 // Does nothing on macOS so don't bother.
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles("/Textures/Logo/icon"))
+            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {

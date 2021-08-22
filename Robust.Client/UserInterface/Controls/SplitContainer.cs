@@ -11,16 +11,19 @@ namespace Robust.Client.UserInterface.Controls
         /// Defines how user-initiated moving of the split should work. See documentation
         /// for each enum value to see how the different options work.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public SplitResizeMode ResizeMode { get; set; }
 
         /// <summary>
         /// Width of the split in virtual pixels
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float SplitWidth { get; set; }
 
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float SplitEdgeSeparation { get; set; }
 
         private float _splitCenter;

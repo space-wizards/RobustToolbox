@@ -1,0 +1,27 @@
+<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         x:Class="Robust.Client.UserInterface.DevWindowTabUI">
+    <BoxContainer Orientation="Vertical">
+        <SplitContainer VerticalExpand="True" Orientation="Horizontal">
+            <BoxContainer Orientation="Vertical" MinWidth="250">
+                <!--
+                <BoxContainer Orientation="Horizontal">
+                    <Button Name="RefreshButton" Text="{Loc 'dev-window-ui-refresh'}" />
+                </BoxContainer>
+                -->
+                <ScrollContainer VerticalExpand="True">
+                    <BoxContainer Name="ControlTreeRoot" Orientation="Vertical" MouseFilter="Stop" />
+                </ScrollContainer>
+            </BoxContainer>
+            <BoxContainer Orientation="Vertical">
+                <BoxContainer Orientation="Horizontal">
+                    <Button Name="RefreshPropertiesButton" Text="Refresh" />
+                </BoxContainer>
+
+                <ScrollContainer VerticalExpand="True" HScrollEnabled="False">
+                    <GridContainer Name="ControlProperties" Columns="2" />
+                </ScrollContainer>
+            </BoxContainer>
+        </SplitContainer>
+    </BoxContainer>
+</Control>

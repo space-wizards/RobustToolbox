@@ -481,7 +481,7 @@ namespace Robust.Client.Console.Commands
         {
             var indentation = new string(' ', indents * 2);
             writer.WriteLine("{0}{1}", indentation, control);
-            foreach (var (key, value) in _propertyValuesFor(control))
+            foreach (var (key, value) in PropertyValuesFor(control))
             {
                 writer.WriteLine("{2} * {0}: {1}", key, value, indentation);
             }
@@ -492,7 +492,7 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        private static List<(string, string)> _propertyValuesFor(Control control)
+        internal static List<(string, string)> PropertyValuesFor(Control control)
         {
             var members = new List<(string, string)>();
             var type = control.GetType();

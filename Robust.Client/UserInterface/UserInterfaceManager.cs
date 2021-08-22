@@ -218,6 +218,7 @@ namespace Robust.Client.UserInterface
         }
 
         public IEnumerable<UIRoot> AllRoots => _roots;
+        public event Action<PostDrawUIRootEventArgs>? OnPostDrawUIRoot;
 
         private void WindowDestroyed(WindowDestroyedEventArgs args)
         {
@@ -679,6 +680,9 @@ namespace Robust.Client.UserInterface
             void DoRender(WindowRoot root)
             {
                 _render(renderHandle, root, Vector2i.Zero, Color.White, null);
+                var drawingHandle = renderHandle.DrawingHandleScreen;
+                drawingHandle.SetTransform(Vector2.Zero, Angle.Zero, Vector2.One);
+                OnPostDrawUIRoot?.Invoke(new PostDrawUIRootEventArgs(root, drawingHandle));
             }
         }
 

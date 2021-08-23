@@ -14,7 +14,7 @@ namespace Robust.Server.Physics
     /// <summary>
     /// Handles generating fixtures for MapGrids.
     /// </summary>
-    internal sealed class GridFixtureSystem : EntitySystem
+    internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
@@ -161,11 +161,6 @@ namespace Robust.Server.Physics
             chunk.Fixture = newFixture;
 
             EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixture = oldFixture, NewFixture = newFixture});
-        }
-
-        private string GetChunkId(Vector2i indices)
-        {
-            return $"grid_chunk-{indices.X}-{indices.Y}";
         }
     }
 

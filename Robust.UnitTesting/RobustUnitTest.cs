@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Client.GameObjects;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -65,6 +66,11 @@ namespace Robust.UnitTesting
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
+            // Required systems
+            var systems = IoCManager.Resolve<IEntitySystemManager>();
+            systems.LoadExtraSystemType<GridFixtureSystem>();
+            systems.Initialize();
+
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             if(entMan.EventBus == null)
@@ -76,7 +82,6 @@ namespace Robust.UnitTesting
             IoCManager.Resolve<IEntityLookup>().Startup();
             var mapMan = IoCManager.Resolve<IMapManager>();
             mapMan.Initialize();
-            mapMan.Startup();
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 
@@ -101,6 +106,8 @@ namespace Robust.UnitTesting
             {
                 entMan.Startup();
             }
+
+            mapMan.Startup();
         }
 
         [OneTimeTearDown]

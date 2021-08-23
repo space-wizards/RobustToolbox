@@ -322,12 +322,12 @@ namespace Robust.Shared.GameObjects
         Stopped,
 
         /// <summary>
-        /// Currently being removed from it's entity.
+        /// Currently being removed from its entity.
         /// </summary>
         Removing,
 
         /// <summary>
-        /// Removed from it's entity, and is deleted.
+        /// Removed from its entity, and is deleted.
         /// </summary>
         Deleted,
     }

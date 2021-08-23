@@ -102,8 +102,9 @@ namespace Robust.Client.UserInterface
             bool alt,
             bool control,
             bool shift,
-            bool system)
-            : base(key, repeat, alt, control, shift, system)
+            bool system,
+            int scanCode)
+            : base(key, repeat, alt, control, shift, system, scanCode)
         {
             SourceControl = sourceControl;
         }

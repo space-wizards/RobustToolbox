@@ -231,6 +231,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
+            compFactory.RegisterClass<PhysicsMapComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -251,12 +252,12 @@ namespace Robust.UnitTesting.Server
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            entityMan.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
-
             var mapManager = container.Resolve<IMapManager>();
             mapManager.Initialize();
+
+            entityMan.Startup();
             mapManager.Startup();
+            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 

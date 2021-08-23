@@ -403,6 +403,22 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public nint? WindowGetWin32Window(WindowReg window)
+            {
+                if (!OperatingSystem.IsWindows())
+                    return null;
+
+                var reg = (GlfwWindowReg) window;
+                try
+                {
+                    return GLFW.GetWin32Window(reg.GlfwWindow);
+                }
+                catch (EntryPointNotFoundException)
+                {
+                    return null;
+                }
+            }
+
             public void WindowDestroy(WindowReg window)
             {
                 var reg = (GlfwWindowReg) window;

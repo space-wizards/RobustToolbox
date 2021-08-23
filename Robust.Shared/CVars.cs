@@ -336,6 +336,24 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin32Experience =
             CVarDef.Create("display.win32_experience", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// The window icon set to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplayWindowIconSet =
+            CVarDef.Create("display.window_icon_set", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The splash logo to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplaySplashLogo =
+            CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */

@@ -345,7 +345,7 @@ namespace Robust.Server.GameObjects
         ///     When an entity moves around we'll remove it from its old node and add it to its new node (if applicable)
         /// </summary>
         /// <param name="moveEvent"></param>
-        private void HandleEntityMove(MoveEvent moveEvent)
+        private void HandleEntityMove(ref MoveEvent moveEvent)
         {
             // TODO: When Acruid does TileEntities we may actually be able to delete this system if tile lookups become fast enough
             var gridId = moveEvent.NewPosition.GetGridId(EntityManager);

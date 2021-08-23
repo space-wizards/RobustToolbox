@@ -217,7 +217,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             _userInterfaceManager.RootControl.Arrange(new UIBox2(0, 0, 50, 50));
 
-            _userInterfaceManager.HandleCanFocusDown(new ScreenCoordinates(30, 30, WindowId.Main));
+            _userInterfaceManager.HandleCanFocusDown(new ScreenCoordinates(30, 30, WindowId.Main), out _);
 
             Assert.That(_userInterfaceManager.KeyboardFocused, NUnit.Framework.Is.EqualTo(control));
             _userInterfaceManager.ReleaseKeyboardFocus();

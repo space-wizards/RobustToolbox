@@ -70,14 +70,11 @@ namespace Robust.Shared.GameObjects
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
-        public IReadOnlyDictionary<MapId, PhysicsMap> Maps => _maps;
-        private Dictionary<MapId, PhysicsMap> _maps = new();
-
-        internal IReadOnlyList<VirtualController> Controllers => _controllers;
-        private List<VirtualController> _controllers = new();
+        internal IEnumerable<VirtualController> Controllers => _controllers.Values;
+        private readonly Dictionary<Type, VirtualController> _controllers = new();
 
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
@@ -87,14 +84,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-
-            // Having a nullspace map just makes a bunch of code easier, we just don't iterate on it.
-            var nullMap = new PhysicsMap(MapId.Nullspace);
-            _maps[MapId.Nullspace] = nullMap;
-            nullMap.Initialize();
-
-            _mapManager.MapCreated += HandleMapCreated;
-            _mapManager.MapDestroyed += HandleMapDestroyed;
+            MapManager.MapCreated += HandleMapCreated;
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
@@ -104,6 +94,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
+            SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
+            SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
 
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
@@ -111,7 +103,23 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IIslandManager>().Initialize();
         }
 
-        private void HandleParentChange(EntParentChangedMessage args)
+        private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
+        {
+            component.ContactManager = new ContactManager();
+            component.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
+        }
+
+        private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
+        {
+            component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
+        }
+
+        public T GetController<T>() where T : VirtualController
+        {
+            return (T) _controllers[typeof(T)];
+        }
+
+        private void HandleParentChange(ref EntParentChangedMessage args)
         {
             var entity = args.Entity;
 
@@ -171,9 +179,14 @@ namespace Robust.Shared.GameObjects
                 c => c.UpdatesBefore,
                 c => c.UpdatesAfter);
 
-            _controllers = TopologicalSort.Sort(nodes).ToList();
+            var controllers = TopologicalSort.Sort(nodes).ToList();
 
-            foreach (var controller in _controllers)
+            foreach (var controller in controllers)
+            {
+                _controllers[controller.GetType()] = controller;
+            }
+
+            foreach (var (_, controller) in _controllers)
             {
                 controller.BeforeMonitor = _tickUsageControllerBeforeSolveHistogram.WithLabels(controller.GetType().Name);
                 controller.AfterMonitor = _tickUsageControllerAfterSolveHistogram.WithLabels(controller.GetType().Name);
@@ -185,36 +198,15 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            foreach (var controller in _controllers)
+            foreach (var (_, controller) in _controllers)
             {
                 controller.Shutdown();
             }
 
-            _mapManager.MapCreated -= HandleMapCreated;
-            _mapManager.MapDestroyed -= HandleMapDestroyed;
+            MapManager.MapCreated -= HandleMapCreated;
         }
 
-        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
-        {
-            // Server just creates nullspace map on its own but sends it to client hence we will just ignore it.
-            if (_maps.ContainsKey(eventArgs.Map)) return;
-
-            var map = new PhysicsMap(eventArgs.Map);
-            _maps.Add(eventArgs.Map, map);
-            map.Initialize();
-            map.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
-            Logger.DebugS("physics", $"Created physics map for {eventArgs.Map}");
-        }
-
-        private void HandleMapDestroyed(object? sender, MapEventArgs eventArgs)
-        {
-            var map = _maps[eventArgs.Map];
-            map.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
-
-            map.Shutdown();
-            _maps.Remove(eventArgs.Map);
-            Logger.DebugS("physics", $"Destroyed physics map for {eventArgs.Map}");
-        }
+        protected abstract void HandleMapCreated(object? sender, MapEventArgs eventArgs);
 
         private void HandleMapChange(EntMapIdChangedMessage message)
         {
@@ -225,13 +217,13 @@ namespace Robust.Shared.GameObjects
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
-                _maps[oldMapId].RemoveBody(physicsComponent);
+                MapManager.GetMapEntity(oldMapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
             }
 
             var newMapId = message.Entity.Transform.MapID;
             if (newMapId != MapId.Nullspace)
             {
-                _maps[newMapId].AddBody(physicsComponent);
+                MapManager.GetMapEntity(newMapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
             }
         }
 
@@ -244,11 +236,11 @@ namespace Robust.Shared.GameObjects
 
             if (message.Component.Deleted || !message.Component.CanCollide)
             {
-                _maps[mapId].RemoveBody(message.Component);
+                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(message.Component);
             }
             else
             {
-                _maps[mapId].AddBody(message.Component);
+                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(message.Component);
             }
         }
 
@@ -259,7 +251,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == MapId.Nullspace)
                 return;
 
-            _maps[mapId].AddAwakeBody(message.Body);
+            MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddAwakeBody(message.Body);
         }
 
         private void HandleSleepMessage(PhysicsSleepMessage message)
@@ -269,7 +261,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == MapId.Nullspace)
                 return;
 
-            _maps[mapId].RemoveSleepBody(message.Body);
+            MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveSleepBody(message.Body);
         }
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
@@ -281,7 +273,9 @@ namespace Robust.Shared.GameObjects
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
             physicsComponent.ClearJoints();
-            _maps[mapId].RemoveBody(physicsComponent);
+
+            if (mapId != MapId.Nullspace)
+                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
         }
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
@@ -290,7 +284,8 @@ namespace Robust.Shared.GameObjects
 
             var mapId = message.Container.Owner.Transform.MapID;
 
-            _maps[mapId].AddBody(physicsComponent);
+            if (mapId != MapId.Nullspace)
+                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
         }
 
         internal void FilterContactsForJoint(Joint joint)
@@ -319,7 +314,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            foreach (var controller in _controllers)
+            foreach (var (_, controller) in _controllers)
             {
                 if (MetricsEnabled)
                 {
@@ -332,19 +327,20 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            foreach (var (mapId, map) in _maps)
+            foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
-                if (mapId == MapId.Nullspace) continue;
-                map.Step(deltaTime, prediction);
+                comp.Step(deltaTime, prediction);
             }
 
-            foreach (var controller in _controllers)
+            foreach (var (_, controller) in _controllers)
             {
                 if (MetricsEnabled)
                 {
                     _stopwatch.Restart();
                 }
+
                 controller.UpdateAfterSolve(prediction, deltaTime);
+
                 if (MetricsEnabled)
                 {
                     controller.AfterMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
@@ -352,10 +348,9 @@ namespace Robust.Shared.GameObjects
             }
 
             // Go through and run all of the deferred events now
-            foreach (var (mapId, map) in _maps)
+            foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
-                if (mapId == MapId.Nullspace) continue;
-                map.ProcessQueue();
+                comp.ProcessQueue();
             }
 
             _physicsManager.ClearTransforms();

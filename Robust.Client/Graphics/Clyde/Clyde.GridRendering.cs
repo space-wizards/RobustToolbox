@@ -52,17 +52,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                var worldPos = transform.WorldPosition;
-                var worldRot = transform.WorldRotation;
 
-                foreach (var (_, chunk) in grid.GetMapChunks())
+                foreach (var chunk in grid.GetMapChunks(worldBounds))
                 {
-                    // Calc world bounds for chunk.
-                    if (!chunk.CalcWorldAABB(worldPos, worldRot).Intersects(in worldBounds))
-                    {
-                        continue;
-                    }
-
                     if (_isChunkDirty(grid, chunk))
                     {
                         _updateChunkMesh(grid, chunk);

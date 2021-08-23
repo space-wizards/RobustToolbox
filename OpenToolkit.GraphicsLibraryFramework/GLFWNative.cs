@@ -406,5 +406,8 @@ namespace OpenToolkit.GraphicsLibraryFramework
 
         [DllImport(LibraryName)]
         public static extern uint glfwGetX11Window(Window* window);
+
+        [DllImport(LibraryName)]
+        public static extern IntPtr glfwGetWin32Window(Window* window);
     }
 }

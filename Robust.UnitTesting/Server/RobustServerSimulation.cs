@@ -231,6 +231,7 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
+            compFactory.RegisterClass<PhysicsMapComponent>();
 
             _regDelegate?.Invoke(compFactory);
 

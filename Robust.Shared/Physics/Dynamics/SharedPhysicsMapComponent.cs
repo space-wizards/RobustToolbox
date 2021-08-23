@@ -35,7 +35,7 @@ using PhysicsComponent = Robust.Shared.GameObjects.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public sealed class PhysicsMap
+    public abstract class SharedPhysicsMapComponent : Component
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
@@ -43,7 +43,9 @@ namespace Robust.Shared.Physics.Dynamics
         private SharedBroadphaseSystem _broadphaseSystem = default!;
         private SharedPhysicsSystem _physicsSystem = default!;
 
-        internal ContactManager ContactManager = new();
+        public override string Name => "PhysicsMap";
+
+        internal ContactManager ContactManager = default!;
 
         private bool _autoClearForces;
 
@@ -119,17 +121,14 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private float _invDt0;
 
-        public MapId MapId { get; }
+        public MapId MapId => Owner.Transform.MapID;
 
-        public PhysicsMap(MapId mapId)
+        protected override void Initialize()
         {
-            MapId = mapId;
+            base.Initialize();
             _broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-        }
 
-        public void Initialize()
-        {
             IoCManager.InjectDependencies(this);
             ContactManager.Initialize();
             ContactManager.MapId = MapId;
@@ -138,8 +137,9 @@ namespace Robust.Shared.Physics.Dynamics
             configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
         }
 
-        public void Shutdown()
+        protected override void Shutdown()
         {
+            base.Shutdown();
             ContactManager.Shutdown();
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -479,13 +479,18 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
-                // prediction && !seed.Predict ||
-                // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
-                if ((prediction && !seed.Predict) ||
-                    (seed.Paused && !seed.IgnorePaused) ||
-                    seed.Island ||
+                if (seed.Island ||
+                    seed.Paused && !seed.IgnorePaused)
+                {
+                    continue;
+                }
+
+                if (prediction && !seed.Predict ||
                     !seed.CanCollide ||
-                    seed.BodyType == BodyType.Static) continue;
+                    seed.BodyType == BodyType.Static)
+                {
+                    continue;
+                }
 
                 // Start of a new island
                 _islandBodies.Clear();
@@ -578,7 +583,13 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             SolveIslands(frameTime, dtRatio, invDt, prediction);
+            Cleanup(frameTime);
 
+            ContactManager.PostSolve();
+        }
+
+        protected virtual void Cleanup(float frameTime)
+        {
             foreach (var body in _islandSet)
             {
                 if (!body.Island || body.Deleted)
@@ -595,8 +606,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             _islandSet.Clear();
             _awakeBodyList.Clear();
-
-            ContactManager.PostSolve();
         }
 
         private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)

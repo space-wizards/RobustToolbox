@@ -89,7 +89,7 @@ namespace Robust.Shared.Configuration
                 {
                     //or add another unregistered CVar
                     //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) { Value = tomlValue };
+                    cfgVar = new ConfigVar(tablePath, 0, CVar.NONE) {Value = tomlValue};
                     _configVars.Add(tablePath, cfgVar);
                 }
 
@@ -120,7 +120,8 @@ namespace Robust.Shared.Configuration
 
                     if (value == null)
                     {
-                        Logger.ErrorS("cfg", $"CVar {name} has no value or default value, was the default value registered as null?");
+                        Logger.ErrorS("cfg",
+                            $"CVar {name} has no value or default value, was the default value registered as null?");
                         continue;
                     }
 
@@ -144,14 +145,16 @@ namespace Robust.Shared.Configuration
                         {
                             tblObject = table.Add(curTblName, new Dictionary<string, TomlObject>()).Added;
                         }
-                        table = tblObject as TomlTable ?? throw new InvalidConfigurationException($"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
+
+                        table = tblObject as TomlTable ?? throw new InvalidConfigurationException(
+                            $"[CFG] Object {curTblName} is being used like a table, but it is a {tblObject}. Are your CVar names formed properly?");
                     }
 
                     //runtime unboxing, either this or generic hell... ¯\_(ツ)_/¯
                     switch (value)
                     {
                         case Enum val:
-                            table.Add(keyName, (int)(object)val); // asserts Enum value != (ulong || long)
+                            table.Add(keyName, (int) (object) val); // asserts Enum value != (ulong || long)
                             break;
                         case int val:
                             table.Add(keyName, val);
@@ -186,7 +189,8 @@ namespace Robust.Shared.Configuration
             }
         }
 
-        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE, Action<T>? onValueChanged = null)
+        public void RegisterCVar<T>(string name, T defaultValue, CVar flags = CVar.NONE,
+            Action<T>? onValueChanged = null)
             where T : notnull
         {
             RegisterCVar(name, typeof(T), defaultValue, flags);
@@ -284,14 +288,16 @@ namespace Robust.Shared.Configuration
 
                 if (!defField.IsInitOnly)
                 {
-                    throw new InvalidOperationException($"Found CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' that is not readonly. Please mark it as readonly.");
+                    throw new InvalidOperationException(
+                        $"Found CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' that is not readonly. Please mark it as readonly.");
                 }
 
                 var def = (CVarDef?) defField.GetValue(null);
 
                 if (def == null)
                 {
-                    throw new InvalidOperationException($"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
+                    throw new InvalidOperationException(
+                        $"CVarDef '{defField.Name}' on '{defField.DeclaringType?.FullName}' is null.");
                 }
 
                 RegisterCVar(def.Name, type, def.DefaultValue, def.Flags);
@@ -345,7 +351,7 @@ namespace Robust.Shared.Configuration
         {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T)(cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
+                return (T) (cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
@@ -373,14 +379,17 @@ namespace Robust.Shared.Configuration
                 if (_configVars.TryGetValue(key, out var cfgVar))
                 {
                     cfgVar.OverrideValue = value;
-                    cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
-                    InvokeValueChanged(cfgVar, cfgVar.OverrideValueParsed);
+                    if (cfgVar.Registered)
+                    {
+                        cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
+                        InvokeValueChanged(cfgVar, cfgVar.OverrideValueParsed);
+                    }
                 }
                 else
                 {
                     //or add another unregistered CVar
                     //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
-                    var cVar = new ConfigVar(key, 0, CVar.NONE) { OverrideValue = value };
+                    var cVar = new ConfigVar(key, 0, CVar.NONE) {OverrideValue = value};
                     _configVars.Add(key, cVar);
                 }
             }
@@ -511,14 +520,19 @@ namespace Robust.Shared.Configuration
         public InvalidConfigurationException()
         {
         }
+
         public InvalidConfigurationException(string message) : base(message)
         {
         }
+
         public InvalidConfigurationException(string message, Exception inner) : base(message, inner)
         {
         }
+
         protected InvalidConfigurationException(
             System.Runtime.Serialization.SerializationInfo info,
-            System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
+            System.Runtime.Serialization.StreamingContext context) : base(info, context)
+        {
+        }
     }
 }

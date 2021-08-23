@@ -129,5 +129,7 @@ namespace Robust.Client.Input
         void ResetAllBindings();
 
         bool IsKeyFunctionModified(BoundKeyFunction function);
+
+        bool IsKeyDown(Keyboard.Key key);
     }
 }

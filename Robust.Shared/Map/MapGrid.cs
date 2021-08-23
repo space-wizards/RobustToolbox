@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -23,7 +24,7 @@ namespace Robust.Shared.Map
         ///     Last game tick that the map was modified.
         /// </summary>
         [ViewVariables]
-        public GameTick LastTileModifiedTick { get; private set; }
+        public GameTick LastModifiedTick { get; private set; }
 
         /// <inheritdoc />
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
@@ -59,7 +60,7 @@ namespace Robust.Shared.Map
             Index = gridIndex;
             ChunkSize = chunkSize;
             ParentMapId = parentMapId;
-            LastTileModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
+            LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
         }
 
         /// <summary>
@@ -108,7 +109,7 @@ namespace Robust.Shared.Map
             set
             {
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
-                LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
 
@@ -126,7 +127,7 @@ namespace Robust.Shared.Map
             set
             {
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
-                LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+                LastModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
 
@@ -188,7 +189,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
-            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            LastModifiedTick = _mapManager.GameTiming.CurTick;
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
         }
 
@@ -201,7 +202,8 @@ namespace Robust.Shared.Map
 
             // Not raising directed because the grid's EntityUid isn't set yet.
             // Don't call GridFixtureSystem directly because it's server-only.
-            IoCManager
+            if (chunk.ValidTiles > 0)
+                IoCManager
                 .Resolve<IEntityManager>()
                 .EventBus
                 .RaiseEvent(EventSource.Local, new RegenerateChunkCollisionEvent(chunk));
@@ -347,23 +349,29 @@ namespace Robust.Shared.Map
         #endregion TileAccess
 
         #region ChunkAccess
-
-        public void RegenerateCollision()
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         ///     The total number of allocated chunks in the grid.
         /// </summary>
         public int ChunkCount => _chunks.Count;
 
-        public GameTick LastAnchoredModifiedTick { get; private set; }
-
         /// <inheritdoc />
         public IMapChunkInternal GetChunk(int xIndex, int yIndex)
         {
             return GetChunk(new Vector2i(xIndex, yIndex));
+        }
+
+        public void RemoveChunk(Vector2i origin)
+        {
+            if (!_chunks.TryGetValue(origin, out var chunk)) return;
+
+            _chunks.Remove(origin);
+
+            _mapManager.ChunkRemoved((MapChunk) chunk);
+
+            if (_chunks.Count == 0)
+            {
+                _entityManager.EventBus.RaiseLocalEvent(GridEntityId, new EmptyGridEvent {GridId = Index});
+            }
         }
 
         /// <inheritdoc />
@@ -421,7 +429,13 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
-            var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
+            // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just
+            // create an entire chunk for it.
+            var gridChunkPos = GridTileToChunkIndices(pos);
+
+            if (!_chunks.TryGetValue(gridChunkPos, out var chunk)) return Enumerable.Empty<EntityUid>();
+
+            var chunkTile = chunk.GridTileToChunkTile(pos);
             return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
         }
 
@@ -430,12 +444,7 @@ namespace Robust.Shared.Map
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
-            Vector2 local;
-            if (coords.EntityId == GridEntityId)
-                local = coords.Position;
-            else
-                local = WorldToLocal(coords.ToMapPos(_entityManager));
-
+            var local = WorldToLocal(coords.ToMapPos(_entityManager));
             return SnapGridLocalCellFor(local);
         }
 
@@ -464,7 +473,6 @@ namespace Robust.Shared.Map
                 return false;
 
             chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
-            LastAnchoredModifiedTick = _entityManager.CurrentTick;
             return true;
         }
 
@@ -479,7 +487,6 @@ namespace Robust.Shared.Map
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
             chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort) chunkTile.Y, euid);
-            LastAnchoredModifiedTick = _entityManager.CurrentTick;
         }
 
         /// <inheritdoc />
@@ -576,15 +583,6 @@ namespace Robust.Shared.Map
                         yield return cell;
                     }
                 }
-        }
-
-        /// <inheritdoc />
-        public void AnchoredEntDirty(Vector2i pos)
-        {
-            LastAnchoredModifiedTick = _entityManager.CurrentTick;
-
-            var chunk = GetChunk(GridTileToChunkIndices(pos));
-            chunk.LastAnchoredModifiedTick = LastAnchoredModifiedTick;
         }
 
         #endregion
@@ -714,5 +712,13 @@ namespace Robust.Shared.Map
         }
 
         #endregion Transforms
+    }
+
+    /// <summary>
+    /// Raised whenever a grid becomes empty due to no more tiles with data.
+    /// </summary>
+    public sealed class EmptyGridEvent : EntityEventArgs
+    {
+        public GridId GridId { get; init;  }
     }
 }

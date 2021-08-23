@@ -16,6 +16,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -41,7 +42,7 @@ namespace Robust.Client.Input
 
         [Dependency] private readonly IResourceManager _resourceMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManagerInternal = default!;
+        [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -248,7 +249,15 @@ namespace Robust.Client.Input
             var uiOnly = false;
             if (hasCanFocus)
             {
-                uiOnly = _userInterfaceManagerInternal.HandleCanFocusDown(MouseScreenPosition);
+                uiOnly = _uiMgr.HandleCanFocusDown(MouseScreenPosition, out _);
+            }
+
+            if (_uiMgr.KeyboardFocused is IRawInputControl rawInput)
+            {
+                var block = RaiseRawKeyInput(args, rawInput, args.IsRepeat ? RawKeyAction.Repeat : RawKeyAction.Down);
+
+                if (block)
+                    return;
             }
 
             foreach (var binding in bindsDown)
@@ -258,6 +267,21 @@ namespace Robust.Client.Input
                     break;
                 }
             }
+        }
+
+        private bool RaiseRawKeyInput(KeyEventArgs args, IRawInputControl rawInput, RawKeyAction action)
+        {
+            DebugTools.AssertNotNull(_uiMgr.KeyboardFocused);
+
+            var mousePos = _uiMgr.CalcRelativeMousePositionFor(_uiMgr.KeyboardFocused!, _uiMgr.MousePositionScaled);
+            var keyEvent = new GuiRawKeyEvent(
+                args.Key,
+                args.ScanCode,
+                action,
+                (Vector2i) (mousePos ?? Vector2.Zero));
+
+            var block = rawInput.RawKeyEvent(keyEvent);
+            return block;
         }
 
         /// <inheritdoc />
@@ -289,8 +313,11 @@ namespace Robust.Client.Input
 
             if (hasCanFocus)
             {
-                _userInterfaceManagerInternal.HandleCanFocusUp();
+                _uiMgr.HandleCanFocusUp();
             }
+
+            if (_uiMgr.KeyboardFocused is IRawInputControl rawInput)
+                RaiseRawKeyInput(args, rawInput, RawKeyAction.Up);
         }
 
         private bool DownBind(KeyBinding binding, bool uiOnly, bool isRepeat)
@@ -605,6 +632,11 @@ namespace Robust.Client.Input
         public bool IsKeyFunctionModified(BoundKeyFunction function)
         {
             return _modifiedKeyFunctions.Contains(function);
+        }
+
+        public bool IsKeyDown(Key key)
+        {
+            return _keysPressed[(int) key];
         }
 
         /// <inheritdoc />

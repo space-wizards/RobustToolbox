@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -134,14 +135,23 @@ namespace Robust.Client.Map
                                 }
                             }
                         }
-
-                        chunk.SuppressCollisionRegeneration = false;
-                        chunk.RegenerateCollision();
                     }
 
                     if (modified.Count != 0)
                     {
                         InvokeGridChanged(this, new GridChangedEventArgs(grid, modified));
+                    }
+
+                    foreach (var chunkData in gridDatum.ChunkData)
+                    {
+                        var chunk = grid.GetChunk(chunkData.Index);
+                        chunk.SuppressCollisionRegeneration = false;
+                        chunk.RegenerateCollision();
+                    }
+
+                    foreach (var chunkData in gridDatum.DeletedChunkData)
+                    {
+                        grid.RemoveChunk(chunkData.Index);
                     }
                 }
 

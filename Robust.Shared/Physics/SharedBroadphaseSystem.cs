@@ -506,7 +506,6 @@ namespace Robust.Shared.Physics
 
             if (!body._fixtures.Remove(fixture))
             {
-                DebugTools.Assert(false);
                 Logger.ErrorS("physics", $"Tried to remove fixture from {body.Owner} that was already removed.");
                 return;
             }

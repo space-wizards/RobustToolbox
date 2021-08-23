@@ -189,7 +189,7 @@ namespace Robust.Server.Placement
                 var pos = closest.WorldToTile(position);
                 closest.SetTile(pos, new Tile(tileType));
             }
-            else // create a new grid
+            else if (tileType != 0) // create a new grid
             {
                 var newGrid = _mapManager.CreateGrid(mapId);
                 newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin

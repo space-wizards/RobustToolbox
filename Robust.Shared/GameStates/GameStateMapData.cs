@@ -41,10 +41,12 @@ namespace Robust.Shared.GameStates
         {
             public readonly MapCoordinates Coordinates;
             public readonly ChunkDatum[] ChunkData;
+            public readonly DeletedChunkDatum[] DeletedChunkData;
 
-            public GridDatum(ChunkDatum[] chunkData, MapCoordinates coordinates)
+            public GridDatum(ChunkDatum[] chunkData, DeletedChunkDatum[] deletedChunkData, MapCoordinates coordinates)
             {
                 ChunkData = chunkData;
+                DeletedChunkData = deletedChunkData;
                 Coordinates = coordinates;
             }
         }
@@ -63,6 +65,17 @@ namespace Robust.Shared.GameStates
             {
                 Index = index;
                 TileData = tileData;
+            }
+        }
+
+        [Serializable, NetSerializable]
+        public struct DeletedChunkDatum
+        {
+            public readonly Vector2i Index;
+
+            public DeletedChunkDatum(Vector2i index)
+            {
+                Index = index;
             }
         }
     }

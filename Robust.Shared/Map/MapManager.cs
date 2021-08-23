@@ -16,6 +16,7 @@ namespace Robust.Shared.Map
     internal class MapManager : IMapManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private SharedGridFixtureSystem _gridFixtures = default!;
@@ -116,6 +117,11 @@ namespace Robust.Shared.Map
                     DeleteGrid(gridIndex);
                 }
             }
+        }
+
+        public virtual void ChunkRemoved(MapChunk chunk)
+        {
+            return;
         }
 
         /// <inheritdoc />
@@ -645,20 +651,26 @@ namespace Robust.Shared.Map
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
 #endif
-
-            if (gridID == GridId.Invalid)
+            // Possible the grid was already deleted / is invalid
+            if (!_grids.TryGetValue(gridID, out var grid))
                 return;
 
-            var grid = _grids[gridID];
             var mapId = grid.ParentMapId;
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) &&
-                gridEnt.LifeStage <= EntityLifeStage.Initialized)
-                gridEnt.Delete();
+            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
+            {
+                // Because deleting a grid also removes its MapGridComponent which also deletes its grid again we'll check for that here.
+                if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
+                    return;
+
+                if (gridEnt.LifeStage <= EntityLifeStage.Initialized)
+                    gridEnt.Delete();
+            }
 
             grid.Dispose();
             _grids.Remove(grid.Index);
 
+            Logger.DebugS("map", $"Deleted grid {gridID}");
             OnGridRemoved?.Invoke(mapId, gridID);
         }
 

@@ -529,7 +529,7 @@ namespace Robust.Shared.Physics
 
             var broadphase = GetBroadphase(fixture.Body);
 
-            if (body.CanCollide && broadphase != null)
+            if (broadphase != null)
             {
                 DestroyProxies(broadphase, fixture);
             }

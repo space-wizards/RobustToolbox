@@ -446,6 +446,8 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
                 GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
 
+                GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
+
                 if (r == Renderer.OpenGL33)
                 {
                     GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);

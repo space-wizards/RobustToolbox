@@ -126,14 +126,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 Normals[i] = temp.Normalized;
             }
 
-            Centroid = ComputeCentroid(vertices);
+            Centroid = ComputeCentroid(Vertices);
 
             // Compute the polygon mass data
             // TODO: Update fixture. Maybe use events for it? Who tf knows.
             // If we get grid polys then we'll actually need runtime updating of bbs.
         }
 
-        private Vector2 ComputeCentroid(Span<Vector2> vertices)
+        private Vector2 ComputeCentroid(Vector2[] vertices)
         {
             var count = vertices.Length;
 

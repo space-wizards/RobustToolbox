@@ -499,7 +499,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var fieldInfo in type.GetAllFields())
             {
-                if (fieldInfo.GetCustomAttribute<ViewVariablesAttribute>() == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(fieldInfo, out _))
                 {
                     continue;
                 }
@@ -509,7 +509,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var propertyInfo in type.GetAllProperties())
             {
-                if (propertyInfo.GetCustomAttribute<ViewVariablesAttribute>() == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(propertyInfo, out _))
                 {
                     continue;
                 }

@@ -111,8 +111,7 @@ namespace Robust.Client.ViewVariables
             DebugTools.Assert(propertyInfo.DeclaringType != null);
             DebugTools.Assert(propertyInfo.DeclaringType.IsInstanceOfType(obj));
 
-            var attr = propertyInfo.GetCustomAttribute<ViewVariablesAttribute>();
-            DebugTools.Assert(attr != null);
+            DebugTools.Assert(ViewVariablesUtility.TryGetViewVariablesAccess(fieldInfo, out var access));
             NameLabel.Text = propertyInfo.Name;
 
             _bottomLabel.Text = $"Type: {propertyInfo.PropertyType.FullName}";
@@ -120,7 +119,7 @@ namespace Robust.Client.ViewVariables
             var editor = vvm.PropertyFor(propertyInfo.PropertyType);
             var value = propertyInfo.GetValue(obj);
 
-            var view = editor.Initialize(value, attr.Access != VVAccess.ReadWrite);
+            var view = editor.Initialize(value, access != VVAccess.ReadWrite);
             if (view.SizeFlagsHorizontal != SizeFlags.FillExpand)
             {
                 NameLabel.HorizontalExpand = true;

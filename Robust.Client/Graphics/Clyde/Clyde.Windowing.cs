@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -26,6 +25,7 @@ namespace Robust.Client.Graphics.Clyde
         private IWindowingImpl? _windowing;
         private Renderer _chosenRenderer;
 
+        private ResourcePath? _windowIconPath;
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;
@@ -87,6 +87,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindowing()
         {
+            var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
+            if (!string.IsNullOrWhiteSpace(iconPath))
+                _windowIconPath = new ResourcePath(iconPath);
+
             _windowingThread = Thread.CurrentThread;
 
             _windowing = new GlfwWindowingImpl(this);
@@ -164,13 +168,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private IEnumerable<Image<Rgba32>> LoadWindowIcons()
         {
-            if (OperatingSystem.IsMacOS())
+            if (OperatingSystem.IsMacOS() || _windowIconPath == null)
             {
                 // Does nothing on macOS so don't bother.
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles("/Textures/Logo/icon"))
+            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {
@@ -399,7 +403,7 @@ namespace Robust.Client.Graphics.Clyde
             public Action<WindowClosedEventArgs>? Closed;
         }
 
-        private sealed class WindowHandle : IClydeWindow
+        private sealed class WindowHandle : IClydeWindowInternal
         {
             // So funny story
             // When this class was a record, the C# compiler on .NET 5 stack overflowed
@@ -466,6 +470,8 @@ namespace Robust.Client.Graphics.Clyde
                 add => _reg.Closed += value;
                 remove => _reg.Closed -= value;
             }
+
+            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(_reg);
         }
 
         private sealed class MonitorHandle : IClydeMonitor

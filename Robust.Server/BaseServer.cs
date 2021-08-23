@@ -322,8 +322,6 @@ namespace Robust.Server
 
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
-            _mapManager.Initialize();
-            _mapManager.Startup();
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
             IoCManager.Resolve<IDebugDrawingManager>().Initialize();
@@ -331,6 +329,7 @@ namespace Robust.Server
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _entityManager.Initialize();
+            _mapManager.Initialize();
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
@@ -343,6 +342,7 @@ namespace Robust.Server
 
             IoCManager.Resolve<IServerConsoleHost>().Initialize();
             _entityManager.Startup();
+            _mapManager.Startup();
             IoCManager.Resolve<IEntityLookup>().Startup();
             _stateManager.Initialize();
 
@@ -537,6 +537,7 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
+            _modLoader.Shutdown();
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
 
             // shut down networking, kicking all players.

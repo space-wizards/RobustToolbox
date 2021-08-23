@@ -119,7 +119,7 @@ namespace Robust.Shared.GameObjects
             return (T) _controllers[typeof(T)];
         }
 
-        private void HandleParentChange(EntParentChangedMessage args)
+        private void HandleParentChange(ref EntParentChangedMessage args)
         {
             var entity = args.Entity;
 

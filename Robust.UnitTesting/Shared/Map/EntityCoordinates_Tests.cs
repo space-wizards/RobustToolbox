@@ -212,14 +212,14 @@ namespace Robust.UnitTesting.Shared.Map
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
-            Assert.That(mapEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
-            Assert.That(gridEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
-            Assert.That(newEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(gridEnt));
+            Assert.That(mapEnt.Transform.Coordinates.GetEntity(entityManager), Is.EqualTo(mapEnt));
+            Assert.That(gridEnt.Transform.Coordinates.GetEntity(entityManager), Is.EqualTo(mapEnt));
+            Assert.That(newEnt.Transform.Coordinates.GetEntity(entityManager), Is.EqualTo(gridEnt));
 
             // Reparenting the entity should return correct results.
             newEnt.Transform.AttachParent(mapEnt);
 
-            Assert.That(newEnt.Transform.Coordinates.GetParent(entityManager), Is.EqualTo(mapEnt));
+            Assert.That(newEnt.Transform.Coordinates.GetEntity(entityManager), Is.EqualTo(mapEnt));
         }
 
         [Test]
@@ -234,19 +234,19 @@ namespace Robust.UnitTesting.Shared.Map
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
-            Assert.That(mapEnt.Transform.Coordinates.TryGetParent(entityManager, out var mapEntParent), Is.EqualTo(true));
+            Assert.That(mapEnt.Transform.Coordinates.TryGetEntity(entityManager, out var mapEntParent), Is.EqualTo(true));
             Assert.That(mapEntParent, Is.EqualTo(mapEnt));
 
-            Assert.That(gridEnt.Transform.Coordinates.TryGetParent(entityManager, out var gridEntParent), Is.EqualTo(true));
+            Assert.That(gridEnt.Transform.Coordinates.TryGetEntity(entityManager, out var gridEntParent), Is.EqualTo(true));
             Assert.That(gridEntParent, Is.EqualTo(mapEnt));
 
-            Assert.That(newEnt.Transform.Coordinates.TryGetParent(entityManager, out var newEntParent), Is.EqualTo(true));
+            Assert.That(newEnt.Transform.Coordinates.TryGetEntity(entityManager, out var newEntParent), Is.EqualTo(true));
             Assert.That(newEntParent, Is.EqualTo(gridEnt));
 
             // Reparenting the entity should return correct results.
             newEnt.Transform.AttachParent(mapEnt);
 
-            Assert.That(newEnt.Transform.Coordinates.TryGetParent(entityManager, out newEntParent), Is.EqualTo(true));
+            Assert.That(newEnt.Transform.Coordinates.TryGetEntity(entityManager, out newEntParent), Is.EqualTo(true));
             Assert.That(newEntParent, Is.EqualTo(mapEnt));
 
             // Deleting the parent should make TryGetParent return false.
@@ -256,10 +256,10 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(newEnt.Transform.Coordinates.IsValid(entityManager), Is.False);
             Assert.That(gridEnt.Transform.Coordinates.IsValid(entityManager), Is.False);
 
-            Assert.That(newEnt.Transform.Coordinates.TryGetParent(entityManager, out newEntParent), Is.EqualTo(false));
+            Assert.That(newEnt.Transform.Coordinates.TryGetEntity(entityManager, out newEntParent), Is.EqualTo(false));
             Assert.That(newEntParent, Is.Null);
 
-            Assert.That(gridEnt.Transform.Coordinates.TryGetParent(entityManager, out gridEntParent), Is.EqualTo(false));
+            Assert.That(gridEnt.Transform.Coordinates.TryGetEntity(entityManager, out gridEntParent), Is.EqualTo(false));
             Assert.That(gridEntParent, Is.Null);
         }
 

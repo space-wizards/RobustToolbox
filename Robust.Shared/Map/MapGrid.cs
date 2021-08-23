@@ -374,9 +374,36 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public bool HasChunk(Vector2i chunkIndices)
+        {
+            return _chunks.ContainsKey(chunkIndices);
+        }
+
+        /// <inheritdoc />
         public IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks()
         {
             return _chunks;
+        }
+
+        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB)
+        {
+            var worldPos = WorldPosition;
+            var localArea = new Box2Rotated(worldAABB.Translated(-worldPos), -WorldRotation).CalcBoundingBox();
+
+            var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
+            var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
+
+            for (var x = chunkLB.X; x <= chunkRT.X; x++)
+            {
+                for (var y = chunkLB.Y; y <= chunkRT.Y; y++)
+                {
+                    var gridChunk = new Vector2i(x, y);
+
+                    if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
+
+                    yield return chunk;
+                }
+            }
         }
 
         #endregion ChunkAccess

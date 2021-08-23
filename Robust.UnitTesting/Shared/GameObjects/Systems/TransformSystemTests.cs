@@ -38,7 +38,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             ent1.Transform.LocalPosition = Vector2.One;
 
             Assert.That(calledCount, Is.EqualTo(1));
-            void MoveEventHandler(MoveEvent ev)
+            void MoveEventHandler(ref MoveEvent ev)
             {
                 calledCount++;
                 Assert.That(ev.OldPosition, Is.EqualTo(new EntityCoordinates(new EntityUid(1), Vector2.Zero)));

@@ -531,7 +531,7 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.MaximizeWindow(window);
                 }
 
-                if (parameters.HideCloseButton)
+                if ((parameters.Styles & OSWindowStyles.NoTitleOptions) != 0)
                 {
                     if (OperatingSystem.IsWindows())
                     {
@@ -546,7 +546,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                     else
                     {
-                        _sawmill.Warning("HideCloseButton not implemented on this platform");
+                        _sawmill.Warning("OSWindowStyles.NoTitleOptions not implemented on this platform");
                     }
                 }
 

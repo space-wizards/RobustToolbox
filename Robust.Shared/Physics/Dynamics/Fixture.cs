@@ -216,8 +216,6 @@ namespace Robust.Shared.Physics.Dynamics
                 {
                     case PhysShapeAabb aabb:
                         return aabb.LocalBounds.Width * aabb.LocalBounds.Height;
-                    case PhysShapeRect rect:
-                        return rect.Rectangle.Width * rect.Rectangle.Height;
                     case PhysShapeCircle circle:
                         return MathF.PI * circle.Radius * circle.Radius;
                     case PolygonShape poly:
@@ -294,9 +292,6 @@ namespace Robust.Shared.Physics.Dynamics
                 case PhysShapeCircle circle:
                     ComputeCircle(circle);
                     break;
-                case PhysShapeRect rect:
-                    ComputeRect(rect);
-                    break;
                 case PolygonShape poly:
                     ComputePoly(poly, out _);
                     break;
@@ -320,25 +315,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Center of mass
             aabb.Centroid = Vector2.Zero;
-
-            // Inertia tensor relative to the local origin (point s).
-            _inertia = density * I;
-        }
-
-        private void ComputeRect(PhysShapeRect rect)
-        {
-            var area = rect.Rectangle.Width * rect.Rectangle.Height;
-            float I = 0.0f;
-
-            //The area is too small for the engine to handle.
-            DebugTools.Assert(area > float.Epsilon);
-
-            // Total mass
-            // TODO: Do we need this?
-            var density = area > 0.0f ? Mass / area : 0.0f;
-
-            // Center of mass
-            rect.Centroid = Vector2.Zero;
 
             // Inertia tensor relative to the local origin (point s).
             _inertia = density * I;

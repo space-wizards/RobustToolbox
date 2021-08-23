@@ -80,7 +80,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.PolygonAndCircle,
                                                                ContactType.ChainAndCircle,
                                                                ContactType.AabbAndCircle,
-                                                               ContactType.RectAndCircle,
                                                            },
                                                            {
                                                                // Edge register
@@ -89,7 +88,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.EdgeAndPolygon,
                                                                ContactType.NotSupported, // Chain
                                                                ContactType.NotSupported, // Aabb
-                                                               ContactType.NotSupported, // Rect
                                                            },
                                                            {
                                                                // Polygon register
@@ -98,7 +96,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.Polygon,
                                                                ContactType.ChainAndPolygon,
                                                                ContactType.AabbAndPolygon,
-                                                               ContactType.RectAndPolygon,
                                                            },
                                                            {
                                                                // Chain register
@@ -107,7 +104,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.ChainAndPolygon,
                                                                ContactType.NotSupported, // Chain
                                                                ContactType.NotSupported, // Aabb - TODO Just cast to poly
-                                                               ContactType.NotSupported, // Rect - TODO Just cast to poly
                                                            },
                                                            {
                                                                // Aabb register
@@ -116,16 +112,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                                                                ContactType.AabbAndPolygon,
                                                                ContactType.NotSupported, // Chain - TODO Just cast to poly
                                                                ContactType.Aabb,
-                                                               ContactType.AabbAndRect,
-                                                           },
-                                                           {
-                                                               // Rectangle register
-                                                               ContactType.RectAndCircle,
-                                                               ContactType.NotSupported, // Edge - TODO Just cast to poly
-                                                               ContactType.RectAndPolygon,
-                                                               ContactType.NotSupported, // Chain - TODO Just cast to poly
-                                                               ContactType.AabbAndRect,
-                                                               ContactType.Rect,
                                                            }
                                                        };
 
@@ -434,18 +420,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 case ContactType.AabbAndPolygon:
                     _collisionManager.CollideAabbAndPolygon(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
                     break;
-                case ContactType.AabbAndRect:
-                    _collisionManager.CollideAabbAndRect(ref manifold, (PhysShapeAabb) FixtureA!.Shape, transformA, (PhysShapeRect) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.Rect:
-                    _collisionManager.CollideRects(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PhysShapeRect) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.RectAndCircle:
-                    _collisionManager.CollideRectAndCircle(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PhysShapeCircle) FixtureB!.Shape, transformB);
-                    break;
-                case ContactType.RectAndPolygon:
-                    _collisionManager.CollideRectAndPolygon(ref manifold, (PhysShapeRect) FixtureA!.Shape, transformA, (PolygonShape) FixtureB!.Shape, transformB);
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException($"Collision between {FixtureA!.Shape.GetType()} and {FixtureB!.Shape.GetType()} not supported");
             }
@@ -476,10 +450,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             Aabb,
             AabbAndPolygon,
             AabbAndCircle,
-            AabbAndRect,
-            Rect,
-            RectAndCircle,
-            RectAndPolygon,
         }
 
         public bool Equals(Contact? other)

@@ -59,18 +59,6 @@ namespace Robust.Shared.Physics.Collision
 
         void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
             PhysShapeAabb aabbB, in Transform transformB);
-
-        void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
-            PhysShapeRect rectB, in Transform transformB);
-
-        void CollideRects(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
-            PhysShapeRect rectB, in Transform transformB);
-
-        void CollideRectAndCircle(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
-            PhysShapeCircle circleB, in Transform transformB);
-
-        void CollideRectAndPolygon(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
-            PolygonShape polyB, in Transform transformB);
     }
 
     /// <summary>
@@ -1138,31 +1126,6 @@ namespace Robust.Shared.Physics.Collision
             in Transform transformB)
         {
             CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
-        }
-
-        public void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,
-            in Transform transformB)
-        {
-            // TODO: Uhh this should work I think with cached bounds? Worst case we manually calc it here but then we need to do fuckery in DistanceProxy
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) rectB, transformB);
-        }
-
-        public void CollideRects(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeRect rectB,
-            in Transform transformB)
-        {
-            CollidePolygons(ref manifold, (PolygonShape) rectA, transformA, (PolygonShape) rectB, transformB);
-        }
-
-        public void CollideRectAndCircle(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeCircle circleB,
-            in Transform transformB)
-        {
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) rectA, transformA, circleB, transformB);
-        }
-
-        public void CollideRectAndPolygon(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PolygonShape polyB,
-            in Transform transformB)
-        {
-            CollidePolygons(ref manifold, (PolygonShape) rectA, transformA, polyB, transformB);
         }
 
         /// <summary>

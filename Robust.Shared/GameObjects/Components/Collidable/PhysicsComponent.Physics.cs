@@ -1297,9 +1297,6 @@ namespace Robust.Shared.GameObjects
                     case PhysShapeAabb aabb:
                         center = aabb.Centroid;
                         break;
-                    case PhysShapeRect rect:
-                        center = rect.Centroid;
-                        break;
                     case PolygonShape poly:
                         center = poly.Centroid;
                         break;

@@ -119,7 +119,7 @@ namespace Robust.Server.Physics
                 },
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
-                true) {ID = GetChunkId(chunk.Indices),
+                true) {ID = GetChunkId(chunk),
                 Body = physicsComponent};
 
             // Check if we have an existing fixture on MapGrid

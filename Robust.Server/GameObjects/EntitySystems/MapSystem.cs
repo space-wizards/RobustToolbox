@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -19,7 +21,32 @@ namespace Robust.Server.GameObjects
             configManager.OnValueChanged(CVars.GameDeleteEmptyGrids, SetGridDeletion, true);
         }
 
-        private void SetGridDeletion(bool value) => _deleteEmptyGrids = value;
+        private void SetGridDeletion(bool value)
+        {
+            _deleteEmptyGrids = value;
+
+            // If we have any existing empty ones then cull them on setting the cvar
+            if (_deleteEmptyGrids)
+            {
+                var toDelete = new List<IMapGrid>();
+
+                foreach (var grid in MapManager.GetAllGrids())
+                {
+                    if (!GridEmpty(grid)) continue;
+                    toDelete.Add(grid);
+                }
+
+                foreach (var grid in toDelete)
+                {
+                    MapManager.DeleteGrid(grid.Index);
+                }
+            }
+        }
+
+        private bool GridEmpty(IMapGrid grid)
+        {
+            return !(grid.GetAllTiles().Any());
+        }
 
         public override void Shutdown()
         {

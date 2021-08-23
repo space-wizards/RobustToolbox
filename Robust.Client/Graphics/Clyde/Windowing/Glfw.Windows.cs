@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Runtime.Loader;
 using System.Threading.Tasks;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
@@ -41,10 +40,18 @@ namespace Robust.Client.Graphics.Clyde
 
                 GLFW.MakeContextCurrent(null);
 
+                Window* ownerPtr = null;
+                if (parameters.Owner != null)
+                {
+                    var ownerReg = (GlfwWindowReg) ((WindowHandle)parameters.Owner).Reg;
+                    ownerPtr = ownerReg.GlfwWindow;
+                }
+
                 var task = SharedWindowCreate(
                     _clyde._chosenRenderer,
                     parameters,
-                    _mainWindow!.GlfwWindow);
+                    _mainWindow!.GlfwWindow,
+                    ownerPtr);
 
                 // Block the main thread (to avoid stuff like texture uploads being problematic).
                 WaitWindowCreate(task);
@@ -93,7 +100,7 @@ namespace Robust.Client.Graphics.Clyde
                     Fullscreen = fullscreen
                 };
 
-                var windowTask = SharedWindowCreate(renderer, parameters, null);
+                var windowTask = SharedWindowCreate(renderer, parameters, null, null);
                 WaitWindowCreate(windowTask);
 
                 var (reg, err) = windowTask.Result;
@@ -135,7 +142,7 @@ namespace Robust.Client.Graphics.Clyde
             private Task<GlfwWindowCreateResult> SharedWindowCreate(
                 Renderer renderer,
                 WindowCreateParameters parameters,
-                Window* share)
+                Window* share, Window* owner)
             {
                 //
                 // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
@@ -158,6 +165,7 @@ namespace Robust.Client.Graphics.Clyde
                     renderer,
                     parameters,
                     (nint) share,
+                    (nint) owner,
                     tcs));
 
                 return tcs.Task;
@@ -179,9 +187,9 @@ namespace Robust.Client.Graphics.Clyde
 
             private void WinThreadWinCreate(CmdWinCreate cmd)
             {
-                var (renderer, parameters, share, tcs) = cmd;
+                var (renderer, parameters, share, owner, tcs) = cmd;
 
-                var window = CreateGlfwWindowForRenderer(renderer, parameters, (Window*) share);
+                var window = CreateGlfwWindowForRenderer(renderer, parameters, (Window*) share, (Window*) owner);
 
                 if (window == null)
                 {
@@ -438,7 +446,8 @@ namespace Robust.Client.Graphics.Clyde
             private Window* CreateGlfwWindowForRenderer(
                 Renderer r,
                 WindowCreateParameters parameters,
-                Window* contextShare)
+                Window* contextShare,
+                Window* ownerWindow)
             {
 #if DEBUG
                 GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
@@ -522,11 +531,62 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.MaximizeWindow(window);
                 }
 
+                if (parameters.HideCloseButton)
+                {
+                    if (OperatingSystem.IsWindows())
+                    {
+                        var hWnd = (void*) GLFW.GetWin32Window(window);
+                        DebugTools.Assert(hWnd != null);
+
+                        Win32.SetWindowLongPtrW(
+                            hWnd,
+                            Win32.GWL_STYLE,
+                            // Cast to long here to work around a bug in rider with nint bitwise operators.
+                            (nint)((long)Win32.GetWindowLongPtrW(hWnd, Win32.GWL_STYLE) & ~Win32.WS_SYSMENU));
+                    }
+                    else
+                    {
+                        _sawmill.Warning("HideCloseButton not implemented on this platform");
+                    }
+                }
+
+                if (ownerWindow != null)
+                {
+                    if (OperatingSystem.IsWindows())
+                    {
+                        var hWnd = (void*) GLFW.GetWin32Window(window);
+                        var ownerHWnd = GLFW.GetWin32Window(ownerWindow);
+                        DebugTools.Assert(hWnd != null);
+
+                        Win32.SetWindowLongPtrW(
+                            hWnd,
+                            Win32.GWLP_HWNDPARENT,
+                            ownerHWnd);
+                    }
+                    else
+                    {
+                        _sawmill.Warning("owner windows not implemented on this platform");
+                    }
+
+
+                    if (parameters.StartupLocation == WindowStartupLocation.CenterOwner)
+                    {
+                        // TODO: Maybe include window frames in size calculations here?
+                        // Figure out frame sizes of both windows.
+                        GLFW.GetWindowPos(ownerWindow, out var ownerX, out var ownerY);
+                        GLFW.GetWindowSize(ownerWindow, out var ownerW, out var ownerH);
+
+                        // Re-fetch this in case DPI scaling is changing it I guess.
+                        GLFW.GetWindowSize(window, out var thisW, out var thisH);
+
+                        GLFW.SetWindowPos(window, ownerX + (ownerW - thisW) / 2, ownerY + (ownerH - thisH) / 2);
+                    }
+                }
+
                 if (parameters.Visible)
                 {
                     GLFW.ShowWindow(window);
                 }
-
 
                 return window;
             }

@@ -12,7 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static Robust.Client.Utility.LiterallyJustMessageBox;
+using static Robust.Client.Utility.Win32;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 
 namespace Robust.Client.Graphics.Clyde
@@ -411,67 +411,67 @@ namespace Robust.Client.Graphics.Clyde
             // VERY funny.
 
             private readonly Clyde _clyde;
-            private readonly WindowReg _reg;
+            public readonly WindowReg Reg;
 
-            public bool IsDisposed => _reg.IsDisposed;
-            public WindowId Id => _reg.Id;
+            public bool IsDisposed => Reg.IsDisposed;
+            public WindowId Id => Reg.Id;
 
             public WindowHandle(Clyde clyde, WindowReg reg)
             {
                 _clyde = clyde;
-                _reg = reg;
+                Reg = reg;
             }
 
             public void Dispose()
             {
-                _clyde.DoDestroyWindow(_reg);
+                _clyde.DoDestroyWindow(Reg);
             }
 
-            public Vector2i Size => _reg.FramebufferSize;
+            public Vector2i Size => Reg.FramebufferSize;
 
             public IRenderTarget RenderTarget
             {
                 get
                 {
-                    if (_reg.IsMainWindow)
+                    if (Reg.IsMainWindow)
                     {
                         return _clyde._mainMainWindowRenderMainTarget;
                     }
 
-                    return _reg.RenderTexture!;
+                    return Reg.RenderTexture!;
                 }
             }
 
             public string Title
             {
-                get => _reg.Title;
-                set => _clyde._windowing!.WindowSetTitle(_reg, value);
+                get => Reg.Title;
+                set => _clyde._windowing!.WindowSetTitle(Reg, value);
             }
 
-            public bool IsFocused => _reg.IsFocused;
-            public bool IsMinimized => _reg.IsMinimized;
+            public bool IsFocused => Reg.IsFocused;
+            public bool IsMinimized => Reg.IsMinimized;
 
             public bool IsVisible
             {
-                get => _reg.IsVisible;
-                set => _clyde.SetWindowVisible(_reg, value);
+                get => Reg.IsVisible;
+                set => _clyde.SetWindowVisible(Reg, value);
             }
 
-            public Vector2 ContentScale => _reg.WindowScale;
+            public Vector2 ContentScale => Reg.WindowScale;
 
             public bool DisposeOnClose
             {
-                get => _reg.DisposeOnClose;
-                set => _reg.DisposeOnClose = value;
+                get => Reg.DisposeOnClose;
+                set => Reg.DisposeOnClose = value;
             }
 
             public event Action<WindowClosedEventArgs> Closed
             {
-                add => _reg.Closed += value;
-                remove => _reg.Closed -= value;
+                add => Reg.Closed += value;
+                remove => Reg.Closed -= value;
             }
 
-            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(_reg);
+            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
         }
 
         private sealed class MonitorHandle : IClydeMonitor

@@ -184,7 +184,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (windowReg == null)
                     return;
 
-                _clyde.SendCloseWindow(windowReg, new WindowClosedEventArgs(windowReg.Handle));
+                _clyde.SendCloseWindow(windowReg, new WindowRequestClosedEventArgs(windowReg.Handle));
             }
 
             private void ProcessEventWindowSize(EventWindowSize ev)

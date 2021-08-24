@@ -84,6 +84,11 @@ namespace Robust.Client.UserInterface.Controls
         /// </summary>
         public event Action<CancelEventArgs>? Closing;
 
+        /// <summary>
+        /// Raised when the window has been closed.
+        /// </summary>
+        public event Action? Closed;
+
         public OSWindow()
         {
             IoCManager.InjectDependencies(this);
@@ -122,7 +127,8 @@ namespace Robust.Client.UserInterface.Controls
             parameters.StartupLocation = StartupLocation;
 
             ClydeWindow = _clyde.CreateWindow(parameters);
-            ClydeWindow.Closed += OnWindowClosed;
+            ClydeWindow.RequestClosed += OnWindowRequestClosed;
+            ClydeWindow.Destroyed += OnWindowDestroyed;
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
             _root.AddChild(this);
@@ -144,16 +150,31 @@ namespace Robust.Client.UserInterface.Controls
             if (eventArgs.Cancel)
                 return;
 
-            Orphan();
-
             ClydeWindow.Dispose();
-            ClydeWindow = null;
-            _root = null;
         }
 
-        private void OnWindowClosed(WindowClosedEventArgs eventArgs)
+        private void OnWindowRequestClosed(WindowRequestClosedEventArgs eventArgs)
         {
             Close();
+        }
+
+        private void OnWindowDestroyed(WindowDestroyedEventArgs obj)
+        {
+            // I give it a 75% chance that some Linux user can force close the window,
+            // breaking GLFW,
+            // and forcing us to have a code path that ignores the RequestClosed code.
+
+            RealClosed();
+        }
+
+        private void RealClosed()
+        {
+            Orphan();
+
+            ClydeWindow = null;
+            _root = null;
+
+            Closed?.Invoke();
         }
     }
 

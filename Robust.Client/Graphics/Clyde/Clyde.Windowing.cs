@@ -39,7 +39,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyUp;
         public event Action<KeyEventArgs>? KeyDown;
         public event Action<MouseWheelEventArgs>? MouseWheel;
-        public event Action<WindowClosedEventArgs>? CloseWindow;
+        public event Action<WindowRequestClosedEventArgs>? CloseWindow;
         public event Action<WindowDestroyedEventArgs>? DestroyWindow;
         public event Action<WindowContentScaleEventArgs>? OnWindowScaleChanged;
         public event Action<WindowResizedEventArgs>? OnWindowResized;
@@ -226,8 +226,11 @@ namespace Robust.Client.Graphics.Clyde
             if (reg.IsMainWindow)
                 throw new InvalidOperationException("Cannot destroy main window.");
 
-            _windowing!.WindowDestroy(reg);
             reg.BlitDoneEvent?.Set();
+            _windowing!.WindowDestroy(reg);
+            var destroyed = new WindowDestroyedEventArgs(reg.Handle);
+            DestroyWindow?.Invoke(destroyed);
+            reg.Closed?.Invoke(destroyed);
         }
 
         public void ProcessInput(FrameEventArgs frameEventArgs)
@@ -400,7 +403,8 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMainWindow;
             public WindowHandle Handle = default!;
             public RenderTexture? RenderTexture;
-            public Action<WindowClosedEventArgs>? Closed;
+            public Action<WindowRequestClosedEventArgs>? RequestClosed;
+            public Action<WindowDestroyedEventArgs>? Closed;
         }
 
         private sealed class WindowHandle : IClydeWindowInternal
@@ -465,7 +469,13 @@ namespace Robust.Client.Graphics.Clyde
                 set => Reg.DisposeOnClose = value;
             }
 
-            public event Action<WindowClosedEventArgs> Closed
+            public event Action<WindowRequestClosedEventArgs> RequestClosed
+            {
+                add => Reg.RequestClosed += value;
+                remove => Reg.RequestClosed -= value;
+            }
+
+            public event Action<WindowDestroyedEventArgs>? Destroyed
             {
                 add => Reg.Closed += value;
                 remove => Reg.Closed -= value;

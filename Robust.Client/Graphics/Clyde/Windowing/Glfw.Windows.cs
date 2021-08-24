@@ -439,8 +439,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 _windows.Remove(reg);
                 _clyde._windowHandles.Remove(reg.Handle);
-
-                _clyde.DestroyWindow?.Invoke(new WindowDestroyedEventArgs(window.Handle));
             }
 
             private Window* CreateGlfwWindowForRenderer(

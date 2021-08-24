@@ -1,10 +1,10 @@
 ﻿namespace Robust.Client.Graphics
 {
-    public readonly struct WindowDestroyedEventArgs
+    public readonly struct WindowRequestClosedEventArgs
     {
         public IClydeWindow Window { get; }
 
-        public WindowDestroyedEventArgs(IClydeWindow window)
+        public WindowRequestClosedEventArgs(IClydeWindow window)
         {
             Window = window;
         }

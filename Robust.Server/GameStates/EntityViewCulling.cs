@@ -253,7 +253,6 @@ namespace Robust.Server.GameStates
                             foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
                             {
                                 var ent = _entMan.GetEntity(anchoredEnt);
-                                DebugTools.Assert(!ent.Transform.Anchored);
 
                                 if (ent.LastModifiedTick < lastSeenChunk)
                                     continue;

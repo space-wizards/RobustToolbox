@@ -59,7 +59,7 @@ namespace Robust.Server.Map
             var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
             foreach (var grid in _grids.Values)
             {
-                if (grid.LastModifiedTick < fromTick)
+                if (grid.LastTileModifiedTick < fromTick)
                 {
                     continue;
                 }
@@ -80,7 +80,7 @@ namespace Robust.Server.Map
 
                 foreach (var (index, chunk) in grid.GetMapChunks())
                 {
-                    if (chunk.LastModifiedTick < fromTick)
+                    if (chunk.LastTileModifiedTick < fromTick)
                     {
                         continue;
                     }

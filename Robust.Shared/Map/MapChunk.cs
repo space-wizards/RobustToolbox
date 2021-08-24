@@ -26,15 +26,17 @@ namespace Robust.Shared.Map
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
+        // We'll keep a running count of how many tiles are non-empty.
+        // If this ever hits 0 then we know the chunk can be deleted.
+        // The alternative is that every time we SetTile we iterate every tile in the chunk.
+        internal int ValidTiles { get; private set; }
+
         private Box2i _cachedBounds;
 
         public Fixture? Fixture { get; set; }
 
         /// <inheritdoc />
-        public GameTick LastTileModifiedTick { get; private set; }
-
-        /// <inheritdoc />
-        public GameTick LastAnchoredModifiedTick { get; set; }
+        public GameTick LastModifiedTick { get; private set; }
 
         /// <summary>
         ///     Constructs an instance of a MapGrid chunk.
@@ -46,7 +48,7 @@ namespace Robust.Shared.Map
         public MapChunk(IMapGridInternal grid, int x, int y, ushort chunkSize)
         {
             _grid = grid;
-            LastTileModifiedTick = grid.CurTick;
+            LastModifiedTick = grid.CurTick;
             _gridIndices = new Vector2i(x, y);
             ChunkSize = chunkSize;
 
@@ -130,19 +132,36 @@ namespace Robust.Shared.Map
             if (_tiles[xIndex, yIndex].TypeId == tile.TypeId)
                 return;
 
+            var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
+            var oldValidTiles = ValidTiles;
+
+            if (oldIsEmpty != tile.IsEmpty)
+            {
+                if (oldIsEmpty)
+                {
+                    ValidTiles += 1;
+                }
+                else
+                {
+                    ValidTiles -= 1;
+                }
+            }
+
+            DebugTools.Assert(ValidTiles >= 0);
             var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];
-            LastTileModifiedTick = _grid.CurTick;
+            LastModifiedTick = _grid.CurTick;
 
             _tiles[xIndex, yIndex] = tile;
 
-            if (!SuppressCollisionRegeneration)
+            // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
+            _grid.NotifyTileChanged(newTileRef, oldTile);
+
+            if (!SuppressCollisionRegeneration && oldValidTiles != ValidTiles)
             {
                 RegenerateCollision();
             }
-
-            _grid.NotifyTileChanged(newTileRef, oldTile);
         }
 
         /// <summary>
@@ -218,7 +237,6 @@ namespace Robust.Shared.Map
 
             DebugTools.Assert(!cell.Center.Contains(euid));
             cell.Center.Add(euid);
-            LastAnchoredModifiedTick = _grid.CurTick;
         }
 
         /// <inheritdoc />
@@ -232,27 +250,20 @@ namespace Robust.Shared.Map
 
             ref var cell = ref _snapGrid[xCell, yCell];
             cell.Center?.Remove(euid);
-            LastAnchoredModifiedTick = _grid.CurTick;
-        }
-
-        public IEnumerable<EntityUid> GetAllAnchoredEnts()
-        {
-            foreach (var cell in _snapGrid)
-            {
-                if(cell.Center is null)
-                    continue;
-
-                foreach (var euid in cell.Center)
-                {
-                    yield return euid;
-                }
-            }
         }
 
         public bool SuppressCollisionRegeneration { get; set; }
 
         public void RegenerateCollision()
         {
+            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
+            if (ValidTiles == 0)
+            {
+                var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(GridId);
+
+                grid.RemoveChunk(_gridIndices);
+            }
+
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, out _cachedBounds);
             _grid.NotifyChunkCollisionRegenerated(this);
@@ -314,5 +325,10 @@ namespace Robust.Shared.Map
         {
             Chunk = chunk;
         }
+    }
+
+    internal sealed class ChunkRemovedEvent : EntityEventArgs
+    {
+        public MapChunk Chunk = default!;
     }
 }

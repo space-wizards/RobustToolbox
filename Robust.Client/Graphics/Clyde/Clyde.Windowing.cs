@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -13,7 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static Robust.Client.Utility.LiterallyJustMessageBox;
+using static Robust.Client.Utility.Win32;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 
 namespace Robust.Client.Graphics.Clyde
@@ -26,6 +25,7 @@ namespace Robust.Client.Graphics.Clyde
         private IWindowingImpl? _windowing;
         private Renderer _chosenRenderer;
 
+        private ResourcePath? _windowIconPath;
         private Thread? _windowingThread;
         private bool _vSync;
         private WindowMode _windowMode;
@@ -87,6 +87,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private bool InitWindowing()
         {
+            var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);
+            if (!string.IsNullOrWhiteSpace(iconPath))
+                _windowIconPath = new ResourcePath(iconPath);
+
             _windowingThread = Thread.CurrentThread;
 
             _windowing = new GlfwWindowingImpl(this);
@@ -164,13 +168,13 @@ namespace Robust.Client.Graphics.Clyde
 
         private IEnumerable<Image<Rgba32>> LoadWindowIcons()
         {
-            if (OperatingSystem.IsMacOS())
+            if (OperatingSystem.IsMacOS() || _windowIconPath == null)
             {
                 // Does nothing on macOS so don't bother.
                 yield break;
             }
 
-            foreach (var file in _resourceCache.ContentFindFiles("/Textures/Logo/icon"))
+            foreach (var file in _resourceCache.ContentFindFiles(_windowIconPath))
             {
                 if (file.Extension != "png")
                 {
@@ -399,7 +403,7 @@ namespace Robust.Client.Graphics.Clyde
             public Action<WindowClosedEventArgs>? Closed;
         }
 
-        private sealed class WindowHandle : IClydeWindow
+        private sealed class WindowHandle : IClydeWindowInternal
         {
             // So funny story
             // When this class was a record, the C# compiler on .NET 5 stack overflowed
@@ -407,65 +411,67 @@ namespace Robust.Client.Graphics.Clyde
             // VERY funny.
 
             private readonly Clyde _clyde;
-            private readonly WindowReg _reg;
+            public readonly WindowReg Reg;
 
-            public bool IsDisposed => _reg.IsDisposed;
-            public WindowId Id => _reg.Id;
+            public bool IsDisposed => Reg.IsDisposed;
+            public WindowId Id => Reg.Id;
 
             public WindowHandle(Clyde clyde, WindowReg reg)
             {
                 _clyde = clyde;
-                _reg = reg;
+                Reg = reg;
             }
 
             public void Dispose()
             {
-                _clyde.DoDestroyWindow(_reg);
+                _clyde.DoDestroyWindow(Reg);
             }
 
-            public Vector2i Size => _reg.FramebufferSize;
+            public Vector2i Size => Reg.FramebufferSize;
 
             public IRenderTarget RenderTarget
             {
                 get
                 {
-                    if (_reg.IsMainWindow)
+                    if (Reg.IsMainWindow)
                     {
                         return _clyde._mainMainWindowRenderMainTarget;
                     }
 
-                    return _reg.RenderTexture!;
+                    return Reg.RenderTexture!;
                 }
             }
 
             public string Title
             {
-                get => _reg.Title;
-                set => _clyde._windowing!.WindowSetTitle(_reg, value);
+                get => Reg.Title;
+                set => _clyde._windowing!.WindowSetTitle(Reg, value);
             }
 
-            public bool IsFocused => _reg.IsFocused;
-            public bool IsMinimized => _reg.IsMinimized;
+            public bool IsFocused => Reg.IsFocused;
+            public bool IsMinimized => Reg.IsMinimized;
 
             public bool IsVisible
             {
-                get => _reg.IsVisible;
-                set => _clyde.SetWindowVisible(_reg, value);
+                get => Reg.IsVisible;
+                set => _clyde.SetWindowVisible(Reg, value);
             }
 
-            public Vector2 ContentScale => _reg.WindowScale;
+            public Vector2 ContentScale => Reg.WindowScale;
 
             public bool DisposeOnClose
             {
-                get => _reg.DisposeOnClose;
-                set => _reg.DisposeOnClose = value;
+                get => Reg.DisposeOnClose;
+                set => Reg.DisposeOnClose = value;
             }
 
             public event Action<WindowClosedEventArgs> Closed
             {
-                add => _reg.Closed += value;
-                remove => _reg.Closed -= value;
+                add => Reg.Closed += value;
+                remove => Reg.Closed -= value;
             }
+
+            public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);
         }
 
         private sealed class MonitorHandle : IClydeMonitor

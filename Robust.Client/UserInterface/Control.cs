@@ -601,12 +601,15 @@ namespace Robust.Client.UserInterface
             ChildAdded(child);
         }
 
+        public event Action<Control>? OnChildAdded;
+
         /// <summary>
         ///     Called after a new child is added to this control.
         /// </summary>
         /// <param name="newChild">The new child.</param>
         protected virtual void ChildAdded(Control newChild)
         {
+            OnChildAdded?.Invoke(newChild);
             InvalidateMeasure();
         }
 
@@ -649,12 +652,15 @@ namespace Robust.Client.UserInterface
             ChildRemoved(child);
         }
 
+        public event Action<Control>? OnChildRemoved;
+
         /// <summary>
         ///     Called when a child is removed from this child.
         /// </summary>
         /// <param name="child">The former child.</param>
         protected virtual void ChildRemoved(Control child)
         {
+            OnChildRemoved?.Invoke(child);
             InvalidateMeasure();
         }
 
@@ -665,6 +671,8 @@ namespace Robust.Client.UserInterface
         {
         }
 
+        public event Action<ControlChildMovedEventArgs>? OnChildMoved;
+
         /// <summary>
         ///     Called when the order index of a child changes.
         /// </summary>
@@ -673,6 +681,7 @@ namespace Robust.Client.UserInterface
         /// <param name="newIndex">The new index of the child.</param>
         protected virtual void ChildMoved(Control child, int oldIndex, int newIndex)
         {
+            OnChildMoved?.Invoke(new ControlChildMovedEventArgs(child, oldIndex, newIndex));
         }
 
         /// <summary>
@@ -824,10 +833,15 @@ namespace Robust.Client.UserInterface
             UserInterfaceManager.ReleaseKeyboardFocus(this);
         }
 
+        public event Action? OnResized;
+
         /// <summary>
         ///     Called when the size of the control changes.
         /// </summary>
-        protected virtual void Resized() { }
+        protected virtual void Resized()
+        {
+            OnResized?.Invoke();
+        }
 
         internal void DoFrameUpdate(FrameEventArgs args)
         {
@@ -967,4 +981,18 @@ namespace Robust.Client.UserInterface
     }
 
     public delegate Control? TooltipSupplier(Control sender);
+
+    public readonly struct ControlChildMovedEventArgs
+    {
+        public ControlChildMovedEventArgs(Control control, int oldIndex, int newIndex)
+        {
+            Control = control;
+            OldIndex = oldIndex;
+            NewIndex = newIndex;
+        }
+
+        public readonly Control Control;
+        public readonly int OldIndex;
+        public readonly int NewIndex;
+    }
 }

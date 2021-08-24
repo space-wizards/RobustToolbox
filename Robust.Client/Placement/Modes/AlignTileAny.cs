@@ -11,7 +11,8 @@ namespace Robust.Client.Placement.Modes
 
         public override void AlignPlacementMode(ScreenCoordinates mouseScreen)
         {
-            const float SearchBoxSize = 1.5f; // size of search box in meters
+            // Go over diagonal size so when placing in a line it doesn't stop snapping.
+            const float SearchBoxSize = 2f; // size of search box in meters
 
             MouseCoords = ScreenToCursorGrid(mouseScreen).AlignWithClosestGridTile(SearchBoxSize, pManager.EntityManager, pManager.MapManager);
 

@@ -76,11 +76,18 @@ namespace Robust.Client.Input
         /// </summary>
         public bool IsRepeat { get; }
 
-        public KeyEventArgs(Keyboard.Key key, bool repeat, bool alt, bool control, bool shift, bool system)
+        public int ScanCode { get; }
+
+        public KeyEventArgs(
+            Keyboard.Key key,
+            bool repeat,
+            bool alt, bool control, bool shift, bool system,
+            int scanCode)
             : base(alt, control, shift, system)
         {
             Key = key;
             IsRepeat = repeat;
+            ScanCode = scanCode;
         }
     }
 

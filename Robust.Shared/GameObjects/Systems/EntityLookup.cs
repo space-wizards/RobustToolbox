@@ -121,9 +121,9 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             var eventBus = _entityManager.EventBus;
-            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
-            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
-            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, ev => _parentChangeQueue.Enqueue(ev));
+            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, (ref MoveEvent ev) => _moveQueue.Push(ev));
+            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, (ref RotateEvent ev) => _rotateQueue.Push(ev));
+            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
@@ -387,8 +387,8 @@ namespace Robust.Shared.GameObjects
         {
             var mapCoordinates = position.ToMap(_entityManager);
             var mapPosition = mapCoordinates.Position;
-            var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
-                mapPosition + new Vector2(range / 2, range / 2));
+            var aabb = new Box2(mapPosition - new Vector2(range, range),
+                mapPosition + new Vector2(range, range));
             return GetEntitiesIntersecting(mapCoordinates.MapId, aabb, approximate);
         }
 

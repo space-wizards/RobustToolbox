@@ -192,6 +192,12 @@ namespace Robust.Shared
         public static readonly CVarDef<string> GameHostName =
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// If a grid is shrunk to include no more tiles should it be deleted.
+        /// </summary>
+        public static readonly CVarDef<bool> GameDeleteEmptyGrids =
+            CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
+
         /*
          * LOG
          */
@@ -329,6 +335,24 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> DisplayWin32Experience =
             CVarDef.Create("display.win32_experience", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The window icon set to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplayWindowIconSet =
+            CVarDef.Create("display.window_icon_set", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The splash logo to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplaySplashLogo =
+            CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
 
         /*
          * AUDIO

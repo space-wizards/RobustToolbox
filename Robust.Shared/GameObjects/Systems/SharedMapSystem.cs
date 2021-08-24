@@ -5,9 +5,9 @@ using Robust.Shared.Map;
 namespace Robust.Shared.GameObjects
 {
     [UsedImplicitly]
-    internal sealed class MapSystem : EntitySystem
+    internal abstract class SharedMapSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
+        [Dependency] protected readonly IMapManagerInternal MapManager = default!;
 
         public override void Initialize()
         {
@@ -26,7 +26,7 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveHandler(EntityUid uid, MapGridComponent component, ComponentRemove args)
         {
-            _mapManager.OnComponentRemoved(component);
+            MapManager.OnComponentRemoved(component);
         }
 
         private void HandleGridInitialize(EntityUid uid, MapGridComponent component, ComponentInit args)

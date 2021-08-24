@@ -255,6 +255,15 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
 
+            {
+                // Handle GameControllerOptions implicit CVar overrides.
+                _configurationManager.OverrideConVars(new []
+                {
+                    (CVars.DisplayWindowIconSet.Name, options.WindowIconSet.ToString()),
+                    (CVars.DisplaySplashLogo.Name, options.SplashLogo.ToString())
+                });
+            }
+
             ProfileOptSetup.Setup(_configurationManager);
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
@@ -472,6 +481,8 @@ namespace Robust.Client
 
         internal void Cleanup()
         {
+            _modLoader.Shutdown();
+
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
             IoCManager.Resolve<IEntityLookup>().Shutdown();

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -203,11 +204,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateOnGridCreated(MapId mapId, GridId gridId)
         {
+            Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(MapId mapId, GridId gridId)
         {
+            Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
+
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)
             {

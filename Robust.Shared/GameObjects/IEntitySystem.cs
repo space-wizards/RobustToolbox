@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,6 +10,7 @@ namespace Robust.Shared.GameObjects
     ///     They have a set of entities to run over and run every once in a while.
     ///     They get managed by an <see cref="IEntitySystemManager" />.
     /// </summary>
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public interface IEntitySystem : IEntityEventSubscriber
     {
         IEnumerable<Type> UpdatesAfter { get; }

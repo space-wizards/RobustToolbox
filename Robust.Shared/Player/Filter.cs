@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Player
 {
@@ -124,6 +122,31 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
+        ///     Add all players whose attached entity match a predicate.
+        ///     Doesn't consider players without an attached entity.
+        /// </summary>
+        public Filter AddWhereAttachedEntity(Predicate<IEntity> predicate)
+        {
+            return AddWhere(session => session.AttachedEntity is { } entity && predicate(entity));
+        }
+
+        /// <summary>
+        ///     Add all players whose entity is on a certain grid.
+        /// </summary>
+        public Filter AddInGrid(GridId gridId)
+        {
+            return AddWhereAttachedEntity(entity => entity.Transform.GridID == gridId);
+        }
+
+        /// <summary>
+        ///     Add all players whose entity is on a certain map.
+        /// </summary>
+        public Filter AddInMap(MapId mapId)
+        {
+            return AddWhereAttachedEntity(entity => entity.Transform.MapID == mapId);
+        }
+
+        /// <summary>
         ///     Adds all players in range of a position.
         /// </summary>
         public Filter AddInRange(MapCoordinates position, float range)
@@ -159,6 +182,18 @@ namespace Robust.Shared.Player
         public Filter RemoveWhere(Predicate<ICommonSession> predicate)
         {
             _recipients.RemoveWhere(predicate);
+            return this;
+        }
+
+        /// <summary>
+        ///     Removes all players whose attached entity match a predicate.
+        ///     Doesn't consider players without an attached entity.
+        /// </summary>
+        /// <param name="predicate"></param>
+        /// <returns></returns>
+        public Filter RemoveWhereAttachedEntity(Predicate<IEntity> predicate)
+        {
+            _recipients.RemoveWhere(session => session.AttachedEntity is { } entity && predicate(entity));
             return this;
         }
 
@@ -227,6 +262,22 @@ namespace Robust.Shared.Player
         public static Filter Broadcast()
         {
             return Empty().AddAllPlayers();
+        }
+
+        /// <summary>
+        ///     A new filter with all players whose attached entity is on a certain grid.
+        /// </summary>
+        public static Filter BroadcastGrid(GridId grid)
+        {
+            return Empty().AddInGrid(grid);
+        }
+
+        /// <summary>
+        ///     A new filter with all players whose attached entity is on a certain map.
+        /// </summary>
+        public static Filter BroadcastMap(MapId map)
+        {
+            return Empty().AddInMap(map);
         }
 
         /// <summary>

@@ -381,11 +381,6 @@ namespace Robust.Server.GameStates
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, uint visMask)
         {
-            if (xform.Owner.Prototype?.ID.Equals("AMEControllerUnanchored") == true)
-            {
-
-            }
-
             var xformUid = xform.Owner.Uid;
 
             // we are done, this ent has already been checked and is visible

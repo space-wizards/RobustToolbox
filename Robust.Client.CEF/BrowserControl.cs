@@ -23,6 +23,7 @@ namespace Robust.Client.CEF
 
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly IInputManager _inputMgr = default!;
+        [Dependency] private readonly CefManager _cef = default!;
 
         private RobustRequestHandler _requestHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
         private LiveData? _data;
@@ -156,6 +157,8 @@ namespace Robust.Client.CEF
         protected override void EnteredTree()
         {
             base.EnteredTree();
+
+            _cef.CheckInitialized();
 
             DebugTools.AssertNull(_data);
 

@@ -73,6 +73,11 @@ namespace Robust.Client.CEF
             _initialized = true;
         }
 
+        public void CheckInitialized()
+        {
+            if (!_initialized)
+                throw new InvalidOperationException("CefManager has not been initialized!");
+        }
 
         /// <summary>
         ///     Needs to be called regularly for CEF to keep working.

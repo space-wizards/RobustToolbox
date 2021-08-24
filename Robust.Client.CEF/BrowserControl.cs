@@ -150,6 +150,7 @@ namespace Robust.Client.CEF
         {
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;
+            MouseFilter = MouseFilterMode.Stop;
 
             IoCManager.InjectDependencies(this);
         }

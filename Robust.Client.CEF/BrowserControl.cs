@@ -168,7 +168,7 @@ namespace Robust.Client.CEF
 
             // A funny web cef client. This can actually be shared by multiple browsers, but I'm not sure how the
             // rendering would work in that case? TODO CEF: Investigate a way to share the web client?
-            var client = new RobustCefClient(renderer, _requestHandler);
+            var client = new RobustCefClient(renderer, _requestHandler, new RobustLoadHandler());
 
             var info = CefWindowInfo.Create();
 
@@ -468,6 +468,7 @@ namespace Robust.Client.CEF
             if (_data == null)
                 throw new InvalidOperationException();
 
+            // TODO: this should not run until the browser is done loading seriously does this even work?
             _data.Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
         }
 

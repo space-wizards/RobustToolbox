@@ -473,12 +473,22 @@ namespace Robust.Client.CEF
 
         public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
         {
-            _requestHandler.AddHandler(handler);
+            _requestHandler.AddResourceRequestHandler(handler);
         }
 
         public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
         {
-            _requestHandler.RemoveHandler(handler);
+            _requestHandler.RemoveResourceRequestHandler(handler);
+        }
+
+        public void AddBeforeBrowseHandler(Action<BeforeBrowseContext> handler)
+        {
+            _requestHandler.AddBeforeBrowseHandler(handler);
+        }
+
+        public void RemoveBeforeBrowseHandler(Action<BeforeBrowseContext> handler)
+        {
+            _requestHandler.RemoveBeforeBrowseHandler(handler);
         }
 
         private sealed class LiveData

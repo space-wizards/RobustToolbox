@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using Lidgren.Network;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -17,6 +19,9 @@ namespace Robust.Shared.Network.Messages
         // (due to being in many parts).
         public const int ReliableThreshold = 1300;
 
+        // If a state is larger than this, compress it with deflate.
+        public const int CompressionThreshold = 256;
+
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
@@ -26,27 +31,66 @@ namespace Robust.Shared.Network.Messages
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
             MsgSize = buffer.LengthBytes;
-            var length = buffer.ReadVariableInt32();
-            using var stream = buffer.ReadAlignedMemory(length);
-            var serializer = IoCManager.Resolve<IRobustSerializer>();
-            serializer.DeserializeDirect(stream, out State);
+            var uncompressedLength = buffer.ReadVariableInt32();
+            var compressedLength = buffer.ReadVariableInt32();
+            MemoryStream finalStream;
 
-            State.PayloadSize = length;
+            // State is compressed.
+            if (compressedLength > 0)
+            {
+                var stream = buffer.ReadAlignedMemory(compressedLength);
+                using var decompressStream = new DeflateStream(stream, CompressionMode.Decompress);
+                var decompressedStream = new MemoryStream(decompressStream.CopyToArray(), false);
+                finalStream = decompressedStream;
+                DebugTools.Assert(decompressedStream.Length == uncompressedLength);
+            }
+            // State is uncompressed.
+            else
+            {
+                var stream = buffer.ReadAlignedMemory(uncompressedLength);
+                finalStream = stream;
+            }
+
+            var serializer = IoCManager.Resolve<IRobustSerializer>();
+            serializer.DeserializeDirect(finalStream, out State);
+            finalStream.Dispose();
+
+            State.PayloadSize = uncompressedLength;
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             var serializer = IoCManager.Resolve<IRobustSerializer>();
-            using (var stateStream = new MemoryStream())
-            {
-                DebugTools.Assert(stateStream.Length <= Int32.MaxValue);
-                serializer.SerializeDirect(stateStream, State);
-                buffer.WriteVariableInt32((int) stateStream.Length);
+            MemoryStream finalStream;
+            var stateStream = new MemoryStream();
+            DebugTools.Assert(stateStream.Length <= Int32.MaxValue);
+            serializer.SerializeDirect(stateStream, State);
+            buffer.WriteVariableInt32((int) stateStream.Length);
 
-                // Always succeeds.
-                stateStream.TryGetBuffer(out var segment);
-                buffer.Write(segment);
+            // We compress the state.
+            if (stateStream.Length > CompressionThreshold)
+            {
+                stateStream.Seek(0, SeekOrigin.Begin);
+                var compressedStream = new MemoryStream();
+                using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Compress, true))
+                {
+                    stateStream.CopyTo(deflateStream);
+                }
+
+                buffer.WriteVariableInt32((int) compressedStream.Length);
+                finalStream = compressedStream;
             }
+            // The state is sent as is.
+            else
+            {
+                // 0 means that the state isn't compressed.
+                buffer.WriteVariableInt32(0);
+                finalStream = stateStream;
+            }
+
+            finalStream.TryGetBuffer(out var segment);
+            buffer.Write(segment);
+            finalStream.Dispose();
 
             _hasWritten = false;
             MsgSize = buffer.LengthBytes;

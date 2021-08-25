@@ -40,9 +40,10 @@ namespace Robust.Shared.Network.Messages
             {
                 var stream = buffer.ReadAlignedMemory(compressedLength);
                 using var decompressStream = new DeflateStream(stream, CompressionMode.Decompress);
-                var decompressedStream = new MemoryStream(decompressStream.CopyToArray(), false);
+                var decompressedStream = new MemoryStream(uncompressedLength);
+                decompressStream.CopyTo(decompressedStream, uncompressedLength);
+                decompressedStream.Position = 0;
                 finalStream = decompressedStream;
-                DebugTools.Assert(decompressedStream.Length == uncompressedLength);
             }
             // State is uncompressed.
             else
@@ -69,7 +70,7 @@ namespace Robust.Shared.Network.Messages
             // We compress the state.
             if (stateStream.Length > CompressionThreshold)
             {
-                stateStream.Seek(0, SeekOrigin.Begin);
+                stateStream.Position = 0;
                 var compressedStream = new MemoryStream();
                 using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Compress, true))
                 {

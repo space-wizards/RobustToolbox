@@ -161,7 +161,7 @@ namespace Robust.Server.GameStates
 
             //TODO: Stop sending all entities to every player first tick
             List<EntityUid>? deletions;
-            if (!CullingEnabled || fromTick == GameTick.Zero)
+            if (!CullingEnabled)
             {
                 var allStates = ServerGameStateManager.GetAllEntityStates(_entMan, session, fromTick);
                 deletions = GetDeletedEntities(fromTick);

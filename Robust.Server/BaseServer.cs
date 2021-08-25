@@ -324,13 +324,13 @@ namespace Robust.Server
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
-            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _entityManager.Initialize();
             _mapManager.Initialize();
 
+            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded

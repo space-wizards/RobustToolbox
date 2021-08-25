@@ -13,7 +13,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <seealso cref="CheckBox"/>
     public abstract class BaseButton : Control
     {
-        private bool _attemptingPress;
+        private int _attemptingPress;
         private bool _beingHovered;
         private bool _disabled;
         private bool _pressed;
@@ -151,11 +151,11 @@ namespace Robust.Client.UserInterface.Controls
                 {
                     return DrawModeEnum.Disabled;
                 }
-                else if (Pressed || _attemptingPress)
+                else if (Pressed || (_attemptingPress > 0 && IsHovered))
                 {
                     return DrawModeEnum.Pressed;
                 }
-                else if (IsHovered)
+                else if (IsHovered || _attemptingPress > 0)
                 {
                     return DrawModeEnum.Hover;
                 }
@@ -210,7 +210,8 @@ namespace Robust.Client.UserInterface.Controls
             var drawMode = DrawMode;
             if (Mode == ActionMode.Release)
             {
-                _attemptingPress = true;
+                UserInterfaceManager.ControlFocused = this;
+                _attemptingPress += 1;
             }
             else
             {
@@ -227,7 +228,8 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 else
                 {
-                    _attemptingPress = true;
+                    UserInterfaceManager.ControlFocused = this;
+                    _attemptingPress += 1;
                     OnPressed?.Invoke(buttonEventArgs);
                 }
             }
@@ -251,7 +253,7 @@ namespace Robust.Client.UserInterface.Controls
             OnButtonUp?.Invoke(buttonEventArgs);
 
             var drawMode = DrawMode;
-            if (Mode == ActionMode.Release && _attemptingPress && HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale))
+            if (Mode == ActionMode.Release && _attemptingPress > 0 && HasPoint((args.PointerLocation.Position - GlobalPixelPosition) / UIScale))
             {
                 // Can't un press a radio button directly.
                 if (Group == null || !Pressed)
@@ -270,7 +272,21 @@ namespace Robust.Client.UserInterface.Controls
                 }
             }
 
-            _attemptingPress = false;
+            _attemptingPress -= 1;
+            if (_attemptingPress == 0 && UserInterfaceManager.ControlFocused == this)
+                UserInterfaceManager.ControlFocused = null;
+            if (drawMode != DrawMode)
+            {
+                DrawModeChanged();
+            }
+        }
+
+        protected internal override void ControlFocusExited()
+        {
+            base.ControlFocusExited();
+
+            var drawMode = DrawMode;
+            _attemptingPress = 0;
             if (drawMode != DrawMode)
             {
                 DrawModeChanged();

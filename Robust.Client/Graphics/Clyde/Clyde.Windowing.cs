@@ -443,6 +443,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsMinimized;
             public string Title = "";
             public bool IsVisible;
+            public IClydeWindow? Owner;
 
             public bool DisposeOnClose;
 

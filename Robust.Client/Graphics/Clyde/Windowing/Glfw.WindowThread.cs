@@ -212,7 +212,8 @@ namespace Robust.Client.Graphics.Clyde
             ) : CmdBase;
 
             private sealed record CmdWinDestroy(
-                nint Window
+                nint Window,
+                bool hadOwner
             ) : CmdBase;
 
             private sealed record GlfwWindowCreateResult(

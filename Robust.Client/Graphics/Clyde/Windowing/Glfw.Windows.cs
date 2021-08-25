@@ -260,7 +260,7 @@ namespace Robust.Client.Graphics.Clyde
             public void WindowDestroy(WindowReg window)
             {
                 var reg = (GlfwWindowReg) window;
-                SendCmd(new CmdWinDestroy((nint) reg.GlfwWindow));
+                SendCmd(new CmdWinDestroy((nint) reg.GlfwWindow, window.Owner != null));
             }
 
             private void WaitWindowCreate(Task<GlfwWindowCreateResult> windowTask)
@@ -339,6 +339,22 @@ namespace Robust.Client.Graphics.Clyde
 
             private static void WinThreadWinDestroy(CmdWinDestroy cmd)
             {
+                var window = (Window*) cmd.Window;
+
+                if (OperatingSystem.IsWindows() && cmd.hadOwner)
+                {
+                    // On Windows, closing the child window causes the owner to be minimized, apparently.
+                    // Clear owner on close to avoid this.
+
+                    var hWnd = (void*) GLFW.GetWin32Window(window);
+                    DebugTools.Assert(hWnd != null);
+
+                    Win32.SetWindowLongPtrW(
+                        hWnd,
+                        Win32.GWLP_HWNDPARENT,
+                        0);
+                }
+
                 GLFW.DestroyWindow((Window*) cmd.Window);
             }
 

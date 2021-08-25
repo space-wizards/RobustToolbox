@@ -58,10 +58,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             var nodeValue =
-                $"{value.Bottom.ToString(CultureInfo.InvariantCulture)}," +
                 $"{value.Left.ToString(CultureInfo.InvariantCulture)}," +
-                $"{value.Top.ToString(CultureInfo.InvariantCulture)}," +
-                $"{value.Right.ToString(CultureInfo.InvariantCulture)}";
+                $"{value.Bottom.ToString(CultureInfo.InvariantCulture)}," +
+                $"{value.Right.ToString(CultureInfo.InvariantCulture)}," +
+                $"{value.Top.ToString(CultureInfo.InvariantCulture)}";
 
             return new ValueDataNode(nodeValue);
         }

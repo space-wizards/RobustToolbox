@@ -11,8 +11,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         Polygon = 2,
         Chain = 3,
         Aabb = 4,
-        Rectangle = 5, // Look you might be able to replace this with polys but for now I have done the thing
-        TypeCount = 6, // Obviously increment this if you add something
+        TypeCount = 5, // Obviously increment this if you add something
     }
 
     /// <summary>
@@ -36,15 +35,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         ShapeType ShapeType { get; }
 
-        // TODO: Like raycasts these aren't using exact shapes so need to do that.
-        bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot);
-
         /// <summary>
-        /// Calculates the AABB of the shape.
+        /// Calculate the AABB of the shape.
         /// </summary>
-        /// <param name="rotation"></param>
-        /// <returns></returns>
-        Box2 CalculateLocalBounds(Angle rotation);
+        Box2 ComputeAABB(Transform transform, int childIndex);
 
         void ApplyState();
 

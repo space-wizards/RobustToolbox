@@ -69,5 +69,7 @@ namespace Robust.Shared.ContentPack
         void SetEnableSandboxing(bool sandboxing);
 
         Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
+
+        void Shutdown();
     }
 }

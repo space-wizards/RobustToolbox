@@ -60,10 +60,10 @@ namespace Robust.Shared
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPredict =
-            CVarDef.Create("net.predict", true, CVar.ARCHIVE);
+            CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetPredictTickBias =
-            CVarDef.Create("net.predict_tick_bias", 1, CVar.ARCHIVE);
+            CVarDef.Create("net.predict_tick_bias", 1, CVar.CLIENTONLY);
 
         // On Windows we default this to 16ms lag bias, to account for time period lag in the Lidgren thread.
         // Basically due to how time periods work on Windows, messages are (at worst) time period-delayed when sending.
@@ -74,7 +74,7 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
                 "net.predict_lag_bias",
                 OperatingSystem.IsWindows() ? 0.016f : 0,
-                CVar.ARCHIVE);
+                CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
@@ -192,6 +192,12 @@ namespace Robust.Shared
         public static readonly CVarDef<string> GameHostName =
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// If a grid is shrunk to include no more tiles should it be deleted.
+        /// </summary>
+        public static readonly CVarDef<bool> GameDeleteEmptyGrids =
+            CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
+
         /*
          * LOG
          */
@@ -224,7 +230,7 @@ namespace Robust.Shared
         /// outside of our viewport.
         /// </remarks>
         public static readonly CVarDef<float> MaxLightRadius =
-            CVarDef.Create("light.max_radius", 20.0f, CVar.CLIENTONLY);
+            CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY);
 
         /*
          * Lookup
@@ -375,6 +381,24 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin32Experience =
             CVarDef.Create("display.win32_experience", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// The window icon set to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplayWindowIconSet =
+            CVarDef.Create("display.window_icon_set", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The splash logo to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplaySplashLogo =
+            CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
@@ -396,6 +420,13 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        // - Contacts
+        public static readonly CVarDef<int> ContactMultithreadThreshold =
+            CVarDef.Create("physics.contact_multithread_threshold", 32);
+
+        public static readonly CVarDef<int> ContactMinimumThreads =
+            CVarDef.Create("physics.contact_minimum_threads", 2);
+
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
             CVarDef.Create("physics.angsleeptol", 2.0f / 180.0f * MathF.PI);
@@ -411,8 +442,21 @@ namespace Robust.Shared
             CVarDef.Create("physics.timetosleep", 0.2f);
 
         // - Solver
+        public static readonly CVarDef<int> PositionConstraintsPerThread =
+            CVarDef.Create("physics.position_constraints_per_thread", 32);
+
+        public static readonly CVarDef<int> PositionConstraintsMinimumThread =
+            CVarDef.Create("physics.position_constraints_minimum_threads", 2);
+
+        public static readonly CVarDef<int> VelocityConstraintsPerThread =
+            CVarDef.Create("physics.velocity_constraints_per_thread", 32);
+
+        public static readonly CVarDef<int> VelocityConstraintMinimumThreads =
+            CVarDef.Create("physics.velocity_constraints_minimum_threads", 2);
+
         // These are the minimum recommended by Box2D with the standard being 8 velocity 3 position iterations.
         // Trade-off is obviously performance vs how long it takes to stabilise.
+        // PhysX opts for fewer velocity iterations and more position but they also have a different solver.
         public static readonly CVarDef<int> PositionIterations =
             CVarDef.Create("physics.positer", 3);
 
@@ -506,13 +550,6 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
-
-        /// <summary>
-        /// How frequently grid fixtures are updated. Given grid updates can be expensive they aren't run immediately.
-        /// Set to 0 to run them immediately.
-        /// </summary>
-        public static readonly CVarDef<float> GridFixtureUpdateRate =
-            CVarDef.Create("physics.grid_fixture_update_rate", 0.2f);
 
         /*
          * DISCORD

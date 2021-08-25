@@ -54,7 +54,7 @@ namespace Robust.Client.Graphics.Clyde
         public event Action<KeyEventArgs>? KeyUp { add { } remove { } }
         public event Action<KeyEventArgs>? KeyDown { add { } remove { } }
         public event Action<MouseWheelEventArgs>? MouseWheel { add { } remove { } }
-        public event Action<WindowClosedEventArgs>? CloseWindow { add { } remove { } }
+        public event Action<WindowRequestClosedEventArgs>? CloseWindow { add { } remove { } }
         public event Action<WindowDestroyedEventArgs>? DestroyWindow { add { } remove { } }
 
         public Texture GetStockTexture(ClydeStockTexture stockTexture)
@@ -396,6 +396,11 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Just do nothing on mutate.
             }
+
+            public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
+            {
+                // Just do nothing on mutate.
+            }
         }
 
         private sealed class DummyShaderInstance : ShaderInstance
@@ -605,7 +610,8 @@ namespace Robust.Client.Graphics.Clyde
             public bool IsVisible { get; set; } = true;
             public Vector2 ContentScale => Vector2.One;
             public bool DisposeOnClose { get; set; }
-            public event Action<WindowClosedEventArgs>? Closed { add { } remove { } }
+            public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
+            public event Action<WindowDestroyedEventArgs>? Destroyed;
 
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {
@@ -614,6 +620,8 @@ namespace Robust.Client.Graphics.Clyde
             public void Dispose()
             {
                 IsDisposed = true;
+
+                Destroyed?.Invoke(new WindowDestroyedEventArgs(this));
             }
         }
     }

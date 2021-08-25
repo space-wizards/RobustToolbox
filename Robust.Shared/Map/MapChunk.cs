@@ -26,6 +26,11 @@ namespace Robust.Shared.Map
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
+        // We'll keep a running count of how many tiles are non-empty.
+        // If this ever hits 0 then we know the chunk can be deleted.
+        // The alternative is that every time we SetTile we iterate every tile in the chunk.
+        internal int ValidTiles { get; private set; }
+
         private Box2i _cachedBounds;
 
         public Fixture? Fixture { get; set; }
@@ -127,6 +132,22 @@ namespace Robust.Shared.Map
             if (_tiles[xIndex, yIndex].TypeId == tile.TypeId)
                 return;
 
+            var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
+            var oldValidTiles = ValidTiles;
+
+            if (oldIsEmpty != tile.IsEmpty)
+            {
+                if (oldIsEmpty)
+                {
+                    ValidTiles += 1;
+                }
+                else
+                {
+                    ValidTiles -= 1;
+                }
+            }
+
+            DebugTools.Assert(ValidTiles >= 0);
             var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];
@@ -134,12 +155,13 @@ namespace Robust.Shared.Map
 
             _tiles[xIndex, yIndex] = tile;
 
-            if (!SuppressCollisionRegeneration)
+            // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
+            _grid.NotifyTileChanged(newTileRef, oldTile);
+
+            if (!SuppressCollisionRegeneration && oldValidTiles != ValidTiles)
             {
                 RegenerateCollision();
             }
-
-            _grid.NotifyTileChanged(newTileRef, oldTile);
         }
 
         /// <summary>
@@ -234,6 +256,14 @@ namespace Robust.Shared.Map
 
         public void RegenerateCollision()
         {
+            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
+            if (ValidTiles == 0)
+            {
+                var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(GridId);
+
+                grid.RemoveChunk(_gridIndices);
+            }
+
             // generate collision rects
             GridChunkPartition.PartitionChunk(this, out _cachedBounds);
             _grid.NotifyChunkCollisionRegenerated(this);
@@ -245,19 +275,28 @@ namespace Robust.Shared.Map
             return _cachedBounds;
         }
 
-        public Box2 CalcWorldBounds()
+        public Box2Rotated CalcWorldBounds(Vector2? gridPos = null, Angle? gridRot = null)
         {
-            var worldPos = _grid.WorldPosition + Indices * _grid.TileSize * ChunkSize;
+            gridRot ??= _grid.WorldRotation;
+            gridPos ??= _grid.WorldPosition;
+            var worldPos = gridPos.Value + gridRot.Value.RotateVec(Indices * _grid.TileSize * ChunkSize);
+
             var localBounds = CalcLocalBounds();
             var ts = _grid.TileSize;
 
-            var scaledLocalBounds = new Box2(
+            var scaledLocalBounds = new Box2Rotated(new Box2(
                 localBounds.Left * ts,
                 localBounds.Bottom * ts,
                 localBounds.Right * ts,
-                localBounds.Top * ts);
+                localBounds.Top * ts).Translated(worldPos), gridRot.Value, worldPos);
 
-            return scaledLocalBounds.Translated(worldPos);
+            return scaledLocalBounds;
+        }
+
+        public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
+        {
+            var bounds = CalcWorldBounds(gridPos, gridRot);
+            return bounds.CalcBoundingBox();
         }
 
         /// <inheritdoc />
@@ -286,5 +325,10 @@ namespace Robust.Shared.Map
         {
             Chunk = chunk;
         }
+    }
+
+    internal sealed class ChunkRemovedEvent : EntityEventArgs
+    {
+        public MapChunk Chunk = default!;
     }
 }

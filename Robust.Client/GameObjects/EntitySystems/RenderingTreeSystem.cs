@@ -108,7 +108,7 @@ namespace Robust.Client.GameObjects
             QueueSpriteUpdate(component);
         }
 
-        private void AnythingMoved(MoveEvent args)
+        private void AnythingMoved(ref MoveEvent args)
         {
             AnythingMovedSubHandler(args.Sender.Transform);
         }
@@ -146,7 +146,7 @@ namespace Robust.Client.GameObjects
             QueueSpriteUpdate(component);
         }
 
-        private void SpriteParentChanged(EntityUid uid, SpriteComponent component, EntParentChangedMessage args)
+        private void SpriteParentChanged(EntityUid uid, SpriteComponent component, ref EntParentChangedMessage args)
         {
             QueueSpriteUpdate(component);
         }
@@ -179,7 +179,7 @@ namespace Robust.Client.GameObjects
             QueueLightUpdate(component);
         }
 
-        private void LightParentChanged(EntityUid uid, PointLightComponent component, EntParentChangedMessage args)
+        private void LightParentChanged(EntityUid uid, PointLightComponent component, ref EntParentChangedMessage args)
         {
             QueueLightUpdate(component);
         }
@@ -267,6 +267,11 @@ namespace Robust.Client.GameObjects
             return null;
         }
 
+        private bool IsVisible(SpriteComponent component)
+        {
+            return component.Visible && !component.ContainerOccluded;
+        }
+
         public override void FrameUpdate(float frameTime)
         {
             _checkedChildren.Clear();
@@ -274,7 +279,7 @@ namespace Robust.Client.GameObjects
             foreach (var sprite in _spriteQueue)
             {
                 sprite.TreeUpdateQueued = false;
-                if (!sprite.Visible || sprite.ContainerOccluded)
+                if (!IsVisible(sprite))
                 {
                     ClearSprite(sprite);
                     continue;

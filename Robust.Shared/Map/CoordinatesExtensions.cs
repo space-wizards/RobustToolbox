@@ -40,6 +40,8 @@ namespace Robust.Shared.Map
                 var intersect = new Box2();
                 foreach (var grid in gridsInArea)
                 {
+                    // TODO: Use CollisionManager to get nearest edge.
+
                     // figure out closest intersect
                     var gridIntersect = gridSearchBox.Intersect(grid.WorldBounds);
                     var gridDist = (gridIntersect.Center - mapCoords.Position).LengthSquared;

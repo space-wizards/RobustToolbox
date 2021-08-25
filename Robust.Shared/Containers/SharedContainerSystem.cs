@@ -1,17 +1,21 @@
+using System;
+using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Containers
 {
-    public class ContainerSystem : EntitySystem
+    public abstract class SharedContainerSystem : EntitySystem
     {
         /// <inheritdoc />
         public override void Initialize()
         {
+            base.Initialize();
+
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChanged);
         }
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        private static void HandleParentChanged(EntParentChangedMessage message)
+        private static void HandleParentChanged(ref EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 

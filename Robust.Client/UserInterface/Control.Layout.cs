@@ -608,7 +608,9 @@ namespace Robust.Client.UserInterface
             measured.Y = Math.Clamp(measured.Y, MinHeight, MaxHeight);
 
             measured = _margin.Inflate(measured);
-            return Vector2.ComponentMin(measured, availableSize);
+            measured = Vector2.ComponentMin(measured, availableSize);
+            measured = Vector2.ComponentMax(measured, Vector2.Zero);
+            return measured;
         }
 
         protected virtual Vector2 MeasureOverride(Vector2 availableSize)
@@ -750,7 +752,7 @@ namespace Robust.Client.UserInterface
             maxH = MathHelper.Clamp(maxConstraint, minH, maxH);
 
             minConstraint = float.IsNaN(setH) ? 0 : setH;
-            minH = MathHelper.Clamp(minW, minConstraint, minH);
+            minH = MathHelper.Clamp(maxH, minConstraint, minH);
 
             return (
                 Math.Clamp(avail.X, minW, maxW),

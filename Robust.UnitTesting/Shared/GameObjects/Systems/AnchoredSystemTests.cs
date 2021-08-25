@@ -31,10 +31,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory =>
-                {
-                    factory.RegisterClass<ContainerManagerComponent>();
-                })
                 .RegisterPrototypes(f=>
                 {
                     f.LoadString(Prototypes);
@@ -89,7 +85,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             Assert.That(ent1.Transform.WorldPosition, Is.EqualTo(new Vector2(7.5f, 7.5f))); // centered on tile
             Assert.That(calledCount, Is.EqualTo(1)); // because the ent was moved from snapping, a MoveEvent was raised.
-            void MoveEventHandler(MoveEvent ev)
+            void MoveEventHandler(ref MoveEvent ev)
             {
                 calledCount++;
             }
@@ -121,7 +117,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             Assert.That(ent1.Transform.ParentUid, Is.EqualTo(grid.GridEntityId));
             Assert.That(calledCount, Is.EqualTo(1));
-            void ParentChangedHandler(EntParentChangedMessage ev)
+            void ParentChangedHandler(ref EntParentChangedMessage ev)
             {
                 Assert.That(ev.Entity, Is.EqualTo(ent1));
                 calledCount++;
@@ -166,16 +162,13 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            // Don't need the default grid for this.
-            entMan.ComponentManager.RemoveComponent<PhysicsComponent>(grid.GridEntityId);
-
             // Act
             ent1.Transform.Anchored = true;
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1.Uid));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
             Assert.That(ent1.HasComponent<PhysicsComponent>(), Is.False);
-            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.False);
+            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.True);
         }
 
         /// <summary>
@@ -210,7 +203,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             Assert.That(ent1.Transform.MapPosition, Is.EqualTo(coordinates));
             Assert.That(calledCount, Is.EqualTo(0));
-            void MoveEventHandler(MoveEvent ev)
+            void MoveEventHandler(ref MoveEvent ev)
             {
                 Assert.Fail("MoveEvent raised when entity is anchored.");
                 calledCount++;
@@ -473,7 +466,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             Assert.That(ent1.Transform.ParentUid, Is.EqualTo(mapMan.GetMapEntityId(TestMapId)));
             Assert.That(calledCount, Is.EqualTo(0));
-            void ParentChangedHandler(EntParentChangedMessage ev)
+            void ParentChangedHandler(ref EntParentChangedMessage ev)
             {
                 Assert.That(ev.Entity, Is.EqualTo(ent1));
                 calledCount++;

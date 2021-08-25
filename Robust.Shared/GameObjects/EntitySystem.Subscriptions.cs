@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Robust.Shared.GameObjects
 {
@@ -7,7 +8,13 @@ namespace Robust.Shared.GameObjects
     {
         private List<SubBase>? _subscriptions;
 
+        /// <summary>
+        /// A handle to allow subscription on this entity system's behalf.
+        /// </summary>
+        protected Subscriptions Subs { get; }
+
         // NOTE: EntityEventHandler<T> and EntitySessionEventHandler<T> CANNOT BE ORDERED BETWEEN EACH OTHER.
+        // EntityEventRefHandler<T> and EntityEventHandler<T> can be, however. They're essentially the same.
 
         protected void SubscribeNetworkEvent<T>(
             EntityEventHandler<T> handler,
@@ -19,6 +26,14 @@ namespace Robust.Shared.GameObjects
 
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
+            Type[]? before = null, Type[]? after = null)
+            where T : notnull
+        {
+            SubEvent(EventSource.Local, handler, before, after);
+        }
+
+        protected void SubscribeLocalEvent<T>(
+            EntityEventRefHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
             where T : notnull
         {
@@ -69,6 +84,18 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
 
+        private void SubEvent<T>(
+            EventSource src,
+            EntityEventRefHandler<T> handler,
+            Type[]? before, Type[]? after)
+            where T : notnull
+        {
+            EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubBroadcast<T>(src));
+        }
+
         private void SubSessionEvent<T>(
             EventSource src,
             EntitySessionEventHandler<T> handler,
@@ -99,9 +126,21 @@ namespace Robust.Shared.GameObjects
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
-            EntityManager.EventBus.SubscribeLocalEvent(handler);
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubLocal<TComp, TEvent>());
+        }
+
+        protected void SubscribeLocalEvent<TComp, TEvent>(
+            ComponentEventRefHandler<TComp, TEvent> handler,
+            Type[]? before = null, Type[]? after = null)
+            where TComp : IComponent
+            where TEvent : notnull
+        {
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
             _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
@@ -110,7 +149,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Unsubscribing of entity system events is now automatic")]
         protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
@@ -118,7 +157,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Unsubscribing of entity system events is now automatic")]
         protected void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
@@ -134,6 +173,51 @@ namespace Robust.Shared.GameObjects
             }
 
             _subscriptions = null;
+        }
+
+        /// <summary>
+        /// API class to allow registering on an EntitySystem's behalf.
+        /// Intended to support creation of boilerplate-reduction-methods
+        /// that need to subscribe stuff on an entity system.
+        /// </summary>
+        [PublicAPI]
+        public sealed class Subscriptions
+        {
+            public EntitySystem System { get; }
+
+            internal Subscriptions(EntitySystem system)
+            {
+                System = system;
+            }
+
+            // Intended for helper methods, so minimal API.
+
+            public void SubEvent<T>(
+                EventSource src,
+                EntityEventHandler<T> handler,
+                Type[]? before = null, Type[]? after = null)
+                where T : notnull
+            {
+                System.SubEvent(src, handler, before, after);
+            }
+
+            public void SubSessionEvent<T>(
+                EventSource src,
+                EntitySessionEventHandler<T> handler,
+                Type[]? before = null, Type[]? after = null)
+                where T : notnull
+            {
+                System.SubSessionEvent(src, handler, before, after);
+            }
+
+            public void SubscribeLocalEvent<TComp, TEvent>(
+                ComponentEventHandler<TComp, TEvent> handler,
+                Type[]? before = null, Type[]? after = null)
+                where TComp : IComponent
+                where TEvent : EntityEventArgs
+            {
+                System.SubscribeLocalEvent(handler, before, after);
+            }
         }
 
         private abstract class SubBase
@@ -156,7 +240,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private sealed class SubLocal<TComp, TBase> : SubBase where TComp : IComponent where TBase : EntityEventArgs
+        private sealed class SubLocal<TComp, TBase> : SubBase where TComp : IComponent where TBase : notnull
         {
             public override void Unsubscribe(EntitySystem sys, IEventBus bus)
             {

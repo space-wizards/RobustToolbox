@@ -153,6 +153,7 @@ namespace Robust.Client.Graphics.Clyde
                 // Draw the entity.
                 sprite.Render(
                     DrawingHandleWorld,
+                    Angle.Zero,
                     overrideDirection == null
                         ? entity.Transform.WorldRotation
                         : Angle.Zero,
@@ -354,18 +355,17 @@ namespace Robust.Client.Graphics.Clyde
 
                 public override void DrawCircle(Vector2 position, float radius, Color color, bool filled = true)
                 {
-                    //TODO: Scale number of sides based on radius
-                    const int Divisions = 8;
-                    const float ArcLength = MathF.PI * 2 / Divisions;
+                    int divisions = Math.Max(16,(int)(radius * 16));
+                    float arcLength = MathF.PI * 2 / divisions;
 
                     var filledTriangle = new Vector2[3];
 
                     // Draws a "circle", but its just a polygon with a bunch of sides
                     // this is the GL_LINES version, not GL_LINE_STRIP
-                    for (int i = 0; i < Divisions; i++)
+                    for (int i = 0; i < divisions; i++)
                     {
-                        var startPos = new Vector2(MathF.Cos(ArcLength * i) * radius, MathF.Sin(ArcLength * i) * radius);
-                        var endPos = new Vector2(MathF.Cos(ArcLength * (i+1)) * radius, MathF.Sin(ArcLength * (i + 1)) * radius);
+                        var startPos = new Vector2(MathF.Cos(arcLength * i) * radius, MathF.Sin(arcLength * i) * radius);
+                        var endPos = new Vector2(MathF.Cos(arcLength * (i+1)) * radius, MathF.Sin(arcLength * (i + 1)) * radius);
 
                         if(!filled)
                             _renderHandle.DrawLine(startPos, endPos, color);

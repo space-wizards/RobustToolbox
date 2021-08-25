@@ -35,15 +35,17 @@ using PhysicsComponent = Robust.Shared.GameObjects.PhysicsComponent;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public sealed class PhysicsMap
+    public abstract class SharedPhysicsMapComponent : Component
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
+        private SharedBroadphaseSystem _broadphaseSystem = default!;
         private SharedPhysicsSystem _physicsSystem = default!;
 
-        internal ContactManager ContactManager = new();
+        public override string Name => "PhysicsMap";
+
+        internal ContactManager ContactManager = default!;
 
         private bool _autoClearForces;
 
@@ -119,22 +121,34 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private float _invDt0;
 
-        public MapId MapId { get; }
+        public MapId MapId => Owner.Transform.MapID;
 
-        public PhysicsMap(MapId mapId)
+        protected override void Initialize()
         {
-            MapId = mapId;
+            base.Initialize();
+            _broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-        }
 
-        public void Initialize()
-        {
             IoCManager.InjectDependencies(this);
             ContactManager.Initialize();
             ContactManager.MapId = MapId;
 
-            _autoClearForces = _configManager.GetCVar(CVars.AutoClearForces);
-            _configManager.OnValueChanged(CVars.AutoClearForces, value => _autoClearForces = value);
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
+        }
+
+        protected override void Shutdown()
+        {
+            base.Shutdown();
+            ContactManager.Shutdown();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
+        }
+
+        private void OnAutoClearChange(bool value)
+        {
+            _autoClearForces = value;
         }
 
         #region AddRemove
@@ -385,7 +399,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            EntitySystem.Get<SharedBroadphaseSystem>().FindNewContacts(MapId);
+            _broadphaseSystem.FindNewContacts(MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
@@ -465,13 +479,18 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
-                // prediction && !seed.Predict ||
-                // AHHH need a way to ignore paused for mapping (seed.Paused && !seed.Owner.TryGetComponent(out IMoverComponent)) ||
-                if ((prediction && !seed.Predict) ||
-                    (seed.Paused && !seed.IgnorePaused) ||
-                    seed.Island ||
+                if (seed.Island ||
+                    seed.Paused && !seed.IgnorePaused)
+                {
+                    continue;
+                }
+
+                if (prediction && !seed.Predict ||
                     !seed.CanCollide ||
-                    seed.BodyType == BodyType.Static) continue;
+                    seed.BodyType == BodyType.Static)
+                {
+                    continue;
+                }
 
                 // Start of a new island
                 _islandBodies.Clear();
@@ -564,7 +583,13 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             SolveIslands(frameTime, dtRatio, invDt, prediction);
+            Cleanup(frameTime);
 
+            ContactManager.PostSolve();
+        }
+
+        protected virtual void Cleanup(float frameTime)
+        {
             foreach (var body in _islandSet)
             {
                 if (!body.Island || body.Deleted)
@@ -581,8 +606,6 @@ namespace Robust.Shared.Physics.Dynamics
 
             _islandSet.Clear();
             _awakeBodyList.Clear();
-
-            ContactManager.PostSolve();
         }
 
         private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)

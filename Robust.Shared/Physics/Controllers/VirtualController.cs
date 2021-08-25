@@ -26,6 +26,8 @@ namespace Robust.Shared.Physics.Controllers
             IoCManager.InjectDependencies(this);
         }
 
+        public virtual void Shutdown() {}
+
         /// <summary>
         ///     Run before any map processing starts.
         /// </summary>
@@ -44,16 +46,16 @@ namespace Robust.Shared.Physics.Controllers
         ///     Run before a particular map starts.
         /// </summary>
         /// <param name="prediction"></param>
-        /// <param name="map"></param>
+        /// <param name="mapComponent"></param>
         /// <param name="frameTime"></param>
-        public virtual void UpdateBeforeMapSolve(bool prediction, PhysicsMap map, float frameTime) {}
+        public virtual void UpdateBeforeMapSolve(bool prediction, SharedPhysicsMapComponent mapComponent, float frameTime) {}
 
         /// <summary>
         ///     Run after a particular map finishes.
         /// </summary>
         /// <param name="prediction"></param>
-        /// <param name="map"></param>
+        /// <param name="mapComponent"></param>
         /// <param name="frameTime"></param>
-        public virtual void UpdateAfterMapSolve(bool prediction, PhysicsMap map, float frameTime) {}
+        public virtual void UpdateAfterMapSolve(bool prediction, SharedPhysicsMapComponent mapComponent, float frameTime) {}
     }
 }

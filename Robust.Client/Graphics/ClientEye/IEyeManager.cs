@@ -53,7 +53,7 @@ namespace Robust.Client.Graphics
         ScreenCoordinates CoordinatesToScreen(EntityCoordinates point);
 
         /// <summary>
-        /// Unprojects a point from UI screen space to world space using the current camera.
+        /// Unprojects a point from UI screen space to world space using the viewport under the screen coordinates.
         /// </summary>
         /// <remarks>
         /// The game exists on the 2D X/Y plane, so this function returns a point o the plane
@@ -64,7 +64,7 @@ namespace Robust.Client.Graphics
         MapCoordinates ScreenToMap(ScreenCoordinates point);
 
         /// <summary>
-        /// Unprojects a point from UI screen space to world space using the current camera.
+        /// Unprojects a point from UI screen space to world space using the main viewport.
         /// </summary>
         /// <remarks>
         /// The game exists on the 2D X/Y plane, so this function returns a point o the plane

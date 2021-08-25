@@ -36,6 +36,11 @@ namespace Robust.Shared.Map
         IMapChunkInternal GetChunk(int xIndex, int yIndex);
 
         /// <summary>
+        /// Removes the chunk with the specified origin.
+        /// </summary>
+        void RemoveChunk(Vector2i origin);
+
+        /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
         ///     then a new one is generated that is filled with empty space.
         /// </summary>
@@ -44,9 +49,19 @@ namespace Robust.Shared.Map
         IMapChunkInternal GetChunk(Vector2i chunkIndices);
 
         /// <summary>
+        /// Returns whether a chunk exists with the specified indices.
+        /// </summary>
+        bool HasChunk(Vector2i chunkIndices);
+
+        /// <summary>
         ///     Returns all chunks in this grid. This will not generate new chunks.
         /// </summary>
         /// <returns>All chunks in the grid.</returns>
         IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks();
+
+        /// <summary>
+        ///     Returns all the <see cref="IMapChunkInternal"/> intersecting the worldAABB.
+        /// </summary>
+        IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB);
     }
 }

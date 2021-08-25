@@ -2,6 +2,7 @@
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Physics
@@ -16,8 +17,7 @@ namespace Robust.Client.Physics
         public override void Update(float frameTime)
         {
             _lastRem = _gameTiming.CurTime;
-
-            SimulateWorld(frameTime, !_gameTiming.InSimulation || !_gameTiming.IsFirstTimePredicted);
+            SimulateWorld(frameTime, _gameTiming.InPrediction);
         }
 
         public override void FrameUpdate(float frameTime)
@@ -30,6 +30,12 @@ namespace Robust.Client.Physics
             var diff = _gameTiming.TickRemainder - _lastRem;
             _lastRem = _gameTiming.TickRemainder;
             SimulateWorld((float) diff.TotalSeconds, true);
+        }
+
+        protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        {
+            if (eventArgs.Map == MapId.Nullspace) return;
+            MapManager.GetMapEntity(eventArgs.Map).AddComponent<PhysicsMapComponent>();
         }
     }
 }

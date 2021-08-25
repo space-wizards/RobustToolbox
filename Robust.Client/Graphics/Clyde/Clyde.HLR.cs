@@ -10,6 +10,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
+using Robust.Shared;
 using Robust.Shared.Enums;
 
 namespace Robust.Client.Graphics.Clyde
@@ -199,9 +200,10 @@ namespace Robust.Client.Graphics.Clyde
         }
 
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds)
+        private void DrawEntities(Viewport viewport, Box2 worldBounds, IEye eye)
         {
-            if (_eyeManager.CurrentMap == MapId.Nullspace || !_mapManager.HasMapEntity(_eyeManager.CurrentMap))
+            var mapId = eye.Position.MapId;
+            if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
             {
                 return;
             }
@@ -210,12 +212,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var screenSize = viewport.Size;
 
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            // TODO: Make this check more accurate.
-            var widerBounds = worldBounds.Enlarged(5);
-
-            ProcessSpriteEntities(_eyeManager.CurrentMap, widerBounds, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, worldBounds, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -271,13 +268,15 @@ namespace Robust.Client.Graphics.Clyde
                     break;
                 }
 
+                var matrix = entry.worldMatrix;
+                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
 
                 RenderTexture? entityPostRenderTarget = null;
                 Vector2i roundedPos = default;
                 if (entry.sprite.PostShader != null)
                 {
                     // calculate world bounding box
-                    var spriteBB = entry.sprite.CalculateBoundingBox();
+                    var spriteBB = entry.sprite.CalculateBoundingBox(worldPosition);
                     var spriteLB = spriteBB.BottomLeft;
                     var spriteRT = spriteBB.TopRight;
 
@@ -289,6 +288,9 @@ namespace Robust.Client.Graphics.Clyde
                     // scale can be passed with PostShader as variable in future
                     var postShadeScale = 1.25f;
                     var screenSpriteSize = (Vector2i) ((screenRT - screenLB) * postShadeScale).Rounded();
+
+                    // Rotate the vector by the eye angle, otherwise the bounding box will be incorrect
+                    screenSpriteSize = (Vector2i) eye.Rotation.RotateVec(screenSpriteSize).Rounded();
                     screenSpriteSize.Y = -screenSpriteSize.Y;
 
                     // I'm not 100% sure why it works, but without it post-shader
@@ -321,9 +323,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                var matrix = entry.worldMatrix;
-                var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
-                entry.sprite.Render(_renderHandle.DrawingHandleWorld, in entry.worldRotation, in worldPosition);
+                entry.sprite.Render(_renderHandle.DrawingHandleWorld, eye.Rotation, in entry.worldRotation, in worldPosition);
 
                 if (entry.sprite.PostShader != null && entityPostRenderTarget != null)
                 {
@@ -368,7 +368,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
 
-                comp.SpriteTree.QueryAabb(ref list, ((
+                comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
@@ -379,17 +379,20 @@ namespace Robust.Client.Graphics.Clyde
                     entry.sprite = value;
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
-                    var worldPos = entry.matrix.Transform(transform.LocalPosition);
-                    entry.yWorldPos = worldPos.Y;
+                    var worldPos = new Vector2(entry.matrix.R0C2, entry.matrix.R1C2);
+                    // Didn't use the bounds from the query as that has to be re-calculated (and is probably more expensive than this).
+                    var bounds = value.CalculateBoundingBox(worldPos);
+                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }), bounds, true);
+                }, bounds);
             }
         }
 
         private void DrawSplash(IRenderHandle handle)
         {
-            var texture = _resourceCache.GetResource<TextureResource>("/Textures/Logo/logo.png").Texture;
+            var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
+            var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
@@ -465,13 +468,13 @@ namespace Robust.Client.Graphics.Clyde
 
                     using (DebugGroup("Grids"))
                     {
-                        _drawGrids(worldBounds);
+                        _drawGrids(viewport, worldBounds, eye);
                     }
 
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds);
+                        DrawEntities(viewport, worldBounds, eye);
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldBounds);

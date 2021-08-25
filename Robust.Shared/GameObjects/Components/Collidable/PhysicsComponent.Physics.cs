@@ -45,9 +45,10 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
+    [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
     [NetworkedComponent()]
-    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
+    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
     {
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
@@ -148,7 +149,7 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnorePaused { get; set; }
 
-        internal PhysicsMap PhysicsMap { get; set; } = default!;
+        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -552,16 +553,17 @@ namespace Robust.Shared.GameObjects
         {
             worldPos ??= Owner.Transform.WorldPosition;
             worldRot ??= Owner.Transform.WorldRotation;
+            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
-            var worldPosValue = worldPos.Value;
-            var worldRotValue = worldRot.Value;
-
-            var bounds = new Box2(worldPosValue, worldPosValue);
+            var bounds = new Box2(transform.Position, transform.Position);
 
             foreach (var fixture in _fixtures)
             {
-                var boundy = fixture.Shape.CalculateLocalBounds(worldRotValue);
-                bounds = bounds.Union(boundy.Translated(worldPosValue));
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
             }
 
             return bounds;
@@ -1039,11 +1041,6 @@ namespace Robust.Shared.GameObjects
 
         private bool _predict;
 
-        /// <summary>
-        ///     As we defer updates need to store the MapId we used for broadphase.
-        /// </summary>
-        public MapId BroadphaseMapId { get; set; }
-
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
             foreach (var entity in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
@@ -1060,7 +1057,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The corresponding local point relative to the body's origin.</returns>
         public Vector2 GetLocalPoint(in Vector2 worldPoint)
         {
-            return Physics.Transform.MulT(GetTransform(), worldPoint);
+            return Transform.MulT(GetTransform(), worldPoint);
         }
 
         /// <summary>
@@ -1177,7 +1174,7 @@ namespace Robust.Shared.GameObjects
             {
                 var contactEdge0 = contactEdge;
                 contactEdge = contactEdge.Next;
-                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+                PhysicsMap?.ContactManager.Destroy(contactEdge0.Contact!);
             }
 
             ContactEdges = null;
@@ -1199,7 +1196,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            PhysicsMap = EntitySystem.Get<SharedPhysicsSystem>().Maps[Owner.Transform.MapID];
+            if (Owner.Transform.MapID != MapId.Nullspace)
+                PhysicsMap = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID).GetComponent<SharedPhysicsMapComponent>();
 
             Dirty();
             // Yeah yeah TODO Combine these
@@ -1247,14 +1245,14 @@ namespace Robust.Shared.GameObjects
                 if (existing.ID.Equals(id)) return;
             }
 
-            PhysicsMap.AddJoint(joint);
+            PhysicsMap?.AddJoint(joint);
             joint.ID = id;
             Logger.DebugS("physics", $"Added joint id: {joint.ID} type: {joint.GetType().Name} to {Owner}");
         }
 
         public void RemoveJoint(Joint joint)
         {
-            PhysicsMap.RemoveJoint(joint);
+            PhysicsMap?.RemoveJoint(joint);
             Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
@@ -1298,9 +1296,6 @@ namespace Robust.Shared.GameObjects
                 {
                     case PhysShapeAabb aabb:
                         center = aabb.Centroid;
-                        break;
-                    case PhysShapeRect rect:
-                        center = rect.Centroid;
                         break;
                     case PolygonShape poly:
                         center = poly.Centroid;

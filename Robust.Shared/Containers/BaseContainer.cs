@@ -16,6 +16,9 @@ namespace Robust.Shared.Containers
         [ViewVariables]
         public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
 
+        [ViewVariables]
+        public abstract List<EntityUid> ExpectedEntities { get; }
+
         /// <inheritdoc />
         public abstract string ContainerType { get; }
 
@@ -65,8 +68,9 @@ namespace Robust.Shared.Containers
             if (toinsert.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
                 return false; // Can't remove from existing container, can't insert.
 
-            InternalInsert(toinsert);
+            // Attach to parent first so we can check IsInContainer more easily.
             transform.AttachParent(Owner.Transform);
+            InternalInsert(toinsert);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -120,9 +121,9 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             var eventBus = _entityManager.EventBus;
-            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
-            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
-            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, ev => _parentChangeQueue.Enqueue(ev));
+            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, (ref MoveEvent ev) => _moveQueue.Push(ev));
+            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, (ref RotateEvent ev) => _rotateQueue.Push(ev));
+            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
@@ -386,8 +387,8 @@ namespace Robust.Shared.GameObjects
         {
             var mapCoordinates = position.ToMap(_entityManager);
             var mapPosition = mapCoordinates.Position;
-            var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
-                mapPosition + new Vector2(range / 2, range / 2));
+            var aabb = new Box2(mapPosition - new Vector2(range, range),
+                mapPosition + new Vector2(range, range));
             return GetEntitiesIntersecting(mapCoordinates.MapId, aabb, approximate);
         }
 
@@ -586,12 +587,24 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetWorldAABB(in IEntity ent)
         {
-            var pos = ent.Transform.WorldPosition;
+            Vector2 pos;
 
-            if (ent.Deleted || !ent.TryGetComponent(out PhysicsComponent? physics))
+            if (ent.Deleted)
+            {
+                pos = ent.Transform.WorldPosition;
                 return new Box2(pos, pos);
+            }
 
-            return physics.GetWorldAABB(pos);
+            if (ent.TryGetContainerMan(out var manager))
+            {
+                return GetWorldAABB(manager.Owner);
+            }
+
+            pos = ent.Transform.WorldPosition;
+
+            return ent.TryGetComponent(out ILookupWorldBox2Component? lookup) ?
+                lookup.GetWorldAABB(pos) :
+                new Box2(pos, pos);
         }
 
         #endregion

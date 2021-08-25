@@ -16,7 +16,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterComponents(factory => { factory.RegisterClass<ContainerManagerComponent>(); })
                 .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPES))
                 .InitializeInstance();
 
@@ -281,11 +280,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// The generic container class uses a list of entities
             /// </summary>
             private readonly List<IEntity> _containerList = new();
+            private readonly List<EntityUid> _expectedEntities = new();
 
             public override string ContainerType => nameof(ContainerOnlyContainer);
 
             /// <inheritdoc />
             public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+
+            public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
             protected override void InternalInsert(IEntity toinsert)

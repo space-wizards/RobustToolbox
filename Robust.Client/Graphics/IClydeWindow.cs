@@ -28,7 +28,13 @@ namespace Robust.Client.Graphics
         ///     Fired when the user tries to close the window. Note that if <see cref="DisposeOnClose"/> is not true,
         ///     this is merely a request and the user pressing the close button does nothing.
         /// </summary>
-        event Action<WindowClosedEventArgs> Closed;
+        event Action<WindowRequestClosedEventArgs> RequestClosed;
+
+        /// <summary>
+        /// Raised when the window has been definitively closed.
+        /// This means the window must not be used anymore (it is disposed).
+        /// </summary>
+        event Action<WindowDestroyedEventArgs> Destroyed;
     }
 
     public interface IClydeWindowInternal : IClydeWindow

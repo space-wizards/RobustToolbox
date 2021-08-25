@@ -317,29 +317,5 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 },
             };
         }
-
-        public static explicit operator PolygonShape(PhysShapeRect rect)
-        {
-            // Ideal world we don't even need PhysShapeRect?
-            var bounds = rect.CachedBounds;
-
-            return new PolygonShape(rect.Radius)
-            {
-                Vertices = new []
-                {
-                    bounds.BottomLeft,
-                    bounds.BottomRight,
-                    bounds.TopRight,
-                    bounds.TopLeft,
-                },
-                Normals = new []
-                {
-                    new Vector2(0f, -1f),
-                    new Vector2(1f, 0f),
-                    new Vector2(0f, 1f),
-                    new Vector2(-1f, 0f),
-                },
-            };
-        }
     }
 }

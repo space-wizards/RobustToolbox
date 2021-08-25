@@ -23,6 +23,7 @@ namespace Robust.Client.CEF
 
         [Dependency] private readonly IClyde _clyde = default!;
         [Dependency] private readonly IInputManager _inputMgr = default!;
+        [Dependency] private readonly CefManager _cef = default!;
 
         private RobustRequestHandler _requestHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
         private LiveData? _data;
@@ -149,6 +150,7 @@ namespace Robust.Client.CEF
         {
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;
+            MouseFilter = MouseFilterMode.Stop;
 
             IoCManager.InjectDependencies(this);
         }
@@ -157,6 +159,8 @@ namespace Robust.Client.CEF
         {
             base.EnteredTree();
 
+            _cef.CheckInitialized();
+
             DebugTools.AssertNull(_data);
 
             // A funny render handler that will allow us to render to the control.
@@ -164,7 +168,7 @@ namespace Robust.Client.CEF
 
             // A funny web cef client. This can actually be shared by multiple browsers, but I'm not sure how the
             // rendering would work in that case? TODO CEF: Investigate a way to share the web client?
-            var client = new RobustCefClient(renderer, _requestHandler);
+            var client = new RobustCefClient(renderer, _requestHandler, new RobustLoadHandler());
 
             var info = CefWindowInfo.Create();
 
@@ -464,17 +468,28 @@ namespace Robust.Client.CEF
             if (_data == null)
                 throw new InvalidOperationException();
 
+            // TODO: this should not run until the browser is done loading seriously does this even work?
             _data.Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
         }
 
         public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
         {
-            _requestHandler.AddHandler(handler);
+            _requestHandler.AddResourceRequestHandler(handler);
         }
 
         public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
         {
-            _requestHandler.RemoveHandler(handler);
+            _requestHandler.RemoveResourceRequestHandler(handler);
+        }
+
+        public void AddBeforeBrowseHandler(Action<BeforeBrowseContext> handler)
+        {
+            _requestHandler.AddBeforeBrowseHandler(handler);
+        }
+
+        public void RemoveBeforeBrowseHandler(Action<BeforeBrowseContext> handler)
+        {
+            _requestHandler.RemoveBeforeBrowseHandler(handler);
         }
 
         private sealed class LiveData

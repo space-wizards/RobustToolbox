@@ -118,12 +118,12 @@ namespace Robust.Client.CEF
 
             public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
             {
-                RequestHandler.AddHandler(handler);
+                RequestHandler.AddResourceRequestHandler(handler);
             }
 
             public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
             {
-                RequestHandler.RemoveHandler(handler);
+                RequestHandler.RemoveResourceRequestHandler(handler);
             }
 
             public void Dispose()

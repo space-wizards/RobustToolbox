@@ -207,6 +207,7 @@ namespace Robust.Client.Graphics.Clyde
                 Renderer Renderer,
                 WindowCreateParameters Parameters,
                 nint ShareWindow,
+                nint OwnerWindow,
                 TaskCompletionSource<GlfwWindowCreateResult> Tcs
             ) : CmdBase;
 

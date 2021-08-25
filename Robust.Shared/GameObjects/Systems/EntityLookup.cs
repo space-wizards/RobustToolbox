@@ -387,8 +387,8 @@ namespace Robust.Shared.GameObjects
         {
             var mapCoordinates = position.ToMap(_entityManager);
             var mapPosition = mapCoordinates.Position;
-            var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
-                mapPosition + new Vector2(range / 2, range / 2));
+            var aabb = new Box2(mapPosition - new Vector2(range, range),
+                mapPosition + new Vector2(range, range));
             return GetEntitiesIntersecting(mapCoordinates.MapId, aabb, approximate);
         }
 

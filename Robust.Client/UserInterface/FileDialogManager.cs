@@ -56,9 +56,9 @@ namespace Robust.Client.UserInterface
             return await OpenFileNfd(filters);
         }
 
-        public async Task<(Stream, bool)?> SaveFile()
+        public async Task<(Stream, bool)?> SaveFile(FileDialogFilters? filters)
         {
-            var name = await GetSaveFileName();
+            var name = await GetSaveFileName(filters);
             if (name == null)
             {
                 return null;
@@ -74,14 +74,14 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private async Task<string?> GetSaveFileName()
+        private async Task<string?> GetSaveFileName(FileDialogFilters? filters)
         {
             if (await IsKDialogAvailable())
             {
-                return await SaveFileKDialog();
+                return await SaveFileKDialog(filters);
             }
 
-            return await SaveFileNfd();
+            return await SaveFileNfd(filters);
         }
 
         private unsafe Task<string?> OpenFileNfd(FileDialogFilters? filters)
@@ -89,21 +89,15 @@ namespace Robust.Client.UserInterface
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
             {
-                var filterPtr = IntPtr.Zero;
                 byte* outPath;
 
-                if (filters != null)
-                {
-                    var filterString = string.Join(';', filters.Groups.Select(f => string.Join(',', f.Extensions)));
-
-                    filterPtr = Marshal.StringToCoTaskMemUTF8(filterString);
-                }
+                var filterPtr = FormatFiltersNfd(filters);
 
                 sw_nfdresult result;
 
                 try
                 {
-                    result = sw_NFD_OpenDialog((byte*) filterPtr, null, &outPath);
+                    result = sw_NFD_OpenDialog((byte*)filterPtr, null, &outPath);
                 }
                 finally
                 {
@@ -117,14 +111,39 @@ namespace Robust.Client.UserInterface
             });
         }
 
-        private unsafe Task<string?> SaveFileNfd()
+        private static IntPtr FormatFiltersNfd(FileDialogFilters? filters)
+        {
+            if (filters != null)
+            {
+                var filterString = string.Join(';', filters.Groups.Select(f => string.Join(',', f.Extensions)));
+
+                return Marshal.StringToCoTaskMemUTF8(filterString);
+            }
+
+            return IntPtr.Zero;
+        }
+
+        private unsafe Task<string?> SaveFileNfd(FileDialogFilters? filters)
         {
             // Have to run it in the thread pool to avoid blocking the main thread.
             return RunAsyncMaybe(() =>
             {
                 byte* outPath;
 
-                var result = sw_NFD_SaveDialog(null, null, &outPath);
+                var filterPtr = FormatFiltersNfd(filters);
+
+                sw_nfdresult result;
+                try
+                {
+                    result = sw_NFD_SaveDialog((byte*) filterPtr, null, &outPath);
+                }
+                finally
+                {
+                    if (filterPtr != IntPtr.Zero)
+                    {
+                        Marshal.FreeCoTaskMem(filterPtr);
+                    }
+                }
 
                 return HandleNfdResult(result, outPath);
             });
@@ -241,6 +260,13 @@ namespace Robust.Client.UserInterface
 
         private Task<string?> OpenFileKDialog(FileDialogFilters? filters)
         {
+            var filtersFormatted = FormatFiltersKDialog(filters);
+
+            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, filtersFormatted);
+        }
+
+        private static string FormatFiltersKDialog(FileDialogFilters? filters)
+        {
             var sb = new StringBuilder();
 
             if (filters != null && filters.Groups.Count != 0)
@@ -253,14 +279,14 @@ namespace Robust.Client.UserInterface
                         sb.Append('|');
                     }
 
-                    foreach (var extension in group.Extensions)
+                    foreach (var extension in @group.Extensions)
                     {
                         sb.AppendFormat(".{0} ", extension);
                     }
 
                     sb.Append('(');
 
-                    foreach (var extension in group.Extensions)
+                    foreach (var extension in @group.Extensions)
                     {
                         sb.AppendFormat("*.{0} ", extension);
                     }
@@ -273,12 +299,14 @@ namespace Robust.Client.UserInterface
                 sb.Append("| All Files (*)");
             }
 
-            return RunKDialog("--getopenfilename", Environment.GetEnvironmentVariable("HOME")!, sb.ToString());
+            return sb.ToString();
         }
 
-        private Task<string?> SaveFileKDialog()
+        private Task<string?> SaveFileKDialog(FileDialogFilters? filters)
         {
-            return RunKDialog("--getsavefilename");
+            var filtersFormatted = FormatFiltersKDialog(filters);
+
+            return RunKDialog("--getsavefilename", Environment.GetEnvironmentVariable("HOME")!, filtersFormatted);
         }
 
         /*

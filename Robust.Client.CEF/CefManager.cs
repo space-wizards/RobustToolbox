@@ -44,6 +44,7 @@ namespace Robust.Client.CEF
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(PathHelpers.GetExecutableDirectory(), "locales"),
                 ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
+                RemoteDebuggingPort = 9222
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
@@ -73,6 +74,11 @@ namespace Robust.Client.CEF
             _initialized = true;
         }
 
+        public void CheckInitialized()
+        {
+            if (!_initialized)
+                throw new InvalidOperationException("CefManager has not been initialized!");
+        }
 
         /// <summary>
         ///     Needs to be called regularly for CEF to keep working.

@@ -63,7 +63,6 @@ namespace Robust.Shared.Network.Messages
             var serializer = IoCManager.Resolve<IRobustSerializer>();
             MemoryStream finalStream;
             var stateStream = new MemoryStream();
-            DebugTools.Assert(stateStream.Length <= Int32.MaxValue);
             serializer.SerializeDirect(stateStream, State);
             buffer.WriteVariableInt32((int) stateStream.Length);
 

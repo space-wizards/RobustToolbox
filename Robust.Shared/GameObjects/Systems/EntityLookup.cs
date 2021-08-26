@@ -90,7 +90,6 @@ namespace Robust.Shared.GameObjects
         private readonly Stack<MoveEvent> _moveQueue = new();
         private readonly Stack<RotateEvent> _rotateQueue = new();
         private readonly Queue<EntParentChangedMessage> _parentChangeQueue = new();
-        private readonly Stack<AnchorStateChangedEvent> _anchorQueue = new();
 
         /// <summary>
         /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
@@ -134,7 +133,7 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeEvent(EventSource.Local, this, (ref MoveEvent ev) => _moveQueue.Push(ev));
             eventBus.SubscribeEvent(EventSource.Local, this, (ref RotateEvent ev) => _rotateQueue.Push(ev));
             eventBus.SubscribeEvent(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
-            eventBus.SubscribeEvent(EventSource.Local, this, (ref AnchorStateChangedEvent ev) => _anchorQueue.Push(ev));
+            eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, HandleAnchored);
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
@@ -161,6 +160,20 @@ namespace Robust.Shared.GameObjects
             _entityManager.EntityStarted -= HandleEntityStarted;
             _mapManager.MapCreated -= HandleMapCreated;
             Started = false;
+        }
+
+        private void HandleAnchored(ref AnchorStateChangedEvent @event)
+        {
+            // This event needs to be handled immediately as anchoring is handled immediately
+            // and any callers may potentially get duplicate entities that just changed state.
+            if (@event.Entity.Transform.Anchored)
+            {
+                RemoveFromEntityTrees(@event.Entity);
+            }
+            else
+            {
+                UpdateEntityTree(@event.Entity);
+            }
         }
 
         private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
@@ -221,19 +234,6 @@ namespace Robust.Shared.GameObjects
 
                 if (mapChangeEvent.Entity.Deleted || mapChangeEvent.Entity.Transform.Anchored) continue;
                 UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
-            }
-
-            while (_anchorQueue.TryPop(out var anchorEvent))
-            {
-                if (!_handledThisTick.Add(anchorEvent.Entity.Uid) || anchorEvent.Entity.Deleted) continue;
-                if (anchorEvent.Entity.Transform.Anchored)
-                {
-                    RemoveFromEntityTrees(anchorEvent.Entity);
-                }
-                else
-                {
-                    UpdateEntityTree(anchorEvent.Entity);
-                }
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
@@ -670,9 +670,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveFromEntityTrees(IEntity entity)
         {
+            // TODO: Need to fix ordering issues and then we can just directly remove it from the tree
+            // rather than this O(n) legacy garbage.
             foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
-                lookup.Tree.Remove(entity);
+                if (lookup.Tree.Remove(entity)) return;
             }
         }
 

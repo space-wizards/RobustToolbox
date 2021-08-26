@@ -208,6 +208,8 @@ namespace Robust.Server.GameStates
                         RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, includedChunks, visMask);
                     }, LookupFlags.None);
 
+                    // TODO: Only check for containermanagers; maybe just take in a flag for "AlwaysVisible / NeverVisible"?
+
                     //Calculate states for all visible anchored ents
                     foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
                     {

@@ -19,6 +19,7 @@ namespace Robust.Shared.GameObjects
         None = 0,
         Approximate = 1 << 0,
         IncludeAnchored = 1 << 1,
+        IncludeContained = 1 << 2,
         // IncludeGrids = 1 << 2,
     }
 
@@ -33,32 +34,32 @@ namespace Robust.Shared.GameObjects
         void Update();
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
         IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
-            float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored);
+            float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored);
+        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained);
 
         bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
 
@@ -135,6 +136,9 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeEvent(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
             eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, HandleAnchored);
 
+            eventBus.SubscribeEvent<EntInsertedIntoContainerMessage>(EventSource.Local, this, HandleContainerInsert);
+            eventBus.SubscribeEvent<EntRemovedFromContainerMessage>(EventSource.Local, this, HandleContainerRemove);
+
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
             eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, HandleGridInit);
@@ -143,6 +147,26 @@ namespace Robust.Shared.GameObjects
             _entityManager.EntityStarted += HandleEntityStarted;
             _mapManager.MapCreated += HandleMapCreated;
             Started = true;
+        }
+
+        private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
+        {
+            UpdateEntityTree(ev.Entity);
+        }
+
+        private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
+        {
+            RemoveFromEntityTrees(ev.Entity);
+            RecursiveRemove(ev.Entity);
+        }
+
+        private void RecursiveRemove(IEntity entity)
+        {
+            foreach (var child in entity.Transform.Children)
+            {
+                RemoveFromEntityTrees(child.Owner);
+                RecursiveRemove(child.Owner);
+            }
         }
 
         public void Shutdown()
@@ -179,6 +203,7 @@ namespace Robust.Shared.GameObjects
         private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
         {
             component.Tree.Clear();
+            component.ContainerManagerTree.Clear();
         }
 
         private void HandleGridInit(GridInitializeEvent ev)
@@ -193,6 +218,12 @@ namespace Robust.Shared.GameObjects
             component.Tree = new DynamicTree<IEntity>(
                 GetRelativeAABBFromEntity,
                 capacity: capacity,
+                growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
+            );
+
+            component.ContainerManagerTree = new DynamicTree<IEntity>(
+                GetRelativeAABBFromEntity,
+                capacity: GrowthRate,
                 growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
             );
         }
@@ -286,6 +317,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
+            DebugTools.Assert((flags & LookupFlags.IncludeContained) == 0x0);
             var found = false;
 
             foreach (var lookup in GetLookupsIntersecting(mapId, box))
@@ -324,6 +356,19 @@ namespace Robust.Shared.GameObjects
                 var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
 
                 lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
+                lookup.ContainerManagerTree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) =>
+                {
+                    callback(data);
+                    if ((flags & LookupFlags.IncludeContained) == 0x0 || !data.TryGetComponent(out ContainerManagerComponent? containerManager)) return;
+
+                    foreach (var container in containerManager.GetAllContainers())
+                    {
+                        foreach (var child in container.ContainedEntities)
+                        {
+                            callback(child);
+                        }
+                    }
+                });
             }
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0)
@@ -609,16 +654,13 @@ namespace Robust.Shared.GameObjects
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.
-            if (entity.Deleted)
+            if (entity.Deleted || entity.IsInContainer())
             {
                 RemoveFromEntityTrees(entity);
                 return true;
             }
 
-            if (!entity.Initialized)
-            {
-                return false;
-            }
+            DebugTools.Assert(entity.Initialized);
 
             var lookup = GetLookup(entity);
 
@@ -645,13 +687,28 @@ namespace Robust.Shared.GameObjects
 
             // for debugging
             var necessary = 0;
+            var checkChildren = true;
 
-            if (lookup.Tree.AddOrUpdate(entity, aabb))
+            if (_compManager.HasComponent<ContainerManagerComponent>(entity.Uid))
             {
-                ++necessary;
+                if (lookup.ContainerManagerTree.AddOrUpdate(entity, aabb))
+                {
+                    ++necessary;
+                }
+
+                checkChildren = false;
+            }
+            else
+            {
+                if (lookup.Tree.AddOrUpdate(entity, aabb))
+                {
+                    ++necessary;
+                }
             }
 
-            if (!entity.HasComponent<EntityLookupComponent>())
+            checkChildren = checkChildren || !entity.HasComponent<EntityLookupComponent>();
+
+            if (checkChildren)
             {
                 foreach (var childTx in entity.Transform.ChildEntityUids)
                 {
@@ -674,7 +731,8 @@ namespace Robust.Shared.GameObjects
             // rather than this O(n) legacy garbage.
             foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (lookup.Tree.Remove(entity)) return;
+                if (lookup.Tree.Remove(entity) ||
+                    lookup.ContainerManagerTree.Remove(entity)) return;
             }
         }
 

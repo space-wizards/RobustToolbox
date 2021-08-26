@@ -243,7 +243,9 @@ namespace Robust.Shared.GameObjects
 
         private void HandleEntityStarted(object? sender, EntityUid uid)
         {
-            UpdateEntityTree(_entityManager.GetEntity(uid));
+            var entity = _entityManager.GetEntity(uid);
+            if (entity.Transform.Anchored) return;
+            UpdateEntityTree(entity);
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -660,6 +662,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
+            DebugTools.Assert(!entity.Transform.Anchored);
             DebugTools.Assert(entity.Initialized);
 
             var lookup = GetLookup(entity);
@@ -706,7 +709,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            checkChildren = checkChildren || !entity.HasComponent<EntityLookupComponent>();
+            checkChildren = checkChildren && !entity.HasComponent<EntityLookupComponent>();
 
             if (checkChildren)
             {

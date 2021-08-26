@@ -13,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -78,6 +79,24 @@ namespace Robust.Server.GameStates
             _playerManager.PlayerStatusChanged += HandlePlayerStatusChanged;
 
             _entityManager.EntityDeleted += HandleEntityDeleted;
+
+            _mapManager.OnGridRemoved += HandleGridRemove;
+        }
+
+        private void HandleGridRemove(MapId mapid, GridId gridid)
+        {
+            // Remove any sort of tracking for when a chunk was sent.
+            foreach (var (_, chunks) in _entityView.PlayerChunks)
+            {
+                foreach (var (chunk, _) in chunks.ToArray())
+                {
+                    if (chunk is not MapChunk mapChunk ||
+                        mapChunk.GridId == gridid)
+                    {
+                        chunks.Remove(chunk);
+                    }
+                }
+            }
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid e)

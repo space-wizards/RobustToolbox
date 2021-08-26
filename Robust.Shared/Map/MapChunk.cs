@@ -261,7 +261,7 @@ namespace Robust.Shared.Map
         {
             foreach (var cell in _snapGrid)
             {
-                if(cell.Center is null)
+                if (cell.Center is null)
                     continue;
 
                 foreach (var euid in cell.Center)

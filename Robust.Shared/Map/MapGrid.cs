@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -739,6 +740,12 @@ namespace Robust.Shared.Map
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return TryGetTileRef(CoordinatesToTile(coords), out tile);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetTileRef(Vector2 worldPos, out TileRef tile)
+        {
+            return TryGetTileRef(WorldToTile(worldPos), out tile);
         }
 
         #endregion Transforms

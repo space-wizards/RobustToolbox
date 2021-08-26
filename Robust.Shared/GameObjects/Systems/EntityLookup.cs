@@ -391,9 +391,15 @@ namespace Robust.Shared.GameObjects
                 }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
             }
 
-            if ((flags & LookupFlags.IncludeAnchored) != 0x0)
+            if ((flags & LookupFlags.IncludeAnchored) != 0x0 &&
+                _mapManager.TryFindGridAt(mapId, position, out var grid) &&
+                grid.TryGetTileRef(position, out var tile))
             {
-
+                foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
+                {
+                    if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
+                    state.list.Add(entity);
+                }
             }
 
             return list;

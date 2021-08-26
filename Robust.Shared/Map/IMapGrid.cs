@@ -210,6 +210,11 @@ namespace Robust.Shared.Map
         bool TryGetTileRef(EntityCoordinates coords, out TileRef tile);
 
         /// <summary>
+        ///     Transforms a world position into a tile reference, returns false if no tile is found.
+        /// </summary>
+        bool TryGetTileRef(Vector2 worldPos, out TileRef tile);
+
+        /// <summary>
         /// Transforms grid tile indices to chunk indices.
         /// </summary>
         Vector2i GridTileToChunkIndices(Vector2i gridTile);

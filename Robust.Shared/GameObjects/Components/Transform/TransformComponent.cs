@@ -984,5 +984,13 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
-    public readonly struct AnchorStateChangedEvent { }
+    public readonly struct AnchorStateChangedEvent
+    {
+        public readonly IEntity Entity;
+
+        public AnchorStateChangedEvent(IEntity entity)
+        {
+            Entity = entity;
+        }
+    }
 }

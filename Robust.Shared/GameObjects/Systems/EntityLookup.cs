@@ -212,7 +212,9 @@ namespace Robust.Shared.GameObjects
 
         private void HandleEntityStarted(object? sender, EntityUid uid)
         {
-            UpdateEntityTree(_entityManager.GetEntity(uid));
+            var entity = _entityManager.GetEntity(uid);
+            if (entity.Transform.Anchored) return;
+            UpdateEntityTree(entity);
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -615,10 +617,8 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (!entity.Initialized)
-            {
-                return false;
-            }
+            DebugTools.Assert(entity.Initialized);
+            DebugTools.Assert(!entity.Transform.Anchored);
 
             var lookup = GetLookup(entity);
 

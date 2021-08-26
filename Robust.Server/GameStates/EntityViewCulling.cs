@@ -435,7 +435,7 @@ namespace Robust.Server.GameStates
             // If we recursively get an anchored entity need to ensure the entire chunk is included (as it may be out of view).
             if (!xform.Anchored) return;
 
-            // This is slow as but entities being parented to anchored ones is hopefully rare so shouldn't be hit too much.
+            // This is slow but entities being parented to anchored ones is hopefully rare so shouldn't be hit too much.
             var mapGrid = (IMapGridInternal) _mapManager.GetGrid(xform.GridID);
             var local = mapGrid.MapToGrid(xform.MapPosition);
             var chunk = mapGrid.GetChunk(mapGrid.LocalToChunkIndices(local));

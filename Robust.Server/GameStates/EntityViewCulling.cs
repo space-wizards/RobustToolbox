@@ -6,6 +6,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -30,13 +31,16 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
         internal readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> PlayerChunks = new(PlayerSetSize);
 
-        private readonly Dictionary<ICommonSession, (IMapChunkInternal Chunk, GameTick Tick, ushort Iterations)>
+        private readonly Dictionary<ICommonSession, ChunkStreamingData>
             _streamingChunks = new();
 
         /// <summary>
         /// How many iterations should we send the chunk over
         /// </summary>
         private const ushort StreamIterations = 16;
+        // TODO: SHOULD DO CELLS-PER-SECOND INSTEAD
+        // THAT WAY IT'S ALSO TICKRATE AGNOSTIC
+        // ALSO SO IT CAN HANDLE VARIABLE CHUNK SIZE
 
         private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
@@ -103,6 +107,7 @@ namespace Robust.Server.GameStates
         {
             _playerVisibleSets.Add(session, new HashSet<EntityUid>(ViewSetCapacity));
             PlayerChunks.Add(session, new Dictionary<IMapChunkInternal, GameTick>(32));
+            _streamingChunks.Add(session, new ChunkStreamingData());
         }
 
         // Not thread safe
@@ -535,6 +540,12 @@ namespace Robust.Server.GameStates
             var map = xform.MapID;
 
             return (view, map);
+        }
+
+        private sealed class ChunkStreamingData
+        {
+            public IMapChunkInternal Chunk { get; }
+            
         }
     }
 }

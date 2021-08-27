@@ -20,6 +20,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -364,7 +365,8 @@ namespace Robust.Client.GameStates
 
                     Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
-                    bus.RaiseComponentEvent(comp, new ComponentHandleState(compState, null));
+                    var handleState = new ComponentHandleState(compState, null);
+                    bus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
                 }
             }
@@ -609,7 +611,8 @@ namespace Robust.Client.GameStates
                 {
                     try
                     {
-                        bus.RaiseComponentEvent(component, new ComponentHandleState(cur, next));
+                        var handleState = new ComponentHandleState(cur, next);
+                        bus.RaiseComponentEvent(component, ref handleState);
                         component.HandleComponentState(cur, next);
                     }
                     catch (Exception e)

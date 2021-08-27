@@ -3,7 +3,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameStates
 {
-    public struct ComponentHandleState
+    public readonly struct ComponentHandleState
     {
         public ComponentState? Current { get; }
         public ComponentState? Next { get; }

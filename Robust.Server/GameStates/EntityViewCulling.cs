@@ -307,7 +307,6 @@ namespace Robust.Server.GameStates
 
                 // PVS leave message
                 //TODO: Remove NaN as the signal to leave PVS
-                //TODO: Use ECS event for this instead.
                 var oldState = (TransformComponent.TransformComponentState) xform.GetComponentState(session);
 
                 entityStates.Add(new EntityState(entityUid,

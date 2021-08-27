@@ -33,7 +33,10 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<ICommonSession, (IMapChunkInternal Chunk, GameTick Tick, ushort Iterations)>
             _streamingChunks = new();
 
-        private const ushort StreamIterations = 8;
+        /// <summary>
+        /// How many iterations should we send the chunk over
+        /// </summary>
+        private const ushort StreamIterations = 16;
 
         private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
@@ -276,6 +279,7 @@ namespace Robust.Server.GameStates
                     {
                         void StreamChunk(int iterations, IMapChunkInternal chunk, List<EntityState> entityStates)
                         {
+                            DebugTools.Assert(StreamIterations <= chunk.ChunkSize && chunk.ChunkSize % StreamIterations == 0);
                             var count = chunk.ChunkSize / StreamIterations;
 
                             // We'll get whole columns at a time

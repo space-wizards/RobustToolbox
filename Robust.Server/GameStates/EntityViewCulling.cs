@@ -286,6 +286,7 @@ namespace Robust.Server.GameStates
                         {
                             DebugTools.Assert(StreamIterations <= chunk.ChunkSize && chunk.ChunkSize % StreamIterations == 0);
                             var count = chunk.ChunkSize / StreamIterations;
+                            Logger.Debug($"Streaming chunk {chunk.Indices} columns {(ushort) (iterations * count)} to {(iterations + 1) * count}");
 
                             // We'll get whole columns at a time
                             for (var x = (ushort) (iterations * count); x < (iterations + 1) * count; x++)
@@ -545,7 +546,7 @@ namespace Robust.Server.GameStates
         private sealed class ChunkStreamingData
         {
             public IMapChunkInternal Chunk { get; }
-            
+
         }
     }
 }

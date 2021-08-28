@@ -269,7 +269,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingEntity = entity,
-                TrackingFallbackCoordinates = fallbackCoordinates,
+                TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -325,7 +325,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingCoordinates = coordinates,
-                TrackingFallbackCoordinates = fallbackCoordinates,
+                TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);

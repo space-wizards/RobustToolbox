@@ -207,6 +207,21 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public nint? WindowGetX11Display(WindowReg window)
+            {
+                CheckWindowDisposed(window);
+
+                var reg = (GlfwWindowReg) window;
+                try
+                {
+                    return GLFW.GetX11Display(reg.GlfwWindow);
+                }
+                catch (EntryPointNotFoundException)
+                {
+                    return null;
+                }
+            }
+
             public nint? WindowGetWin32Window(WindowReg window)
             {
                 if (!OperatingSystem.IsWindows())

@@ -65,6 +65,9 @@ namespace Robust.Client.Graphics.Clyde
         public static extern int eglTerminate(void* display);
 
         [DllImport(LibraryName)]
+        public static extern void* eglGetDisplay(void* display);
+
+        [DllImport(LibraryName)]
         public static extern void* eglGetPlatformDisplayEXT(int platform, void* native_display, nint* attrib_list);
 
         [DllImport(LibraryName)]

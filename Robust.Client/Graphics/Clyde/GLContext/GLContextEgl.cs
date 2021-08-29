@@ -37,7 +37,8 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void UpdateVSync()
             {
-                throw new System.NotImplementedException();
+                // TODO:
+
             }
 
             public override void WindowCreated(WindowReg reg)
@@ -65,9 +66,16 @@ namespace Robust.Client.Graphics.Clyde
                     if (data.EglSurface == (void*) EGL_NO_SURFACE)
                         throw new Exception("eglCreateWindowSurface failed.");
                 }
+                else if (OperatingSystem.IsLinux())
+                {
+                    var window = Clyde._windowing!.WindowGetX11Id(reg)!.Value;
+                    data.EglSurface = eglCreateWindowSurface(_eglDisplay, _eglConfig, (void*) window, attribs);
+                    if (data.EglSurface == (void*) EGL_NO_SURFACE)
+                        throw new Exception("eglCreateWindowSurface failed.");
+                }
                 else
                 {
-                    throw new NotSupportedException("EGL is not currently supported outside Windows ANGLE");
+                    throw new NotSupportedException("EGL is not currently supported outside Windows ANGLE or X11 Linux");
                 }
 
                 if (reg.IsMainWindow)
@@ -97,9 +105,16 @@ namespace Robust.Client.Graphics.Clyde
                     if (_eglDisplay == null)
                         throw new Exception("eglGetPlatformDisplayEXT failed.");
                 }
+                else if (OperatingSystem.IsLinux())
+                {
+                    var xDisplay = Clyde._windowing!.WindowGetX11Display(mainWindow.Reg)!.Value;
+                    _eglDisplay = eglGetDisplay((void*) xDisplay);
+                    if (mainWindow.EglSurface == (void*) EGL_NO_SURFACE)
+                        throw new Exception("eglCreateWindowSurface failed.");
+                }
                 else
                 {
-                    throw new NotSupportedException("EGL is not currently supported outside Windows ANGLE");
+                    throw new NotSupportedException("EGL is not currently supported outside Windows ANGLE or X11 Linux");
                 }
 
                 int major;
@@ -243,6 +258,7 @@ namespace Robust.Client.Graphics.Clyde
                 public WindowReg Reg = default!;
 
                 // ReSharper disable once InconsistentNaming
+                // Windows DC for this window.
                 // Only used for main window.
                 public nint DC;
 

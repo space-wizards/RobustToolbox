@@ -41,6 +41,7 @@ namespace Robust.Client.Graphics.Clyde
             void WindowRequestAttention(WindowReg window);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
+            nint? WindowGetX11Display(WindowReg window);
             nint? WindowGetWin32Window(WindowReg window);
 
             // Keyboard

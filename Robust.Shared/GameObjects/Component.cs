@@ -137,14 +137,14 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentShutdown CompShutdownInstance = new();
         private static readonly ComponentRemove CompRemoveInstance = new();
 
-        private EntityEventBus GetBus()
+        private IEventBus GetBus()
         {
             // Apparently components are being created outside of the ComponentManager,
             // and the Owner is not being set correctly.
             // ReSharper disable once RedundantAssertionStatement
             DebugTools.AssertNotNull(Owner);
 
-            return (EntityEventBus) Owner.EntityManager.EventBus;
+            return Owner.EntityManager.EventBus;
         }
 
         /// <summary>

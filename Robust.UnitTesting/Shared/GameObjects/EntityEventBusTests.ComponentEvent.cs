@@ -156,7 +156,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
 
             // Raise
-            bus.RaiseComponentEvent(compInstance, new ComponentInit());
+            ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(1));

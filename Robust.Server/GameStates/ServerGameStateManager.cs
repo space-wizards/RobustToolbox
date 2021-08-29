@@ -81,6 +81,10 @@ namespace Robust.Server.GameStates
             _entityManager.EntityDeleted += HandleEntityDeleted;
 
             _mapManager.OnGridRemoved += HandleGridRemove;
+
+            // If you want to make this modifiable at runtime you need to subscribe to tickrate updates and streaming updates
+            // plus invalidate any chunks currently being streamed as well.
+            _entityView.StreamingTilesPerTick = (int) (_configurationManager.GetCVar(CVars.StreamedTilesPerSecond) / _gameTiming.TickRate);
         }
 
         private void HandleGridRemove(MapId mapid, GridId gridid)
@@ -246,7 +250,7 @@ namespace Robust.Server.GameStates
 
             var mailBag = _playerManager.GetAllPlayers()
                 .Where(s => s.Status == SessionStatus.InGame)
-                // .AsParallel()
+                .AsParallel()
                 .Select(SafeGenerateMail);
 
             foreach (var (msg, chan) in mailBag)

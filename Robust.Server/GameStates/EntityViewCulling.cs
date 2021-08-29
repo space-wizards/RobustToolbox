@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -34,13 +35,7 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<ICommonSession, ChunkStreamingData>
             _streamingChunks = new();
 
-        /// <summary>
-        /// How many iterations should we send the chunk over
-        /// </summary>
-        private const ushort StreamIterations = 16;
-        // TODO: SHOULD DO CELLS-PER-SECOND INSTEAD
-        // THAT WAY IT'S ALSO TICKRATE AGNOSTIC
-        // ALSO SO IT CAN HANDLE VARIABLE CHUNK SIZE
+        internal int StreamingTilesPerTick;
 
         private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
@@ -282,22 +277,21 @@ namespace Robust.Server.GameStates
                     // To fix pop-in we'll go through nearby chunks and send them little-by-little
                     if (newChunkCount == 0)
                     {
-                        void StreamChunk(int iterations, IMapChunkInternal chunk, List<EntityState> entityStates)
+                        void StreamChunk(int iteration, IMapChunkInternal chunk, List<EntityState> entityStates)
                         {
-                            DebugTools.Assert(StreamIterations <= chunk.ChunkSize && chunk.ChunkSize % StreamIterations == 0);
-                            var count = chunk.ChunkSize / StreamIterations;
-                            Logger.Debug($"Streaming chunk {chunk.Indices} columns {(ushort) (iterations * count)} to {(iterations + 1) * count}");
+                            var chunkSize = chunk.ChunkSize;
+                            var index = iteration * StreamingTilesPerTick;
+                            // Logger.Debug($"Streaming chunk {chunk.Indices} iteration {iteration + 1}");
 
-                            // We'll get whole columns at a time
-                            for (var x = (ushort) (iterations * count); x < (iterations + 1) * count; x++)
+                            for (var i = index; i < Math.Min(index + StreamingTilesPerTick, chunkSize * chunkSize); i++)
                             {
-                                for (var y = (ushort) 0; y < chunk.ChunkSize; y++)
+                                var x = (ushort) (i / chunkSize);
+                                var y = (ushort) (i % chunkSize);
+
+                                foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
                                 {
-                                    foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
-                                    {
-                                        var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, GameTick.Zero);
-                                        entityStates.Add(newState);
-                                    }
+                                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, GameTick.Zero);
+                                    entityStates.Add(newState);
                                 }
                             }
                         }
@@ -313,12 +307,15 @@ namespace Robust.Server.GameStates
                                 continue;
                             }
 
+                            var chunkSize = stream.Chunk.ChunkSize;
+                            var streamsRequired = (int) MathF.Ceiling((chunkSize * chunkSize) / (float) StreamingTilesPerTick);
+
                             StreamChunk(stream.Iterations, stream.Chunk, entityStates);
                             stream.Iterations += 1;
 
                             // Chunk loaded in so we'll mark it as sent on the tick we started.
                             // Doesn't really matter if we send some duplicate data (e.g. entity changes since it started).
-                            if (stream.Iterations >= StreamIterations)
+                            if (stream.Iterations >= streamsRequired)
                             {
                                 chunksSeen[stream.Chunk] = stream.Tick;
                                 stream.Chunk = null;
@@ -327,11 +324,12 @@ namespace Robust.Server.GameStates
                             continue;
                         }
 
-                        var enlarged = viewBox.Enlarged(15);
+                        // Find a new chunk to start streaming in range.
+                        var enlarged = viewBox.Scale(2f);
 
                         foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
                         {
-                            var grid = (IMapGridInternal)publicMapGrid;
+                            var grid = (IMapGridInternal) publicMapGrid;
 
                             foreach (var chunk in grid.GetMapChunks(enlarged))
                             {

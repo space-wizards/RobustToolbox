@@ -84,6 +84,23 @@ namespace Robust.Client.GameObjects
             if (curState is not AppearanceComponentState actualState)
                 return;
 
+            var stateDiff = data.Count != actualState.Data.Count;
+
+            if (!stateDiff)
+            {
+                foreach (var (key, value) in data)
+                {
+                    if (!actualState.Data.TryGetValue(key, out var stateValue) ||
+                        !value.Equals(stateValue))
+                    {
+                        stateDiff = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!stateDiff) return;
+
             data = actualState.Data;
             MarkDirty();
         }

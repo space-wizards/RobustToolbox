@@ -205,12 +205,8 @@ namespace Robust.Server.GameStates
                     // assume there are no deleted ents in here, cull them first in ent/comp manager
                     _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity =>
                     {
-                        // TODO: Need to not store these on the BVH, next PR. Should be a decent perf gain on PVS.
-                        if(entity.Transform.Anchored)
-                            return;
-
                         RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, includedChunks, visMask);
-                    });
+                    }, LookupFlags.None);
 
                     //Calculate states for all visible anchored ents
                     foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))

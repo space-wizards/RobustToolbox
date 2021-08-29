@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -442,6 +443,18 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
+        {
+            foreach (var tile in GetTilesIntersecting(worldAABB))
+            {
+                foreach (var ent in GetAnchoredEntities(tile.GridIndices))
+                {
+                    yield return ent;
+                }
+            }
+        }
+
+        /// <inheritdoc />
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
@@ -727,6 +740,12 @@ namespace Robust.Shared.Map
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return TryGetTileRef(CoordinatesToTile(coords), out tile);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetTileRef(Vector2 worldPos, out TileRef tile)
+        {
+            return TryGetTileRef(WorldToTile(worldPos), out tile);
         }
 
         #endregion Transforms

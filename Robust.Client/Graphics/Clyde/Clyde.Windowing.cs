@@ -17,7 +17,7 @@ using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
 
 namespace Robust.Client.Graphics.Clyde
 {
-    internal partial class Clyde
+    internal partial class  Clyde
     {
         private readonly List<WindowReg> _windows = new();
         private readonly List<WindowHandle> _windowHandles = new();
@@ -309,7 +309,11 @@ namespace Robust.Client.Graphics.Clyde
             WindowReg? share,
             bool isMain)
         {
-            var (reg, error) = _windowing!.WindowCreate(glSpec, parameters, share);
+            WindowReg? owner = null;
+            if (parameters.Owner != null)
+                owner = ((WindowHandle)parameters.Owner).Reg;
+
+            var (reg, error) = _windowing!.WindowCreate(glSpec, parameters, share, owner);
 
             if (reg != null)
             {

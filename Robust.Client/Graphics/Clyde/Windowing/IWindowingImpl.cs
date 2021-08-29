@@ -31,7 +31,8 @@ namespace Robust.Client.Graphics.Clyde
             (WindowReg?, string? error) WindowCreate(
                 GLContextSpec? spec,
                 WindowCreateParameters parameters,
-                WindowReg? share);
+                WindowReg? share,
+                WindowReg? owner);
 
             void WindowDestroy(WindowReg reg);
             void WindowSetTitle(WindowReg window, string title);

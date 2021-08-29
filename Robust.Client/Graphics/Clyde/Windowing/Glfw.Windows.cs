@@ -226,18 +226,16 @@ namespace Robust.Client.Graphics.Clyde
             public (WindowReg?, string? error) WindowCreate(
                 GLContextSpec? spec,
                 WindowCreateParameters parameters,
-                WindowReg? share)
+                WindowReg? share,
+                WindowReg? owner)
             {
                 Window* sharePtr = null;
                 if (share is GlfwWindowReg glfwReg)
                     sharePtr = glfwReg.GlfwWindow;
 
                 Window* ownerPtr = null;
-                if (parameters.Owner != null)
-                {
-                    var ownerReg = (GlfwWindowReg) ((WindowHandle)parameters.Owner).Reg;
-                    ownerPtr = ownerReg.GlfwWindow;
-                }
+                if (owner is GlfwWindowReg glfwOwnerReg)
+                    ownerPtr = glfwOwnerReg.GlfwWindow;
 
                 var task = SharedWindowCreate(
                     spec,

@@ -299,6 +299,7 @@ namespace Robust.Server.GameStates
 
                         var stream = _streamingChunks[session];
 
+                        // Check if we're already streaming a chunk and if so then continue it.
                         if (stream.Chunk != null)
                         {
                             // Came into PVS range so we'll stop streaming.
@@ -341,7 +342,7 @@ namespace Robust.Server.GameStates
                                     continue;
 
                                 StreamChunk(0, chunk, entityStates);
-                                DebugTools.Assert(stream.Chunk == null);
+                                // DebugTools.Assert(stream.Chunk == null);
                                 stream.Chunk = chunk;
                                 stream.Tick = fromTick;
                                 stream.Iterations = 1;

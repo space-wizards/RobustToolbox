@@ -295,7 +295,15 @@ namespace Robust.Client.Graphics.Clyde
 
             var glSpec = _glContext!.GetNewWindowSpec();
 
-            var (reg, error) = SharedWindowCreate(glSpec, parameters, _mainWindow, isMain: false);
+            _glContext.BeforeSharedWindowCreateUnbind();
+
+            var (reg, error) = SharedWindowCreate(
+                glSpec,
+                parameters,
+                glSpec == null ? null : _mainWindow,
+                isMain: false);
+
+            // Rebinding is handed by WindowCreated in the GL context.
 
             if (error != null)
                 throw new Exception(error);

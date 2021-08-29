@@ -136,7 +136,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Switch rendering to pseudo-world space.
                 {
-                    CalcWorldProjMatrix(_clyde._currentRenderTarget.Size, out var proj);
+                    _clyde.CalcWorldProjMatrix(_clyde._currentRenderTarget.Size, out var proj);
 
                     var ofsX = position.X - _clyde.ScreenSize.X / 2f;
                     var ofsY = position.Y - _clyde.ScreenSize.Y / 2f;

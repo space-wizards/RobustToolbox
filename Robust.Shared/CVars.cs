@@ -343,6 +343,15 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplayAdapter =
             CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Use EGL to create GL context instead of GLFW, if possible.
+        /// </summary>
+        /// <remarks>
+        /// This only tries to use EGL if on a platform like X11 or Windows (w/ ANGLE) where it is possible.
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayEgl =
+            CVarDef.Create("display.egl", true, CVar.CLIENTONLY);
+
         public static readonly CVarDef<int> DisplayFontDpi =
             CVarDef.Create("display.fontdpi", 96, CVar.CLIENTONLY);
 

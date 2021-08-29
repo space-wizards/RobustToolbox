@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -436,6 +437,17 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     return eglGetProcAddress(ptr);
                 }
+            }
+
+            public override void BindWindowRenderTarget(WindowId rtWindowId)
+            {
+                var data = _windowData[rtWindowId];
+                var result = eglMakeCurrent(_eglDisplay, data.EglBackbuffer, data.EglBackbuffer, _eglContext);
+                if (result == EGL_FALSE)
+                    throw new Exception("eglMakeCurrent failed.");
+
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                Clyde.CheckGlError();
             }
 
             private static void ThrowIfFailed(string methodName, HRESULT hr)

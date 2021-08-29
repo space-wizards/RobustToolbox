@@ -13,19 +13,34 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitGLContextManager()
         {
-            if (OperatingSystem.IsWindows()
-                && _cfg.GetCVar(CVars.DisplayAngle)
-                && _cfg.GetCVar(CVars.DisplayAngleCustomSwapChain))
+            if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngle))
             {
-                _sawmillOgl.Debug("Trying custom swap chain ANGLE.");
-                var ctxAngle = new GLContextAngle(this);
-
-                if (ctxAngle.TryInitialize())
+                if (_cfg.GetCVar(CVars.DisplayAngleCustomSwapChain))
                 {
-                    _sawmillOgl.Debug("Successfully initialized custom ANGLE");
-                    _glContext = ctxAngle;
+                    _sawmillOgl.Debug("Trying custom swap chain ANGLE.");
+                    var ctxAngle = new GLContextAngle(this);
+
+                    if (ctxAngle.TryInitialize())
+                    {
+                        _sawmillOgl.Debug("Successfully initialized custom ANGLE");
+                        _glContext = ctxAngle;
+                        return;
+                    }
+                }
+
+                if (_cfg.GetCVar(CVars.DisplayEgl))
+                {
+                    _sawmillOgl.Debug("Trying EGL");
+                    _glContext = new GLContextEgl(this);
                     return;
                 }
+            }
+
+            if (OperatingSystem.IsLinux() && _cfg.GetCVar(CVars.DisplayEgl))
+            {
+                _sawmillOgl.Debug("Trying EGL");
+                _glContext = new GLContextEgl(this);
+                return;
             }
 
             _glContext = new GLContextWindow(this);

@@ -53,6 +53,8 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 else
                 {
+                    Clyde._windowing!.GLMakeContextCurrent(Clyde._mainWindow);
+
                     CreateWindowRenderTexture(data);
                     InitWindowBlitThread(data);
                 }
@@ -91,6 +93,26 @@ namespace Robust.Client.Graphics.Clyde
             public override unsafe void* GetProcAddress(string name)
             {
                 return Clyde._windowing!.GLGetProcAddress(name);
+            }
+
+            public override void BindWindowRenderTarget(WindowId rtWindowId)
+            {
+                var data = _windowData[rtWindowId];
+                if (data.Reg.IsMainWindow)
+                {
+                    GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+                    Clyde.CheckGlError();
+                }
+                else
+                {
+                    var loaded = Clyde.RtToLoaded(data.RenderTexture!);
+                    GL.BindFramebuffer(FramebufferTarget.Framebuffer, loaded.FramebufferHandle.Handle);
+                }
+            }
+
+            public override void BeforeSharedWindowCreateUnbind()
+            {
+                Clyde._windowing!.GLMakeContextCurrent(null);
             }
 
             private void BlitSecondaryWindows()
@@ -138,7 +160,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (Clyde._hasGLFenceSync)
                 {
                     // 0xFFFFFFFFFFFFFFFFUL is GL_TIMEOUT_IGNORED
-                    var sync = rt!.LastGLSync;
+                    var sync = rt.LastGLSync;
                     GL.WaitSync(sync, WaitSyncFlags.None, unchecked((long) 0xFFFFFFFFFFFFFFFFUL));
                     Clyde.CheckGlError();
                 }

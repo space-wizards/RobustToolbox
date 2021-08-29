@@ -122,7 +122,7 @@ namespace Robust.Client.Graphics.Clyde
             view = Matrix3.Identity;
         }
 
-        private static void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
+        private void CalcWorldMatrices(in Vector2i screenSize, in Vector2 renderScale, IEye eye,
             out Matrix3 proj, out Matrix3 view)
         {
             eye.GetViewMatrix(out view, renderScale);
@@ -131,11 +131,17 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3 proj)
+        private void CalcWorldProjMatrix(in Vector2i screenSize, out Matrix3 proj)
         {
             proj = Matrix3.Identity;
             proj.R0C0 = EyeManager.PixelsPerMeter * 2f / screenSize.X;
             proj.R1C1 = EyeManager.PixelsPerMeter * 2f / screenSize.Y;
+
+            if (_currentRenderTarget.FlipY)
+            {
+                proj.R1C1 *= -1;
+                proj.R1C2 *= -1;
+            }
         }
 
         private void SetProjViewBuffer(in Matrix3 proj, in Matrix3 view)
@@ -358,7 +364,15 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Don't forget to flip it, these coordinates have bottom left as origin.
                 // TODO: Broken when rendering to non-screen render targets.
-                GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
+
+                if (_currentRenderTarget.FlipY)
+                {
+                    GL.Scissor(box.Left, box.Top, box.Width, box.Height);
+                }
+                else
+                {
+                    GL.Scissor(box.Left, _currentRenderTarget.Size.Y - box.Bottom, box.Width, box.Height);
+                }
                 CheckGlError();
             }
             else if (oldIsScissoring)

@@ -245,8 +245,7 @@ namespace Robust.Client.Graphics.Clyde
             // NOTE: It's critically important that this be the "focal point" of all framebuffer bindings.
             if (rt.IsWindow)
             {
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                CheckGlError();
+                _glContext!.BindWindowRenderTarget(rt.WindowId);
             }
             else
             {

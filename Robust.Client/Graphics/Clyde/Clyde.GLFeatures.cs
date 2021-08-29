@@ -105,7 +105,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLReadFramebuffer, "read_framebuffer", (3, 0));
                 CheckGLCap(ref _hasGLPrimitiveRestart, "primitive_restart", (3, 1));
                 CheckGLCap(ref _hasGLUniformBuffers, "uniform_buffers", (3, 0));
-                CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2));
+                CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2), "GL_EXT_color_buffer_float");
             }
 
             _sawmillOgl.Debug($"  GLES: {_isGLES}");

@@ -1,6 +1,7 @@
 ﻿using System;
 using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -89,6 +90,12 @@ namespace Robust.Client.Graphics.Clyde
 
             public abstract unsafe void* GetProcAddress(string name);
 
+            public abstract void BindWindowRenderTarget(WindowId rtWindowId);
+
+            public virtual void BeforeSharedWindowCreateUnbind()
+            {
+            }
+
             private sealed class BindingsContextImpl : IBindingsContext
             {
                 private readonly GLContextBase _context;
@@ -100,7 +107,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 public unsafe IntPtr GetProcAddress(string procName)
                 {
-                    return (nint) _context.GetProcAddress(procName);
+                    return (nint)_context.GetProcAddress(procName);
                 }
             }
         }

@@ -166,7 +166,11 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void Shutdown()
             {
-                throw new System.NotImplementedException();
+                if (_eglDisplay != null)
+                {
+                    eglMakeCurrent(_eglDisplay, null, null, null);
+                    eglTerminate(_eglDisplay);
+                }
             }
 
             public override bool GlesOnly => true;
@@ -194,6 +198,14 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     return eglGetProcAddress(ptr);
                 }
+            }
+
+            public override void BindWindowRenderTarget(WindowId rtWindowId)
+            {
+                var data = _windowData[rtWindowId];
+                var result = eglMakeCurrent(_eglDisplay, data.EglSurface, data.EglSurface, _eglContext);
+                if (result == EGL_FALSE)
+                    throw new Exception("eglMakeCurrent failed.");
             }
 
             private static string DumpEglConfig(void* display, void* config)

@@ -620,13 +620,20 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void GLMakeContextCurrent(WindowReg window)
+            public void GLMakeContextCurrent(WindowReg? window)
             {
-                CheckWindowDisposed(window);
+                if (window != null)
+                {
+                    CheckWindowDisposed(window);
 
-                var reg = (GlfwWindowReg) window;
+                    var reg = (GlfwWindowReg)window;
 
-                GLFW.MakeContextCurrent(reg.GlfwWindow);
+                    GLFW.MakeContextCurrent(reg.GlfwWindow);
+                }
+                else
+                {
+                    GLFW.MakeContextCurrent(null);
+                }
             }
 
             public void GLSwapInterval(int interval)

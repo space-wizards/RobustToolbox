@@ -45,6 +45,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 box.BodyType = BodyType.Dynamic;
                 Assert.That(box.InvI, Is.GreaterThan(0f));
 
+                // Check regular impulse works
                 box.ApplyLinearImpulse(new Vector2(0f, 1f));
                 Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
 
@@ -53,6 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(box.LinearVelocity.Length, Is.EqualTo(0f));
                 Assert.That(box.AngularVelocity, Is.EqualTo(0f));
 
+                // Check the angular impulse is applied from the point
                 box.ApplyLinearImpulse(new Vector2(0f, 1f), new Vector2(0.5f, 0f));
                 Assert.That(box.LinearVelocity.Length, Is.GreaterThan(0f));
                 Assert.That(box.AngularVelocity, Is.Not.EqualTo(0f));

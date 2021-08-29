@@ -313,6 +313,15 @@ namespace Robust.Shared
             CVarDef.Create("display.renderer", 0, CVar.CLIENTONLY);
 
         /// <summary>
+        /// Whether to use compatibility mode.
+        /// </summary>
+        /// <remarks>
+        /// This can change certain behaviors like GL version selection to try to avoid driver crashes.
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayCompat =
+            CVarDef.Create("display.compat", false, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Which OpenGL version to use for the OpenGL renderer.
         /// </summary>
         public static readonly CVarDef<int> DisplayOpenGLVersion =

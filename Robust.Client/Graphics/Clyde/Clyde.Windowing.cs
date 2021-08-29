@@ -160,7 +160,7 @@ namespace Robust.Client.Graphics.Clyde
 
             RendererOpenGLVersion[] versions;
 
-            if (_glContext!.GlesOnly)
+            if (_glContext!.GlesOnly || _cfg.GetCVar(CVars.DisplayCompat))
             {
                 versions = new[]
                 {

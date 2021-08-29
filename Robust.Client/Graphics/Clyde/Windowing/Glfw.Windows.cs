@@ -379,6 +379,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
                 GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
+                GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
 
                 if (spec == null)
                 {
@@ -397,7 +398,6 @@ namespace Robust.Client.Graphics.Clyde
                     GLFW.WindowHint(WindowHintInt.ContextVersionMinor, s.Minor);
                     GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, s.Profile != GLContextProfile.Compatibility);
                     GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-                    GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
 
                     switch (s.Profile)
                     {

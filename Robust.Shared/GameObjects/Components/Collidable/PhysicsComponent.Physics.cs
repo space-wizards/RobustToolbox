@@ -1142,12 +1142,28 @@ namespace Robust.Shared.GameObjects
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }
 
+        /// <summary>
+        /// Applies an impulse to the centre of mass.
+        /// </summary>
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
             if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             LinearVelocity += impulse * _invMass;
+        }
+
+        /// <summary>
+        /// Applies an impulse from the specified point.
+        /// </summary>
+        public void ApplyLinearImpulse(in Vector2 impulse, in Vector2 point)
+        {
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
+            Awake = true;
+
+            LinearVelocity += impulse * _invMass;
+            // TODO: Sweep here
+            AngularVelocity += InvI * Vector2.Cross(point, impulse);
         }
 
         public void ApplyAngularImpulse(float impulse)

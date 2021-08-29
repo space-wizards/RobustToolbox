@@ -31,7 +31,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision
 {
-    internal interface ICollisionManager
+    internal interface IManifoldManager
     {
         bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
             in Transform xfB);
@@ -64,7 +64,7 @@ namespace Robust.Shared.Physics.Collision
     /// <summary>
     ///     Handles several collision features: Generating contact manifolds, testing shape overlap,
     /// </summary>
-    internal class CollisionManager : ICollisionManager
+    internal sealed class CollisionManager : IManifoldManager
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The transform for the first shape.</param>
         /// <param name="xfB">The transform for the seconds shape.</param>
         /// <returns></returns>
-        bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
+        bool IManifoldManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
             // TODO: Make this a struct.

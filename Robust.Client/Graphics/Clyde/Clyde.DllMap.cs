@@ -49,14 +49,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 return IntPtr.Zero;
             });
-
-            NativeLibrary.SetDllImportResolver(typeof(Egl).Assembly, (name, assembly, path) =>
-            {
-                if (OperatingSystem.IsLinux())
-                    return NativeLibrary.Load("libEGL.so.1");
-
-                return IntPtr.Zero;
-            });
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]

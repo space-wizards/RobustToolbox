@@ -48,6 +48,32 @@ namespace Robust.Shared.GameObjects
         void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
             where TEvent : notnull;
+
+        /// <summary>
+        /// Dispatches an event directly to a specific component.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+            where TEvent : notnull;
+
+        /// <summary>
+        /// Dispatches an event directly to a specific component, by-ref.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+            where TEvent : notnull;
     }
 
     internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
@@ -70,36 +96,16 @@ namespace Robust.Shared.GameObjects
             _eventTables = new EventTables(_entMan);
         }
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
-            where TEvent : notnull
+        /// <inheritdoc />
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
             _eventTables.DispatchComponent<TEvent>(component.Owner.Uid, component, ref unitRef, false);
         }
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component, by-ref.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
-            where TEvent : notnull
+        /// <inheritdoc />
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 

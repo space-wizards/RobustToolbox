@@ -14,4 +14,26 @@ namespace Robust.Shared.GameStates
             Next = next;
         }
     }
+
+    /// <summary>
+    ///     Component event for getting the component state for a specific player.
+    /// </summary>
+    public struct ComponentGetState
+    {
+        /// <summary>
+        ///     Input parameter. The player the state is being generated for.
+        /// </summary>
+        public readonly ICommonSession Player;
+
+        /// <summary>
+        ///     Output parameter. Set this to the component's state for the player.
+        /// </summary>
+        public ComponentState? State { get; set; }
+
+        public ComponentGetState(ICommonSession player)
+        {
+            Player = player;
+            State = null;
+        }
+    }
 }

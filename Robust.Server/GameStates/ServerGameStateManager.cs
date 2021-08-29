@@ -268,13 +268,15 @@ namespace Robust.Server.GameStates
         /// <summary>
         /// Generates a network entity state for the given entity.
         /// </summary>
-        /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
+        /// <param name="entMan">EntityManager that contains the entity.</param>
         /// <param name="player">The player to generate this state for.</param>
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
         /// <returns>New entity State for the given entity.</returns>
-        internal static EntityState GetEntityState(IComponentManager compMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
+        internal static EntityState GetEntityState(IEntityManager entMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
+            var bus = entMan.EventBus;
+            var compMan = entMan.ComponentManager;
             var changed = new List<ComponentChange>();
 
             foreach (var (netId, component) in compMan.GetNetComponents(entityUid))
@@ -294,7 +296,7 @@ namespace Robust.Server.GameStates
                 {
                     ComponentState? state = null;
                     if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
-                        state = component.GetComponentState(player);
+                        state = compMan.GetComponentState(bus, component, player);
 
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
@@ -302,7 +304,7 @@ namespace Robust.Server.GameStates
                 }
                 else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
                 {
-                    changed.Add(ComponentChange.Changed(netId, component.GetComponentState(player)));
+                    changed.Add(ComponentChange.Changed(netId, compMan.GetComponentState(bus, component, player)));
                 }
                 else if (component.Deleted && component.LastModifiedTick >= fromTick)
                 {
@@ -331,7 +333,7 @@ namespace Robust.Server.GameStates
                 DebugTools.Assert(entity.Initialized);
 
                 if (entity.LastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(entityMan.ComponentManager, player, entity.Uid, fromTick));
+                    stateEntities.Add(GetEntityState(entityMan, player, entity.Uid, fromTick));
             }
 
             // no point sending an empty collection

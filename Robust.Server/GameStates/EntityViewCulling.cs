@@ -254,7 +254,7 @@ namespace Robust.Server.GameStates
                                 if (ent.LastModifiedTick < lastSeenChunk)
                                     continue;
 
-                                var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, lastSeenChunk);
+                                var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, lastSeenChunk);
                                 entityStates.Add(newState);
                             }
 
@@ -332,7 +332,7 @@ namespace Robust.Server.GameStates
                         continue;
 
                     // only send new changes
-                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, fromTick);
+                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, entityUid, fromTick);
 
                     if (!newState.Empty)
                         entityStates.Add(newState);
@@ -342,7 +342,7 @@ namespace Robust.Server.GameStates
                     // PVS enter message
 
                     // don't assume the client knows anything about us
-                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, GameTick.Zero);
+                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, entityUid, GameTick.Zero);
                     entityStates.Add(newState);
                 }
             }

@@ -302,12 +302,14 @@ namespace Robust.Server.GameStates
                             }
                         }
 
-                        if (_streamingChunks.TryGetValue(session, out var stream))
+                        var stream = _streamingChunks[session];
+
+                        if (stream.Chunk != null)
                         {
                             // Came into PVS range so we'll stop streaming.
                             if (chunksSeen.ContainsKey(stream.Chunk))
                             {
-                                _streamingChunks.Remove(session);
+                                stream.Chunk = null;
                                 continue;
                             }
 
@@ -319,15 +321,13 @@ namespace Robust.Server.GameStates
                             if (stream.Iterations >= StreamIterations)
                             {
                                 chunksSeen[stream.Chunk] = stream.Tick;
-                                _streamingChunks.Remove(session);
-                                continue;
+                                stream.Chunk = null;
                             }
 
-                            _streamingChunks[session] = stream;
                             continue;
                         }
 
-                        var enlarged = viewBox.Enlarged(12);
+                        var enlarged = viewBox.Enlarged(15);
 
                         foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
                         {
@@ -340,12 +340,14 @@ namespace Robust.Server.GameStates
                                     continue;
 
                                 StreamChunk(0, chunk, entityStates);
-                                DebugTools.Assert(!_streamingChunks.ContainsKey(session));
-                                _streamingChunks[session] = (chunk, fromTick, 1);
+                                DebugTools.Assert(stream.Chunk == null);
+                                stream.Chunk = chunk;
+                                stream.Tick = fromTick;
+                                stream.Iterations = 1;
                                 break;
                             }
 
-                            if (_streamingChunks.ContainsKey(session)) break;
+                            if (stream.Chunk != null) break;
                         }
                     }
                 }
@@ -545,7 +547,16 @@ namespace Robust.Server.GameStates
 
         private sealed class ChunkStreamingData
         {
-            public IMapChunkInternal Chunk { get; }
+            public IMapChunkInternal? Chunk { get; set; }
+            /// <summary>
+            /// Tick when we started streaming the chunk.
+            /// </summary>
+            public GameTick Tick { get; set; }
+
+            /// <summary>
+            /// How many iterations we have done so far.
+            /// </summary>
+            public int Iterations { get; set; }
 
         }
     }

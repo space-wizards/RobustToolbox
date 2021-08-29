@@ -13,6 +13,8 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitGLContextManager()
         {
+            // Advanced GL contexts currently disabled due to lack of testing etc.
+            /*
             if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngle))
             {
                 if (_cfg.GetCVar(CVars.DisplayAngleCustomSwapChain))
@@ -46,6 +48,7 @@ namespace Robust.Client.Graphics.Clyde
                 _glContext = ctxEgl;
                 return;
             }
+            */
 
             _glContext = new GLContextWindow(this);
         }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿/*
+using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Console;
 using Robust.Shared.Utility;
@@ -57,3 +58,4 @@ namespace Robust.Client.Graphics.Clyde
         }
     }
 }
+*/

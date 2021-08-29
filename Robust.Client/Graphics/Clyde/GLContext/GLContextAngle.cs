@@ -1,4 +1,6 @@
-﻿using System;
+﻿/*
+// Commented out because I can't be bothered to figure out trimming for TerraFX.
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -503,3 +505,4 @@ namespace Robust.Client.Graphics.Clyde
         }
     }
 }
+*/

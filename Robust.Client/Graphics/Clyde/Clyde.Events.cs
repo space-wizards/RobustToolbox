@@ -102,17 +102,10 @@ namespace Robust.Client.Graphics.Clyde
 
         private void SendWindowResized(WindowReg reg, Vector2i oldSize)
         {
-            if (reg.IsMainWindow)
-            {
-                UpdateMainWindowLoadedRtSize();
-                GL.Viewport(0, 0, reg.FramebufferSize.X, reg.FramebufferSize.Y);
-                CheckGlError();
-            }
-            else
-            {
-                reg.RenderTexture!.Dispose();
-                CreateWindowRenderTexture(reg);
-            }
+            var loaded = RtToLoaded(reg.RenderTarget);
+            loaded.Size = reg.FramebufferSize;
+
+            _glContext!.WindowResized(reg, oldSize);
 
             var eventArgs = new WindowResizedEventArgs(
                 oldSize,

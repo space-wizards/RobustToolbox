@@ -296,13 +296,10 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
-                    {
-                        found = true;
-                        return false;
-                    }
+                    if (ent.Deleted) return true;
+                    found = true;
+                    return false;
 
-                    return true;
                 }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
             }
 
@@ -519,6 +516,8 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
+            if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
+
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 foreach (var tile in grid.GetAllTiles())
@@ -545,17 +544,11 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
             {
-                var offsetPos = position -lookup.Owner.Transform.WorldPosition;
+                var offsetPos = lookup.Owner.Transform.InvWorldMatrix.Transform(position);
 
                 lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
-                    var transform = ent.Transform;
-                    if (MathHelper.CloseTo(transform.Coordinates.X, state.position.X) &&
-                        MathHelper.CloseTo(transform.Coordinates.Y, state.position.Y))
-                    {
-                        state.list.Add(ent);
-                    }
-
+                    state.list.Add(ent);
                     return true;
                 }, offsetPos, (flags & LookupFlags.Approximate) != 0x0);
             }

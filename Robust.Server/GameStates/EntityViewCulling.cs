@@ -36,6 +36,7 @@ namespace Robust.Server.GameStates
             _streamingChunks = new();
 
         internal int StreamingTilesPerTick;
+        internal float StreamRange;
 
         private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
@@ -324,8 +325,10 @@ namespace Robust.Server.GameStates
                             continue;
                         }
 
+                        if (StreamRange <= 0f) continue;
+
                         // Find a new chunk to start streaming in range.
-                        var enlarged = viewBox.Scale(2f);
+                        var enlarged = viewBox.Enlarged(StreamRange);
 
                         foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
                         {

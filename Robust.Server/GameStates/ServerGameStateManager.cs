@@ -85,6 +85,7 @@ namespace Robust.Server.GameStates
             // If you want to make this modifiable at runtime you need to subscribe to tickrate updates and streaming updates
             // plus invalidate any chunks currently being streamed as well.
             _entityView.StreamingTilesPerTick = (int) (_configurationManager.GetCVar(CVars.StreamedTilesPerSecond) / _gameTiming.TickRate);
+            _configurationManager.OnValueChanged(CVars.StreamedTileRange, value => _entityView.StreamRange = value, true);
         }
 
         private void HandleGridRemove(MapId mapid, GridId gridid)

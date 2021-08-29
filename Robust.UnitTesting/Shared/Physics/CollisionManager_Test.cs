@@ -27,8 +27,8 @@ namespace Robust.UnitTesting.Shared.Physics
             _circleB = new PhysShapeCircle {Radius = 0.5f};
             _polyA = new PolygonShape();
             _polyB = new PolygonShape();
-            _polyA.SetAsBox(-0.5f, 0.5f);
-            _polyB.SetAsBox(-0.5f, 0.5f);
+            _polyA.SetAsBox(0.5f, 0.5f);
+            _polyB.SetAsBox(0.5f, 0.5f);
         }
 
         [Test]
@@ -88,8 +88,8 @@ namespace Robust.UnitTesting.Shared.Physics
                 PointCount = 2,
                 Points = new ManifoldPoint[]
                 {
-                    new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65538}},
-                    new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 65794}}
+                    new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65795}},
+                    new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 66051}}
                 }
             };
             _collisionManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);

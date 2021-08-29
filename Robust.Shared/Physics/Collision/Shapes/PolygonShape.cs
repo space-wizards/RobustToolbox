@@ -198,8 +198,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
             Array.Resize(ref Normals, 4);
 
             Vertices[0] = new Vector2(-halfWidth, -halfHeight);
-            Vertices[1] = new Vector2( halfWidth, -halfHeight);
-            Vertices[2] = new Vector2( halfWidth,  halfHeight);
+            Vertices[1] = new Vector2(halfWidth, -halfHeight);
+            Vertices[2] = new Vector2(halfWidth,  halfHeight);
             Vertices[3] = new Vector2(-halfWidth,  halfHeight);
 
             Normals[0] = new Vector2(0.0f, -1.0f);

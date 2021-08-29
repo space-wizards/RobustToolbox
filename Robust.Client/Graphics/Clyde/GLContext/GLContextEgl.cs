@@ -37,8 +37,9 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void UpdateVSync()
             {
-                // TODO:
+                var interval = Clyde._vSync ? 1 : 0;
 
+                eglSwapInterval(_eglDisplay, interval);
             }
 
             public void InitializePublic()
@@ -90,14 +91,12 @@ namespace Robust.Client.Graphics.Clyde
                     if (result == EGL_FALSE)
                         throw new Exception("eglMakeCurrent failed.");
                 }
-
-                var procName = Marshal.StringToCoTaskMemUTF8("glGetString");
-                var getString = (delegate* unmanaged<int, byte*>) eglGetProcAddress((byte*) procName);
             }
 
             public override void WindowDestroyed(WindowReg reg)
             {
-                throw new System.NotImplementedException();
+                var data = _windowData[reg.Id];
+                eglDestroySurface(_eglDisplay, data.EglSurface);
             }
 
             private void Initialize(WindowData mainWindow)

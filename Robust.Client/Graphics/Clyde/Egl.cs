@@ -131,6 +131,9 @@ namespace Robust.Client.Graphics.Clyde
         public static extern int eglSwapBuffers(void* display, void* surface);
 
         [DllImport(LibraryName)]
+        public static extern int eglSwapInterval(void* display, int interval);
+
+        [DllImport(LibraryName)]
         public static extern int eglDestroySurface(void* display, void* surface);
     }
 }

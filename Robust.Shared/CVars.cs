@@ -335,7 +335,7 @@ namespace Robust.Shared
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleDxgi1 =
-            CVarDef.Create("display.angle_custom_dxgi1", false, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle_dxgi1", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Try to use the display adapter with this name, if the current renderer supports selecting it.

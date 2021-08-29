@@ -17,7 +17,6 @@ namespace Robust.Shared.Physics
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
         private const int MinimumBroadphaseCapacity = 256;
 

@@ -40,6 +40,8 @@ namespace Robust.Client.Graphics.Clyde
 
             public override void WindowCreated(WindowReg reg)
             {
+                reg.RenderTarget.MakeGLFence = true;
+
                 var data = new WindowData
                 {
                     Reg = reg

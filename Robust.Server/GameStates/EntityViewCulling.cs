@@ -546,6 +546,7 @@ namespace Robust.Server.GameStates
             return (view, map);
         }
 
+        // Dumped this in its own data structure just to avoid thread-safety issues.
         private sealed class ChunkStreamingData
         {
             public IMapChunkInternal? Chunk { get; set; }

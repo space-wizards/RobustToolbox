@@ -31,7 +31,9 @@ namespace Robust.Client.Graphics.Clyde
                 if (_cfg.GetCVar(CVars.DisplayEgl))
                 {
                     _sawmillOgl.Debug("Trying EGL");
-                    _glContext = new GLContextEgl(this);
+                    var ctxEgl = new GLContextEgl(this);
+                    ctxEgl.InitializePublic();
+                    _glContext = ctxEgl;
                     return;
                 }
             }

@@ -207,6 +207,9 @@ namespace Robust.Client.Graphics.Clyde
 
             private void TryInitializeCore()
             {
+                var extensions = Marshal.PtrToStringUTF8((nint) eglQueryString(null, EGL_EXTENSIONS));
+                Logger.DebugS("clyde.ogl.angle", $"EGL client extensions: {extensions}!");
+
                 CreateD3D11Device();
                 CreateEglContext();
             }

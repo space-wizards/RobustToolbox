@@ -41,6 +41,12 @@ namespace Robust.Client.Graphics.Clyde
 
             }
 
+            public void InitializePublic()
+            {
+                var extensions = Marshal.PtrToStringUTF8((nint) eglQueryString(null, EGL_EXTENSIONS));
+                Logger.DebugS("clyde.ogl.egl", $"EGL client extensions: {extensions}!");
+            }
+
             public override void WindowCreated(WindowReg reg)
             {
                 var data = new WindowData

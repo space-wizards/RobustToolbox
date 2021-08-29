@@ -23,6 +23,7 @@ namespace Robust.UnitTesting.Shared.Map
             {
                 var mapId = mapManager.CreateMap();
                 var grid = mapManager.CreateGrid(mapId);
+                var gridEntity = entManager.GetEntity(grid.GridEntityId);
 
                 for (var i = 0; i < 10; i++)
                 {
@@ -34,7 +35,7 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That(entManager.GetEntity(grid.GridEntityId).Deleted);
+                Assert.That(gridEntity.Deleted);
             });
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -24,7 +25,7 @@ namespace Robust.Shared.Map
         ///     Last game tick that the map was modified.
         /// </summary>
         [ViewVariables]
-        public GameTick LastModifiedTick { get; private set; }
+        public GameTick LastTileModifiedTick { get; private set; }
 
         /// <inheritdoc />
         public GameTick CurTick => _mapManager.GameTiming.CurTick;
@@ -60,7 +61,7 @@ namespace Robust.Shared.Map
             Index = gridIndex;
             ChunkSize = chunkSize;
             ParentMapId = parentMapId;
-            LastModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
+            LastTileModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
         }
 
         /// <summary>
@@ -109,7 +110,7 @@ namespace Robust.Shared.Map
             set
             {
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
-                LastModifiedTick = _mapManager.GameTiming.CurTick;
+                LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
 
@@ -127,7 +128,7 @@ namespace Robust.Shared.Map
             set
             {
                 _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
-                LastModifiedTick = _mapManager.GameTiming.CurTick;
+                LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
 
@@ -189,7 +190,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
-            LastModifiedTick = _mapManager.GameTiming.CurTick;
+            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
         }
 
@@ -354,6 +355,8 @@ namespace Robust.Shared.Map
         /// </summary>
         public int ChunkCount => _chunks.Count;
 
+        public GameTick LastAnchoredModifiedTick { get; private set; }
+
         /// <inheritdoc />
         public IMapChunkInternal GetChunk(int xIndex, int yIndex)
         {
@@ -440,11 +443,28 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
+        {
+            foreach (var tile in GetTilesIntersecting(worldAABB))
+            {
+                foreach (var ent in GetAnchoredEntities(tile.GridIndices))
+                {
+                    yield return ent;
+                }
+            }
+        }
+
+        /// <inheritdoc />
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
-            var local = WorldToLocal(coords.ToMapPos(_entityManager));
+            Vector2 local;
+            if (coords.EntityId == GridEntityId)
+                local = coords.Position;
+            else
+                local = WorldToLocal(coords.ToMapPos(_entityManager));
+
             return SnapGridLocalCellFor(local);
         }
 
@@ -473,6 +493,7 @@ namespace Robust.Shared.Map
                 return false;
 
             chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
+            LastAnchoredModifiedTick = _entityManager.CurrentTick;
             return true;
         }
 
@@ -487,6 +508,7 @@ namespace Robust.Shared.Map
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
             chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort) chunkTile.Y, euid);
+            LastAnchoredModifiedTick = _entityManager.CurrentTick;
         }
 
         /// <inheritdoc />
@@ -583,6 +605,15 @@ namespace Robust.Shared.Map
                         yield return cell;
                     }
                 }
+        }
+
+        /// <inheritdoc />
+        public void AnchoredEntDirty(Vector2i pos)
+        {
+            LastAnchoredModifiedTick = _entityManager.CurrentTick;
+
+            var chunk = GetChunk(GridTileToChunkIndices(pos));
+            chunk.LastAnchoredModifiedTick = LastAnchoredModifiedTick;
         }
 
         #endregion
@@ -709,6 +740,12 @@ namespace Robust.Shared.Map
         public bool TryGetTileRef(EntityCoordinates coords, out TileRef tile)
         {
             return TryGetTileRef(CoordinatesToTile(coords), out tile);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetTileRef(Vector2 worldPos, out TileRef tile)
+        {
+            return TryGetTileRef(WorldToTile(worldPos), out tile);
         }
 
         #endregion Transforms

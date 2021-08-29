@@ -165,6 +165,8 @@ namespace Robust.Client.Graphics.Clyde
                     renderer,
                     parameters,
                     (nint) share,
+                    // We have to pass the owner window in the Cmd here instead of reading it off parameters,
+                    // in case the owner window is closed between sending and handling of this cmd.
                     (nint) owner,
                     tcs));
 
@@ -206,13 +208,30 @@ namespace Robust.Client.Graphics.Clyde
                 // So we send the TCS back to the game thread
                 // which processes events in the correct order and has better control of stuff during init.
                 var reg = WinThreadSetupWindow(window);
+                reg.Owner = parameters.Owner;
 
                 SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(reg, null), tcs));
             }
 
             private void WinThreadWinDestroy(CmdWinDestroy cmd)
             {
-                GLFW.DestroyWindow((Window*) cmd.Window);
+                var window = (Window*) cmd.Window;
+
+                if (OperatingSystem.IsWindows() && cmd.hadOwner)
+                {
+                    // On Windows, closing the child window causes the owner to be minimized, apparently.
+                    // Clear owner on close to avoid this.
+
+                    var hWnd = (void*) GLFW.GetWin32Window(window);
+                    DebugTools.Assert(hWnd != null);
+
+                    Win32.SetWindowLongPtrW(
+                        hWnd,
+                        Win32.GWLP_HWNDPARENT,
+                        0);
+                }
+
+                GLFW.DestroyWindow(window);
             }
 
             public void WindowSetTitle(WindowReg window, string title)
@@ -435,7 +454,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 reg.IsDisposed = true;
 
-                SendCmd(new CmdWinDestroy((nint) reg.GlfwWindow));
+                SendCmd(new CmdWinDestroy((nint) reg.GlfwWindow, window.Owner != null));
 
                 _windows.Remove(reg);
                 _clyde._windowHandles.Remove(reg.Handle);

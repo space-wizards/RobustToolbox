@@ -60,10 +60,10 @@ namespace Robust.Shared
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPredict =
-            CVarDef.Create("net.predict", true, CVar.ARCHIVE);
+            CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetPredictTickBias =
-            CVarDef.Create("net.predict_tick_bias", 1, CVar.ARCHIVE);
+            CVarDef.Create("net.predict_tick_bias", 1, CVar.CLIENTONLY);
 
         // On Windows we default this to 16ms lag bias, to account for time period lag in the Lidgren thread.
         // Basically due to how time periods work on Windows, messages are (at worst) time period-delayed when sending.
@@ -74,7 +74,7 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
                 "net.predict_lag_bias",
                 OperatingSystem.IsWindows() ? 0.016f : 0,
-                CVar.ARCHIVE);
+                CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);

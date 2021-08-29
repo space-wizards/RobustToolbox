@@ -1,8 +1,9 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Players;
 
 namespace Robust.Shared.GameStates
 {
-    public class ComponentHandleState : EntityEventArgs
+    public readonly struct ComponentHandleState
     {
         public ComponentState? Current { get; }
         public ComponentState? Next { get; }

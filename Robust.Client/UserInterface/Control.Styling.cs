@@ -258,6 +258,14 @@ namespace Robust.Client.UserInterface
             return false;
         }
 
+        public T StylePropertyDefault<T>(string param, T defaultValue)
+        {
+            if (TryGetStyleProperty<T>(param, out var value))
+                return value;
+
+            return defaultValue;
+        }
+
         private sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>
         {
             private readonly Control _owner;

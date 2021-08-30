@@ -17,13 +17,11 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    [ComponentReference(typeof(IPointLightComponent))]
-    [NetworkedComponent()]
-    public class PointLightComponent : Component, IPointLightComponent, ISerializationHooks
+    [ComponentReference(typeof(IPointLightComponent)), ComponentReference(typeof(SharedPointLightComponent))]
+    [NetworkedComponent]
+    public class PointLightComponent : SharedPointLightComponent, IPointLightComponent, ISerializationHooks
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
-
-        public override string Name => "PointLight";
 
         internal bool TreeUpdateQueued { get; set; }
 

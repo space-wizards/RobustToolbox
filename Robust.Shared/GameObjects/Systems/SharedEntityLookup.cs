@@ -70,19 +70,21 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null);
 
-        void RemoveFromEntityTrees(IEntity entity);
-
         Box2 GetWorldAabbFromEntity(in IEntity ent);
     }
 
     [UsedImplicitly]
     public abstract class SharedEntityLookup : IEntityLookup, IEntityEventSubscriber
     {
-        private readonly IComponentManager _compManager;
-        private readonly IEntityManager _entityManager;
-        private readonly IMapManager _mapManager;
+        // Look, EntityLookup is a bit of a mess. Part of it is me, part of it is Q. Once shuttle rotation is in
+        // we'll actually have a better idea of the requirements and cleaning it up will be easier.
+        // It's also gone through several changes of DI, requirements on other systems, being a manager or not, etc.
 
-        private const int GrowthRate = 256;
+        protected readonly IComponentManager CompManager;
+        protected readonly IEntityManager EntityManager;
+        protected readonly IMapManager MapManager;
+
+        protected const int GrowthRate = 256;
 
         private const float PointEnlargeRange = .00001f / 2;
 
@@ -114,9 +116,9 @@ namespace Robust.Shared.GameObjects
 
         public SharedEntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager)
         {
-            _compManager = compManager;
-            _entityManager = entityManager;
-            _mapManager = mapManager;
+            CompManager = compManager;
+            EntityManager = entityManager;
+            MapManager = mapManager;
         }
 
         public void Startup()
@@ -129,19 +131,19 @@ namespace Robust.Shared.GameObjects
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
-            var eventBus = _entityManager.EventBus;
+            var eventBus = EntityManager.EventBus;
             eventBus.SubscribeEvent(EventSource.Local, this, (ref MoveEvent ev) => _moveQueue.Push(ev));
             eventBus.SubscribeEvent(EventSource.Local, this, (ref RotateEvent ev) => _rotateQueue.Push(ev));
             eventBus.SubscribeEvent(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
             eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, HandleAnchored);
 
-            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
-            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
+            eventBus.SubscribeLocalEvent<SharedEntityLookupComponent, ComponentInit>(HandleLookupInit);
+            eventBus.SubscribeLocalEvent<SharedEntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
             eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, HandleGridInit);
 
-            _entityManager.EntityDeleted += HandleEntityDeleted;
-            _entityManager.EntityStarted += HandleEntityStarted;
-            _mapManager.MapCreated += HandleMapCreated;
+            EntityManager.EntityDeleted += HandleEntityDeleted;
+            EntityManager.EntityStarted += HandleEntityStarted;
+            MapManager.MapCreated += HandleMapCreated;
             Started = true;
         }
 
@@ -156,9 +158,9 @@ namespace Robust.Shared.GameObjects
             _handledThisTick.Clear();
             _parentChangeQueue.Clear();
 
-            _entityManager.EntityDeleted -= HandleEntityDeleted;
-            _entityManager.EntityStarted -= HandleEntityStarted;
-            _mapManager.MapCreated -= HandleMapCreated;
+            EntityManager.EntityDeleted -= HandleEntityDeleted;
+            EntityManager.EntityStarted -= HandleEntityStarted;
+            MapManager.MapCreated -= HandleMapCreated;
             Started = false;
         }
 
@@ -176,17 +178,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
+        private void HandleLookupShutdown(EntityUid uid, SharedEntityLookupComponent component, ComponentShutdown args)
         {
             component.Tree.Clear();
         }
 
-        private void HandleGridInit(GridInitializeEvent ev)
-        {
-            _entityManager.GetEntity(ev.EntityUid).EnsureComponent<EntityLookupComponent>();
-        }
+        protected abstract void HandleGridInit(GridInitializeEvent ev);
 
-        private void HandleLookupInit(EntityUid uid, EntityLookupComponent component, ComponentInit args)
+        protected virtual void HandleLookupInit(EntityUid uid, SharedEntityLookupComponent component, ComponentInit args)
         {
             var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / (float) GrowthRate) * GrowthRate);
 
@@ -197,7 +196,7 @@ namespace Robust.Shared.GameObjects
             );
         }
 
-        private static Box2 GetRelativeAABBFromEntity(in IEntity entity)
+        protected static Box2 GetRelativeAABBFromEntity(in IEntity entity)
         {
             var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
@@ -207,22 +206,17 @@ namespace Robust.Shared.GameObjects
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
         {
-            RemoveFromEntityTrees(_entityManager.GetEntity(uid));
+            RemoveFromEntityTrees(EntityManager.GetEntity(uid));
         }
 
         private void HandleEntityStarted(object? sender, EntityUid uid)
         {
-            var entity = _entityManager.GetEntity(uid);
+            var entity = EntityManager.GetEntity(uid);
             if (entity.Transform.Anchored) return;
             UpdateEntityTree(entity);
         }
 
-        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
-        {
-            if (eventArgs.Map == MapId.Nullspace) return;
-
-            _mapManager.GetMapEntity(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
-        }
+        protected abstract void HandleMapCreated(object? sender, MapEventArgs eventArgs);
 
         public void Update()
         {
@@ -242,6 +236,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!_handledThisTick.Add(moveEvent.Sender.Uid) || moveEvent.Sender.Deleted) continue;
 
+                RemoveFromEntityTrees(moveEvent.Sender);
                 DebugTools.Assert(!moveEvent.Sender.Transform.Anchored);
                 UpdateEntityTree(moveEvent.Sender, moveEvent.WorldAABB);
             }
@@ -250,6 +245,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!_handledThisTick.Add(rotateEvent.Sender.Uid) || rotateEvent.Sender.Deleted) continue;
 
+                RemoveFromEntityTrees(rotateEvent.Sender);
                 DebugTools.Assert(!rotateEvent.Sender.Transform.Anchored);
                 UpdateEntityTree(rotateEvent.Sender, rotateEvent.WorldAABB);
             }
@@ -259,27 +255,27 @@ namespace Robust.Shared.GameObjects
 
         #region Spatial Queries
 
-        private IEnumerable<EntityLookupComponent> GetLookupsIntersecting(MapId mapId, Box2 worldAABB)
+        protected IEnumerable<SharedEntityLookupComponent> GetLookupsIntersecting(MapId mapId, Box2 worldAABB)
         {
             if (mapId == MapId.Nullspace) yield break;
 
             // TODO: Recursive and all that.
-            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_lookupEnlargementRange)))
+            foreach (var grid in MapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_lookupEnlargementRange)))
             {
-                yield return _entityManager.GetEntity(grid.GridEntityId).GetComponent<EntityLookupComponent>();
+                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<SharedEntityLookupComponent>();
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<EntityLookupComponent>();
+            yield return MapManager.GetMapEntity(mapId).GetComponent<SharedEntityLookupComponent>();
         }
 
         private IEnumerable<IEntity> GetAnchored(MapId mapId, Box2 worldAABB, LookupFlags flags)
         {
             if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
-            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            foreach (var grid in MapManager.FindGridsIntersecting(mapId, worldAABB))
             {
                 foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                 {
-                    if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                    if (!EntityManager.TryGetEntity(uid, out var ent)) continue;
                     yield return ent;
                 }
             }
@@ -327,11 +323,11 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0)
             {
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, position))
+                foreach (var grid in MapManager.FindGridsIntersecting(mapId, position))
                 {
                     foreach (var uid in grid.GetAnchoredEntities(position))
                     {
-                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                        if (!EntityManager.TryGetEntity(uid, out var ent)) continue;
                         callback(ent);
                     }
                 }
@@ -391,12 +387,12 @@ namespace Robust.Shared.GameObjects
             }
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0 &&
-                _mapManager.TryFindGridAt(mapId, position, out var grid) &&
+                MapManager.TryFindGridAt(mapId, position, out var grid) &&
                 grid.TryGetTileRef(position, out var tile))
             {
                 foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
                 {
-                    if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
+                    if (!EntityManager.TryGetEntity(ent, out var entity)) continue;
                     state.list.Add(entity);
                 }
             }
@@ -413,7 +409,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            var mapPos = position.ToMap(_entityManager);
+            var mapPos = position.ToMap(EntityManager);
             return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, flags);
         }
 
@@ -455,7 +451,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            var mapCoordinates = position.ToMap(_entityManager);
+            var mapCoordinates = position.ToMap(EntityManager);
             var mapPosition = mapCoordinates.Position;
             var aabb = new Box2(mapPosition - new Vector2(range, range),
                 mapPosition + new Vector2(range, range));
@@ -488,7 +484,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
             float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            var position = coordinates.ToMap(_entityManager).Position;
+            var position = coordinates.ToMap(EntityManager).Position;
 
             foreach (var entity in GetEntitiesInRange(coordinates, range * 2, flags))
             {
@@ -504,7 +500,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert((flags & LookupFlags.Approximate) == 0x0);
 
-            foreach (EntityLookupComponent comp in _compManager.EntityQuery<EntityLookupComponent>(true))
+            foreach (SharedEntityLookupComponent comp in CompManager.EntityQuery<SharedEntityLookupComponent>(true))
             {
                 if (comp.Owner.Transform.MapID != mapId) continue;
 
@@ -518,13 +514,13 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
 
-            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
+            foreach (var grid in MapManager.GetAllMapGrids(mapId))
             {
                 foreach (var tile in grid.GetAllTiles())
                 {
                     foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
                     {
-                        if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
+                        if (!EntityManager.TryGetEntity(ent, out var entity)) continue;
                         yield return entity;
                     }
                 }
@@ -555,11 +551,11 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0)
             {
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, aabb))
+                foreach (var grid in MapManager.FindGridsIntersecting(mapId, aabb))
                 {
                     foreach (var uid in grid.GetAnchoredEntities(aabb))
                     {
-                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                        if (!EntityManager.TryGetEntity(uid, out var ent)) continue;
                         list.Add(ent);
                     }
                 }
@@ -572,7 +568,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private static EntityLookupComponent? GetLookup(IEntity entity)
+        private static SharedEntityLookupComponent? GetLookup(IEntity entity)
         {
             if (entity.Transform.MapID == MapId.Nullspace)
             {
@@ -580,7 +576,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (entity.HasComponent<EntityLookupComponent>() &&
+            if (entity.HasComponent<SharedEntityLookupComponent>() &&
                 entity.Transform.Parent == null)
             {
                 return null;
@@ -592,7 +588,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (parent == null) break;
 
-                if (parent.TryGetComponent(out EntityLookupComponent? comp)) return comp;
+                if (parent.TryGetComponent(out SharedEntityLookupComponent? comp)) return comp;
                 parent = parent.Transform.Parent?.Owner;
             }
 
@@ -644,13 +640,15 @@ namespace Robust.Shared.GameObjects
                 ++necessary;
             }
 
-            if (!entity.HasComponent<EntityLookupComponent>())
+            UpdatePVSTree(lookup, entity, aabb);
+
+            if (!entity.HasComponent<SharedEntityLookupComponent>())
             {
                 foreach (var childTx in entity.Transform.ChildEntityUids)
                 {
                     if (!_handledThisTick.Add(childTx)) continue;
 
-                    if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
+                    if (UpdateEntityTree(EntityManager.GetEntity(childTx)))
                     {
                         ++necessary;
                     }
@@ -660,14 +658,16 @@ namespace Robust.Shared.GameObjects
             return necessary > 0;
         }
 
-        /// <inheritdoc />
-        public void RemoveFromEntityTrees(IEntity entity)
+        protected virtual void RemoveFromEntityTrees(IEntity entity)
         {
             // TODO: Need to fix ordering issues and then we can just directly remove it from the tree
             // rather than this O(n) legacy garbage.
-            foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
+            foreach (var lookup in CompManager.EntityQuery<SharedEntityLookupComponent>(true))
             {
-                if (lookup.Tree.Remove(entity)) return;
+                if (lookup.Tree.Remove(entity))
+                {
+                    return;
+                }
             }
         }
 
@@ -700,6 +700,6 @@ namespace Robust.Shared.GameObjects
 
         #endregion
 
-        protected abstract void UpdatePVSTree(IEntity entity);
+        protected virtual void UpdatePVSTree(SharedEntityLookupComponent component, IEntity entity, Box2 aabb) {}
     }
 }

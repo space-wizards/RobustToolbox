@@ -5,13 +5,19 @@ namespace Robust.Client.GameObjects
 {
     public sealed class EntityLookup : SharedEntityLookup
     {
-        public EntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager) : base(compManager, entityManager, mapManager)
+        public EntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager) :
+            base(compManager, entityManager, mapManager) {}
+
+        protected override void HandleGridInit(GridInitializeEvent ev)
         {
+            EntityManager.GetEntity(ev.EntityUid).EnsureComponent<EntityLookupComponent>();
         }
 
-        protected override void UpdatePVSTree(IEntity entity)
+        protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
-            throw new System.NotImplementedException();
+            if (eventArgs.Map == MapId.Nullspace) return;
+
+            MapManager.GetMapEntity(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
         }
     }
 }

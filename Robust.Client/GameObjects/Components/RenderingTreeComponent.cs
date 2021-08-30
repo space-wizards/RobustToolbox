@@ -29,7 +29,7 @@ namespace Robust.Client.GameObjects
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero + value.Offset;
 
             return Box2.CenteredAround(pos, (boxSize, boxSize));
         }
@@ -51,7 +51,7 @@ namespace Robust.Client.GameObjects
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero + value.Offset;
 
             return Box2.CenteredAround(pos, (boxSize, boxSize));
         }

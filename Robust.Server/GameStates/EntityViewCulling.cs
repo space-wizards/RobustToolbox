@@ -208,6 +208,12 @@ namespace Robust.Server.GameStates
                         RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, includedChunks, visMask);
                     }, LookupFlags.None);
 
+                    var serverLookup = (EntityLookup) _lookup;
+                    serverLookup.FastPVSIntersecting(in mapId, ref viewBox, entity =>
+                    {
+                        RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, includedChunks, visMask);
+                    });
+
                     //Calculate states for all visible anchored ents
                     foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
                     {

@@ -340,7 +340,6 @@ namespace Robust.Client.GameObjects
                     Logger.WarningS(LoggerSawmill, $"Light radius for {light.Owner} set above max radius of {MaxLightRadius}. This may lead to pop-in.");
                 }
 
-                var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
                 var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos);
 
                 // If we're on a new map then clear the old one.

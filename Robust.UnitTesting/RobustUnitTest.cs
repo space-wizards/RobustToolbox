@@ -97,7 +97,7 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<MetaDataComponent>();
             }
 
-            if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedEntityLookupComponent)))
             {
                 compFactory.RegisterClass<EntityLookupComponent>();
             }

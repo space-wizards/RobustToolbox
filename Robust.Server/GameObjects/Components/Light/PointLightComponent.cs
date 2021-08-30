@@ -8,9 +8,9 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
-    [ComponentReference(typeof(IPointLightComponent))]
-    [NetworkedComponent()]
-    public class PointLightComponent : Component, IPointLightComponent
+    [ComponentReference(typeof(IPointLightComponent)), ComponentReference(typeof(SharedPointLightComponent))]
+    [NetworkedComponent]
+    public class PointLightComponent : SharedPointLightComponent, IPointLightComponent
     {
         [DataField("color")]
         private Color _color = new(200, 200, 200);
@@ -23,8 +23,6 @@ namespace Robust.Server.GameObjects
 
         private bool _containerOccluded;
 
-        public override string Name => "PointLight";
-
         [ViewVariables(VVAccess.ReadWrite)]
         public Color Color
         {
@@ -36,7 +34,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        [ViewVariables]
+        [ViewVariables(VVAccess.ReadWrite)]
         public bool Enabled
         {
             get => _enabled;
@@ -101,7 +99,7 @@ namespace Robust.Server.GameObjects
             {
                 if (_offset.Equals(value)) return;
                 _offset = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new UpdatePVSRangeEvent()
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new UpdatePVSRangeEvent
                 {
                     Component = this,
                     Bounds = EntitySystem.Get<PointLightSystem>().GetPvsRange(this),

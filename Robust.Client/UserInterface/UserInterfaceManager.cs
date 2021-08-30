@@ -215,6 +215,11 @@ namespace Robust.Client.UserInterface
             root.RemoveAllChildren();
         }
 
+        public WindowRoot? GetWindowRoot(IClydeWindow window)
+        {
+            return !_windowsToRoot.TryGetValue(window.Id, out var root) ? null : root;
+        }
+
         public IEnumerable<UIRoot> AllRoots => _roots;
         public event Action<PostDrawUIRootEventArgs>? OnPostDrawUIRoot;
 

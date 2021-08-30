@@ -59,8 +59,6 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.Reset();
 
             // Basic pre-render busywork.
-            // Clear screen to black.
-            ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
             _updateUniformConstants(_mainWindow!.FramebufferSize);
@@ -84,6 +82,9 @@ namespace Robust.Client.Graphics.Clyde
                 if (weak.TryGetTarget(out var viewport) && viewport.AutomaticRender)
                     RenderViewport(viewport);
             }
+
+            // Clear screen to correct color.
+            ClearFramebuffer(_userInterfaceManager.GetMainClearColor());
 
             using (DebugGroup("UI"))
             {
@@ -391,13 +392,16 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawSplash(IRenderHandle handle)
         {
+            // Clear screen to black for splash.
+            ClearFramebuffer(Color.Black);
+
             var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
             var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color clearColor=default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
@@ -411,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(default);
+                ClearFramebuffer(clearColor);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);

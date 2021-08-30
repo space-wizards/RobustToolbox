@@ -671,7 +671,10 @@ namespace Robust.Client.UserInterface
             {
                 if (root.Window != _clyde.MainWindow)
                 {
-                    renderHandle.RenderInRenderTarget(root.Window.RenderTarget, () => DoRender(root));
+                    renderHandle.RenderInRenderTarget(
+                        root.Window.RenderTarget,
+                        () => DoRender(root),
+                        root.ActualBgColor);
                 }
             }
 
@@ -885,6 +888,8 @@ namespace Robust.Client.UserInterface
 
             return pos - control.GlobalPosition;
         }
+
+        public Color GetMainClearColor() => RootControl.ActualBgColor;
 
         private void _resetTooltipTimer()
         {

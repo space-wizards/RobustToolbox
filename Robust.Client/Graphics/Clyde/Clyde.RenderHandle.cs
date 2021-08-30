@@ -112,7 +112,7 @@ namespace Robust.Client.Graphics.Clyde
                 return clydeTexture;
             }
 
-            public void RenderInRenderTarget(IRenderTarget target, Action a)
+            public void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default)
             {
                 _clyde.RenderInRenderTarget((RenderTargetBase) target, a);
             }

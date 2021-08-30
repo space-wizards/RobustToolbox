@@ -66,6 +66,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var data = _windowData[reg.Id];
                 data.BlitDoneEvent?.Set();
+
+                _windowData.Remove(reg.Id);
             }
 
 

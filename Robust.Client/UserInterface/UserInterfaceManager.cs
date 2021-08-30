@@ -128,9 +128,6 @@ namespace Robust.Client.UserInterface
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
 
-            RootControl.InvalidateMeasure();
-            QueueMeasureUpdate(RootControl);
-
             _clyde.OnWindowResized += WindowSizeChanged;
             _clyde.OnWindowScaleChanged += WindowContentScaleChanged;
             _clyde.DestroyWindow += WindowDestroyed;
@@ -199,6 +196,7 @@ namespace Robust.Client.UserInterface
             _roots.Add(newRoot);
             _windowsToRoot.Add(window.Id, newRoot);
 
+            newRoot.StyleSheetUpdate();
             newRoot.InvalidateMeasure();
             QueueMeasureUpdate(newRoot);
 

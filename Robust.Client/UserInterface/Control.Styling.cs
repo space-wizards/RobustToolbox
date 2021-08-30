@@ -125,7 +125,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal.QueueStyleUpdate(this);
         }
 
-        private void StyleSheetUpdate()
+        internal void StyleSheetUpdate()
         {
             _stylesheetUpdateNeeded = true;
 

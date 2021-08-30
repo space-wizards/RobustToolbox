@@ -1,9 +1,7 @@
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Players;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -22,6 +20,8 @@ namespace Robust.Server.GameObjects
         private float _radius = 10;
         [DataField("offset")]
         private Vector2 _offset = Vector2.Zero;
+
+        private bool _containerOccluded;
 
         public override string Name => "PointLight";
 
@@ -42,15 +42,33 @@ namespace Robust.Server.GameObjects
             get => _enabled;
             set
             {
-                if (_enabled != value)
+                if (_enabled == value) return;
+                _enabled = value;
+                // Kinda weird until ECS lights
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new UpdatePVSRangeEvent
                 {
-                    _enabled = value;
-                    Dirty();
-                }
+                    Component = this,
+                    Bounds = EntitySystem.Get<PointLightSystem>().GetPvsRange(this),
+                });
+                Dirty();
             }
         }
 
-        public bool ContainerOccluded { get; set; }
+        public bool ContainerOccluded
+        {
+            get => _containerOccluded;
+            set
+            {
+                if (_containerOccluded == value) return;
+                _containerOccluded = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new UpdatePVSRangeEvent
+                {
+                    Component = this,
+                    Bounds = EntitySystem.Get<PointLightSystem>().GetPvsRange(this),
+                });
+            }
+        }
+
         public bool MaskAutoRotate { get; set; }
         public Angle Rotation { get; set; }
         public string? MaskPath { get; set; }
@@ -64,7 +82,13 @@ namespace Robust.Server.GameObjects
             get => _radius;
             set
             {
+                if (MathHelper.CloseTo(_radius, value)) return;
                 _radius = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new UpdatePVSRangeEvent
+                {
+                    Component = this,
+                    Bounds = EntitySystem.Get<PointLightSystem>().GetPvsRange(this),
+                });
                 Dirty();
             }
         }
@@ -75,7 +99,13 @@ namespace Robust.Server.GameObjects
             get => _offset;
             set
             {
+                if (_offset.Equals(value)) return;
                 _offset = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new UpdatePVSRangeEvent()
+                {
+                    Component = this,
+                    Bounds = EntitySystem.Get<PointLightSystem>().GetPvsRange(this),
+                });
                 Dirty();
             }
         }

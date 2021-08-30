@@ -53,6 +53,11 @@ namespace Robust.Shared.GameObjects
         void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component;
 
         /// <summary>
+        /// Adds the component if not already on the entity.
+        /// </summary>
+        T EnsureComponent<T>(IEntity entity) where T : Component, new();
+
+        /// <summary>
         ///     Removes the component with the specified reference type,
         ///     Without needing to have the component itself.
         /// </summary>

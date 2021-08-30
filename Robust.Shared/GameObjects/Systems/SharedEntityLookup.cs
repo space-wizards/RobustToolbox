@@ -76,7 +76,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [UsedImplicitly]
-    public class EntityLookup : IEntityLookup, IEntityEventSubscriber
+    public abstract class SharedEntityLookup : IEntityLookup, IEntityEventSubscriber
     {
         private readonly IComponentManager _compManager;
         private readonly IEntityManager _entityManager;
@@ -112,7 +112,7 @@ namespace Robust.Shared.GameObjects
 
         public bool Started { get; private set; } = false;
 
-        public EntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager)
+        public SharedEntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager)
         {
             _compManager = compManager;
             _entityManager = entityManager;
@@ -699,5 +699,7 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        protected abstract void UpdatePVSTree(IEntity entity);
     }
 }

@@ -177,6 +177,16 @@ namespace Robust.Shared.GameObjects
                 component.LifeStartup();
         }
 
+        public T EnsureComponent<T>(IEntity entity) where T : Component, new()
+        {
+            if (entity.TryGetComponent(out T? component))
+            {
+                return component;
+            }
+
+            return entity.AddComponent<T>();
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)

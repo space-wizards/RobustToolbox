@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
@@ -26,12 +27,12 @@ namespace Robust.Client.Graphics.Clyde
                 =
                 new();
 
-        public unsafe void Render()
+        public void Render()
         {
             CheckTransferringScreenshots();
 
             var allMinimized = true;
-            foreach (var windowReg in _windowing!.AllWindows)
+            foreach (var windowReg in _windows)
             {
                 if (!windowReg.IsMinimized)
                 {
@@ -45,9 +46,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ClearFramebuffer(Color.Black);
 
-                // We have to keep running swapbuffers here
-                // or else the user's PC will turn into a heater!!
-                SwapMainBuffers();
+                // Sleep to avoid turning the computer into a heater.
+                Thread.Sleep(16);
                 return;
             }
 
@@ -59,11 +59,9 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.Reset();
 
             // Basic pre-render busywork.
-            // Clear screen to black.
-            ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
-            _updateUniformConstants(_windowing.MainWindow!.FramebufferSize);
+            _updateUniformConstants(_mainWindow!.FramebufferSize);
 
             {
                 CalcScreenMatrices(ScreenSize, out var proj, out var view);
@@ -75,7 +73,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DrawSplash(_renderHandle);
                 FlushRenderQueue();
-                SwapMainBuffers();
+                SwapAllBuffers();
                 return;
             }
 
@@ -85,6 +83,9 @@ namespace Robust.Client.Graphics.Clyde
                     RenderViewport(viewport);
             }
 
+            // Clear screen to correct color.
+            ClearFramebuffer(_userInterfaceManager.GetMainClearColor());
+
             using (DebugGroup("UI"))
             {
                 _userInterfaceManager.Render(_renderHandle);
@@ -93,10 +94,8 @@ namespace Robust.Client.Graphics.Clyde
 
             TakeScreenshot(ScreenshotType.Final);
 
-            BlitSecondaryWindows();
-
             // And finally, swap those buffers!
-            SwapMainBuffers();
+            SwapAllBuffers();
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox)
@@ -393,13 +392,16 @@ namespace Robust.Client.Graphics.Clyde
 
         private void DrawSplash(IRenderHandle handle)
         {
+            // Clear screen to black for splash.
+            ClearFramebuffer(Color.Black);
+
             var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
             var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color clearColor=default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
@@ -413,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(default);
+                ClearFramebuffer(clearColor);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);

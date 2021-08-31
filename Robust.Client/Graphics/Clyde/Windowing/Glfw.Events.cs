@@ -19,9 +19,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
                     catch (Exception e)
                     {
-                        _sawmill.Error(
-                            "clyde.win",
-                            $"Caught exception in windowing event ({ev.GetType()}):\n{e}");
+                        _sawmill.Error($"Caught exception in windowing event ({ev.GetType()}):\n{e}");
                     }
 
                     if (single)

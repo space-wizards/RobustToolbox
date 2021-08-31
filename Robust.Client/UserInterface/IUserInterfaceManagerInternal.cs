@@ -57,6 +57,8 @@ namespace Robust.Client.UserInterface
         Control? GetSuppliedTooltipFor(Control control);
 
         Vector2? CalcRelativeMousePositionFor(Control control, ScreenCoordinates mousePos);
+
+        Color GetMainClearColor();
     }
 }
 

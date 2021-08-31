@@ -77,10 +77,5 @@ namespace Robust.Shared.GameObjects
                 Dirty();
             }
         }
-
-        public override ComponentState GetComponentState(ICommonSession player)
-        {
-            return new PointLightComponentState(_enabled, _color, _radius, _offset);
-        }
     }
 }

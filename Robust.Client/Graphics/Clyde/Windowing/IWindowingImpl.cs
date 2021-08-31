@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading.Tasks;
-using OpenToolkit;
+﻿using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
@@ -13,47 +10,54 @@ namespace Robust.Client.Graphics.Clyde
     {
         private interface IWindowingImpl
         {
-            WindowReg? MainWindow { get; }
-            IReadOnlyList<WindowReg> AllWindows { get; }
-            IBindingsContext GraphicsBindingContext { get; }
-
             // Lifecycle stuff
             bool Init();
-            bool TryInitMainWindow(Renderer renderer, [NotNullWhen(false)] out string? error);
             void Shutdown();
 
+            // Window loop
             void EnterWindowLoop();
             void TerminateWindowLoop();
 
+            // Event pump
             void ProcessEvents(bool single=false);
             void FlushDispose();
 
+            // Cursor
             ICursor CursorGetStandard(StandardCursorShape shape);
             ICursor CursorCreate(Image<Rgba32> image, Vector2i hotSpot);
             void CursorSet(WindowReg window, ICursor? cursor);
 
+            // Window API.
+            (WindowReg?, string? error) WindowCreate(
+                GLContextSpec? spec,
+                WindowCreateParameters parameters,
+                WindowReg? share,
+                WindowReg? owner);
+
+            void WindowDestroy(WindowReg reg);
             void WindowSetTitle(WindowReg window, string title);
             void WindowSetMonitor(WindowReg window, IClydeMonitor monitor);
             void WindowSetVisible(WindowReg window, bool visible);
             void WindowRequestAttention(WindowReg window);
             void WindowSwapBuffers(WindowReg window);
             uint? WindowGetX11Id(WindowReg window);
+            nint? WindowGetX11Display(WindowReg window);
             nint? WindowGetWin32Window(WindowReg window);
-            WindowHandle WindowCreate(WindowCreateParameters parameters);
-            void WindowDestroy(WindowReg reg);
 
+            // Keyboard
             string KeyGetName(Keyboard.Key key);
 
-            Task<string> ClipboardGetText();
-            void ClipboardSetText(string text);
+            // Clipboard
+            Task<string> ClipboardGetText(WindowReg mainWindow);
+            void ClipboardSetText(WindowReg mainWindow, string text);
 
-            void UpdateVSync();
             void UpdateMainWindowMode();
 
             // OpenGL-related stuff.
-            void GLMakeContextCurrent(WindowReg reg);
+            // Note: you should probably go through GLContextBase instead, which calls these functions.
+            void GLMakeContextCurrent(WindowReg? reg);
             void GLSwapInterval(int interval);
-            void GLInitMainContext(bool gles);
+            unsafe void* GLGetProcAddress(string procName);
         }
     }
 }

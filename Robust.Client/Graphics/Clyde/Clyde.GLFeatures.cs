@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Shared.Log;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -72,6 +71,12 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (2, 1));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (2, 1));
+
+                _hasGLSrgb = true;
+                _hasGLReadFramebuffer = true;
+                _hasGLPrimitiveRestart = true;
+                _hasGLUniformBuffers = true;
+                _hasGLFloatFramebuffers = true;
             }
             else
             {
@@ -94,15 +99,14 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (3, 0));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (3, 0), "GL_OES_standard_derivatives");
-            }
 
-            // TODO: Enable these on ES 3.0
-            _hasGLSrgb = !_isGLES;
-            _hasGLReadFramebuffer = !_isGLES;
-            _hasGLPrimitiveRestart = !_isGLES;
-            _hasGLUniformBuffers = !_isGLES;
-            // This is 3.2 or extensions
-            _hasGLFloatFramebuffers = !_isGLES;
+                _hasGLSrgb = major >= 3;
+
+                CheckGLCap(ref _hasGLReadFramebuffer, "read_framebuffer", (3, 0));
+                CheckGLCap(ref _hasGLPrimitiveRestart, "primitive_restart", (3, 1));
+                CheckGLCap(ref _hasGLUniformBuffers, "uniform_buffers", (3, 0));
+                CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2), "GL_EXT_color_buffer_float");
+            }
 
             _sawmillOgl.Debug($"  GLES: {_isGLES}");
 
@@ -141,7 +145,11 @@ namespace Robust.Client.Graphics.Clyde
                 "map_buffer_range",
                 "pixel_buffer_object",
                 "map_buffer_oes",
-                "standard_derivatives"
+                "standard_derivatives",
+                "read_framebuffer",
+                "primitive_restart",
+                "uniform_buffers",
+                "float_framebuffers"
             };
 
             foreach (var cvar in cvars)

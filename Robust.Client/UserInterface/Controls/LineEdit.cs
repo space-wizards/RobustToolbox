@@ -21,6 +21,8 @@ namespace Robust.Client.UserInterface.Controls
         private const float MouseScrollDelay = 0.001f;
 
         public const string StylePropertyStyleBox = "stylebox";
+        public const string StylePropertyCursorColor = "cursor-color";
+        public const string StylePropertySelectionColor = "selection-color";
         public const string StyleClassLineEditNotEditable = "notEditable";
         public const string StylePseudoClassPlaceholder = "placeholder";
 
@@ -919,15 +921,25 @@ namespace Robust.Client.UserInterface.Controls
 
                     if (selectionLower != selectionUpper)
                     {
-                        handle.DrawRect(new UIBox2(selectionLower, contentBox.Top, selectionUpper, contentBox.Bottom),
+                        var color = _master.StylePropertyDefault(
+                            StylePropertySelectionColor,
                             Color.CornflowerBlue.WithAlpha(0.25f));
+
+                        handle.DrawRect(
+                            new UIBox2(selectionLower, contentBox.Top, selectionUpper, contentBox.Bottom),
+                            color);
                     }
 
                     if (_master._cursorCurrentlyLit)
                     {
+                        var color = _master.StylePropertyDefault(
+                            StylePropertyCursorColor,
+                            Color.White);
+
                         handle.DrawRect(
                             new UIBox2(actualCursorPosition, contentBox.Top, actualCursorPosition + 1,
-                                contentBox.Bottom), Color.White);
+                                contentBox.Bottom),
+                            color);
                     }
                 }
             }

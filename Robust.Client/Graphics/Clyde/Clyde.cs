@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
+using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
@@ -65,21 +66,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private ISawmill _sawmillOgl = default!;
 
+        private IBindingsContext _glBindingsContext = default!;
+
         public Clyde()
         {
-            // Init main window render target.
-            var windowRid = AllocRid();
-            var window = new RenderMainWindow(this, windowRid);
-            var loadedData = new LoadedRenderTarget
-            {
-                IsWindow = true,
-                IsSrgb = true
-            };
-            _renderTargets.Add(windowRid, loadedData);
-
-            _mainMainWindowRenderMainTarget = window;
-            _currentRenderTarget = RtToLoaded(window);
-            _currentBoundRenderTarget = _currentRenderTarget;
+            _currentBoundRenderTarget = default!;
+            _currentRenderTarget = default!;
         }
 
         public bool InitializePreWindowing()
@@ -101,6 +93,8 @@ namespace Robust.Client.Graphics.Clyde
         public bool InitializePostWindowing()
         {
             _gameThread = Thread.CurrentThread;
+
+            InitGLContextManager();
             if (!InitMainWindowAndRenderer())
                 return false;
 
@@ -153,8 +147,22 @@ namespace Robust.Client.Graphics.Clyde
             RegisterBlockCVars();
         }
 
+        private void GLInitBindings(bool gles)
+        {
+            _glBindingsContext = _glContext!.BindingsContext;
+            GL.LoadBindings(_glBindingsContext);
+
+            if (gles)
+            {
+                // On GLES we use some OES and KHR functions so make sure to initialize them.
+                OpenToolkit.Graphics.ES20.GL.LoadBindings(_glBindingsContext);
+            }
+        }
+
         private void InitOpenGL()
         {
+            GLInitBindings(_isGLES);
+
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
@@ -183,7 +191,7 @@ namespace Robust.Client.Graphics.Clyde
             DebugInfo = new ClydeDebugInfo(glVersion, renderer, vendor, version, overrideVersion != null);
 
             GL.Enable(EnableCap.Blend);
-            if (_hasGLSrgb)
+            if (_hasGLSrgb && !_isGLES)
             {
                 GL.Enable(EnableCap.FramebufferSrgb);
                 CheckGlError();
@@ -325,7 +333,7 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(TextureSampleParameters.Default);
-            ScreenBufferTexture = GenTexture(screenBufferHandle, _windowing!.MainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
+            ScreenBufferTexture = GenTexture(screenBufferHandle, _mainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
         }
 
         private GLHandle MakeQuadVao()
@@ -468,7 +476,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PushDebugGroupMaybe(string group)
         {
-            if (!_hasGLKhrDebug)
+            if (!_hasGLKhrDebug || true)
             {
                 return;
             }
@@ -486,7 +494,7 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PopDebugGroupMaybe()
         {
-            if (!_hasGLKhrDebug)
+            if (!_hasGLKhrDebug || true)
             {
                 return;
             }
@@ -503,6 +511,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Shutdown()
         {
+            _glContext?.Shutdown();
             ShutdownWindowing();
             _shutdownAudio();
         }

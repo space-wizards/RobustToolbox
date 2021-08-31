@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
@@ -156,58 +157,39 @@ namespace Robust.Client.Graphics.Clyde
             DebugTools.AssertNotNull(_glContext);
 
             _chosenRenderer = Renderer.OpenGL;
-            _openGLVersion = (RendererOpenGLVersion) _cfg.GetCVar(CVars.DisplayOpenGLVersion);
-
-            RendererOpenGLVersion[] versions;
-
-            if (_glContext!.GlesOnly || _cfg.GetCVar(CVars.DisplayCompat))
-            {
-                versions = new[]
-                {
-                    RendererOpenGLVersion.GLES3,
-                    RendererOpenGLVersion.GLES2
-                };
-            }
-            else
-            {
-                versions = new[]
-                {
-                    RendererOpenGLVersion.GL33,
-                    RendererOpenGLVersion.GL31,
-                    RendererOpenGLVersion.GLES3,
-                    RendererOpenGLVersion.GLES2
-                };
-            }
-
-            if (_openGLVersion != RendererOpenGLVersion.Auto)
-            {
-                if (Array.IndexOf(versions, _openGLVersion) != -1)
-                    versions = new[] {_openGLVersion};
-                else
-                    Logger.ErrorS("clyde.win", $"Requested OpenGL version {_openGLVersion} not supported.");
-            }
 
             var succeeded = false;
             string? lastError = null;
-            foreach (var version in versions)
+
+            if (_glContext!.RequireWindowGL)
             {
-                var glSpec = _glContext!.SpecWithOpenGLVersion(version);
+                var specs = _glContext!.SpecsToTry;
 
-                if (!TryInitMainWindow(glSpec, out lastError))
+                foreach (var glSpec in specs)
                 {
-                    Logger.DebugS("clyde.win", $"OpenGL {version} unsupported: {lastError}");
-                    continue;
+                    if (!TryInitMainWindow(glSpec, out lastError))
+                    {
+                        Logger.DebugS("clyde.win", $"OpenGL {glSpec.OpenGLVersion} unsupported: {lastError}");
+                        continue;
+                    }
+
+                    succeeded = true;
+                    break;
                 }
-
-                // We should have a main window now.
-                DebugTools.AssertNotNull(_mainWindow);
-
-                succeeded = true;
-                _openGLVersion = version;
-                _isGLES = _openGLVersion is RendererOpenGLVersion.GLES2 or RendererOpenGLVersion.GLES3;
-                _isCore = _openGLVersion is RendererOpenGLVersion.GL33;
-                break;
             }
+            else
+            {
+                if (!TryInitMainWindow(null, out lastError))
+                    Logger.DebugS("clyde.win", $"Failed to create window: {lastError}");
+                else
+                    succeeded = true;
+            }
+
+            // We should have a main window now.
+            DebugTools.AssertNotNull(_mainWindow);
+
+            // _openGLVersion must be set by _glContext.
+            DebugTools.Assert(_openGLVersion != RendererOpenGLVersion.Auto);
 
             if (!succeeded)
             {
@@ -234,6 +216,14 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             InitOpenGL();
+
+            _sawmillOgl.Debug("Setting viewport and rendering splash...");
+
+            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
+            CheckGlError();
+
+            // Quickly do a render with _drawingSplash = true so the screen isn't blank.
+            Render();
 
             return true;
         }
@@ -338,12 +328,13 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     Size = reg.FramebufferSize,
                     IsWindow = true,
-                    WindowId = reg.Id
+                    WindowId = reg.Id,
+                    IsSrgb = true
                 });
 
                 reg.RenderTarget = new RenderWindow(this, rtId);
 
-                _glContext!.WindowCreated(reg);
+                _glContext!.WindowCreated(glSpec, reg);
             }
 
             // Pass through result whether successful or not, caller handles it.

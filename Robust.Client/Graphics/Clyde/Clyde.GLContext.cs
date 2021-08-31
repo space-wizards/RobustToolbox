@@ -14,9 +14,9 @@ namespace Robust.Client.Graphics.Clyde
         private void InitGLContextManager()
         {
             // Advanced GL contexts currently disabled due to lack of testing etc.
-            /*
             if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngle))
             {
+                /*
                 if (_cfg.GetCVar(CVars.DisplayAngleCustomSwapChain))
                 {
                     _sawmillOgl.Debug("Trying custom swap chain ANGLE.");
@@ -26,10 +26,14 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         _sawmillOgl.Debug("Successfully initialized custom ANGLE");
                         _glContext = ctxAngle;
+
+                        ctxAngle.EarlyInit();
                         return;
                     }
                 }
+                */
 
+                /*
                 if (_cfg.GetCVar(CVars.DisplayEgl))
                 {
                     _sawmillOgl.Debug("Trying EGL");
@@ -38,8 +42,10 @@ namespace Robust.Client.Graphics.Clyde
                     _glContext = ctxEgl;
                     return;
                 }
+                */
             }
 
+            /*
             if (OperatingSystem.IsLinux() && _cfg.GetCVar(CVars.DisplayEgl))
             {
                 _sawmillOgl.Debug("Trying EGL");
@@ -59,6 +65,8 @@ namespace Robust.Client.Graphics.Clyde
             public int Minor;
             public GLContextProfile Profile;
             public GLContextCreationApi CreationApi;
+            // Used by GLContextWindow to figure out which GL version managed to initialize.
+            public RendererOpenGLVersion OpenGLVersion;
         }
 
         private enum GLContextProfile

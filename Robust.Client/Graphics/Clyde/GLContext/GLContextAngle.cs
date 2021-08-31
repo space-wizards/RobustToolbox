@@ -1,5 +1,5 @@
-﻿/*
-// Commented out because I can't be bothered to figure out trimming for TerraFX.
+﻿// Commented out because I can't be bothered to figure out trimming for TerraFX.
+/*
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -15,7 +15,6 @@ using static Robust.Client.Graphics.Clyde.Egl;
 using static TerraFX.Interop.D3D_DRIVER_TYPE;
 using static TerraFX.Interop.D3D_FEATURE_LEVEL;
 using static TerraFX.Interop.DXGI_FORMAT;
-using static TerraFX.Interop.DXGI_MEMORY_SEGMENT_GROUP;
 using static TerraFX.Interop.DXGI_SWAP_EFFECT;
 using static TerraFX.Interop.Windows;
 
@@ -39,16 +38,21 @@ namespace Robust.Client.Graphics.Clyde
             private IDXGIAdapter1* _adapter;
             private ID3D11Device* _device;
             private ID3D11DeviceContext* _deviceContext;
+            private D3D_FEATURE_LEVEL _deviceFl;
             private void* _eglDevice;
             private void* _eglDisplay;
             private void* _eglContext;
             private void* _eglConfig;
 
+            private bool _es3;
             private uint _swapInterval;
 
             private readonly Dictionary<WindowId, WindowData> _windowData = new();
 
-            public override bool GlesOnly => true;
+            public override GLContextSpec[] SpecsToTry => Array.Empty<GLContextSpec>();
+            public override bool RequireWindowGL => false;
+            public override bool EarlyContextInit => true;
+            public override bool HasBrokenWindowSrgb => false;
 
             public GLContextAngle(Clyde clyde) : base(clyde)
             {
@@ -65,7 +69,7 @@ namespace Robust.Client.Graphics.Clyde
                 _swapInterval = (uint) (Clyde._vSync ? 1 : 0);
             }
 
-            public override void WindowCreated(WindowReg reg)
+            public override void WindowCreated(GLContextSpec? spec, WindowReg reg)
             {
                 var data = new WindowData
                 {
@@ -73,28 +77,15 @@ namespace Robust.Client.Graphics.Clyde
                 };
                 _windowData[reg.Id] = data;
 
-                IDXGIFactory2* factory2;
-                var iid = IID_IDXGIFactory2;
-                if (FAILED(_factory->QueryInterface(&iid, (void**) &factory2)))
-                    factory2 = null;
-
                 var hWnd = Clyde._windowing!.WindowGetWin32Window(reg)!.Value;
 
                 // todo: exception management.
-                if (factory2 != null && !Clyde._cfg.GetCVar(CVars.DisplayAngleDxgi1))
-                {
-                    CreateSwapChain2(factory2, hWnd, data);
-                }
-                else
-                {
-                    CreateSwapChain1(data);
-                }
+                CreateSwapChain1(hWnd, data);
+
+                _factory->MakeWindowAssociation(hWnd, DXGI_MWA_NO_ALT_ENTER);
 
                 var rt = Clyde.RtToLoaded(reg.RenderTarget);
                 rt.FlipY = true;
-
-                if (factory2 != null)
-                    factory2->Release();
 
                 if (reg.IsMainWindow)
                 {
@@ -143,52 +134,47 @@ namespace Robust.Client.Graphics.Clyde
                     attributes);
             }
 
-            private void CreateSwapChain2(IDXGIFactory2* factory2, nint hWnd, WindowData data)
+            private void CreateSwapChain1(nint hWnd, WindowData data)
             {
-                var desc = new DXGI_SWAP_CHAIN_DESC1
+                var desc = new DXGI_SWAP_CHAIN_DESC
                 {
-                    Width = (uint) data.Reg.FramebufferSize.X,
-                    Height = (uint) data.Reg.FramebufferSize.Y,
-                    Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+                    BufferDesc =
+                    {
+                        Width = (uint) data.Reg.FramebufferSize.X,
+                        Height = (uint) data.Reg.FramebufferSize.Y,
+                        Format =  Clyde._hasGLSrgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM
+                    },
                     SampleDesc =
                     {
                         Count = 1
                     },
+                    OutputWindow = hWnd,
                     BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT,
                     BufferCount = 2,
-                    SwapEffect = DXGI_SWAP_EFFECT_DISCARD
+                    SwapEffect = DXGI_SWAP_EFFECT_DISCARD,
+                    Windowed = 1
                 };
-
-                IDXGISwapChain1* swapChain1;
-
-                ThrowIfFailed("CreateSwapChainForHwnd", factory2->CreateSwapChainForHwnd(
-                    (IUnknown*) _device,
-                    hWnd,
-                    &desc,
-                    null,
-                    null,
-                    &swapChain1
-                ));
 
                 fixed (IDXGISwapChain** swapPtr = &data.SwapChain)
                 {
-                    var iid = IID_IDXGISwapChain;
-                    ThrowIfFailed("QueryInterface", swapChain1->QueryInterface(&iid, (void**) swapPtr));
+                    ThrowIfFailed("CreateSwapChain", _factory->CreateSwapChain(
+                        (IUnknown*) _device,
+                        &desc,
+                        swapPtr
+                    ));
                 }
-
-                swapChain1->Release();
 
                 SetupBackbuffer(data);
             }
 
-            private void CreateSwapChain1(WindowData data)
-            {
-                throw new NotImplementedException();
-            }
-
             public override void WindowDestroyed(WindowReg reg)
             {
-                throw new NotImplementedException();
+                var data = _windowData[reg.Id];
+
+                DestroyBackbuffer(data);
+                data.SwapChain->Release();
+
+                _windowData.Remove(reg.Id);
             }
 
             public bool TryInitialize()
@@ -205,6 +191,14 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return true;
+            }
+
+            public void EarlyInit()
+            {
+                // Early GL context init so that feature detection runs before window creation,
+                // and so that we can know _hasGLSrgb in window creation.
+                eglMakeCurrent(_eglDisplay, null, null, _eglContext);
+                Clyde.InitOpenGL();
             }
 
             private void TryInitializeCore()
@@ -245,13 +239,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 var attribs = stackalloc int[]
                 {
-                    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+                    // EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
                     EGL_RED_SIZE, 8,
                     EGL_GREEN_SIZE, 8,
                     EGL_BLUE_SIZE, 8,
                     EGL_ALPHA_SIZE, 8,
                     EGL_STENCIL_SIZE, 8,
-                    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
                     EGL_NONE
                 };
 
@@ -275,9 +268,14 @@ namespace Robust.Client.Graphics.Clyde
 
                 _eglConfig = configs[0];
 
+                int supportedRenderableTypes;
+                eglGetConfigAttrib(_eglDisplay, _eglConfig, EGL_RENDERABLE_TYPE, &supportedRenderableTypes);
+
+                _es3 = (supportedRenderableTypes & EGL_OPENGL_ES3_BIT) != 0;
+
                 var createAttribs = stackalloc int[]
                 {
-                    EGL_CONTEXT_CLIENT_VERSION, 3,
+                    EGL_CONTEXT_CLIENT_VERSION, _es3 ? 3 : 2,
                     EGL_NONE
                 };
 
@@ -286,6 +284,8 @@ namespace Robust.Client.Graphics.Clyde
                     throw new Exception("eglCreateContext failed!");
 
                 Logger.DebugS("clyde.ogl.angle", "EGL context created!");
+
+                Clyde._openGLVersion = _es3 ? RendererOpenGLVersion.GLES3 : RendererOpenGLVersion.GLES2;
             }
 
             private void CreateD3D11Device()
@@ -317,21 +317,28 @@ namespace Robust.Client.Graphics.Clyde
                         Logger.DebugS("clyde.ogl.angle", $"Found display adapter with name: {adapterName}");
                     }
 
-                    var featureLevels = stackalloc D3D_FEATURE_LEVEL[]
+                    Span<D3D_FEATURE_LEVEL> featureLevels = stackalloc D3D_FEATURE_LEVEL[]
                     {
-                        D3D_FEATURE_LEVEL_11_1,
-                        D3D_FEATURE_LEVEL_11_0
+                        // 11_0 can do GLES3
+                        D3D_FEATURE_LEVEL_11_0,
+                        // 9_3 can do GLES2
+                        D3D_FEATURE_LEVEL_9_3,
+                        // If we get a 9_1 FL we can't do D3D11 based ANGLE,
+                        // but ANGLE can do it manually via the D3D9 renderer.
+                        // In this case, abort custom swap chain and let ANGLE handle everything.
+                        D3D_FEATURE_LEVEL_9_1
                     };
 
                     fixed (ID3D11Device** device = &_device)
+                    fixed (D3D_FEATURE_LEVEL* fl = &featureLevels[0])
                     {
                         ThrowIfFailed("D3D11CreateDevice", D3D11CreateDevice(
                             (IDXGIAdapter*) _adapter,
                             _adapter == null ? D3D_DRIVER_TYPE_HARDWARE : D3D_DRIVER_TYPE_UNKNOWN,
                             IntPtr.Zero,
                             0,
-                            featureLevels,
-                            1,
+                            fl,
+                            (uint) featureLevels.Length,
                             D3D11_SDK_VERSION,
                             device,
                             null,
@@ -350,7 +357,22 @@ namespace Robust.Client.Graphics.Clyde
                         ThrowIfFailed("GetParent", dxgiDevice->GetParent(&iid, (void**) ptrAdapter));
                     }
 
+                    _deviceFl = _device->GetFeatureLevel();
+
+                    DXGI_ADAPTER_DESC1 desc;
+                    ThrowIfFailed("GetDesc1", _adapter->GetDesc1(&desc));
+
+                    var descName = new ReadOnlySpan<char>(desc.Description, 128).TrimEnd('\0');
+
                     Logger.DebugS("clyde.ogl.angle", "Successfully created D3D11 device!");
+                    Logger.DebugS("clyde.ogl.angle", $"D3D11 Device Adapter: {descName.ToString()}");
+                    Logger.DebugS("clyde.ogl.angle", $"D3D11 Device FL: {_deviceFl}");
+
+                    if (_deviceFl == D3D_FEATURE_LEVEL_9_1)
+                    {
+                        throw new Exception(
+                            "D3D11 device has too low FL (need at least 9_3). Aborting custom swap chain!");
+                    }
                 }
                 finally
                 {
@@ -358,7 +380,6 @@ namespace Robust.Client.Graphics.Clyde
                         dxgiDevice->Release();
                 }
             }
-
 
             public override void Shutdown()
             {
@@ -396,7 +417,7 @@ namespace Robust.Client.Graphics.Clyde
                 ThrowIfFailed("ResizeBuffers", data.SwapChain->ResizeBuffers(
                     2,
                     (uint) reg.FramebufferSize.X, (uint) reg.FramebufferSize.Y,
-                    DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
+                    Clyde._hasGLSrgb ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM,
                     0));
 
                 SetupBackbuffer(data);
@@ -467,7 +488,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var sb = new StringBuilder();
 
-                sb.Append($"cfg: {Get(EGL_CONFIG_ID):00} | ");
+                sb.Append($"cfg: {Get(EGL_CONFIG_ID):000} | ");
                 sb.AppendFormat(
                     "R/G/B/A/D/S: {0}/{1}/{2}/{3}/{4:00}/{5} | ",
                     Get(EGL_RED_SIZE), Get(EGL_GREEN_SIZE), Get(EGL_BLUE_SIZE), Get(EGL_ALPHA_SIZE),
@@ -480,7 +501,8 @@ namespace Robust.Client.Graphics.Clyde
                 sb.Append($"NAT: {Get(EGL_NATIVE_VISUAL_ID)} | ");
                 sb.Append($"SAMPLES: {Get(EGL_SAMPLES)} | ");
                 sb.Append($"SAMPLE_BUFFERS: {Get(EGL_SAMPLE_BUFFERS)} | ");
-                sb.Append($"ORIENTATION: {Get(EGL_OPTIMAL_SURFACE_ORIENTATION_ANGLE)}");
+                sb.Append($"ORIENTATION: {Get(EGL_OPTIMAL_SURFACE_ORIENTATION_ANGLE)} | ");
+                sb.Append($"RENDERABLE: {Get(EGL_RENDERABLE_TYPE)}");
 
                 return sb.ToString();
 

@@ -26,6 +26,8 @@ namespace Robust.Client.Graphics.Clyde
             private void* _eglContext;
             private void* _eglConfig;
 
+            public override bool HasBrokenWindowSrgb => Clyde._isGLES && OperatingSystem.IsWindows();
+
             public GLContextEgl(Clyde clyde) : base(clyde)
             {
             }
@@ -48,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
                 Logger.DebugS("clyde.ogl.egl", $"EGL client extensions: {extensions}!");
             }
 
-            public override void WindowCreated(WindowReg reg)
+            public override void WindowCreated(GLContextSpec? spec, WindowReg reg)
             {
                 var data = new WindowData
                 {
@@ -193,7 +195,8 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public override bool GlesOnly => true;
+            public override GLContextSpec[] SpecsToTry => Array.Empty<GLContextSpec>();
+            public override bool RequireWindowGL => false;
 
             public override void SwapAllBuffers()
             {

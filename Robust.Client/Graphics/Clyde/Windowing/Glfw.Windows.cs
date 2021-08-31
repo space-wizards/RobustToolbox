@@ -129,29 +129,27 @@ namespace Robust.Client.Graphics.Clyde
 
             public void UpdateMainWindowMode()
             {
-                /*if (_mainWindow == null)
-                {
+                if (_clyde._mainWindow == null)
                     return;
-                }
 
-                var win = _mainWindow;
+                var win = (GlfwWindowReg) _clyde._mainWindow;
                 if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
-                    _mainWindow.PrevWindowSize = win.WindowSize;
-                    _mainWindow.PrevWindowPos = win.PrevWindowPos;
+                    win.PrevWindowSize = win.WindowSize;
+                    win.PrevWindowPos = win.PrevWindowPos;
 
-                    SendCmd(new CmdWinSetFullscreen((nint) _mainWindow.GlfwWindow));
+                    SendCmd(new CmdWinSetFullscreen((nint) win.GlfwWindow));
                 }
                 else
                 {
                     SendCmd(new CmdWinSetMonitor(
-                        (nint) _mainWindow.GlfwWindow,
+                        (nint) win.GlfwWindow,
                         0,
-                        _mainWindow.PrevWindowPos.X, _mainWindow.PrevWindowPos.Y,
-                        _mainWindow.PrevWindowSize.X, _mainWindow.PrevWindowSize.Y,
+                        win.PrevWindowPos.X, win.PrevWindowPos.Y,
+                        win.PrevWindowSize.X, win.PrevWindowSize.Y,
                         0
                     ));
-                }*/
+                }
             }
 
             private void WinThreadWinSetFullscreen(CmdWinSetFullscreen cmd)
@@ -442,9 +440,22 @@ namespace Robust.Client.Graphics.Clyde
                     _winThreadMonitors.TryGetValue(parameters.Monitor.Id, out var monitorReg))
                 {
                     monitor = monitorReg.Ptr;
+                    var mode = GLFW.GetVideoMode(monitor);
+                    // Set refresh rate to monitor's so that GLFW doesn't manually select one.
+                    GLFW.WindowHint(WindowHintInt.RefreshRate, mode->RefreshRate);
+                }
+                else
+                {
+                    GLFW.WindowHint(WindowHintInt.RefreshRate, -1);
                 }
 
                 GLFW.WindowHint(WindowHintBool.Visible, false);
+
+                GLFW.WindowHint(WindowHintInt.RedBits, 8);
+                GLFW.WindowHint(WindowHintInt.GreenBits, 8);
+                GLFW.WindowHint(WindowHintInt.BlueBits, 8);
+                GLFW.WindowHint(WindowHintInt.AlphaBits, 8);
+                GLFW.WindowHint(WindowHintInt.StencilBits, 8);
 
                 var window = GLFW.CreateWindow(
                     parameters.Width, parameters.Height,

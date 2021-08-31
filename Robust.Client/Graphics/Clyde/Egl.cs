@@ -39,6 +39,7 @@ namespace Robust.Client.Graphics.Clyde
         public const int EGL_WINDOW_BIT = 0x0004;
         public const int EGL_OPENGL_ES_API = 0x30A0;
         public const int EGL_RENDERABLE_TYPE = 0x3040;
+        public const int EGL_OPENGL_ES2_BIT = 0x00000004;
         public const int EGL_OPENGL_ES3_BIT = 0x00000040;
         public const int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
         public const int EGL_TEXTURE_FORMAT = 0x3080;

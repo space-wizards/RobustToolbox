@@ -23,6 +23,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLVertexArrayObject;
         private bool _hasGLVertexArrayObjectOes;
         private bool _hasGLFloatFramebuffers;
+        private bool _hasGLES3Shaders;
         private bool HasGLAnyMapBuffer => _hasGLMapBuffer || _hasGLMapBufferRange || _hasGLMapBufferOes;
         private bool _hasGLMapBuffer;
         private bool _hasGLMapBufferOes;
@@ -99,13 +100,28 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (3, 0));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (3, 0), "GL_OES_standard_derivatives");
-
-                _hasGLSrgb = major >= 3;
-
                 CheckGLCap(ref _hasGLReadFramebuffer, "read_framebuffer", (3, 0));
                 CheckGLCap(ref _hasGLPrimitiveRestart, "primitive_restart", (3, 1));
                 CheckGLCap(ref _hasGLUniformBuffers, "uniform_buffers", (3, 0));
                 CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2), "GL_EXT_color_buffer_float");
+                CheckGLCap(ref _hasGLES3Shaders, "gles3_shaders", (3, 0));
+
+                if (major >= 3)
+                {
+                    if (_glContext!.HasBrokenWindowSrgb)
+                    {
+                        _sawmillOgl.Debug("  sRGB: false (window broken sRGB)");
+                    }
+                    else
+                    {
+                        _sawmillOgl.Debug("  sRGB: true");
+                    }
+                }
+                else
+                {
+                    _hasGLSrgb = false;
+                    _sawmillOgl.Debug("  sRGB: false");
+                }
             }
 
             _sawmillOgl.Debug($"  GLES: {_isGLES}");
@@ -149,7 +165,8 @@ namespace Robust.Client.Graphics.Clyde
                 "read_framebuffer",
                 "primitive_restart",
                 "uniform_buffers",
-                "float_framebuffers"
+                "float_framebuffers",
+                "gles3_shaders",
             };
 
             foreach (var cvar in cvars)

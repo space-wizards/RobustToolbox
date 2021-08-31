@@ -1,6 +1,5 @@
 ﻿using System;
 using OpenToolkit;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -28,19 +27,23 @@ namespace Robust.Client.Graphics.Clyde
                 return SpecWithOpenGLVersion(Clyde._openGLVersion);
             }
 
+            public virtual bool EarlyContextInit => false;
+
             public abstract GLContextSpec? SpecWithOpenGLVersion(RendererOpenGLVersion version);
 
             public abstract void UpdateVSync();
-            public abstract void WindowCreated(WindowReg reg);
+            public abstract void WindowCreated(GLContextSpec? spec, WindowReg reg);
             public abstract void WindowDestroyed(WindowReg reg);
 
             public abstract void Shutdown();
 
-            public abstract bool GlesOnly { get; }
+            public abstract GLContextSpec[] SpecsToTry { get; }
+            public abstract bool RequireWindowGL { get;  }
+            public abstract bool HasBrokenWindowSrgb { get; }
 
             protected static GLContextSpec GetVersionSpec(RendererOpenGLVersion version)
             {
-                var spec = new GLContextSpec();
+                var spec = new GLContextSpec { OpenGLVersion = version };
 
                 switch (version)
                 {

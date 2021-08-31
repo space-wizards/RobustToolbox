@@ -150,7 +150,7 @@ namespace Robust.Client.Graphics.Clyde
 
             if (_isGLES)
             {
-                if (_openGLVersion == RendererOpenGLVersion.GLES3)
+                if (_hasGLES3Shaders)
                 {
                     versionHeader = "#version 300 es\n";
                 }

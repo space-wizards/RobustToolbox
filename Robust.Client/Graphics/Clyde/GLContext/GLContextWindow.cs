@@ -18,7 +18,36 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Dictionary<WindowId, WindowData> _windowData = new();
 
-            public override bool GlesOnly => false;
+            public override GLContextSpec[] SpecsToTry
+            {
+                get
+                {
+                    // Compat mode: only GLES2.
+                    if (Clyde._cfg.GetCVar(CVars.DisplayCompat))
+                        return new[] { GetVersionSpec(RendererOpenGLVersion.GLES2) };
+
+                    var requestedVersion = (RendererOpenGLVersion) Clyde._cfg.GetCVar(CVars.DisplayOpenGLVersion);
+                    if (requestedVersion != RendererOpenGLVersion.Auto)
+                    {
+                        return new[]
+                        {
+                            GetVersionSpec(requestedVersion)
+                        };
+                    }
+
+                    return new[]
+                    {
+                        GetVersionSpec(RendererOpenGLVersion.GL33),
+                        GetVersionSpec(RendererOpenGLVersion.GL31),
+                        GetVersionSpec(RendererOpenGLVersion.GLES3),
+                        GetVersionSpec(RendererOpenGLVersion.GLES2),
+                    };
+                }
+            }
+
+            public override bool RequireWindowGL => true;
+            // ANGLE does not support main window sRGB.
+            public override bool HasBrokenWindowSrgb => Clyde._isGLES && OperatingSystem.IsWindows();
 
             public GLContextWindow(Clyde clyde) : base(clyde)
             {
@@ -38,7 +67,7 @@ namespace Robust.Client.Graphics.Clyde
                 Clyde._windowing.GLSwapInterval(Clyde._vSync ? 1 : 0);
             }
 
-            public override void WindowCreated(WindowReg reg)
+            public override void WindowCreated(GLContextSpec? spec, WindowReg reg)
             {
                 reg.RenderTarget.MakeGLFence = true;
 
@@ -51,6 +80,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 if (reg.IsMainWindow)
                 {
+                    Clyde._openGLVersion = spec!.Value.OpenGLVersion;
                     UpdateVSync();
                 }
                 else

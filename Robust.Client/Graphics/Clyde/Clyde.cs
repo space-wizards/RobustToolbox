@@ -161,13 +161,17 @@ namespace Robust.Client.Graphics.Clyde
 
         private void InitOpenGL()
         {
+            _isGLES = _openGLVersion is RendererOpenGLVersion.GLES2 or RendererOpenGLVersion.GLES3;
+            _isCore = _openGLVersion is RendererOpenGLVersion.GL33;
+
             GLInitBindings(_isGLES);
 
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
+            // GLES2 doesn't allow you to query major/minor version. Seriously.
+            var major = _openGLVersion == RendererOpenGLVersion.GLES2 ? 2 : GL.GetInteger(GetPName.MajorVersion);
+            var minor = _openGLVersion == RendererOpenGLVersion.GLES2 ? 0 :GL.GetInteger(GetPName.MinorVersion);
 
             _sawmillOgl.Debug("OpenGL Vendor: {0}", vendor);
             _sawmillOgl.Debug("OpenGL Renderer: {0}", renderer);
@@ -230,14 +234,6 @@ namespace Robust.Client.Graphics.Clyde
             _sawmillOgl.Debug("Setting up RenderHandle...");
 
             _renderHandle = new RenderHandle(this);
-
-            _sawmillOgl.Debug("Setting viewport and rendering splash...");
-
-            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
-            CheckGlError();
-
-            // Quickly do a render with _drawingSplash = true so the screen isn't blank.
-            Render();
         }
 
         private (int major, int minor)? ParseGLOverrideVersion()
@@ -333,7 +329,8 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(TextureSampleParameters.Default);
-            ScreenBufferTexture = GenTexture(screenBufferHandle, _mainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
+            // TODO: This is atrocious and broken and awful why did I merge this
+            ScreenBufferTexture = GenTexture(screenBufferHandle, (1920, 1080), true, null, TexturePixelType.Rgba32);
         }
 
         private GLHandle MakeQuadVao()

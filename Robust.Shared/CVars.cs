@@ -519,17 +519,6 @@ namespace Robust.Shared
             CVarDef.Create("physics.angularslop", 2.0f / 180.0f * MathF.PI);
 
         /// <summary>
-        /// The radius of the polygon/edge shape skin. This should not be modified. Making
-        /// this smaller means polygons will have an insufficient buffer for continuous collision.
-        /// Making it larger may create artifacts for vertex collision.
-        /// </summary>
-        /// <remarks>
-        ///     Default is set to be 2 x linearslop. TODO Should we listen to linearslop changes?
-        /// </remarks>
-        public static readonly CVarDef<float> PolygonRadius =
-            CVarDef.Create("physics.polygonradius", 2 * 0.005f);
-
-        /// <summary>
         /// If true, it will run a GiftWrap convex hull on all polygon inputs.
         /// This makes for a more stable engine when given random input,
         /// but if speed of the creation of polygons are more important,
@@ -583,8 +572,11 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResCheckPathCasing =
             CVarDef.Create("res.checkpathcasing", false);
 
-        public static readonly CVarDef<bool> TexturePreloadingEnabled =
+        public static readonly CVarDef<bool> ResTexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> ResTexturePreloadCache =
+            CVarDef.Create("res.texture_preload_cache", true, CVar.CLIENTONLY);
 
 
         /*

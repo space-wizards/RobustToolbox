@@ -222,16 +222,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private float ExponentDistanceClamped(float rolloffFactor, float distance, float referenceDistance)
-        {
-            return MathF.Pow((distance / referenceDistance), (-rolloffFactor));
-        }
-
-        private float LinearDistanceClamped(float rolloffFactor, float distance, float referenceDistance, float maxDistance)
-        {
-            return (1f - rolloffFactor * (distance - referenceDistance) / (maxDistance - referenceDistance));
-        }
-
         private static void StreamDone(PlayingStream stream)
         {
             stream.Source.Dispose();

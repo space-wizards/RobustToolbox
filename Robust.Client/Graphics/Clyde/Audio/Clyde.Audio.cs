@@ -786,19 +786,25 @@ namespace Robust.Client.Graphics.Clyde
                 _master._checkAlError();
             }
 
-            public void SetMaxDistance(float maxDistance)
+            public void SetMaxDistance(float distance)
             {
-                throw new NotImplementedException();
+                _checkDisposed();
+                AL.Source(SourceHandle!.Value, ALSourcef.MaxDistance, distance);
+                _master._checkAlError();
             }
 
             public void SetRolloffFactor(float rolloffFactor)
             {
-                throw new NotImplementedException();
+                _checkDisposed();
+                AL.Source(SourceHandle!.Value, ALSourcef.RolloffFactor, rolloffFactor);
+                _master._checkAlError();
             }
 
             public void SetReferenceDistance(float refDistance)
             {
-                throw new NotImplementedException();
+                _checkDisposed();
+                AL.Source(SourceHandle!.Value, ALSourcef.ReferenceDistance, refDistance);
+                _master._checkAlError();
             }
 
             public void SetOcclusion(float blocks)

@@ -346,7 +346,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void SetReferenceDistance(float refDistance)
             {
-                throw new NotImplementedException();
+                // Nada.
             }
 
             public void SetOcclusion(float blocks)

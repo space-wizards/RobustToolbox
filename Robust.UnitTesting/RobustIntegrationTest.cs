@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -36,13 +37,29 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
+        internal static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
+
         private readonly List<IntegrationInstance> _integrationInstances = new();
+        private readonly ConcurrentDictionary<ServerIntegrationInstance, byte> _serversRunning = new();
 
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
+            if (options?.Pool ?? false)
+            {
+                if (ServersReady.TryDequeue(out var server))
+                {
+                    return server;
+                }
+
+                var pooledInstance = new ServerIntegrationInstance(options);
+                _serversRunning[pooledInstance] = 0;
+
+                return pooledInstance;
+            }
+
             var instance = new ServerIntegrationInstance(options);
             _integrationInstances.Add(instance);
             return instance;
@@ -58,9 +75,28 @@ namespace Robust.UnitTesting
             return instance;
         }
 
-        [OneTimeTearDown]
-        public async Task TearDown()
+        protected virtual async Task TearDown(ServerIntegrationInstance server)
         {
+        }
+
+        [OneTimeTearDown]
+        public async Task OneTimeTearDown()
+        {
+            foreach (var server in _serversRunning.Keys)
+            {
+                await server.WaitIdleAsync();
+
+                if (server.UnhandledException != null)
+                {
+                    continue;
+                }
+
+                await TearDown(server);
+                ServersReady.Enqueue(server);
+            }
+
+            _serversRunning.Clear();
+
             _integrationInstances.ForEach(p => p.Stop());
             await Task.WhenAll(_integrationInstances.Select(p => p.WaitIdleAsync()));
             _integrationInstances.Clear();
@@ -714,6 +750,8 @@ namespace Robust.UnitTesting
                 LoadConfigAndUserData = false,
                 LoadContentResources = false,
             };
+
+            public bool Pool { get; set; }
         }
 
         public class ClientIntegrationOptions : IntegrationOptions

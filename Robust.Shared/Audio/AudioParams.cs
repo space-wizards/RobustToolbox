@@ -6,6 +6,23 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Audio
 {
+    public enum Attenuation : int
+    {
+        // https://hackage.haskell.org/package/OpenAL-1.7.0.5/docs/Sound-OpenAL-AL-Attenuation.html
+
+        /// <summary>
+        /// Default to the overall attenuation. If set project-wide will use InverseDistanceClamped. This is what you typically want for an audio source.
+        /// </summary>
+        Default = 0,
+        NoAttenuation = 1 << 0,
+        InverseDistance = 1 << 1,
+        InverseDistanceClamped = 1 << 2,
+        LinearDistance = 1 << 3,
+        LinearDistanceClamped = 1 << 4,
+        ExponentDistance = 1 << 5,
+        ExponentDistanceClamped = 1 << 6,
+    }
+
     /// <summary>
     ///     Contains common audio parameters for audio playback on the client.
     /// </summary>
@@ -13,6 +30,12 @@ namespace Robust.Shared.Audio
     [DataDefinition]
     public struct AudioParams : IPopulateDefaultValues
     {
+        /// <summary>
+        ///     The DistanceModel to use for this specific source.
+        /// </summary>
+        [DataField("attenuation")]
+        public Attenuation Attenuation { get; set; }
+
         /// <summary>
         ///     Base volume to play the audio at, in dB.
         /// </summary>
@@ -39,13 +62,6 @@ namespace Robust.Shared.Audio
         public float MaxDistance { get; set; }
 
         /// <summary>
-        ///     Only applies to positional audio.
-        ///     Positional audio is dampened over distance with this as exponent.
-        /// </summary>
-        [DataField("attenuation")]
-        public float Attenuation { get; set; }
-
-        /// <summary>
         ///     Used for distance attenuation calculations. Set to 0f to make a sound exempt from distance attenuation.
         /// </summary>
         [DataField("rolloffFactor")]
@@ -68,15 +84,14 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, 1f, 1f, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, 1, false, 0f);
 
-        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds) : this()
+        public AudioParams(float volume, float pitchScale, string busName, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds) : this()
         {
             Volume = volume;
             PitchScale = pitchScale;
             BusName = busName;
             MaxDistance = maxDistance;
-            Attenuation = attenuation;
             RolloffFactor = rolloffFactor;
             ReferenceDistance = refDistance;
             Loop = loop;
@@ -116,18 +131,6 @@ namespace Robust.Shared.Audio
         {
             var me = this;
             me.BusName = bus;
-            return me;
-        }
-
-        /// <summary>
-        ///     Returns a copy of this instance with a new attenuation set, for easy chaining.
-        /// </summary>
-        /// <param name="attenuation">The new attenuation.</param>
-        [Pure]
-        public AudioParams WithAttenuation(float attenuation)
-        {
-            var me = this;
-            me.Attenuation = attenuation;
             return me;
         }
 
@@ -179,6 +182,18 @@ namespace Robust.Shared.Audio
             return me;
         }
 
+        /// <summary>
+        ///     Returns a copy of this instance with attenuation set, for easy chaining.
+        /// </summary>
+        /// <param name="attenuation">The new attenuation.</param>
+        [Pure]
+        public AudioParams WithAttenuation(Attenuation attenuation)
+        {
+            var me = this;
+            me.Attenuation = attenuation;
+            return me;
+        }
+
         [Pure]
         public AudioParams WithPlayOffset(float offset)
         {
@@ -192,7 +207,6 @@ namespace Robust.Shared.Audio
             PitchScale = 1f;
             BusName = "Master";
             MaxDistance = SoundSystem.DefaultSoundRange;
-            Attenuation = 1f;
         }
     }
 }

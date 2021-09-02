@@ -9,6 +9,7 @@ using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
 using Robust.Shared;
+using Robust.Shared.Audio;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;
 
@@ -58,6 +59,7 @@ namespace Robust.Client.Graphics.Clyde
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
             _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
+            _cfg.OnValueChanged(CVars.AudioAttenuation, SetAudioAttenuation, true);
         }
 
         private void _audioCreateContext()
@@ -81,7 +83,6 @@ namespace Robust.Client.Graphics.Clyde
             _openALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
             _openALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
             _openALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
-            _openALSawmill.Debug("OpenAL DistanceModel: {0}", AL.GetDistanceModel().ToString());
         }
 
         private void _audioOpenDevice()
@@ -191,6 +192,43 @@ namespace Robust.Client.Graphics.Clyde
         public void SetMasterVolume(float newVolume)
         {
             AL.Listener(ALListenerf.Gain, _baseGain * newVolume);
+        }
+
+        public void SetAudioAttenuation(int value)
+        {
+            var attenuation = (Attenuation) value;
+
+            switch (attenuation)
+            {
+                case Attenuation.NoAttenuation:
+                    AL.DistanceModel(ALDistanceModel.None);
+                    break;
+                case Attenuation.InverseDistance:
+                    AL.DistanceModel(ALDistanceModel.InverseDistance);
+                    break;
+                case Attenuation.Default:
+                case Attenuation.InverseDistanceClamped:
+                    AL.DistanceModel(ALDistanceModel.InverseDistanceClamped);
+                    break;
+                case Attenuation.LinearDistance:
+                    AL.DistanceModel(ALDistanceModel.LinearDistance);
+                    break;
+                case Attenuation.LinearDistanceClamped:
+                    AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
+                    break;
+                case Attenuation.ExponentDistance:
+                    AL.DistanceModel(ALDistanceModel.ExponentDistance);
+                    break;
+                case Attenuation.ExponentDistanceClamped:
+                    AL.DistanceModel(ALDistanceModel.ExponentDistanceClamped);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"No implementation to set {attenuation.ToString()} for DistanceModel!");
+            }
+
+            var attToString = attenuation == Attenuation.Default ? Attenuation.InverseDistanceClamped : attenuation;
+
+            _openALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)

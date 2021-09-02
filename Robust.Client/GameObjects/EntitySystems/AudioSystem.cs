@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
@@ -153,6 +155,9 @@ namespace Robust.Client.GameObjects
                                     stream.TrackingEntity);
                             }
 
+                            var distance = sourceRelative.Length;
+                            // var attenuation = CalculateAttenuation(stream.Attenuation, distance);
+
                             stream.Source.SetVolume(stream.Volume);
                             stream.Source.SetOcclusion(occlusion);
                         }
@@ -178,6 +183,12 @@ namespace Robust.Client.GameObjects
                 // meaning it'll break the entire audio system.
                 _playingClydeStreams.RemoveAll(p => p.Done);
             }
+        }
+
+        private float CalculateAttenuation(float attenuation, float distance)
+        {
+            if (attenuation.Equals(1f)) return 1f;
+            return MathF.Exp(attenuation * distance);
         }
 
         private static void StreamDone(PlayingStream stream)
@@ -217,6 +228,7 @@ namespace Robust.Client.GameObjects
             var playing = new PlayingStream
             {
                 Source = source,
+                Attenuation = audioParams?.Attenuation ?? 1f,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -263,6 +275,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingEntity = entity,
+                Attenuation = audioParams?.Attenuation ?? 1f,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -310,6 +323,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingCoordinates = coordinates,
+                Attenuation = audioParams?.Attenuation ?? 1f,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -325,6 +339,9 @@ namespace Robust.Client.GameObjects
 
             source.SetPitch(audioParams.Value.PitchScale);
             source.SetVolume(audioParams.Value.Volume);
+            source.SetRolloffFactor(audioParams.Value.RolloffFactor);
+            source.SetMaxDistance(audioParams.Value.MaxDistance);
+            source.SetReferenceDistance(audioParams.Value.ReferenceDistance);
             source.SetPlaybackPosition(audioParams.Value.PlayOffsetSeconds);
             source.IsLooping = audioParams.Value.Loop;
         }
@@ -337,6 +354,7 @@ namespace Robust.Client.GameObjects
             public EntityCoordinates? TrackingCoordinates;
             public bool Done;
             public float Volume;
+            public float Attenuation;
 
             public void Stop()
             {

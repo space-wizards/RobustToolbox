@@ -81,6 +81,7 @@ namespace Robust.Client.Graphics.Clyde
             _openALSawmill.Debug("OpenAL Vendor: {0}", AL.Get(ALGetString.Vendor));
             _openALSawmill.Debug("OpenAL Renderer: {0}", AL.Get(ALGetString.Renderer));
             _openALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
+            _openALSawmill.Debug("OpenAL DistanceModel: {0}", AL.GetDistanceModel().ToString());
         }
 
         private void _audioOpenDevice()
@@ -486,6 +487,27 @@ namespace Robust.Client.Graphics.Clyde
                 _master._checkAlError();
             }
 
+            public void SetMaxDistance(float distance)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.MaxDistance, distance);
+                _master._checkAlError();
+            }
+
+            public void SetRolloffFactor(float rolloffFactor)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.RolloffFactor, rolloffFactor);
+                _master._checkAlError();
+            }
+
+            public void SetReferenceDistance(float refDistance)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.ReferenceDistance, refDistance);
+                _master._checkAlError();
+            }
+
             public void SetOcclusion(float blocks)
             {
                 _checkDisposed();
@@ -724,6 +746,21 @@ namespace Robust.Client.Graphics.Clyde
                 _gain = scale;
                 AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
                 _master._checkAlError();
+            }
+
+            public void SetMaxDistance(float maxDistance)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SetRolloffFactor(float rolloffFactor)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void SetReferenceDistance(float refDistance)
+            {
+                throw new NotImplementedException();
             }
 
             public void SetOcclusion(float blocks)

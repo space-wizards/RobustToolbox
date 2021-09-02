@@ -45,6 +45,18 @@ namespace Robust.Shared.Audio
         [DataField("attenuation")]
         public float Attenuation { get; set; }
 
+        /// <summary>
+        ///     Used for distance attenuation calculations. Set to 0f to make a sound exempt from distance attenuation.
+        /// </summary>
+        [DataField("rolloffFactor")]
+        public float RolloffFactor { get; set; }
+
+        /// <summary>
+        ///     Equivalent of the minimum distance to use for an audio source.
+        /// </summary>
+        [DataField("referenceDistance")]
+        public float ReferenceDistance { get; set; }
+
         [DataField("loop")]
         public bool Loop { get; set; }
 
@@ -56,15 +68,17 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, 1f, 1f, false, 0f);
 
-        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, bool loop, float playOffsetSeconds) : this()
+        public AudioParams(float volume, float pitchScale, string busName, float maxDistance, float attenuation, float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds) : this()
         {
             Volume = volume;
             PitchScale = pitchScale;
             BusName = busName;
             MaxDistance = maxDistance;
             Attenuation = attenuation;
+            RolloffFactor = rolloffFactor;
+            ReferenceDistance = refDistance;
             Loop = loop;
             PlayOffsetSeconds = playOffsetSeconds;
         }
@@ -126,6 +140,30 @@ namespace Robust.Shared.Audio
         {
             var me = this;
             me.MaxDistance = dist;
+            return me;
+        }
+
+        /// <summary>
+        ///     Returns a copy of this instance with a new rolloff factor set, for easy chaining.
+        /// </summary>
+        /// <param name="rolloffFactor">The new rolloff factor.</param>
+        [Pure]
+        public AudioParams WithRolloffFactor(float rolloffFactor)
+        {
+            var me = this;
+            me.RolloffFactor = rolloffFactor;
+            return me;
+        }
+
+        /// <summary>
+        ///     Returns a copy of this instance with a new reference distance set, for easy chaining.
+        /// </summary>
+        /// <param name="refDistance">The new reference distance.</param>
+        [Pure]
+        public AudioParams WithReferenceDistance(float refDistance)
+        {
+            var me = this;
+            me.ReferenceDistance = refDistance;
             return me;
         }
 

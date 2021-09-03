@@ -660,8 +660,13 @@ namespace Robust.Shared.Map
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
+            Vector2 local;
 
-            var local = WorldToLocal(coords.ToMapPos(_entityManager));
+            if (coords.EntityId == GridEntityId)
+                local = coords.Position;
+            else
+                local = WorldToLocal(coords.ToMapPos(_entityManager));
+
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new Vector2i(x, y);

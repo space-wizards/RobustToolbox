@@ -130,7 +130,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var list = GetOverlaysForSpace(space);
 
-            var worldBounds = CalcWorldBounds(vp);
+            var worldBounds = CalcWorldAABB(vp);
             var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldBounds);
 
             foreach (var overlay in list)
@@ -458,16 +458,17 @@ namespace Robust.Client.Graphics.Clyde
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
+                var worldAABB = CalcWorldAABB(viewport);
                 var worldBounds = CalcWorldBounds(viewport);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
                     {
-                        DrawLightsAndFov(viewport, worldBounds, eye);
+                        DrawLightsAndFov(viewport, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldBounds);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB);
                     FlushRenderQueue();
 
                     using (DebugGroup("Grids"))
@@ -478,10 +479,10 @@ namespace Robust.Client.Graphics.Clyde
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds, eye);
+                        DrawEntities(viewport, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldBounds);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
@@ -514,22 +515,38 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldBounds);
+                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB);
                 FlushRenderQueue();
 
                 _currentViewport = oldVp;
             });
         }
 
-        private static Box2 CalcWorldBounds(Viewport viewport)
+        private static Box2 CalcWorldAABB(Viewport viewport)
         {
             var eye = viewport.Eye;
             if (eye == null)
                 return default;
 
-            // TODO: This seems completely unfit by lacking things like rotation handling.
+            return GetAABB(eye, viewport);
+        }
+
+        private static Box2 GetAABB(IEye eye, Viewport viewport)
+        {
             return Box2.CenteredAround(eye.Position.Position,
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
+        }
+
+        private static Box2Rotated CalcWorldBounds(Viewport viewport)
+        {
+            var eye = viewport.Eye;
+            if (eye == null)
+                return default;
+
+            var rotation = eye.Rotation;
+            var aabb = GetAABB(eye, viewport);
+
+            return new Box2Rotated(aabb, rotation, aabb.Center);
         }
 
         private sealed class OverlayComparer : IComparer<Overlay>

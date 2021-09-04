@@ -71,5 +71,7 @@ namespace Robust.Shared.Map
         ///     Returns all the <see cref="IMapChunkInternal"/> intersecting the worldAABB.
         /// </summary>
         IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB);
+
+        IEnumerable<IMapChunkInternal> GetMapChunks(Box2Rotated worldArea);
     }
 }

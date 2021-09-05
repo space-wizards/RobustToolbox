@@ -628,18 +628,19 @@ namespace Robust.Shared.Physics
                 _broadphasePositions[broadphase] = broadphaseOffset;
             }
 
-            // TODO: This needs a matrix transform ya dingus
-            var relativePos1 = new Transform(transform1.Position - broadphaseOffset.Position,
+            var relativePos1 = new Transform(
+                broadphaseTransform.InvWorldMatrix.Transform(transform1.Position),
                 transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
-                var aabb = fixture.Shape.ComputeAABB(relativePos1, i);
+                var bounds = fixture.Shape.ComputeAABB(relativePos1, i);
+                var aabb = bounds.Translated(relativePos1.Position);
                 proxy.AABB = aabb;
                 var displacement = Vector2.Zero;
                 broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
-                var worldAABB = proxy.AABB.Translated(broadphaseOffset.Position);
+                var worldAABB = new Box2Rotated(bounds, broadphaseOffset.Rotation).CalcBoundingBox().Translated(transform1.Position);
 
                 AddToMoveBuffer(broadphaseTransform.MapID, proxy, worldAABB);
             }

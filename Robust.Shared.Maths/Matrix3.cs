@@ -873,6 +873,12 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2Rotated Transform(in Box2Rotated box)
+        {
+            return new Box2Rotated(box.)
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Transform(in Matrix3 matrix, Vector2 vector)
         {
             var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;

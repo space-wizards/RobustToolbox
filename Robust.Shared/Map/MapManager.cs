@@ -587,7 +587,7 @@ namespace Robust.Shared.Map
         {
             foreach (var (_, grid) in _grids)
             {
-                if (grid.ParentMapId != mapId) continue;
+                if (grid.ParentMapId != mapId || !worldArea.Intersects(grid.WorldBounds)) continue;
 
                 var found = false;
 
@@ -606,12 +606,10 @@ namespace Robust.Shared.Map
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
                             // TODO: Need to use CollisionManager to test detailed overlap
-                            if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
-                            {
-                                yield return grid;
-                                found = true;
-                                break;
-                            }
+                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
+                            yield return grid;
+                            found = true;
+                            break;
                         }
 
                         if (found)
@@ -627,11 +625,11 @@ namespace Robust.Shared.Map
 
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea)
         {
+            var worldBounds = worldArea.CalcBoundingBox();
+
             foreach (var (_, grid) in _grids)
             {
-                if (grid.ParentMapId != mapId) continue;
-
-                var worldBounds = worldArea.CalcBoundingBox();
+                if (grid.ParentMapId != mapId || !worldBounds.Intersects(grid.WorldBounds)) continue;
 
                 var found = false;
 
@@ -649,15 +647,15 @@ namespace Robust.Shared.Map
                     {
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
-                            // TODO: Need to use CollisionManager to test detailed overlap
-                            if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds))
-                            {
-                                // TODO: Check collision here.
+                            // TODO: Probably need to make GJK support Box2Rotated intersecting each other?
 
-                                yield return grid;
-                                found = true;
-                                break;
-                            }
+                            // TODO: Need to use CollisionManager to test detailed overlap
+                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
+                            // TODO: Check collision here.
+
+                            yield return grid;
+                            found = true;
+                            break;
                         }
 
                         if (found)

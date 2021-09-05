@@ -201,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
@@ -209,11 +209,11 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldBounds);
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB);
 
             var screenSize = viewport.Size;
 
-            ProcessSpriteEntities(mapId, worldBounds, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, worldBounds, worldAABB, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -261,7 +261,7 @@ namespace Robust.Client.Graphics.Clyde
                             null,
                             viewport,
                             new UIBox2i((0, 0), viewport.Size),
-                            worldBounds);
+                            worldAABB);
                         overlayIndex = j;
                         continue;
                     }
@@ -362,12 +362,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Box2 worldBounds,
+        private void ProcessSpriteEntities(MapId map, Box2Rotated worldBounds, Box2 worldAABB,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
-            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
+            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldAABB))
             {
-                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
@@ -386,7 +386,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }, bounds);
+                }, bounds, true);
             }
         }
 
@@ -465,7 +465,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     using (DebugGroup("Lights"))
                     {
-                        DrawLightsAndFov(viewport, worldAABB, eye);
+                        DrawLightsAndFov(viewport, worldBounds, worldAABB, eye);
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB);
@@ -479,7 +479,7 @@ namespace Robust.Client.Graphics.Clyde
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldAABB, eye);
+                        DrawEntities(viewport, worldBounds, worldAABB, eye);
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);

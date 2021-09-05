@@ -873,9 +873,26 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Box2Rotated Transform(in Box2Rotated box)
+        public Box2 TransformBox(in Box2Rotated box)
         {
-            return new Box2Rotated(box.)
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = box.BottomLeft;
+            vertices[1] = box.BottomRight;
+            vertices[2] = box.TopRight;
+            vertices[3] = box.TopLeft;
+
+            var botLeft = box.BottomLeft;
+            var topRight = box.TopRight;
+
+            for (var i = 0; i < 4; i++)
+            {
+                var vertex = Transform(vertices[i]);
+
+                botLeft = Vector2.ComponentMin(vertex, botLeft);
+                topRight = Vector2.ComponentMax(vertex, topRight);
+            }
+
+            return new Box2(botLeft, topRight);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

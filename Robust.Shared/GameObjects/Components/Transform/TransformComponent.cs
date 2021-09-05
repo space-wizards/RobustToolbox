@@ -384,6 +384,11 @@ namespace Robust.Shared.GameObjects
             get => _anchored;
             set
             {
+                if (value && !_anchored)
+                {
+
+                }
+
                 // This will be set again when the transform starts, actually anchoring it.
                 if (LifeStage < ComponentLifeStage.Starting)
                 {

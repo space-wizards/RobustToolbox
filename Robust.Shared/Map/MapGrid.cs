@@ -422,8 +422,7 @@ namespace Robust.Shared.Map
         public IEnumerable<IMapChunkInternal> GetMapChunks(Box2Rotated worldArea)
         {
             var matrix = InvWorldMatrix;
-
-            var localArea = matrix.Transform(worldArea).CalcBoundingBox();
+            var localArea = matrix.TransformBox(worldArea);
 
             var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
             var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));

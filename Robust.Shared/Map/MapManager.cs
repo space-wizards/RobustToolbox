@@ -543,10 +543,11 @@ namespace Robust.Shared.Map
 
                 // Doesn't use WorldBounds because it's just an AABB.
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
-                var gridPos = gridEnt.Transform.WorldPosition;
-                var gridRot = -gridEnt.Transform.WorldRotation;
+                var matrix = gridEnt.Transform.InvWorldMatrix;
+                var localPos = matrix.Transform(worldPos);
 
-                var localPos = new Angle(gridRot).RotateVec(worldPos - gridPos);
+                var gridPos = gridEnt.Transform.WorldPosition;
+                var gridRot = gridEnt.Transform.WorldRotation;
 
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
                 var chunkIndices = mapGrid.GridTileToChunkIndices(tile);

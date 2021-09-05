@@ -168,6 +168,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadFromStream(new StringReader(Prototypes));
             prototypeManager.Resync();
         }

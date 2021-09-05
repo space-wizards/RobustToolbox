@@ -50,6 +50,7 @@ namespace Robust.UnitTesting.Server.GameObjects
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var manager = IoCManager.Resolve<IPrototypeManager>();
+            manager.RegisterType(typeof(EntityPrototype));
             manager.LoadFromStream(new StringReader(PROTOTYPES));
             manager.Resync();
 

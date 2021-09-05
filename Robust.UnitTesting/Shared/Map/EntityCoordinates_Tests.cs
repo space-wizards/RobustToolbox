@@ -43,6 +43,7 @@ namespace Robust.UnitTesting.Shared.Map
         {
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
             prototypeManager.Resync();
 

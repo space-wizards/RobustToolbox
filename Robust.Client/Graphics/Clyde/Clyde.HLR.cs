@@ -543,7 +543,7 @@ namespace Robust.Client.Graphics.Clyde
             if (eye == null)
                 return default;
 
-            var rotation = eye.Rotation;
+            var rotation = -eye.Rotation;
             var aabb = GetAABB(eye, viewport);
 
             return new Box2Rotated(aabb, rotation, aabb.Center);

@@ -784,8 +784,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    // TODO: I know this doesn't work with rotated grids but when I come back to these I'm adding tests
-                    // because rotation bugs are common.
                     var treeBounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>

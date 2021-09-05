@@ -110,10 +110,12 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (_glContext!.HasBrokenWindowSrgb)
                     {
+                        _hasGLSrgb = false;
                         _sawmillOgl.Debug("  sRGB: false (window broken sRGB)");
                     }
                     else
                     {
+                        _hasGLSrgb = true;
                         _sawmillOgl.Debug("  sRGB: true");
                     }
                 }

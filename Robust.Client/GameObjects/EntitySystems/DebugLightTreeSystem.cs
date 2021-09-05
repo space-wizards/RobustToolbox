@@ -67,9 +67,9 @@ namespace Robust.Client.GameObjects
 
                 var viewport = _eyeManager.GetWorldViewport();
 
-                foreach (var tree in _tree.GetLightTrees(map, viewport))
+                foreach (var tree in _tree.GetRenderTrees(map, viewport))
                 {
-                    foreach (var light in tree)
+                    foreach (var light in tree.LightTree)
                     {
                         var aabb = _lookup.GetWorldAabbFromEntity(light.Owner);
                         if (!aabb.Intersects(viewport)) continue;

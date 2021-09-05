@@ -70,16 +70,10 @@ namespace Robust.Client.GameObjects
                 var worldPos = gridEnt.Transform.WorldPosition;
                 var worldRot = gridEnt.Transform.WorldRotation;
 
-                foreach (var (_, chunk) in mapGrid.GetMapChunks())
+                foreach (var chunk in mapGrid.GetMapChunks(viewport))
                 {
                     var chunkBounds = chunk.CalcWorldBounds(worldPos, worldRot);
                     var aabb = chunkBounds.CalcBoundingBox();
-
-                    // Calc world bounds for chunk.
-                    if (!aabb.Intersects(in viewport))
-                    {
-                        continue;
-                    }
 
                     args.WorldHandle.DrawRect(chunkBounds, Color.Green.WithAlpha(0.2f), true);
                     args.WorldHandle.DrawRect(aabb, Color.Red, false);

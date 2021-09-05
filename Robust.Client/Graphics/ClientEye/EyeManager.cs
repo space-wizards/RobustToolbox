@@ -69,6 +69,13 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
+        public Box2Rotated GetWorldViewbounds()
+        {
+            var bounds = GetWorldViewport();
+            return new Box2Rotated(bounds, CurrentEye.Rotation, bounds.Center);
+        }
+
+        /// <inheritdoc />
         public Vector2 WorldToScreen(Vector2 point)
         {
             return MainViewport.WorldToScreen(point);

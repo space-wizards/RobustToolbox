@@ -876,17 +876,40 @@ namespace Robust.Shared.Maths
         public Box2 TransformBox(in Box2Rotated box)
         {
             Span<Vector2> vertices = stackalloc Vector2[4];
-            vertices[0] = box.BottomLeft;
-            vertices[1] = box.BottomRight;
-            vertices[2] = box.TopRight;
-            vertices[3] = box.TopLeft;
+            vertices[0] = Transform(box.BottomLeft);
+            vertices[1] = Transform(box.BottomRight);
+            vertices[2] = Transform(box.TopRight);
+            vertices[3] = Transform(box.TopLeft);
 
-            var botLeft = box.BottomLeft;
-            var topRight = box.TopRight;
+            var botLeft = vertices[0];
+            var topRight = vertices[0];
 
             for (var i = 0; i < 4; i++)
             {
-                var vertex = Transform(vertices[i]);
+                var vertex = vertices[i];
+
+                botLeft = Vector2.ComponentMin(vertex, botLeft);
+                topRight = Vector2.ComponentMax(vertex, topRight);
+            }
+
+            return new Box2(botLeft, topRight);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2 TransformBox(in Box2 box)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = Transform(box.BottomLeft);
+            vertices[1] = Transform(box.BottomRight);
+            vertices[2] = Transform(box.TopRight);
+            vertices[3] = Transform(box.TopLeft);
+
+            var botLeft = vertices[0];
+            var topRight = vertices[0];
+
+            for (var i = 0; i < 4; i++)
+            {
+                var vertex = vertices[i];
 
                 botLeft = Vector2.ComponentMin(vertex, botLeft);
                 topRight = Vector2.ComponentMax(vertex, topRight);

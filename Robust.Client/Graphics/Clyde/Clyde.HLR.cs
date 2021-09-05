@@ -386,7 +386,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }, bounds, true);
+                }, bounds);
             }
         }
 

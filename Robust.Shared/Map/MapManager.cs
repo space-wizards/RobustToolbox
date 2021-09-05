@@ -566,11 +566,9 @@ namespace Robust.Shared.Map
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
                     // TODO: Use CollisionManager once it's done.
-                    if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
-                    {
-                        grid = mapGrid;
-                        return true;
-                    }
+                    if (!fixture.Shape.ComputeAABB(transform, i).Contains(worldPos)) continue;
+                    grid = mapGrid;
+                    return true;
                 }
             }
 

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -74,7 +72,10 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
-        public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
+        public Box2 WorldBounds =>
+            new Box2Rotated(LocalBounds, WorldRotation, LocalBounds.Center)
+                .CalcBoundingBox()
+                .Translated(WorldPosition);
 
         /// <inheritdoc />
         [ViewVariables]

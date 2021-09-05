@@ -199,10 +199,12 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetRelativeAABBFromEntity(in IEntity entity)
         {
+            // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
+
             var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
 
-            return aabb.Translated(-tree?.Owner.Transform.WorldPosition ?? Vector2.Zero);
+            return tree?.Owner.Transform.InvWorldMatrix.TransformBox(aabb) ?? aabb;
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -292,7 +294,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, box))
             {
-                var offsetBox = box.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(box);
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
@@ -320,7 +322,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
-                var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(position);
 
                 lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
             }
@@ -347,7 +349,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
-                var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(position);
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
@@ -378,16 +380,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
             {
-                var offsetBox = aabb.Translated(-lookup.Owner.Transform.WorldPosition);
+                var localPoint = lookup.Owner.Transform.InvWorldMatrix.Transform(position);
 
-                lookup.Tree.QueryAabb(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
+                lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
                     if (Intersecting(ent, state.position))
                     {
                         state.list.Add(ent);
                     }
                     return true;
-                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+                }, localPoint, (flags & LookupFlags.Approximate) != 0x0);
             }
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0 &&
@@ -634,7 +636,7 @@ namespace Robust.Shared.GameObjects
             var transform = entity.Transform;
             DebugTools.Assert(transform.Initialized);
 
-            var aabb = worldAABB.Value.Translated(-lookup.Owner.Transform.WorldPosition);
+            var aabb = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB.Value);
 
             // for debugging
             var necessary = 0;

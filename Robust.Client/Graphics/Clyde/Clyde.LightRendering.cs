@@ -501,7 +501,7 @@ namespace Robust.Client.Graphics.Clyde
             GetLightsToRender(MapId map, in Box2Rotated worldBounds, in Box2 worldAABB)
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-            var enlargedBounds = worldBounds.CalcBoundingBox().Enlarged(renderingTreeSystem.MaxLightRadius);
+            var enlargedBounds = worldAABB.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var state = (this, worldAABB, count: 0);
@@ -519,6 +519,9 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     var transform = light.Owner.Transform;
+
+                    if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
+
                     var lightPos = transform.WorldMatrix.Transform(light.Offset);
 
                     var circle = new Circle(lightPos, light.Radius);
@@ -783,7 +786,7 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // TODO: I know this doesn't work with rotated grids but when I come back to these I'm adding tests
                     // because rotation bugs are common.
-                    var treeBounds = expandedBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                    var treeBounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {

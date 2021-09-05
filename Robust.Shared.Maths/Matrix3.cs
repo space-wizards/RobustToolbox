@@ -872,6 +872,9 @@ namespace Robust.Shared.Maths
             return Transform(this, vector);
         }
 
+        // TODO: These 2 are big-ass SIMD candidates. Trying to make it use the existing Box2Rotated SIMD seemed jank
+        // These are also gonna be called a decent amount.
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2 TransformBox(in Box2Rotated box)
         {

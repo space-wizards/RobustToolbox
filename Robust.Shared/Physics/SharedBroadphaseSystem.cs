@@ -883,6 +883,12 @@ namespace Robust.Shared.Physics
 
                 if (!broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
+                if (broadphase.Owner.TryGetComponent(out IMapGridComponent? mapGrid) &&
+                    !_mapManager.GetGrid(mapGrid.GridIndex).WorldBounds.Intersects(aabb))
+                {
+                    continue;
+                }
+
                 var transform = physicsComponent.GetTransform();
                 var found = false;
 

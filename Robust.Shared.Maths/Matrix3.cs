@@ -924,6 +924,8 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Transform(in Matrix3 matrix, Vector2 vector)
         {
+            // TODO: Look at SIMD coz holy fak this is called a lot
+
             var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
             var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
 

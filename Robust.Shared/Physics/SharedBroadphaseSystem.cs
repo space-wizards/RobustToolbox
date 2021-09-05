@@ -1053,19 +1053,20 @@ namespace Robust.Shared.Physics
 
             foreach (var broadphase in GetBroadphases(mapId, rayBox))
             {
-                var offset = broadphase.Owner.Transform.WorldPosition;
+                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
 
-                var gridRay = new CollisionRay(ray.Position - offset, ray.Direction, ray.CollisionMask);
-                // TODO: Probably need rotation when we get rotatable grids
+                var position = invMatrix.Transform(ray.Position);
+                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var direction = gridRot.RotateVec(ray.Direction);
+
+                var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
                     if (returnOnFirstHit && results.Count > 0) return true;
 
                     if (distFromOrigin > maxLength)
-                    {
                         return true;
-                    }
 
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                     {
@@ -1080,7 +1081,7 @@ namespace Robust.Shared.Physics
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, point + offset, proxy.Fixture.Body.Owner);
+                    var result = new RayCastResults(distFromOrigin, point + position, proxy.Fixture.Body.Owner);
                     results.Add(result);
                     EntityManager.EventBus.QueueEvent(EventSource.Local,
                         new DebugDrawRayMessage(

@@ -286,7 +286,15 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
-            var localArea = new Box2(WorldToLocal(worldArea.BottomLeft), WorldToLocal(worldArea.TopRight));
+            var matrix = InvWorldMatrix;
+
+            var localBL = matrix.Transform(worldArea.BottomLeft);
+            var localTR = matrix.Transform(worldArea.TopRight);
+
+            var botLeft = Vector2.ComponentMin(localBL, localTR);
+            var topRight = Vector2.ComponentMax(localBL, localTR);
+
+            var localArea = new Box2(botLeft, topRight);
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 

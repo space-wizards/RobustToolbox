@@ -283,19 +283,32 @@ namespace Robust.Shared.Map
             }
         }
 
+        public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
+            Predicate<TileRef>? predicate = null)
+        {
+            var matrix = InvWorldMatrix;
+            var localArea = matrix.TransformBox(worldArea);
+
+            foreach (var tile in GetLocalTilesIntersecting(localArea, ignoreEmpty, predicate))
+            {
+                yield return tile;
+            }
+        }
+
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
             var matrix = InvWorldMatrix;
+            var localArea = matrix.TransformBox(worldArea);
 
-            var localBL = matrix.Transform(worldArea.BottomLeft);
-            var localTR = matrix.Transform(worldArea.TopRight);
+            foreach (var tile in GetLocalTilesIntersecting(localArea, ignoreEmpty, predicate))
+            {
+                yield return tile;
+            }
+        }
 
-            var botLeft = Vector2.ComponentMin(localBL, localTR);
-            var topRight = Vector2.ComponentMax(localBL, localTR);
-
-            var localArea = new Box2(botLeft, topRight);
-
+        private IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty, Predicate<TileRef>? predicate)
+        {
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
@@ -314,19 +327,14 @@ namespace Robust.Shared.Map
                             continue;
 
                         if (predicate == null || predicate(tile))
-                        {
                             yield return tile;
-
-                        }
                     }
                     else if (!ignoreEmpty)
                     {
                         var tile = new TileRef(ParentMapId, Index, x, y, new Tile());
 
                         if (predicate == null || predicate(tile))
-                        {
                             yield return tile;
-                        }
                     }
                 }
             }

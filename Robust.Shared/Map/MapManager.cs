@@ -546,14 +546,14 @@ namespace Robust.Shared.Map
                 var matrix = gridEnt.Transform.InvWorldMatrix;
                 var localPos = matrix.Transform(worldPos);
 
-                var gridPos = gridEnt.Transform.WorldPosition;
-                var gridRot = gridEnt.Transform.WorldRotation;
-
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
                 var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
 
                 if (!mapGrid.HasChunk(chunkIndices)) continue;
                 if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
+
+                var gridPos = gridEnt.Transform.WorldPosition;
+                var gridRot = gridEnt.Transform.WorldRotation;
 
                 var transform = new Transform(gridPos, (float) gridRot);
                 // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.

@@ -73,7 +73,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         [ViewVariables]
         public Box2 WorldBounds =>
-            new Box2Rotated(LocalBounds, WorldRotation, LocalBounds.Center)
+            new Box2Rotated(LocalBounds, WorldRotation, Vector2.Zero)
                 .CalcBoundingBox()
                 .Translated(WorldPosition);
 

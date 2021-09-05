@@ -98,6 +98,8 @@ namespace Robust.Shared.Map
         /// <param name="tiles"></param>
         void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
 
+        IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
         /// </summary>

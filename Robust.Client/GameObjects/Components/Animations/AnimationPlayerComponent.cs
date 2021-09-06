@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
 using static Robust.Client.Animations.AnimationPlaybackShared;
@@ -12,9 +11,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class AnimationPlayerComponent : Component
     {
+        // TODO: Give this component a friend someday. Way too much content shit to change atm ._.
+
         public override string Name => "AnimationPlayer";
 
-        private readonly Dictionary<string, AnimationPlayback> _playingAnimations
+        public int PlayingAnimationCount => PlayingAnimations.Count;
+
+        internal readonly Dictionary<string, AnimationPlayback> PlayingAnimations
             = new();
 
         /// <summary>
@@ -26,50 +29,31 @@ namespace Robust.Client.GameObjects
         /// </param>
         public void Play(Animation animation, string key)
         {
+            EntitySystem.Get<AnimationPlayerSystem>().AddComponent(this);
             var playback = new AnimationPlayback(animation);
 
-            _playingAnimations.Add(key, playback);
+            PlayingAnimations.Add(key, playback);
         }
 
         public bool HasRunningAnimation(string key)
         {
-            return _playingAnimations.ContainsKey(key);
+            return PlayingAnimations.ContainsKey(key);
         }
 
         public void Stop(string key)
         {
-            _playingAnimations.Remove(key);
+            PlayingAnimations.Remove(key);
         }
 
-        internal void Update(float frameTime)
+        /// <summary>
+        /// Temporary method until the event is replaced with eventbus.
+        /// </summary>
+        internal void AnimationComplete(string key)
         {
-            if (_playingAnimations.Count == 0)
-            {
-                return;
-            }
-
-            List<string>? toRemove = null;
-            // TODO: Get rid of this ToArray() allocation.
-            foreach (var (key, playback) in _playingAnimations.ToArray())
-            {
-                var keep = UpdatePlayback(Owner, playback, frameTime);
-                if (!keep)
-                {
-                    toRemove ??= new List<string>();
-                    toRemove.Add(key);
-                }
-            }
-
-            if (toRemove != null)
-            {
-                foreach (var key in toRemove)
-                {
-                    _playingAnimations.Remove(key);
-                    AnimationCompleted?.Invoke(key);
-                }
-            }
+            AnimationCompleted?.Invoke(key);
         }
 
+        [Obsolete("Use AnimationCompletedEvent instead")]
         public event Action<string>? AnimationCompleted;
     }
 }

@@ -158,7 +158,7 @@ namespace Robust.Client.GameObjects
                                     stream.TrackingEntity);
                             }
 
-                            var distance = sourceRelative.Length;
+                            var distance = MathF.Max(stream.ReferenceDistance, MathF.Min(sourceRelative.Length, stream.MaxDistance));
                             float gain;
 
                             // Technically these are formulas for gain not decibels but EHHHHHHHH.
@@ -177,8 +177,8 @@ namespace Robust.Client.GameObjects
                                     break;
                                 case Attenuation.LinearDistanceClamped:
                                 case Attenuation.LinearDistance:
-                                    gain = (1 - stream.RolloffFactor * (distance - stream.ReferenceDistance) /
-                                        (stream.MaxDistance - stream.ReferenceDistance));
+                                    gain = 1f - stream.RolloffFactor * (distance - stream.ReferenceDistance) /
+                                        (stream.MaxDistance - stream.ReferenceDistance);
 
                                     break;
                                 case Attenuation.ExponentDistanceClamped:
@@ -190,7 +190,9 @@ namespace Robust.Client.GameObjects
                                     throw new ArgumentOutOfRangeException($"No implemented attenuation for {stream.Attenuation.ToString()}");
                             }
 
-                            stream.Source.SetVolume(stream.Volume + gain);
+                            var actualGain = MathF.Max(0f, MathF.Pow(10, stream.Volume / 10) + gain);
+
+                            stream.Source.SetVolumeDirect(actualGain);
                             stream.Source.SetOcclusion(occlusion);
                         }
 

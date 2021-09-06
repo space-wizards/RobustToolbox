@@ -706,7 +706,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter); // TODO: Sweep.LocalCenter
+            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));

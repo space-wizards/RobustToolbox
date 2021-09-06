@@ -349,7 +349,7 @@ namespace Robust.Shared.Physics.Collision
 
             internal EPCollider(IConfigurationManager configManager)
             {
-                _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _polygonRadius = PhysicsConstants.PolygonRadius;
                 _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }

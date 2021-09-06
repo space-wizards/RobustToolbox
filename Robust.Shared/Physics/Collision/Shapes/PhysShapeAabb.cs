@@ -69,7 +69,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PhysShapeAabb()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         public Box2 ComputeAABB(Transform transform, int childIndex)

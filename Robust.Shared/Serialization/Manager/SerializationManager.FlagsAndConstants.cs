@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,9 +13,9 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly Dictionary<Type, Type> _constantsMapping = new();
 
-        private void InitializeFlagsAndConstants()
+        private void InitializeFlagsAndConstants(IEnumerable<Type> flags, IEnumerable<Type> constants)
         {
-            foreach (Type constType in _reflectionManager.FindTypesWithAttribute<ConstantsForAttribute>())
+            foreach (Type constType in constants)
             {
                 if (!constType.IsEnum)
                 {
@@ -37,7 +38,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
             }
 
-            foreach (var bitflagType in _reflectionManager.FindTypesWithAttribute<FlagsForAttribute>())
+            foreach (var bitflagType in flags)
             {
                 if (!bitflagType.IsEnum)
                 {

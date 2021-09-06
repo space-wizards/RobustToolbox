@@ -24,7 +24,13 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     // Compat mode: only GLES2.
                     if (Clyde._cfg.GetCVar(CVars.DisplayCompat))
-                        return new[] { GetVersionSpec(RendererOpenGLVersion.GLES2) };
+                    {
+                        return new[]
+                        {
+                            GetVersionSpec(RendererOpenGLVersion.GLES3),
+                            GetVersionSpec(RendererOpenGLVersion.GLES2)
+                        };
+                    }
 
                     var requestedVersion = (RendererOpenGLVersion) Clyde._cfg.GetCVar(CVars.DisplayOpenGLVersion);
                     if (requestedVersion != RendererOpenGLVersion.Auto)

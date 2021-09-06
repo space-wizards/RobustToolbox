@@ -31,7 +31,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision
 {
-    internal interface ICollisionManager
+    internal interface IManifoldManager
     {
         bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
             in Transform xfB);
@@ -59,24 +59,12 @@ namespace Robust.Shared.Physics.Collision
 
         void CollideAabbs(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
             PhysShapeAabb aabbB, in Transform transformB);
-
-        void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA,
-            PhysShapeRect rectB, in Transform transformB);
-
-        void CollideRects(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
-            PhysShapeRect rectB, in Transform transformB);
-
-        void CollideRectAndCircle(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
-            PhysShapeCircle circleB, in Transform transformB);
-
-        void CollideRectAndPolygon(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA,
-            PolygonShape polyB, in Transform transformB);
     }
 
     /// <summary>
     ///     Handles several collision features: Generating contact manifolds, testing shape overlap,
     /// </summary>
-    internal class CollisionManager : ICollisionManager
+    internal sealed class CollisionManager : IManifoldManager
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 
@@ -94,7 +82,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The transform for the first shape.</param>
         /// <param name="xfB">The transform for the seconds shape.</param>
         /// <returns></returns>
-        bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
+        bool IManifoldManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
             // TODO: Make this a struct.
@@ -361,7 +349,7 @@ namespace Robust.Shared.Physics.Collision
 
             internal EPCollider(IConfigurationManager configManager)
             {
-                _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _polygonRadius = PhysicsConstants.PolygonRadius;
                 _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
@@ -1138,31 +1126,6 @@ namespace Robust.Shared.Physics.Collision
             in Transform transformB)
         {
             CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) aabbB, transformB);
-        }
-
-        public void CollideAabbAndRect(ref Manifold manifold, PhysShapeAabb aabbA, in Transform transformA, PhysShapeRect rectB,
-            in Transform transformB)
-        {
-            // TODO: Uhh this should work I think with cached bounds? Worst case we manually calc it here but then we need to do fuckery in DistanceProxy
-            CollidePolygons(ref manifold, (PolygonShape) aabbA, transformA, (PolygonShape) rectB, transformB);
-        }
-
-        public void CollideRects(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeRect rectB,
-            in Transform transformB)
-        {
-            CollidePolygons(ref manifold, (PolygonShape) rectA, transformA, (PolygonShape) rectB, transformB);
-        }
-
-        public void CollideRectAndCircle(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PhysShapeCircle circleB,
-            in Transform transformB)
-        {
-            CollidePolygonAndCircle(ref manifold, (PolygonShape) rectA, transformA, circleB, transformB);
-        }
-
-        public void CollideRectAndPolygon(ref Manifold manifold, PhysShapeRect rectA, in Transform transformA, PolygonShape polyB,
-            in Transform transformB)
-        {
-            CollidePolygons(ref manifold, (PolygonShape) rectA, transformA, polyB, transformB);
         }
 
         /// <summary>

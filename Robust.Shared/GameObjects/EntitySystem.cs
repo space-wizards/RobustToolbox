@@ -93,14 +93,25 @@ namespace Robust.Shared.GameObjects
         }
 
         protected void RaiseLocalEvent<TEvent>(EntityUid uid, TEvent args, bool broadcast = true)
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
         }
 
-        protected void RaiseLocalEvent(EntityUid uid, EntityEventArgs args, bool broadcast = true)
+        protected void RaiseLocalEvent(EntityUid uid, object args, bool broadcast = true)
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, args, broadcast);
+        }
+
+        protected void RaiseLocalEvent<TEvent>(EntityUid uid, ref TEvent args, bool broadcast = true)
+            where TEvent : notnull
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
+        }
+
+        protected void RaiseLocalEvent(EntityUid uid, ref object args, bool broadcast = true)
+        {
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref args, broadcast);
         }
 
         #endregion

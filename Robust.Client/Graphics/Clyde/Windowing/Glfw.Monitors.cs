@@ -21,7 +21,6 @@ namespace Robust.Client.Graphics.Clyde
 
             // Can't use ClydeHandle because it's 64 bit.
             private int _nextMonitorId = 1;
-            private int _primaryMonitorId;
             private readonly Dictionary<int, GlfwMonitorReg> _monitors = new();
 
             private void InitMonitors()
@@ -35,7 +34,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 var primaryMonitor = GLFW.GetPrimaryMonitor();
                 var up = GLFW.GetMonitorUserPointer(primaryMonitor);
-                _primaryMonitorId = (int) up;
+                _clyde._primaryMonitorId = (int) up;
 
                 ProcessEvents();
             }
@@ -86,7 +85,7 @@ namespace Robust.Client.Graphics.Clyde
                     ev.CurrentMode.RefreshRate,
                     ev.AllModes);
 
-                _clyde._monitorHandles.Add(impl);
+                _clyde._monitorHandles.Add(ev.Id, impl);
                 _monitors[ev.Id] = new GlfwMonitorReg
                 {
                     Id = ev.Id,
@@ -116,7 +115,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var reg = _monitors[ev.Id];
                 _monitors.Remove(ev.Id);
-                _clyde._monitorHandles.Remove(reg.Handle);
+                _clyde._monitorHandles.Remove(ev.Id);
             }
 
             private sealed class GlfwMonitorReg : MonitorReg

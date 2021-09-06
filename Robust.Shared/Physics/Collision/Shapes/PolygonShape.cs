@@ -153,7 +153,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PolygonShape()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         public PolygonShape(float radius)
@@ -171,6 +171,29 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 new(halfWidth, halfHeight),
                 new(-halfWidth, halfHeight),
             };
+        }
+
+        public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
+        {
+            // TODO: Like above just set normals directly but needs tests and stuff which I CBF to do in this PR.
+            Vertices = new List<Vector2>
+            {
+                new(-halfWidth, -halfHeight),
+                new(halfWidth, -halfHeight),
+                new(halfWidth, halfHeight),
+                new(-halfWidth, halfHeight),
+            };
+
+            Centroid = center;
+
+            var xf = new Transform(center, angle);
+
+            // Transform vertices and normals.
+            for (var i = 0; i < _vertices.Count; ++i)
+            {
+                _vertices[i] = Transform.Mul(xf, _vertices[i]);
+                _normals[i] = Transform.Mul(xf.Quaternion2D, _normals[i]);
+            }
         }
 
         // Don't need to check Centroid for these below as it's based off of the vertices below
@@ -259,23 +282,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
                     new (0, -1),
                 }
                 */
-            };
-        }
-
-        public static explicit operator PolygonShape(PhysShapeRect rect)
-        {
-            // Ideal world we don't even need PhysShapeRect?
-            var bounds = rect.CachedBounds;
-
-            return new PolygonShape(rect.Radius)
-            {
-                Vertices = new List<Vector2>
-                {
-                    bounds.BottomRight,
-                    bounds.TopRight,
-                    bounds.TopLeft,
-                    bounds.BottomLeft,
-                },
             };
         }
     }

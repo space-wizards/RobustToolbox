@@ -150,12 +150,20 @@ namespace Robust.Client.Graphics.Clyde
 
             if (_isGLES)
             {
-                // GLES2 uses a different GLSL versioning scheme to desktop GL.
-                versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
-                if (_hasGLStandardDerivatives)
+                if (_hasGLES3Shaders)
                 {
-                    versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
+                    versionHeader = "#version 300 es\n";
                 }
+                else
+                {
+                    // GLES2 uses a different GLSL versioning scheme to desktop GL.
+                    versionHeader = "#version 100\n#define HAS_VARYING_ATTRIBUTE\n";
+                    if (_hasGLStandardDerivatives)
+                    {
+                        versionHeader += "#extension GL_OES_standard_derivatives : enable\n";
+                    }
+                }
+
             }
 
             if (_hasGLStandardDerivatives)

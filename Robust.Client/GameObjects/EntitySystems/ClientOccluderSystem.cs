@@ -62,7 +62,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void HandleAnchorChanged(EntityUid uid, ClientOccluderComponent component, AnchorStateChangedEvent args)
+        private static void HandleAnchorChanged(EntityUid uid, ClientOccluderComponent component, ref AnchorStateChangedEvent args)
         {
             component.AnchorStateChanged();
         }

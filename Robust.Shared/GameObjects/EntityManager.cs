@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
 using Prometheus;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
@@ -49,8 +47,6 @@ namespace Robust.Shared.GameObjects
         ///     All entities currently stored in the manager.
         /// </summary>
         protected readonly Dictionary<EntityUid, Entity> Entities = new();
-
-        protected readonly List<Entity> AllEntities = new();
 
         private EntityEventBus _eventBus = null!;
 
@@ -125,11 +121,6 @@ namespace Robust.Shared.GameObjects
             using (histogram?.WithLabels("ComponentCull").NewTimer())
             {
                 _componentManager.CullRemovedComponents();
-            }
-
-            using (histogram?.WithLabels("EntityCull").NewTimer())
-            {
-                CullDeletedEntities();
             }
         }
 
@@ -227,21 +218,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntities()
-        {
-            // Need to do an iterator loop to avoid issues with concurrent access.
-            // ReSharper disable once ForCanBeConvertedToForeach
-            for (var i = 0; i < AllEntities.Count; i++)
-            {
-                var entity = AllEntities[i];
-                if (entity.Deleted)
-                {
-                    continue;
-                }
-
-                yield return entity;
-            }
-        }
+        public IEnumerable<IEntity> GetEntities() => Entities.Values;
 
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
@@ -295,6 +272,7 @@ namespace Robust.Shared.GameObjects
             entity.LifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
+            Entities.Remove(entity.Uid);
         }
 
         public void QueueDeleteEntity(IEntity entity)
@@ -335,8 +313,6 @@ namespace Robust.Shared.GameObjects
             {
                 DeleteEntity(e);
             }
-
-            CullDeletedEntities();
         }
 
         /// <summary>
@@ -381,7 +357,6 @@ namespace Robust.Shared.GameObjects
 
             // We do this after the event, so if the event throws we have not committed
             Entities[entity.Uid] = entity;
-            AllEntities.Add(entity);
 
             // allocate the required MetaDataComponent
             _componentManager.AddComponent<MetaDataComponent>(entity);
@@ -445,27 +420,6 @@ namespace Robust.Shared.GameObjects
         {
             entity.StartAllComponents();
             EntityStarted?.Invoke(this, entity.Uid);
-        }
-
-        private void CullDeletedEntities()
-        {
-            // Culling happens in updates.
-            // It doesn't matter because to-be culled entities can't be accessed.
-            // This should prevent most cases of "somebody is iterating while we're removing things"
-            for (var i = 0; i < AllEntities.Count; i++)
-            {
-                var entity = AllEntities[i];
-                if (!entity.Deleted)
-                {
-                    continue;
-                }
-
-                AllEntities.RemoveSwap(i);
-                Entities.Remove(entity.Uid);
-
-                // Process the one we just swapped next.
-                i--;
-            }
         }
 
 #endregion Entity Management

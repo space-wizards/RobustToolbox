@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Diagnostics;
+using System.Linq;
+using XamlX;
 using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
@@ -11,11 +13,14 @@ namespace Robust.Build.Tasks
     /// Emitters & Transformers based on:
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AvaloniaXamlIlRootObjectScopeTransformer.cs
     /// - https://github.com/AvaloniaUI/Avalonia/blob/c85fa2b9977d251a31886c2534613b4730fbaeaf/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/AddNameScopeRegistration.cs
+    /// - https://github.com/AvaloniaUI/Avalonia/blob/afb8ae6f3c517dae912729511483995b16cb31af/src/Markup/Avalonia.Markup.Xaml.Loader/CompilerExtensions/Transformers/IgnoredDirectivesTransformer.cs
     /// </summary>
     public class RobustXamlILCompiler : XamlILCompiler
     {
         public RobustXamlILCompiler(TransformerConfiguration configuration, XamlLanguageEmitMappings<IXamlILEmitter, XamlILNodeEmitResult> emitMappings, bool fillWithDefaults) : base(configuration, emitMappings, fillWithDefaults)
         {
+            Transformers.Insert(0, new IgnoredDirectivesTransformer());
+
             Transformers.Add(new AddNameScopeRegistration());
             Transformers.Add(new RobustMarkRootObjectScopeNode());
 
@@ -195,6 +200,25 @@ namespace Robust.Build.Tasks
 
                     return XamlILNodeEmitResult.Void(1);
                 }
+            }
+        }
+
+        class IgnoredDirectivesTransformer : IXamlAstTransformer
+        {
+            public IXamlAstNode Transform(AstTransformationContext context, IXamlAstNode node)
+            {
+                if (node is XamlAstObjectNode astNode)
+                {
+                    astNode.Children.RemoveAll(n =>
+                        n is XamlAstXmlDirective dir &&
+                        dir.Namespace == XamlNamespaces.Xaml2006 &&
+                        (dir.Name == "Class" ||
+                         dir.Name == "Precompile" ||
+                         dir.Name == "FieldModifier" ||
+                         dir.Name == "ClassModifier"));
+                }
+
+                return node;
             }
         }
     }

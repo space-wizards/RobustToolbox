@@ -11,8 +11,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         Polygon = 2,
         Chain = 3,
         Aabb = 4,
-        Rectangle = 5, // Look you might be able to replace this with polys but for now I have done the thing
-        TypeCount = 6, // Obviously increment this if you add something
+        TypeCount = 5, // Obviously increment this if you add something
     }
 
     /// <summary>

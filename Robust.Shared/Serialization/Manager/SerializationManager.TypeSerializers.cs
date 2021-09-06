@@ -14,9 +14,9 @@ namespace Robust.Shared.Serialization.Manager
         private readonly Dictionary<Type, Type> _genericCopierTypes = new();
         private readonly Dictionary<(Type Type, Type DataNodeType), Type> _genericValidatorTypes = new();
 
-        private void InitializeTypeSerializers()
+        private void InitializeTypeSerializers(IEnumerable<Type> typeSerializers)
         {
-            foreach (var type in _reflectionManager.FindTypesWithAttribute<TypeSerializerAttribute>())
+            foreach (var type in typeSerializers)
             {
                 RegisterSerializer(type);
             }

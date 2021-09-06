@@ -3,9 +3,9 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Robust.Shared.Log;
 using SixLabors.ImageSharp.PixelFormats;
 
 // ReSharper disable once IdentifierTypo
@@ -23,9 +23,6 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _renderTargetDisposeQueue
             = new();
-
-        // Initialized in Clyde's constructor
-        private readonly RenderMainWindow _mainMainWindowRenderMainTarget;
 
         // This is always kept up-to-date, except in CreateRenderTarget (because it restores the old value)
         // It is used for SRGB emulation.
@@ -248,8 +245,7 @@ namespace Robust.Client.Graphics.Clyde
             // NOTE: It's critically important that this be the "focal point" of all framebuffer bindings.
             if (rt.IsWindow)
             {
-                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-                CheckGlError();
+                _glContext!.BindWindowRenderTarget(rt.WindowId);
             }
             else
             {
@@ -267,17 +263,15 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void UpdateMainWindowLoadedRtSize()
-        {
-            var loadedRt = RtToLoaded(_mainMainWindowRenderMainTarget);
-            loadedRt.Size = _windowing!.MainWindow!.FramebufferSize;
-        }
-
         private sealed class LoadedRenderTarget
         {
             public bool IsWindow;
+            public WindowId WindowId;
+
             public Vector2i Size;
             public bool IsSrgb;
+
+            public bool FlipY;
 
             public RTCF ColorFormat;
 
@@ -386,11 +380,11 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private sealed class RenderMainWindow : RenderTargetBase
+        private sealed class RenderWindow : RenderTargetBase
         {
-            public override Vector2i Size => Clyde._windowing!.MainWindow!.FramebufferSize;
+            public override Vector2i Size => Clyde._renderTargets[Handle].Size;
 
-            public RenderMainWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
+            public RenderWindow(Clyde clyde, ClydeHandle handle) : base(clyde, handle)
             {
             }
         }

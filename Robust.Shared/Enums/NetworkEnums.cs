@@ -18,22 +18,4 @@
         InGame,
         Disconnected
     }
-
-    public enum NetworkDataType: byte
-    {
-        d_enum,
-        d_bool,
-        d_byte,
-        d_sbyte,
-        d_ushort,
-        d_short,
-        d_int,
-        d_uint,
-        d_ulong,
-        d_long,
-        d_float,
-        d_double,
-        d_string,
-        d_byteArray
-    }
 }

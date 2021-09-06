@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace Robust.Client.Graphics
+﻿namespace Robust.Client.Graphics
 {
-    public class WindowDestroyedEventArgs : EventArgs
+    public readonly struct WindowDestroyedEventArgs
     {
         public IClydeWindow Window { get; }
 

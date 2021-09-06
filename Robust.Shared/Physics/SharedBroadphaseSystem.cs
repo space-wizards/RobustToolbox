@@ -8,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Utility;
 
@@ -16,7 +17,6 @@ namespace Robust.Shared.Physics
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly SharedPhysicsSystem _physicsSystem = default!;
 
         private const int MinimumBroadphaseCapacity = 256;
 
@@ -229,7 +229,7 @@ namespace Robust.Shared.Physics
 
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
-            var contactManager = _physicsSystem.Maps[mapId].ContactManager;
+            var contactManager = _mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().ContactManager;
 
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
@@ -312,7 +312,7 @@ namespace Robust.Shared.Physics
             _broadphases.Clear();
         }
 
-        private void HandleParentChange(EntityUid uid, PhysicsComponent component, EntParentChangedMessage args)
+        private void HandleParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
         {
             _queuedParents.Enqueue(args);
         }
@@ -453,12 +453,12 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void HandleMove(EntityUid uid, PhysicsComponent component, MoveEvent args)
+        private void HandleMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
         {
             _queuedMoves.Enqueue(args);
         }
 
-        private void HandleRotate(EntityUid uid, PhysicsComponent component, RotateEvent args)
+        private void HandleRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
         {
             _queuedRotates.Enqueue(args);
         }
@@ -484,6 +484,19 @@ namespace Robust.Shared.Physics
             // TODO: Set newcontacts to true.
         }
 
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape)
+        {
+            var fixture = new Fixture(body, shape);
+            CreateFixture(body, fixture);
+        }
+
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)
+        {
+            // TODO: Make it take in density instead
+            var fixture = new Fixture(body, shape) {Mass = mass};
+            CreateFixture(body, fixture);
+        }
+
         public void DestroyFixture(PhysicsComponent body, Fixture fixture)
         {
             // TODO: Assert world locked
@@ -492,7 +505,6 @@ namespace Robust.Shared.Physics
 
             if (!body._fixtures.Remove(fixture))
             {
-                DebugTools.Assert(false);
                 Logger.ErrorS("physics", $"Tried to remove fixture from {body.Owner} that was already removed.");
                 return;
             }
@@ -509,13 +521,13 @@ namespace Robust.Shared.Physics
 
                 if (fixture == fixtureA || fixture == fixtureB)
                 {
-                    body.PhysicsMap.ContactManager.Destroy(contact);
+                    body.PhysicsMap?.ContactManager.Destroy(contact);
                 }
             }
 
             var broadphase = GetBroadphase(fixture.Body);
 
-            if (body.CanCollide && broadphase != null)
+            if (broadphase != null)
             {
                 DestroyProxies(broadphase, fixture);
             }

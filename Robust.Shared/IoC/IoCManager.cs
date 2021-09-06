@@ -1,8 +1,8 @@
 using Robust.Shared.IoC.Exceptions;
 using System;
-using System.Diagnostics.Contracts;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 
@@ -96,7 +96,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        public static void Register<TInterface, TImplementation>(bool overwrite = false)
+        public static void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -116,7 +116,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="T"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        public static void Register<T>(bool overwrite = false) where T : class
+        public static void Register<[MeansImplicitUse] T>(bool overwrite = false) where T : class
         {
             Register<T, T>(overwrite);
         }
@@ -182,7 +182,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         public static T Resolve<T>()
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
@@ -198,7 +198,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         public static object ResolveType(Type type)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);

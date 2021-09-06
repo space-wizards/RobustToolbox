@@ -14,50 +14,53 @@ namespace Robust.Shared.GameObjects
         // Ordered event raising is slow so if this event has any ordering dependencies we use a slower path.
         private readonly HashSet<Type> _orderedEvents = new();
 
-        private void ProcessSingleEventOrdered(EventSource source, object eventArgs, Type eventType)
+        private void ProcessSingleEventOrdered(EventSource source, ref Unit eventArgs, Type eventType, bool byRef)
         {
-            var found = new List<(EventHandler, OrderingData?)>();
+            var found = new List<(RefEventHandler, OrderingData?)>();
 
-            CollectBroadcastOrdered(source, eventType, found);
+            CollectBroadcastOrdered(source, eventType, found, byRef);
 
-            DispatchOrderedEvents(eventArgs, found);
+            DispatchOrderedEvents(ref eventArgs, found);
         }
 
         private void CollectBroadcastOrdered(
             EventSource source,
             Type eventType,
-            List<(EventHandler, OrderingData?)> found)
+            List<(RefEventHandler, OrderingData?)> found,
+            bool byRef)
         {
             if (!_eventSubscriptions.TryGetValue(eventType, out var subs))
                 return;
 
             foreach (var handler in subs)
             {
+                if (handler.ReferenceEvent != byRef)
+                    ThrowByRefMisMatch();
+
                 if ((handler.Mask & source) != 0)
                     found.Add((handler.Handler, handler.Ordering));
             }
         }
 
-        private void RaiseLocalOrdered<TEvent>(
-            EntityUid uid,
-            TEvent args,
-            bool broadcast)
-            where TEvent : EntityEventArgs
+        private void RaiseLocalOrdered(EntityUid uid,
+            Type eventType,
+            ref Unit unitRef,
+            bool broadcast, bool byRef)
         {
-            var found = new List<(EventHandler, OrderingData?)>();
+            var found = new List<(RefEventHandler, OrderingData?)>();
 
             if (broadcast)
-                CollectBroadcastOrdered(EventSource.Local, typeof(TEvent), found);
+                CollectBroadcastOrdered(EventSource.Local, eventType, found, byRef);
 
-            _eventTables.CollectOrdered(uid, typeof(TEvent), found);
+            _eventTables.CollectOrdered(uid, eventType, found, byRef);
 
-            DispatchOrderedEvents(args, found);
+            DispatchOrderedEvents(ref unitRef, found);
 
             if (broadcast)
-                ProcessAwaitingMessages(EventSource.Local, args, typeof(TEvent));
+                ProcessAwaitingMessages(EventSource.Local, ref unitRef, eventType);
         }
 
-        private static void DispatchOrderedEvents(object eventArgs, List<(EventHandler, OrderingData?)> found)
+        private static void DispatchOrderedEvents(ref Unit eventArgs, List<(RefEventHandler, OrderingData?)> found)
         {
             var nodes = TopologicalSort.FromBeforeAfter(
                 found.Where(f => f.Item2 != null),
@@ -69,14 +72,14 @@ namespace Robust.Shared.GameObjects
 
             foreach (var handler in TopologicalSort.Sort(nodes))
             {
-                handler(eventArgs);
+                handler(ref eventArgs);
             }
 
             // Go over all handlers that don't have ordering so weren't included in the sort.
             foreach (var (handler, orderData) in found)
             {
                 if (orderData == null)
-                    handler(eventArgs);
+                    handler(ref eventArgs);
             }
         }
 

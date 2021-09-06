@@ -149,7 +149,7 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnorePaused { get; set; }
 
-        internal PhysicsMap PhysicsMap { get; set; } = default!;
+        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -1174,7 +1174,7 @@ namespace Robust.Shared.GameObjects
             {
                 var contactEdge0 = contactEdge;
                 contactEdge = contactEdge.Next;
-                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+                PhysicsMap?.ContactManager.Destroy(contactEdge0.Contact!);
             }
 
             ContactEdges = null;
@@ -1196,7 +1196,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            PhysicsMap = EntitySystem.Get<SharedPhysicsSystem>().Maps[Owner.Transform.MapID];
+            if (Owner.Transform.MapID != MapId.Nullspace)
+                PhysicsMap = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID).GetComponent<SharedPhysicsMapComponent>();
 
             Dirty();
             // Yeah yeah TODO Combine these
@@ -1244,14 +1245,14 @@ namespace Robust.Shared.GameObjects
                 if (existing.ID.Equals(id)) return;
             }
 
-            PhysicsMap.AddJoint(joint);
+            PhysicsMap?.AddJoint(joint);
             joint.ID = id;
             Logger.DebugS("physics", $"Added joint id: {joint.ID} type: {joint.GetType().Name} to {Owner}");
         }
 
         public void RemoveJoint(Joint joint)
         {
-            PhysicsMap.RemoveJoint(joint);
+            PhysicsMap?.RemoveJoint(joint);
             Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
@@ -1295,9 +1296,6 @@ namespace Robust.Shared.GameObjects
                 {
                     case PhysShapeAabb aabb:
                         center = aabb.Centroid;
-                        break;
-                    case PhysShapeRect rect:
-                        center = rect.Centroid;
                         break;
                     case PolygonShape poly:
                         center = poly.Centroid;

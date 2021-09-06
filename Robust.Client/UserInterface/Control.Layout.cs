@@ -31,7 +31,6 @@ namespace Robust.Client.UserInterface
         private HAlignment _horizontalAlignment;
         private VAlignment _verticalAlignment;
         private Thickness _margin;
-        private bool _isLayoutUpdateOverrideUsed;
         private bool _measuring;
 
         /// <summary>
@@ -260,8 +259,6 @@ namespace Robust.Client.UserInterface
                     SizeFlags.ShrinkEnd => HAlignment.Right,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
-                Parent?.UpdateLayout();
             }
         }
 
@@ -299,8 +296,6 @@ namespace Robust.Client.UserInterface
                     SizeFlags.ShrinkEnd => VAlignment.Bottom,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
-                Parent?.UpdateLayout();
             }
         }
 
@@ -397,9 +392,7 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     A combination of <see cref="MinSize" /> and <see cref="CalculateMinimumSize" />,
-        ///     Whichever is greater.
-        ///     Use this for whenever you need the *actual* minimum size of something.
+        ///     A proxy to <see cref="DesiredSize"/>.
         /// </summary>
         /// <remarks>
         ///     This is in virtual pixels.
@@ -417,7 +410,6 @@ namespace Robust.Client.UserInterface
         /// <summary>
         ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.
         /// </summary>
-        /// <seealso cref="CalculateMinimumSize" />
         /// <seealso cref="CombinedMinimumSize" />
         [ViewVariables]
         [Obsolete("Use MinSize instead.")]
@@ -574,27 +566,6 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Override this to calculate a minimum size for this control.
-        ///     Do NOT call this directly to get the minimum size for layout purposes!
-        ///     Use <see cref="CombinedMinimumSize" /> for the ACTUAL minimum size.
-        /// </summary>
-        [Obsolete("Implement MeasureOverride instead")]
-        protected virtual Vector2 CalculateMinimumSize()
-        {
-            return Vector2.Zero;
-        }
-
-        /// <summary>
-        ///     Tells the GUI system that the minimum size of this control may have changed,
-        ///     so that say containers will re-sort it if necessary.
-        /// </summary>
-        [Obsolete("Use InvalidateMeasure()")]
-        public void MinimumSizeChanged()
-        {
-            InvalidateMeasure();
-        }
-
-        /// <summary>
         /// Notify the layout system that this control's <see cref="Measure"/> result may have changed
         /// and must be recalculated.
         /// </summary>
@@ -607,22 +578,6 @@ namespace Robust.Client.UserInterface
             IsArrangeValid = false;
 
             UserInterfaceManagerInternal.QueueMeasureUpdate(this);
-        }
-
-        /// <summary>
-        ///     Forces this component to immediately calculate layout.
-        /// </summary>
-        /// <remarks>
-        ///     This should only be used for unit testing,
-        ///     where running the deferred layout updating system in the UI manager can be annoying.
-        ///     If you are forced to use this in regular code, you have found a bug.
-        /// </remarks>
-        [Obsolete("Call Arrange manually for unit tests or call Measure manually for early measures.")]
-        public void ForceRunLayoutUpdate()
-        {
-            // TODO: Fix or remove this
-            if (PreviousArrange.HasValue)
-                Arrange(PreviousArrange.Value);
         }
 
         /// <summary>
@@ -639,12 +594,6 @@ namespace Robust.Client.UserInterface
 
             IsArrangeValid = false;
             UserInterfaceManagerInternal.QueueArrangeUpdate(this);
-        }
-
-        [Obsolete("Use InvalidateArrange()")]
-        protected void UpdateLayout()
-        {
-            InvalidateArrange();
         }
 
         /// <summary>
@@ -697,12 +646,7 @@ namespace Robust.Client.UserInterface
             try
             {
                 _measuring = true;
-                measured = Vector2.ComponentMax(
-                    MeasureOverride(constrained),
-                    // For the time being keep the old CalculateMinimumSize around.
-#pragma warning disable 618
-                    CalculateMinimumSize());
-#pragma warning restore 618
+                measured = MeasureOverride(constrained);
             }
             finally
             {
@@ -797,17 +741,9 @@ namespace Robust.Client.UserInterface
 
             size = ApplySizeConstraints(this, size);
 
-            Size = size;
-            _isLayoutUpdateOverrideUsed = true;
-#pragma warning disable 618
-            LayoutUpdateOverride();
-#pragma warning restore 618
-            if (!_isLayoutUpdateOverrideUsed)
-            {
-                var arranged = ArrangeOverride(size);
+            var arranged = ArrangeOverride(size);
 
-                size = Vector2.ComponentMin(arranged, size);
-            }
+            size = Vector2.ComponentMin(arranged, size);
 
             switch (HorizontalAlignment)
             {
@@ -851,24 +787,6 @@ namespace Robust.Client.UserInterface
             }
 
             return finalSize;
-        }
-
-        [Obsolete("Use Control.ArrangePixel")]
-        protected void FitChildInPixelBox(Control child, UIBox2i pixelBox)
-        {
-            child.ArrangePixel(pixelBox);
-        }
-
-        [Obsolete("Use Control.Arrange")]
-        protected void FitChildInBox(Control child, UIBox2 box)
-        {
-            child.Arrange(box);
-        }
-
-        [Obsolete("Implement ArrangeOverride instead.")]
-        protected virtual void LayoutUpdateOverride()
-        {
-            _isLayoutUpdateOverrideUsed = false;
         }
 
         private static Vector2 ApplySizeConstraints(Control control, Vector2 avail)

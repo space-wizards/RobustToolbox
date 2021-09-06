@@ -430,7 +430,7 @@ namespace Robust.Server.GameStates
 
             // This is slow but entities being parented to anchored ones is hopefully rare so shouldn't be hit too much.
             var mapGrid = (IMapGridInternal) _mapManager.GetGrid(xform.GridID);
-            var local = mapGrid.MapToGrid(xform.MapPosition);
+            var local = xform.Coordinates;
             var chunk = mapGrid.GetChunk(mapGrid.LocalToChunkIndices(local));
 
             if (!includedChunks.TryGetValue(xform.GridID, out var chunks))

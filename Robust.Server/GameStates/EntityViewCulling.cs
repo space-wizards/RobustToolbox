@@ -291,7 +291,7 @@ namespace Robust.Server.GameStates
 
                                 foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
                                 {
-                                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, anchoredEnt, GameTick.Zero);
+                                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, GameTick.Zero);
                                     entityStates.Add(newState);
                                 }
                             }

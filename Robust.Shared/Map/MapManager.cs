@@ -597,6 +597,7 @@ namespace Robust.Shared.Map
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
 
+                // TODO: Client needs to know about chunk fixtures so you can just do GetMapChunks and do a faster fixture query.
                 if (body.FixtureCount > 0)
                 {
                     // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.

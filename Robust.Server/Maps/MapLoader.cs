@@ -11,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -443,10 +444,13 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
+                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+                var compManager = IoCManager.Resolve<IComponentManager>();
 
                 foreach (var gridId in _mapManager.GetAllGrids())
                 {
+                    // TODO: Need to reconcile these
                     gridFixtures.ProcessGrid(gridId.Index);
                 }
             }

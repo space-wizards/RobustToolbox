@@ -38,6 +38,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightToggleEvent(_enabled));
                 Dirty();
             }
         }
@@ -76,6 +77,16 @@ namespace Robust.Shared.GameObjects
                 _offset = value;
                 Dirty();
             }
+        }
+    }
+
+    public sealed class PointLightToggleEvent : EntityEventArgs
+    {
+        public bool Enabled;
+
+        public PointLightToggleEvent(bool enabled)
+        {
+            Enabled = enabled;
         }
     }
 }

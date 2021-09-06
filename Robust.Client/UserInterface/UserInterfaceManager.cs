@@ -128,9 +128,6 @@ namespace Robust.Client.UserInterface
             RootControl = CreateWindowRoot(_clyde.MainWindow);
             RootControl.Name = "MainWindowRoot";
 
-            RootControl.InvalidateMeasure();
-            QueueMeasureUpdate(RootControl);
-
             _clyde.OnWindowResized += WindowSizeChanged;
             _clyde.OnWindowScaleChanged += WindowContentScaleChanged;
             _clyde.DestroyWindow += WindowDestroyed;
@@ -199,6 +196,7 @@ namespace Robust.Client.UserInterface
             _roots.Add(newRoot);
             _windowsToRoot.Add(window.Id, newRoot);
 
+            newRoot.StyleSheetUpdate();
             newRoot.InvalidateMeasure();
             QueueMeasureUpdate(newRoot);
 
@@ -215,6 +213,11 @@ namespace Robust.Client.UserInterface
             _roots.Remove(root);
 
             root.RemoveAllChildren();
+        }
+
+        public WindowRoot? GetWindowRoot(IClydeWindow window)
+        {
+            return !_windowsToRoot.TryGetValue(window.Id, out var root) ? null : root;
         }
 
         public IEnumerable<UIRoot> AllRoots => _roots;
@@ -671,7 +674,10 @@ namespace Robust.Client.UserInterface
             {
                 if (root.Window != _clyde.MainWindow)
                 {
-                    renderHandle.RenderInRenderTarget(root.Window.RenderTarget, () => DoRender(root));
+                    renderHandle.RenderInRenderTarget(
+                        root.Window.RenderTarget,
+                        () => DoRender(root),
+                        root.ActualBgColor);
                 }
             }
 
@@ -885,6 +891,8 @@ namespace Robust.Client.UserInterface
 
             return pos - control.GlobalPosition;
         }
+
+        public Color GetMainClearColor() => RootControl.ActualBgColor;
 
         private void _resetTooltipTimer()
         {

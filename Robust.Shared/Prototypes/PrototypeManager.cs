@@ -193,7 +193,7 @@ namespace Robust.Shared.Prototypes
         }
     }
 
-    public class PrototypeManager : IPrototypeManager, IPostInjectInit
+    public class PrototypeManager : IPrototypeManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;
@@ -223,6 +223,7 @@ namespace Robust.Shared.Prototypes
             }
 
             _initialized = true;
+            ReloadPrototypeTypes();
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
@@ -604,12 +605,6 @@ namespace Robust.Shared.Prototypes
         }
 
         #endregion IPrototypeManager members
-
-        public void PostInject()
-        {
-            _reflectionManager.OnAssemblyAdded += (_, _) => ReloadPrototypeTypes();
-            ReloadPrototypeTypes();
-        }
 
         private void ReloadPrototypeTypes()
         {

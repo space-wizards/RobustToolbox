@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Runtime;
 using System.Threading.Tasks;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
@@ -139,6 +140,7 @@ namespace Robust.Client
 
             _authManager.LoadFromEnv();
 
+            GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
 
             // Setup main loop

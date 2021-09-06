@@ -216,6 +216,7 @@ namespace Robust.Shared.Serialization.Manager
         [MustUseReturnValue]
         T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false);
 
+        [MustUseReturnValue]
         object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false);
 

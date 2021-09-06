@@ -50,7 +50,7 @@ namespace Robust.Shared.GameObjects
 #if DEBUG
             if (LifeStage != ComponentLifeStage.Added)
             {
-                DebugTools.Assert(false, $"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
             }
 #endif
         }
@@ -69,7 +69,7 @@ namespace Robust.Shared.GameObjects
 #if DEBUG
             if (LifeStage != ComponentLifeStage.Initialized)
             {
-                DebugTools.Assert(false, $"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
             }
 #endif
         }
@@ -88,7 +88,7 @@ namespace Robust.Shared.GameObjects
 #if DEBUG
             if (LifeStage != ComponentLifeStage.Running)
             {
-                DebugTools.Assert(false, $"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
             }
 #endif
         }
@@ -111,7 +111,7 @@ namespace Robust.Shared.GameObjects
 #if DEBUG
             if (LifeStage != ComponentLifeStage.Stopped)
             {
-                DebugTools.Assert(false, $"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
             }
 #endif
         }
@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
 #if DEBUG
             if (LifeStage != ComponentLifeStage.Deleted)
             {
-                DebugTools.Assert(false, $"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
             }
 #endif
         }

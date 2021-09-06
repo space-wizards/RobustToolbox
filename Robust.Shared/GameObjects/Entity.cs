@@ -151,7 +151,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!t.Initialized)
                 {
-                    DebugTools.Assert(false, $"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
                 }
             }
 

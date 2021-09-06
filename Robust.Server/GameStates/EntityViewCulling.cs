@@ -205,7 +205,7 @@ namespace Robust.Server.GameStates
                     // assume there are no deleted ents in here, cull them first in ent/comp manager
                     _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity =>
                     {
-                        RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, includedChunks, visMask);
+                        RecursiveAdd(entity.Uid, visibleEnts, includedChunks, visMask);
                     }, LookupFlags.None);
 
                     //Calculate states for all visible anchored ents
@@ -234,10 +234,8 @@ namespace Robust.Server.GameStates
 
                     foreach (var (gridId, chunks) in includedChunks)
                     {
-                        var xform = (TransformComponent) _entMan.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).Transform;
-
                         // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
-                        RecursiveAdd(xform, visibleEnts, includedChunks, visMask);
+                        RecursiveAdd(_mapManager.GetGrid(gridId).GridEntityId, visibleEnts, includedChunks, visMask);
 
                         foreach (var chunk in chunks)
                         {
@@ -375,50 +373,49 @@ namespace Robust.Server.GameStates
         // Read Safe
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, uint visMask)
+        private bool RecursiveAdd(EntityUid uid, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, uint visMask)
         {
-            var xformUid = xform.Owner.Uid;
-
             // we are done, this ent has already been checked and is visible
-            if (visSet.Contains(xformUid))
+            if (visSet.Contains(uid))
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_compMan.TryGetComponent<VisibilityComponent>(xformUid, out var visComp))
+            if (_compMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
             {
                 if ((visMask & visComp.Layer) == 0)
                     return false;
             }
 
-            var xformParentUid = xform.ParentUid;
+            var xform = _compMan.GetComponent<TransformComponent>(uid);
+
+            var parentUid = xform.ParentUid;
 
             // this is the world entity, it is always visible
-            if (!xformParentUid.IsValid())
+            if (!parentUid.IsValid())
             {
-                visSet.Add(xformUid);
+                visSet.Add(uid);
                 return true;
             }
 
             // parent is already in the set
-            if (visSet.Contains(xformParentUid))
+            if (visSet.Contains(parentUid))
             {
                 EnsureAnchoredChunk(xform, includedChunks);
                 if (!xform.Anchored)
-                    visSet.Add(xformUid);
+                    visSet.Add(uid);
 
                 return true;
             }
 
             // parent was not added, so we are not either
-            var xformParent = _compMan.GetComponent<TransformComponent>(xformParentUid);
-            if (!RecursiveAdd(xformParent, visSet, includedChunks, visMask))
+            if (!RecursiveAdd(parentUid, visSet, includedChunks, visMask))
                 return false;
 
             EnsureAnchoredChunk(xform, includedChunks);
 
             // add us
             if (!xform.Anchored)
-                visSet.Add(xformUid);
+                visSet.Add(uid);
 
             return true;
         }

@@ -51,6 +51,9 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 
             Assert.That(copy, Is.EqualTo(target));
 
+            Assert.That(copy!.Count, Is.EqualTo(2));
+            Assert.That(target.Count, Is.EqualTo(2));
+
             Assert.That(copy, Does.Contain("A"));
             Assert.That(copy, Does.Contain("E"));
 

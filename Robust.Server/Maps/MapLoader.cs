@@ -444,14 +444,20 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
-                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
                 var compManager = IoCManager.Resolve<IComponentManager>();
+                var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
 
-                foreach (var gridId in _mapManager.GetAllGrids())
+                foreach (var grid in _mapManager.GetAllGrids())
                 {
-                    // TODO: Need to reconcile these
-                    gridFixtures.ProcessGrid(gridId.Index);
+                    var body = compManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+
+                    // TODO: Need to correlate chunk fixtures to deez
+                    foreach (var fixture in body.Fixtures)
+                    {
+                        var id = fixture.ID;
+                    }
+
+                    gridFixtures.ProcessGrid(grid.Index);
                 }
             }
 

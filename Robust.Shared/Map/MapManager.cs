@@ -534,7 +534,8 @@ namespace Robust.Shared.Map
         {
             foreach (var (_, mapGrid) in _grids)
             {
-                if (mapGrid.ParentMapId != mapId || !mapGrid.WorldBounds.Contains(worldPos))
+                // TODO: Use WorldBounds again.
+                if (mapGrid.ParentMapId != mapId)
                     continue;
 
                 // Turn the worldPos into a localPos and work out the relevant chunk we need to check
@@ -552,25 +553,14 @@ namespace Robust.Shared.Map
                 var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
 
                 if (!mapGrid.HasChunk(chunkIndices)) continue;
-                if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
 
-                var transform = new Transform(gridPos, (float) gridRot);
-                // TODO: Client never associates Fixtures with chunks hence we need to look it up by ID.
+                // TODO: Client never associates Fixtures with chunks
                 var chunk = mapGrid.GetChunk(chunkIndices);
-                var id = _gridFixtures.GetChunkId((MapChunk) chunk);
-                var fixture = body.GetFixture(id);
+                var chunkTile = chunk.GetTileRef(chunk.GridTileToChunkTile(tile));
 
-                if (fixture == null) continue;
-
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    // TODO: Use CollisionManager once it's done.
-                    if (fixture.Shape.ComputeAABB(transform, i).Contains(worldPos))
-                    {
-                        grid = mapGrid;
-                        return true;
-                    }
-                }
+                if (chunkTile.Tile.IsEmpty) continue;
+                grid = mapGrid;
+                return true;
             }
 
             grid = null;

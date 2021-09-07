@@ -165,7 +165,7 @@ namespace Robust.Client.GameObjects
                             switch (stream.Attenuation)
                             {
                                 case Attenuation.Default:
-                                    gain = 0f;
+                                    gain = 1f;
                                     break;
                                 // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
                                 // I didn't even wanna implement this much for linear but figured it'd be cleaner.
@@ -190,7 +190,8 @@ namespace Robust.Client.GameObjects
                                     throw new ArgumentOutOfRangeException($"No implemented attenuation for {stream.Attenuation.ToString()}");
                             }
 
-                            var actualGain = MathF.Max(0f, MathF.Pow(10, stream.Volume / 10) + gain);
+                            var volume = MathF.Pow(10, stream.Volume / 10);
+                            var actualGain = MathF.Max(0f, volume * gain);
 
                             stream.Source.SetVolumeDirect(actualGain);
                             stream.Source.SetOcclusion(occlusion);

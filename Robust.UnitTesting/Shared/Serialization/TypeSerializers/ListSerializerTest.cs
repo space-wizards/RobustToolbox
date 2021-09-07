@@ -32,5 +32,33 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 
             Assert.That(deserializedList, Is.EqualTo(list));
         }
+
+        [Test]
+        public void CustomCopyTest()
+        {
+            var source = new List<string> {"A", "E"};
+            var target = new List<string>();
+
+            Assert.IsNotEmpty(source);
+            Assert.IsEmpty(target);
+
+            var copy = (List<string>?) Serialization.CopyWithTypeSerializer(typeof(ListSerializers<string>), source, target);
+
+            Assert.NotNull(copy);
+
+            Assert.IsNotEmpty(copy!);
+            Assert.IsNotEmpty(target);
+
+            Assert.That(copy, Is.EqualTo(target));
+
+            Assert.That(copy!.Count, Is.EqualTo(2));
+            Assert.That(target.Count, Is.EqualTo(2));
+
+            Assert.That(copy, Does.Contain("A"));
+            Assert.That(copy, Does.Contain("E"));
+
+            Assert.That(target, Does.Contain("A"));
+            Assert.That(target, Does.Contain("E"));
+        }
     }
 }

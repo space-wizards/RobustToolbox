@@ -653,19 +653,13 @@ namespace Robust.Shared.Serialization.Manager
             return copy == null ? default : (T?) copy;
         }
 
+        [MustUseReturnValue]
         public object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false)
         {
             if (source == null || target == null) return source;
-            var commonType = TypeHelpers.SelectCommonType(source.GetType(), target.GetType());
-            if (commonType == null)
-            {
-                throw new InvalidOperationException($"Could not find common type in {nameof(CopyWithTypeSerializer)}!");
-            }
 
-            var method = typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(CopyWithSerializer))!
-                .MakeGenericMethod(commonType, source.GetType(), target.GetType(), typeSerializer);
-            return method.Invoke(this, new object?[] {source, target, skipHook, context});
+            return CopyWithSerializerRaw(typeSerializer, source, ref target, skipHook, context);
         }
 
         private object? CreateCopyInternal(Type type, object? source, ISerializationContext? context = null, bool skipHook = false)

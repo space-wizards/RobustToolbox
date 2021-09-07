@@ -137,7 +137,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>The deserialized object, or null.</returns>
         T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
-        DeserializationResult ReadWithTypeSerializer(Type type, Type typeSerializer, DataNode node,
+        DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node,
             ISerializationContext? context = null, bool skipHook = false);
 
         #endregion

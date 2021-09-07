@@ -461,12 +461,10 @@ namespace Robust.Shared.Serialization.Manager
             return ReadValueCast<T>(typeof(T), node, context, skipHook);
         }
 
-        public DeserializationResult ReadWithTypeSerializer(Type type, Type typeSerializer, DataNode node, ISerializationContext? context = null,
+        public DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node, ISerializationContext? context = null,
             bool skipHook = false)
         {
-            var method = typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(ReadWithSerializer))!
-                .MakeGenericMethod(type, node.GetType(), typeSerializer);
-            return (DeserializationResult) method.Invoke(this, new object?[] {node, context, skipHook})!;
+            return ReadWithSerializerRaw(value, node, serializer, context, skipHook);
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,

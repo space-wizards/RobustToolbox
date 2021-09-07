@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -426,6 +427,9 @@ namespace Robust.Shared
         /*
          * AUDIO
          */
+
+        public static readonly CVarDef<int> AudioAttenuation =
+            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);

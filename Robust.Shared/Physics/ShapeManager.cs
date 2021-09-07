@@ -32,7 +32,7 @@ namespace Robust.Shared.Physics
                 case PolygonShape poly:
                     var pLocal = Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
 
-                    for (var i = 0; i < poly.Vertices.Count; i++)
+                    for (var i = 0; i < poly.Vertices.Length; i++)
                     {
                         var dot = Vector2.Dot(poly.Normals[i], pLocal - poly.Vertices[i]);
                         if (dot > 0f) return false;

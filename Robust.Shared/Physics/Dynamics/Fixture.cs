@@ -164,7 +164,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("mass")]
-        private float _mass = 1.0f;
+        private float _mass;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.

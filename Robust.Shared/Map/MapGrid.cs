@@ -656,9 +656,7 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <summary>
-        ///     Transforms entity coordinates to tile indices relative to grid origin.
-        /// </summary>
+        /// <inheritdoc />
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
@@ -674,9 +672,7 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <summary>
-        ///     Transforms global world coordinates to chunk indices relative to grid origin.
-        /// </summary>
+        /// <inheritdoc />
         public Vector2i LocalToChunkIndices(EntityCoordinates gridPos)
         {
             Vector2 local;

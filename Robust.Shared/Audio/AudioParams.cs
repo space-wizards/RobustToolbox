@@ -86,6 +86,18 @@ namespace Robust.Shared.Audio
         /// </summary>
         public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, 1, false, 0f);
 
+        public AudioParams(
+            float volume,
+            float pitchScale,
+            string busName,
+            float maxDistance,
+            float refDistance,
+            bool loop,
+            float playOffsetSeconds)
+            : this(volume, pitchScale, busName, maxDistance, 1, refDistance, loop, playOffsetSeconds)
+        {
+        }
+
         public AudioParams(float volume, float pitchScale, string busName, float maxDistance,float rolloffFactor, float refDistance, bool loop, float playOffsetSeconds) : this()
         {
             Volume = volume;

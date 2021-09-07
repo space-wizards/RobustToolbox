@@ -30,11 +30,6 @@ namespace Robust.Client.UserInterface
         private bool _kDialogAvailable;
         private bool _checkedKDialogAvailable;
 
-        static FileDialogManager()
-        {
-            DllMapHelper.RegisterSimpleMap(typeof(FileDialogManager).Assembly, "swnfd");
-        }
-
         public async Task<Stream?> OpenFile(FileDialogFilters? filters = null)
         {
             var name = await GetOpenFileName(filters);

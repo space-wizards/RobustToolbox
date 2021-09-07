@@ -177,7 +177,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PolygonShape()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         public PolygonShape(float radius)

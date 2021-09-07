@@ -12,6 +12,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Copy
 {
+    [MemoryDiagnoser]
     public class SerializationCopyBenchmark : SerializationBenchmark
     {
         public SerializationCopyBenchmark()
@@ -119,7 +120,7 @@ namespace Robust.Benchmarks.Serialization.Copy
 
         [Benchmark]
         [BenchmarkCategory("flag")]
-        public object? CreateCopyFlagZero()
+        public object? CopyFlagZero()
         {
             return SerializationManager.CopyWithTypeSerializer(
                 typeof(FlagSerializer<BenchmarkFlags>),
@@ -129,12 +130,22 @@ namespace Robust.Benchmarks.Serialization.Copy
 
         [Benchmark]
         [BenchmarkCategory("flag")]
-        public object? CreateCopyFlagThirtyOne()
+        public object? CopyFlagThirtyOne()
         {
             return SerializationManager.CopyWithTypeSerializer(
                 typeof(FlagSerializer<BenchmarkFlags>),
                 (int) FlagThirtyOne,
                 (int) FlagThirtyOne);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("customTypeSerializer")]
+        public object? CopyIntegerCustomSerializer()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(BenchmarkIntSerializer),
+                Integer,
+                Integer);
         }
     }
 }

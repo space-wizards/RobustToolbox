@@ -47,7 +47,12 @@ namespace Robust.Shared.GameObjects
             LifeStage = ComponentLifeStage.Adding;
             OnAdd();
 
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Added, $"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Added)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
+            }
+#endif
         }
 
         /// <summary>
@@ -61,7 +66,12 @@ namespace Robust.Shared.GameObjects
             LifeStage = ComponentLifeStage.Initializing;
             Initialize();
 
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Initialized, $"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Initialized)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Initialize)} in derived method.");
+            }
+#endif
         }
 
         /// <summary>
@@ -75,7 +85,12 @@ namespace Robust.Shared.GameObjects
             LifeStage = ComponentLifeStage.Starting;
             Startup();
 
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Running, $"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Running)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Startup)} in derived method.");
+            }
+#endif
         }
 
         /// <summary>
@@ -93,7 +108,12 @@ namespace Robust.Shared.GameObjects
             LifeStage = ComponentLifeStage.Stopping;
             Shutdown();
 
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Stopped, $"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Stopped)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(Shutdown)} in derived method.");
+            }
+#endif
         }
 
         /// <summary>
@@ -108,7 +128,12 @@ namespace Robust.Shared.GameObjects
             LifeStage = ComponentLifeStage.Removing;
             OnRemove();
 
-            DebugTools.Assert(LifeStage == ComponentLifeStage.Deleted, $"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
+#if DEBUG
+            if (LifeStage != ComponentLifeStage.Deleted)
+            {
+                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnRemove)} in derived method.");
+            }
+#endif
         }
 
         /// <inheritdoc />
@@ -137,14 +162,14 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentShutdown CompShutdownInstance = new();
         private static readonly ComponentRemove CompRemoveInstance = new();
 
-        private EntityEventBus GetBus()
+        private IEventBus GetBus()
         {
             // Apparently components are being created outside of the ComponentManager,
             // and the Owner is not being set correctly.
             // ReSharper disable once RedundantAssertionStatement
             DebugTools.AssertNotNull(Owner);
 
-            return (EntityEventBus) Owner.EntityManager.EventBus;
+            return Owner.EntityManager.EventBus;
         }
 
         /// <summary>

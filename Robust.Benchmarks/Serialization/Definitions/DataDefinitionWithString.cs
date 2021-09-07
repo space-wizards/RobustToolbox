@@ -5,7 +5,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     [DataDefinition]
     public class DataDefinitionWithString
     {
-        [field: DataField("string")]
+        [DataField("string")]
         public string StringField { get; init; } = default!;
     }
 }

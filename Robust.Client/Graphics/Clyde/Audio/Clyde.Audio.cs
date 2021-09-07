@@ -9,6 +9,7 @@ using OpenToolkit.Audio.OpenAL;
 using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
 using Robust.Client.Audio;
 using Robust.Shared;
+using Robust.Shared.Audio;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;
 
@@ -58,6 +59,7 @@ namespace Robust.Client.Graphics.Clyde
             IsEfxSupported = HasAlDeviceExtension("ALC_EXT_EFX");
 
             _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
+            _cfg.OnValueChanged(CVars.AudioAttenuation, SetAudioAttenuation, true);
         }
 
         private void _audioCreateContext()
@@ -190,6 +192,43 @@ namespace Robust.Client.Graphics.Clyde
         public void SetMasterVolume(float newVolume)
         {
             AL.Listener(ALListenerf.Gain, _baseGain * newVolume);
+        }
+
+        public void SetAudioAttenuation(int value)
+        {
+            var attenuation = (Attenuation) value;
+
+            switch (attenuation)
+            {
+                case Attenuation.NoAttenuation:
+                    AL.DistanceModel(ALDistanceModel.None);
+                    break;
+                case Attenuation.InverseDistance:
+                    AL.DistanceModel(ALDistanceModel.InverseDistance);
+                    break;
+                case Attenuation.Default:
+                case Attenuation.InverseDistanceClamped:
+                    AL.DistanceModel(ALDistanceModel.InverseDistanceClamped);
+                    break;
+                case Attenuation.LinearDistance:
+                    AL.DistanceModel(ALDistanceModel.LinearDistance);
+                    break;
+                case Attenuation.LinearDistanceClamped:
+                    AL.DistanceModel(ALDistanceModel.LinearDistanceClamped);
+                    break;
+                case Attenuation.ExponentDistance:
+                    AL.DistanceModel(ALDistanceModel.ExponentDistance);
+                    break;
+                case Attenuation.ExponentDistanceClamped:
+                    AL.DistanceModel(ALDistanceModel.ExponentDistanceClamped);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"No implementation to set {attenuation.ToString()} for DistanceModel!");
+            }
+
+            var attToString = attenuation == Attenuation.Default ? Attenuation.InverseDistanceClamped : attenuation;
+
+            _openALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
         }
 
         public IClydeAudioSource CreateAudioSource(AudioStream stream)
@@ -486,6 +525,27 @@ namespace Robust.Client.Graphics.Clyde
                 _master._checkAlError();
             }
 
+            public void SetMaxDistance(float distance)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.MaxDistance, distance);
+                _master._checkAlError();
+            }
+
+            public void SetRolloffFactor(float rolloffFactor)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.RolloffFactor, rolloffFactor);
+                _master._checkAlError();
+            }
+
+            public void SetReferenceDistance(float refDistance)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle, ALSourcef.ReferenceDistance, refDistance);
+                _master._checkAlError();
+            }
+
             public void SetOcclusion(float blocks)
             {
                 _checkDisposed();
@@ -723,6 +783,27 @@ namespace Robust.Client.Graphics.Clyde
                 }
                 _gain = scale;
                 AL.Source(SourceHandle!.Value, ALSourcef.Gain, _gain * priorOcclusion);
+                _master._checkAlError();
+            }
+
+            public void SetMaxDistance(float distance)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle!.Value, ALSourcef.MaxDistance, distance);
+                _master._checkAlError();
+            }
+
+            public void SetRolloffFactor(float rolloffFactor)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle!.Value, ALSourcef.RolloffFactor, rolloffFactor);
+                _master._checkAlError();
+            }
+
+            public void SetReferenceDistance(float refDistance)
+            {
+                _checkDisposed();
+                AL.Source(SourceHandle!.Value, ALSourcef.ReferenceDistance, refDistance);
                 _master._checkAlError();
             }
 

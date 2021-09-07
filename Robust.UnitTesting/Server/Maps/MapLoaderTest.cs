@@ -90,7 +90,10 @@ entities:
             resourceManager.MountString("/TestMap.yml", MapData);
             resourceManager.MountString("/Prototypes/TestMapEntity.yml", Prototype);
 
-            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
+            var protoMan = IoCManager.Resolve<IPrototypeManager>();
+            protoMan.RegisterType(typeof(EntityPrototype));
+
+            protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
         }
 
         [Test]

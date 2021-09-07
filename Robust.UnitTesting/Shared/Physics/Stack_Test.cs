@@ -49,7 +49,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-            var physicsSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
             var broadphaseSystem = entitySystemManager.GetEntitySystem<SharedBroadphaseSystem>();
             MapId mapId;
 

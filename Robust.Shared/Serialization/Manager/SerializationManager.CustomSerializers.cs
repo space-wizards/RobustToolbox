@@ -33,9 +33,9 @@ namespace Robust.Shared.Serialization.Manager
 
         private ReadSerializerDelegate GetOrCreateReadSerializerDelegate(Type value, Type node, Type serializer)
         {
-            return _readSerializerDelegates.GetOrAdd((value, node, serializer), (_, tuple) =>
+            return _readSerializerDelegates.GetOrAdd((value, node, serializer), static (tuple, instance) =>
             {
-                var instanceParam = Expression.Constant(this);
+                var instanceParam = Expression.Constant(instance);
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
@@ -63,7 +63,7 @@ namespace Robust.Shared.Serialization.Manager
                     nodeParam,
                     contextParam,
                     skipHookParam).Compile();
-            }, (value, node, serializer));
+            }, this);
         }
 
         private CopySerializerDelegate GetOrCreateCopySerializerDelegate(Type common, Type source, Type target, Type serializer)

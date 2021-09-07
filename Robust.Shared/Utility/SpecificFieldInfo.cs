@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Robust.Shared.Utility
 {
-    public class SpecificFieldInfo : AbstractFieldInfo
+    internal sealed class SpecificFieldInfo : AbstractFieldInfo
     {
         public override string Name { get; }
 

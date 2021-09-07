@@ -15,8 +15,13 @@ namespace Robust.Client.UserInterface.Controls
         private const int DefaultSeparation = 0;
 
         /// <summary>
-        ///     Specifies "where" the controls should be laid out.
+        /// Specifies the alignment of the controls <b>along the orientation axis.</b>
         /// </summary>
+        /// <remarks>
+        /// This is along the orientation axis, not cross to it.
+        /// This means that if your orientation is vertical and you set this to center,
+        /// your controls will be laid out in the vertical <i>center</i> of the box control instead of the top.
+        /// </remarks>
         public AlignMode Align { get; set; }
 
         private bool Vertical => Orientation == LayoutOrientation.Vertical;
@@ -249,9 +254,19 @@ namespace Robust.Client.UserInterface.Controls
             End = 2
         }
 
+        /// <summary>
+        /// Orientation for a box container.
+        /// </summary>
         public enum LayoutOrientation : byte
         {
+            /// <summary>
+            /// Controls are laid out horizontally, left to right.
+            /// </summary>
             Horizontal,
+
+            /// <summary>
+            /// Controls are laid out vertically, top to bottom.
+            /// </summary>
             Vertical
         }
     }

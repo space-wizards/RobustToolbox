@@ -344,6 +344,7 @@ Types:
     FileAccess: { } # Enum
     FileMode: { } # Enum
     FileShare: { } # Enum
+    FileNotFoundException: { All: True }
     InvalidDataException: { All: True }
     IOException: { All: True }
     MemoryStream: { All: True }

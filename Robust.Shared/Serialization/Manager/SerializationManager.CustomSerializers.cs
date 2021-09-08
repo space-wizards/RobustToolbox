@@ -17,6 +17,11 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool skipHook = false);
 
+        private delegate DataNode WriteSerializerDelegate(
+            object value,
+            ISerializationContext? context = null,
+            bool alwaysWrite = false);
+
         private delegate object CopySerializerDelegate(
             object source,
             ref object target,
@@ -27,6 +32,9 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly ConcurrentDictionary<(Type value, Type node, Type serializer), ReadSerializerDelegate>
             _readSerializerDelegates = new();
+
+        private readonly ConcurrentDictionary<(Type value, Type serializer), WriteSerializerDelegate>
+            _writeSerializerDelegates = new();
 
         private readonly ConcurrentDictionary<(Type common, Type source, Type target, Type serializer), CopySerializerDelegate>
             _copySerializerDelegates = new();
@@ -63,6 +71,41 @@ namespace Robust.Shared.Serialization.Manager
                     nodeParam,
                     contextParam,
                     skipHookParam).Compile();
+            }, this);
+        }
+
+        private WriteSerializerDelegate GetOrCreateWriteSerializerDelegate(Type value, Type serializer)
+        {
+            return _writeSerializerDelegates.GetOrAdd((value, serializer), static (tuple, instance) =>
+            {
+                var instanceParam = Expression.Constant(instance);
+                var valueParam = Expression.Parameter(typeof(object), "value");
+                var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+                var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
+
+                var returnVariable = Expression.Variable(typeof(DataNode));
+                var returnLabel = Expression.Label(typeof(DataNode));
+                var returnExpression = Expression.Label(returnLabel, returnVariable);
+
+                var call = Expression.Call(
+                    instanceParam,
+                    nameof(WriteWithSerializer),
+                    new[] {tuple.value, tuple.serializer},
+                    Expression.Convert(valueParam, tuple.value),
+                    contextParam,
+                    alwaysWriteParam);
+
+                var block = Expression.Block(
+                    new[] {returnVariable},
+                    Expression.Assign(returnVariable, call),
+                    Expression.Return(returnLabel, returnVariable),
+                    returnExpression);
+
+                return Expression.Lambda<WriteSerializerDelegate>(
+                    block,
+                    valueParam,
+                    contextParam,
+                    alwaysWriteParam).Compile();
             }, this);
         }
 
@@ -133,6 +176,16 @@ namespace Robust.Shared.Serialization.Manager
             return serializer.Read(this, node, DependencyCollection, skipHook, context);
         }
 
+        private DataNode WriteWithSerializerRaw(
+            Type type,
+            Type serializer,
+            object value,
+            ISerializationContext? context = null,
+            bool alwaysWrite = false)
+        {
+            return GetOrCreateWriteSerializerDelegate(type, serializer)(value, context, alwaysWrite);
+        }
+
         private DataNode WriteWithSerializer<T, TSerializer>(
             T value,
             ISerializationContext? context = null,
@@ -140,7 +193,7 @@ namespace Robust.Shared.Serialization.Manager
             where TSerializer : ITypeWriter<T>
             where T : notnull
         {
-            var serializer = (ITypeWriter<T>)GetTypeSerializer(typeof(TSerializer));
+            var serializer = (ITypeWriter<T>) GetTypeSerializer(typeof(TSerializer));
             return serializer.Write(this, value, alwaysWrite, context);
         }
 

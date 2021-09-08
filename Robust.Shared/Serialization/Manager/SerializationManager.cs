@@ -540,15 +540,13 @@ namespace Robust.Shared.Serialization.Manager
             return mapping;
         }
 
-        public DataNode WriteWithTypeSerializer(Type type, Type typeSerializer, object? value, bool alwaysWrite = false,
+        public DataNode WriteWithTypeSerializer(Type type, Type serializer, object? value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
             // TODO Serialization: just return null
             if (type.IsNullable() && value == null) return new MappingDataNode();
 
-            var method = typeof(SerializationManager).GetRuntimeMethods().First(m => m.Name == nameof(WriteWithSerializer))!
-                .MakeGenericMethod(type, typeSerializer);
-            return (DataNode) method.Invoke(this, new object?[] {value, context, alwaysWrite})!;
+            return WriteWithSerializerRaw(type, serializer, value!, context, alwaysWrite);
         }
 
         private object? CopyToTarget(object? source, object? target, ISerializationContext? context = null, bool skipHook = false)

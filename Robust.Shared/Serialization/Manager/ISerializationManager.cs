@@ -174,7 +174,7 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
 
-        DataNode WriteWithTypeSerializer(Type type, Type typeSerializer, object? value, bool alwaysWrite = false,
+        DataNode WriteWithTypeSerializer(Type type, Type serializer, object? value, bool alwaysWrite = false,
             ISerializationContext? context = null);
 
         #endregion

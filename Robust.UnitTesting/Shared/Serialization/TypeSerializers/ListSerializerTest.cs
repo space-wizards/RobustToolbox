@@ -49,6 +49,18 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         }
 
         [Test]
+        public void CustomWriteTest()
+        {
+            var list = new List<string> {"A", "E"};
+
+            var node = (SequenceDataNode) Serialization.WriteWithTypeSerializer(typeof(List<string>), typeof(ListSerializers<string>), list);
+
+            Assert.That(node.Sequence.Count, Is.EqualTo(2));
+            Assert.That(node.Cast<ValueDataNode>(0).Value, Is.EqualTo("A"));
+            Assert.That(node.Cast<ValueDataNode>(1).Value, Is.EqualTo("E"));
+        }
+
+        [Test]
         public void CustomCopyTest()
         {
             var source = new List<string> {"A", "E"};

@@ -298,7 +298,7 @@ namespace Robust.Server.GameStates
                 var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
 
                 // Anchored entities don't ever leave
-                DebugTools.Assert(!xform.Anchored);
+                if (xform.Anchored) continue;
 
                 // PVS leave message
                 //TODO: Remove NaN as the signal to leave PVS

@@ -458,7 +458,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void StopPlaying()
             {
-                _checkDisposed();
+                if (_isDisposed()) return;
                 AL.SourceStop(SourceHandle);
                 _master._checkAlError();
             }
@@ -672,6 +672,11 @@ namespace Robust.Client.Graphics.Clyde
                 SourceHandle = -1;
             }
 
+            private bool _isDisposed()
+            {
+                return SourceHandle == -1;
+            }
+
             private void _checkDisposed()
             {
                 if (SourceHandle == -1)
@@ -721,7 +726,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void StopPlaying()
             {
-                _checkDisposed();
+                if (_isDisposed()) return;
                 // ReSharper disable once PossibleInvalidOperationException
                 AL.SourceStop(SourceHandle!.Value);
                 _master._checkAlError();
@@ -929,6 +934,11 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 SourceHandle = null;
+            }
+
+            private bool _isDisposed()
+            {
+                return SourceHandle == null;
             }
 
             private void _checkDisposed()

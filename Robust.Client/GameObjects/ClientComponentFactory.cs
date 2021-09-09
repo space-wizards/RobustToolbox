@@ -29,7 +29,6 @@ namespace Robust.Client.GameObjects
             RegisterClass<EyeComponent>();
             RegisterClass<AppearanceComponent>();
             RegisterClass<AppearanceTestComponent>();
-            RegisterClass<SnapGridComponent>();
             RegisterClass<AnimationPlayerComponent>();
             RegisterClass<TimerComponent>();
 

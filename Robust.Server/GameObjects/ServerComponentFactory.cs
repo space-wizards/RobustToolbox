@@ -27,7 +27,6 @@ namespace Robust.Server.GameObjects
             RegisterClass<OccluderTreeComponent>();
             RegisterClass<SpriteComponent>();
             RegisterClass<AppearanceComponent>();
-            RegisterClass<SnapGridComponent>();
             RegisterClass<ServerUserInterfaceComponent>();
             RegisterClass<TimerComponent>();
             RegisterClass<MapSaveIdComponent>();

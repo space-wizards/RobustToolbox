@@ -173,12 +173,8 @@ namespace Robust.Shared.Serialization.Manager
                 }
                 else
                 {
-                    if (!instance.TryGetDefinition(value, out var definition))
-                    {
-                        throw new ArgumentException($"No data definition found for type {value} with node type {node.GetType()} when reading");
-                    }
-
-                    var definitionConst = Expression.Constant(definition);
+                    var definition = instance.GetDefinition(value);
+                    var definitionConst = Expression.Constant(definition, typeof(DataDefinition));
 
                     var instantiator = instance.GetOrCreateInstantiator(value);
                     var instantiatorConst = Expression.Constant(instantiator);
@@ -360,13 +356,19 @@ namespace Robust.Shared.Serialization.Manager
             where TValue : notnull
             where TNode : DataNode
         {
+            if (context != null &&
+                context.TypeReaders.TryGetValue((typeof(TValue), typeof(TNode)), out var readerUnCast))
+            {
+                reader = (ITypeReader<TValue, TNode>) readerUnCast;
+            }
+
             return reader.Read(this, node, DependencyCollection, skipHook, context);
         }
 
         private DeserializationResult ReadGenericNullable<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
-            DataDefinition definition,
+            DataDefinition? definition,
             bool populate,
             bool hooks,
             ISerializationContext? context = null,
@@ -384,7 +386,7 @@ namespace Robust.Shared.Serialization.Manager
         private DeserializationResult ReadGenericValue<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
-            DataDefinition definition,
+            DataDefinition? definition,
             bool populate,
             bool hooks,
             ISerializationContext? context = null,
@@ -392,6 +394,19 @@ namespace Robust.Shared.Serialization.Manager
             where TValue : notnull
         {
             var type = typeof(TValue);
+
+            if (context != null &&
+                context.TypeReaders.TryGetValue((typeof(TValue), typeof(ValueDataNode)), out var readerUnCast))
+            {
+                var reader = (ITypeReader<TValue, ValueDataNode>) readerUnCast;
+                return reader.Read(this, node, DependencyCollection, skipHook, context);
+            }
+
+            if (definition == null)
+            {
+                throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
+            }
+
             var instance = (TValue) instantiator();
 
             if (populate)
@@ -420,14 +435,27 @@ namespace Robust.Shared.Serialization.Manager
         private DeserializationResult ReadGenericMapping<TValue>(
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
-            DataDefinition definition,
+            DataDefinition? definition,
             bool populate,
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false)
             where TValue : notnull
         {
+            var type = typeof(TValue);
             var instance = (TValue) instantiator();
+
+            if (context != null &&
+                context.TypeReaders.TryGetValue((type, typeof(MappingDataNode)), out var readerUnCast))
+            {
+                var reader = (ITypeReader<TValue, MappingDataNode>) readerUnCast;
+                return reader.Read(this, node, DependencyCollection, skipHook, context);
+            }
+
+            if (definition == null)
+            {
+                throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
+            }
 
             if (populate)
             {

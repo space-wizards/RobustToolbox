@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        internal delegate DeserializationResult ReadDelegate(
+        private delegate DeserializationResult ReadDelegate(
             Type type,
             DataNode node,
             ISerializationContext? context = null,
@@ -24,7 +24,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private ReadDelegate GetOrCreateReader(Type value, DataNode node)
         {
-            if (node.Tag?.StartsWith("!type:") == true)
+            if (node.Tag?.StartsWith("!type:") ?? false)
             {
                 var typeString = node.Tag.Substring(6);
                 value = ResolveConcreteType(value, typeString);
@@ -49,22 +49,49 @@ namespace Robust.Shared.Serialization.Manager
 
                 if (value.IsArray)
                 {
-                    call = node switch
+                    var elementType = value.GetElementType()!;
+
+                    switch (node)
                     {
-                        ValueDataNode when nullable => Expression.Call(
-                            instanceConst,
-                            nameof(ReadArrayValue),
-                            new[] { value.GetElementType()! },
-                            Expression.Convert(nodeParam, typeof(ValueDataNode))),
-                        SequenceDataNode => Expression.Call(
-                            instanceConst,
-                            nameof(ReadArraySequence),
-                            new[] { value.GetElementType()! },
-                            Expression.Convert(nodeParam, typeof(SequenceDataNode)),
-                            contextParam,
-                            skipHookParam),
-                        _ => throw new ArgumentException($"Cannot read array from data node type {nodeType}")
-                    };
+                        case ValueDataNode when nullable:
+                            call = Expression.Call(
+                                instanceConst,
+                                nameof(ReadArrayValue),
+                                new[] { elementType },
+                                Expression.Convert(nodeParam, typeof(ValueDataNode)));
+                            break;
+                        case SequenceDataNode seqNode:
+                            var isSealed = elementType.IsPrimitive || elementType.IsEnum ||
+                                           elementType == typeof(string) || elementType.IsSealed;
+
+                            if (isSealed && seqNode.Sequence.Count > 0)
+                            {
+                                var reader = instance.GetOrCreateReader(elementType, seqNode.Sequence[0]);
+                                var readerConst = Expression.Constant(reader);
+
+                                call = Expression.Call(
+                                    instanceConst,
+                                    nameof(ReadArraySequenceSealed),
+                                    new[] { elementType },
+                                    Expression.Convert(nodeParam, typeof(SequenceDataNode)),
+                                    readerConst,
+                                    contextParam,
+                                    skipHookParam);
+
+                                break;
+                            }
+
+                            call = Expression.Call(
+                                instanceConst,
+                                nameof(ReadArraySequence),
+                                new[] { elementType },
+                                Expression.Convert(nodeParam, typeof(SequenceDataNode)),
+                                contextParam,
+                                skipHookParam);
+                            break;
+                        default:
+                            throw new ArgumentException($"Cannot read array from data node type {nodeType}");
+                    }
                 }
                 else if (value.IsEnum)
                 {
@@ -223,8 +250,7 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool skipHook = false)
         {
-            var type = typeof(T).EnsureNotNullableType();
-
+            var type = typeof(T);
             var array = new T[node.Sequence.Count];
             var results = new DeserializationResult[node.Sequence.Count];
 
@@ -234,7 +260,29 @@ namespace Robust.Shared.Serialization.Manager
                 var result = Read(type, subNode, context, skipHook);
 
                 results[i] = result;
-                array.SetValue(result.RawValue, i);
+                array[i] = (T) result.RawValue!;
+            }
+
+            return new DeserializedArray(array, results);
+        }
+
+        private DeserializationResult ReadArraySequenceSealed<T>(
+            SequenceDataNode node,
+            ReadDelegate elementReader,
+            ISerializationContext? context = null,
+            bool skipHook = false)
+        {
+            var type = typeof(T);
+            var array = new T[node.Sequence.Count];
+            var results = new DeserializationResult[node.Sequence.Count];
+
+            for (var i = 0; i < node.Sequence.Count; i++)
+            {
+                var subNode = node.Sequence[i];
+                var result = elementReader(type, subNode, context, skipHook);
+
+                results[i] = result;
+                array[i] = (T) result.RawValue!;
             }
 
             return new DeserializedArray(array, results);

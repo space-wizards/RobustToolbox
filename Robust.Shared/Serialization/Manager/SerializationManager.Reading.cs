@@ -124,14 +124,14 @@ namespace Robust.Shared.Serialization.Manager
                             $"Cannot read {nameof(ISelfSerialize)} from node type {nodeType}. Expected {nameof(ValueDataNode)}");
                     }
 
-                    var instantiator = instance.GetOrCreateInstantiator(value);
+                    var instantiator = instance.GetOrCreateInstantiator(value) ?? throw new NullReferenceException($"No instantiator could be made for type {value}");
                     var instantiatorConst = Expression.Constant(instantiator);
 
                     call = Expression.Call(
                         instanceConst,
                         nameof(ReadSelfSerialize),
                         new[] { value },
-                        nodeParam,
+                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
                         instantiatorConst);
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
@@ -312,6 +312,11 @@ namespace Robust.Shared.Serialization.Manager
             InstantiationDelegate<object> instantiator)
             where TValue : ISelfSerialize
         {
+            if (node.Value == "null")
+            {
+                return new DeserializedValue<TValue>(default);
+            }
+
             var value = (TValue) instantiator();
             value.Deserialize(node.Value);
 

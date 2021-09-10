@@ -197,6 +197,8 @@ namespace Robust.Shared.Serialization.Manager
 
             _copyByRefRegistrations.Clear();
 
+            _highestFlagBit.Clear();
+
             _initialized = false;
         }
 

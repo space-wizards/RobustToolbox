@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq.Expressions;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
@@ -12,58 +10,33 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate bool ReadDelegate(
-            Type type,
-            DataNode node,
-            IDependencyCollection dependencies,
-            [NotNullWhen(true)] out DeserializationResult? obj,
-            bool skipHook,
-            ISerializationContext? context = null);
-
         private readonly Dictionary<(Type Type, Type DataNodeType), object> _typeReaders = new();
-        private readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, ReadDelegate>> _readDelegates = new();
 
-        private ReadDelegate GetOrCreateReadDelegate(Type type, Type nodeType)
+        private object? GetTypeReader(Type value, Type node)
         {
-            return _readDelegates
-                .GetOrAdd(type, _ => new ConcurrentDictionary<Type, ReadDelegate>())
-                .GetOrAdd(nodeType, (nT, t) =>
-                {
-                    var instanceParam = Expression.Constant(this);
-                    var typeParam = Expression.Parameter(typeof(Type), "type");
-                    var nodeParam = Expression.Parameter(typeof(DataNode), "node");
-                    var dependenciesParam = Expression.Parameter(typeof(IDependencyCollection), "dependencies");
-                    var objParam = Expression.Parameter(typeof(DeserializationResult).MakeByRefType(), "obj");
-                    var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
-                    var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
+            if (_typeReaders.TryGetValue((value, node), out var reader))
+            {
+                return reader;
+            }
 
-                    var call = Expression.Call(
-                        instanceParam,
-                        nameof(TryRead),
-                        new[] {t, nT},
-                        typeParam,
-                        Expression.Convert(nodeParam, nT),
-                        dependenciesParam,
-                        objParam,
-                        skipHookParam,
-                        contextParam);
+            if (TryGetGenericReader(value, node, out reader))
+            {
+                return reader;
+            }
 
-                    return Expression.Lambda<ReadDelegate>(
-                        call,
-                        typeParam,
-                        nodeParam,
-                        dependenciesParam,
-                        objParam,
-                        skipHookParam,
-                        contextParam).Compile();
-                }, type);
+            return null;
         }
 
-        private bool TryGetReader<T, TNode>(
+        private bool TryGetTypeReader(Type value, Type node, [NotNullWhen(true)] out object? reader)
+        {
+            return (reader = GetTypeReader(value, node)) != null;
+        }
+
+        private bool TryGetTypeReader<TValue, TNode>(
             Type type,
             ISerializationContext? context,
-            [NotNullWhen(true)] out ITypeReader<T, TNode>? reader)
-            where T : notnull
+            [NotNullWhen(true)] out ITypeReader<TValue, TNode>? reader)
+            where TValue : notnull
             where TNode : DataNode
         {
             var nodeType = typeof(TNode);
@@ -72,24 +45,24 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((type, nodeType), out var rawTypeReader) ||
                 _typeReaders.TryGetValue((type, nodeType), out rawTypeReader))
             {
-                reader = (ITypeReader<T, TNode>) rawTypeReader;
+                reader = (ITypeReader<TValue, TNode>) rawTypeReader;
                 return true;
             }
 
             return TryGetGenericReader(out reader);
         }
 
-        private bool TryRead<T, TNode>(
+        private bool TryRead<TValue, TNode>(
             Type type,
             TNode node,
             IDependencyCollection dependencies,
             [NotNullWhen(true)] out DeserializationResult? obj,
             bool skipHook,
             ISerializationContext? context = null)
-            where T : notnull
+            where TValue : notnull
             where TNode : DataNode
         {
-            if (TryGetReader<T, TNode>(type, context, out var reader))
+            if (TryGetTypeReader<TValue, TNode>(type, context, out var reader))
             {
                 obj = reader.Read(this, node, dependencies, skipHook, context);
                 return true;
@@ -99,25 +72,23 @@ namespace Robust.Shared.Serialization.Manager
             return false;
         }
 
-        private bool TryReadRaw(
-            Type type,
-            DataNode node,
-            IDependencyCollection dependencies,
-            [NotNullWhen(true)] out DeserializationResult? obj,
-            bool skipHook,
-            ISerializationContext? context = null)
-        {
-            return GetOrCreateReadDelegate(type, node.GetType())(type, node, dependencies, out obj, skipHook, context);
-        }
-
         private bool TryGetGenericReader<T, TNode>(
             [NotNullWhen(true)] out ITypeReader<T, TNode>? reader)
             where TNode : DataNode
             where T : notnull
         {
-            var type = typeof(T);
-            var nodeType = typeof(TNode);
+            if (TryGetGenericReader(typeof(T), typeof(TNode), out var readerUnCast))
+            {
+                reader = (ITypeReader<T, TNode>) readerUnCast;
+                return true;
+            }
 
+            reader = null;
+            return false;
+        }
+
+        private bool TryGetGenericReader(Type type, Type node, [NotNullWhen(true)] out object? reader)
+        {
             if (type.IsGenericType)
             {
                 var typeDef = type.GetGenericTypeDefinition();
@@ -126,7 +97,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 foreach (var (key, val) in _genericReaderTypes)
                 {
-                    if (typeDef.HasSameMetadataDefinitionAs(key.Type) && key.DataNodeType.IsAssignableFrom(nodeType))
+                    if (typeDef.HasSameMetadataDefinitionAs(key.Type) && key.DataNodeType.IsAssignableFrom(node))
                     {
                         serializerTypeDef = val;
                         break;
@@ -141,8 +112,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 var serializerType = serializerTypeDef.MakeGenericType(type.GetGenericArguments());
 
-                reader = (ITypeReader<T, TNode>) (RegisterSerializer(serializerType) ??
-                                                  throw new NullReferenceException());
+                reader = RegisterSerializer(serializerType) ?? throw new NullReferenceException();
                 return true;
             }
 

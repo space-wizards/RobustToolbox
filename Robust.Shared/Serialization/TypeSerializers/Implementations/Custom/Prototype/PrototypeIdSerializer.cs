@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
-            return DeserializationResult.Value(node.Value);
+            return new DeserializedValue<string>(node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, string value, bool alwaysWrite = false,

@@ -102,5 +102,26 @@ namespace Robust.Benchmarks.Serialization
         {
             return SerializationManager.ReadValue<DataDefinitionWithString[]>(TenStringDefsNode);
         }
+
+        [Benchmark]
+        [BenchmarkCategory("read")]
+        public SealedDataDefinitionWithString[]? ReadEmptySealedStringDataDef()
+        {
+            return SerializationManager.ReadValue<SealedDataDefinitionWithString[]>(EmptyNode);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("read")]
+        public SealedDataDefinitionWithString[]? ReadOneSealedStringDataDef()
+        {
+            return SerializationManager.ReadValue<SealedDataDefinitionWithString[]>(OneStringDefNode);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("read")]
+        public SealedDataDefinitionWithString[]? ReadTenSealedStringDataDefs()
+        {
+            return SerializationManager.ReadValue<SealedDataDefinitionWithString[]>(TenStringDefsNode);
+        }
     }
 }

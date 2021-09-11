@@ -199,6 +199,8 @@ namespace Robust.Shared.Serialization.Manager
 
             _highestFlagBit.Clear();
 
+            _readers.Clear();
+
             _initialized = false;
         }
 

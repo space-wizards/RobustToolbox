@@ -292,7 +292,7 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             var value = Enum.Parse<TEnum>(node.Value, true);
-            return new DeserializedValue<TEnum>(value);
+            return new DeserializedValue<TEnum?>(value);
         }
 
         private DeserializationResult ReadEnumValue<TEnum>(ValueDataNode node) where TEnum : struct
@@ -320,7 +320,7 @@ namespace Robust.Shared.Serialization.Manager
             var value = (TValue) instantiator();
             value.Deserialize(node.Value);
 
-            return new DeserializedValue<TValue>(value);
+            return new DeserializedValue<TValue?>(value);
         }
 
         private DeserializationResult ReadWithTypeReaderNullable<TValue>(
@@ -328,7 +328,6 @@ namespace Robust.Shared.Serialization.Manager
             ITypeReader<TValue, ValueDataNode> reader,
             ISerializationContext? context = null,
             bool skipHook = false)
-            where TValue : notnull
         {
             if (node.Value == "null")
             {
@@ -358,7 +357,6 @@ namespace Robust.Shared.Serialization.Manager
             ITypeReader<TValue, TNode> reader,
             ISerializationContext? context = null,
             bool skipHook = false)
-            where TValue : notnull
             where TNode : DataNode
         {
             if (context != null &&
@@ -378,14 +376,13 @@ namespace Robust.Shared.Serialization.Manager
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false)
-            where TValue : notnull
         {
             if (node.Value == "null")
             {
                 return new DeserializedValue<TValue?>(default);
             }
 
-            return ReadGenericValue<TValue>(node, instantiator, definition, populate, hooks, context, skipHook);
+            return ReadGenericValue<TValue?>(node, instantiator, definition, populate, hooks, context, skipHook);
         }
 
         private DeserializationResult ReadGenericValue<TValue>(
@@ -396,7 +393,6 @@ namespace Robust.Shared.Serialization.Manager
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false)
-            where TValue : notnull
         {
             var type = typeof(TValue);
 
@@ -412,7 +408,7 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No data definition found for type {type} with node type {node.GetType()} when reading");
             }
 
-            var instance = (TValue) instantiator();
+            var instance = instantiator();
 
             if (populate)
             {
@@ -445,10 +441,9 @@ namespace Robust.Shared.Serialization.Manager
             bool hooks,
             ISerializationContext? context = null,
             bool skipHook = false)
-            where TValue : notnull
         {
             var type = typeof(TValue);
-            var instance = (TValue) instantiator();
+            var instance = instantiator();
 
             if (context != null &&
                 context.TypeReaders.TryGetValue((type, typeof(MappingDataNode)), out var readerUnCast))

@@ -85,27 +85,27 @@ namespace Robust.Shared.Serialization.Manager
             where TTarget : TCommon
             where TCommon : notnull
         {
-            object? rawTypeCopier;
+            object? rawCopier;
 
             if (context != null &&
-                context.TypeCopiers.TryGetValue(typeof(TCommon), out rawTypeCopier) ||
-                _typeCopiers.TryGetValue(typeof(TCommon), out rawTypeCopier))
+                context.TypeCopiers.TryGetValue(typeof(TCommon), out rawCopier) ||
+                _typeCopiers.TryGetValue(typeof(TCommon), out rawCopier))
             {
-                var ser = (ITypeCopier<TCommon>) rawTypeCopier;
-                target = (TTarget) ser.Copy(this, source, target, skipHook, context);
+                var copier = (ITypeCopier<TCommon>) rawCopier;
+                target = (TTarget) copier.Copy(this, source, target, skipHook, context);
                 return true;
             }
 
-            if (TryGetGenericCopier(out ITypeCopier<TCommon>? genericTypeWriter))
+            if (TryGetGenericCopier(out ITypeCopier<TCommon>? genericCopier))
             {
-                target = (TTarget) genericTypeWriter.Copy(this, source, target, skipHook, context);
+                target = (TTarget) genericCopier.Copy(this, source, target, skipHook, context);
                 return true;
             }
 
             return false;
         }
 
-        private bool TryGetGenericCopier<T>([NotNullWhen(true)] out ITypeCopier<T>? rawCopier) where T : notnull
+        private bool TryGetGenericCopier<T>([NotNullWhen(true)] out ITypeCopier<T>? rawCopier)
         {
             rawCopier = null;
 

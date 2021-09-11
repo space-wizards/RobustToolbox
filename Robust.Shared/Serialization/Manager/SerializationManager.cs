@@ -344,19 +344,14 @@ namespace Robust.Shared.Serialization.Manager
                 : null;
         }
 
-        internal DataDefinition GetDefinitionOrThrow(Type type)
-        {
-            return GetDefinition(type) ?? throw new ArgumentException($"No data definition found with type {type}");
-        }
-
-        internal bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
+        private bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
         {
             dataDefinition = GetDefinition(type);
             return dataDefinition != null;
         }
 
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
-            ISerializationContext? context = null) where T : notnull
+            ISerializationContext? context = null)
         {
             return WriteValue(typeof(T), value, alwaysWrite, context);
         }

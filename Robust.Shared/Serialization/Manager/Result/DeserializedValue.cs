@@ -28,12 +28,12 @@
 
     public class DeserializedValue<T> : DeserializationResult<T>
     {
-        public DeserializedValue(T? value)
+        public DeserializedValue(T value)
         {
             Value = value;
         }
 
-        public override T? Value { get; }
+        public override T Value { get; }
 
         public override object? RawValue => Value;
 
@@ -50,7 +50,9 @@
         public override void CallAfterDeserializationHook()
         {
             if (Value is ISerializationHooks hooks)
+            {
                 hooks.AfterDeserialization();
+            }
         }
     }
 }

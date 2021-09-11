@@ -235,7 +235,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (value.Value == "null")
             {
-                return new DeserializedValue<T[]>(null);
+                return new DeserializedValue<T[]?>(null);
             }
 
             throw new InvalidNodeTypeException("Cannot read an array from a value data node that is not null.");
@@ -314,7 +314,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue>(default);
+                return new DeserializedValue<TValue?>(default);
             }
 
             var value = (TValue) instantiator();
@@ -332,7 +332,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue>(default);
+                return new DeserializedValue<TValue?>(default);
             }
 
             return ReadWithTypeReader(node, reader, context, skipHook);
@@ -382,7 +382,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue>(default);
+                return new DeserializedValue<TValue?>(default);
             }
 
             return ReadGenericValue<TValue>(node, instantiator, definition, populate, hooks, context, skipHook);

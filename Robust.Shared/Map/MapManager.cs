@@ -605,18 +605,13 @@ namespace Robust.Shared.Map
                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
                         // TODO: Need to use CollisionManager to test detailed overlap
-                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
-                        {
-                            // TODO: Need to use CollisionManager to test detailed overlap
-                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
-                            yield return grid;
-                            found = true;
-                            break;
-                        }
-
-                        if (found)
-                            break;
+                        if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
+                        yield return grid;
+                        found = true;
+                        break;
                     }
+
+                    if (found) break;
                 }
 
                 if (!anyChunks && worldArea.Contains(transform.Position))
@@ -651,18 +646,13 @@ namespace Robust.Shared.Map
                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
                         // TODO: Need to use CollisionManager to test detailed overlap
-                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds))
-                        {
-                            // TODO: Need to use CollisionManager to test detailed overlap
-                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
-                            yield return grid;
-                            found = true;
-                            break;
-                        }
-
-                        if (found)
-                            break;
+                        if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
+                        yield return grid;
+                        found = true;
+                        break;
                     }
+
+                    if (found) break;
                 }
 
                 if (!anyChunks && worldArea.Contains(transform.Position))

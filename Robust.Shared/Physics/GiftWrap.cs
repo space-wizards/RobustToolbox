@@ -20,6 +20,7 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 
@@ -36,18 +37,20 @@ namespace Robust.Shared.Physics
         //Extracted from Box2D
 
         /// <summary>
-        /// Returns the convex hull from the given vertices.
+        /// Sets the convex hull from the given vertices.
         /// </summary>
         /// <param name="vertices">The vertices.</param>
-        public static List<Vector2> GetConvexHull(List<Vector2> vertices)
+        public static Vector2[] SetConvexHull(Span<Vector2> vertices)
         {
-            if (vertices.Count <= 3)
-                return vertices;
+            if (vertices.Length <= 3)
+            {
+                return vertices.ToArray();
+            }
 
             // Find the right most point on the hull
             int i0 = 0;
             float x0 = vertices[0].X;
-            for (int i = 1; i < vertices.Count; ++i)
+            for (int i = 1; i < vertices.Length; ++i)
             {
                 float x = vertices[i].X;
                 if (x > x0 || (MathHelper.CloseTo(x, x0) && vertices[i].Y < vertices[i0].Y))
@@ -57,7 +60,7 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            int[] hull = new int[vertices.Count];
+            Span<int> hull = stackalloc int[vertices.Length];
             int m = 0;
             int ih = i0;
 
@@ -66,7 +69,7 @@ namespace Robust.Shared.Physics
                 hull[m] = ih;
 
                 int ie = 0;
-                for (int j = 1; j < vertices.Count; ++j)
+                for (int j = 1; j < vertices.Length; ++j)
                 {
                     if (ie == ih)
                     {
@@ -98,12 +101,12 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            var result = new List<Vector2>(m);
+            var result = new Vector2[m];
 
             // Copy vertices.
             for (var i = 0; i < m; ++i)
             {
-                result.Add(vertices[hull[i]]);
+                result[i] = vertices[hull[i]];
             }
 
             return result;

@@ -12,6 +12,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Write
 {
+    [MemoryDiagnoser]
     public class SerializationWriteBenchmark : SerializationBenchmark
     {
         public SerializationWriteBenchmark()
@@ -118,6 +119,16 @@ namespace Robust.Benchmarks.Serialization.Write
                 typeof(int),
                 typeof(FlagSerializer<BenchmarkFlags>),
                 FlagThirtyOne);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("customTypeSerializer")]
+        public DataNode WriteIntegerCustomSerializer()
+        {
+            return SerializationManager.WriteWithTypeSerializer(
+                typeof(int),
+                typeof(BenchmarkIntSerializer),
+                Integer);
         }
     }
 }

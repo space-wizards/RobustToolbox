@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace Robust.Shared.Utility
 {
-    public abstract class AbstractFieldInfo
+    internal abstract class AbstractFieldInfo
     {
         public abstract string Name { get; }
         internal abstract MemberInfo MemberInfo { get; }

@@ -484,10 +484,11 @@ namespace Robust.Shared.Physics
             // TODO: Set newcontacts to true.
         }
 
-        public void CreateFixture(PhysicsComponent body, IPhysShape shape)
+        public Fixture CreateFixture(PhysicsComponent body, IPhysShape shape)
         {
             var fixture = new Fixture(body, shape);
             CreateFixture(body, fixture);
+            return fixture;
         }
 
         public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)

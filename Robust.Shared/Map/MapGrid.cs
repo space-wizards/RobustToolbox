@@ -285,7 +285,9 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
-            var localArea = new Box2(WorldToLocal(worldArea.BottomLeft), WorldToLocal(worldArea.TopRight));
+            var matrix = InvWorldMatrix;
+
+            var localArea = new Box2(matrix.Transform(worldArea.BottomLeft), matrix.Transform(worldArea.TopRight));
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
@@ -654,25 +656,32 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <summary>
-        ///     Transforms entity coordinates to tile indices relative to grid origin.
-        /// </summary>
+        /// <inheritdoc />
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
+            Vector2 local;
 
-            var local = WorldToLocal(coords.ToMapPos(_entityManager));
+            if (coords.EntityId == GridEntityId)
+                local = coords.Position;
+            else
+                local = WorldToLocal(coords.ToMapPos(_entityManager));
+
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new Vector2i(x, y);
         }
 
-        /// <summary>
-        ///     Transforms global world coordinates to chunk indices relative to grid origin.
-        /// </summary>
+        /// <inheritdoc />
         public Vector2i LocalToChunkIndices(EntityCoordinates gridPos)
         {
-            var local = WorldToLocal(gridPos.ToMapPos(_entityManager));
+            Vector2 local;
+
+            if (gridPos.EntityId == GridEntityId)
+                local = gridPos.Position;
+            else
+                local = WorldToLocal(gridPos.ToMapPos(_entityManager));
+
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
             return new Vector2i(x, y);

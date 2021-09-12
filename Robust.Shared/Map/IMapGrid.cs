@@ -220,7 +220,7 @@ namespace Robust.Shared.Map
         Vector2i GridTileToChunkIndices(Vector2i gridTile);
 
         /// <summary>
-        /// Transforms local grid coordinates to chunk indices.
+        /// Transforms EntityCoordinates to chunk indices relative to grid origin.
         /// </summary>
         Vector2i LocalToChunkIndices(EntityCoordinates gridPos);
 

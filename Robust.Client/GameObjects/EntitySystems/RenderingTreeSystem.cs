@@ -37,11 +37,11 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public float MaxLightRadius { get; private set; }
 
-        internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
+        internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2Rotated worldBounds)
         {
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
             }

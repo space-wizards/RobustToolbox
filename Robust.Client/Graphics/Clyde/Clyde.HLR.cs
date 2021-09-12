@@ -213,7 +213,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var screenSize = viewport.Size;
 
-            ProcessSpriteEntities(mapId, worldBounds, worldAABB, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, worldBounds, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -362,10 +362,10 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Box2Rotated worldBounds, Box2 worldAABB,
+        private void ProcessSpriteEntities(MapId map, Box2Rotated worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
-            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldAABB))
+            foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
                 var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
 

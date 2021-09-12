@@ -581,25 +581,24 @@ namespace Robust.Shared.Map
 
                 var found = false;
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
 
                 foreach (var chunk in grid.GetMapChunks(worldArea))
                 {
-                    var id = _gridFixtures.GetChunkId((MapChunk) chunk);
-                    var fixture = body.GetFixture(id);
-
-                    if (fixture == null) continue;
-
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    foreach (var fixture in chunk.Fixtures)
                     {
-                        // TODO: Need to use CollisionManager to test detailed overlap
-                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {
-                            yield return grid;
-                            found = true;
-                            break;
+                            // TODO: Need to use CollisionManager to test detailed overlap
+                            if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
+                            {
+                                yield return grid;
+                                found = true;
+                                break;
+                            }
                         }
+
+                        if (found) break;
                     }
 
                     if (found) break;

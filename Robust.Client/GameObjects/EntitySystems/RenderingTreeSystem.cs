@@ -49,6 +49,18 @@ namespace Robust.Client.GameObjects
             yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
         }
 
+        internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+            }
+
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+        }
+
         public override void Initialize()
         {
             base.Initialize();

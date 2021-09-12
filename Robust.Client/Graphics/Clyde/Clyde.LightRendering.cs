@@ -506,7 +506,7 @@ namespace Robust.Client.Graphics.Clyde
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var state = (this, worldAABB, count: 0);
 
-            foreach (var comp in renderingTreeSystem.GetRenderTrees(map, worldBounds))
+            foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
                 var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
 

@@ -3,6 +3,7 @@ using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Benchmarks.Serialization.Initialize
 {
+    [MemoryDiagnoser]
     public class SerializationInitializeBenchmark : SerializationBenchmark
     {
         [IterationCleanup]

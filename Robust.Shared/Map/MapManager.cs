@@ -586,24 +586,24 @@ namespace Robust.Shared.Map
         {
             foreach (var (_, grid) in _grids)
             {
-                if (grid.ParentMapId != mapId || !worldArea.Intersects(grid.WorldBounds)) continue;
+                if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
 
                 var found = false;
-
-                // TODO: Future optimisation; we can probably do a very fast check with no fixtures
-                // by just knowing the chunk bounds of the grid and then checking that first
-                // this will mainly be helpful once we get multiple grids.
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
 
-                // TODO: Client needs to know about chunk fixtures so you can just do GetMapChunks and do a faster fixture query.
-                if (body.FixtureCount > 0)
+                foreach (var chunk in grid.GetMapChunks(worldArea))
                 {
-                    // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
-                    foreach (var fixture in body.Fixtures)
+                    var id = _gridFixtures.GetChunkId((MapChunk) chunk);
+                    var fixture = body.GetFixture(id);
+
+                    if (fixture == null) continue;
+
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        // TODO: Need to use CollisionManager to test detailed overlap
+                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
                         {
                             // TODO: Need to use CollisionManager to test detailed overlap
                             if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
@@ -626,33 +626,30 @@ namespace Robust.Shared.Map
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea)
         {
             var worldBounds = worldArea.CalcBoundingBox();
-
+            
             foreach (var (_, grid) in _grids)
             {
-                if (grid.ParentMapId != mapId || !worldBounds.Intersects(grid.WorldBounds)) continue;
+                if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
 
                 var found = false;
-
-                // TODO: Future optimisation; we can probably do a very fast check with no fixtures
-                // by just knowing the chunk bounds of the grid and then checking that first
-                // this will mainly be helpful once we get multiple grids.
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
 
-                if (body.FixtureCount > 0)
+                foreach (var chunk in grid.GetMapChunks(worldArea))
                 {
-                    // We can't rely on the broadphase proxies existing as they're deferred until physics requires the update.
-                    foreach (var fixture in body.Fixtures)
+                    var id = _gridFixtures.GetChunkId((MapChunk) chunk);
+                    var fixture = body.GetFixture(id);
+
+                    if (fixture == null) continue;
+
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        // TODO: Need to use CollisionManager to test detailed overlap
+                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
                         {
-                            // TODO: Probably need to make GJK support Box2Rotated intersecting each other?
-
                             // TODO: Need to use CollisionManager to test detailed overlap
-                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
-                            // TODO: Check collision here.
-
+                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
                             yield return grid;
                             found = true;
                             break;

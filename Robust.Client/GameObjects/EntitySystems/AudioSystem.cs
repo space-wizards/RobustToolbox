@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
@@ -8,6 +10,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Player;
@@ -96,6 +99,8 @@ namespace Robust.Client.GameObjects
             // Update positions of streams every frame.
             try
             {
+                var ourPos = _eyeManager.CurrentEye.Position.Position;
+
                 foreach (var stream in _playingClydeStreams)
                 {
                     if (!stream.Source.IsPlaying)
@@ -139,7 +144,7 @@ namespace Robust.Client.GameObjects
                         }
                         else
                         {
-                            var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                            var sourceRelative = ourPos - pos.Position;
                             var occlusion = 0f;
                             if (sourceRelative.Length > 0)
                             {
@@ -153,14 +158,54 @@ namespace Robust.Client.GameObjects
                                     stream.TrackingEntity);
                             }
 
-                            stream.Source.SetVolume(stream.Volume);
+                            var distance = MathF.Max(stream.ReferenceDistance, MathF.Min(sourceRelative.Length, stream.MaxDistance));
+                            float gain;
+
+                            // Technically these are formulas for gain not decibels but EHHHHHHHH.
+                            switch (stream.Attenuation)
+                            {
+                                case Attenuation.Default:
+                                    gain = 1f;
+                                    break;
+                                // You thought I'd implement clamping per source? Hell no that's just for the overall OpenAL setting
+                                // I didn't even wanna implement this much for linear but figured it'd be cleaner.
+                                case Attenuation.InverseDistanceClamped:
+                                case Attenuation.InverseDistance:
+                                    gain = stream.ReferenceDistance /
+                                           (stream.ReferenceDistance + stream.RolloffFactor * (distance - stream.ReferenceDistance));
+
+                                    break;
+                                case Attenuation.LinearDistanceClamped:
+                                case Attenuation.LinearDistance:
+                                    gain = 1f - stream.RolloffFactor * (distance - stream.ReferenceDistance) /
+                                        (stream.MaxDistance - stream.ReferenceDistance);
+
+                                    break;
+                                case Attenuation.ExponentDistanceClamped:
+                                case Attenuation.ExponentDistance:
+                                    gain = MathF.Pow((distance / stream.ReferenceDistance),
+                                        (-stream.RolloffFactor));
+                                    break;
+                                default:
+                                    throw new ArgumentOutOfRangeException($"No implemented attenuation for {stream.Attenuation.ToString()}");
+                            }
+
+                            var volume = MathF.Pow(10, stream.Volume / 10);
+                            var actualGain = MathF.Max(0f, volume * gain);
+
+                            stream.Source.SetVolumeDirect(actualGain);
                             stream.Source.SetOcclusion(occlusion);
                         }
 
-                        if (!stream.Source.SetPosition(pos.Position))
+                        SetAudioPos(stream, stream.Attenuation != Attenuation.NoAttenuation ? pos.Position : ourPos);
+
+                        void SetAudioPos(PlayingStream stream, Vector2 pos)
                         {
-                            Logger.Warning("Interrupting positional audio, can't set position.");
-                            stream.Source.StopPlaying();
+                            if (!stream.Source.SetPosition(pos))
+                            {
+                                Logger.Warning("Interrupting positional audio, can't set position.");
+                                stream.Source.StopPlaying();
+                            }
                         }
 
                         if (stream.TrackingEntity != null)
@@ -217,6 +262,10 @@ namespace Robust.Client.GameObjects
             var playing = new PlayingStream
             {
                 Source = source,
+                Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
+                MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
+                ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
+                RolloffFactor = audioParams?.RolloffFactor ?? 1f,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -263,6 +312,10 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingEntity = entity,
+                Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
+                MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
+                ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
+                RolloffFactor = audioParams?.RolloffFactor ?? 1f,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -310,6 +363,10 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingCoordinates = coordinates,
+                Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
+                MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
+                ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
+                RolloffFactor = audioParams?.RolloffFactor ?? 1f,
                 Volume = audioParams?.Volume ?? 0
             };
             _playingClydeStreams.Add(playing);
@@ -325,6 +382,9 @@ namespace Robust.Client.GameObjects
 
             source.SetPitch(audioParams.Value.PitchScale);
             source.SetVolume(audioParams.Value.Volume);
+            source.SetRolloffFactor(audioParams.Value.RolloffFactor);
+            source.SetMaxDistance(audioParams.Value.MaxDistance);
+            source.SetReferenceDistance(audioParams.Value.ReferenceDistance);
             source.SetPlaybackPosition(audioParams.Value.PlayOffsetSeconds);
             source.IsLooping = audioParams.Value.Loop;
         }
@@ -337,6 +397,27 @@ namespace Robust.Client.GameObjects
             public EntityCoordinates? TrackingCoordinates;
             public bool Done;
             public float Volume;
+
+            public float MaxDistance;
+            public float ReferenceDistance;
+            public float RolloffFactor;
+
+            public Attenuation Attenuation
+            {
+                get => _attenuation;
+                set
+                {
+                    if (value == _attenuation) return;
+                    _attenuation = value;
+                    if (_attenuation != Attenuation.Default)
+                    {
+                        // Need to disable default attenuation when using a custom one
+                        // Damn Sloth wanting linear ambience sounds so they smoothly cut-off and are short-range
+                        Source.SetRolloffFactor(0f);
+                    }
+                }
+            }
+            private Attenuation _attenuation = Attenuation.Default;
 
             public void Stop()
             {

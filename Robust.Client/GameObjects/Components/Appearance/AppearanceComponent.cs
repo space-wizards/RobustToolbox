@@ -158,22 +158,4 @@ namespace Robust.Client.GameObjects
         {
         }
     }
-
-    sealed class AppearanceTestComponent : Component
-    {
-        public override string Name => "AppearanceTest";
-
-        float time;
-        bool state;
-
-        public void OnUpdate(float frameTime)
-        {
-            time += frameTime;
-            if (time > 1)
-            {
-                time -= 1;
-                Owner.GetComponent<AppearanceComponent>().SetData("test", state = !state);
-            }
-        }
-    }
 }

@@ -161,7 +161,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("mass")]
-        private float _mass = 1.0f;
+        private float _mass;
 
         /// <summary>
         /// Bitmask of the collision layers the component is a part of.
@@ -231,16 +231,16 @@ namespace Robust.Shared.Physics.Dynamics
             // You'll also need a dedicated solver for circles (and ideally AABBs) as otherwise it'll be laggier casting to PolygonShape.
             if (Shape is PhysShapeAabb aabb)
             {
-                Shape = new PolygonShape
-                {
-                    Vertices = new List<Vector2>
-                    {
-                        aabb.LocalBounds.BottomRight,
-                        aabb.LocalBounds.TopRight,
-                        aabb.LocalBounds.TopLeft,
-                        aabb.LocalBounds.BottomLeft,
-                    }
-                };
+                var bounds = aabb.LocalBounds;
+                var poly = new PolygonShape();
+                Span<Vector2> verts = stackalloc Vector2[4];
+                verts[0] = bounds.BottomLeft;
+                verts[1] = bounds.BottomRight;
+                verts[2] = bounds.TopRight;
+                verts[3] = bounds.TopLeft;
+                poly.SetVertices(verts);
+                Shape = poly;
+                DebugTools.Assert(Vertices.IsCounterClockwise(poly.Vertices));
             }
         }
 
@@ -343,7 +343,9 @@ namespace Robust.Shared.Physics.Dynamics
             //
             // The rest of the derivation is handled by computer algebra.
 
-            DebugTools.Assert(poly.Vertices.Count >= 3);
+            var vertexCount = poly.Vertices.Length;
+
+            DebugTools.Assert(vertexCount >= 3);
 
             //FPE optimization: Consolidated the calculate centroid and mass code to a single method.
             Vector2 center = Vector2.Zero;
@@ -355,19 +357,19 @@ namespace Robust.Shared.Physics.Dynamics
             Vector2 s = Vector2.Zero;
 
             // This code would put the reference point inside the polygon.
-            for (int i = 0; i < poly.Vertices.Count; ++i)
+            for (int i = 0; i < vertexCount; ++i)
             {
                 s += poly.Vertices[i];
             }
-            s *= 1.0f / poly.Vertices.Count;
+            s *= 1.0f / vertexCount;
 
             const float k_inv3 = 1.0f / 3.0f;
 
-            for (var i = 0; i < poly.Vertices.Count; ++i)
+            for (var i = 0; i < vertexCount; ++i)
             {
                 // Triangle vertices.
                 Vector2 e1 = poly.Vertices[i] - s;
-                Vector2 e2 = i + 1 < poly.Vertices.Count ? poly.Vertices[i + 1] - s : poly.Vertices[0] - s;
+                Vector2 e2 = i + 1 < vertexCount ? poly.Vertices[i + 1] - s : poly.Vertices[0] - s;
 
                 float D = Vector2.Cross(e1, e2);
 

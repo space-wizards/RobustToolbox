@@ -242,7 +242,9 @@ namespace Robust.Shared.GameObjects
 
             while (_moveQueue.TryPop(out var moveEvent))
             {
-                if (!_handledThisTick.Add(moveEvent.Sender.Uid) || moveEvent.Sender.Deleted) continue;
+                if (!_handledThisTick.Add(moveEvent.Sender.Uid) ||
+                    moveEvent.Sender.Deleted ||
+                    moveEvent.Sender.Transform.Anchored) continue;
 
                 DebugTools.Assert(!moveEvent.Sender.Transform.Anchored);
                 UpdateEntityTree(moveEvent.Sender, moveEvent.WorldAABB);
@@ -250,7 +252,9 @@ namespace Robust.Shared.GameObjects
 
             while (_rotateQueue.TryPop(out var rotateEvent))
             {
-                if (!_handledThisTick.Add(rotateEvent.Sender.Uid) || rotateEvent.Sender.Deleted) continue;
+                if (!_handledThisTick.Add(rotateEvent.Sender.Uid) ||
+                    rotateEvent.Sender.Deleted ||
+                    rotateEvent.Sender.Transform.Anchored) continue;
 
                 DebugTools.Assert(!rotateEvent.Sender.Transform.Anchored);
                 UpdateEntityTree(rotateEvent.Sender, rotateEvent.WorldAABB);

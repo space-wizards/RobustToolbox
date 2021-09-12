@@ -592,9 +592,11 @@ namespace Robust.Shared.Map
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+                var anyChunks = false;
 
                 foreach (var chunk in grid.GetMapChunks(worldArea))
                 {
+                    anyChunks = true;
                     var id = _gridFixtures.GetChunkId((MapChunk) chunk);
                     var fixture = body.GetFixture(id);
 
@@ -616,7 +618,8 @@ namespace Robust.Shared.Map
                             break;
                     }
                 }
-                else if (worldArea.Contains(transform.Position))
+
+                if (!anyChunks && worldArea.Contains(transform.Position))
                 {
                     yield return grid;
                 }
@@ -626,18 +629,20 @@ namespace Robust.Shared.Map
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea)
         {
             var worldBounds = worldArea.CalcBoundingBox();
-            
+
             foreach (var (_, grid) in _grids)
             {
-                if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
+                if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldBounds)) continue;
 
                 var found = false;
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
                 var body = gridEnt.GetComponent<PhysicsComponent>();
                 var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
+                var anyChunks = false;
 
                 foreach (var chunk in grid.GetMapChunks(worldArea))
                 {
+                    anyChunks = true;
                     var id = _gridFixtures.GetChunkId((MapChunk) chunk);
                     var fixture = body.GetFixture(id);
 
@@ -646,10 +651,10 @@ namespace Robust.Shared.Map
                     for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
                         // TODO: Need to use CollisionManager to test detailed overlap
-                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
+                        if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds))
                         {
                             // TODO: Need to use CollisionManager to test detailed overlap
-                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
+                            if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
                             yield return grid;
                             found = true;
                             break;
@@ -659,7 +664,8 @@ namespace Robust.Shared.Map
                             break;
                     }
                 }
-                else if (worldArea.Contains(transform.Position))
+
+                if (!anyChunks && worldArea.Contains(transform.Position))
                 {
                     yield return grid;
                 }

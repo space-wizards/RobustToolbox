@@ -137,7 +137,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>The deserialized object, or null.</returns>
         T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
-        DeserializationResult ReadWithTypeSerializer(Type type, Type typeSerializer, DataNode node,
+        DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node,
             ISerializationContext? context = null, bool skipHook = false);
 
         #endregion
@@ -174,7 +174,7 @@ namespace Robust.Shared.Serialization.Manager
         /// </returns>
         DataNode WriteValue(Type type, object? value, bool alwaysWrite = false, ISerializationContext? context = null);
 
-        DataNode WriteWithTypeSerializer(Type type, Type typeSerializer, object? value, bool alwaysWrite = false,
+        DataNode WriteWithTypeSerializer(Type type, Type serializer, object? value, bool alwaysWrite = false,
             ISerializationContext? context = null);
 
         #endregion
@@ -216,6 +216,7 @@ namespace Robust.Shared.Serialization.Manager
         [MustUseReturnValue]
         T? Copy<T>(T? source, T? target, ISerializationContext? context = null, bool skipHook = false);
 
+        [MustUseReturnValue]
         object? CopyWithTypeSerializer(Type typeSerializer, object? source, object? target,
             ISerializationContext? context = null, bool skipHook = false);
 

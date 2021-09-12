@@ -72,7 +72,7 @@ namespace Robust.Client.Graphics
         public Box2Rotated GetWorldViewbounds()
         {
             var bounds = GetWorldViewport();
-            return new Box2Rotated(bounds, CurrentEye.Rotation, bounds.Center);
+            return new Box2Rotated(bounds, -CurrentEye.Rotation, bounds.Center);
         }
 
         /// <inheritdoc />

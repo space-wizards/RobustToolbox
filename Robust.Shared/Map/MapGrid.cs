@@ -215,6 +215,12 @@ namespace Robust.Shared.Map
         #region TileAccess
 
         /// <inheritdoc />
+        public TileRef GetTileRef(MapCoordinates coords)
+        {
+            return GetTileRef(CoordinatesToTile(coords));
+        }
+
+        /// <inheritdoc />
         public TileRef GetTileRef(EntityCoordinates coords)
         {
             return GetTileRef(CoordinatesToTile(coords));
@@ -424,6 +430,12 @@ namespace Robust.Shared.Map
         #endregion ChunkAccess
 
         #region SnapGridAccess
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
+        {
+            return GetAnchoredEntities(TileIndicesFor(coords));
+        }
 
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords)
@@ -651,6 +663,18 @@ namespace Robust.Shared.Map
         public Vector2i WorldToTile(Vector2 posWorld)
         {
             var local = WorldToLocal(posWorld);
+            var x = (int)Math.Floor(local.X / TileSize);
+            var y = (int)Math.Floor(local.Y / TileSize);
+            return new Vector2i(x, y);
+        }
+
+        /// <inheritdoc />
+        public Vector2i CoordinatesToTile(MapCoordinates coords)
+        {
+            DebugTools.Assert(ParentMapId == coords.MapId);
+
+            var local = WorldToLocal(coords.Position);
+
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
             return new Vector2i(x, y);

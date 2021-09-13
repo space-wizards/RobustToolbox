@@ -63,20 +63,18 @@ namespace Robust.Client.ViewVariables
 
             foreach (var fieldInfo in type.GetAllFields())
             {
-                var attr = fieldInfo.GetCustomAttribute<ViewVariablesAttribute>();
-                if (attr == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(fieldInfo, out var access))
                 {
                     continue;
                 }
 
-                members.Add((fieldInfo, attr.Access, fieldInfo.GetValue(obj), (v, _) => fieldInfo.SetValue(obj, v),
+                members.Add((fieldInfo, (VVAccess)access, fieldInfo.GetValue(obj), (v, _) => fieldInfo.SetValue(obj, v),
                     fieldInfo.FieldType));
             }
 
             foreach (var propertyInfo in type.GetAllProperties())
             {
-                var attr = propertyInfo.GetCustomAttribute<ViewVariablesAttribute>();
-                if (attr == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(propertyInfo, out var access))
                 {
                     continue;
                 }
@@ -86,7 +84,7 @@ namespace Robust.Client.ViewVariables
                     continue;
                 }
 
-                members.Add((propertyInfo, attr.Access, propertyInfo.GetValue(obj),
+                members.Add((propertyInfo, (VVAccess)access, propertyInfo.GetValue(obj),
                     (v, _) => propertyInfo.GetSetMethod(true)!.Invoke(obj, new[] {v}), propertyInfo.PropertyType));
             }
 

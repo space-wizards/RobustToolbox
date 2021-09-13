@@ -49,7 +49,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-            var physicsSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
             var broadphaseSystem = entitySystemManager.GetEntitySystem<SharedBroadphaseSystem>();
             MapId mapId;
 
@@ -61,7 +60,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                physicsSystem.Maps[mapId].Gravity = new Vector2(0, -9.8f);
+
+                mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
                 var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
 
@@ -90,8 +90,6 @@ namespace Robust.UnitTesting.Shared.Physics
                     0.0f, -10.0f, -5.0f, 5.0f, 10.0f
                 };
 
-                PolygonShape shape;
-
                 for (var j = 0; j < columnCount; j++)
                 {
                     for (var i = 0; i < rowCount; i++)
@@ -102,15 +100,16 @@ namespace Robust.UnitTesting.Shared.Physics
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
 
                         box.BodyType = BodyType.Dynamic;
-                        shape = new PolygonShape(0.001f) {Vertices = new List<Vector2>()
+                        var poly = new PolygonShape(0.001f);
+                        poly.SetVertices(new List<Vector2>()
                         {
                             new(0.5f, -0.5f),
                             new(0.5f, 0.5f),
                             new(-0.5f, 0.5f),
                             new(-0.5f, -0.5f),
-                        }};
+                        });
 
-                        var fixture = new Fixture(box, shape)
+                        var fixture = new Fixture(box, poly)
                         {
                             CollisionMask = 1,
                             CollisionLayer = 1,
@@ -177,7 +176,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                physicsSystem.Maps[mapId].Gravity = new Vector2(0, -9.8f);
+                mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
                 var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
 

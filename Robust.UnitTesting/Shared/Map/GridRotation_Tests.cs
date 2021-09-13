@@ -63,7 +63,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entMan = server.ResolveDependency<IEntityManager>();
             var mapMan = server.ResolveDependency<IMapManager>();
-            var gridSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -84,8 +83,6 @@ namespace Robust.UnitTesting.Shared.Map
                 }
 
                 var chunks = gridInternal.GetMapChunks().Select(c => c.Value).ToList();
-
-                gridSystem.Process();
 
                 Assert.That(chunks.Count, Is.EqualTo(1));
                 var chunk = chunks[0];

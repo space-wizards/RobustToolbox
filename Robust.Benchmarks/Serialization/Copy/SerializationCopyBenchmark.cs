@@ -6,11 +6,13 @@ using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Copy
 {
+    [MemoryDiagnoser]
     public class SerializationCopyBenchmark : SerializationBenchmark
     {
         public SerializationCopyBenchmark()
@@ -34,6 +36,10 @@ namespace Robust.Benchmarks.Serialization.Copy
         private DataDefinitionWithString DataDefinitionWithString { get; }
 
         private SeedDataDefinition Seed { get; }
+
+        private BenchmarkFlagsEnum FlagZero = BenchmarkFlagsEnum.Zero;
+
+        private BenchmarkFlagsEnum FlagThirtyOne = BenchmarkFlagsEnum.ThirtyOne;
 
         [Benchmark]
         public string? CreateCopyString()
@@ -110,6 +116,36 @@ namespace Robust.Benchmarks.Serialization.Copy
             copy.SplatPrototype = Seed.SplatPrototype;
 
             return copy;
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public object? CopyFlagZero()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(FlagSerializer<BenchmarkFlags>),
+                (int) FlagZero,
+                (int) FlagZero);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("flag")]
+        public object? CopyFlagThirtyOne()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(FlagSerializer<BenchmarkFlags>),
+                (int) FlagThirtyOne,
+                (int) FlagThirtyOne);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("customTypeSerializer")]
+        public object? CopyIntegerCustomSerializer()
+        {
+            return SerializationManager.CopyWithTypeSerializer(
+                typeof(BenchmarkIntSerializer),
+                Integer,
+                Integer);
         }
     }
 }

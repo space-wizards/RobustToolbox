@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void DeferMoveEvent(MoveEvent moveEvent)
+        public void DeferMoveEvent(ref MoveEvent moveEvent)
         {
             if (moveEvent.Sender.HasComponent<IMapGridComponent>())
                 _gridMoves.Enqueue(moveEvent);
@@ -77,7 +77,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    RaiseLocalEvent(ev.Sender.Uid, ev);
+                    RaiseLocalEvent(ev.Sender.Uid, ref ev);
                 }
             }
         }

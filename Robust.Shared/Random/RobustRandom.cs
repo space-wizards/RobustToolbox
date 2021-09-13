@@ -4,6 +4,11 @@ namespace Robust.Shared.Random
     {
         private readonly System.Random _random = new();
 
+        public float NextFloat()
+        {
+            return _random.NextFloat();
+        }
+
         public int Next()
         {
             return _random.Next();

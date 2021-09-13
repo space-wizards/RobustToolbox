@@ -11,6 +11,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.Console;
+using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
@@ -185,6 +186,10 @@ namespace Robust.UnitTesting.Server
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
                 .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
 
+            reflectionManager
+                .Setup(x => x.FindAllTypes())
+                .Returns(() => realReflection.FindAllTypes());
+
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
             container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
@@ -202,7 +207,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IIslandManager, IslandManager>();
-            container.Register<ICollisionManager, CollisionManager>();
+            container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
             container.Register<IPhysicsManager, PhysicsManager>();
@@ -229,6 +234,8 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<PhysicsComponent>();
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
+            compFactory.RegisterClass<ContainerManagerComponent>();
+            compFactory.RegisterClass<PhysicsMapComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -249,12 +256,12 @@ namespace Robust.UnitTesting.Server
 
             _systemDelegate?.Invoke(entitySystemMan);
 
-            entityMan.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
-
             var mapManager = container.Resolve<IMapManager>();
             mapManager.Initialize();
+
+            entityMan.Startup();
             mapManager.Startup();
+            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 

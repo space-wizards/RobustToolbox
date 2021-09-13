@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -60,10 +61,10 @@ namespace Robust.Shared
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPredict =
-            CVarDef.Create("net.predict", true, CVar.ARCHIVE);
+            CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetPredictTickBias =
-            CVarDef.Create("net.predict_tick_bias", 1, CVar.ARCHIVE);
+            CVarDef.Create("net.predict_tick_bias", 1, CVar.CLIENTONLY);
 
         // On Windows we default this to 16ms lag bias, to account for time period lag in the Lidgren thread.
         // Basically due to how time periods work on Windows, messages are (at worst) time period-delayed when sending.
@@ -74,13 +75,19 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetPredictLagBias = CVarDef.Create(
                 "net.predict_lag_bias",
                 OperatingSystem.IsWindows() ? 0.016f : 0,
-                CVar.ARCHIVE);
+                CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> NetStateBufMergeThreshold =
             CVarDef.Create("net.state_buf_merge_threshold", 5, CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> NetPVS =
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        public static readonly CVarDef<float> StreamedTilesPerSecond =
+            CVarDef.Create("net.stream_tps", 500f, CVar.ARCHIVE | CVar.SERVER);
+
+        public static readonly CVarDef<float> StreamedTileRange =
+            CVarDef.Create("net.stream_range", 15f, CVar.ARCHIVE | CVar.SERVER);
 
         public static readonly CVarDef<float> NetMaxUpdateRange =
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
@@ -192,6 +199,12 @@ namespace Robust.Shared
         public static readonly CVarDef<string> GameHostName =
             CVarDef.Create("game.hostname", "MyServer", CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        /// <summary>
+        /// If a grid is shrunk to include no more tiles should it be deleted.
+        /// </summary>
+        public static readonly CVarDef<bool> GameDeleteEmptyGrids =
+            CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
+
         /*
          * LOG
          */
@@ -298,15 +311,75 @@ namespace Robust.Shared
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        // Clyde related enums are in Clyde.Constants.cs.
+
+        /// <summary>
+        /// Which renderer to use to render the game.
+        /// </summary>
         public static readonly CVarDef<int> DisplayRenderer =
             CVarDef.Create("display.renderer", 0, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Whether to use compatibility mode.
+        /// </summary>
+        /// <remarks>
+        /// This can change certain behaviors like GL version selection to try to avoid driver crashes.
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayCompat =
+            CVarDef.Create("display.compat", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Which OpenGL version to use for the OpenGL renderer.
+        /// </summary>
+        public static readonly CVarDef<int> DisplayOpenGLVersion =
+            CVarDef.Create("display.opengl_version", 0, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// On Windows, use ANGLE as OpenGL implementation.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngle =
+            CVarDef.Create("display.angle", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Use a custom swap chain when using ANGLE.
+        /// Should improve performance and fixes main window sRGB handling with ANGLE.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
+            CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Force usage of DXGI 1.1 when using custom swap chain setup.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleDxgi1 =
+            CVarDef.Create("display.angle_dxgi1", false, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Try to use the display adapter with this name, if the current renderer supports selecting it.
+        /// </summary>
+        public static readonly CVarDef<string> DisplayAdapter =
+            CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Use EGL to create GL context instead of GLFW, if possible.
+        /// </summary>
+        /// <remarks>
+        /// This only tries to use EGL if on a platform like X11 or Windows (w/ ANGLE) where it is possible.
+        /// </remarks>
+        public static readonly CVarDef<bool> DisplayEgl =
+            CVarDef.Create("display.egl", true, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> DisplayFontDpi =
             CVarDef.Create("display.fontdpi", 96, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Override detected OpenGL version, for testing.
+        /// </summary>
         public static readonly CVarDef<string> DisplayOGLOverrideVersion =
             CVarDef.Create("display.ogl_override_version", string.Empty, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Run <c>glCheckError()</c> after (almost) every GL call.
+        /// </summary>
         public static readonly CVarDef<bool> DisplayOGLCheckErrors =
             CVarDef.Create("display.ogl_check_errors", false, CVar.CLIENTONLY);
 
@@ -321,6 +394,9 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayForceSyncWindows =
             CVarDef.Create<bool>("display.force_sync_windows", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Use a separate thread for multi-window blitting.
+        /// </summary>
         public static readonly CVarDef<bool> DisplayThreadWindowBlit =
             CVarDef.Create("display.thread_window_blit", true, CVar.CLIENTONLY);
 
@@ -330,9 +406,30 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplayWin32Experience =
             CVarDef.Create("display.win32_experience", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// The window icon set to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplayWindowIconSet =
+            CVarDef.Create("display.window_icon_set", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// The splash logo to use. Overriden by <c>GameControllerOptions</c> on startup.
+        /// </summary>
+        /// <remarks>
+        /// Dynamically changing this does nothing.
+        /// </remarks>
+        public static readonly CVarDef<string> DisplaySplashLogo =
+            CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
+
         /*
          * AUDIO
          */
+
+        public static readonly CVarDef<int> AudioAttenuation =
+            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
@@ -432,17 +529,6 @@ namespace Robust.Shared
             CVarDef.Create("physics.angularslop", 2.0f / 180.0f * MathF.PI);
 
         /// <summary>
-        /// The radius of the polygon/edge shape skin. This should not be modified. Making
-        /// this smaller means polygons will have an insufficient buffer for continuous collision.
-        /// Making it larger may create artifacts for vertex collision.
-        /// </summary>
-        /// <remarks>
-        ///     Default is set to be 2 x linearslop. TODO Should we listen to linearslop changes?
-        /// </remarks>
-        public static readonly CVarDef<float> PolygonRadius =
-            CVarDef.Create("physics.polygonradius", 2 * 0.005f);
-
-        /// <summary>
         /// If true, it will run a GiftWrap convex hull on all polygon inputs.
         /// This makes for a more stable engine when given random input,
         /// but if speed of the creation of polygons are more important,
@@ -482,13 +568,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MaxAngVelocity =
             CVarDef.Create("physics.maxangvelocity", 15f);
 
-        /// <summary>
-        /// How frequently grid fixtures are updated. Given grid updates can be expensive they aren't run immediately.
-        /// Set to 0 to run them immediately.
-        /// </summary>
-        public static readonly CVarDef<float> GridFixtureUpdateRate =
-            CVarDef.Create("physics.grid_fixture_update_rate", 0.2f);
-
         /*
          * DISCORD
          */
@@ -503,8 +582,11 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResCheckPathCasing =
             CVarDef.Create("res.checkpathcasing", false);
 
-        public static readonly CVarDef<bool> TexturePreloadingEnabled =
+        public static readonly CVarDef<bool> ResTexturePreloadingEnabled =
             CVarDef.Create("res.texturepreloadingenabled", true, CVar.CLIENTONLY);
+
+        public static readonly CVarDef<bool> ResTexturePreloadCache =
+            CVarDef.Create("res.texture_preload_cache", true, CVar.CLIENTONLY);
 
 
         /*

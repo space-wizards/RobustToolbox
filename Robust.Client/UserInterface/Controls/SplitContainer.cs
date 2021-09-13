@@ -1,6 +1,7 @@
 using System;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -10,16 +11,19 @@ namespace Robust.Client.UserInterface.Controls
         /// Defines how user-initiated moving of the split should work. See documentation
         /// for each enum value to see how the different options work.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public SplitResizeMode ResizeMode { get; set; }
 
         /// <summary>
         /// Width of the split in virtual pixels
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float SplitWidth { get; set; }
 
         /// <summary>
         /// Virtual pixel offset from the edge beyond which the split cannot be moved.
         /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
         public float SplitEdgeSeparation { get; set; }
 
         private float _splitCenter;
@@ -36,6 +40,7 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool Vertical => Orientation == SplitOrientation.Vertical;
 
+        [ViewVariables(VVAccess.ReadWrite)]
         public SplitOrientation Orientation
         {
             get => _orientation;

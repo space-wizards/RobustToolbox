@@ -462,8 +462,8 @@ namespace Robust.Client.UserInterface.Controls
             var (vSepActual, hSepActual) = (Vector2i) (Separations * UIScale);
             var hSep = _limitDimension == Dimension.Column ? hSepActual : vSepActual;
             var vSep = _limitDimension == Dimension.Column ? vSepActual : hSepActual;
-            var width = _limitDimension == Dimension.Column ? PixelWidth : PixelHeight;
-            var height = _limitDimension == Dimension.Column ? PixelHeight : PixelWidth;
+            var width = (_limitDimension == Dimension.Column ? finalSize.X : finalSize.Y) * UIScale;
+            var height = (_limitDimension == Dimension.Column ? finalSize.Y : finalSize.X) * UIScale;
 
             var stretchMaxX = width - hSep * (cols - 1);
             var stretchMaxY = height - vSep * (rows - 1);

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
@@ -39,13 +38,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             // is 1 just in that position.
             //
             // Otherwise, this code may throw an exception
-            var maxFlagValue = ((int[])Enum.GetValues(flagType)).Max();
+            var maxFlagValue = serializationManager.GetFlagHighestBit(typeof(TTag));
 
-            for (var bitIndex = 1; bitIndex <= maxFlagValue; bitIndex = bitIndex << 1)
+            for (var bitIndex = 1; bitIndex <= maxFlagValue; bitIndex++)
             {
-                if ((bitIndex & value) == bitIndex)
+                var bitValue = 1 << bitIndex;
+
+                if ((bitValue & value) == bitValue)
                 {
-                    var flagName = Enum.GetName(flagType, bitIndex);
+                    var flagName = Enum.GetName(flagType, bitValue);
 
                     if (flagName == null)
                     {

@@ -62,7 +62,7 @@ namespace Robust.Client.Graphics.Clyde
                     TextEntered?.Invoke(args);
                     break;
                 case DEventWindowClosed(var reg, var args):
-                    reg.Closed?.Invoke(args);
+                    reg.RequestClosed?.Invoke(args);
                     CloseWindow?.Invoke(args);
 
                     if (reg.DisposeOnClose && !reg.IsMainWindow)
@@ -95,24 +95,17 @@ namespace Robust.Client.Graphics.Clyde
             _eventDispatchQueue.Enqueue(new DEventScroll(ev));
         }
 
-        private void SendCloseWindow(WindowReg windowReg, WindowClosedEventArgs ev)
+        private void SendCloseWindow(WindowReg windowReg, WindowRequestClosedEventArgs ev)
         {
             _eventDispatchQueue.Enqueue(new DEventWindowClosed(windowReg, ev));
         }
 
         private void SendWindowResized(WindowReg reg, Vector2i oldSize)
         {
-            if (reg.IsMainWindow)
-            {
-                UpdateMainWindowLoadedRtSize();
-                GL.Viewport(0, 0, reg.FramebufferSize.X, reg.FramebufferSize.Y);
-                CheckGlError();
-            }
-            else
-            {
-                reg.RenderTexture!.Dispose();
-                CreateWindowRenderTexture(reg);
-            }
+            var loaded = RtToLoaded(reg.RenderTarget);
+            loaded.Size = reg.FramebufferSize;
+
+            _glContext!.WindowResized(reg, oldSize);
 
             var eventArgs = new WindowResizedEventArgs(
                 oldSize,
@@ -156,7 +149,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed record DEventScroll(MouseWheelEventArgs Args) : DEventBase;
 
-        private sealed record DEventWindowClosed(WindowReg Reg, WindowClosedEventArgs Args) : DEventBase;
+        private sealed record DEventWindowClosed(WindowReg Reg, WindowRequestClosedEventArgs Args) : DEventBase;
 
         private sealed record DEventWindowResized(WindowResizedEventArgs Args) : DEventBase;
 

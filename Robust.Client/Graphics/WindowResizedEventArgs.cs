@@ -1,9 +1,8 @@
-using System;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
-    public class WindowResizedEventArgs : EventArgs
+    public readonly struct WindowResizedEventArgs
     {
         public WindowResizedEventArgs(Vector2i oldSize, Vector2i newSize, IClydeWindow window)
         {

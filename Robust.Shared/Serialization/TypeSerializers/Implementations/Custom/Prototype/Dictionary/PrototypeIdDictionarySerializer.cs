@@ -13,7 +13,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary
 {
-    [TypeSerializer]
+    // [TypeSerializer]
     public class PrototypeIdDictionarySerializer<TValue, TPrototype> :
         ITypeSerializer<Dictionary<string, TValue>, MappingDataNode>,
         ITypeSerializer<SortedDictionary<string, TValue>, MappingDataNode>,

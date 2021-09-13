@@ -4,7 +4,9 @@ using System.Collections.Immutable;
 using Moq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
@@ -154,7 +156,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
 
             // Raise
-            bus.RaiseComponentEvent(compInstance, new ComponentInit());
+            ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
 
             // Assert
             Assert.That(calledCount, Is.EqualTo(1));

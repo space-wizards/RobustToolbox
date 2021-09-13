@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Reflection.Emit;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager
 {
@@ -21,7 +20,7 @@ namespace Robust.Shared.Serialization.Manager
                     new[] { typeof(object) },
                     true);
 
-                var generator = method.GetRobustGen();
+                var generator = method.GetILGenerator();
 
                 if (type.IsValueType)
                 {

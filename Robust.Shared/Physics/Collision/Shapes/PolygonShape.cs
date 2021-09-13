@@ -213,11 +213,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
         {
             Span<Vector2> verts = stackalloc Vector2[4];
+            // Damn normies
+            Span<Vector2> norms = stackalloc Vector2[4];
 
             verts[0] = new Vector2(-halfWidth, -halfHeight);
             verts[1] = new Vector2(halfWidth, -halfHeight);
             verts[2] = new Vector2(halfWidth, halfHeight);
             verts[3] = new Vector2(-halfWidth, halfHeight);
+            norms[0] = new Vector2(0f, -1f);
+            norms[1] = new Vector2(1f, 0f);
+            norms[2] = new Vector2(0f, 1f);
+            norms[3] = new Vector2(-1f, 0f);
 
             Centroid = center;
 
@@ -228,9 +234,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
             // Transform vertices and normals.
             for (var i = 0; i < verts.Length; ++i)
             {
-                var vector = verts[i];
-                Vertices[i] = Transform.Mul(xf, vector);
-                Normals[i] = Transform.Mul(xf.Quaternion2D, vector);
+                Vertices[i] = Transform.Mul(xf, verts[i]);
+                Normals[i] = Transform.Mul(xf.Quaternion2D, norms[i]);
             }
         }
 

@@ -300,6 +300,12 @@ namespace Robust.Shared.Physics
                 {
                     if (other.Fixture.Body.Deleted) continue;
 
+                    // Because we may be colliding with something asleep (due to the way grid movement works) need
+                    // to make sure the contact doesn't fail.
+                    // This is because we generate a contact across 2 different broadphases where both bodies aren't
+                    // moving locally but are moving in world-terms.
+                    proxyA.Fixture.Body.WakeBody();
+                    other.Fixture.Body.WakeBody();
                     contactManager.AddPair(proxyA, other);
                 }
             }

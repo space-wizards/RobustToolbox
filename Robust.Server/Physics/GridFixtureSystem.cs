@@ -1,11 +1,14 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics
 {
@@ -73,10 +76,17 @@ namespace Robust.Server.Physics
 
         private void RegenerateCollision(MapChunk chunk)
         {
-            // Currently this is gonna be hella simple.
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
-                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) ||
-                !gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
+
+            DebugTools.Assert(chunk.ValidTiles > 0);
+
+            // Currently this is gonna be hella simple.
+            if (!gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent))
+            {
+                Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(physicsComponent)}");
+                return;
+            }
 
             // TODO: Lots of stuff here etc etc, make changes to mapgridchunk.
             var bounds = chunk.CalcLocalBounds();
@@ -97,17 +107,16 @@ namespace Robust.Server.Physics
             // on the grid (e.g. mass) which we want to preserve.
             var oldFixture = chunk.Fixture;
 
+            var polyShape = new PolygonShape();
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = bounds.BottomLeft;
+            vertices[1] = bounds.BottomRight;
+            vertices[2] = bounds.TopRight;
+            vertices[3] = bounds.TopLeft;
+            polyShape.SetVertices(vertices);
+
             var newFixture = new Fixture(
-                new PolygonShape
-                {
-                    Vertices = new List<Vector2>
-                    {
-                        bounds.BottomRight,
-                        bounds.TopRight,
-                        bounds.TopLeft,
-                        bounds.BottomLeft,
-                    }
-                },
+                polyShape,
                 MapGridHelpers.CollisionGroup,
                 MapGridHelpers.CollisionGroup,
                 true) {ID = GetChunkId(chunk),

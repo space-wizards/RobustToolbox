@@ -1,4 +1,5 @@
 using Robust.Shared.GameObjects;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
@@ -10,6 +11,8 @@ namespace Robust.Shared.Map
         IEntityManager EntityManager { get; }
 
         void OnComponentRemoved(MapGridComponent comp);
+
+        void ChunkRemoved(MapChunk chunk);
 
         /// <summary>
         ///     Raises the OnTileChanged event.

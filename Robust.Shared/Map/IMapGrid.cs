@@ -115,6 +115,7 @@ namespace Robust.Shared.Map
 
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
+        IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);
 
         Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
@@ -209,12 +210,17 @@ namespace Robust.Shared.Map
         bool TryGetTileRef(EntityCoordinates coords, out TileRef tile);
 
         /// <summary>
+        ///     Transforms a world position into a tile reference, returns false if no tile is found.
+        /// </summary>
+        bool TryGetTileRef(Vector2 worldPos, out TileRef tile);
+
+        /// <summary>
         /// Transforms grid tile indices to chunk indices.
         /// </summary>
         Vector2i GridTileToChunkIndices(Vector2i gridTile);
 
         /// <summary>
-        /// Transforms local grid coordinates to chunk indices.
+        /// Transforms EntityCoordinates to chunk indices relative to grid origin.
         /// </summary>
         Vector2i LocalToChunkIndices(EntityCoordinates gridPos);
 

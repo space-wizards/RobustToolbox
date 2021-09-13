@@ -103,17 +103,6 @@ namespace Robust.Shared.Physics.Collision
 
                     Radius = edge.Radius;
                     break;
-                case ShapeType.Rectangle:
-                    var rectangle = (PhysShapeRect) shape;
-                    var calcedBounds = rectangle.CachedBounds;
-
-                    Vertices.Add(calcedBounds.BottomRight);
-                    Vertices.Add(calcedBounds.TopRight);
-                    Vertices.Add(calcedBounds.TopLeft);
-                    Vertices.Add(calcedBounds.BottomLeft);
-
-                    Radius = rectangle.Radius;
-                    break;
                 default:
                     throw new InvalidOperationException($"Invalid shapetype specified {shape.ShapeType}");
             }

@@ -1,8 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -35,7 +33,6 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
-using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
 {
@@ -324,13 +321,13 @@ namespace Robust.Server
             IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
-            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
             _entityManager.Initialize();
             _mapManager.Initialize();
 
+            IoCManager.Resolve<IDebugDrawingManager>().Initialize();
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // because of 'reasons' this has to be called after the last assembly is loaded
@@ -452,6 +449,12 @@ namespace Robust.Server
 
         private void ProcessExiting(object? sender, EventArgs e)
         {
+            // If the main loop is not running the task will never get processed on the main thread
+            if (!_mainLoop.Running)
+            {
+                return;
+            }
+
             _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
             // Give the server 10 seconds to shut down.
             // If it still hasn't managed to assume it's stuck or something.
@@ -537,6 +540,7 @@ namespace Robust.Server
         // called right before main loop returns, do all saving/cleanup in here
         private void Cleanup()
         {
+            _modLoader.Shutdown();
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
 
             // shut down networking, kicking all players.

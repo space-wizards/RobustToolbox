@@ -92,7 +92,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public EdgeShape(Vector2 start, Vector2 end)
         {
             Set(start, end);
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         /// <summary>

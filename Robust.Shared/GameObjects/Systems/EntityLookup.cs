@@ -13,6 +13,15 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [Flags]
+    public enum LookupFlags : byte
+    {
+        None = 0,
+        Approximate = 1 << 0,
+        IncludeAnchored = 1 << 1,
+        // IncludeGrids = 1 << 2,
+    }
+
     public interface IEntityLookup
     {
         // Not an EntitySystem given EntityManager has a dependency on it which means it's just easier to IoC it for tests.
@@ -22,34 +31,34 @@ namespace Robust.Shared.GameObjects
         void Shutdown();
 
         void Update();
-        bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false);
+        bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId);
+        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
-            float arcWidth, bool approximate = false);
+            float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback);
+        void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, bool approximate = false);
+        IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
 
@@ -121,9 +130,10 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             var eventBus = _entityManager.EventBus;
-            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, ev => _moveQueue.Push(ev));
-            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, ev => _rotateQueue.Push(ev));
-            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, ev => _parentChangeQueue.Enqueue(ev));
+            eventBus.SubscribeEvent(EventSource.Local, this, (ref MoveEvent ev) => _moveQueue.Push(ev));
+            eventBus.SubscribeEvent(EventSource.Local, this, (ref RotateEvent ev) => _rotateQueue.Push(ev));
+            eventBus.SubscribeEvent(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
+            eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, HandleAnchored);
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
@@ -150,6 +160,20 @@ namespace Robust.Shared.GameObjects
             _entityManager.EntityStarted -= HandleEntityStarted;
             _mapManager.MapCreated -= HandleMapCreated;
             Started = false;
+        }
+
+        private void HandleAnchored(ref AnchorStateChangedEvent @event)
+        {
+            // This event needs to be handled immediately as anchoring is handled immediately
+            // and any callers may potentially get duplicate entities that just changed state.
+            if (@event.Entity.Transform.Anchored)
+            {
+                RemoveFromEntityTrees(@event.Entity);
+            }
+            else
+            {
+                UpdateEntityTree(@event.Entity);
+            }
         }
 
         private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
@@ -188,7 +212,9 @@ namespace Robust.Shared.GameObjects
 
         private void HandleEntityStarted(object? sender, EntityUid uid)
         {
-            UpdateEntityTree(_entityManager.GetEntity(uid));
+            var entity = _entityManager.GetEntity(uid);
+            if (entity.Transform.Anchored) return;
+            UpdateEntityTree(entity);
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -208,21 +234,27 @@ namespace Robust.Shared.GameObjects
                 _handledThisTick.Add(mapChangeEvent.Entity.Uid);
                 RemoveFromEntityTrees(mapChangeEvent.Entity);
 
-                if (mapChangeEvent.Entity.Deleted) continue;
+                if (mapChangeEvent.Entity.Deleted || mapChangeEvent.Entity.Transform.Anchored) continue;
                 UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
             {
-                if (moveEvent.Sender.Deleted || !_handledThisTick.Add(moveEvent.Sender.Uid)) continue;
+                if (!_handledThisTick.Add(moveEvent.Sender.Uid) ||
+                    moveEvent.Sender.Deleted ||
+                    moveEvent.Sender.Transform.Anchored) continue;
 
+                DebugTools.Assert(!moveEvent.Sender.Transform.Anchored);
                 UpdateEntityTree(moveEvent.Sender, moveEvent.WorldAABB);
             }
 
             while (_rotateQueue.TryPop(out var rotateEvent))
             {
-                if (rotateEvent.Sender.Deleted || !_handledThisTick.Add(rotateEvent.Sender.Uid)) continue;
+                if (!_handledThisTick.Add(rotateEvent.Sender.Uid) ||
+                    rotateEvent.Sender.Deleted ||
+                    rotateEvent.Sender.Transform.Anchored) continue;
 
+                DebugTools.Assert(!rotateEvent.Sender.Transform.Anchored);
                 UpdateEntityTree(rotateEvent.Sender, rotateEvent.WorldAABB);
             }
 
@@ -244,8 +276,21 @@ namespace Robust.Shared.GameObjects
             yield return _mapManager.GetMapEntity(mapId).GetComponent<EntityLookupComponent>();
         }
 
+        private IEnumerable<IEntity> GetAnchored(MapId mapId, Box2 worldAABB, LookupFlags flags)
+        {
+            if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+            {
+                foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+                {
+                    if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                    yield return ent;
+                }
+            }
+        }
+
         /// <inheritdoc />
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, bool approximate = false)
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var found = false;
 
@@ -255,14 +300,19 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
-                    {
-                        found = true;
-                        return false;
-                    }
+                    if (ent.Deleted) return true;
+                    found = true;
+                    return false;
 
+                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            if (!found)
+            {
+                foreach (var _ in GetAnchored(mapId, box, flags))
+                {
                     return true;
-                }, offsetBox, approximate);
+                }
             }
 
             return found;
@@ -270,7 +320,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback)
+        public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
@@ -278,10 +328,22 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
             }
+
+            if ((flags & LookupFlags.IncludeAnchored) != 0x0)
+            {
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, position))
+                {
+                    foreach (var uid in grid.GetAnchoredEntities(position))
+                    {
+                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                        callback(ent);
+                    }
+                }
+            }
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
 
@@ -298,14 +360,19 @@ namespace Robust.Shared.GameObjects
                         list.Add(ent);
                     }
                     return true;
-                }, offsetBox, approximate);
+                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            foreach (var ent in GetAnchored(mapId, position, flags))
+            {
+                list.Add(ent);
             }
 
             return list;
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
 
@@ -324,34 +391,41 @@ namespace Robust.Shared.GameObjects
                         state.list.Add(ent);
                     }
                     return true;
-                }, offsetBox, approximate);
+                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            if ((flags & LookupFlags.IncludeAnchored) != 0x0 &&
+                _mapManager.TryFindGridAt(mapId, position, out var grid) &&
+                grid.TryGetTileRef(position, out var tile))
+            {
+                foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
+                {
+                    if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
+                    state.list.Add(entity);
+                }
             }
 
             return list;
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            return GetEntitiesIntersecting(position.MapId, position.Position, approximate);
+            return GetEntitiesIntersecting(position.MapId, position.Position, flags);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var mapPos = position.ToMap(_entityManager);
-            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, approximate);
+            return GetEntitiesIntersecting(mapPos.MapId, mapPos.Position, flags);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            if (entity.TryGetComponent<IPhysBody>(out var component))
-            {
-                return GetEntitiesIntersecting(entity.Transform.MapID, component.GetWorldAABB(), approximate);
-            }
-
-            return GetEntitiesIntersecting(entity.Transform.Coordinates, approximate);
+            var worldAABB = GetWorldAabbFromEntity(entity);
+            return GetEntitiesIntersecting(entity.Transform.MapID, worldAABB, flags);
         }
 
         /// <inheritdoc />
@@ -383,47 +457,44 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var mapCoordinates = position.ToMap(_entityManager);
             var mapPosition = mapCoordinates.Position;
-            var aabb = new Box2(mapPosition - new Vector2(range / 2, range / 2),
-                mapPosition + new Vector2(range / 2, range / 2));
-            return GetEntitiesIntersecting(mapCoordinates.MapId, aabb, approximate);
+            var aabb = new Box2(mapPosition - new Vector2(range, range),
+                mapPosition + new Vector2(range, range));
+            return GetEntitiesIntersecting(mapCoordinates.MapId, aabb, flags);
+            // TODO: Use a circle shape here mate
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var aabb = box.Enlarged(range);
-            return GetEntitiesIntersecting(mapId, aabb, approximate);
+            return GetEntitiesIntersecting(mapId, aabb, flags);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var aabb = new Box2(point, point).Enlarged(range);
-            return GetEntitiesIntersecting(mapId, aabb, approximate);
+            return GetEntitiesIntersecting(mapId, aabb, flags);
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            if (entity.TryGetComponent<IPhysBody>(out var component))
-            {
-                return GetEntitiesInRange(entity.Transform.MapID, component.GetWorldAABB(), range, approximate);
-            }
-
-            return GetEntitiesInRange(entity.Transform.Coordinates, range, approximate);
+            var worldAABB = GetWorldAabbFromEntity(entity);
+            return GetEntitiesInRange(entity.Transform.MapID, worldAABB, range, flags);
         }
 
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
-            float arcWidth, bool approximate = false)
+            float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var position = coordinates.ToMap(_entityManager).Position;
 
-            foreach (var entity in GetEntitiesInRange(coordinates, range * 2, approximate))
+            foreach (var entity in GetEntitiesInRange(coordinates, range * 2, flags))
             {
                 var angle = new Angle(entity.Transform.WorldPosition - position);
                 if (angle.Degrees < direction.Degrees + arcWidth / 2 &&
@@ -433,10 +504,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId)
+        public IEnumerable<IEntity> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
+            DebugTools.Assert((flags & LookupFlags.Approximate) == 0x0);
+
             foreach (EntityLookupComponent comp in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
+                if (comp.Owner.Transform.MapID != mapId) continue;
+
                 foreach (var entity in comp.Tree)
                 {
                     if (entity.Deleted) continue;
@@ -444,10 +519,24 @@ namespace Robust.Shared.GameObjects
                     yield return entity;
                 }
             }
+
+            if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
+
+            foreach (var grid in _mapManager.GetAllMapGrids(mapId))
+            {
+                foreach (var tile in grid.GetAllTiles())
+                {
+                    foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
+                    {
+                        if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
+                        yield return entity;
+                    }
+                }
+            }
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, bool approximate = false)
+        public IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
 
@@ -459,19 +548,25 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
             {
-                var offsetPos = position -lookup.Owner.Transform.WorldPosition;
+                var offsetPos = lookup.Owner.Transform.InvWorldMatrix.Transform(position);
 
                 lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
-                    var transform = ent.Transform;
-                    if (MathHelper.CloseTo(transform.Coordinates.X, state.position.X) &&
-                        MathHelper.CloseTo(transform.Coordinates.Y, state.position.Y))
-                    {
-                        state.list.Add(ent);
-                    }
-
+                    state.list.Add(ent);
                     return true;
-                }, offsetPos, approximate);
+                }, offsetPos, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            if ((flags & LookupFlags.IncludeAnchored) != 0x0)
+            {
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, aabb))
+                {
+                    foreach (var uid in grid.GetAnchoredEntities(aabb))
+                    {
+                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                        list.Add(ent);
+                    }
+                }
             }
 
             return list;
@@ -519,10 +614,8 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            if (!entity.Initialized)
-            {
-                return false;
-            }
+            DebugTools.Assert(entity.Initialized);
+            DebugTools.Assert(!entity.Transform.Anchored);
 
             var lookup = GetLookup(entity);
 
@@ -574,9 +667,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void RemoveFromEntityTrees(IEntity entity)
         {
+            // TODO: Need to fix ordering issues and then we can just directly remove it from the tree
+            // rather than this O(n) legacy garbage.
             foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
-                lookup.Tree.Remove(entity);
+                if (lookup.Tree.Remove(entity)) return;
             }
         }
 

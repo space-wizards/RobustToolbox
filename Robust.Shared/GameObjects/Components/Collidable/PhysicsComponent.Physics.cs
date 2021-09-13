@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnorePaused { get; set; }
 
-        internal PhysicsMap PhysicsMap { get; set; } = default!;
+        internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -992,12 +992,28 @@ namespace Robust.Shared.GameObjects
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }
 
+        /// <summary>
+        /// Applies an impulse to the centre of mass.
+        /// </summary>
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
             if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             LinearVelocity += impulse * _invMass;
+        }
+
+        /// <summary>
+        /// Applies an impulse from the specified point.
+        /// </summary>
+        public void ApplyLinearImpulse(in Vector2 impulse, in Vector2 point)
+        {
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
+            Awake = true;
+
+            LinearVelocity += impulse * _invMass;
+            // TODO: Sweep here
+            AngularVelocity += InvI * Vector2.Cross(point, impulse);
         }
 
         public void ApplyAngularImpulse(float impulse)
@@ -1024,7 +1040,7 @@ namespace Robust.Shared.GameObjects
             {
                 var contactEdge0 = contactEdge;
                 contactEdge = contactEdge.Next;
-                PhysicsMap.ContactManager.Destroy(contactEdge0.Contact!);
+                PhysicsMap?.ContactManager.Destroy(contactEdge0.Contact!);
             }
 
             ContactEdges = null;
@@ -1046,7 +1062,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            PhysicsMap = EntitySystem.Get<SharedPhysicsSystem>().Maps[Owner.Transform.MapID];
+            if (Owner.Transform.MapID != MapId.Nullspace)
+                PhysicsMap = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID).GetComponent<SharedPhysicsMapComponent>();
 
             Dirty();
             // Yeah yeah TODO Combine these
@@ -1116,9 +1133,6 @@ namespace Robust.Shared.GameObjects
                 {
                     case PhysShapeAabb aabb:
                         center = aabb.Centroid;
-                        break;
-                    case PhysShapeRect rect:
-                        center = rect.Centroid;
                         break;
                     case PolygonShape poly:
                         center = poly.Centroid;

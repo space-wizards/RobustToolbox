@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -6,7 +7,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates
 {
-    internal class EntityViewCulling
+    internal sealed class EntityViewCulling
     {
         private const int ViewSetCapacity = 128; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
@@ -26,9 +26,16 @@ namespace Robust.Server.GameStates
         private readonly IServerEntityManager _entMan;
         private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
-        private IEntityLookup _lookup;
+        private readonly IEntityLookup _lookup;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
+        internal readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> PlayerChunks = new(PlayerSetSize);
+
+        private readonly Dictionary<ICommonSession, ChunkStreamingData>
+            _streamingChunks = new();
+
+        internal int StreamingTilesPerTick;
+        internal float StreamRange;
 
         private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
 
@@ -94,13 +101,17 @@ namespace Robust.Server.GameStates
         public void AddPlayer(ICommonSession session)
         {
             _playerVisibleSets.Add(session, new HashSet<EntityUid>(ViewSetCapacity));
+            PlayerChunks.Add(session, new Dictionary<IMapChunkInternal, GameTick>(32));
+            _streamingChunks.Add(session, new ChunkStreamingData());
         }
 
         // Not thread safe
         public void RemovePlayer(ICommonSession session)
         {
             _playerVisibleSets.Remove(session);
+            PlayerChunks.Remove(session);
             _playerLastFullMap.Remove(session, out _);
+            _streamingChunks.Remove(session);
         }
 
         // thread safe
@@ -161,7 +172,7 @@ namespace Robust.Server.GameStates
 
             //TODO: Stop sending all entities to every player first tick
             List<EntityUid>? deletions;
-            if (!CullingEnabled || fromTick == GameTick.Zero)
+            if (!CullingEnabled)
             {
                 var allStates = ServerGameStateManager.GetAllEntityStates(_entMan, session, fromTick);
                 deletions = GetDeletedEntities(fromTick);
@@ -169,23 +180,192 @@ namespace Robust.Server.GameStates
                 return (allStates, deletions);
             }
 
-            var lastMapUpdate = _playerLastFullMap.GetValueOrDefault(session);
-            var currentViewSet = CalcCurrentViewSet(session);
+            var visibleEnts = _visSetPool.Get();
+            // As we may have entities parented to anchored entities on chunks we've never seen we need to make sure
+            // they're included.
+            List<EntityState> entityStates = new();
+
+            //TODO: Refactor map system to not require every map and grid entity to function.
+            IncludeMapCriticalEntities(visibleEnts);
+
+            // if you don't have an attached entity, you don't see the world.
+            if (session.AttachedEntityUid is not null)
+            {
+                var viewers = GetSessionViewers(session);
+                var chunksSeen = PlayerChunks[session];
+
+                foreach (var eyeEuid in viewers)
+                {
+                    var includedChunks = new Dictionary<GridId, HashSet<IMapChunkInternal>>();
+
+                    var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
+
+                    uint visMask = 0;
+                    if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
+                        visMask = eyeComp.VisibilityMask;
+
+                    //Always include the map entity of the eye, if it exists.
+                    if(_mapManager.MapExists(mapId))
+                        visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
+
+                    //Always include viewable ent itself
+                    visibleEnts.Add(eyeEuid);
+
+                    // grid entity should be added through this
+                    // assume there are no deleted ents in here, cull them first in ent/comp manager
+                    _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity =>
+                    {
+                        RecursiveAdd(entity.Uid, visibleEnts, includedChunks, visMask);
+                    }, LookupFlags.None);
+
+                    //Calculate states for all visible anchored ents
+                    foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
+                    {
+                        var grid = (IMapGridInternal)publicMapGrid;
+
+                        // Can't really check when grid was modified here because we may need to dump new chunks on the person
+                        // as right now if you make a new chunk the client never actually gets these entities here.
+
+                        foreach (var chunk in grid.GetMapChunks(viewBox))
+                        {
+                            // for each chunk, check dirty
+                            if (chunksSeen.TryGetValue(chunk, out var chunkSeen) && chunk.LastAnchoredModifiedTick < chunkSeen)
+                                continue;
+
+                            if (!includedChunks.TryGetValue(grid.Index, out var chunks))
+                            {
+                                chunks = new HashSet<IMapChunkInternal>();
+                                includedChunks[grid.Index] = chunks;
+                            }
+
+                            chunks.Add(chunk);
+                        }
+                    }
+
+                    var newChunkCount = 0;
+
+                    foreach (var (gridId, chunks) in includedChunks)
+                    {
+                        // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
+                        RecursiveAdd(_mapManager.GetGrid(gridId).GridEntityId, visibleEnts, includedChunks, visMask);
+
+                        foreach (var chunk in chunks)
+                        {
+                            if (!chunksSeen.TryGetValue(chunk, out var lastSeenChunk))
+                            {
+                                // Dump the whole thing on them.
+                                lastSeenChunk = GameTick.Zero;
+                                newChunkCount++;
+                            }
+
+                            foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
+                            {
+                                var ent = _entMan.GetEntity(anchoredEnt);
+
+                                if (ent.LastModifiedTick < lastSeenChunk)
+                                    continue;
+
+                                var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, lastSeenChunk);
+                                entityStates.Add(newState);
+                            }
+
+                            chunksSeen[chunk] = fromTick;
+                        }
+                    }
+
+                    // To fix pop-in we'll go through nearby chunks and send them little-by-little
+                    if (newChunkCount == 0)
+                    {
+                        void StreamChunk(int iteration, IMapChunkInternal chunk, List<EntityState> entityStates)
+                        {
+                            var chunkSize = chunk.ChunkSize;
+                            var index = iteration * StreamingTilesPerTick;
+                            // Logger.Debug($"Streaming chunk {chunk.Indices} iteration {iteration + 1}");
+
+                            for (var i = index; i < Math.Min(index + StreamingTilesPerTick, chunkSize * chunkSize); i++)
+                            {
+                                var x = (ushort) (i / chunkSize);
+                                var y = (ushort) (i % chunkSize);
+
+                                foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
+                                {
+                                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, GameTick.Zero);
+                                    entityStates.Add(newState);
+                                }
+                            }
+                        }
+
+                        var stream = _streamingChunks[session];
+
+                        // Check if we're already streaming a chunk and if so then continue it.
+                        if (stream.Chunk != null)
+                        {
+                            // Came into PVS range so we'll stop streaming.
+                            if (chunksSeen.ContainsKey(stream.Chunk))
+                            {
+                                stream.Chunk = null;
+                                continue;
+                            }
+
+                            var chunkSize = stream.Chunk.ChunkSize;
+                            var streamsRequired = (int) MathF.Ceiling((chunkSize * chunkSize) / (float) StreamingTilesPerTick);
+
+                            StreamChunk(stream.Iterations, stream.Chunk, entityStates);
+                            stream.Iterations += 1;
+
+                            // Chunk loaded in so we'll mark it as sent on the tick we started.
+                            // Doesn't really matter if we send some duplicate data (e.g. entity changes since it started).
+                            if (stream.Iterations >= streamsRequired)
+                            {
+                                chunksSeen[stream.Chunk] = stream.Tick;
+                                stream.Chunk = null;
+                            }
+
+                            continue;
+                        }
+
+                        if (StreamRange <= 0f) continue;
+
+                        // Find a new chunk to start streaming in range.
+                        var enlarged = viewBox.Enlarged(StreamRange);
+
+                        foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
+                        {
+                            var grid = (IMapGridInternal) publicMapGrid;
+
+                            foreach (var chunk in grid.GetMapChunks(enlarged))
+                            {
+                                // if we've ever seen this chunk don't worry about it.
+                                if (chunksSeen.ContainsKey(chunk))
+                                    continue;
+
+                                StreamChunk(0, chunk, entityStates);
+                                // DebugTools.Assert(stream.Chunk == null);
+                                stream.Chunk = chunk;
+                                stream.Tick = fromTick;
+                                stream.Iterations = 1;
+                                break;
+                            }
+
+                            if (stream.Chunk != null) break;
+                        }
+                    }
+                }
+
+                viewers.Clear();
+                _viewerEntsPool.Return(viewers);
+            }
 
             deletions = GetDeletedEntities(fromTick);
-            var entityStates = GenerateEntityStates(session, fromTick, currentViewSet, deletions, lastMapUpdate);
+            GenerateEntityStates(entityStates, session, fromTick, visibleEnts, deletions);
 
             // no point sending an empty collection
-            entityStates = entityStates.Count == 0 ? default : entityStates;
-            deletions = deletions.Count == 0 ? default : deletions;
-
-            return (entityStates, deletions);
+            return (entityStates.Count == 0 ? default : entityStates, deletions.Count == 0 ? default : deletions);
         }
 
-        private List<EntityState> GenerateEntityStates(ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions, GameTick lastMapUpdate)
+        private void GenerateEntityStates(List<EntityState> entityStates, ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions)
         {
             // pretty big allocations :(
-            List<EntityState> entityStates = new(currentSet.Count);
             var previousSet = _playerVisibleSets[session];
 
             // complement set
@@ -228,11 +408,20 @@ namespace Robust.Server.GameStates
 
             foreach (var entityUid in currentSet)
             {
+
+                // skip sending anchored entities (walls)
+                DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
+
                 if (previousSet.Contains(entityUid))
                 {
                     //Still Visible
+
+                    // Nothing new to send
+                    if(_entMan.GetEntity(entityUid).LastModifiedTick < fromTick)
+                        continue;
+
                     // only send new changes
-                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, fromTick);
+                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, entityUid, fromTick);
 
                     if (!newState.Empty)
                         entityStates.Add(newState);
@@ -241,13 +430,8 @@ namespace Robust.Server.GameStates
                 {
                     // PVS enter message
 
-                    // skip sending anchored entities (walls)
-                    var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
-                    if (xform.Anchored && _entMan.GetEntity(entityUid).LastModifiedTick <= lastMapUpdate)
-                        continue;
-
                     // don't assume the client knows anything about us
-                    var newState = ServerGameStateManager.GetEntityState(_entMan.ComponentManager, session, entityUid, GameTick.Zero);
+                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, entityUid, GameTick.Zero);
                     entityStates.Add(newState);
                 }
             }
@@ -256,46 +440,6 @@ namespace Robust.Server.GameStates
             _playerVisibleSets[session] = currentSet;
             previousSet.Clear();
             _visSetPool.Return(previousSet);
-            return entityStates;
-        }
-
-        private HashSet<EntityUid> CalcCurrentViewSet(ICommonSession session)
-        {
-            var visibleEnts = _visSetPool.Get();
-
-            //TODO: Refactor map system to not require every map and grid entity to function.
-            IncludeMapCriticalEntities(visibleEnts);
-
-            // if you don't have an attached entity, you don't see the world.
-            if (session.AttachedEntityUid is null)
-                return visibleEnts;
-
-            var viewers = GetSessionViewers(session);
-
-            foreach (var eyeEuid in viewers)
-            {
-                var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
-
-                uint visMask = 0;
-                if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
-                    visMask = eyeComp.VisibilityMask;
-
-                //Always include the map entity of the eye, if it exists.
-                if(_mapManager.MapExists(mapId))
-                    visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
-
-                //Always include viewable ent itself
-                visibleEnts.Add(eyeEuid);
-
-                // grid entity should be added through this
-                // assume there are no deleted ents in here, cull them first in ent/comp manager
-                _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity => RecursiveAdd((TransformComponent) entity.Transform, visibleEnts, visMask));
-            }
-
-            viewers.Clear();
-            _viewerEntsPool.Return(viewers);
-
-            return visibleEnts;
         }
 
         private void IncludeMapCriticalEntities(ISet<EntityUid> set)
@@ -320,45 +464,73 @@ namespace Robust.Server.GameStates
         // Read Safe
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        private bool RecursiveAdd(TransformComponent xform, HashSet<EntityUid> visSet, uint visMask)
+        private bool RecursiveAdd(EntityUid uid, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, uint visMask)
         {
-            var xformUid = xform.Owner.Uid;
-
             // we are done, this ent has already been checked and is visible
-            if (visSet.Contains(xformUid))
+            if (visSet.Contains(uid))
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_compMan.TryGetComponent<VisibilityComponent>(xformUid, out var visComp))
+            if (_compMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
             {
                 if ((visMask & visComp.Layer) == 0)
                     return false;
             }
 
-            var xformParentUid = xform.ParentUid;
+            var xform = _compMan.GetComponent<TransformComponent>(uid);
+
+            var parentUid = xform.ParentUid;
 
             // this is the world entity, it is always visible
-            if (!xformParentUid.IsValid())
+            if (!parentUid.IsValid())
             {
-                visSet.Add(xformUid);
+                visSet.Add(uid);
                 return true;
             }
 
             // parent is already in the set
-            if (visSet.Contains(xformParentUid))
+            if (visSet.Contains(parentUid))
             {
-                visSet.Add(xformUid);
+                EnsureAnchoredChunk(xform, includedChunks);
+                if (!xform.Anchored)
+                    visSet.Add(uid);
+
                 return true;
             }
 
             // parent was not added, so we are not either
-            var xformParent = _compMan.GetComponent<TransformComponent>(xformParentUid);
-            if (!RecursiveAdd(xformParent, visSet, visMask))
+            if (!RecursiveAdd(parentUid, visSet, includedChunks, visMask))
                 return false;
 
+            EnsureAnchoredChunk(xform, includedChunks);
+
             // add us
-            visSet.Add(xformUid);
+            if (!xform.Anchored)
+                visSet.Add(uid);
+
             return true;
+        }
+
+        /// <summary>
+        /// If we recursively get an anchored entity need to ensure the entire chunk is included (as it may be out of view).
+        /// </summary>
+        private void EnsureAnchoredChunk(TransformComponent xform, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks)
+        {
+            // If we recursively get an anchored entity need to ensure the entire chunk is included (as it may be out of view).
+            if (!xform.Anchored) return;
+
+            // This is slow but entities being parented to anchored ones is hopefully rare so shouldn't be hit too much.
+            var mapGrid = (IMapGridInternal) _mapManager.GetGrid(xform.GridID);
+            var local = xform.Coordinates;
+            var chunk = mapGrid.GetChunk(mapGrid.LocalToChunkIndices(local));
+
+            if (!includedChunks.TryGetValue(xform.GridID, out var chunks))
+            {
+                chunks = new HashSet<IMapChunkInternal>();
+                includedChunks[xform.GridID] = chunks;
+            }
+
+            chunks.Add(chunk);
         }
 
         // Read Safe
@@ -370,6 +542,22 @@ namespace Robust.Server.GameStates
             var map = xform.MapID;
 
             return (view, map);
+        }
+
+        // Dumped this in its own data structure just to avoid thread-safety issues.
+        private sealed class ChunkStreamingData
+        {
+            public IMapChunkInternal? Chunk { get; set; }
+            /// <summary>
+            /// Tick when we started streaming the chunk.
+            /// </summary>
+            public GameTick Tick { get; set; }
+
+            /// <summary>
+            /// How many iterations we have done so far.
+            /// </summary>
+            public int Iterations { get; set; }
+
         }
     }
 }

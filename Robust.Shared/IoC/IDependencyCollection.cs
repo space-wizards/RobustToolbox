@@ -1,6 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
+using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Reflection;
 
@@ -42,7 +42,7 @@ namespace Robust.Shared.IoC
         /// Thrown if <paramref name="overwrite"/> is false and <typeparamref name="TInterface"/> has been registered before,
         /// or if an already instantiated interface (by <see cref="DependencyCollection.BuildGraph"/>) is attempting to be overwritten.
         /// </exception>
-        void Register<TInterface, TImplementation>(bool overwrite = false)
+        void Register<TInterface, [MeansImplicitUse] TImplementation>(bool overwrite = false)
             where TImplementation : class, TInterface;
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         T Resolve<T>();
 
         /// <summary>
@@ -142,7 +142,7 @@ namespace Robust.Shared.IoC
         /// Thrown if the resolved type hasn't been created yet
         /// because the object graph still needs to be constructed for it.
         /// </exception>
-        [Pure]
+        [System.Diagnostics.Contracts.Pure]
         object ResolveType(Type type);
 
         /// <summary>

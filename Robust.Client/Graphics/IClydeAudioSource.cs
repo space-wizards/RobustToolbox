@@ -19,6 +19,9 @@ namespace Robust.Client.Graphics
         void SetGlobal();
         void SetVolume(float decibels);
         void SetVolumeDirect(float decibels);
+        void SetMaxDistance(float maxDistance);
+        void SetRolloffFactor(float rolloffFactor);
+        void SetReferenceDistance(float refDistance);
         void SetOcclusion(float blocks);
         void SetPlaybackPosition(float seconds);
         void SetVelocity(Vector2 velocity);

@@ -11,6 +11,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Benchmarks.Serialization.Read
 {
+    [MemoryDiagnoser]
     public class SerializationReadBenchmark : SerializationBenchmark
     {
         public SerializationReadBenchmark()
@@ -80,6 +81,16 @@ namespace Robust.Benchmarks.Serialization.Read
                 typeof(int),
                 typeof(FlagSerializer<BenchmarkFlags>),
                 FlagThirtyOne);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("customTypeSerializer")]
+        public DeserializationResult ReadIntegerCustomSerializer()
+        {
+            return SerializationManager.ReadWithTypeSerializer(
+                typeof(int),
+                typeof(BenchmarkIntSerializer),
+                IntNode);
         }
     }
 }

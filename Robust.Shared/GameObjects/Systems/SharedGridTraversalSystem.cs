@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>(ev => _queuedEvents.Push(ev));
+            SubscribeLocalEvent<MoveEvent>((ref MoveEvent ev) => _queuedEvents.Push(ev));
         }
 
         public override void Update(float frameTime)
@@ -35,13 +35,13 @@ namespace Robust.Shared.GameObjects
             while (_queuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender.Uid)) continue;
-                HandleMove(moveEvent);
+                HandleMove(ref moveEvent);
             }
 
             _handledThisTick.Clear();
         }
 
-        private void HandleMove(MoveEvent moveEvent)
+        private void HandleMove(ref MoveEvent moveEvent)
         {
             var entity = moveEvent.Sender;
 

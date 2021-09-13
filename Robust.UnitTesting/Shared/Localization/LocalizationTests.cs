@@ -29,7 +29,11 @@ namespace Robust.UnitTesting.Shared.Localization
             res.MountString("/Locale/en-US/a.ftl", FluentCode);
             res.MountString("/Prototypes/a.yml", YAMLCode);
 
-            IoCManager.Resolve<IPrototypeManager>().LoadDirectory(new ResourcePath("/Prototypes"));
+            var protoMan = IoCManager.Resolve<IPrototypeManager>();
+
+            protoMan.RegisterType(typeof(EntityPrototype));
+            protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
+            protoMan.Resync();
 
             var loc = IoCManager.Resolve<ILocalizationManager>();
             var culture = new CultureInfo("en-US", false);
@@ -196,7 +200,7 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
             const ulong ulng1 = 0, ulng2 = 1, ulng3 = 5;
             const float f1 = 0, f2 = 1, f3 = 5;
             const double d1 = 0, d2 = 1, d3 = 5;
-            
+
             yield return new object[] { b1, b2, b3 };
             yield return new object[] { sb1, sb2, sb3 };
             yield return new object[] { sh1, sh2, sh3 };
@@ -225,7 +229,7 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
             });
         }
 
-        
+
         [Test]
         [TestCase("PropsInPrototype")]
         [TestCase("PropsInLoc")]

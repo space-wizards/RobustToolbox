@@ -5,7 +5,7 @@ using Robust.Shared.Serialization.Markdown;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
 {
-    public interface ITypeReader<TType, TNode> : ITypeValidator<TType, TNode> where TType : notnull where TNode : DataNode
+    public interface ITypeReader<TType, TNode> : ITypeValidator<TType, TNode> where TNode : DataNode
     {
         DeserializationResult Read(
             ISerializationManager serializationManager,

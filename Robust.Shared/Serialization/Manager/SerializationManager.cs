@@ -199,6 +199,8 @@ namespace Robust.Shared.Serialization.Manager
 
             _highestFlagBit.Clear();
 
+            _readers.Clear();
+
             _initialized = false;
         }
 
@@ -267,7 +269,7 @@ namespace Robust.Shared.Serialization.Manager
             if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
                 return node is ValueDataNode valueDataNode ? new ValidatedValueNode(valueDataNode) : new ErrorNode(node, "Invalid nodetype for ISelfSerialize", true);
 
-            if (TryGetDataDefinition(underlyingType, out var dataDefinition))
+            if (TryGetDefinition(underlyingType, out var dataDefinition))
             {
                 return node switch
                 {
@@ -317,7 +319,7 @@ namespace Robust.Shared.Serialization.Manager
 
         public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false)
         {
-            if (!TryGetDataDefinition(obj.GetType(), out var dataDefinition))
+            if (!TryGetDefinition(obj.GetType(), out var dataDefinition))
                 throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
 
             if (obj is IPopulateDefaultValues populateDefaultValues)
@@ -335,142 +337,21 @@ namespace Robust.Shared.Serialization.Manager
             return res;
         }
 
-        internal DataDefinition? GetDataDefinition(Type type)
+        internal DataDefinition? GetDefinition(Type type)
         {
-            if (DataDefinitions.TryGetValue(type, out var dataDefinition)) return dataDefinition;
-
-            return null;
+            return DataDefinitions.TryGetValue(type, out var dataDefinition)
+                ? dataDefinition
+                : null;
         }
 
-        internal bool TryGetDataDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
+        private bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
         {
-            dataDefinition = GetDataDefinition(type);
+            dataDefinition = GetDefinition(type);
             return dataDefinition != null;
         }
 
-        public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            if (type.IsNullable() && node is ValueDataNode {Value: "null"})
-            {
-                return DeserializationResult.Value(type, null);
-            }
-
-            var underlyingType = type.EnsureNotNullableType();
-
-            if (underlyingType.IsArray)
-            {
-                if (node is not SequenceDataNode sequenceDataNode) throw new InvalidNodeTypeException();
-                var newArray = (Array) Activator.CreateInstance(type, sequenceDataNode.Sequence.Count)!;
-                var results = new List<DeserializationResult>();
-
-                var idx = 0;
-                foreach (var entryNode in sequenceDataNode.Sequence)
-                {
-                    var value = Read(type.GetElementType()!, entryNode, context, skipHook);
-                    results.Add(value);
-                    newArray.SetValue(value.RawValue, idx++);
-                }
-
-                return new DeserializedArray(newArray, results);
-            }
-
-            if (underlyingType.IsEnum)
-            {
-                return new DeserializedValue(node switch
-                {
-                    ValueDataNode valueNode => Enum.Parse(underlyingType, valueNode.Value, true),
-                    SequenceDataNode sequenceNode => Enum.Parse(underlyingType, string.Join(", ", sequenceNode.Sequence), true),
-                    _ => throw new InvalidNodeTypeException($"Cannot serialize node as {underlyingType}, unsupported node type {node.GetType()}")
-                });
-            }
-
-            if (node.Tag?.StartsWith("!type:") == true)
-            {
-                var typeString = node.Tag.Substring(6);
-                underlyingType = ResolveConcreteType(underlyingType, typeString);
-            }
-
-            if (TryReadRaw(underlyingType, node, DependencyCollection, out var serializedObj, skipHook, context))
-            {
-                return serializedObj;
-            }
-
-            if (typeof(ISelfSerialize).IsAssignableFrom(underlyingType))
-            {
-                if (node is not ValueDataNode valueDataNode) throw new InvalidNodeTypeException();
-
-                var selfSerObj = (ISelfSerialize) Activator.CreateInstance(underlyingType)!;
-                selfSerObj.Deserialize(valueDataNode.Value);
-
-                return new DeserializedValue(selfSerObj);
-            }
-
-            if (underlyingType.IsInterface || underlyingType.IsAbstract)
-            {
-                 throw new InvalidOperationException($"Unable to create an instance of an interface or abstract type. Type: {underlyingType}");
-            }
-
-            var obj = Activator.CreateInstance(underlyingType)!;
-
-            if (obj is IPopulateDefaultValues populateDefaultValues)
-            {
-                populateDefaultValues.PopulateDefaultValues();
-            }
-
-            if (!TryGetDataDefinition(underlyingType, out var dataDef))
-            {
-                throw new InvalidOperationException($"No data definition found for type {underlyingType} with node type {node.GetType()} when reading");
-            }
-
-            if (node is not MappingDataNode mappingDataNode)
-            {
-                if (node is not ValueDataNode emptyValueDataNode || emptyValueDataNode.Value != string.Empty)
-                    throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
-
-                // If we get an empty ValueDataNode we just use an empty mapping
-                mappingDataNode = new MappingDataNode();
-            }
-
-            var res = dataDef.Populate(obj, mappingDataNode, this, context, skipHook);
-
-            if (!skipHook && res.RawValue is ISerializationHooks serHooks)
-            {
-                serHooks.AfterDeserialization();
-            }
-
-            return res;
-        }
-
-        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return Read(type, node, context, skipHook).RawValue;
-        }
-
-        public T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            var value = Read(type, node, context, skipHook);
-
-            if (value.RawValue == null)
-            {
-                return default;
-            }
-
-            return (T?) value.RawValue;
-        }
-
-        public T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return ReadValueCast<T>(typeof(T), node, context, skipHook);
-        }
-
-        public DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node, ISerializationContext? context = null,
-            bool skipHook = false)
-        {
-            return ReadWithSerializerRaw(value, node, serializer, context, skipHook);
-        }
-
         public DataNode WriteValue<T>(T value, bool alwaysWrite = false,
-            ISerializationContext? context = null) where T : notnull
+            ISerializationContext? context = null)
         {
             return WriteValue(typeof(T), value, alwaysWrite, context);
         }
@@ -526,7 +407,7 @@ namespace Robust.Shared.Serialization.Manager
                 currentType = value.GetType();
             }
 
-            if (!TryGetDataDefinition(currentType, out var dataDef))
+            if (!TryGetDefinition(currentType, out var dataDef))
             {
                 throw new InvalidOperationException($"No data definition found for type {type} when writing");
             }
@@ -622,7 +503,7 @@ namespace Robust.Shared.Serialization.Manager
                 populateDefaultValues.PopulateDefaultValues();
             }
 
-            if (!TryGetDataDefinition(commonType, out var dataDef))
+            if (!TryGetDefinition(commonType, out var dataDef))
             {
                 throw new InvalidOperationException($"No data definition found for type {commonType} when copying");
             }

@@ -50,7 +50,9 @@
         public override void CallAfterDeserializationHook()
         {
             if (Value is ISerializationHooks hooks)
+            {
                 hooks.AfterDeserialization();
+            }
         }
     }
 }

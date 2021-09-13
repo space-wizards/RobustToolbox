@@ -27,7 +27,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             var v1 = serializationManager.ReadValueOrThrow<T1>(entry.Key, context, skipHook);
             var v2 = serializationManager.ReadValueOrThrow<T2>(entry.Value, context, skipHook);
 
-            return DeserializationResult.Value(new ValueTuple<T1, T2>(v1, v2));
+            return new DeserializedValue<ValueTuple<T1, T2>>(new ValueTuple<T1, T2>(v1, v2));
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,

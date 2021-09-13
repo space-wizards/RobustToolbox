@@ -140,8 +140,8 @@ stored in a single array since multiple arrays lead to multiple misses.
     public sealed class PhysicsIsland
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-#if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
+#if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
 

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.Player;
@@ -8,7 +10,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    internal class UserInterfaceSystem : EntitySystem
+    public class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         private const float MaxWindowRange = 2;
         private const float MaxWindowRangeSquared = MaxWindowRange * MaxWindowRange;
@@ -43,8 +45,17 @@ namespace Robust.Server.GameObjects
 
         private void OnMessageReceived(BoundUIWrapMessage msg, EntitySessionEventArgs args)
         {
-            if (!ComponentManager.TryGetComponent<ServerUserInterfaceComponent>(msg.Entity, out var uiComp))
+            var uid = msg.Entity;
+            if (!ComponentManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var uiComp))
                 return;
+
+            var message = msg.Message;
+            message.Session = args.SenderSession;
+            message.Entity = uid;
+            message.UiKey = msg.UiKey;
+
+            // Raise as object so the correct type is used.
+            RaiseLocalEvent(uid, (object)message);
 
             uiComp.ReceiveMessage((IPlayerSession) args.SenderSession, msg);
         }
@@ -106,5 +117,114 @@ namespace Robust.Server.GameObjects
         {
             _activeInterfaces.Add(userInterface);
         }
+
+        #region Proxy Methods
+
+        public bool HasUi(EntityUid uid, object uiKey)
+        {
+            if (!ComponentManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var ui))
+                return false;
+
+            return ui.HasBoundUserInterface(uiKey);
+        }
+
+        public BoundUserInterface GetUi(EntityUid uid, object uiKey)
+        {
+            return ComponentManager.GetComponent<ServerUserInterfaceComponent>(uid).GetBoundUserInterface(uiKey);
+        }
+
+        public BoundUserInterface? GetUiOrNull(EntityUid uid, object uiKey)
+        {
+            return TryGetUi(uid, uiKey, out var ui)
+                ? ui
+                : null;
+        }
+
+        public bool TryGetUi(EntityUid uid, object uiKey, [NotNullWhen(true)] out BoundUserInterface? ui)
+        {
+            ui = null;
+
+            return ComponentManager.TryGetComponent(uid, out ServerUserInterfaceComponent uiComp)
+                   && uiComp.TryGetBoundUserInterface(uiKey, out ui);
+        }
+
+        public bool TrySetUiState(EntityUid uid, object uiKey, BoundUserInterfaceState state, IPlayerSession? session = null)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            ui.SetState(state, session);
+            return true;
+        }
+
+        public bool TryToggleUi(EntityUid uid, object uiKey, IPlayerSession session)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            ui.Toggle(session);
+            return true;
+        }
+
+        public bool TryOpen(EntityUid uid, object uiKey, IPlayerSession session)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            return ui.Open(session);
+        }
+
+        public bool TryClose(EntityUid uid, object uiKey, IPlayerSession session)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            return ui.Close(session);
+        }
+
+        public bool TryCloseAll(EntityUid uid, object uiKey)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            ui.CloseAll();
+            return true;
+        }
+
+        public bool SessionHasOpenUi(EntityUid uid, object uiKey, IPlayerSession session)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            return ui.SessionHasOpen(session);
+        }
+
+        public bool TrySendUiMessage(EntityUid uid, object uiKey, BoundUserInterfaceMessage message)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            ui.SendMessage(message);
+            return true;
+        }
+
+        public bool TrySendUiMessage(EntityUid uid, object uiKey, BoundUserInterfaceMessage message, IPlayerSession session)
+        {
+            if (!TryGetUi(uid, uiKey, out var ui))
+                return false;
+
+            try
+            {
+                ui.SendMessage(message, session);
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        #endregion
     }
 }

@@ -175,7 +175,7 @@ namespace Robust.Server.GameObjects
         ///     Thrown if the session's status is <c>Connecting</c> or <c>Disconnected</c>
         /// </exception>
         /// <exception cref="ArgumentNullException">Thrown if <see cref="session"/> is null.</exception>
-        public void Open(IPlayerSession session)
+        public bool Open(IPlayerSession session)
         {
             if (session == null)
             {
@@ -189,7 +189,7 @@ namespace Robust.Server.GameObjects
 
             if (_subscribedSessions.Contains(session))
             {
-                return;
+                return false;
             }
 
             _subscribedSessions.Add(session);
@@ -208,6 +208,7 @@ namespace Robust.Server.GameObjects
             }
 
             session.PlayerStatusChanged += OnSessionOnPlayerStatusChanged;
+            return true;
         }
 
         private void OnSessionOnPlayerStatusChanged(object? sender, SessionStatusEventArgs args)
@@ -223,7 +224,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="session">The session to close the UI on.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="session"/> is null.</exception>
-        public void Close(IPlayerSession session)
+        public bool Close(IPlayerSession session)
         {
             if (session == null)
             {
@@ -232,16 +233,19 @@ namespace Robust.Server.GameObjects
 
             if (!_subscribedSessions.Contains(session))
             {
-                return;
+                return false;
             }
 
             var msg = new CloseBoundInterfaceMessage();
             SendMessage(msg, session);
             CloseShared(session);
+            return true;
         }
 
         private void CloseShared(IPlayerSession session)
         {
+            var owner = Owner.Owner;
+            owner.EntityManager.EventBus.RaiseLocalEvent(owner.Uid, new BoundUserInterfaceClosedEvent(owner.Uid, UiKey, session));
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);

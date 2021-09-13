@@ -22,35 +22,74 @@
 
 using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
     [Serializable, NetSerializable]
+    internal sealed class RevoluteJointState : JointState
+    {
+        public Vector2 LocalAnchorA { get; internal set; }
+        public Vector2 LocalAnchorB { get; internal set; }
+        public bool EnableLimit { get; internal set; }
+        public bool EnableMotor { get; internal set; }
+        public float ReferenceAngle { get; internal set; }
+        public float LowerAngle { get; internal set; }
+        public float UpperAngle { get; internal set; }
+        public float MotorSpeed { get; internal set; }
+        public float MaxMotorTorque { get; internal set; }
+
+        public override Joint GetJoint()
+        {
+            var joint = new RevoluteJoint(UidA, UidB)
+            {
+                ID = ID,
+                Breakpoint = Breakpoint,
+                CollideConnected = CollideConnected,
+                Enabled = Enabled,
+                EnableLimit = EnableLimit,
+                EnableMotor = EnableMotor,
+                ReferenceAngle = ReferenceAngle,
+                LowerAngle = LowerAngle,
+                UpperAngle = UpperAngle,
+                MotorSpeed = MotorSpeed,
+                MaxMotorTorque = MaxMotorTorque,
+                LocalAnchorA = LocalAnchorA,
+                LocalAnchorB = LocalAnchorB
+            };
+
+            return joint;
+        }
+
+    }
+
     public class RevoluteJoint : Joint
     {
-        [NonSerialized] private Vector2 _impulse;
-        [NonSerialized] private int _indexA;
-        [NonSerialized] private int _indexB;
-        [NonSerialized] private Vector2 _localCenterA;
-        [NonSerialized] private Vector2 _localCenterB;
-        [NonSerialized] private float _invMassA;
-        [NonSerialized] private float _invMassB;
-        [NonSerialized] private float _invIA;
-        [NonSerialized] private float _invIB;
-        [NonSerialized] private Vector2 _rA;
-        [NonSerialized] private Vector2 _rB;
-        [NonSerialized] private Matrix22 _K;
-        [NonSerialized] private float _axialMass;
-        [NonSerialized] private float _angle;
-        [NonSerialized] private float _motorImpulse;
-        [NonSerialized] private float _lowerImpulse;
-        [NonSerialized] private float _upperImpulse;
+        // Temporary
+        private Vector2 _impulse;
+        private int _indexA;
+        private int _indexB;
+        private Vector2 _localCenterA;
+        private Vector2 _localCenterB;
+        private float _invMassA;
+        private float _invMassB;
+        private float _invIA;
+        private float _invIB;
+        private Vector2 _rA;
+        private Vector2 _rB;
+        private Matrix22 _K;
+        private float _axialMass;
+        private float _angle;
+        private float _motorImpulse;
+        private float _lowerImpulse;
+        private float _upperImpulse;
 
         public Vector2 LocalAnchorA;
         public Vector2 LocalAnchorB;
 
+        // Settable
         public bool EnableLimit;
         public bool EnableMotor;
         public float ReferenceAngle;
@@ -59,19 +98,27 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public float MotorSpeed;
         public float MaxMotorTorque;
 
-        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA, bodyB)
+        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
         {
             LocalAnchorA = bodyA.GetLocalPoint(anchor);
             LocalAnchorB = bodyB.GetLocalPoint(anchor);
             ReferenceAngle = (float) (bodyB.Owner.Transform.WorldRotation - bodyA.Owner.Transform.WorldRotation).Theta;
         }
 
-        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB) : base(bodyA, bodyB) {}
+        public RevoluteJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
 
         public override JointType JointType => JointType.Revolute;
 
         public override Vector2 WorldAnchorA { get; set; }
         public override Vector2 WorldAnchorB { get; set; }
+
+        public override JointState GetState()
+        {
+            var revoluteState = new RevoluteJointState();
+
+            base.GetState(revoluteState);
+            return revoluteState;
+        }
 
         public override Vector2 GetReactionForce(float invDt)
         {

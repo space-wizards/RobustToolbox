@@ -140,22 +140,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="anchorA">The first body anchor</param>
         /// <param name="anchorB">The second body anchor</param>
         public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB, IConfigurationManager configManager)
-            : base(bodyA, bodyB)
+            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
         {
-            var aUid = bodyA.Owner.Uid;
-            var bUid = bodyB.Owner.Uid;
-
-            if (aUid.CompareTo(bUid) < 0)
-            {
-                LocalAnchorA = anchorA;
-                LocalAnchorB = anchorB;
-            }
-            else
-            {
-                LocalAnchorA = anchorB;
-                LocalAnchorB = anchorA;
-            }
-
             configManager.OnValueChanged(CVars.LinearSlop, value => _linearSlop = value, true);
             Length = MathF.Max(_linearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value, true);

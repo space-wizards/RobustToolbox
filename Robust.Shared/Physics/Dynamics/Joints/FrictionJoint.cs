@@ -139,7 +139,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="anchor"></param>
         /// <param name="useWorldCoordinates">Set to true if you are using world coordinates as anchors.</param>
         public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor, bool useWorldCoordinates = false)
-            : base(bodyA, bodyB)
+            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
         {
             if (useWorldCoordinates)
             {
@@ -154,7 +154,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, bool useWorldCoordinates = false)
-            : base(bodyA, bodyB)
+            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
         {
             if (useWorldCoordinates)
             {

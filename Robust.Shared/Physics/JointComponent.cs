@@ -25,37 +25,6 @@ namespace Robust.Shared.Physics
 
         internal Dictionary<string, Joint> Joints = new();
 
-        protected override void OnAdd()
-        {
-            base.OnAdd();
-            Logger.DebugS("physics", $"Added joint component to {Owner}");
-        }
-
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-            var jointSystem = EntitySystem.Get<SharedJointSystem>();
-
-            foreach (var joint in Joints.Values.ToArray())
-            {
-                jointSystem.RemoveJointDeferred(joint);
-            }
-
-            Logger.DebugS("physics", $"Removed joint component for {Owner}");
-        }
-
-        public override ComponentState GetComponentState(ICommonSession player)
-        {
-            var states = new Dictionary<string, JointState>(Joints.Count);
-
-            foreach (var (_, joint) in Joints)
-            {
-                states.Add(joint.ID, joint.GetState());
-            }
-
-            return new JointComponentState(states);
-        }
-
         [Serializable, NetSerializable]
         public sealed class JointComponentState : ComponentState
         {

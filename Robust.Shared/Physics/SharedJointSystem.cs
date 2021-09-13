@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -7,6 +8,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
@@ -50,6 +52,15 @@ namespace Robust.Shared.Physics
         {
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
+            SubscribeLocalEvent<JointComponent, ComponentShutdown>(HandleShutdown);
+        }
+
+        private void HandleShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
+        {
+            foreach (var joint in component.Joints.Values)
+            {
+                RemoveJointDeferred(joint);
+            }
         }
 
         public override void Update(float frameTime)
@@ -75,6 +86,12 @@ namespace Robust.Shared.Physics
         public void AddJointDeferred(PhysicsComponent bodyA, PhysicsComponent bodyB, Joint joint)
         {
             var msg = new AddJointEvent(bodyA, bodyB, joint);
+            _events.Enqueue(msg);
+        }
+
+        public void AddJointDeferred(Joint joint)
+        {
+            var msg = new AddJointEvent(joint.BodyA, joint.BodyB, joint);
             _events.Enqueue(msg);
         }
 
@@ -188,6 +205,7 @@ namespace Robust.Shared.Physics
             if (string.IsNullOrEmpty(joint.ID))
             {
                 Logger.ErrorS("physics", $"Can't add a joint with no ID");
+                DebugTools.Assert($"Can't add a joint with no ID");
                 return;
             }
 
@@ -249,17 +267,17 @@ namespace Robust.Shared.Physics
         {
             var joint = @event.Joint;
 
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
+            var bodyAUid = joint.BodyAUid;
+            var bodyBUid = joint.BodyBUid;
 
             // Originally I logged these but because of prediction the client can just nuke them multiple times in a row
             // because each body has its own JointComponent, bleh.
-            if (!bodyA.Owner.TryGetComponent(out JointComponent? jointComponentA))
+            if (!ComponentManager.TryGetComponent<JointComponent>(bodyAUid, out var jointComponentA))
             {
                 return;
             }
 
-            if (!bodyB.Owner.TryGetComponent(out JointComponent? jointComponentB))
+            if (!ComponentManager.TryGetComponent<JointComponent>(bodyBUid, out var jointComponentB))
             {
                 return;
             }
@@ -277,8 +295,28 @@ namespace Robust.Shared.Physics
             Logger.DebugS("physics", $"Removed joint {@event.Joint.ID}");
 
             // Wake up connected bodies.
-            bodyA.Awake = true;
-            bodyB.Awake = true;
+            if (ComponentManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA))
+            {
+                bodyA.Awake = true;
+            }
+
+            if (ComponentManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB))
+            {
+                bodyB.Awake = true;
+            }
+
+            if (!jointComponentA.Deleted)
+            {
+                jointComponentA.Dirty();
+            }
+
+            if (!jointComponentB.Deleted)
+            {
+                jointComponentB.Dirty();
+            }
+
+            if (jointComponentA.Deleted && jointComponentB.Deleted)
+                return;
 
             // If the joint prevents collisions, then flag any contacts for filtering.
             if (!joint.CollideConnected)
@@ -292,16 +330,13 @@ namespace Robust.Shared.Physics
             EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
-            /*
+            /* TODO: Fix when RemoveComponent bug fixed
             if (jointComponentA.Joints.Count == 0)
                 bodyA.Owner.RemoveComponent<JointComponent>();
 
             if (jointComponentB.Joints.Count == 0)
                 bodyB.Owner.RemoveComponent<JointComponent>();
             */
-
-            jointComponentA.Dirty();
-            jointComponentB.Dirty();
         }
         #endregion
 

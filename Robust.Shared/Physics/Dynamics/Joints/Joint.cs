@@ -113,16 +113,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <summary>
         ///     Get the first body attached to this joint.
         /// </summary>
-        public PhysicsComponent BodyA { get; internal set; }
+        public PhysicsComponent BodyA =>
+            IoCManager.Resolve<IComponentManager>().GetComponent<PhysicsComponent>(BodyAUid);
 
-        public EntityUid BodyAUid => BodyA.Owner.Uid;
+        public EntityUid BodyAUid { get; init; }
 
         /// <summary>
         ///     Get the second body attached to this joint.
         /// </summary>
-        public PhysicsComponent BodyB { get; internal set; }
+        public PhysicsComponent BodyB =>
+            IoCManager.Resolve<IComponentManager>().GetComponent<PhysicsComponent>(BodyBUid);
 
-        public EntityUid BodyBUid => BodyB.Owner.Uid;
+        public EntityUid BodyBUid { get; init; }
 
         /// <summary>
         /// Get the anchor point on bodyA in world coordinates.
@@ -189,24 +191,24 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public virtual void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport) {}
 
-        protected Joint(PhysicsComponent bodyA, PhysicsComponent bodyB)
+        protected Joint(EntityUid bodyAUid, EntityUid bodyBUid)
         {
-            //Can't connect a joint to the same body twice.
-            Debug.Assert(bodyA != bodyB);
+            var uidA = bodyAUid;
+            var uidB = bodyBUid;
 
-            var aUid = bodyA.Owner.Uid;
-            var bUid = bodyB.Owner.Uid;
-
-            if (aUid.CompareTo(bUid) < 0)
+            if (uidA.CompareTo(uidB) >= 0)
             {
-                BodyA = bodyA;
-                BodyB = bodyB;
+                BodyAUid = uidB;
+                BodyBUid = uidA;
             }
             else
             {
-                BodyA = bodyB;
-                BodyB = bodyA;
+                BodyAUid = uidA;
+                BodyBUid = uidB;
             }
+
+            //Can't connect a joint to the same body twice.
+            Debug.Assert(BodyAUid != BodyBUid);
         }
 
         /// <summary>
@@ -227,22 +229,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         internal virtual void ApplyState(JointState state)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-
             ID = state.ID;
             CollideConnected = state.CollideConnected;
             Enabled = state.Enabled;
-
-            if (BodyA.Owner.Uid != state.UidA)
-            {
-                BodyA = entityManager.GetEntity(BodyAUid).GetComponent<PhysicsComponent>();
-            }
-
-            if (BodyB.Owner.Uid != state.UidB)
-            {
-                BodyB = entityManager.GetEntity(BodyBUid).GetComponent<PhysicsComponent>();
-            }
-
             Breakpoint = state.Breakpoint;
             _breakpointSquared = Breakpoint * Breakpoint;
         }
@@ -261,11 +250,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         protected void WakeBodies()
         {
-            if (BodyA != null)
-                BodyA.Awake = true;
-
-            if (BodyB != null)
-                BodyB.Awake = true;
+            BodyA.Awake = true;
+            BodyB.Awake = true;
         }
 
         internal abstract void InitVelocityConstraints(SolverData data);

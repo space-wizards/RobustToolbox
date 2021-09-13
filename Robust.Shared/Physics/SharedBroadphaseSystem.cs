@@ -498,6 +498,11 @@ namespace Robust.Shared.Physics
             CreateFixture(body, fixture);
         }
 
+        public void DestroyFixture(Fixture fixture)
+        {
+            DestroyFixture(fixture.Body, fixture);
+        }
+
         public void DestroyFixture(PhysicsComponent body, Fixture fixture)
         {
             // TODO: Assert world locked

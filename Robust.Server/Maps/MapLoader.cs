@@ -446,13 +446,14 @@ namespace Robust.Server.Maps
             private void ApplyGridFixtures()
             {
                 var compManager = IoCManager.Resolve<IComponentManager>();
+                var entManager = IoCManager.Resolve<IEntityManager>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
                 var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
                 foreach (var grid in Grids)
                 {
                     var gridInternal = (IMapGridInternal) grid;
-                    var body = compManager.GetComponent<PhysicsComponent>(grid.GridEntityId);
+                    var body = compManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
                     gridFixtures.ProcessGrid(grid.Index);
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that

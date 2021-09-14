@@ -19,8 +19,6 @@ namespace Robust.Shared.Map
         [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private SharedGridFixtureSystem _gridFixtures = default!;
-
         public IGameTiming GameTiming => _gameTiming;
 
         public IEntityManager EntityManager => _entityManager;
@@ -84,8 +82,6 @@ namespace Robust.Shared.Map
 #endif
 
             Logger.DebugS("map", "Starting...");
-
-            _gridFixtures = EntitySystem.Get<SharedGridFixtureSystem>();
 
             if (!_maps.Contains(MapId.Nullspace))
             {

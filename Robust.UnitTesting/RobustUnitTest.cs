@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
-using Robust.Client.GameObjects;
+using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using GridFixtureSystem = Robust.Client.GameObjects.GridFixtureSystem;
 
 namespace Robust.UnitTesting
 {
@@ -68,7 +70,8 @@ namespace Robust.UnitTesting
 
             // Required systems
             var systems = IoCManager.Resolve<IEntitySystemManager>();
-            systems.LoadExtraSystemType<GridFixtureSystem>();
+            //systems.LoadExtraSystemType<GridFixtureSystem>();
+            //systems.LoadExtraSystemType<BroadPhaseSystem>();
             systems.Initialize();
 
             var entMan = IoCManager.Resolve<IEntityManager>();

@@ -263,7 +263,8 @@ namespace Robust.Shared.Physics
 
             ComponentManager.RemoveComponent<JointComponent>(body.Owner.Uid);
         }
-        private void RemoveJoint(RemoveJointEvent @event)
+
+        protected void RemoveJoint(RemoveJointEvent @event)
         {
             var joint = @event.Joint;
 
@@ -330,7 +331,7 @@ namespace Robust.Shared.Physics
             EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
-            /* TODO: Fix when RemoveComponent bug fixed
+            /* TODO: Fix when RemoveComponent bug fixed. Probably defer this to every update just to avoid prediction fuckery.
             if (jointComponentA.Joints.Count == 0)
                 bodyA.Owner.RemoveComponent<JointComponent>();
 

@@ -30,7 +30,7 @@ namespace Robust.Client.Physics
 
             foreach (var removed in changed)
             {
-                RemoveJointDeferred(component.Joints[removed]);
+                RemoveJoint(component.Joints[removed]);
             }
 
             foreach (var (id, state) in jointState.Joints)
@@ -61,7 +61,7 @@ namespace Robust.Client.Physics
 
             if (changed.Count > 0)
             {
-                component. Dirty();
+                component.Dirty();
             }
         }
     }

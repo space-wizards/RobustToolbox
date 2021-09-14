@@ -449,7 +449,7 @@ namespace Robust.Server.Maps
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
                 var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
-                foreach (var grid in _mapManager.GetAllGrids())
+                foreach (var grid in Grids)
                 {
                     var gridInternal = (IMapGridInternal) grid;
                     var body = compManager.GetComponent<PhysicsComponent>(grid.GridEntityId);

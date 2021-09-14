@@ -17,9 +17,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
-        // We'll defer gridfixture updates during deserialization because MapLoader is interesting
-        private Dictionary<GridId, HashSet<MapChunk>> _queuedFixtureUpdates = new();
-
         public override void Initialize()
         {
             base.Initialize();
@@ -33,42 +30,18 @@ namespace Robust.Shared.GameObjects
         /// <param name="ev"></param>
         private void HandleCollisionRegenerate(RegenerateChunkCollisionEvent ev)
         {
-            // TODO: Probably shouldn't do this but MapLoader can lead to a lot of ordering nonsense hence we
-            // need to defer for it to ensure the fixtures get attached to the chunks properly.
-            if (!EntityManager.EntityExists(_mapManager.GetGrid(ev.Chunk.GridId).GridEntityId))
-            {
-                if (!_queuedFixtureUpdates.TryGetValue(ev.Chunk.GridId, out var chunks))
-                {
-                    chunks = new HashSet<MapChunk>();
-                    _queuedFixtureUpdates[ev.Chunk.GridId] = chunks;
-                }
-
-                chunks.Add(ev.Chunk);
-                return;
-            }
-
             RegenerateCollision(ev.Chunk);
         }
 
         public void ProcessGrid(GridId gridId)
         {
-            if (!_queuedFixtureUpdates.TryGetValue(gridId, out var chunks))
-            {
-                return;
-            }
+            var grid = (IMapGridInternal) _mapManager.GetGrid(gridId);
 
-            if (!_mapManager.GridExists(gridId))
+            // Just in case there's any deleted we'll ToArray
+            foreach (var (_, chunk) in grid.GetMapChunks().ToArray())
             {
-                _queuedFixtureUpdates.Remove(gridId);
-                return;
+                chunk.RegenerateCollision();
             }
-
-            foreach (var chunk in chunks)
-            {
-                RegenerateCollision(chunk);
-            }
-
-            _queuedFixtureUpdates.Remove(gridId);
         }
 
         // TODO: Move to its own thing

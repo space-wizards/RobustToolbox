@@ -2,6 +2,8 @@ using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.Physics;
+using Robust.Server.Player;
+using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -59,55 +61,6 @@ namespace Robust.UnitTesting.Shared.Map
 
                 gridBody.LinearVelocity = Vector2.One;
                 Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));
-            });
-        }
-
-        /// <summary>
-        /// Assert client and server get the same result when creating grid-fixtures
-        /// </summary>
-        [Test]
-        public async Task TestClientServerGridFixtures()
-        {
-            var client = StartClient();
-            var server = StartServer();
-
-            await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
-
-            var cMapManager = client.ResolveDependency<IMapManager>();
-            var sMapManager = server.ResolveDependency<IMapManager>();
-
-            var cCompManager = client.ResolveDependency<IComponentManager>();
-            var sCompManager = server.ResolveDependency<IComponentManager>();
-
-            var cEntManager = client.ResolveDependency<IEntityManager>();
-
-            client.SetConnectTarget(server);
-            var netMan = client.ResolveDependency<IClientNetManager>();
-
-            IMapGrid grid = default!;
-
-            await client.WaitPost(() =>
-            {
-                netMan.ClientConnect(null!, 0, null!);
-            });
-
-            await client.WaitRunTicks(1);
-
-            await server.WaitAssertion(() =>
-            {
-                var mapId = sMapManager.CreateMap();
-                grid = sMapManager.CreateGrid(mapId);
-                Assert.That(sCompManager.GetComponent<PhysicsComponent>(grid.GridEntityId).FixtureCount, Is.EqualTo(0));
-            });
-
-            await server.WaitRunTicks(1);
-            await client.WaitRunTicks(1);
-
-            await client.WaitAssertion(() =>
-            {
-                Assert.That(cEntManager.EntityExists(grid.GridEntityId));
-
-                Assert.That(cCompManager.GetComponent<PhysicsComponent>(grid.GridEntityId).FixtureCount, Is.EqualTo(0));
             });
         }
     }

@@ -284,8 +284,12 @@ namespace Robust.Shared.Map
             }
 
             // generate collision rects
-            GridChunkPartition.PartitionChunk(this, out _cachedBounds);
-            _grid.NotifyChunkCollisionRegenerated(this);
+            GridChunkPartition.PartitionChunk(this, out _cachedBounds, out var rectangles);
+
+            _grid.UpdateAABB();
+
+            if (ValidTiles > 0)
+                EntitySystem.Get<SharedGridFixtureSystem>().RegenerateCollision(this, rectangles);
         }
 
         /// <inheritdoc />

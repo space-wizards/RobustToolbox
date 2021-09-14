@@ -24,7 +24,7 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = ChunkFactory(4, _testMiscTiles);
 
             // Act
-            GridChunkPartition.PartitionChunk(chunk, out var bounds);
+            GridChunkPartition.PartitionChunk(chunk, out var bounds, out _);
 
             // box origin is top left
             // algorithm goes down columns of array, starting on left side, then moves right, expanding rectangles to the right
@@ -53,7 +53,7 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = ChunkFactory(4, _testJoinTiles);
 
             // Act
-            GridChunkPartition.PartitionChunk(chunk, out var bounds);
+            GridChunkPartition.PartitionChunk(chunk, out var bounds, out _);
 
             Assert.That(bounds, Is.EqualTo(new Box2i(1, 0, 3, 3)));
         }

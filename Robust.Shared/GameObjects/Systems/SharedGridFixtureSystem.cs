@@ -21,16 +21,6 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
-            SubscribeLocalEvent<RegenerateChunkCollisionEvent>(HandleCollisionRegenerate);
-        }
-
-        /// <summary>
-        /// Queue the chunk to generate (if cooldown > 0) or immediately process it.
-        /// </summary>
-        /// <param name="ev"></param>
-        private void HandleCollisionRegenerate(RegenerateChunkCollisionEvent ev)
-        {
-            RegenerateCollision(ev.Chunk);
         }
 
         public void ProcessGrid(GridId gridId)
@@ -44,76 +34,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        // TODO: Move to its own thing
-        /// <summary>
-        /// Decompose a <see cref="MapChunk"/> into as few rectangles as possible.
-        /// </summary>
-        /// <param name="chunk"></param>
-        /// <returns></returns>
-        private List<Box2i> GetRectangles(MapChunk chunk)
-        {
-            // TODO: can skip tiles based on rectangles you fucking numpty so do that.
-            var rectangles = new List<Box2i>();
-
-            // TODO: Use the existing PartitionChunk version because that one is likely faster and you can Span that shit.
-            // Convert each line into boxes as long as they can be.
-            for (ushort y = 0; y < chunk.ChunkSize; y++)
-            {
-                var origin = 0;
-                var running = false;
-
-                for (ushort x = 0; x < chunk.ChunkSize; x++)
-                {
-                    if (!chunk.GetTile(x, y).IsEmpty)
-                    {
-                        running = true;
-                        continue;
-                    }
-
-                    // Still empty
-                    if (running)
-                    {
-                        rectangles.Add(new Box2i(origin, y, x, y + 1));
-                    }
-
-                    origin = x + 1;
-                    running = false;
-                }
-
-                if (running)
-                    rectangles.Add(new Box2i(origin, y, chunk.ChunkSize, y + 1));
-            }
-
-            // Patch them together as available
-            for (var i = rectangles.Count - 1; i >= 0; i--)
-            {
-                var box = rectangles[i];
-                for (var j = i - 1; j >= 0; j--)
-                {
-                    var other = rectangles[j];
-
-                    // Gone down as far as we can go.
-                    if (other.Top < box.Bottom) break;
-
-                    if (box.Left == other.Left && box.Right == other.Right)
-                    {
-                        box = new Box2i(box.Left, other.Bottom, box.Right, box.Top);
-                        rectangles[i] = box;
-                        rectangles.RemoveAt(j);
-                        i -= 1;
-                        continue;
-                    }
-
-                    // TODO: See if we can at least patch some kind of polygon out of it to reduce fixture count.
-                }
-            }
-
-            // TODO: Assert ValidTiles count is the same.
-            // DebugTools.Assert(rectangles.Select(b => b.Area).Equals(chunk.Va));
-            return rectangles;
-        }
-
-        private void RegenerateCollision(MapChunk chunk)
+        internal void RegenerateCollision(MapChunk chunk, List<Box2i> rectangles)
         {
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
                 !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
@@ -142,7 +63,7 @@ namespace Robust.Shared.GameObjects
 
             Span<Vector2> vertices = stackalloc Vector2[4];
 
-            foreach (var rectangle in GetRectangles(chunk))
+            foreach (var rectangle in rectangles)
             {
                 var bounds = rectangle.Translated(origin);
                 var poly = new PolygonShape();

@@ -10,6 +10,7 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Utility;
+using static Robust.Shared.Serialization.Manager.SerializationManager;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
@@ -45,21 +46,19 @@ namespace Robust.Shared.Serialization.Manager.Definition
             _serialize = EmitSerializeDelegate();
             _copy = EmitCopyDelegate();
 
-            FieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];
+            var fieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];
+            var fieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
 
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
                 var fieldDefinition = BaseFieldDefinitions[i];
-                FieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
+
+                fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
+                fieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
             }
 
-            FieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
-
-            for (var i = 0; i < BaseFieldDefinitions.Length; i++)
-            {
-                var fieldDefinition = BaseFieldDefinitions[i];
-                FieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
-            }
+            FieldAccessors = fieldAccessors.ToImmutableArray();
+            FieldAssigners = fieldAssigners.ToImmutableArray();
         }
 
         public Type Type { get; }
@@ -67,8 +66,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private string[] Duplicates { get; }
         private object?[] DefaultValues { get; }
 
-        private AccessField<object, object?>[] FieldAccessors { get; }
-        private AssignField<object, object?>[] FieldAssigners { get; }
+        private ImmutableArray<AccessField<object, object?>> FieldAccessors { get; }
+        private ImmutableArray<AssignField<object, object?>> FieldAssigners { get; }
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
 
@@ -182,14 +181,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     if (propertyInfo.PropertyInfo.GetMethod == null)
                     {
-                        Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
+                        Logger.ErrorS(LogCategory, $"Property {propertyInfo} is annotated with DataFieldAttribute but has no getter");
                         continue;
                     }
                     else if (propertyInfo.PropertyInfo.SetMethod == null)
                     {
                         if (!propertyInfo.TryGetBackingField(out var backingFieldInfo))
                         {
-                            Logger.ErrorS(SerializationManager.LogCategory, $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
+                            Logger.ErrorS(LogCategory, $"Property {propertyInfo} in type {propertyInfo.DeclaringType} is annotated with DataFieldAttribute as non-readonly but has no auto-setter");
                             continue;
                         }
 

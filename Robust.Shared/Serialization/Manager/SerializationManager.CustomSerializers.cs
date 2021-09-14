@@ -169,7 +169,6 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool skipHook = false)
             where TSerializer : ITypeReader<T, TNode>
-            where T : notnull
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
@@ -191,7 +190,6 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool alwaysWrite = false)
             where TSerializer : ITypeWriter<T>
-            where T : notnull
         {
             var serializer = (ITypeWriter<T>) GetTypeSerializer(typeof(TSerializer));
             return serializer.Write(this, value, alwaysWrite, context);
@@ -214,7 +212,6 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
             where TSource : TCommon
             where TTarget : TCommon
-            where TCommon : notnull
             where TSerializer : ITypeCopier<TCommon>
         {
             var serializer = (ITypeCopier<TCommon>) GetTypeSerializer(typeof(TSerializer));
@@ -224,7 +221,6 @@ namespace Robust.Shared.Serialization.Manager
         private ValidationNode ValidateWithSerializer<T, TNode, TSerializer>(
             TNode node,
             ISerializationContext? context)
-            where T : notnull
             where TNode : DataNode
             where TSerializer : ITypeValidator<T, TNode>
         {

@@ -155,8 +155,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="context">The context to use, if any.</param>
         /// <typeparam name="T">The type to serialize.</typeparam>
         /// <returns>A serialized datanode created from the given <see cref="value"/>.</returns>
-        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null)
-            where T : notnull;
+        DataNode WriteValue<T>(T value, bool alwaysWrite = false, ISerializationContext? context = null);
 
         /// <summary>
         ///     Serializes a value into a node.

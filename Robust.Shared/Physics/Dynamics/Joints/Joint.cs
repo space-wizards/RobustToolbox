@@ -65,6 +65,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public bool CollideConnected { get; internal set; }
         public EntityUid UidA { get; internal set; }
         public EntityUid UidB { get; internal set; }
+        public Vector2 LocalAnchorA { get; internal set; }
+        public Vector2 LocalAnchorB { get; internal set; }
         public float Breakpoint { get; internal set; }
 
         public abstract Joint GetJoint();
@@ -78,7 +80,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [ViewVariables]
         public string ID { get; set; } = string.Empty;
 
-        // TODO: Box2D just checks Enabled (AKA CanCollide) on each body. May also be worthwhile porting? Need to test it doesn't E X P L O D E.
         /// <summary>
         /// Indicate if this joint is enabled or not. Disabling a joint
         /// means it is still in the simulation, but inactive.
@@ -126,17 +127,33 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public EntityUid BodyBUid { get; init; }
 
-        /// <summary>
-        /// Get the anchor point on bodyA in world coordinates.
-        /// On some joints, this value indicate the anchor point within the world.
-        /// </summary>
-        public abstract Vector2 WorldAnchorA { get; set; }
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LocalAnchorA
+        {
+            get => _localAnchorA;
+            set
+            {
+                if (_localAnchorA.EqualsApprox(value)) return;
+                _localAnchorA = value;
+                Dirty();
+            }
+        }
 
-        /// <summary>
-        ///     Get the anchor point on bodyB in world coordinates.
-        ///     On some joints, this value indicate the anchor point within the world.
-        /// </summary>
-        public abstract Vector2 WorldAnchorB { get; set; }
+        private Vector2 _localAnchorA;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LocalAnchorB
+        {
+            get => _localAnchorB;
+            set
+            {
+                if (_localAnchorB.EqualsApprox(value)) return;
+                _localAnchorB = value;
+                Dirty();
+            }
+        }
+
+        private Vector2 _localAnchorB;
 
         /// <summary>
         ///     Set this flag to true if the attached bodies should collide.
@@ -189,7 +206,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             BodyB.Dirty();
         }
 
-        public virtual void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport) {}
+        public virtual void DebugDraw(DebugDrawingHandle handle) {}
 
         protected Joint(EntityUid bodyAUid, EntityUid bodyBUid)
         {
@@ -234,6 +251,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             Enabled = state.Enabled;
             Breakpoint = state.Breakpoint;
             _breakpointSquared = Breakpoint * Breakpoint;
+            _localAnchorA = state.LocalAnchorA;
+            _localAnchorB = state.LocalAnchorB;
         }
 
         /// <summary>
@@ -247,12 +266,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         /// <param name="invDt">The inverse delta time.</param>
         public abstract float GetReactionTorque(float invDt);
-
-        protected void WakeBodies()
-        {
-            BodyA.Awake = true;
-            BodyB.Awake = true;
-        }
 
         internal abstract void InitVelocityConstraints(SolverData data);
 

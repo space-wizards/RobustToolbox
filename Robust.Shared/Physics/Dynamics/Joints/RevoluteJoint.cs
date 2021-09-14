@@ -31,8 +31,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     [Serializable, NetSerializable]
     internal sealed class RevoluteJointState : JointState
     {
-        public Vector2 LocalAnchorA { get; internal set; }
-        public Vector2 LocalAnchorB { get; internal set; }
         public bool EnableLimit { get; internal set; }
         public bool EnableMotor { get; internal set; }
         public float ReferenceAngle { get; internal set; }
@@ -86,9 +84,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _lowerImpulse;
         private float _upperImpulse;
 
-        public Vector2 LocalAnchorA;
-        public Vector2 LocalAnchorB;
-
         // Settable
         public bool EnableLimit;
         public bool EnableMotor;
@@ -109,15 +104,26 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override JointType JointType => JointType.Revolute;
 
-        public override Vector2 WorldAnchorA { get; set; }
-        public override Vector2 WorldAnchorB { get; set; }
-
         public override JointState GetState()
         {
             var revoluteState = new RevoluteJointState();
 
             base.GetState(revoluteState);
             return revoluteState;
+        }
+
+        internal override void ApplyState(JointState state)
+        {
+            base.ApplyState(state);
+            if (state is not RevoluteJointState revoluteState) return;
+
+            EnableLimit = revoluteState.EnableLimit;
+            EnableMotor = revoluteState.EnableMotor;
+            LowerAngle = revoluteState.LowerAngle;
+            MotorSpeed = revoluteState.MotorSpeed;
+            ReferenceAngle = revoluteState.ReferenceAngle;
+            UpperAngle = revoluteState.UpperAngle;
+            MaxMotorTorque = revoluteState.MaxMotorTorque;
         }
 
         public override Vector2 GetReactionForce(float invDt)

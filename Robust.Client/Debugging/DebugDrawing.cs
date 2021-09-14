@@ -189,7 +189,7 @@ namespace Robust.Client.Debugging
                         {
                             if (drawnJoints.Contains(joint)) continue;
                             drawnJoints.Add(joint);
-                            joint.DebugDraw(drawing, in viewport);
+                            joint.DebugDraw(drawing);
                             drawing.SetTransform(in Matrix3.Identity);
                         }
                     }

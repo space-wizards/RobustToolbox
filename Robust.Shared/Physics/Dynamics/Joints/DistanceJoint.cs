@@ -39,8 +39,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     [Serializable, NetSerializable]
     internal sealed class DistanceJointState : JointState
     {
-        public Vector2 LocalAnchorA { get; internal set; }
-        public Vector2 LocalAnchorB { get; internal set; }
         public float Length { get; internal set; }
         public float MinLength { get; internal set; }
         public float MaxLength { get; internal set; }
@@ -150,54 +148,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         /// <summary>
-        /// The local anchor point relative to bodyA's origin.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorA
-        {
-            get => _localAnchorA;
-            set
-            {
-                if (_localAnchorA.EqualsApprox(value)) return;
-
-                _localAnchorA = value;
-                Dirty();
-            }
-        }
-
-        private Vector2 _localAnchorA;
-
-        /// <summary>
-        /// The local anchor point relative to bodyB's origin.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorB
-        {
-            get => _localAnchorB;
-            set
-            {
-                if (_localAnchorB.EqualsApprox(value)) return;
-
-                _localAnchorB = value;
-                Dirty();
-            }
-        }
-
-        private Vector2 _localAnchorB;
-
-        public override Vector2 WorldAnchorA
-        {
-            get => BodyA.GetWorldPoint(LocalAnchorA);
-            set => DebugTools.Assert(false, "You can't set the world anchor on this joint type.");
-        }
-
-        public override Vector2 WorldAnchorB
-        {
-            get => BodyB.GetWorldPoint(LocalAnchorB);
-            set => DebugTools.Assert(false, "You can't set the world anchor on this joint type.");
-        }
-
-        /// <summary>
         /// The natural length between the anchor points.
         /// Manipulating the length can lead to non-physical behavior when the frequency is zero.
         /// </summary>
@@ -296,22 +246,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return F;
         }
 
-        public override void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport)
-        {
-            base.DebugDraw(handle, in worldViewport);
-
-            var matrixB = BodyB.Owner.Transform.WorldMatrix;
-            var vector = WorldAnchorA - WorldAnchorB;
-            var distance = vector.Length;
-
-            if (distance <= 0.0f) return;
-
-            var line = new Box2Rotated(new Box2(-0.08f, 0, 0.08f, distance), vector.ToWorldAngle().Opposite());
-
-            handle.SetTransform(matrixB);
-            handle.DrawRect(line, Color.Blue.WithAlpha(0.7f));
-        }
-
         public override JointState GetState()
         {
             var distanceState = new DistanceJointState
@@ -321,8 +255,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 MinLength = _minLength,
                 MaxLength = _maxLength,
                 Stiffness = _stiffness,
-                LocalAnchorA = _localAnchorA,
-                LocalAnchorB = _localAnchorB
+                LocalAnchorA = LocalAnchorA,
+                LocalAnchorB = LocalAnchorB
             };
 
             base.GetState(distanceState);
@@ -339,8 +273,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             _minLength = distanceState.MinLength;
             _maxLength = distanceState.MaxLength;
             _stiffness = distanceState.Stiffness;
-            _localAnchorA = distanceState.LocalAnchorA;
-            _localAnchorB = distanceState.LocalAnchorB;
         }
 
         /// <summary>

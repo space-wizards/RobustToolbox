@@ -48,8 +48,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     {
         public float MaxForce { get; }
         public float MaxTorque { get; }
-        public Vector2 LocalAnchorA { get; }
-        public Vector2 LocalAnchorB { get; }
 
         public override Joint GetJoint()
         {
@@ -108,30 +106,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public float MaxTorque { get; set; }
 
         /// <summary>
-        ///     The local anchor point on BodyA
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorA { get; set; }
-
-        /// <summary>
-        ///     The local anchor point on BodyB
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorB { get; set; }
-
-        public override Vector2 WorldAnchorA
-        {
-            get => BodyA.GetWorldPoint(LocalAnchorA);
-            set => LocalAnchorA = BodyA.GetLocalPoint(value);
-        }
-
-        public override Vector2 WorldAnchorB
-        {
-            get => BodyB.GetWorldPoint(LocalAnchorB);
-            set => LocalAnchorB = BodyB.GetLocalPoint(value);
-        }
-
-        /// <summary>
         /// Constructor for FrictionJoint.
         /// </summary>
         /// <param name="bodyA"></param>
@@ -174,6 +148,15 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             base.GetState(frictionState);
             return frictionState;
+        }
+
+        internal override void ApplyState(JointState state)
+        {
+            base.ApplyState(state);
+            if (state is not FrictionJointState frictionState) return;
+
+            MaxForce = frictionState.MaxForce;
+            MaxTorque = frictionState.MaxTorque;
         }
 
         public override Vector2 GetReactionForce(float invDt)

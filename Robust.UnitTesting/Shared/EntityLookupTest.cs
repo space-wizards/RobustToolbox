@@ -32,17 +32,24 @@ namespace Robust.UnitTesting.Shared
 
                 grid.SetTile(new Vector2i(), new Tile(1));
 
-                Assert.That(!lookup.GetEntitiesIntersecting(theMapSpotBeingUsed).Any());
+                lookup.Update();
+                Assert.That(lookup.GetEntitiesIntersecting(theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
                 // Setup and check it actually worked
                 var dummy = entManager.SpawnEntity(null, theMapSpotBeingUsed);
-                dummy.Transform.Anchored = true;
-                Assert.That(dummy.Transform.Anchored);
-
                 lookup.Update();
+                Assert.That(lookup.GetEntitiesIntersecting(theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // When anchoring should still only be 1 entity.
-                Assert.That(lookup.GetEntitiesIntersecting(theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
+                dummy.Transform.Anchored = true;
+                Assert.That(dummy.Transform.Anchored);
+                lookup.Update();
+                Assert.That(lookup.GetEntitiesIntersecting(theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
+
+                // Even when unanchored should still be there
+                dummy.Transform.Anchored = false;
+                lookup.Update();
+                Assert.That(lookup.GetEntitiesIntersecting(theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
             });
         }
     }

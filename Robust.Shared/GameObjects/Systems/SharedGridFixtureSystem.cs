@@ -23,12 +23,10 @@ namespace Robust.Shared.GameObjects
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
         }
 
-        public void ProcessGrid(GridId gridId)
+        internal void ProcessGrid(IMapGridInternal gridInternal)
         {
-            var grid = (IMapGridInternal) _mapManager.GetGrid(gridId);
-
             // Just in case there's any deleted we'll ToArray
-            foreach (var (_, chunk) in grid.GetMapChunks().ToArray())
+            foreach (var (_, chunk) in gridInternal.GetMapChunks().ToArray())
             {
                 chunk.RegenerateCollision();
             }

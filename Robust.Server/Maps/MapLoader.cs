@@ -454,7 +454,7 @@ namespace Robust.Server.Maps
                 {
                     var gridInternal = (IMapGridInternal) grid;
                     var body = compManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
-                    gridFixtures.ProcessGrid(grid.Index);
+                    gridFixtures.ProcessGrid(gridInternal);
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Server.GameObjects;
 using Robust.Server.Physics;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -10,6 +11,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using GridFixtureSystem = Robust.Client.GameObjects.GridFixtureSystem;
@@ -70,8 +72,9 @@ namespace Robust.UnitTesting
 
             // Required systems
             var systems = IoCManager.Resolve<IEntitySystemManager>();
-            //systems.LoadExtraSystemType<GridFixtureSystem>();
-            //systems.LoadExtraSystemType<BroadPhaseSystem>();
+            systems.LoadExtraSystemType<GridFixtureSystem>();
+            systems.LoadExtraSystemType<BroadPhaseSystem>();
+            systems.LoadExtraSystemType<PhysicsSystem>();
             systems.Initialize();
 
             var entMan = IoCManager.Resolve<IEntityManager>();
@@ -103,6 +106,11 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(EntityLookupComponent)))
             {
                 compFactory.RegisterClass<EntityLookupComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
+            {
+                compFactory.RegisterClass<PhysicsMapComponent>();
             }
 
             if(entMan.EventBus == null)

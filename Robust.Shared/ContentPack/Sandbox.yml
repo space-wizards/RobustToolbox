@@ -396,6 +396,7 @@ Types:
     IOrderedEnumerable`1: { All: True }
   System.Net:
     DnsEndPoint: { }
+    HttpStatusCode: { } # Enum
   System.Numerics:
     BitOperations: { All: True }
   System.Reflection:

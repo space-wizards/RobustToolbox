@@ -28,6 +28,7 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -705,7 +706,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(Vector2.Zero, Vector2.Zero); // TODO: Sweep.LocalCenter
+            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
@@ -776,7 +777,7 @@ namespace Robust.Shared.GameObjects
                 if (_bodyType != BodyType.Dynamic) return;
                 if (value.EqualsApprox(_localCenter)) return;
 
-                throw new NotImplementedException();
+                _localCenter = value;
             }
         }
 
@@ -913,7 +914,7 @@ namespace Robust.Shared.GameObjects
                 if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
-                if (_linVelocity.EqualsApprox(value, 0.0001))
+                if (_linVelocity.EqualsApprox(value))
                     return;
 
                 _linVelocity = value;
@@ -1288,6 +1289,7 @@ namespace Robust.Shared.GameObjects
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
+            LocalCenter = Vector2.Zero;
             // Sweep
 
             if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
@@ -1356,8 +1358,8 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            /* TODO
-            // Move center of mass;
+            LocalCenter = localCenter;
+            /*
             var oldCenter = _sweep.Center;
             _sweep.LocalCenter = localCenter;
             _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);

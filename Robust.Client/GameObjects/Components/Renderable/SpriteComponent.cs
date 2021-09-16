@@ -1217,8 +1217,7 @@ namespace Robust.Client.GameObjects
             RenderInternal(drawingHandle, eyeRotation, worldRotation, Vector2.Zero, overrideDirection);
         }
 
-        [DataField("noRot")]
-        private bool _screenLock = true;
+        [DataField("noRot")] private bool _screenLock = false;
 
         [DataField("overrideDir")]
         private Direction _overrideDirection = Direction.East;

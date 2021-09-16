@@ -71,11 +71,11 @@ namespace Robust.Client.GameObjects
         {
             var handle = args.WorldHandle;
             var currentMap = _eyeManager.CurrentMap;
-            var viewport = _eyeManager.GetWorldViewport();
+            var viewport = _eyeManager.GetWorldViewbounds();
 
             foreach (var comp in _renderTree.GetRenderTrees(currentMap, viewport))
             {
-                var localAABB = viewport.Translated(-comp.Owner.Transform.WorldPosition);
+                var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(viewport);
 
                 foreach (var sprite in comp.SpriteTree.QueryAabb(localAABB))
                 {

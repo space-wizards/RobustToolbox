@@ -46,6 +46,12 @@ namespace Robust.Shared.Physics
             Quaternion2D = new Quaternion2D(angle);
         }
 
+        public Transform(Vector2 position, Angle angle)
+        {
+            Position = position;
+            Quaternion2D = new Quaternion2D(angle);
+        }
+
         public static Vector2 Mul(in Transform transform, in Vector2 vector)
         {
             float x = (transform.Quaternion2D.C * vector.X - transform.Quaternion2D.S * vector.Y) + transform.Position.X;
@@ -143,6 +149,14 @@ namespace Robust.Shared.Physics
         {
             C = MathF.Cos(angle);
             S = MathF.Sin(angle);
+        }
+
+        public Quaternion2D(Angle angle)
+        {
+            var radians = (float) angle.Theta;
+
+            C = MathF.Cos(radians);
+            S = MathF.Sin(radians);
         }
 
         public Quaternion2D Set(float angle)

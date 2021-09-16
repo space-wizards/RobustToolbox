@@ -2,10 +2,12 @@
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Physics;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 #nullable enable
@@ -20,12 +22,12 @@ namespace Robust.Client.GameObjects
     {
         // How fast the camera rotates in radians
         private const float CameraRotateSpeed = MathF.PI;
-        private const float CameraSnapTolerance = 0.01f;
 
-#pragma warning disable 649, CS8618
-        // ReSharper disable once NotNullMemberIsNotInitialized
-        [Dependency] private readonly IEyeManager _eyeManager;
-#pragma warning restore 649, CS8618
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+
+        private bool _isLerping = false;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -55,6 +57,9 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             var currentEye = _eyeManager.CurrentEye;
+
+            // TODO: Content should have its own way of handling this. We should have a default behavior that they can overwrite.
+            /*
             var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
 
             var direction = 0;
@@ -74,17 +79,23 @@ namespace Robust.Client.GameObjects
                 currentEye.Rotation += CameraRotateSpeed * frameTime * direction;
                 currentEye.Rotation = currentEye.Rotation.Reduced();
             }
-            else
-            {
-                // snap to cardinal directions
-                var closestDir = currentEye.Rotation.GetCardinalDir().ToVec();
-                var currentDir = currentEye.Rotation.ToVec();
+            */
 
-                var dot = Vector2.Dot(closestDir, currentDir);
-                if (MathHelper.CloseTo(dot, 1, CameraSnapTolerance))
-                {
-                    currentEye.Rotation = closestDir.ToAngle();
-                }
+            var playerTransform = _playerManager.LocalPlayer?.ControlledEntity?.Transform;
+
+            if (playerTransform == null) return;
+
+            var gridId = playerTransform.GridID;
+
+            var parent = gridId != GridId.Invalid && EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEnt) ?
+                gridEnt.Transform
+                : _mapManager.GetMapEntity(playerTransform.MapID).Transform;
+
+            if (!_isLerping)
+            {
+                // TODO: Detect parent change and start lerping
+                var parentRotation = parent.WorldRotation;
+                currentEye.Rotation = -parentRotation;
             }
 
             foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>(true))

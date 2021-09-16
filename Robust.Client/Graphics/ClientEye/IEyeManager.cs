@@ -31,6 +31,8 @@ namespace Robust.Client.Graphics
         /// </summary>
         Box2 GetWorldViewport();
 
+        Box2Rotated GetWorldViewbounds();
+
         /// <summary>
         /// Calculates the projection matrix to transform a point from camera space
         /// to UI screen space.

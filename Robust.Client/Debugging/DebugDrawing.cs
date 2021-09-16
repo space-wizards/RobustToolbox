@@ -158,6 +158,7 @@ namespace Robust.Client.Debugging
                 _hoverStartScreen = mouseScreenPos.Position;
 
                 var viewport = _eyeManager.GetWorldViewport();
+                var viewBounds = _eyeManager.GetWorldViewbounds();
 
                 if (viewport.IsEmpty()) return;
 
@@ -165,7 +166,7 @@ namespace Robust.Client.Debugging
                 var colorEdge = Color.Red.WithAlpha(0.33f);
                 var drawnJoints = new HashSet<Joint>();
 
-                foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewport))
+                foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewBounds))
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
 

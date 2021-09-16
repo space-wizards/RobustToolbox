@@ -62,7 +62,6 @@ namespace Robust.Shared.Maths
         public Matrix22 GetInverse()
         {
             float a = EX.X, b = EY.X, c = EX.Y, d = EY.Y;
-            Matrix22 B;
             float det = a * d - b * c;
             if (det != 0.0f)
             {

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -74,7 +72,10 @@ namespace Robust.Shared.Map
 
         /// <inheritdoc />
         [ViewVariables]
-        public Box2 WorldBounds => LocalBounds.Translated(WorldPosition);
+        public Box2 WorldBounds =>
+            new Box2Rotated(LocalBounds, WorldRotation, Vector2.Zero)
+                .CalcBoundingBox()
+                .Translated(WorldPosition);
 
         /// <inheritdoc />
         [ViewVariables]
@@ -282,12 +283,32 @@ namespace Robust.Shared.Map
             }
         }
 
+        public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
+            Predicate<TileRef>? predicate = null)
+        {
+            var matrix = InvWorldMatrix;
+            var localArea = matrix.TransformBox(worldArea);
+
+            foreach (var tile in GetLocalTilesIntersecting(localArea, ignoreEmpty, predicate))
+            {
+                yield return tile;
+            }
+        }
+
         /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2 worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null)
         {
             var matrix = InvWorldMatrix;
+            var localArea = matrix.TransformBox(worldArea);
 
-            var localArea = new Box2(matrix.Transform(worldArea.BottomLeft), matrix.Transform(worldArea.TopRight));
+            foreach (var tile in GetLocalTilesIntersecting(localArea, ignoreEmpty, predicate))
+            {
+                yield return tile;
+            }
+        }
+
+        private IEnumerable<TileRef> GetLocalTilesIntersecting(Box2 localArea, bool ignoreEmpty, Predicate<TileRef>? predicate)
+        {
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
@@ -306,19 +327,14 @@ namespace Robust.Shared.Map
                             continue;
 
                         if (predicate == null || predicate(tile))
-                        {
                             yield return tile;
-
-                        }
                     }
                     else if (!ignoreEmpty)
                     {
                         var tile = new TileRef(ParentMapId, Index, x, y, new Tile());
 
                         if (predicate == null || predicate(tile))
-                        {
                             yield return tile;
-                        }
                     }
                 }
             }
@@ -404,6 +420,27 @@ namespace Robust.Shared.Map
         {
             var worldPos = WorldPosition;
             var localArea = new Box2Rotated(worldAABB.Translated(-worldPos), -WorldRotation).CalcBoundingBox();
+
+            var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
+            var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
+
+            for (var x = chunkLB.X; x <= chunkRT.X; x++)
+            {
+                for (var y = chunkLB.Y; y <= chunkRT.Y; y++)
+                {
+                    var gridChunk = new Vector2i(x, y);
+
+                    if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
+
+                    yield return chunk;
+                }
+            }
+        }
+
+        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2Rotated worldArea)
+        {
+            var matrix = InvWorldMatrix;
+            var localArea = matrix.TransformBox(worldArea);
 
             var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
             var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));

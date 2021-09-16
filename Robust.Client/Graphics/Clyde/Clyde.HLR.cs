@@ -130,7 +130,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var list = GetOverlaysForSpace(space);
 
-            var worldBounds = CalcWorldBounds(vp);
+            var worldBounds = CalcWorldAABB(vp);
             var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldBounds);
 
             foreach (var overlay in list)
@@ -201,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
@@ -209,7 +209,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldBounds);
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB);
 
             var screenSize = viewport.Size;
 
@@ -261,7 +261,7 @@ namespace Robust.Client.Graphics.Clyde
                             null,
                             viewport,
                             new UIBox2i((0, 0), viewport.Size),
-                            worldBounds);
+                            worldAABB);
                         overlayIndex = j;
                         continue;
                     }
@@ -362,12 +362,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Box2 worldBounds,
+        private void ProcessSpriteEntities(MapId map, Box2Rotated worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
@@ -458,16 +458,17 @@ namespace Robust.Client.Graphics.Clyde
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
+                var worldAABB = CalcWorldAABB(viewport);
                 var worldBounds = CalcWorldBounds(viewport);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
                     {
-                        DrawLightsAndFov(viewport, worldBounds, eye);
+                        DrawLightsAndFov(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldBounds);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB);
                     FlushRenderQueue();
 
                     using (DebugGroup("Grids"))
@@ -478,10 +479,10 @@ namespace Robust.Client.Graphics.Clyde
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds, eye);
+                        DrawEntities(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldBounds);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
@@ -514,22 +515,38 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldBounds);
+                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB);
                 FlushRenderQueue();
 
                 _currentViewport = oldVp;
             });
         }
 
-        private static Box2 CalcWorldBounds(Viewport viewport)
+        private static Box2 CalcWorldAABB(Viewport viewport)
         {
             var eye = viewport.Eye;
             if (eye == null)
                 return default;
 
-            // TODO: This seems completely unfit by lacking things like rotation handling.
+            return GetAABB(eye, viewport);
+        }
+
+        private static Box2 GetAABB(IEye eye, Viewport viewport)
+        {
             return Box2.CenteredAround(eye.Position.Position,
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
+        }
+
+        private static Box2Rotated CalcWorldBounds(Viewport viewport)
+        {
+            var eye = viewport.Eye;
+            if (eye == null)
+                return default;
+
+            var rotation = -eye.Rotation;
+            var aabb = GetAABB(eye, viewport);
+
+            return new Box2Rotated(aabb, rotation, aabb.Center);
         }
 
         private sealed class OverlayComparer : IComparer<Overlay>

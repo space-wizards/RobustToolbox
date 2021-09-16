@@ -872,9 +872,60 @@ namespace Robust.Shared.Maths
             return Transform(this, vector);
         }
 
+        // TODO: These 2 are big-ass SIMD candidates. Trying to make it use the existing Box2Rotated SIMD seemed jank
+        // These are also gonna be called a decent amount.
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2 TransformBox(in Box2Rotated box)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = Transform(box.BottomLeft);
+            vertices[1] = Transform(box.BottomRight);
+            vertices[2] = Transform(box.TopRight);
+            vertices[3] = Transform(box.TopLeft);
+
+            var botLeft = vertices[0];
+            var topRight = vertices[0];
+
+            for (var i = 0; i < 4; i++)
+            {
+                var vertex = vertices[i];
+
+                botLeft = Vector2.ComponentMin(vertex, botLeft);
+                topRight = Vector2.ComponentMax(vertex, topRight);
+            }
+
+            return new Box2(botLeft, topRight);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2 TransformBox(in Box2 box)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = Transform(box.BottomLeft);
+            vertices[1] = Transform(box.BottomRight);
+            vertices[2] = Transform(box.TopRight);
+            vertices[3] = Transform(box.TopLeft);
+
+            var botLeft = vertices[0];
+            var topRight = vertices[0];
+
+            for (var i = 0; i < 4; i++)
+            {
+                var vertex = vertices[i];
+
+                botLeft = Vector2.ComponentMin(vertex, botLeft);
+                topRight = Vector2.ComponentMax(vertex, topRight);
+            }
+
+            return new Box2(botLeft, topRight);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Transform(in Matrix3 matrix, Vector2 vector)
         {
+            // TODO: Look at SIMD coz holy fak this is called a lot
+
             var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
             var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
 

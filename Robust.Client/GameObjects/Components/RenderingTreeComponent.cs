@@ -15,12 +15,13 @@ namespace Robust.Client.GameObjects
         private static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var worldPos = value.Owner.Transform.WorldPosition;
-            var bounds = value.CalculateBoundingBox(worldPos);
+            var worldRot = value.Owner.Transform.WorldRotation;
+            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var offset = -tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var localAABB = tree?.Owner.Transform.InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
 
-            return bounds.Translated(offset);
+            return localAABB;
         }
 
         private static Box2 LightAabbFunc(in PointLightComponent value)
@@ -29,31 +30,34 @@ namespace Robust.Client.GameObjects
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var localPos = tree?.Owner.Transform.InvWorldMatrix.Transform(worldPos) ?? worldPos;
 
-            return Box2.CenteredAround(pos, (boxSize, boxSize));
+            return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
 
-        internal static Box2 SpriteAabbFunc(SpriteComponent value, Vector2? worldPos = null)
+        internal static Box2 SpriteAabbFunc(SpriteComponent value, Vector2? worldPos = null, Angle? worldRot = null)
         {
             worldPos ??= value.Owner.Transform.WorldPosition;
-            var bounds = value.CalculateBoundingBox(worldPos.Value);
+            worldRot ??= value.Owner.Transform.WorldRotation;
+            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos.Value), worldRot.Value, worldPos.Value);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var offset = -tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var localAABB = tree?.Owner.Transform.InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
 
-            return bounds.Translated(offset);
+            return localAABB;
         }
 
         internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)
         {
+            // Lights are circles so don't need entity's rotation
+
             worldPos ??= value.Owner.Transform.WorldPosition;
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var pos = worldPos - tree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
+            var localPos = tree?.Owner.Transform.InvWorldMatrix.Transform(worldPos.Value) ?? worldPos.Value;
 
-            return Box2.CenteredAround(pos, (boxSize, boxSize));
+            return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
     }
 }

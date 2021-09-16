@@ -1,8 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -35,7 +33,6 @@ using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Serilog.Debugging;
 using Serilog.Sinks.Loki;
-using Stopwatch = Robust.Shared.Timing.Stopwatch;
 
 namespace Robust.Server
 {
@@ -452,6 +449,12 @@ namespace Robust.Server
 
         private void ProcessExiting(object? sender, EventArgs e)
         {
+            // If the main loop is not running the task will never get processed on the main thread
+            if (!_mainLoop.Running)
+            {
+                return;
+            }
+
             _taskManager.RunOnMainThread(() => Shutdown("ProcessExited"));
             // Give the server 10 seconds to shut down.
             // If it still hasn't managed to assume it's stuck or something.

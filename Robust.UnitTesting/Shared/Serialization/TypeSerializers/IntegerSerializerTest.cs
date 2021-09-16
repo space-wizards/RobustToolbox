@@ -3,13 +3,22 @@ using Robust.Shared.Serialization.Markdown.Value;
 
 // ReSharper disable AccessToStaticMemberViaDerivedType
 
-namespace Robust.UnitTesting.Shared.Serialization
+namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
-    public class NullableSerializationTest : SerializationTest
+    public class IntegerSerializerTest : SerializationTest
     {
         [Test]
-        public void NullableIntTest()
+        public void IntReadTest()
+        {
+            var value = Serialization.Read(typeof(int), new ValueDataNode("5"));
+
+            Assert.NotNull(value.RawValue);
+            Assert.That(value.RawValue, Is.EqualTo(5));
+        }
+
+        [Test]
+        public void NullableIntReadTest()
         {
             var nullValue = Serialization.Read(typeof(int?), new ValueDataNode("null"));
 

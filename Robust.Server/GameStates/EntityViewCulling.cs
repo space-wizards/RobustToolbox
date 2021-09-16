@@ -7,7 +7,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -184,7 +183,6 @@ namespace Robust.Server.GameStates
             var visibleEnts = _visSetPool.Get();
             // As we may have entities parented to anchored entities on chunks we've never seen we need to make sure
             // they're included.
-            var includedChunks = new Dictionary<GridId, HashSet<IMapChunkInternal>>();
             List<EntityState> entityStates = new();
 
             //TODO: Refactor map system to not require every map and grid entity to function.
@@ -198,6 +196,8 @@ namespace Robust.Server.GameStates
 
                 foreach (var eyeEuid in viewers)
                 {
+                    var includedChunks = new Dictionary<GridId, HashSet<IMapChunkInternal>>();
+
                     var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
 
                     uint visMask = 0;

@@ -19,7 +19,6 @@ namespace Robust.Shared.GameObjects
     public class EntitySystemManager : IEntitySystemManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
 #if EXCEPTION_TOLERANCE

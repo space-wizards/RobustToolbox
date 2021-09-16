@@ -48,10 +48,6 @@ namespace Robust.Shared.Serialization.Manager
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
 
-                var returnVariable = Expression.Variable(typeof(DeserializationResult));
-                var returnLabel = Expression.Label(typeof(DeserializationResult));
-                var returnExpression = Expression.Label(returnLabel, returnVariable);
-
                 var call = Expression.Call(
                     instanceParam,
                     nameof(ReadWithSerializer),
@@ -60,14 +56,8 @@ namespace Robust.Shared.Serialization.Manager
                     contextParam,
                     skipHookParam);
 
-                var block = Expression.Block(
-                    new[] {returnVariable},
-                    Expression.Assign(returnVariable, call),
-                    Expression.Return(returnLabel, returnVariable),
-                    returnExpression);
-
                 return Expression.Lambda<ReadSerializerDelegate>(
-                    block,
+                    call,
                     nodeParam,
                     contextParam,
                     skipHookParam).Compile();
@@ -83,10 +73,6 @@ namespace Robust.Shared.Serialization.Manager
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var alwaysWriteParam = Expression.Parameter(typeof(bool), "alwaysWrite");
 
-                var returnVariable = Expression.Variable(typeof(DataNode));
-                var returnLabel = Expression.Label(typeof(DataNode));
-                var returnExpression = Expression.Label(returnLabel, returnVariable);
-
                 var call = Expression.Call(
                     instanceParam,
                     nameof(WriteWithSerializer),
@@ -95,14 +81,8 @@ namespace Robust.Shared.Serialization.Manager
                     contextParam,
                     alwaysWriteParam);
 
-                var block = Expression.Block(
-                    new[] {returnVariable},
-                    Expression.Assign(returnVariable, call),
-                    Expression.Return(returnLabel, returnVariable),
-                    returnExpression);
-
                 return Expression.Lambda<WriteSerializerDelegate>(
-                    block,
+                    call,
                     valueParam,
                     contextParam,
                     alwaysWriteParam).Compile();
@@ -121,9 +101,6 @@ namespace Robust.Shared.Serialization.Manager
 
                 var targetCastVariable = Expression.Variable(tuple.target, "targetCastVariable");
 
-                var returnLabel = Expression.Label(typeof(object));
-                var returnExpression = Expression.Label(returnLabel, targetParam);
-
                 var call = Expression.Call(
                     instanceParam,
                     nameof(CopyWithSerializer),
@@ -138,12 +115,7 @@ namespace Robust.Shared.Serialization.Manager
                     Expression.Assign(
                         targetCastVariable,
                         Expression.Convert(targetParam, tuple.target)),
-                    Expression.Assign(targetCastVariable, call),
-                    Expression.Assign(
-                        targetParam,
-                        Expression.Convert(targetCastVariable, typeof(object))),
-                    Expression.Return(returnLabel, targetParam),
-                    returnExpression);
+                    Expression.Convert(call, typeof(object)));
 
                 return Expression.Lambda<CopySerializerDelegate>(
                     block,
@@ -169,7 +141,6 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool skipHook = false)
             where TSerializer : ITypeReader<T, TNode>
-            where T : notnull
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
@@ -191,7 +162,6 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null,
             bool alwaysWrite = false)
             where TSerializer : ITypeWriter<T>
-            where T : notnull
         {
             var serializer = (ITypeWriter<T>) GetTypeSerializer(typeof(TSerializer));
             return serializer.Write(this, value, alwaysWrite, context);
@@ -214,7 +184,6 @@ namespace Robust.Shared.Serialization.Manager
             ISerializationContext? context = null)
             where TSource : TCommon
             where TTarget : TCommon
-            where TCommon : notnull
             where TSerializer : ITypeCopier<TCommon>
         {
             var serializer = (ITypeCopier<TCommon>) GetTypeSerializer(typeof(TSerializer));
@@ -224,7 +193,6 @@ namespace Robust.Shared.Serialization.Manager
         private ValidationNode ValidateWithSerializer<T, TNode, TSerializer>(
             TNode node,
             ISerializationContext? context)
-            where T : notnull
             where TNode : DataNode
             where TSerializer : ITypeValidator<T, TNode>
         {

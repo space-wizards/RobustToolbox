@@ -245,7 +245,7 @@ namespace Robust.Server.GameObjects
         private void CloseShared(IPlayerSession session)
         {
             var owner = Owner.Owner;
-            owner.EntityManager.EventBus.RaiseLocalEvent(owner.Uid, new BoundUIClosedEvent());
+            owner.EntityManager.EventBus.RaiseLocalEvent(owner.Uid, new BoundUIClosedEvent(UiKey, owner.Uid, session));
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);

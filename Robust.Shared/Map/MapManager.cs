@@ -530,7 +530,8 @@ namespace Robust.Shared.Map
         {
             foreach (var (_, mapGrid) in _grids)
             {
-                // TODO: Use WorldBounds again.
+                // So not sure if doing the transform for WorldBounds and early out here is faster than just
+                // checking if we have a relevant chunk, need to profile.
                 if (mapGrid.ParentMapId != mapId)
                     continue;
 

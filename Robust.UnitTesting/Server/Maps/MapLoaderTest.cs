@@ -103,6 +103,7 @@ entities:
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             var mapId = map.CreateMap();
+            map.GetMapEntity(mapId).EnsureComponent<PhysicsMapComponent>();
             var mapLoad = IoCManager.Resolve<IMapLoader>();
             var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
 

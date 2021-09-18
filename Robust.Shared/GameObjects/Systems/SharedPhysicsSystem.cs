@@ -105,7 +105,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
-            component.ContactManager = new ContactManager();
+            component.ContactManager = new();
             component.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
         }
 

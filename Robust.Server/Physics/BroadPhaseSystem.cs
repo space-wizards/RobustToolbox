@@ -1,6 +1,5 @@
 using Robust.Server.GameObjects;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 
 namespace Robust.Server.Physics
 {

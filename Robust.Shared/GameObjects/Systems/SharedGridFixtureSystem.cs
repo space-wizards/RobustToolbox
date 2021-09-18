@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -17,11 +18,22 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
 
+        private bool _enabled;
+
         public override void Initialize()
         {
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
+            IoCManager.Resolve<IConfigurationManager>().OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
         }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            IoCManager.Resolve<IConfigurationManager>().UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
+        }
+
+        private void SetEnabled(bool value) => _enabled = value;
 
         internal void ProcessGrid(IMapGridInternal gridInternal)
         {
@@ -34,6 +46,8 @@ namespace Robust.Shared.GameObjects
 
         internal void RegenerateCollision(MapChunk chunk, List<Box2i> rectangles)
         {
+            if (!_enabled) return;
+
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
                 !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
 

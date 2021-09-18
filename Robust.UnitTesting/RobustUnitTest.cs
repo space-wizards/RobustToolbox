@@ -5,6 +5,7 @@ using System.Reflection;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
+using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -72,9 +73,6 @@ namespace Robust.UnitTesting
 
             // Required systems
             var systems = IoCManager.Resolve<IEntitySystemManager>();
-            systems.LoadExtraSystemType<GridFixtureSystem>();
-            systems.LoadExtraSystemType<BroadPhaseSystem>();
-            systems.LoadExtraSystemType<PhysicsSystem>();
             systems.Initialize();
 
             var entMan = IoCManager.Resolve<IEntityManager>();

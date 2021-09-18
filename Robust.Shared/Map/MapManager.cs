@@ -569,22 +569,46 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
-            // Although if grid fixture generation is updated these won't match this should be faster than using fixtures.
+            // So despite the fact we have accurate bounds the reason I didn't make this tile-based is because
+            // at some stage we may want to overwrite the default behavior e.g. if you allow diagonals
             foreach (var (_, grid) in _grids)
             {
                 if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
 
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var found = false;
+                var xformComp = _entityManager.ComponentManager.GetComponent<TransformComponent>(gridEnt.Uid);
+                var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
 
-                foreach (var _ in grid.GetTilesIntersecting(worldArea))
+                if (_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
                 {
-                    found = true;
-                    yield return grid;
-                    break;
+                    var intersects = false;
+
+                    foreach (var chunk in grid.GetMapChunks(worldArea))
+                    {
+                        foreach (var fixture in chunk.Fixtures)
+                        {
+                            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                            {
+                                if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
+
+                                intersects = true;
+                                break;
+                            }
+
+                            if (intersects) break;
+                        }
+
+                        if (intersects) break;
+                    }
+
+                    if (intersects)
+                    {
+                        yield return grid;
+                        continue;
+                    }
                 }
 
-                if (!found && worldArea.Contains(gridEnt.Transform.WorldPosition))
+                if (grid.ChunkCount == 0 && worldArea.Contains(transform.Position))
                 {
                     yield return grid;
                 }
@@ -601,16 +625,39 @@ namespace Robust.Shared.Map
                 if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldBounds)) continue;
 
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var found = false;
+                var xformComp = _entityManager.ComponentManager.GetComponent<TransformComponent>(gridEnt.Uid);
+                var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
 
-                foreach (var _ in grid.GetTilesIntersecting(worldArea))
+                if (_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
                 {
-                    found = true;
-                    yield return grid;
-                    break;
+                    var intersects = false;
+
+                    foreach (var chunk in grid.GetMapChunks(worldArea))
+                    {
+                        foreach (var fixture in chunk.Fixtures)
+                        {
+                            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                            {
+                                if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
+
+                                intersects = true;
+                                break;
+                            }
+
+                            if (intersects) break;
+                        }
+
+                        if (intersects) break;
+                    }
+
+                    if (intersects)
+                    {
+                        yield return grid;
+                        continue;
+                    }
                 }
 
-                if (!found && worldArea.Contains(gridEnt.Transform.WorldPosition))
+                if (grid.ChunkCount == 0 && worldArea.Contains(transform.Position))
                 {
                     yield return grid;
                 }

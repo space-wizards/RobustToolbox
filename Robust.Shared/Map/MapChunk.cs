@@ -288,8 +288,9 @@ namespace Robust.Shared.Map
 
             _grid.UpdateAABB();
 
-            if (ValidTiles > 0)
-                EntitySystem.Get<SharedGridFixtureSystem>().RegenerateCollision(this, rectangles);
+            // TryGet because unit tests YAY
+            if (ValidTiles > 0 && EntitySystem.TryGet(out SharedGridFixtureSystem? system))
+                system.RegenerateCollision(this, rectangles);
         }
 
         /// <inheritdoc />

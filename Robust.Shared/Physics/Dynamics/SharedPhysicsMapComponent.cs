@@ -47,7 +47,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal ContactManager ContactManager = default!;
 
-        private bool _autoClearForces;
+        public bool AutoClearForces;
 
         /// <summary>
         ///     Change the global gravity vector.
@@ -122,34 +122,6 @@ namespace Robust.Shared.Physics.Dynamics
         private float _invDt0;
 
         public MapId MapId => Owner.Transform.MapID;
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            _broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-            _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-
-            IoCManager.InjectDependencies(this);
-            ContactManager.Initialize();
-            ContactManager.MapId = MapId;
-
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
-        }
-
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-            ContactManager.Shutdown();
-
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
-        }
-
-        private void OnAutoClearChange(bool value)
-        {
-            _autoClearForces = value;
-        }
 
         #region AddRemove
         public void AddAwakeBody(PhysicsComponent body)
@@ -428,7 +400,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
-            if (!prediction && _autoClearForces)
+            if (!prediction && AutoClearForces)
                 ClearForces();
 
             _invDt0 = invDt;

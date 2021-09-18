@@ -74,7 +74,7 @@ namespace Robust.Shared.Map
 
             foreach (var rectangle in rectangles)
             {
-                bounds = bounds.Union(rectangle);
+                bounds = bounds.IsEmpty() ? rectangle : bounds.Union(rectangle);
             }
         }
     }

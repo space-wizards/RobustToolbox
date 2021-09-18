@@ -139,5 +139,15 @@ namespace Robust.Shared.Map
             x = X;
             y = Y;
         }
+
+        /// <summary>
+        /// Used to get a copy of the coordinates with an offset.
+        /// </summary>
+        /// <param name="offset">Offset to apply to these coordinates</param>
+        /// <returns>A copy of these coordinates, but offset.</returns>
+        public MapCoordinates Offset(Vector2 offset)
+        {
+            return new MapCoordinates(Position + offset, MapId);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Exceptions;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;

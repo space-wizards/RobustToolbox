@@ -566,44 +566,32 @@ namespace Robust.Shared.Map
             return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }
 
+        /// <inheritdoc />
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
+            // Although if grid fixture generation is updated these won't match this should be faster than using fixtures.
             foreach (var (_, grid) in _grids)
             {
                 if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
 
-                var found = false;
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
-                var anyChunks = false;
+                var found = false;
 
-                foreach (var chunk in grid.GetMapChunks(worldArea))
+                foreach (var _ in grid.GetTilesIntersecting(worldArea))
                 {
-                    anyChunks = true;
-                    var id = _gridFixtures.GetChunkId((MapChunk) chunk);
-                    var fixture = body.GetFixture(id);
-
-                    if (fixture == null) continue;
-
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                    {
-                        // TODO: Need to use CollisionManager to test detailed overlap
-                        if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
-                        yield return grid;
-                        found = true;
-                        break;
-                    }
-
-                    if (found) break;
+                    found = true;
+                    yield return grid;
+                    break;
                 }
 
-                if (!anyChunks && worldArea.Contains(transform.Position))
+                if (!found && worldArea.Contains(gridEnt.Transform.WorldPosition))
                 {
                     yield return grid;
                 }
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea)
         {
             var worldBounds = worldArea.CalcBoundingBox();
@@ -612,34 +600,17 @@ namespace Robust.Shared.Map
             {
                 if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldBounds)) continue;
 
-                var found = false;
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var body = gridEnt.GetComponent<PhysicsComponent>();
-                var transform = new Transform(gridEnt.Transform.WorldPosition, (float) gridEnt.Transform.WorldRotation);
-                var anyChunks = false;
+                var found = false;
 
-                foreach (var chunk in grid.GetMapChunks(worldArea))
+                foreach (var _ in grid.GetTilesIntersecting(worldArea))
                 {
-                    foreach (var fixture in chunk.Fixtures)
-                    {
-                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                        {
-                            // TODO: Need to use CollisionManager to test detailed overlap
-                            if (fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea))
-                            {
-                                yield return grid;
-                                found = true;
-                                break;
-                            }
-                        }
-
-                        if (found) break;
-                    }
-
-                    if (found) break;
+                    found = true;
+                    yield return grid;
+                    break;
                 }
 
-                if (!anyChunks && worldArea.Contains(transform.Position))
+                if (!found && worldArea.Contains(gridEnt.Transform.WorldPosition))
                 {
                     yield return grid;
                 }

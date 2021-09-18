@@ -64,10 +64,9 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))
             {
-                var mapGrid = (IMapGridInternal) grid;
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
 
-                if (!gridEnt.TryGetComponent(out PhysicsComponent? body)) continue;
+                if (!_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body)) continue;
 
                 var transform = body.GetTransform();
 

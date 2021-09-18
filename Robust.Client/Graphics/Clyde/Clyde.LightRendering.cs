@@ -317,7 +317,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
         }
 
-        private void DrawLightsAndFov(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void DrawLightsAndFov(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             if (!_lightManager.Enabled)
             {
@@ -332,7 +332,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds);
+            var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
 
             UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
 
@@ -498,39 +498,41 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private ((PointLightComponent light, Vector2 pos, float distanceSquared)[] lights, int count, Box2 expandedBounds)
-            GetLightsToRender(MapId map, in Box2 worldBounds)
+            GetLightsToRender(MapId map, in Box2Rotated worldBounds, in Box2 worldAABB)
         {
             var renderingTreeSystem = _entitySystemManager.GetEntitySystem<RenderingTreeSystem>();
-            var enlargedBounds = worldBounds.Enlarged(renderingTreeSystem.MaxLightRadius);
+            var enlargedBounds = worldAABB.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
-            var state = (this, worldBounds, count: 0);
+            var state = (this, worldAABB, count: 0);
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
 
-                comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldBounds, int count) state, in PointLightComponent light) =>
+                comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count) state, in PointLightComponent light) =>
                 {
-                    var transform = light.Owner.Transform;
-
                     if (state.count >= LightsToRenderListSize)
                     {
                         // There are too many lights to fit in the static memory.
                         return false;
                     }
 
+                    var transform = light.Owner.Transform;
+
+                    if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
+
                     var lightPos = transform.WorldMatrix.Transform(light.Offset);
 
                     var circle = new Circle(lightPos, light.Radius);
 
                     // If the light doesn't touch anywhere the camera can see, it doesn't matter.
-                    if (!circle.Intersects(state.worldBounds))
+                    if (!circle.Intersects(state.worldAABB))
                     {
                         return true;
                     }
 
-                    float distanceSquared = (state.worldBounds.Center - lightPos).LengthSquared;
+                    float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
                     state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
 
                     return true;
@@ -555,7 +557,7 @@ namespace Robust.Client.Graphics.Clyde
             // We expand the world bounds so that it encompasses the center of every light source.
             // This should make it so no culled occluder can make a difference.
             // (if the occluder is in the current lights at all, it's still not between the light and the world bounds).
-            var expandedBounds = worldBounds;
+            var expandedBounds = worldAABB;
 
             for (var i = 0; i < state.count; i++)
             {
@@ -782,9 +784,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    // TODO: I know this doesn't work with rotated grids but when I come back to these I'm adding tests
-                    // because rotation bugs are common.
-                    var treeBounds = expandedBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                    var treeBounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {

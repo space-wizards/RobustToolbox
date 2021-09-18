@@ -20,7 +20,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))

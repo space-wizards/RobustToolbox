@@ -355,7 +355,7 @@ namespace Robust.Shared.GameObjects
                 if(Anchored)
                     return;
 
-                if (_localPosition.EqualsApprox(value, 0.00001))
+                if (_localPosition.EqualsApprox(value))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
@@ -930,8 +930,8 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            var anchorStateChangedEvent = default(AnchorStateChangedEvent);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent, false);
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
         }
     }
 

@@ -149,5 +149,16 @@ namespace Robust.Shared.Map
         {
             return new MapCoordinates(Position + offset, MapId);
         }
+
+        /// <summary>
+        /// Used to get a copy of the coordinates with an offset.
+        /// </summary>
+        /// <param name="x">X axis offset to apply to these coordinates</param>
+        /// <param name="y">Y axis offset to apply to these coordinates</param>
+        /// <returns>A copy of these coordinates, but offset.</returns>
+        public MapCoordinates Offset(float x, float y)
+        {
+            return Offset(new Vector2(x, y));
+        }
     }
 }

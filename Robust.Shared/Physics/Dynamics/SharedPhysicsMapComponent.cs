@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -40,8 +39,8 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
-        private SharedBroadphaseSystem _broadphaseSystem = default!;
-        private SharedPhysicsSystem _physicsSystem = default!;
+        internal SharedBroadphaseSystem BroadphaseSystem = default!;
+        internal SharedPhysicsSystem PhysicsSystem = default!;
 
         public override string Name => "PhysicsMap";
 
@@ -189,7 +188,7 @@ namespace Robust.Shared.Physics.Dynamics
             // If the joint prevents collisions, then flag any contacts for filtering.
             if (!joint.CollideConnected)
             {
-                _physicsSystem.FilterContactsForJoint(joint);
+                PhysicsSystem.FilterContactsForJoint(joint);
             }
 
             bodyA.Dirty();
@@ -371,12 +370,12 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            _broadphaseSystem.FindNewContacts(MapId);
+            BroadphaseSystem.FindNewContacts(MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
-            foreach (var controller in _physicsSystem.Controllers)
+            foreach (var controller in PhysicsSystem.Controllers)
             {
                 controller.UpdateBeforeMapSolve(prediction, this, frameTime);
             }
@@ -394,7 +393,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             // TODO: SolveTOI
 
-            foreach (var controller in _physicsSystem.Controllers)
+            foreach (var controller in PhysicsSystem.Controllers)
             {
                 controller.UpdateAfterMapSolve(prediction, this, frameTime);
             }

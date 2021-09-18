@@ -110,6 +110,8 @@ namespace Robust.Shared.GameObjects
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
             IoCManager.InjectDependencies(component);
+            component.BroadphaseSystem = Get<SharedBroadphaseSystem>();
+            component.PhysicsSystem = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;

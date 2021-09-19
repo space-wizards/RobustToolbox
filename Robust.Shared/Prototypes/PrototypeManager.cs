@@ -139,6 +139,8 @@ namespace Robust.Shared.Prototypes
 
         List<IPrototype> LoadString(string str, bool overwrite = false);
 
+        void RemoveString(string prototypes);
+
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
         /// </summary>
@@ -602,6 +604,33 @@ namespace Robust.Shared.Prototypes
         public List<IPrototype> LoadString(string str, bool overwrite = false)
         {
             return LoadFromStream(new StringReader(str), overwrite);
+        }
+
+        public void RemoveString(string prototypes)
+        {
+            var reader = new StringReader(prototypes);
+            var yaml = new YamlStream();
+
+            yaml.Load(reader);
+
+            foreach (var document in yaml.Documents)
+            {
+                var root = (YamlSequenceNode) document.RootNode;
+                foreach (var node in root.Cast<YamlMappingNode>())
+                {
+                    var typeString = node.GetNode("type").AsString();
+                    var type = _prototypeTypes[typeString];
+
+                    var id = node.GetNode("id").AsString();
+
+                    if (_inheritanceTrees.TryGetValue(type, out var tree))
+                    {
+                        tree.RemoveId(id);
+                    }
+
+                    _prototypes[type].Remove(id);
+                }
+            }
         }
 
         #endregion IPrototypeManager members

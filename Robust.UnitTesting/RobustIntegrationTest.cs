@@ -37,9 +37,12 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
-        internal static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
+        public static readonly ConcurrentQueue<ClientIntegrationInstance> ClientsReady = new();
+        public static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
 
         private readonly List<IntegrationInstance> _integrationInstances = new();
+
+        private readonly ConcurrentDictionary<ClientIntegrationInstance, byte> _clientsRunning = new();
         private readonly ConcurrentDictionary<ServerIntegrationInstance, byte> _serversRunning = new();
 
         /// <summary>
@@ -51,6 +54,12 @@ namespace Robust.UnitTesting
             {
                 if (ServersReady.TryDequeue(out var server))
                 {
+                    server.PreviousOptions = server.ServerOptions;
+                    server.ServerOptions = options;
+
+                    OnServerReturn(server).Wait();
+
+                    _serversRunning[server] = 0;
                     return server;
                 }
 
@@ -70,28 +79,83 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
+            if (options?.Pool ?? false)
+            {
+                if (ClientsReady.TryDequeue(out var client))
+                {
+                    client.PreviousOptions = client.ClientOptions;
+                    client.ClientOptions = options;
+
+                    OnClientReturn(client).Wait();
+
+                    _clientsRunning[client] = 0;
+                    return client;
+                }
+
+                var pooledInstance = new ClientIntegrationInstance(options);
+                _clientsRunning[pooledInstance] = 0;
+
+                return pooledInstance;
+            }
+
             var instance = new ClientIntegrationInstance(options);
             _integrationInstances.Add(instance);
             return instance;
         }
 
-        protected virtual async Task TearDown(ServerIntegrationInstance server)
+        protected virtual async Task OnInstanceReturn(IntegrationInstance instance)
         {
+            await instance.WaitIdleAsync();
+
+            var configs = instance.ResolveDependency<IConfigurationManagerInternal>();
+
+            await instance.WaitPost(() =>
+            {
+                configs.ResetOverrides();
+
+                if (instance.Options != null)
+                {
+                    configs.OverrideConVars(instance.Options.CVarOverrides.Select(pair => (pair.Key, pair.Value)));
+                }
+            });
+        }
+
+        protected virtual async Task OnClientReturn(ClientIntegrationInstance client)
+        {
+            await OnInstanceReturn(client);
+        }
+
+        protected virtual async Task OnServerReturn(ServerIntegrationInstance server)
+        {
+            await OnInstanceReturn(server);
         }
 
         [OneTimeTearDown]
         public async Task OneTimeTearDown()
         {
-            foreach (var server in _serversRunning.Keys)
+            foreach (var client in _clientsRunning.Keys)
             {
-                await server.WaitIdleAsync();
+                await client.WaitIdleAsync();
 
-                if (server.UnhandledException != null)
+                if (client.UnhandledException != null || !client.IsAlive)
                 {
                     continue;
                 }
 
-                await TearDown(server);
+                ClientsReady.Enqueue(client);
+            }
+
+            _clientsRunning.Clear();
+
+            foreach (var server in _serversRunning.Keys)
+            {
+                await server.WaitIdleAsync();
+
+                if (server.UnhandledException != null || !server.IsAlive)
+                {
+                    continue;
+                }
+
                 ServersReady.Enqueue(server);
             }
 
@@ -115,7 +179,6 @@ namespace Robust.UnitTesting
         /// </remarks>
         public abstract class IntegrationInstance : IDisposable
         {
-            private readonly IntegrationOptions? _options;
             private protected Thread? InstanceThread;
             private protected IDependencyCollection DependencyCollection = default!;
             private protected IntegrationGameLoop GameLoop = default!;
@@ -131,6 +194,8 @@ namespace Robust.UnitTesting
             private bool _isSurelyIdle;
             private bool _isAlive = true;
             private Exception? _unhandledException;
+
+            public virtual IntegrationOptions? Options { get; internal set; }
 
             /// <summary>
             ///     Whether the instance is still alive.
@@ -175,7 +240,7 @@ namespace Robust.UnitTesting
 
             private protected IntegrationInstance(IntegrationOptions? options)
             {
-                _options = options;
+                Options = options;
 
                 var toInstance = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
                 {
@@ -227,7 +292,7 @@ namespace Robust.UnitTesting
             /// </exception>
             public Task WaitIdleAsync(bool throwOnUnhandled = true, CancellationToken cancellationToken = default)
             {
-                if (_options?.Asynchronous == true)
+                if (Options?.Asynchronous == true)
                 {
                     return WaitIdleImplAsync(throwOnUnhandled, cancellationToken);
                 }
@@ -405,11 +470,9 @@ namespace Robust.UnitTesting
 
         public sealed class ServerIntegrationInstance : IntegrationInstance
         {
-            private readonly ServerIntegrationOptions? _options;
-
             internal ServerIntegrationInstance(ServerIntegrationOptions? options) : base(options)
             {
-                _options = options;
+                ServerOptions = options;
                 DependencyCollection = new DependencyCollection();
                 if (options?.Asynchronous == true)
                 {
@@ -421,6 +484,16 @@ namespace Robust.UnitTesting
                     Init();
                 }
             }
+
+            public override IntegrationOptions? Options
+            {
+                get => ServerOptions;
+                internal set => ServerOptions = (ServerIntegrationOptions?) value;
+            }
+
+            public ServerIntegrationOptions? ServerOptions { get; internal set; }
+
+            public ServerIntegrationOptions? PreviousOptions { get; internal set; }
 
             private void _serverMain()
             {
@@ -452,51 +525,57 @@ namespace Robust.UnitTesting
                 IoCManager.Register<TestingModLoader, TestingModLoader>(true);
                 IoCManager.RegisterInstance<IStatusHost>(new Mock<IStatusHost>().Object, true);
                 IoCManager.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
-                _options?.InitIoC?.Invoke();
+                Options?.InitIoC?.Invoke();
                 IoCManager.BuildGraph();
                 //ServerProgram.SetupLogging();
                 ServerProgram.InitReflectionManager();
 
                 var server = DependencyCollection.Resolve<BaseServer>();
 
-                var serverOptions = _options != null ? _options.Options : new ServerOptions()
+                var serverOptions = ServerOptions?.Options ?? new ServerOptions()
                 {
                     LoadConfigAndUserData = false,
                     LoadContentResources = false,
                 };
 
                 // Autoregister components if options are null or we're NOT starting from content.
-                if (!_options?.ContentStart ?? true)
+                if (!Options?.ContentStart ?? true)
                 {
                     var componentFactory = IoCManager.Resolve<IComponentFactory>();
                     componentFactory.DoAutoRegistrations();
                     componentFactory.GenerateNetIds();
                 }
 
-                if (_options?.ContentAssemblies != null)
+                if (Options?.ContentAssemblies != null)
                 {
-                    IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
+                    IoCManager.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
                 }
 
                 var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
 
-                if (_options != null)
-                {
-                    _options.BeforeStart?.Invoke();
-                    cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
 
-                    if (_options.ExtraPrototypes != null)
+                if (Options != null)
+                {
+                    Options.BeforeStart?.Invoke();
+                    cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
+
+                    if (Options.ExtraPrototypes != null)
                     {
                         IoCManager.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
                     }
                 }
 
-                cfg.OverrideConVars(new[] {("log.runtimelog", "false"), (CVars.SysWinTickPeriod.Name, "-1")});
+                cfg.OverrideConVars(new[]
+                {
+                    ("log.runtimelog", "false"),
+                    (CVars.SysWinTickPeriod.Name, "-1"),
+                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
+                });
 
-                var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
-                server.ContentStart = _options?.ContentStart ?? false;
-                if (server.Start(serverOptions, () => new TestLogHandler("SERVER", failureLevel)))
+                server.ContentStart = Options?.ContentStart ?? false;
+                if (server.Start(serverOptions, () => new TestLogHandler(cfg, "SERVER")))
                 {
                     throw new Exception("Server failed to start.");
                 }
@@ -515,11 +594,9 @@ namespace Robust.UnitTesting
 
         public sealed class ClientIntegrationInstance : IntegrationInstance
         {
-            private readonly ClientIntegrationOptions? _options;
-
             internal ClientIntegrationInstance(ClientIntegrationOptions? options) : base(options)
             {
-                _options = options;
+                ClientOptions = options;
                 DependencyCollection = new DependencyCollection();
 
                 if (options?.Asynchronous == true)
@@ -532,6 +609,16 @@ namespace Robust.UnitTesting
                     Init();
                 }
             }
+
+            public override IntegrationOptions? Options
+            {
+                get => ClientOptions;
+                internal set => ClientOptions = (ClientIntegrationOptions?) value;
+            }
+
+            public ClientIntegrationOptions? ClientOptions { get; internal set; }
+
+            public ClientIntegrationOptions? PreviousOptions { get; internal set; }
 
             /// <summary>
             ///     Wire up the server to connect to when <see cref="IClientNetManager.ClientConnect"/> gets called.
@@ -577,43 +664,45 @@ namespace Robust.UnitTesting
                 IoCManager.Register<IModLoaderInternal, TestingModLoader>(true);
                 IoCManager.Register<TestingModLoader, TestingModLoader>(true);
                 IoCManager.Register<IRobustMappedStringSerializer, IntegrationMappedStringSerializer>(true);
-                _options?.InitIoC?.Invoke();
+                Options?.InitIoC?.Invoke();
                 IoCManager.BuildGraph();
 
                 GameController.RegisterReflection();
 
                 var client = DependencyCollection.Resolve<GameController>();
 
-                var clientOptions = _options != null ? _options.Options : new GameControllerOptions()
+                var clientOptions = ClientOptions?.Options ?? new GameControllerOptions()
                 {
                     LoadContentResources = false,
                     LoadConfigAndUserData = false,
                 };
 
                 // Autoregister components if options are null or we're NOT starting from content.
-                if (!_options?.ContentStart ?? true)
+                if (!Options?.ContentStart ?? true)
                 {
                     var componentFactory = IoCManager.Resolve<IComponentFactory>();
                     componentFactory.DoAutoRegistrations();
                     componentFactory.GenerateNetIds();
                 }
 
-                if (_options?.ContentAssemblies != null)
+                if (Options?.ContentAssemblies != null)
                 {
-                    IoCManager.Resolve<TestingModLoader>().Assemblies = _options.ContentAssemblies;
+                    IoCManager.Resolve<TestingModLoader>().Assemblies = Options.ContentAssemblies;
                 }
 
                 var cfg = IoCManager.Resolve<IConfigurationManagerInternal>();
 
-                if (_options != null)
-                {
-                    _options.BeforeStart?.Invoke();
-                    cfg.OverrideConVars(_options.CVarOverrides.Select(p => (p.Key, p.Value)));
+                cfg.LoadCVarsFromAssembly(typeof(RobustIntegrationTest).Assembly);
 
-                    if (_options.ExtraPrototypes != null)
+                if (Options != null)
+                {
+                    Options.BeforeStart?.Invoke();
+                    cfg.OverrideConVars(Options.CVarOverrides.Select(p => (p.Key, p.Value)));
+
+                    if (Options.ExtraPrototypes != null)
                     {
                         IoCManager.Resolve<IResourceManagerInternal>()
-                            .MountString("/Prototypes/__integration_extra.yml", _options.ExtraPrototypes);
+                            .MountString("/Prototypes/__integration_extra.yml", Options.ExtraPrototypes);
                     }
                 }
 
@@ -627,15 +716,16 @@ namespace Robust.UnitTesting
 
                     // Avoid preloading textures.
                     (CVars.ResTexturePreloadingEnabled.Name, "false"),
+
+                    (RTCVars.FailureLogLevel.Name, (Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
                 });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),
                     _fromInstanceWriter, _toInstanceReader);
 
-                var failureLevel = _options == null ? LogLevel.Error : _options.FailureLogLevel;
                 client.OverrideMainLoop(GameLoop);
-                client.ContentStart = _options?.ContentStart ?? false;
-                client.StartupSystemSplash(clientOptions, () => new TestLogHandler("CLIENT", failureLevel));
+                client.ContentStart = Options?.ContentStart ?? false;
+                client.StartupSystemSplash(clientOptions, () => new TestLogHandler(cfg, "CLIENT"));
                 client.StartupContinue(GameController.DisplayMode.Headless);
 
                 GameLoop.RunInit();
@@ -750,8 +840,6 @@ namespace Robust.UnitTesting
                 LoadConfigAndUserData = false,
                 LoadContentResources = false,
             };
-
-            public bool Pool { get; set; }
         }
 
         public class ClientIntegrationOptions : IntegrationOptions
@@ -769,11 +857,12 @@ namespace Robust.UnitTesting
             public Action? BeforeStart { get; set; }
             public Assembly[]? ContentAssemblies { get; set; }
             public string? ExtraPrototypes { get; set; }
-            public LogLevel? FailureLogLevel { get; set; } = LogLevel.Error;
+            public LogLevel? FailureLogLevel { get; set; } = RTCVars.FailureLogLevel.DefaultValue;
             public bool ContentStart { get; set; } = false;
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
-            public bool Asynchronous { get; set; } = true;
+            public bool Asynchronous { get; set; }
+            public bool Pool { get; set; }
         }
 
         /// <summary>

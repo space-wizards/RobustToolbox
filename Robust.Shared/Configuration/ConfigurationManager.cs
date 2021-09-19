@@ -1,10 +1,10 @@
-using Nett;
-using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Nett;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
@@ -16,6 +16,7 @@ namespace Robust.Shared.Configuration
     {
         private const char TABLE_DELIMITER = '.';
         protected readonly Dictionary<string, ConfigVar> _configVars = new();
+        private readonly Dictionary<string, string> _overrides = new();
         private string? _configFile;
         protected bool _isServer;
 
@@ -379,6 +380,8 @@ namespace Robust.Shared.Configuration
                 if (_configVars.TryGetValue(key, out var cfgVar))
                 {
                     cfgVar.OverrideValue = value;
+                    _overrides.Add(key, value);
+
                     if (cfgVar.Registered)
                     {
                         cfgVar.OverrideValueParsed = ParseOverrideValue(value, cfgVar.DefaultValue?.GetType());
@@ -390,9 +393,35 @@ namespace Robust.Shared.Configuration
                     //or add another unregistered CVar
                     //Note: the defaultValue is arbitrarily 0, it will get overwritten when the cvar is registered.
                     var cVar = new ConfigVar(key, 0, CVar.NONE) {OverrideValue = value};
+
                     _configVars.Add(key, cVar);
+                    _overrides.Add(key, value);
                 }
             }
+        }
+
+        public void ResetOverrides()
+        {
+            foreach (var (key, value) in _overrides)
+            {
+                if (_configVars.TryGetValue(key, out var cvar) &&
+                    cvar.OverrideValue == value)
+                {
+                    if (!cvar.Registered)
+                    {
+                        _configVars.Remove(key);
+                        continue;
+                    }
+
+                    cvar.OverrideValue = null;
+                    cvar.OverrideValueParsed = null;
+                    cvar.Value = cvar.DefaultValue;
+
+                    InvokeValueChanged(cvar, cvar.DefaultValue);
+                }
+            }
+
+            _overrides.Clear();
         }
 
         private static object ParseOverrideValue(string value, Type? type)
@@ -410,6 +439,11 @@ namespace Robust.Shared.Configuration
             if (type == typeof(float))
             {
                 return float.Parse(value);
+            }
+
+            if (type?.IsEnum ?? false)
+            {
+                return Enum.Parse(type, value);
             }
 
             // Must be a string.

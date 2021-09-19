@@ -11,7 +11,6 @@ using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
@@ -152,6 +151,7 @@ namespace Robust.Client.GameObjects
                 if (value == null) return;
 
                 Layers.Clear();
+                LayerMap.Clear();
                 foreach (var layerDatum in value)
                 {
                     var anyTextureAttempted = false;

@@ -512,5 +512,10 @@ namespace Robust.Client.Graphics.Clyde
             ShutdownWindowing();
             _shutdownAudio();
         }
+
+        private bool IsMainThread()
+        {
+            return Thread.CurrentThread == _gameThread;
+        }
     }
 }

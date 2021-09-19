@@ -632,8 +632,9 @@ namespace Robust.Client.Console.Commands
                 }
             });
 
-            tabContainer.AddChild(new HSplitContainer
+            tabContainer.AddChild(new SplitContainer
             {
+                Orientation = SplitContainer.SplitOrientation.Horizontal,
                 Children =
                 {
                     new PanelContainer

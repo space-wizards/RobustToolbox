@@ -135,12 +135,6 @@ namespace Robust.Client.UserInterface.Controls
             SetMarginBottom(control, diffY + control.GetValue<float>(MarginBottomProperty));
         }
 
-        [Obsolete("Change SetSize on the control instead.")]
-        public new static void SetSize(Control control, Vector2 size)
-        {
-            control.SetSize = size;
-        }
-
         /// <summary>
         ///     Sets an anchor AND a margin preset. This is most likely the method you want.
         ///

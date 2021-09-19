@@ -84,53 +84,10 @@ namespace Robust.Client.UserInterface.Controls
             get => GetCount(Dimension.Row);
             set => SetCount(Dimension.Row, value);
         }
-        /// <summary>
-        ///     The max width (in virtual pixels) the grid of elements can have. This dynamically determines
-        ///     the number of columns based on the size of the elements. Setting this puts this grid
-        ///     into LimitMode.LimitColumns and LimitType.Size. Items will be added to fill up the entire row, up to the defined
-        ///     width, and then create a second row.
-        ///
-        ///     In the presence of unevenly-sized children,
-        ///     rows will still have the same amount elements - the items are laid out in a grid pattern such
-        ///     that they are all aligned, the height and width of each "cell" being determined by
-        ///     the greatest min height and min width among the elements. In the presence of expanding elements,
-        ///     their pre-expanded size will be used to determine the cell layout, then the elements expand within
-        ///     the defined Control.Size
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///     Thrown if the value assigned is less than or equal to 0.
-        /// </exception>
-        [Obsolete("Use MaxGridWidth")]
-        public new float MaxWidth
-        {
-            set => MaxGridWidth = value;
-        }
 
         public float MaxGridWidth
         {
             set => SetMaxSize(Dimension.Column, value);
-        }
-
-        /// <summary>
-        ///     The max height (in virtual pixels) the grid  of elements can have. This dynamically determines
-        ///     the number of rows based on the size of the elements. Setting this puts this grid
-        ///     into LimitMode.LimitRows and LimitType.Size - items will be added to fill up the entire column, up to the defined
-        ///     height, and then create a second column.
-        ///
-        ///     In the presence of unevenly-sized children,
-        ///     columns will still have the same amount elements - the items are laid out in a grid pattern such
-        ///     that they are all aligned, the height and width of each "cell" being determined by
-        ///     the greatest min height and min width among the elements. In the presence of expanding elements,
-        ///     their pre-expanded size will be used to determine the layout, then the elements expand within
-        ///     the defined Control.Size
-        /// </summary>
-        /// <exception cref="ArgumentOutOfRangeException">
-        ///     Thrown if the value assigned is less than or equal to 0.
-        /// </exception>
-        [Obsolete("Use MaxGridHeight")]
-        public new float MaxHeight
-        {
-            set => MaxGridHeight = value;
         }
 
         public float MaxGridHeight

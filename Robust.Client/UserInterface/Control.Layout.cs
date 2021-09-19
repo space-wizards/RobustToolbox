@@ -397,15 +397,8 @@ namespace Robust.Client.UserInterface
         /// <remarks>
         ///     This is in virtual pixels.
         /// </remarks>
-        /// <seealso cref="CombinedPixelMinimumSize"/>
         [Obsolete("Use DesiredSize and Measure()")]
         public Vector2 CombinedMinimumSize => DesiredSize;
-
-        /// <summary>
-        ///     The <see cref="CombinedMinimumSize"/>, in physical pixels.
-        /// </summary>
-        [Obsolete("Use DesiredSize and Measure()")]
-        public Vector2i CombinedPixelMinimumSize => (Vector2i) (CombinedMinimumSize * UIScale);
 
         /// <summary>
         ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.

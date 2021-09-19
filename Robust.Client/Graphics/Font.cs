@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -54,12 +53,6 @@ namespace Robust.Client.Graphics
         public abstract float DrawChar(
             DrawingHandleScreen handle, Rune rune, Vector2 baseline, float scale,
             Color color, bool fallback=true);
-
-        [Obsolete("Use Rune variant instead")]
-        public float DrawChar(DrawingHandleScreen handle, char chr, Vector2 baseline, float scale, Color color)
-        {
-            return DrawChar(handle, (Rune) chr, baseline, scale, color);
-        }
 
         /// <summary>
         ///     Gets metrics describing the dimensions and positioning of a single glyph in the font.

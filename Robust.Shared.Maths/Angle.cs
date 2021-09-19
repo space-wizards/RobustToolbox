@@ -11,9 +11,6 @@ namespace Robust.Shared.Maths
     {
         public static Angle Zero { get; } = new();
 
-        [Obsolete("Use Angle.Zero")]
-        public static Angle South { get; } = new(-MathHelper.PiOver2);
-
         /// <summary>
         ///     Angle in radians.
         /// </summary>

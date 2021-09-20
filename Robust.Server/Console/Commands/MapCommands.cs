@@ -165,18 +165,21 @@ namespace Robust.Server.Console.Commands
             if (!int.TryParse(args[0], out var intMapId))
                 return;
 
-            var mapID = new MapId(intMapId);
+            var mapId = new MapId(intMapId);
 
             // no saving null space
-            if (mapID == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
                 return;
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            if (!mapManager.MapExists(mapID))
+            if (!mapManager.MapExists(mapId))
+            {
+                shell.WriteLine("Target map does not exist.");
                 return;
+            }
 
-            // TODO: Parse path
-            IoCManager.Resolve<IMapLoader>().SaveMap(mapID, "Maps/Demo/DemoMap.yaml");
+            IoCManager.Resolve<IMapLoader>().SaveMap(mapId, args[1]);
+            shell.WriteLine($"Map {mapId} has been saved to {args[1]}.");
         }
     }
 
@@ -194,26 +197,24 @@ namespace Robust.Server.Console.Commands
             if (!int.TryParse(args[0], out var intMapId))
                 return;
 
-            var mapID = new MapId(intMapId);
+            var mapId = new MapId(intMapId);
 
             // no loading null space
-            if (mapID == MapId.Nullspace)
+            if (mapId == MapId.Nullspace)
             {
                 shell.WriteLine("You cannot load into map 0.");
                 return;
             }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            if (mapManager.MapExists(mapID))
+            if (mapManager.MapExists(mapId))
             {
-                shell.WriteLine($"Map {mapID} already exists.");
+                shell.WriteLine($"Map {mapId} already exists.");
                 return;
             }
 
-            // TODO: Parse path
-            var mapPath = "Maps/Demo/DemoMap.yaml";
-            IoCManager.Resolve<IMapLoader>().LoadMap(mapID, mapPath);
-            shell.WriteLine($"Map {mapID} has been loaded from {mapPath}.");
+            IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1]);
+            shell.WriteLine($"Map {mapId} has been loaded from {args[1]}.");
         }
     }
 

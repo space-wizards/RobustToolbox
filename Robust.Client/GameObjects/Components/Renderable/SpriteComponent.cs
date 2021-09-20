@@ -1285,13 +1285,13 @@ namespace Robust.Client.GameObjects
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
-                RenderLayer(drawingHandle, layer, worldRotation, overrideDirection);
+                RenderLayer(drawingHandle, layer, eyeRotation, worldRotation, overrideDirection);
             }
         }
 
-        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle worldRotation, Direction? overrideDirection)
+        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection)
         {
-            var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
+            var texture = GetRenderTexture(layer, worldRotation + eyeRotation, overrideDirection);
 
             if (layer.Shader != null)
             {

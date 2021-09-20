@@ -22,14 +22,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///
+        ///     Resolves the components on the entity for the null component references.
         /// </summary>
-        /// <param name="uid"></param>
-        /// <param name="comp1"></param>
-        /// <param name="comp2"></param>
-        /// <typeparam name="TComp1"></typeparam>
-        /// <typeparam name="TComp2"></typeparam>
-        /// <returns></returns>
+        /// <param name="uid">The entity where to query the components.</param>
+        /// <param name="comp1">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <param name="comp2">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <typeparam name="TComp1">The component type to resolve.</typeparam>
+        /// <typeparam name="TComp2">The component type to resolve.</typeparam>
+        /// <returns>True if the components are not null or were resolved correctly, false if any of the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve<TComp1, TComp2>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2)
             where TComp1 : IComponent
@@ -38,6 +38,17 @@ namespace Robust.Shared.GameObjects
             return Resolve(uid, ref comp1) && Resolve(uid, ref comp2);
         }
 
+        /// <summary>
+        ///     Resolves the components on the entity for the null component references.
+        /// </summary>
+        /// <param name="uid">The entity where to query the components.</param>
+        /// <param name="comp1">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <param name="comp2">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <param name="comp3">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <typeparam name="TComp1">The component type to resolve.</typeparam>
+        /// <typeparam name="TComp2">The component type to resolve.</typeparam>
+        /// <typeparam name="TComp3">The component type to resolve.</typeparam>
+        /// <returns>True if the components are not null or were resolved correctly, false if any of the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve<TComp1, TComp2, TComp3>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, [NotNullWhen(true)] ref TComp3? comp3)
             where TComp1 : IComponent
@@ -47,6 +58,19 @@ namespace Robust.Shared.GameObjects
             return Resolve(uid, ref comp1, ref comp2) && Resolve(uid, ref comp3);
         }
 
+        /// <summary>
+        ///     Resolves the components on the entity for the null component references.
+        /// </summary>
+        /// <param name="uid">The entity where to query the components.</param>
+        /// <param name="comp1">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <param name="comp2">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <param name="comp3">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <param name="comp4">A reference to the variable storing the component, or null if it has to be resolved.</param>
+        /// <typeparam name="TComp1">The component type to resolve.</typeparam>
+        /// <typeparam name="TComp2">The component type to resolve.</typeparam>
+        /// <typeparam name="TComp3">The component type to resolve.</typeparam>
+        /// <typeparam name="TComp4">The component type to resolve.</typeparam>
+        /// <returns>True if the components are not null or were resolved correctly, false if any of the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected bool Resolve<TComp1, TComp2, TComp3, TComp4>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, [NotNullWhen(true)] ref TComp3? comp3, [NotNullWhen(true)] ref TComp4? comp4)
             where TComp1 : IComponent

@@ -308,6 +308,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<bool> DisplayBlurLight =
+            CVarDef.Create("display.blur_light", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> DisplayBlurLightFactor =
+            CVarDef.Create("display.blur_light_factor", 0.0001f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 

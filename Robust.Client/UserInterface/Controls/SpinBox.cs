@@ -7,7 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Number input LineEdit with increment buttons.
     /// </summary>
-    public class SpinBox : HBoxContainer
+    public class SpinBox : BoxContainer
     {
         public const string LeftButtonStyle = "spinbox-left";
         public const string RightButtonStyle = "spinbox-right";
@@ -54,6 +54,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public SpinBox()
         {
+            Orientation = LayoutOrientation.Horizontal;
             MouseFilter = MouseFilterMode.Pass;
 
             _lineEdit = new LineEdit

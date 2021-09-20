@@ -392,34 +392,6 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     A proxy to <see cref="DesiredSize"/>.
-        /// </summary>
-        /// <remarks>
-        ///     This is in virtual pixels.
-        /// </remarks>
-        /// <seealso cref="CombinedPixelMinimumSize"/>
-        [Obsolete("Use DesiredSize and Measure()")]
-        public Vector2 CombinedMinimumSize => DesiredSize;
-
-        /// <summary>
-        ///     The <see cref="CombinedMinimumSize"/>, in physical pixels.
-        /// </summary>
-        [Obsolete("Use DesiredSize and Measure()")]
-        public Vector2i CombinedPixelMinimumSize => (Vector2i) (CombinedMinimumSize * UIScale);
-
-        /// <summary>
-        ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.
-        /// </summary>
-        /// <seealso cref="CombinedMinimumSize" />
-        [ViewVariables]
-        [Obsolete("Use MinSize instead.")]
-        public Vector2 CustomMinimumSize
-        {
-            get => (_minWidth, _minHeight);
-            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
-        }
-
-        /// <summary>
         /// A settable minimum size for this control.
         /// This is factored into <see cref="MeasureCore"/> so that this control itself always has at least this size.
         /// </summary>

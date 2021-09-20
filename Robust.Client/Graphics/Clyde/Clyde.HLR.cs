@@ -483,6 +483,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);
+                    FlushRenderQueue();
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {

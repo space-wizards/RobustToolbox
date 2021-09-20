@@ -443,10 +443,8 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            if (!_hasGLKhrDebug)
-            {
+            if (!_hasGLKhrDebug || !_glDebuggerPresent)
                 return;
-            }
 
             if (_isGLKhrDebugESExtension)
             {
@@ -473,10 +471,9 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PushDebugGroupMaybe(string group)
         {
-            if (!_hasGLKhrDebug || true)
-            {
+            // ANGLE spams console log messages when using debug groups, so let's only use them if we're debugging GL.
+            if (!_hasGLKhrDebug || !_glDebuggerPresent)
                 return;
-            }
 
             if (_isGLKhrDebugESExtension)
             {
@@ -491,10 +488,8 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PopDebugGroupMaybe()
         {
-            if (!_hasGLKhrDebug || true)
-            {
+            if (!_hasGLKhrDebug || !_glDebuggerPresent)
                 return;
-            }
 
             if (_isGLKhrDebugESExtension)
             {
@@ -511,6 +506,11 @@ namespace Robust.Client.Graphics.Clyde
             _glContext?.Shutdown();
             ShutdownWindowing();
             _shutdownAudio();
+        }
+
+        private bool IsMainThread()
+        {
+            return Thread.CurrentThread == _gameThread;
         }
     }
 }

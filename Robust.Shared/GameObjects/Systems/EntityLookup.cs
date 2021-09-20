@@ -31,24 +31,13 @@ namespace Robust.Shared.GameObjects
         void Shutdown();
 
         void Update();
-        bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesAt(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
-            float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid uid);
+        IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB);
+        IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds);
+        IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates);
+        IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates);
+        IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef);
 
         void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored);
 
@@ -59,20 +48,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 point, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
-
-        bool IsIntersecting(IEntity entityOne, IEntity entityTwo);
-
-        /// <summary>
-        /// Updates the lookup for this entity.
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="worldAABB">Pass in to avoid it being re-calculated</param>
-        /// <returns></returns>
-        bool UpdateEntityTree(IEntity entity, Box2? worldAABB = null);
-
-        void RemoveFromEntityTrees(IEntity entity);
-
-        Box2 GetWorldAabbFromEntity(in IEntity ent);
     }
 
     [UsedImplicitly]

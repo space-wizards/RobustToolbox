@@ -116,8 +116,10 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
+        IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);
+        IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds);
 
         Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));

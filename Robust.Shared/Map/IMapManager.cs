@@ -109,6 +109,17 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
+        /// <summary>
+        /// Attempts to find the map grid under the coordinates.
+        /// </summary>
+        /// <remarks>
+        /// This method will never return the map's default grid.
+        /// </remarks>
+        /// <param name="mapCoordinates">Location on the map to check for a grid.</param>
+        /// <param name="grid">Grid that was found, if any.</param>
+        /// <returns>Returns true when a grid was found under the location.</returns>
+        bool TryFindGridAt(EntityCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
+
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
 
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea);

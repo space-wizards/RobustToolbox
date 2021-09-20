@@ -582,6 +582,13 @@ namespace Robust.Shared.Map
             return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }
 
+        /// <inheritdoc />
+        public bool TryFindGridAt(EntityCoordinates coordinates, [NotNullWhen(true)] out IMapGrid? grid)
+        {
+            var mapCoordinates = coordinates.ToMap(EntityManager);
+            return TryFindGridAt(mapCoordinates, out grid);
+        }
+
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
             foreach (var (_, grid) in _grids)

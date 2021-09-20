@@ -418,8 +418,8 @@ namespace Robust.Shared.Map
 
         public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB)
         {
-            var worldPos = WorldPosition;
-            var localArea = new Box2Rotated(worldAABB.Translated(-worldPos), -WorldRotation).CalcBoundingBox();
+            var matrix = InvWorldMatrix;
+            var localArea = matrix.TransformBox(worldAABB);
 
             var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
             var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
@@ -469,6 +469,12 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
+        {
+            return GetAnchoredEntities(TileIndicesFor(coords));
+        }
+
+        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
             // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just
@@ -485,6 +491,18 @@ namespace Robust.Shared.Map
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
         {
             foreach (var tile in GetTilesIntersecting(worldAABB))
+            {
+                foreach (var ent in GetAnchoredEntities(tile.GridIndices))
+                {
+                    yield return ent;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds)
+        {
+            foreach (var tile in GetTilesIntersecting(worldBounds))
             {
                 foreach (var ent in GetAnchoredEntities(tile.GridIndices))
                 {

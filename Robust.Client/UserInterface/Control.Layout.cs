@@ -1,5 +1,4 @@
 ﻿using System;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
@@ -224,80 +223,6 @@ namespace Robust.Client.UserInterface
         /// </summary>
         /// <seealso cref="Rect"/>
         public UIBox2i PixelRect => UIBox2i.FromDimensions(PixelPosition, PixelSize);
-
-        /// <summary>
-        ///     Horizontal size flags for container layout.
-        /// </summary>
-        [ViewVariables]
-        [Obsolete("Use HorizontalAlignment and HorizontalExpand instead.")]
-        public SizeFlags SizeFlagsHorizontal
-        {
-            get
-            {
-                var flags = HorizontalAlignment switch
-                {
-                    HAlignment.Stretch => SizeFlags.Fill,
-                    HAlignment.Left => SizeFlags.None,
-                    HAlignment.Center => SizeFlags.ShrinkCenter,
-                    HAlignment.Right => SizeFlags.ShrinkEnd,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-
-                if (_horizontalExpand)
-                    flags |= SizeFlags.Expand;
-
-                return flags;
-            }
-            set
-            {
-                HorizontalExpand = (value & SizeFlags.Expand) != 0;
-                HorizontalAlignment = (value & ~SizeFlags.Expand) switch
-                {
-                    SizeFlags.None => HAlignment.Left,
-                    SizeFlags.Fill => HAlignment.Stretch,
-                    SizeFlags.ShrinkCenter => HAlignment.Center,
-                    SizeFlags.ShrinkEnd => HAlignment.Right,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            }
-        }
-
-        /// <summary>
-        ///     Vertical size flags for container layout.
-        /// </summary>
-        [Obsolete("Use VerticalAlignment and VerticalExpand instead.")]
-        [ViewVariables]
-        public SizeFlags SizeFlagsVertical
-        {
-            get
-            {
-                var flags = _verticalAlignment switch
-                {
-                    VAlignment.Stretch => SizeFlags.Fill,
-                    VAlignment.Top => SizeFlags.None,
-                    VAlignment.Center => SizeFlags.ShrinkCenter,
-                    VAlignment.Bottom => SizeFlags.ShrinkEnd,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-
-                if (_verticalExpand)
-                    flags |= SizeFlags.Expand;
-
-                return flags;
-            }
-            set
-            {
-                VerticalExpand = (value & SizeFlags.Expand) != 0;
-                VerticalAlignment = (value & ~SizeFlags.Expand) switch
-                {
-                    SizeFlags.None => VAlignment.Top,
-                    SizeFlags.Fill => VAlignment.Stretch,
-                    SizeFlags.ShrinkCenter => VAlignment.Center,
-                    SizeFlags.ShrinkEnd => VAlignment.Bottom,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            }
-        }
 
         /// <summary>
         /// Horizontal alignment mode.
@@ -814,46 +739,6 @@ namespace Robust.Client.UserInterface
             return (
                 Math.Clamp(avail.X, minW, maxW),
                 Math.Clamp(avail.Y, minH, maxH));
-        }
-
-        /// <summary>
-        ///     Controls how a control changes size when inside a container.
-        /// </summary>
-        [Flags]
-        [PublicAPI]
-        [Obsolete("Use HAlignment/VAlignment/VerticalExpand/HorizontalExpand instead")]
-        public enum SizeFlags : byte
-        {
-            /// <summary>
-            ///     Shrink to the begin of the specified axis.
-            /// </summary>
-            None = 0,
-
-            /// <summary>
-            ///     Fill as much space as possible in a container, without pushing others.
-            /// </summary>
-            Fill = 1,
-
-            /// <summary>
-            ///     Fill as much space as possible in a container, pushing other nodes.
-            ///     The ratio of pushing if there's multiple set to expand is dependant on <see cref="SizeFlagsStretchRatio" />
-            /// </summary>
-            Expand = 2,
-
-            /// <summary>
-            ///     Combination of <see cref="Fill" /> and <see cref="Expand" />.
-            /// </summary>
-            FillExpand = 3,
-
-            /// <summary>
-            ///     Shrink inside a container, aligning to the center.
-            /// </summary>
-            ShrinkCenter = 4,
-
-            /// <summary>
-            ///     Shrink inside a container, aligning to the end.
-            /// </summary>
-            ShrinkEnd = 8,
         }
 
         /// <summary>

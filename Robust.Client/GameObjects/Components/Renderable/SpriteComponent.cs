@@ -1261,7 +1261,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                angle = CalcRectWorldAngle(worldRotation, numDirs);
+                angle = CalcRectWorldAngle(worldRotation + eyeRotation, numDirs) - eyeRotation;
             }
 
             var sWorldRotation = angle;

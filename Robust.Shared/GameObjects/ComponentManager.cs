@@ -1,15 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Internal.TypeSystem;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
-using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -375,6 +372,17 @@ namespace Robust.Shared.GameObjects
         {
             return _netComponents.TryGetValue(uid, out var netSet)
                    && netSet.ContainsKey(netId);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T EnsureComponent<T>(IEntity entity) where T : Component, new()
+        {
+            if (TryGetComponent<T>(entity.Uid, out var component))
+            {
+                return component;
+            }
+
+            return AddComponent<T>(entity);
         }
 
         /// <inheritdoc />

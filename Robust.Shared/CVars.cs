@@ -454,6 +454,13 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        // Grid fixtures
+        /// <summary>
+        /// I'ma be real with you: the only reason this exists is to get tests working.
+        /// </summary>
+        public static readonly CVarDef<bool> GenerateGridFixtures =
+            CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
+
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =
             CVarDef.Create("physics.contact_multithread_threshold", 32);

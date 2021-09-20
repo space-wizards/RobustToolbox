@@ -165,7 +165,7 @@ namespace Robust.Shared.Map
         /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
         /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
         /// </summary>
-        private void UpdateAABB()
+        public void UpdateAABB()
         {
             LocalBounds = new Box2();
             foreach (var chunk in _chunks.Values)
@@ -193,24 +193,6 @@ namespace Robust.Shared.Map
         {
             LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             _mapManager.RaiseOnTileChanged(tileRef, oldTile);
-        }
-
-        /// <inheritdoc />
-        public void NotifyChunkCollisionRegenerated(MapChunk chunk)
-        {
-            // TODO: Ideally we wouldn't have LocalBounds on the grid and we could just treat it like a physics object
-            // (eventually, well into the future).
-            // For now we'll just attach a fixture to each chunk.
-
-            // Not raising directed because the grid's EntityUid isn't set yet.
-            // Don't call GridFixtureSystem directly because it's server-only.
-            if (chunk.ValidTiles > 0)
-                IoCManager
-                .Resolve<IEntityManager>()
-                .EventBus
-                .RaiseEvent(EventSource.Local, new RegenerateChunkCollisionEvent(chunk));
-
-            UpdateAABB();
         }
 
         #region TileAccess

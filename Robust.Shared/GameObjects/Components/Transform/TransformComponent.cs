@@ -71,6 +71,7 @@ namespace Robust.Shared.GameObjects
             private set
             {
                 if (_gridId.Equals(value)) return;
+
                 _gridId = value;
                 foreach (var transformComponent in Children)
                 {

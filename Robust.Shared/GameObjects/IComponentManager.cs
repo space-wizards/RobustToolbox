@@ -121,6 +121,8 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
         bool HasComponent(EntityUid uid, ushort netId);
 
+        T EnsureComponent<T>(IEntity entity) where T : Component, new();
+
         /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>

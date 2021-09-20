@@ -84,6 +84,7 @@ namespace Robust.Client.UserInterface.Controls
             get => GetCount(Dimension.Row);
             set => SetCount(Dimension.Row, value);
         }
+
         /// <summary>
         ///     The max width (in virtual pixels) the grid of elements can have. This dynamically determines
         ///     the number of columns based on the size of the elements. Setting this puts this grid
@@ -100,12 +101,6 @@ namespace Robust.Client.UserInterface.Controls
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        [Obsolete("Use MaxGridWidth")]
-        public new float MaxWidth
-        {
-            set => MaxGridWidth = value;
-        }
-
         public float MaxGridWidth
         {
             set => SetMaxSize(Dimension.Column, value);
@@ -127,12 +122,6 @@ namespace Robust.Client.UserInterface.Controls
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        [Obsolete("Use MaxGridHeight")]
-        public new float MaxHeight
-        {
-            set => MaxGridHeight = value;
-        }
-
         public float MaxGridHeight
         {
             set => SetMaxSize(Dimension.Row, value);

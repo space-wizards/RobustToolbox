@@ -108,20 +108,6 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
 
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeNetworkEvent<T>()
-            where T : notnull
-        {
-            EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Network, this);
-        }
-
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeLocalEvent<T>()
-            where T : notnull
-        {
-            EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Local, this);
-        }
-
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
@@ -144,22 +130,6 @@ namespace Robust.Shared.GameObjects
 
             _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
-        }
-
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
-            where TComp : IComponent
-            where TEvent : notnull
-        {
-            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
-        }
-
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeLocalEvent<TComp, TEvent>()
-            where TComp : IComponent
-            where TEvent : notnull
-        {
-            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
         }
 
         private void ShutdownSubscriptions()

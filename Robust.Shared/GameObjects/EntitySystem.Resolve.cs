@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -9,6 +10,7 @@ namespace Robust.Shared.GameObjects
         protected bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component)
             where TComp : IComponent
         {
+            DebugTools.Assert(uid == component?.Owner.Uid, "Specified Entity is not the component's Owner!");
             return component != null || ComponentManager.TryGetComponent(uid, out component);
         }
 

@@ -94,8 +94,6 @@ namespace Robust.Client.Graphics.Clyde
 
             public RenderTexture LightBlurTarget = default!;
 
-            public RenderTexture FovBlurTarget = default!;
-
             // Unused, to be removed.
             public RenderTexture WallMaskRenderTarget = default!;
 

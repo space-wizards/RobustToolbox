@@ -81,6 +81,8 @@ namespace Robust.Client.Graphics.Clyde
         // For depth calculation for FOV.
         private RenderTexture _fovRenderTarget = default!;
 
+        private RenderTexture _fovBlurTarget = default!;
+
         // For depth calculation of lighting shadows.
         private RenderTexture _shadowRenderTarget = default!;
         // Used because otherwise a MaxLightsPerScene change callback getting hit on startup causes interesting issues (read: bugs)
@@ -153,6 +155,11 @@ namespace Robust.Client.Graphics.Clyde
                 new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, true),
                 new TextureSampleParameters { WrapMode = TextureWrapMode.Repeat },
                 nameof(_fovRenderTarget));
+
+            _fovBlurTarget = CreateRenderTarget((FovMapSize, 2),
+                new RenderTargetFormatParameters(_hasGLFloatFramebuffers ? RenderTargetColorFormat.RG32F : RenderTargetColorFormat.Rgba8, false),
+                new TextureSampleParameters { WrapMode = TextureWrapMode.Repeat },
+                nameof(_fovBlurTarget));
 
             if (_hasGLSamplerObjects)
             {
@@ -679,13 +686,13 @@ namespace Robust.Client.Graphics.Clyde
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
 
-                BindRenderTargetFull(viewport.FovBlurTarget);
+                BindRenderTargetFull(_fovBlurTarget);
 
                 // Blur horizontally to _wallBleedIntermediateRenderTarget1.
                 shader.SetUniformMaybe("direction", Vector2.UnitX);
                 _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
-                SetTexture(TextureUnit.Texture0, viewport.FovBlurTarget.Texture);
+                SetTexture(TextureUnit.Texture0, _fovBlurTarget.Texture);
 
                 BindRenderTargetFull(_fovRenderTarget);
 
@@ -1105,11 +1112,6 @@ namespace Robust.Client.Graphics.Clyde
                 new RenderTargetFormatParameters(lightMapColorFormat),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
-
-            viewport.FovBlurTarget = CreateRenderTarget(lightMapSize,
-                new RenderTargetFormatParameters(lightMapColorFormat),
-                lightMapSampleParameters,
-                $"{viewport.Name}-{nameof(viewport.FovBlurTarget)}");
 
             viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,

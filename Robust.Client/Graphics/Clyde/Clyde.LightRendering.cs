@@ -367,6 +367,9 @@ namespace Robust.Client.Graphics.Clyde
                 FinalizeDepthDraw();
             }
 
+            if (_cfg.GetCVar(CVars.DisplayBlurFov))
+                BlurFov(viewport, eye);
+
             GL.Enable(EnableCap.StencilTest);
             _isStencilling = true;
 
@@ -628,6 +631,69 @@ namespace Robust.Client.Graphics.Clyde
                 _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
 
                 SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+            }
+
+            GL.Enable(EnableCap.Blend);
+            CheckGlError();
+            // We didn't trample over the old _currentMatrices so just roll it back.
+            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
+        }
+
+        private void BlurFov(Viewport viewport, IEye eye)
+        {
+            using var _ = DebugGroup(nameof(BlurFov));
+
+            GL.Disable(EnableCap.Blend);
+            CheckGlError();
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            SetProjViewBuffer(proj, view);
+
+            var shader = _loadedShaders[_lightBlurShaderHandle].Program;
+            shader.Use();
+
+            SetupGlobalUniformsImmediate(shader, _fovRenderTarget.Texture);
+
+            var size = _fovRenderTarget.Size;
+            shader.SetUniformMaybe("size", (Vector2)size);
+            shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+
+            GL.Viewport(0, 0, size.X, size.Y);
+            CheckGlError();
+
+            // Initially we're pulling from the light render target.
+            // So we set it out of the loop so
+            // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
+            SetTexture(TextureUnit.Texture0, _fovRenderTarget.Texture);
+
+            // Have to scale the blurring radius based on viewport size and camera zoom.
+            const float refCameraHeight = 14;
+            var facBase = _cfg.GetCVar(CVars.DisplayBlurFovFactor);
+            var cameraSize = eye.Zoom.Y * viewport.Size.Y * (1 / viewport.RenderScale.Y) / EyeManager.PixelsPerMeter;
+            // 7e-3f is just a magic factor that makes it look ok.
+            var factor = facBase * (refCameraHeight / cameraSize);
+
+            // Multi-iteration gaussian blur.
+            for (var i = 3; i > 0; i--)
+            {
+                var scale = (i + 1) * factor;
+                // Set factor.
+                shader.SetUniformMaybe("radius", scale);
+
+                BindRenderTargetFull(viewport.FovBlurTarget);
+
+                // Blur horizontally to _wallBleedIntermediateRenderTarget1.
+                shader.SetUniformMaybe("direction", Vector2.UnitX);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+
+                SetTexture(TextureUnit.Texture0, viewport.FovBlurTarget.Texture);
+
+                BindRenderTargetFull(_fovRenderTarget);
+
+                // Blur vertically to _wallBleedIntermediateRenderTarget2.
+                shader.SetUniformMaybe("direction", Vector2.UnitY);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+
+                SetTexture(TextureUnit.Texture0, _fovRenderTarget.Texture);
             }
 
             GL.Enable(EnableCap.Blend);
@@ -1039,6 +1105,11 @@ namespace Robust.Client.Graphics.Clyde
                 new RenderTargetFormatParameters(lightMapColorFormat),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
+
+            viewport.FovBlurTarget = CreateRenderTarget(lightMapSize,
+                new RenderTargetFormatParameters(lightMapColorFormat),
+                lightMapSampleParameters,
+                $"{viewport.Name}-{nameof(viewport.FovBlurTarget)}");
 
             viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,

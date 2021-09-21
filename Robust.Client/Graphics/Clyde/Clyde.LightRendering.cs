@@ -672,19 +672,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private void ApplyFovToBuffer(Viewport viewport, IEye eye)
         {
-            GL.Clear(ClearBufferMask.StencilBufferBit);
-            GL.Enable(EnableCap.StencilTest);
-            GL.StencilOp(OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Keep, OpenToolkit.Graphics.OpenGL4.StencilOp.Replace);
-            GL.StencilFunc(StencilFunction.Always, 1, 0xFF);
-            GL.StencilMask(0xFF);
-
             bool blur = _cfg.GetCVar(CVars.DisplayBlurFov);
 
             // If we're blurring FOV, we need to render to a separate target first
-            // and then apply that to the final framebuffer.
+            // and then draw that to the final framebuffer.
             if (blur)
             {
                 BindRenderTargetFull(viewport.FovBlurTarget1);
+                GLClearColor(Color.Blue);
             }
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
@@ -697,15 +692,23 @@ namespace Robust.Client.Graphics.Clyde
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
             fovShader.SetUniformMaybe("center", eye.Position.Position);
 
+            GL.StencilMask(0xFF);
+            CheckGlError();
+            GL.StencilFunc(StencilFunction.Always, 0, 0);
+            CheckGlError();
+            GL.StencilOp(TKStencilOp.Replace, TKStencilOp.Replace, TKStencilOp.Keep);
+            CheckGlError();
+
             DrawBlit(viewport, fovShader);
 
             if (blur)
             {
-                Blur(viewport, eye, viewport.FovBlurTarget1, viewport.FovBlurTarget1, viewport.FovBlurTarget2,
+                Blur(viewport, eye, viewport.RenderTarget, viewport.FovBlurTarget1, viewport.FovBlurTarget2,
                     _cfg.GetCVar(CVars.DisplayBlurFovFactor));
+
                 BindRenderTargetFull(viewport.RenderTarget);
                 GL.Viewport(0, 0, viewport.RenderTarget.Size.X, viewport.RenderTarget.Size.Y);
-                SetTexture(TextureUnit.Texture0, viewport.FovBlurTarget2.Texture);
+                SetTexture(TextureUnit.Texture0, viewport.FovBlurTarget1.Texture);
                 GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
             }
 
@@ -998,12 +1001,12 @@ namespace Robust.Client.Graphics.Clyde
                 $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
 
             viewport.FovBlurTarget1 = CreateRenderTarget(lightMapSize,
-                new RenderTargetFormatParameters(lightMapColorFormat),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.FovBlurTarget1)}");
 
             viewport.FovBlurTarget2 = CreateRenderTarget(lightMapSize,
-                new RenderTargetFormatParameters(lightMapColorFormat),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.FovBlurTarget2)}");
 

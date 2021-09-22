@@ -312,7 +312,7 @@ namespace Robust.Shared
             CVarDef.Create("display.blur_light", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<float> DisplayBlurLightFactor =
-            CVarDef.Create("display.blur_light_factor", 0.0015f, CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("display.blur_light_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<bool> DisplayBlurFov =
             CVarDef.Create("display.blur_fov", true, CVar.CLIENTONLY | CVar.ARCHIVE);

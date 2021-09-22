@@ -25,6 +25,9 @@ namespace Robust.Client.Graphics
 
         R11FG11FB10F,
 
+        /// <summary>
+        ///     One 8 bit red channel.
+        /// </summary>
         R8,
     }
 }

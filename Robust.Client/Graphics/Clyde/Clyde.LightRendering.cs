@@ -674,12 +674,18 @@ namespace Robust.Client.Graphics.Clyde
         {
             bool blur = _cfg.GetCVar(CVars.DisplayBlurFov);
 
+            // GLES2 noobs don't have texture swizzling, sorry!
+            if (_openGLVersion is RendererOpenGLVersion.GLES2) blur = false;
+
             // If we're blurring FOV, we need to render to a separate target first
             // and then draw that to the final framebuffer.
             if (blur)
             {
                 BindRenderTargetFull(viewport.FovBlurTarget1);
-                GLClearColor(Color.Blue);
+                GLClearColor(default); // .Red
+                GL.Clear(ClearBufferMask.ColorBufferBit);
+                CheckGlError();
+                //GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.Red);
             }
 
             var fovShader = _loadedShaders[_fovShaderHandle].Program;
@@ -696,20 +702,26 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             GL.StencilFunc(StencilFunction.Always, 0, 0);
             CheckGlError();
-            GL.StencilOp(TKStencilOp.Replace, TKStencilOp.Replace, TKStencilOp.Keep);
+            GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Replace);
             CheckGlError();
 
             DrawBlit(viewport, fovShader);
 
             if (blur)
             {
-                Blur(viewport, eye, viewport.RenderTarget, viewport.FovBlurTarget1, viewport.FovBlurTarget2,
+                Blur(viewport, eye, viewport.FovBlurTarget1, viewport.FovBlurTarget2, viewport.FovBlurTarget1,
                     _cfg.GetCVar(CVars.DisplayBlurFovFactor));
+
+                // GL.BlendFunc(BlendingFactor.Zero, BlendingFactor.OneMinusSrcAlpha);
 
                 BindRenderTargetFull(viewport.RenderTarget);
                 GL.Viewport(0, 0, viewport.RenderTarget.Size.X, viewport.RenderTarget.Size.Y);
                 SetTexture(TextureUnit.Texture0, viewport.FovBlurTarget1.Texture);
+
                 GL.DrawArrays(PrimitiveType.TriangleStrip, 0, 4);
+
+                // ResetBlendFunc();
+                // GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int) All.Alpha);
             }
 
             GL.StencilMask(0x00);
@@ -1001,12 +1013,12 @@ namespace Robust.Client.Graphics.Clyde
                 $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
 
             viewport.FovBlurTarget1 = CreateRenderTarget(lightMapSize,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true), // R8
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.FovBlurTarget1)}");
 
             viewport.FovBlurTarget2 = CreateRenderTarget(lightMapSize,
-                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true),
+                new RenderTargetFormatParameters(RenderTargetColorFormat.Rgba8Srgb, true), // R8
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.FovBlurTarget2)}");
 

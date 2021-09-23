@@ -1348,7 +1348,7 @@ namespace Robust.Shared.GameObjects
             if (_inertia > 0.0f && !_fixedRotation)
             {
                 // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
+                _inertia -= _mass * Vector2.Dot(Vector2.Zero, Vector2.Zero);
 
                 DebugTools.Assert(_inertia > 0.0f);
                 InvI = 1.0f / _inertia;
@@ -1359,7 +1359,7 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            LocalCenter = localCenter;
+            LocalCenter = Vector2.Zero;
             /*
             var oldCenter = _sweep.Center;
             _sweep.LocalCenter = localCenter;

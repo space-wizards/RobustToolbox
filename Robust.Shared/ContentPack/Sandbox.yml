@@ -13,6 +13,7 @@ AllowedVerifierErrors:
 WhitelistedNamespaces:
 - Robust
 - Content
+- OpenDreamShared
 
 # The type whitelist does NOT care about which assembly types come from.
 # This is because types switch assembly all the time.
@@ -299,6 +300,7 @@ Types:
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
   System.ComponentModel:
+    CancelEventArgs: { All: True }
     PropertyDescriptor: { }
     ISite: { All: True }
     IComponent: { All: True }
@@ -332,6 +334,7 @@ Types:
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
+    NumberStyles: { All: True } # Enum
     TextInfo:
       Methods:
       - "bool get_IsRightToLeft()"
@@ -467,6 +470,8 @@ Types:
     UnmanagedType: { } # `unmanaged` constraint in C# modreqs with this.
   System.Runtime.Versioning:
     TargetFrameworkAttribute: { All: True }
+  System.Text.Json.Serialization:
+    JsonIgnoreAttribute: { All: True }
   System.Text.RegularExpressions:
     Capture: { All: True }
     CaptureCollection: { All: True }

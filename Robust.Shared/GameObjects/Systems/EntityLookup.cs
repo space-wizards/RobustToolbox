@@ -736,7 +736,7 @@ namespace Robust.Shared.GameObjects
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.
-            if (entity.Deleted || entity.IsInContainer() || entity.Transform.Anchored)
+            if (entity.Deleted || entity.IsInContainer())
             {
                 RemoveFromEntityTrees(entity);
                 return true;
@@ -784,13 +784,16 @@ namespace Robust.Shared.GameObjects
                 ++necessary;
             }
 
-            foreach (var childTx in entity.Transform.ChildEntityUids)
+            if (!entity.HasComponent<EntityLookupComponent>())
             {
-                if (!_handledThisTick.Add(childTx)) continue;
-
-                if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
+                foreach (var childTx in entity.Transform.ChildEntityUids)
                 {
-                    ++necessary;
+                    if (!_handledThisTick.Add(childTx)) continue;
+
+                    if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
+                    {
+                        ++necessary;
+                    }
                 }
             }
 

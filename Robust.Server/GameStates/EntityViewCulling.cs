@@ -216,7 +216,7 @@ namespace Robust.Server.GameStates
                     _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity =>
                     {
                         RecursiveAdd(entity.Uid, visibleEnts, includedChunks, visMask);
-                    }, LookupFlags.None);
+                    }, LookupFlags.IncludeContained | LookupFlags.ContainerVisibility);
 
                     //Calculate states for all visible anchored ents
                     foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))

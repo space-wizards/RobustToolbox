@@ -12,6 +12,20 @@ namespace Robust.Shared.Containers
     /// </summary>
     public abstract class BaseContainer : IContainer
     {
+        [ViewVariables(VVAccess.ReadWrite)]
+        public ContainerVisibility Visibility
+        {
+            get => _visibility;
+            set
+            {
+                if (_visibility == value) return;
+                _visibility = value;
+                Owner.Dirty();
+            }
+        }
+
+        private ContainerVisibility _visibility = ContainerVisibility.Always;
+
         /// <inheritdoc />
         [ViewVariables]
         public abstract IReadOnlyList<IEntity> ContainedEntities { get; }

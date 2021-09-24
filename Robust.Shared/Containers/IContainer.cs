@@ -7,6 +7,14 @@ using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Containers
 {
+    public enum ContainerVisibility : byte
+    {
+        // This container is never visible
+        None = 0,
+        // This container is always visible (within PVS range).
+        Always = 1 << 0,
+    }
+
     /// <summary>
     /// A container is a way to "contain" entities inside other entities, in a logical way.
     /// This is alike BYOND's <c>contents</c> system, except more advanced.
@@ -29,6 +37,11 @@ namespace Robust.Shared.Containers
     [ImplicitDataDefinitionForInheritors]
     public interface IContainer
     {
+        /// <summary>
+        ///     Visibility of the container for PVS purposes. Only useful on the server.
+        /// </summary>
+        ContainerVisibility Visibility { get; set; }
+
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>

@@ -17,9 +17,21 @@ namespace Robust.Shared.GameObjects
     public enum LookupFlags : byte
     {
         None = 0,
+
         Approximate = 1 << 0,
+
         IncludeAnchored = 1 << 1,
+
+        /// <summary>
+        /// Do we include contained entities
+        /// </summary>
         IncludeContained = 1 << 2,
+
+        /// <summary>
+        /// If we include contained entities should we check their visibility
+        /// </summary>
+        ContainerVisibility = 1 << 3,
+
         // IncludeGrids = 1 << 3,
     }
 
@@ -361,13 +373,19 @@ namespace Robust.Shared.GameObjects
                 var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(position);
 
                 lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
+
+                if ((flags & LookupFlags.IncludeContained) == 0x0) continue;
+
                 lookup.ContainerManagerTree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) =>
                 {
-                    callback(data);
-                    if ((flags & LookupFlags.IncludeContained) == 0x0 || !data.TryGetComponent(out ContainerManagerComponent? containerManager)) return;
+                    if (!data.TryGetComponent(out ContainerManagerComponent? containerManager)) return;
 
                     foreach (var container in containerManager.GetAllContainers())
                     {
+                        if ((flags & LookupFlags.ContainerVisibility) != 0x0 &&
+                            container.Visibility == ContainerVisibility.None &&
+                            !container.ShowContents) continue;
+
                         foreach (var child in container.ContainedEntities)
                         {
                             callback(child);
@@ -408,6 +426,27 @@ namespace Robust.Shared.GameObjects
                     }
                     return true;
                 }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+
+                if ((flags & LookupFlags.IncludeContained) == 0x0) continue;
+
+                lookup.ContainerManagerTree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager)) return true;
+
+                    foreach (var container in containerManager.GetAllContainers())
+                    {
+                        if ((flags & LookupFlags.ContainerVisibility) != 0x0 &&
+                            container.Visibility == ContainerVisibility.None) continue;
+
+                        foreach (var child in container.ContainedEntities)
+                        {
+                            if (child.Deleted) continue;
+                            list.Add(child);
+                        }
+                    }
+
+                    return true;
+                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
             }
 
             foreach (var ent in GetAnchored(mapId, position, flags))
@@ -437,6 +476,27 @@ namespace Robust.Shared.GameObjects
                     {
                         state.list.Add(ent);
                     }
+                    return true;
+                }, localPoint, (flags & LookupFlags.Approximate) != 0x0);
+
+                if ((flags & LookupFlags.IncludeContained) == 0x0) continue;
+
+                lookup.ContainerManagerTree.QueryPoint(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager)) return true;
+
+                    foreach (var container in containerManager.GetAllContainers())
+                    {
+                        if ((flags & LookupFlags.ContainerVisibility) != 0x0 &&
+                            container.Visibility == ContainerVisibility.None) continue;
+
+                        foreach (var child in container.ContainedEntities)
+                        {
+                            if (child.Deleted) continue;
+                            list.Add(child);
+                        }
+                    }
+
                     return true;
                 }, localPoint, (flags & LookupFlags.Approximate) != 0x0);
             }
@@ -602,6 +662,27 @@ namespace Robust.Shared.GameObjects
                     state.list.Add(ent);
                     return true;
                 }, offsetPos, (flags & LookupFlags.Approximate) != 0x0);
+
+                if ((flags & LookupFlags.IncludeContained) == 0x0) continue;
+
+                lookup.ContainerManagerTree.QueryPoint(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager)) return true;
+
+                    foreach (var container in containerManager.GetAllContainers())
+                    {
+                        if ((flags & LookupFlags.ContainerVisibility) != 0x0 &&
+                            container.Visibility == ContainerVisibility.None) continue;
+
+                        foreach (var child in container.ContainedEntities)
+                        {
+                            if (child.Deleted) continue;
+                            list.Add(child);
+                        }
+                    }
+
+                    return true;
+                }, offsetPos, (flags & LookupFlags.Approximate) != 0x0);
             }
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0)
@@ -655,7 +736,7 @@ namespace Robust.Shared.GameObjects
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.
-            if (entity.Deleted || entity.IsInContainer())
+            if (entity.Deleted || entity.IsInContainer() || entity.Transform.Anchored)
             {
                 RemoveFromEntityTrees(entity);
                 return true;
@@ -689,7 +770,6 @@ namespace Robust.Shared.GameObjects
 
             // for debugging
             var necessary = 0;
-            var checkChildren = true;
 
             if (_compManager.HasComponent<ContainerManagerComponent>(entity.Uid))
             {
@@ -697,29 +777,20 @@ namespace Robust.Shared.GameObjects
                 {
                     ++necessary;
                 }
-
-                checkChildren = false;
             }
-            else
+
+            if (lookup.Tree.AddOrUpdate(entity, aabb))
             {
-                if (lookup.Tree.AddOrUpdate(entity, aabb))
+                ++necessary;
+            }
+
+            foreach (var childTx in entity.Transform.ChildEntityUids)
+            {
+                if (!_handledThisTick.Add(childTx)) continue;
+
+                if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
                 {
                     ++necessary;
-                }
-            }
-
-            checkChildren = checkChildren && !entity.HasComponent<EntityLookupComponent>();
-
-            if (checkChildren)
-            {
-                foreach (var childTx in entity.Transform.ChildEntityUids)
-                {
-                    if (!_handledThisTick.Add(childTx)) continue;
-
-                    if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
-                    {
-                        ++necessary;
-                    }
                 }
             }
 
@@ -733,6 +804,8 @@ namespace Robust.Shared.GameObjects
             // rather than this O(n) legacy garbage.
             foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
             {
+                lookup.ContainerManagerTree.Remove(entity);
+
                 if (lookup.Tree.Remove(entity)) return;
             }
         }

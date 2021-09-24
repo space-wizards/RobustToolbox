@@ -387,18 +387,6 @@ namespace Robust.Shared.GameObjects
                     }
                 }
             }
-
-            if ((flags & LookupFlags.IncludeAnchored) != 0x0)
-            {
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, position))
-                {
-                    foreach (var uid in grid.GetAnchoredEntities(position))
-                    {
-                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
-                        callback(ent);
-                    }
-                }
-            }
         }
 
         /// <inheritdoc />

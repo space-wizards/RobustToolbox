@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Shared.Log;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -10,6 +9,8 @@ namespace Robust.Client.Graphics.Clyde
         // OpenGL feature detection go here.
 
         private bool _hasGLKhrDebug;
+        private bool _glDebuggerPresent;
+
         // As per the extension specification, when implemented as extension in an ES context,
         // function names have to be suffixed by "KHR"
         // This keeps track of whether that's necessary.
@@ -24,6 +25,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLVertexArrayObject;
         private bool _hasGLVertexArrayObjectOes;
         private bool _hasGLFloatFramebuffers;
+        private bool _hasGLES3Shaders;
         private bool HasGLAnyMapBuffer => _hasGLMapBuffer || _hasGLMapBufferRange || _hasGLMapBufferOes;
         private bool _hasGLMapBuffer;
         private bool _hasGLMapBufferOes;
@@ -57,6 +59,8 @@ namespace Robust.Client.Graphics.Clyde
         {
             var extensions = GetGLExtensions();
 
+            CheckGLDebuggerStatus(extensions);
+
             _sawmillOgl.Debug("OpenGL capabilities:");
 
             if (!_isGLES)
@@ -72,6 +76,12 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (2, 1));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (2, 1));
+
+                _hasGLSrgb = true;
+                _hasGLReadFramebuffer = true;
+                _hasGLPrimitiveRestart = true;
+                _hasGLUniformBuffers = true;
+                _hasGLFloatFramebuffers = true;
             }
             else
             {
@@ -94,15 +104,31 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLMapBufferRange, "map_buffer_range", (3, 0));
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (3, 0));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (3, 0), "GL_OES_standard_derivatives");
-            }
+                CheckGLCap(ref _hasGLReadFramebuffer, "read_framebuffer", (3, 0));
+                CheckGLCap(ref _hasGLPrimitiveRestart, "primitive_restart", (3, 1));
+                CheckGLCap(ref _hasGLUniformBuffers, "uniform_buffers", (3, 0));
+                CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2), "GL_EXT_color_buffer_float");
+                CheckGLCap(ref _hasGLES3Shaders, "gles3_shaders", (3, 0));
 
-            // TODO: Enable these on ES 3.0
-            _hasGLSrgb = !_isGLES;
-            _hasGLReadFramebuffer = !_isGLES;
-            _hasGLPrimitiveRestart = !_isGLES;
-            _hasGLUniformBuffers = !_isGLES;
-            // This is 3.2 or extensions
-            _hasGLFloatFramebuffers = !_isGLES;
+                if (major >= 3)
+                {
+                    if (_glContext!.HasBrokenWindowSrgb)
+                    {
+                        _hasGLSrgb = false;
+                        _sawmillOgl.Debug("  sRGB: false (window broken sRGB)");
+                    }
+                    else
+                    {
+                        _hasGLSrgb = true;
+                        _sawmillOgl.Debug("  sRGB: true");
+                    }
+                }
+                else
+                {
+                    _hasGLSrgb = false;
+                    _sawmillOgl.Debug("  sRGB: false");
+                }
+            }
 
             _sawmillOgl.Debug($"  GLES: {_isGLES}");
 
@@ -127,6 +153,19 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        private void CheckGLDebuggerStatus(HashSet<string> extensions)
+        {
+            if (!extensions.Contains("GL_EXT_debug_tool"))
+                return;
+
+            const int GL_DEBUG_TOOL_EXT = 0x6789;
+            const int GL_DEBUG_TOOL_NAME_EXT = 0x678A;
+
+            _glDebuggerPresent = GL.IsEnabled((EnableCap)GL_DEBUG_TOOL_EXT);
+            var name = GL.GetString((StringName)GL_DEBUG_TOOL_NAME_EXT);
+            _sawmillOgl.Debug($"OpenGL debugger present: {name}");
+        }
+
         private void RegisterBlockCVars()
         {
             string[] cvars =
@@ -141,7 +180,12 @@ namespace Robust.Client.Graphics.Clyde
                 "map_buffer_range",
                 "pixel_buffer_object",
                 "map_buffer_oes",
-                "standard_derivatives"
+                "standard_derivatives",
+                "read_framebuffer",
+                "primitive_restart",
+                "uniform_buffers",
+                "float_framebuffers",
+                "gles3_shaders",
             };
 
             foreach (var cvar in cvars)

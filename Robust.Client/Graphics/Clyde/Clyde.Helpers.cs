@@ -2,10 +2,8 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using SixLabors.ImageSharp.PixelFormats;
 using ES20 = OpenToolkit.Graphics.ES20;
 
 namespace Robust.Client.Graphics.Clyde
@@ -276,7 +274,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private void LoadGLProc<T>(string name, out T field) where T : Delegate
         {
-            var proc = _windowing!.GraphicsBindingContext.GetProcAddress(name);
+            var proc = _glBindingsContext.GetProcAddress(name);
             if (proc == IntPtr.Zero || proc == new IntPtr(1) || proc == new IntPtr(2))
             {
                 throw new InvalidOperationException($"Unable to load GL function '{name}'!");

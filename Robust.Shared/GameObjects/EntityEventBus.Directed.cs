@@ -48,6 +48,32 @@ namespace Robust.Shared.GameObjects
         void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
             where TEvent : notnull;
+
+        /// <summary>
+        /// Dispatches an event directly to a specific component.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+            where TEvent : notnull;
+
+        /// <summary>
+        /// Dispatches an event directly to a specific component, by-ref.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+            where TEvent : notnull;
     }
 
     internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
@@ -70,20 +96,20 @@ namespace Robust.Shared.GameObjects
             _eventTables = new EventTables(_entMan);
         }
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
-            where TEvent : EntityEventArgs
+        /// <inheritdoc />
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
         {
-            _eventTables.DispatchComponent(component.Owner.Uid, component, args);
+            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
+
+            _eventTables.DispatchComponent<TEvent>(component.Owner.Uid, component, ref unitRef, false);
+        }
+
+        /// <inheritdoc />
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        {
+            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
+
+            _eventTables.DispatchComponent<TEvent>(component.Owner.Uid, component, ref unitRef, true);
         }
 
         /// <inheritdoc />
@@ -403,7 +429,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            public void DispatchComponent<TEvent>(EntityUid euid, IComponent component, TEvent args)
+            public void DispatchComponent<TEvent>(EntityUid euid, IComponent component, ref Unit args, bool dispatchByReference)
                 where TEvent : notnull
             {
                 var enumerator = GetReferences(component.GetType());
@@ -415,11 +441,10 @@ namespace Robust.Shared.GameObjects
                     if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
                         continue;
 
-                    if (reg.ReferenceEvent)
+                    if (reg.ReferenceEvent != dispatchByReference)
                         ThrowByRefMisMatch();
 
-                    var handler = (DirectedEventHandler<TEvent>)reg.Original;
-                    handler(euid, component, ref args);
+                    reg.Handler(euid, component, ref args);
                 }
             }
 

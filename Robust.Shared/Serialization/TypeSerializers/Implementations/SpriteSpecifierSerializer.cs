@@ -27,7 +27,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             bool skipHook, ISerializationContext? context)
         {
             var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
-            return DeserializationResult.Value(new Texture(path));
+            return new DeserializedValue<Texture>(new Texture(path));
         }
 
         DeserializationResult ITypeReader<SpriteSpecifier, ValueDataNode>.Read(
@@ -56,7 +56,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
-            return DeserializationResult.Value(new EntityPrototype(node.Value));
+            return new DeserializedValue<EntityPrototype>(new EntityPrototype(node.Value));
         }
 
         DeserializationResult ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
@@ -75,7 +75,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             }
 
             var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context, skipHook);
-            return DeserializationResult.Value(new Rsi(path, valueDataNode.Value));
+            return new DeserializedValue<Rsi>(new Rsi(path, valueDataNode.Value));
         }
 
 

@@ -38,7 +38,7 @@ namespace Robust.Client.Physics
             // This is a client-only problem.
             foreach (var body in AwakeBodies)
             {
-                if (body.Island || body.LinearVelocity.Length > 0f || body.AngularVelocity != 0f) continue;
+                if (body.Island || body.LinearVelocity.Length > 0.0001f || body.AngularVelocity != 0f) continue;
                 body.SleepTime += frameTime;
                 if (body.SleepTime > _timeToSleep)
                 {

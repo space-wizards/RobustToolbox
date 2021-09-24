@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
+using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects
 {
@@ -120,6 +121,8 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
         bool HasComponent(EntityUid uid, ushort netId);
 
+        T EnsureComponent<T>(IEntity entity) where T : Component, new();
+
         /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
@@ -196,6 +199,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid">Entity UID to look on.</param>
         /// <returns>All components that have a network ID.</returns>
         NetComponentEnumerable GetNetComponents(EntityUid uid);
+
+        /// <summary>
+        ///     Gets a component state for a certain player.
+        /// </summary>
+        /// <param name="eventBus">A reference to the event bus instance.</param>
+        /// <param name="component">Component to generate the state for.</param>
+        /// <param name="player">The player to generate the state for.</param>
+        /// <returns>The component state of the component, for the player.</returns>
+        ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

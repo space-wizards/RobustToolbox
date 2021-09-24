@@ -43,7 +43,11 @@ entitiesImmutableList:
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            IoCManager.Resolve<IPrototypeManager>().LoadString(Prototypes);
+            var protoMan = IoCManager.Resolve<IPrototypeManager>();
+
+            protoMan.RegisterType(typeof(EntityPrototype));
+            protoMan.LoadString(Prototypes);
+            protoMan.Resync();
         }
 
         [Test]

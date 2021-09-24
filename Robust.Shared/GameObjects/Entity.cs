@@ -149,7 +149,10 @@ namespace Robust.Shared.GameObjects
             // Second integrity check in case of.
             foreach (var t in EntityManager.ComponentManager.GetComponents(Uid))
             {
-                DebugTools.Assert(t.Initialized, $"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                if (!t.Initialized)
+                {
+                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                }
             }
 
 #endif

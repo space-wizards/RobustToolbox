@@ -74,7 +74,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public event Action<string>? ComponentIgnoreAdded;
-        
+
         /// <inheritdoc />
         public IEnumerable<Type> AllRegisteredTypes => types.Keys;
 
@@ -104,12 +104,6 @@ namespace Robust.Shared.GameObjects
                     shell.WriteLine($"  [{netId,4}] {registration.Name,-16} {registration.Type.Name}");
                 }
             });
-        }
-
-        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
-        public void Register<T>(bool overwrite = false) where T : IComponent, new()
-        {
-            Register(typeof(T), overwrite);
         }
 
         private void Register(Type type, bool overwrite = false)
@@ -165,12 +159,6 @@ namespace Robust.Shared.GameObjects
             ComponentAdded?.Invoke(registration);
         }
 
-        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
-        public void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new()
-        {
-            RegisterReference(typeof(TTarget), typeof(TInterface));
-        }
-
         private void RegisterReference(Type target, Type @interface)
         {
             if (_networkedComponents is not null)
@@ -217,7 +205,7 @@ namespace Robust.Shared.GameObjects
                 throw new ComponentRegistrationLockException();
 
             var registration = names[name];
-            
+
             names.Remove(registration.Name);
             _lowerCaseNames.Remove(registration.Name.ToLowerInvariant());
             types.Remove(registration.Type);

@@ -69,6 +69,28 @@ namespace Robust.Client.Graphics
         }
 
         /// <inheritdoc />
+        public Box2Rotated GetWorldViewbounds()
+        {
+            var vpSize = _displayManager.ScreenSize;
+
+            var topRight = ScreenToMap(new Vector2(vpSize.X, 0)).Position;
+            var bottomLeft = ScreenToMap(new Vector2(0, vpSize.Y)).Position;
+
+            var rotation = new Angle(CurrentEye.Rotation);
+            var center = (bottomLeft + topRight) / 2;
+
+            var localTopRight = topRight - center;
+            var localBotLeft = bottomLeft - center;
+
+            localTopRight = rotation.RotateVec(localTopRight);
+            localBotLeft = rotation.RotateVec(localBotLeft);
+
+            var bounds = new Box2(localBotLeft, localTopRight).Translated(center);
+
+            return new Box2Rotated(bounds, -CurrentEye.Rotation, bounds.Center);
+        }
+
+        /// <inheritdoc />
         public Vector2 WorldToScreen(Vector2 point)
         {
             return MainViewport.WorldToScreen(point);

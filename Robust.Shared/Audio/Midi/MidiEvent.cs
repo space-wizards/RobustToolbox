@@ -19,7 +19,7 @@ namespace Robust.Shared.Audio.Midi
 
         public byte Velocity { get; set; }
 
-        public byte Control { get; set; }
+        public int Control { get; set; }
 
         public byte Value { get; set; }
 
@@ -35,7 +35,7 @@ namespace Robust.Shared.Audio.Midi
             {
                 Type = (byte) midiEvent.Type,
                 Channel = (byte) midiEvent.Channel,
-                Control = (byte) midiEvent.Control,
+                Control = midiEvent.Control,
                 Key = (byte) midiEvent.Key,
                 Pitch = (short) midiEvent.Pitch,
                 Program = (byte) midiEvent.Program,
@@ -90,7 +90,7 @@ namespace Robust.Shared.Audio.Midi
 
                 // CC
                 case 176:
-                    @event.ControlChange(midiEvent.Channel, midiEvent.Control, midiEvent.Value);
+                    @event.ControlChange(midiEvent.Channel, (short)midiEvent.Control, midiEvent.Value);
                     break;
 
                 // Program Change

@@ -20,6 +20,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -50,6 +51,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 #if EXCEPTION_TOLERANCE
@@ -334,8 +336,6 @@ namespace Robust.Client.GameStates
 
         private void ResetPredictedEntities(GameTick curTick)
         {
-            var bus = (EntityEventBus) _entities.EventBus;
-
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
@@ -364,7 +364,8 @@ namespace Robust.Client.GameStates
 
                     Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
                     // TODO: Handle interpolation.
-                    bus.RaiseComponentEvent(comp, new ComponentHandleState(compState, null));
+                    var handleState = new ComponentHandleState(compState, null);
+                    _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
                     comp.HandleComponentState(compState, null);
                 }
             }
@@ -381,6 +382,8 @@ namespace Robust.Client.GameStates
             Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
             var player = _players.LocalPlayer.Session;
 
+            var bus = _entityManager.EventBus;
+
             foreach (var createdEntity in createdEntities)
             {
                 var compData = new Dictionary<uint, ComponentState>();
@@ -388,7 +391,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _componentManager.GetNetComponents(createdEntity))
                 {
-                    var state = component.GetComponentState(player);
+                    var state = _componentManager.GetComponentState(bus, component, player);
 
                     if(state.GetType() == typeof(ComponentState))
                         continue;
@@ -472,14 +475,12 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            var bus = (EntityEventBus) _entities.EventBus;
-
             // Make sure this is done after all entities have been instantiated.
             foreach (var kvStates in toApply)
             {
                 var ent = kvStates.Key;
                 var entity = (Entity) ent;
-                HandleEntityState(entity.EntityManager.ComponentManager, entity, bus, kvStates.Value.Item1,
+                HandleEntityState(entity.EntityManager.ComponentManager, entity, _entities.EventBus, kvStates.Value.Item1,
                     kvStates.Value.Item2);
             }
 
@@ -547,7 +548,7 @@ namespace Robust.Client.GameStates
             return created;
         }
 
-        private void HandleEntityState(IComponentManager compMan, IEntity entity, EntityEventBus bus, EntityState? curState,
+        private void HandleEntityState(IComponentManager compMan, IEntity entity, IEventBus bus, EntityState? curState,
             EntityState? nextState)
         {
             var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
@@ -609,7 +610,8 @@ namespace Robust.Client.GameStates
                 {
                     try
                     {
-                        bus.RaiseComponentEvent(component, new ComponentHandleState(cur, next));
+                        var handleState = new ComponentHandleState(cur, next);
+                        bus.RaiseComponentEvent(component, ref handleState);
                         component.HandleComponentState(cur, next);
                     }
                     catch (Exception e)

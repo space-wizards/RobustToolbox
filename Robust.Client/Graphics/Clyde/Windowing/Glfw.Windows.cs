@@ -1,15 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using OpenToolkit;
-using OpenToolkit.Graphics.OpenGL4;
 using OpenToolkit.GraphicsLibraryFramework;
-using Robust.Client.Input;
 using Robust.Client.Utility;
-using Robust.Shared;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -21,218 +15,10 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private unsafe sealed partial class GlfwWindowingImpl
+        private sealed unsafe partial class GlfwWindowingImpl
         {
-            private readonly List<GlfwWindowReg> _windows = new();
-
-            public IReadOnlyList<WindowReg> AllWindows => _windows;
-            public IBindingsContext GraphicsBindingContext => _mainGraphicsContext;
-
-            public WindowReg? MainWindow => _mainWindow;
-            private GlfwWindowReg? _mainWindow;
-            private GlfwBindingsContext _mainGraphicsContext = default!;
             private int _nextWindowId = 1;
             private static bool _eglLoaded;
-
-            public WindowHandle WindowCreate(WindowCreateParameters parameters)
-            {
-                DebugTools.AssertNotNull(_mainWindow);
-
-                GLFW.MakeContextCurrent(null);
-
-                Window* ownerPtr = null;
-                if (parameters.Owner != null)
-                {
-                    var ownerReg = (GlfwWindowReg) ((WindowHandle)parameters.Owner).Reg;
-                    ownerPtr = ownerReg.GlfwWindow;
-                }
-
-                var task = SharedWindowCreate(
-                    _clyde._chosenRenderer,
-                    parameters,
-                    _mainWindow!.GlfwWindow,
-                    ownerPtr);
-
-                // Block the main thread (to avoid stuff like texture uploads being problematic).
-                WaitWindowCreate(task);
-
-                GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
-
-                var (reg, error) = task.Result;
-
-                if (reg == null)
-                {
-                    var (desc, errCode) = error!.Value;
-                    throw new GlfwException($"{errCode}: {desc}");
-                }
-
-                _clyde.CreateWindowRenderTexture(reg);
-                _clyde.InitWindowBlitThread(reg);
-
-                GLFW.MakeContextCurrent(_mainWindow.GlfwWindow);
-
-                return reg.Handle;
-            }
-
-            public bool TryInitMainWindow(Renderer renderer, [NotNullWhen(false)] out string? error)
-            {
-                var width = _cfg.GetCVar(CVars.DisplayWidth);
-                var height = _cfg.GetCVar(CVars.DisplayHeight);
-                var prevWidth = width;
-                var prevHeight = height;
-
-                IClydeMonitor? monitor = null;
-                var fullscreen = false;
-
-                if (_clyde._windowMode == WindowMode.Fullscreen)
-                {
-                    monitor = _monitors[_primaryMonitorId].Handle;
-                    width = monitor.Size.X;
-                    height = monitor.Size.Y;
-                    fullscreen = true;
-                }
-
-                var parameters = new WindowCreateParameters
-                {
-                    Width = width,
-                    Height = height,
-                    Monitor = monitor,
-                    Fullscreen = fullscreen
-                };
-
-                var windowTask = SharedWindowCreate(renderer, parameters, null, null);
-                WaitWindowCreate(windowTask);
-
-                var (reg, err) = windowTask.Result;
-                if (reg == null)
-                {
-                    var (desc, code) = err!.Value;
-                    error = $"[{code}] {desc}";
-
-                    return false;
-                }
-
-                DebugTools.Assert(reg.Id == WindowId.Main);
-
-                _mainWindow = reg;
-                reg.IsMainWindow = true;
-
-                if (fullscreen)
-                {
-                    reg.PrevWindowSize = (prevWidth, prevHeight);
-                    reg.PrevWindowPos = (50, 50);
-                }
-
-                UpdateVSync();
-
-                error = null;
-                return true;
-            }
-
-            private void WaitWindowCreate(Task<GlfwWindowCreateResult> windowTask)
-            {
-                while (!windowTask.IsCompleted)
-                {
-                    // Keep processing events until the window task gives either an error or success.
-                    WaitEvents();
-                    ProcessEvents(single: true);
-                }
-            }
-
-            private Task<GlfwWindowCreateResult> SharedWindowCreate(
-                Renderer renderer,
-                WindowCreateParameters parameters,
-                Window* share, Window* owner)
-            {
-                //
-                // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
-                // I originally wanted this to be async so we could avoid blocking the main thread
-                // while the OS takes its stupid 100~ms just to initialize a fucking GL context.
-                // This doesn't *work* because
-                // we have to release the GL context while the shared context is being created.
-                // (at least on WGL, I didn't test other platforms and I don't care to.)
-                // Not worth it to avoid a main thread blockage by allowing Clyde to temporarily release the GL context,
-                // because rendering would be locked up *anyways*.
-                //
-                // Basically what I'm saying is that everything about OpenGL is a fucking mistake
-                // and I should get on either Veldrid or Vulkan some time.
-                // Probably Veldrid tbh.
-                //
-
-                // Yes we ping-pong this TCS through the window thread and back, deal with it.
-                var tcs = new TaskCompletionSource<GlfwWindowCreateResult>();
-                SendCmd(new CmdWinCreate(
-                    renderer,
-                    parameters,
-                    (nint) share,
-                    // We have to pass the owner window in the Cmd here instead of reading it off parameters,
-                    // in case the owner window is closed between sending and handling of this cmd.
-                    (nint) owner,
-                    tcs));
-
-                return tcs.Task;
-            }
-
-            private void FinishWindowCreate(EventWindowCreate ev)
-            {
-                var (res, tcs) = ev;
-                var reg = res.Reg;
-
-                if (reg != null)
-                {
-                    _windows.Add(reg);
-                    _clyde._windowHandles.Add(reg.Handle);
-                }
-
-                tcs.TrySetResult(res);
-            }
-
-            private void WinThreadWinCreate(CmdWinCreate cmd)
-            {
-                var (renderer, parameters, share, owner, tcs) = cmd;
-
-                var window = CreateGlfwWindowForRenderer(renderer, parameters, (Window*) share, (Window*) owner);
-
-                if (window == null)
-                {
-                    var err = GLFW.GetError(out var desc);
-
-                    SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(null, (desc, err)), tcs));
-                    return;
-                }
-
-                // We can't invoke the TCS directly from the windowing thread because:
-                // * it'd hit the synchronization context,
-                //   which would make (blocking) main window init more annoying.
-                // * it'd not be synchronized to other incoming window events correctly which might be icky.
-                // So we send the TCS back to the game thread
-                // which processes events in the correct order and has better control of stuff during init.
-                var reg = WinThreadSetupWindow(window);
-                reg.Owner = parameters.Owner;
-
-                SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(reg, null), tcs));
-            }
-
-            private void WinThreadWinDestroy(CmdWinDestroy cmd)
-            {
-                var window = (Window*) cmd.Window;
-
-                if (OperatingSystem.IsWindows() && cmd.hadOwner)
-                {
-                    // On Windows, closing the child window causes the owner to be minimized, apparently.
-                    // Clear owner on close to avoid this.
-
-                    var hWnd = (void*) GLFW.GetWin32Window(window);
-                    DebugTools.Assert(hWnd != null);
-
-                    Win32.SetWindowLongPtrW(
-                        hWnd,
-                        Win32.GWLP_HWNDPARENT,
-                        0);
-                }
-
-                GLFW.DestroyWindow(window);
-            }
 
             public void WindowSetTitle(WindowReg window, string title)
             {
@@ -341,37 +127,26 @@ namespace Robust.Client.Graphics.Clyde
                 GLFW.SwapBuffers(reg.GlfwWindow);
             }
 
-            public void UpdateVSync()
-            {
-                if (_mainWindow == null)
-                    return;
-
-                GLFW.MakeContextCurrent(_mainWindow!.GlfwWindow);
-                GLFW.SwapInterval(_clyde._vSync ? 1 : 0);
-            }
-
             public void UpdateMainWindowMode()
             {
-                if (_mainWindow == null)
-                {
+                if (_clyde._mainWindow == null)
                     return;
-                }
 
-                var win = _mainWindow;
+                var win = (GlfwWindowReg) _clyde._mainWindow;
                 if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
-                    _mainWindow.PrevWindowSize = win.WindowSize;
-                    _mainWindow.PrevWindowPos = win.PrevWindowPos;
+                    win.PrevWindowSize = win.WindowSize;
+                    win.PrevWindowPos = win.PrevWindowPos;
 
-                    SendCmd(new CmdWinSetFullscreen((nint) _mainWindow.GlfwWindow));
+                    SendCmd(new CmdWinSetFullscreen((nint) win.GlfwWindow));
                 }
                 else
                 {
                     SendCmd(new CmdWinSetMonitor(
-                        (nint) _mainWindow.GlfwWindow,
+                        (nint) win.GlfwWindow,
                         0,
-                        _mainWindow.PrevWindowPos.X, _mainWindow.PrevWindowPos.Y,
-                        _mainWindow.PrevWindowSize.X, _mainWindow.PrevWindowSize.Y,
+                        win.PrevWindowPos.X, win.PrevWindowPos.Y,
+                        win.PrevWindowSize.X, win.PrevWindowSize.Y,
                         0
                     ));
                 }
@@ -380,8 +155,8 @@ namespace Robust.Client.Graphics.Clyde
             private void WinThreadWinSetFullscreen(CmdWinSetFullscreen cmd)
             {
                 var ptr = (Window*) cmd.Window;
-                GLFW.GetWindowSize(ptr, out var w, out var h);
-                GLFW.GetWindowPos(ptr, out var x, out var y);
+                //GLFW.GetWindowSize(ptr, out var w, out var h);
+                //GLFW.GetWindowPos(ptr, out var x, out var y);
 
                 var monitor = MonitorForWindow(ptr);
                 var mode = GLFW.GetVideoMode(monitor);
@@ -430,6 +205,21 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public nint? WindowGetX11Display(WindowReg window)
+            {
+                CheckWindowDisposed(window);
+
+                var reg = (GlfwWindowReg) window;
+                try
+                {
+                    return GLFW.GetX11Display(reg.GlfwWindow);
+                }
+                catch (EntryPointNotFoundException)
+                {
+                    return null;
+                }
+            }
+
             public nint? WindowGetWin32Window(WindowReg window)
             {
                 if (!OperatingSystem.IsWindows())
@@ -446,67 +236,190 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public (WindowReg?, string? error) WindowCreate(
+                GLContextSpec? spec,
+                WindowCreateParameters parameters,
+                WindowReg? share,
+                WindowReg? owner)
+            {
+                Window* sharePtr = null;
+                if (share is GlfwWindowReg glfwReg)
+                    sharePtr = glfwReg.GlfwWindow;
+
+                Window* ownerPtr = null;
+                if (owner is GlfwWindowReg glfwOwnerReg)
+                    ownerPtr = glfwOwnerReg.GlfwWindow;
+
+                var task = SharedWindowCreate(
+                    spec,
+                    parameters,
+                    sharePtr,
+                    ownerPtr);
+
+                // Block the main thread (to avoid stuff like texture uploads being problematic).
+                WaitWindowCreate(task);
+
+                var (reg, errorResult) = task.Result;
+
+                if (reg != null)
+                    return (reg, null);
+
+                var (desc, errCode) = errorResult!.Value;
+                return (null, $"[{errCode}]: {desc}");
+            }
+
             public void WindowDestroy(WindowReg window)
             {
                 var reg = (GlfwWindowReg) window;
-                if (reg.IsDisposed)
-                    return;
-
-                reg.IsDisposed = true;
-
                 SendCmd(new CmdWinDestroy((nint) reg.GlfwWindow, window.Owner != null));
+            }
 
-                _windows.Remove(reg);
-                _clyde._windowHandles.Remove(reg.Handle);
+            private void WaitWindowCreate(Task<GlfwWindowCreateResult> windowTask)
+            {
+                while (!windowTask.IsCompleted)
+                {
+                    // Keep processing events until the window task gives either an error or success.
+                    WaitEvents();
+                    ProcessEvents(single: true);
+                }
+            }
+
+            private Task<GlfwWindowCreateResult> SharedWindowCreate(
+                GLContextSpec? glSpec,
+                WindowCreateParameters parameters,
+                Window* share, Window* owner)
+            {
+                //
+                // IF YOU'RE WONDERING WHY THIS IS TASK-BASED:
+                // I originally wanted this to be async so we could avoid blocking the main thread
+                // while the OS takes its stupid 100~ms just to initialize a fucking GL context.
+                // This doesn't *work* because
+                // we have to release the GL context while the shared context is being created.
+                // (at least on WGL, I didn't test other platforms and I don't care to.)
+                // Not worth it to avoid a main thread blockage by allowing Clyde to temporarily release the GL context,
+                // because rendering would be locked up *anyways*.
+                //
+                // Basically what I'm saying is that everything about OpenGL is a fucking mistake
+                // and I should get on either Veldrid or Vulkan some time.
+                // Probably Veldrid tbh.
+                //
+
+                // Yes we ping-pong this TCS through the window thread and back, deal with it.
+                var tcs = new TaskCompletionSource<GlfwWindowCreateResult>();
+                SendCmd(new CmdWinCreate(
+                    glSpec,
+                    parameters,
+                    (nint) share,
+                    (nint) owner,
+                    tcs));
+
+                return tcs.Task;
+            }
+
+            private static void FinishWindowCreate(EventWindowCreate ev)
+            {
+                var (res, tcs) = ev;
+
+                tcs.TrySetResult(res);
+            }
+
+            private void WinThreadWinCreate(CmdWinCreate cmd)
+            {
+                var (glSpec, parameters, share, owner, tcs) = cmd;
+
+                var window = CreateGlfwWindowForRenderer(glSpec, parameters, (Window*) share, (Window*) owner);
+
+                if (window == null)
+                {
+                    var err = GLFW.GetError(out var desc);
+
+                    SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(null, (desc, err)), tcs));
+                    return;
+                }
+
+                // We can't invoke the TCS directly from the windowing thread because:
+                // * it'd hit the synchronization context,
+                //   which would make (blocking) main window init more annoying.
+                // * it'd not be synchronized to other incoming window events correctly which might be icky.
+                // So we send the TCS back to the game thread
+                // which processes events in the correct order and has better control of stuff during init.
+                var reg = WinThreadSetupWindow(window);
+
+                SendEvent(new EventWindowCreate(new GlfwWindowCreateResult(reg, null), tcs));
+            }
+
+            private static void WinThreadWinDestroy(CmdWinDestroy cmd)
+            {
+                var window = (Window*) cmd.Window;
+
+                if (OperatingSystem.IsWindows() && cmd.hadOwner)
+                {
+                    // On Windows, closing the child window causes the owner to be minimized, apparently.
+                    // Clear owner on close to avoid this.
+
+                    var hWnd = (void*) GLFW.GetWin32Window(window);
+                    DebugTools.Assert(hWnd != null);
+
+                    Win32.SetWindowLongPtrW(
+                        hWnd,
+                        Win32.GWLP_HWNDPARENT,
+                        0);
+                }
+
+                GLFW.DestroyWindow((Window*) cmd.Window);
             }
 
             private Window* CreateGlfwWindowForRenderer(
-                Renderer r,
+                GLContextSpec? spec,
                 WindowCreateParameters parameters,
                 Window* contextShare,
                 Window* ownerWindow)
             {
-#if DEBUG
-                GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
-#endif
                 GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
                 GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
-
                 GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
 
-                if (r == Renderer.OpenGL33)
+                if (spec == null)
                 {
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 3);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
-                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
+                    // No OpenGL context requested.
+                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.NoApi);
                 }
-                else if (r == Renderer.OpenGL31)
+                else
                 {
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 1);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, false);
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.NativeContextApi);
-                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
-                }
-                else if (r == Renderer.OpenGLES2)
-                {
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 2);
-                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 0);
-                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-                    GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlEsApi);
-                    // GLES2 is initialized through EGL to allow ANGLE usage.
-                    // (It may be an idea to make this a configuration cvar)
-                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi, ContextApi.EglContextApi);
-                    GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
-                    GLFW.WindowHint(WindowHintBool.SrgbCapable, false);
+                    var s = spec.Value;
 
-                    if (!_eglLoaded && OperatingSystem.IsWindows())
+#if DEBUG
+                    GLFW.WindowHint(WindowHintBool.OpenGLDebugContext, true);
+#endif
+
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMajor, s.Major);
+                    GLFW.WindowHint(WindowHintInt.ContextVersionMinor, s.Minor);
+                    GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, s.Profile != GLContextProfile.Compatibility);
+                    GLFW.WindowHint(WindowHintBool.SrgbCapable, true);
+
+                    switch (s.Profile)
+                    {
+                        case GLContextProfile.Compatibility:
+                            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                            GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
+                            break;
+                        case GLContextProfile.Core:
+                            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+                            GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlApi);
+                            break;
+                        case GLContextProfile.Es:
+                            GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Any);
+                            GLFW.WindowHint(WindowHintClientApi.ClientApi, ClientApi.OpenGlEsApi);
+                            break;
+                    }
+
+                    GLFW.WindowHint(WindowHintContextApi.ContextCreationApi,
+                        s.CreationApi == GLContextCreationApi.Egl
+                            ? ContextApi.EglContextApi
+                            : ContextApi.NativeContextApi);
+
+#if !FULL_RELEASE
+                    if (s.CreationApi == GLContextCreationApi.Egl && !_eglLoaded && OperatingSystem.IsWindows())
                     {
                         // On non-published builds (so, development), GLFW can't find libEGL.dll
                         // because it'll be in runtimes/<rid>/native/ instead of next to the actual executable.
@@ -519,17 +432,30 @@ namespace Robust.Client.Graphics.Clyde
 
                         _eglLoaded = true;
                     }
+#endif
                 }
-
 
                 Monitor* monitor = null;
                 if (parameters.Monitor != null &&
                     _winThreadMonitors.TryGetValue(parameters.Monitor.Id, out var monitorReg))
                 {
                     monitor = monitorReg.Ptr;
+                    var mode = GLFW.GetVideoMode(monitor);
+                    // Set refresh rate to monitor's so that GLFW doesn't manually select one.
+                    GLFW.WindowHint(WindowHintInt.RefreshRate, mode->RefreshRate);
+                }
+                else
+                {
+                    GLFW.WindowHint(WindowHintInt.RefreshRate, -1);
                 }
 
                 GLFW.WindowHint(WindowHintBool.Visible, false);
+
+                GLFW.WindowHint(WindowHintInt.RedBits, 8);
+                GLFW.WindowHint(WindowHintInt.GreenBits, 8);
+                GLFW.WindowHint(WindowHintInt.BlueBits, 8);
+                GLFW.WindowHint(WindowHintInt.AlphaBits, 8);
+                GLFW.WindowHint(WindowHintInt.StencilBits, 8);
 
                 var window = GLFW.CreateWindow(
                     parameters.Width, parameters.Height,
@@ -654,9 +580,10 @@ namespace Robust.Client.Graphics.Clyde
 
             private WindowReg? FindWindow(Window* window)
             {
-                foreach (var windowReg in _windows)
+                foreach (var windowReg in _clyde._windows)
                 {
-                    if (windowReg.GlfwWindow == window)
+                    var glfwReg = (GlfwWindowReg) windowReg;
+                    if (glfwReg.GlfwWindow == window)
                     {
                         return windowReg;
                     }
@@ -665,37 +592,26 @@ namespace Robust.Client.Graphics.Clyde
                 return null;
             }
 
-
-            public int KeyGetScanCode(Keyboard.Key key)
-            {
-                return GLFW.GetKeyScancode(ConvertGlfwKeyReverse(key));
-            }
-
-            public string KeyGetNameScanCode(int scanCode)
-            {
-                return GLFW.GetKeyName(Keys.Unknown, scanCode);
-            }
-
-            public Task<string> ClipboardGetText()
+            public Task<string> ClipboardGetText(WindowReg mainWindow)
             {
                 var tcs = new TaskCompletionSource<string>();
-                SendCmd(new CmdGetClipboard((nint) _mainWindow!.GlfwWindow, tcs));
+                SendCmd(new CmdGetClipboard((nint) ((GlfwWindowReg) mainWindow).GlfwWindow, tcs));
                 return tcs.Task;
             }
 
-            private void WinThreadGetClipboard(CmdGetClipboard cmd)
+            private static void WinThreadGetClipboard(CmdGetClipboard cmd)
             {
                 var clipboard = GLFW.GetClipboardString((Window*) cmd.Window);
                 // Don't have to care about synchronization I don't think so just fire this immediately.
                 cmd.Tcs.TrySetResult(clipboard);
             }
 
-            public void ClipboardSetText(string text)
+            public void ClipboardSetText(WindowReg mainWindow, string text)
             {
-                SendCmd(new CmdSetClipboard((nint) _mainWindow!.GlfwWindow, text));
+                SendCmd(new CmdSetClipboard((nint) ((GlfwWindowReg) mainWindow).GlfwWindow, text));
             }
 
-            private void WinThreadSetClipboard(CmdSetClipboard cmd)
+            private static void WinThreadSetClipboard(CmdSetClipboard cmd)
             {
                 GLFW.SetClipboardString((Window*) cmd.Window, cmd.Text);
             }
@@ -730,30 +646,30 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            public void GLInitMainContext(bool gles)
+            public void GLMakeContextCurrent(WindowReg? window)
             {
-                _mainGraphicsContext = new GlfwBindingsContext();
-                GL.LoadBindings(_mainGraphicsContext);
-
-                if (gles)
+                if (window != null)
                 {
-                    // On GLES we use some OES and KHR functions so make sure to initialize them.
-                    OpenToolkit.Graphics.ES20.GL.LoadBindings(_mainGraphicsContext);
+                    CheckWindowDisposed(window);
+
+                    var reg = (GlfwWindowReg)window;
+
+                    GLFW.MakeContextCurrent(reg.GlfwWindow);
                 }
-            }
-
-            public void GLMakeContextCurrent(WindowReg window)
-            {
-                CheckWindowDisposed(window);
-
-                var reg = (GlfwWindowReg) window;
-
-                GLFW.MakeContextCurrent(reg.GlfwWindow);
+                else
+                {
+                    GLFW.MakeContextCurrent(null);
+                }
             }
 
             public void GLSwapInterval(int interval)
             {
                 GLFW.SwapInterval(interval);
+            }
+
+            public void* GLGetProcAddress(string procName)
+            {
+                return (void*) GLFW.GetProcAddress(procName);
             }
 
             private void CheckWindowDisposed(WindowReg reg)
@@ -768,14 +684,6 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Kept around to avoid it being GCd.
                 public CursorImpl? Cursor;
-            }
-
-            private class GlfwBindingsContext : IBindingsContext
-            {
-                public IntPtr GetProcAddress(string procName)
-                {
-                    return GLFW.GetProcAddress(procName);
-                }
             }
         }
     }

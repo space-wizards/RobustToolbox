@@ -380,7 +380,7 @@ namespace Robust.Client.Graphics.Clyde
             ReadOnlySpan<T> buf)
             where T : unmanaged, IPixel<T>
         {
-            if (!_hasGLTextureSwizzle && typeof(T) == typeof(A8) && typeof(T) == typeof(L8))
+            if (!_hasGLTextureSwizzle && (typeof(T) == typeof(A8) || typeof(T) == typeof(L8)))
             {
                 var swizzleBuf = ArrayPool<Rgba32>.Shared.Rent(buf.Length);
 
@@ -610,7 +610,7 @@ namespace Robust.Client.Graphics.Clyde
 
             protected override void Dispose(bool disposing)
             {
-                if (disposing)
+                if (_clyde.IsMainThread())
                 {
                     // Main thread, do direct GL deletion.
                     _clyde.DeleteTexture(TextureId);

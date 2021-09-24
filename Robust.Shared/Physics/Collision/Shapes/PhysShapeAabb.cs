@@ -69,7 +69,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PhysShapeAabb()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         public Box2 ComputeAABB(Transform transform, int childIndex)
@@ -94,19 +94,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         // TODO
         [field: NonSerialized]
         public event Action? OnDataChanged;
-
-        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
-        {
-            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
-            return bounds.Intersects(worldAABB);
-        }
-
-        /// <inheritdoc />
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            // TODO: Make a new ComputeAABB func or just wrap ComputeAABB into the existing methods?
-            return _localBounds.Scale(1 + Radius);
-        }
 
         [Pure]
         internal List<Vector2> GetVertices()

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
+using OpenToolkit;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Map;
 using Robust.Client.ResourceManagement;
@@ -24,7 +25,6 @@ namespace Robust.Client.Graphics.Clyde
     internal sealed partial class Clyde : IClydeInternal, IClydeAudio, IPostInjectInit
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly ILightManager _lightManager = default!;
         [Dependency] private readonly ILogManager _logManager = default!;
@@ -65,21 +65,12 @@ namespace Robust.Client.Graphics.Clyde
 
         private ISawmill _sawmillOgl = default!;
 
+        private IBindingsContext _glBindingsContext = default!;
+
         public Clyde()
         {
-            // Init main window render target.
-            var windowRid = AllocRid();
-            var window = new RenderMainWindow(this, windowRid);
-            var loadedData = new LoadedRenderTarget
-            {
-                IsWindow = true,
-                IsSrgb = true
-            };
-            _renderTargets.Add(windowRid, loadedData);
-
-            _mainMainWindowRenderMainTarget = window;
-            _currentRenderTarget = RtToLoaded(window);
-            _currentBoundRenderTarget = _currentRenderTarget;
+            _currentBoundRenderTarget = default!;
+            _currentRenderTarget = default!;
         }
 
         public bool InitializePreWindowing()
@@ -101,6 +92,8 @@ namespace Robust.Client.Graphics.Clyde
         public bool InitializePostWindowing()
         {
             _gameThread = Thread.CurrentThread;
+
+            InitGLContextManager();
             if (!InitMainWindowAndRenderer())
                 return false;
 
@@ -153,13 +146,31 @@ namespace Robust.Client.Graphics.Clyde
             RegisterBlockCVars();
         }
 
+        private void GLInitBindings(bool gles)
+        {
+            _glBindingsContext = _glContext!.BindingsContext;
+            GL.LoadBindings(_glBindingsContext);
+
+            if (gles)
+            {
+                // On GLES we use some OES and KHR functions so make sure to initialize them.
+                OpenToolkit.Graphics.ES20.GL.LoadBindings(_glBindingsContext);
+            }
+        }
+
         private void InitOpenGL()
         {
+            _isGLES = _openGLVersion is RendererOpenGLVersion.GLES2 or RendererOpenGLVersion.GLES3;
+            _isCore = _openGLVersion is RendererOpenGLVersion.GL33;
+
+            GLInitBindings(_isGLES);
+
             var vendor = GL.GetString(StringName.Vendor);
             var renderer = GL.GetString(StringName.Renderer);
             var version = GL.GetString(StringName.Version);
-            var major = GL.GetInteger(GetPName.MajorVersion);
-            var minor = GL.GetInteger(GetPName.MinorVersion);
+            // GLES2 doesn't allow you to query major/minor version. Seriously.
+            var major = _openGLVersion == RendererOpenGLVersion.GLES2 ? 2 : GL.GetInteger(GetPName.MajorVersion);
+            var minor = _openGLVersion == RendererOpenGLVersion.GLES2 ? 0 :GL.GetInteger(GetPName.MinorVersion);
 
             _sawmillOgl.Debug("OpenGL Vendor: {0}", vendor);
             _sawmillOgl.Debug("OpenGL Renderer: {0}", renderer);
@@ -183,7 +194,7 @@ namespace Robust.Client.Graphics.Clyde
             DebugInfo = new ClydeDebugInfo(glVersion, renderer, vendor, version, overrideVersion != null);
 
             GL.Enable(EnableCap.Blend);
-            if (_hasGLSrgb)
+            if (_hasGLSrgb && !_isGLES)
             {
                 GL.Enable(EnableCap.FramebufferSrgb);
                 CheckGlError();
@@ -222,14 +233,6 @@ namespace Robust.Client.Graphics.Clyde
             _sawmillOgl.Debug("Setting up RenderHandle...");
 
             _renderHandle = new RenderHandle(this);
-
-            _sawmillOgl.Debug("Setting viewport and rendering splash...");
-
-            GL.Viewport(0, 0, ScreenSize.X, ScreenSize.Y);
-            CheckGlError();
-
-            // Quickly do a render with _drawingSplash = true so the screen isn't blank.
-            Render();
         }
 
         private (int major, int minor)? ParseGLOverrideVersion()
@@ -325,7 +328,8 @@ namespace Robust.Client.Graphics.Clyde
             screenBufferHandle = new GLHandle(GL.GenTexture());
             GL.BindTexture(TextureTarget.Texture2D, screenBufferHandle.Handle);
             ApplySampleParameters(TextureSampleParameters.Default);
-            ScreenBufferTexture = GenTexture(screenBufferHandle, _windowing!.MainWindow!.FramebufferSize, true, null, TexturePixelType.Rgba32);
+            // TODO: This is atrocious and broken and awful why did I merge this
+            ScreenBufferTexture = GenTexture(screenBufferHandle, (1920, 1080), true, null, TexturePixelType.Rgba32);
         }
 
         private GLHandle MakeQuadVao()
@@ -438,10 +442,8 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            if (!_hasGLKhrDebug)
-            {
+            if (!_hasGLKhrDebug || !_glDebuggerPresent)
                 return;
-            }
 
             if (_isGLKhrDebugESExtension)
             {
@@ -468,10 +470,9 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PushDebugGroupMaybe(string group)
         {
-            if (!_hasGLKhrDebug)
-            {
+            // ANGLE spams console log messages when using debug groups, so let's only use them if we're debugging GL.
+            if (!_hasGLKhrDebug || !_glDebuggerPresent)
                 return;
-            }
 
             if (_isGLKhrDebugESExtension)
             {
@@ -486,10 +487,8 @@ namespace Robust.Client.Graphics.Clyde
         [Conditional("DEBUG")]
         private void PopDebugGroupMaybe()
         {
-            if (!_hasGLKhrDebug)
-            {
+            if (!_hasGLKhrDebug || !_glDebuggerPresent)
                 return;
-            }
 
             if (_isGLKhrDebugESExtension)
             {
@@ -503,8 +502,14 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Shutdown()
         {
+            _glContext?.Shutdown();
             ShutdownWindowing();
             _shutdownAudio();
+        }
+
+        private bool IsMainThread()
+        {
+            return Thread.CurrentThread == _gameThread;
         }
     }
 }

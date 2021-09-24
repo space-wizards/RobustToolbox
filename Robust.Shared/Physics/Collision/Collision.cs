@@ -31,7 +31,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision
 {
-    internal interface ICollisionManager
+    internal interface IManifoldManager
     {
         bool TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB, in Transform xfA,
             in Transform xfB);
@@ -64,7 +64,7 @@ namespace Robust.Shared.Physics.Collision
     /// <summary>
     ///     Handles several collision features: Generating contact manifolds, testing shape overlap,
     /// </summary>
-    internal class CollisionManager : ICollisionManager
+    internal sealed class CollisionManager : IManifoldManager
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 
@@ -82,7 +82,7 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="xfA">The transform for the first shape.</param>
         /// <param name="xfB">The transform for the seconds shape.</param>
         /// <returns></returns>
-        bool ICollisionManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
+        bool IManifoldManager.TestOverlap(IPhysShape shapeA, int indexA, IPhysShape shapeB, int indexB,
             in Transform xfA, in Transform xfB)
         {
             // TODO: Make this a struct.
@@ -349,7 +349,7 @@ namespace Robust.Shared.Physics.Collision
 
             internal EPCollider(IConfigurationManager configManager)
             {
-                _polygonRadius = configManager.GetCVar(CVars.PolygonRadius);
+                _polygonRadius = PhysicsConstants.PolygonRadius;
                 _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
@@ -562,8 +562,8 @@ namespace Robust.Shared.Physics.Collision
                 }
 
                 // Get polygonB in frameA
-                _polygonB.Count = polygonB.Vertices.Count;
-                for (int i = 0; i < polygonB.Vertices.Count; ++i)
+                _polygonB.Count = polygonB.Vertices.Length;
+                for (var i = 0; i < polygonB.Vertices.Length; ++i)
                 {
                     _polygonB.Vertices[i] = Transform.Mul(_xf, polygonB.Vertices[i]);
                     _polygonB.Normals[i] = Transform.Mul(_xf.Quaternion2D, polygonB.Normals[i]);
@@ -851,7 +851,7 @@ namespace Robust.Shared.Physics.Collision
             int normalIndex = 0;
             float separation = float.MinValue;
             float radius = polygonA.Radius + circleB.Radius;
-            int vertexCount = polygonA.Vertices.Count;
+            int vertexCount = polygonA.Vertices.Length;
 
             for (int i = 0; i < vertexCount; ++i)
             {
@@ -1026,7 +1026,7 @@ namespace Robust.Shared.Physics.Collision
 
             FindIncidentEdge(incidentEdge, poly1, xf1, edge1, poly2, xf2);
 
-            int count1 = poly1.Vertices.Count;
+            int count1 = poly1.Vertices.Length;
 
             int iv1 = edge1;
             int iv2 = edge1 + 1 < count1 ? edge1 + 1 : 0;
@@ -1217,8 +1217,8 @@ namespace Robust.Shared.Physics.Collision
             var n1s = poly1.Normals;
             var v1s = poly1.Vertices;
             var v2s = poly2.Vertices;
-            var count1 = v1s.Count;
-            var count2 = v2s.Count;
+            var count1 = v1s.Length;
+            var count2 = v2s.Length;
             var xf = Transform.MulT(xf2, xf1);
 
             var bestIndex = 0;
@@ -1254,13 +1254,13 @@ namespace Robust.Shared.Physics.Collision
 
         private static void FindIncidentEdge(Span<ClipVertex> c, PolygonShape poly1, in Transform xf1, int edge1, PolygonShape poly2, in Transform xf2)
         {
-            List<Vector2> normals1 = poly1.Normals;
+            var normals1 = poly1.Normals;
 
-            var count2 = poly2.Vertices.Count;
-            List<Vector2> vertices2 = poly2.Vertices;
-            List<Vector2> normals2 = poly2.Normals;
+            var count2 = poly2.Vertices.Length;
+            var vertices2 = poly2.Vertices;
+            var normals2 = poly2.Normals;
 
-            Debug.Assert(0 <= edge1 && edge1 < poly1.Vertices.Count);
+            Debug.Assert(0 <= edge1 && edge1 < poly1.Vertices.Length);
 
             // Get the normal of the reference edge in poly2's frame.
             var normal1 = Transform.MulT(xf2.Quaternion2D, Transform.Mul(xf1.Quaternion2D, normals1[edge1]));

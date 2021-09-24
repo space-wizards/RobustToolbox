@@ -18,6 +18,7 @@ namespace Robust.Server.Player
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
+        private readonly HashSet<EntityUid> _viewSubscriptions = new();
 
         public PlayerSession(PlayerManager playerManager, INetChannel client, PlayerData data)
         {
@@ -36,7 +37,7 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        private readonly HashSet<EntityUid> _viewSubscriptions = new();
+        [ViewVariables] public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
@@ -168,8 +169,6 @@ namespace Robust.Server.Player
             DetachFromEntity();
             UpdatePlayerState();
         }
-
-        public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
 
         private void SetAttachedEntityName()
         {

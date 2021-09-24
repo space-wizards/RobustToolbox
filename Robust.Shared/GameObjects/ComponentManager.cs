@@ -1,13 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Internal.TypeSystem;
 using Robust.Shared.Exceptions;
+using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
-using Robust.Shared.Serialization;
+using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
@@ -375,6 +374,17 @@ namespace Robust.Shared.GameObjects
                    && netSet.ContainsKey(netId);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T EnsureComponent<T>(IEntity entity) where T : Component, new()
+        {
+            if (TryGetComponent<T>(entity.Uid, out var component))
+            {
+                return component;
+            }
+
+            return AddComponent<T>(entity);
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
@@ -586,6 +596,15 @@ namespace Robust.Shared.GameObjects
 
                 yield return comp;
             }
+        }
+
+        /// <inheritdoc />
+        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+        {
+            var getState = new ComponentGetState(player);
+            eventBus.RaiseComponentEvent(component, ref getState);
+
+            return getState.State ?? component.GetComponentState(player);
         }
 
         #endregion

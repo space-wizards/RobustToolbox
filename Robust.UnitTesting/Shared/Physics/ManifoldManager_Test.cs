@@ -8,10 +8,10 @@ using Robust.Shared.Physics.Collision.Shapes;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    [TestOf(typeof(ICollisionManager))]
-    public class CollisionManager_Test : RobustUnitTest
+    [TestOf(typeof(IManifoldManager))]
+    public class ManifoldManager_Test : RobustUnitTest
     {
-        private ICollisionManager _collisionManager = default!;
+        private IManifoldManager _manifoldManager = default!;
 
         private PhysShapeCircle _circleA = default!;
         private PhysShapeCircle _circleB = default!;
@@ -22,13 +22,13 @@ namespace Robust.UnitTesting.Shared.Physics
         [OneTimeSetUp]
         public void Setup()
         {
-            _collisionManager = IoCManager.Resolve<ICollisionManager>();
+            _manifoldManager = IoCManager.Resolve<IManifoldManager>();
             _circleA = new PhysShapeCircle {Radius = 0.5f};
             _circleB = new PhysShapeCircle {Radius = 0.5f};
             _polyA = new PolygonShape();
             _polyB = new PolygonShape();
-            _polyA.SetAsBox(-0.5f, 0.5f);
-            _polyB.SetAsBox(-0.5f, 0.5f);
+            _polyA.SetAsBox(0.5f, 0.5f);
+            _polyB.SetAsBox(0.5f, 0.5f);
         }
 
         [Test]
@@ -38,15 +38,15 @@ namespace Robust.UnitTesting.Shared.Physics
             var transformB = new Transform(Vector2.One, 0f);
 
             // No overlap
-            Assert.That(_collisionManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(false));
+            Assert.That(_manifoldManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(false));
 
             // Overlap directly
             transformA = new Transform(transformB.Position, 0f);
-            Assert.That(_collisionManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_manifoldManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(true));
 
             // Overlap on edge
             transformA.Position = transformB.Position + new Vector2(0.5f, 0.0f);
-            Assert.That(_collisionManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_manifoldManager.TestOverlap(_circleA, 0, _circleB, 0, transformA, transformB), Is.EqualTo(true));
         }
 
         [Test]
@@ -56,18 +56,18 @@ namespace Robust.UnitTesting.Shared.Physics
             var transformB = new Transform(Vector2.One, 0f);
 
             // No overlap
-            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(false));
+            Assert.That(_manifoldManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(false));
 
             // Overlap directly
             transformA = new Transform(transformB.Position, 0f);
-            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_manifoldManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
 
             // Overlap on edge
             transformA.Position = transformB.Position + new Vector2(0.5f, 0.0f);
-            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_manifoldManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
 
             transformA.Quaternion2D = transformA.Quaternion2D.Set(45f);
-            Assert.That(_collisionManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
+            Assert.That(_manifoldManager.TestOverlap(_polyA, 0, _polyB, 0, transformA, transformB), Is.EqualTo(true));
         }
 
         [Test]
@@ -88,11 +88,11 @@ namespace Robust.UnitTesting.Shared.Physics
                 PointCount = 2,
                 Points = new ManifoldPoint[]
                 {
-                    new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65538}},
-                    new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 65794}}
+                    new() {LocalPoint = new Vector2(0.5f, -0.5f), Id = new ContactID {Key = 65795}},
+                    new() {LocalPoint = new Vector2(0.5f, 0.5f), Id = new ContactID {Key = 66051}}
                 }
             };
-            _collisionManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);
+            _manifoldManager.CollidePolygons(ref manifold, _polyA, transformA, _polyB, transformB);
 
             for (var i = 0; i < manifold.Points.Length; i++)
             {

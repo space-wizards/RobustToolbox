@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.Intrinsics.X86;
 using NFluidsynth;
 using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
@@ -8,7 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using MidiEvent = NFluidsynth.MidiEvent;
 
@@ -220,7 +218,7 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
-                    for (var i = 0; i < 16; i++)
+                    for (var i = 0; i < _synth.MidiChannelCount; i++)
                         _synth.ProgramChange(i, value);
 
                 _midiProgram = value;
@@ -234,7 +232,7 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
-                    for (var i = 0; i < 16; i++)
+                    for (var i = 0; i < _synth.MidiChannelCount; i++)
                         _synth.BankSelect(i, value);
 
                 _midiBank = value;
@@ -248,7 +246,7 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
-                    for (var i = 0; i < 16; i++)
+                    for (var i = 0; i < _synth.MidiChannelCount; i++)
                         _synth.SoundFontSelect(i, value);
 
                 _midiSoundfont = value;
@@ -575,16 +573,20 @@ namespace Robust.Client.Audio.Midi
                         // Sometimes MIDI files spam these for no good reason and I can't find any info on what they are.
                         case 1:
                         case 5:
+                        // MetaEvent -- SetTempo - 0x51
                         case 81:
+                            // Already handled by the player.
+                            return;
                         // System Messages - 0xF0
                         case 240:
-                            switch (midiEvent.Control)
+                            switch ((byte)midiEvent.Control)
                             {
                                 case 11:
                                     _synth.AllNotesOff(midiEvent.Channel);
                                     break;
                             }
-                            return;
+
+                            break;
 
                         default:
                             _midiSawmill.Warning("Unhandled midi event of type {0}", midiEvent.Type, midiEvent);
@@ -634,7 +636,7 @@ namespace Robust.Client.Audio.Midi
             _sequencer?.UnregisterClient(_debugRegister);
             _sequencer?.UnregisterClient(_synthRegister);
             _sequencer?.Dispose();
-            
+
             _synth?.Dispose();
             _player?.Dispose();
         }

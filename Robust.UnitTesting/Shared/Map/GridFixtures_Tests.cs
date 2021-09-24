@@ -1,7 +1,5 @@
-using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -23,7 +21,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
-            var gridFixtures = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -47,14 +44,15 @@ namespace Robust.UnitTesting.Shared.Map
                 // Now do 2 tiles (same chunk)
                 grid.SetTile(Vector2i.One, new Tile(1));
 
-                Assert.That(gridBody.Fixtures.Count, Is.EqualTo(1));
-                bounds = gridBody.Fixtures[0].Shape.ComputeAABB(new Transform(Vector2.Zero, (float) Angle.Zero.Theta), 0);
-                // Because it's a diagonal tile it will actually be 2x2 area (until we get accurate hitboxes anyway).
-                Assert.That(MathHelper.CloseTo(Box2.Area(bounds), 4.0f, 0.1f));
-
-                // If we add a new chunk should be 2 now
-                grid.SetTile(new Vector2i(-1, -1), new Tile(1));
                 Assert.That(gridBody.Fixtures.Count, Is.EqualTo(2));
+                bounds = gridBody.Fixtures[0].Shape.ComputeAABB(new Transform(Vector2.Zero, (float) Angle.Zero.Theta), 0);
+
+                // Even if we add a new tile old fixture should stay the same if they don't connect.
+                Assert.That(MathHelper.CloseTo(Box2.Area(bounds), 1.0f, 0.1f));
+
+                // If we add a new chunk should be 3 now
+                grid.SetTile(new Vector2i(-1, -1), new Tile(1));
+                Assert.That(gridBody.Fixtures.Count, Is.EqualTo(3));
 
                 gridBody.LinearVelocity = Vector2.One;
                 Assert.That(gridBody.LinearVelocity.Length, Is.EqualTo(0f));

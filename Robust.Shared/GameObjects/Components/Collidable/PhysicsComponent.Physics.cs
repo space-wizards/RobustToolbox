@@ -28,6 +28,7 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -606,7 +607,8 @@ namespace Robust.Shared.GameObjects
             get => _canCollide;
             set
             {
-                if (_canCollide == value)
+                if (_canCollide == value ||
+                    value && Owner.IsInContainer())
                     return;
 
                 _canCollide = value;
@@ -705,7 +707,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(Vector2.Zero, Vector2.Zero); // TODO: Sweep.LocalCenter
+            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
@@ -776,7 +778,7 @@ namespace Robust.Shared.GameObjects
                 if (_bodyType != BodyType.Dynamic) return;
                 if (value.EqualsApprox(_localCenter)) return;
 
-                throw new NotImplementedException();
+                _localCenter = value;
             }
         }
 
@@ -913,7 +915,7 @@ namespace Robust.Shared.GameObjects
                 if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
-                if (_linVelocity.EqualsApprox(value, 0.0001))
+                if (_linVelocity.EqualsApprox(value))
                     return;
 
                 _linVelocity = value;
@@ -1142,12 +1144,28 @@ namespace Robust.Shared.GameObjects
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }
 
+        /// <summary>
+        /// Applies an impulse to the centre of mass.
+        /// </summary>
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
             if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             LinearVelocity += impulse * _invMass;
+        }
+
+        /// <summary>
+        /// Applies an impulse from the specified point.
+        /// </summary>
+        public void ApplyLinearImpulse(in Vector2 impulse, in Vector2 point)
+        {
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
+            Awake = true;
+
+            LinearVelocity += impulse * _invMass;
+            // TODO: Sweep here
+            AngularVelocity += InvI * Vector2.Cross(point, impulse);
         }
 
         public void ApplyAngularImpulse(float impulse)
@@ -1272,6 +1290,7 @@ namespace Robust.Shared.GameObjects
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
+            LocalCenter = Vector2.Zero;
             // Sweep
 
             if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
@@ -1329,7 +1348,7 @@ namespace Robust.Shared.GameObjects
             if (_inertia > 0.0f && !_fixedRotation)
             {
                 // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
+                _inertia -= _mass * Vector2.Dot(Vector2.Zero, Vector2.Zero);
 
                 DebugTools.Assert(_inertia > 0.0f);
                 InvI = 1.0f / _inertia;
@@ -1340,8 +1359,8 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            /* TODO
-            // Move center of mass;
+            LocalCenter = Vector2.Zero;
+            /*
             var oldCenter = _sweep.Center;
             _sweep.LocalCenter = localCenter;
             _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);

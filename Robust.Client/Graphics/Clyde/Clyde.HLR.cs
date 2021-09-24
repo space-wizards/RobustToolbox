@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Map;
@@ -26,12 +27,12 @@ namespace Robust.Client.Graphics.Clyde
                 =
                 new();
 
-        public unsafe void Render()
+        public void Render()
         {
             CheckTransferringScreenshots();
 
             var allMinimized = true;
-            foreach (var windowReg in _windowing!.AllWindows)
+            foreach (var windowReg in _windows)
             {
                 if (!windowReg.IsMinimized)
                 {
@@ -45,9 +46,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 ClearFramebuffer(Color.Black);
 
-                // We have to keep running swapbuffers here
-                // or else the user's PC will turn into a heater!!
-                SwapMainBuffers();
+                // Sleep to avoid turning the computer into a heater.
+                Thread.Sleep(16);
                 return;
             }
 
@@ -59,11 +59,9 @@ namespace Robust.Client.Graphics.Clyde
             _debugStats.Reset();
 
             // Basic pre-render busywork.
-            // Clear screen to black.
-            ClearFramebuffer(Color.Black);
 
             // Update shared UBOs.
-            _updateUniformConstants(_windowing.MainWindow!.FramebufferSize);
+            _updateUniformConstants(_mainWindow!.FramebufferSize);
 
             {
                 CalcScreenMatrices(ScreenSize, out var proj, out var view);
@@ -75,7 +73,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DrawSplash(_renderHandle);
                 FlushRenderQueue();
-                SwapMainBuffers();
+                SwapAllBuffers();
                 return;
             }
 
@@ -85,6 +83,9 @@ namespace Robust.Client.Graphics.Clyde
                     RenderViewport(viewport);
             }
 
+            // Clear screen to correct color.
+            ClearFramebuffer(_userInterfaceManager.GetMainClearColor());
+
             using (DebugGroup("UI"))
             {
                 _userInterfaceManager.Render(_renderHandle);
@@ -93,10 +94,8 @@ namespace Robust.Client.Graphics.Clyde
 
             TakeScreenshot(ScreenshotType.Final);
 
-            BlitSecondaryWindows();
-
             // And finally, swap those buffers!
-            SwapMainBuffers();
+            SwapAllBuffers();
         }
 
         private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox)
@@ -131,7 +130,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             var list = GetOverlaysForSpace(space);
 
-            var worldBounds = CalcWorldBounds(vp);
+            var worldBounds = CalcWorldAABB(vp);
             var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldBounds);
 
             foreach (var overlay in list)
@@ -202,7 +201,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
 
-        private void DrawEntities(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void DrawEntities(Viewport viewport, Box2Rotated worldBounds, Box2 worldAABB, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (mapId == MapId.Nullspace || !_mapManager.HasMapEntity(mapId))
@@ -210,7 +209,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldBounds);
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB);
 
             var screenSize = viewport.Size;
 
@@ -262,7 +261,7 @@ namespace Robust.Client.Graphics.Clyde
                             null,
                             viewport,
                             new UIBox2i((0, 0), viewport.Size),
-                            worldBounds);
+                            worldAABB);
                         overlayIndex = j;
                         continue;
                     }
@@ -363,12 +362,12 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Box2 worldBounds,
+        private void ProcessSpriteEntities(MapId map, Box2Rotated worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = worldBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
@@ -387,19 +386,22 @@ namespace Robust.Client.Graphics.Clyde
                     entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }, bounds);
+                }, bounds, true);
             }
         }
 
         private void DrawSplash(IRenderHandle handle)
         {
+            // Clear screen to black for splash.
+            ClearFramebuffer(Color.Black);
+
             var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
             var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color clearColor=default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
@@ -413,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(default);
+                ClearFramebuffer(clearColor);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);
@@ -456,16 +458,17 @@ namespace Robust.Client.Graphics.Clyde
                 SetProjViewFull(proj, view);
 
                 // Calculate world-space AABB for camera, to cull off-screen things.
+                var worldAABB = CalcWorldAABB(viewport);
                 var worldBounds = CalcWorldBounds(viewport);
 
                 if (_eyeManager.CurrentMap != MapId.Nullspace)
                 {
                     using (DebugGroup("Lights"))
                     {
-                        DrawLightsAndFov(viewport, worldBounds, eye);
+                        DrawLightsAndFov(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldBounds);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB);
                     FlushRenderQueue();
 
                     using (DebugGroup("Grids"))
@@ -476,10 +479,11 @@ namespace Robust.Client.Graphics.Clyde
                     // We will also render worldspace overlays here so we can do them under / above entities as necessary
                     using (DebugGroup("Entities"))
                     {
-                        DrawEntities(viewport, worldBounds, eye);
+                        DrawEntities(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldBounds);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);
+                    FlushRenderQueue();
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
@@ -512,22 +516,38 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldBounds);
+                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB);
                 FlushRenderQueue();
 
                 _currentViewport = oldVp;
             });
         }
 
-        private static Box2 CalcWorldBounds(Viewport viewport)
+        private static Box2 CalcWorldAABB(Viewport viewport)
         {
             var eye = viewport.Eye;
             if (eye == null)
                 return default;
 
-            // TODO: This seems completely unfit by lacking things like rotation handling.
+            return GetAABB(eye, viewport);
+        }
+
+        private static Box2 GetAABB(IEye eye, Viewport viewport)
+        {
             return Box2.CenteredAround(eye.Position.Position,
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
+        }
+
+        private static Box2Rotated CalcWorldBounds(Viewport viewport)
+        {
+            var eye = viewport.Eye;
+            if (eye == null)
+                return default;
+
+            var rotation = -eye.Rotation;
+            var aabb = GetAABB(eye, viewport);
+
+            return new Box2Rotated(aabb, rotation, aabb.Center);
         }
 
         private sealed class OverlayComparer : IComparer<Overlay>

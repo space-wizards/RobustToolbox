@@ -112,9 +112,9 @@ namespace Robust.Client.Graphics.Clyde
                 return clydeTexture;
             }
 
-            public void RenderInRenderTarget(IRenderTarget target, Action a)
+            public void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default)
             {
-                _clyde.RenderInRenderTarget((RenderTargetBase) target, a);
+                _clyde.RenderInRenderTarget((RenderTargetBase) target, a, clearColor);
             }
 
             public void SetScissor(UIBox2i? scissorBox)
@@ -133,13 +133,20 @@ namespace Robust.Client.Graphics.Clyde
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
+                var oldModel = _clyde._currentMatrixModel;
+
+                var newModel = oldModel;
+                position += (oldModel.R0C2, oldModel.R1C2);
+                newModel.R0C2 = 0;
+                newModel.R1C2 = 0;
+                SetModelTransform(newModel);
 
                 // Switch rendering to pseudo-world space.
                 {
-                    CalcWorldProjMatrix(_clyde._currentRenderTarget.Size, out var proj);
+                    _clyde.CalcWorldProjMatrix(_clyde._currentRenderTarget.Size, out var proj);
 
-                    var ofsX = position.X - _clyde.ScreenSize.X / 2f;
-                    var ofsY = position.Y - _clyde.ScreenSize.Y / 2f;
+                    var ofsX = position.X - _clyde._currentRenderTarget.Size.X / 2f;
+                    var ofsY = position.Y - _clyde._currentRenderTarget.Size.Y / 2f;
 
                     var view = Matrix3.Identity;
                     view.R0C0 = scale.X;
@@ -161,6 +168,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Reset to screen space
                 SetProjView(oldProj, oldView);
+                SetModelTransform(oldModel);
             }
 
             public void DrawLine(Vector2 a, Vector2 b, Color color)
@@ -310,6 +318,11 @@ namespace Robust.Client.Graphics.Clyde
                     _renderHandle.DrawLine(@from, to, color * Modulate);
                 }
 
+                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor = default)
+                {
+                    _renderHandle.RenderInRenderTarget(target, a, clearColor);
+                }
+
                 public override void DrawRect(UIBox2 rect, Color color, bool filled = true)
                 {
                     if (filled)
@@ -331,6 +344,11 @@ namespace Robust.Client.Graphics.Clyde
                     var color = (modulate ?? Color.White) * Modulate;
                     _renderHandle.DrawTextureScreen(texture, rect.TopLeft, rect.TopRight,
                         rect.BottomLeft, rect.BottomRight, color, subRegion);
+                }
+
+                public override void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+                {
+                    _renderHandle.DrawEntity(entity, position, scale, overrideDirection);
                 }
             }
 
@@ -383,6 +401,11 @@ namespace Robust.Client.Graphics.Clyde
                 public override void DrawLine(Vector2 from, Vector2 to, Color color)
                 {
                     _renderHandle.DrawLine(@from, to, color * Modulate);
+                }
+
+                public override void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor = default)
+                {
+                    _renderHandle.RenderInRenderTarget(target, a, clearColor);
                 }
 
                 public override void DrawRect(Box2 rect, Color color, bool filled = true)

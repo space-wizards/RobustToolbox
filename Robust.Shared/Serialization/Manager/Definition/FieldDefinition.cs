@@ -4,7 +4,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public class FieldDefinition
+    internal class FieldDefinition
     {
         public FieldDefinition(
             DataFieldAttribute attr,

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
     public class DeserializedArray : DeserializationResult
     {
-        public DeserializedArray(Array array, IEnumerable<DeserializationResult> mappings)
+        public DeserializedArray(Array array, DeserializationResult[] mappings)
         {
             Value = array;
             Mappings = mappings;
@@ -13,52 +12,52 @@ namespace Robust.Shared.Serialization.Manager.Result
 
         public Array Value { get; }
 
-        public IEnumerable<DeserializationResult> Mappings { get; }
+        public DeserializationResult[] Mappings { get; }
 
         public override object RawValue => Value;
 
         public override DeserializationResult PushInheritanceFrom(DeserializationResult source)
         {
             var sourceCollection = source.Cast<DeserializedArray>();
-            var valueList = (Array) Activator.CreateInstance(Value.GetType(), Value.Length)!;
-            var resList = new List<DeserializationResult>();
+            var values = (Array) Activator.CreateInstance(Value.GetType(), Value.Length)!;
+            var results = new DeserializationResult[sourceCollection.Mappings.Length];
 
-            var i = 0;
-            foreach (var oldRes in sourceCollection.Mappings)
+            for (var i = 0; i < sourceCollection.Mappings.Length; i++)
             {
+                var oldRes = sourceCollection.Mappings[i];
                 var newRes = oldRes.Copy();
-                valueList.SetValue(newRes.RawValue, i);
-                resList.Add(newRes);
-                i++;
+
+                values.SetValue(newRes.RawValue, i);
+                results[i] = newRes;
             }
 
-            i = 0;
-            foreach (var oldRes in Mappings)
+            for (var i = 0; i < Mappings.Length; i++)
             {
+                var oldRes = Mappings[i];
                 var newRes = oldRes.Copy();
-                valueList.SetValue(newRes.RawValue, i);
-                resList.Add(newRes);
-                i++;
+
+                values.SetValue(newRes.RawValue, i);
+                results[i] = newRes;
             }
 
-            return new DeserializedArray(valueList, resList);
+            return new DeserializedArray(values, results);
         }
 
         public override DeserializationResult Copy()
         {
-            var valueList = (Array) Activator.CreateInstance(Value.GetType(), Value.Length)!;
-            var resList = new List<DeserializationResult>();
+            var values = (Array) Activator.CreateInstance(Value.GetType(), Value.Length)!;
+            var results = new DeserializationResult[Mappings.Length];
 
-            var i = 0;
-            foreach (var oldRes in Mappings)
+            for (var i = 0; i < Mappings.Length; i++)
             {
+                var oldRes = Mappings[i];
                 var newRes = oldRes.Copy();
-                valueList.SetValue(newRes.RawValue, i);
-                resList.Add(newRes);
-                i++;
+
+                values.SetValue(newRes.RawValue, i);
+                results[i] = newRes;
             }
 
-            return new DeserializedArray(valueList, resList);
+            return new DeserializedArray(values, results);
         }
 
         public override void CallAfterDeserializationHook()

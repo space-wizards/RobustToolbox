@@ -9,6 +9,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Holds a collection of ECS components that are attached to entities.
     /// </summary>
+    [Obsolete("Use IEntityManager instead.")]
     [PublicAPI]
     public interface IComponentManager
     {

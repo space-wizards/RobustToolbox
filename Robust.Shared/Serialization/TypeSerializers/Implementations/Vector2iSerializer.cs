@@ -20,7 +20,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             string raw = node.Value;
-            string[] args = raw.Split(',');
+            char splitter = raw.IndexOf(',') == -1 ? 'x' : ',';
+            string[] args = raw.Split(splitter);
 
             if (args.Length != 2)
             {
@@ -39,7 +40,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             string raw = node.Value;
-            string[] args = raw.Split(',');
+            char splitter = raw.IndexOf(',') == -1 ? 'x' : ',';
+            string[] args = raw.Split(splitter);
 
             if (args.Length != 2)
             {

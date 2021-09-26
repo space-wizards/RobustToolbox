@@ -59,9 +59,6 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
-            // TODO: So technically if you update entity positions in between broadphase and when physics is run under physicsisland
-            // (This includes in StartCollideEvent) then the cache will no longer be invalid.
-            // We need some kind of way to lock this (at least in debug).
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(HandleBroadphaseInit);
@@ -100,7 +97,6 @@ namespace Robust.Shared.Physics
             _broadphaseTransforms.Clear();
             _handledThisTick.Clear();
             EnsureBroadphaseTransforms();
-            // TODO: IF ANY OF THE BELOW UPDATES ARE FOR A BROADPHASE NEED TO MAKE SURE ITS CACHE IS INVALIDATED!!!
 
             while (_queuedBodyUpdates.TryDequeue(out var update))
             {
@@ -264,7 +260,8 @@ namespace Robust.Shared.Physics
                 foreach (var (broadphase, broadphaseXForm) in _broadphaseTransforms)
                 {
                     // Broadphase can't intersect with entities on itself so skip.
-                    if (proxyBody.Owner.Uid == broadphase.Owner.Uid) continue;
+                    if (proxyBody.Owner.Uid == broadphase.Owner.Uid ||
+                        broadphase.Owner.Transform.MapID != proxyBody.Owner.Transform.MapID) continue;
 
                     // If we're a map / our BB intersects then we'll do the work
                     if (_broadphaseBounding.TryGetValue(broadphase.Owner.Uid, out var broadphaseAABB) &&

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -14,7 +15,7 @@ namespace Robust.Client.GameObjects
             {
                 var anim = _activeAnimations[i];
                 if (!Update(anim, frameTime)) continue;
-                _activeAnimations.RemoveAt(i);
+                _activeAnimations.RemoveSwap(i);
                 anim.HasPlayingAnimation = false;
             }
         }

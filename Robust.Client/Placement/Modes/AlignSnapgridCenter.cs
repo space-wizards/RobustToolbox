@@ -9,8 +9,8 @@ namespace Robust.Client.Placement.Modes
 {
     public class SnapgridCenter : PlacementMode
     {
-        private IMapGrid? _grid;
-        float _snapSize;
+        protected IMapGrid? Grid;
+        protected float SnapSize;
 
         public override bool HasLineMode => true;
         public override bool HasGridMode => true;
@@ -19,23 +19,22 @@ namespace Robust.Client.Placement.Modes
 
         public override void Render(DrawingHandleWorld handle)
         {
-            if (_grid != null)
+            if (Grid != null)
             {
                 var viewportSize = (Vector2)pManager._clyde.ScreenSize;
 
-                var gridPosition = _grid.MapToGrid(pManager.eyeManager.ScreenToMap(Vector2.Zero));
-                var position = gridPosition.WithPosition(new Vector2(MathF.Floor(gridPosition.X), MathF.Floor(gridPosition.Y))).ToMap(IoCManager.Resolve<IEntityManager>());
+                var gridPosition = Grid.MapToGrid(pManager.eyeManager.ScreenToMap(Vector2.Zero));
 
-                var gridstart = pManager.eyeManager.WorldToScreen(new Vector2( //Find snap grid closest to screen origin and convert back to screen coords
-                    (float)(MathF.Round(position.X / _snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * _snapSize,
-                    (float)(MathF.Round(position.Y / _snapSize - 0.5f, MidpointRounding.AwayFromZero) + 0.5f) * _snapSize));
-                for (var a = gridstart.X; a < viewportSize.X; a += _snapSize * 32) //Iterate through screen creating gridlines
+                var gridstart = pManager.eyeManager.CoordinatesToScreen(
+                    gridPosition.WithPosition(new Vector2(MathF.Floor(gridPosition.X), MathF.Floor(gridPosition.Y))));
+
+                for (var a = gridstart.X; a < viewportSize.X; a += SnapSize * EyeManager.PixelsPerMeter) //Iterate through screen creating gridlines
                 {
                     var from = ScreenToWorld(new Vector2(a, 0));
                     var to = ScreenToWorld(new Vector2(a, viewportSize.Y));
                     handle.DrawLine(from, to, new Color(0, 0, 1f));
                 }
-                for (var a = gridstart.Y; a < viewportSize.Y; a += _snapSize * 32)
+                for (var a = gridstart.Y; a < viewportSize.Y; a += SnapSize * EyeManager.PixelsPerMeter)
                 {
                     var from = ScreenToWorld(new Vector2(0, a));
                     var to = ScreenToWorld(new Vector2(viewportSize.X, a));
@@ -52,22 +51,22 @@ namespace Robust.Client.Placement.Modes
             MouseCoords = ScreenToCursorGrid(mouseScreen);
 
             var gridId = MouseCoords.GetGridId(pManager.EntityManager);
-            _snapSize = 1f;
+            SnapSize = 1f;
             if (gridId.IsValid())
             {
-                _grid = pManager.MapManager.GetGrid(gridId);
-                _snapSize = _grid.TileSize; //Find snap size for the grid.
+                Grid = pManager.MapManager.GetGrid(gridId);
+                SnapSize = Grid.TileSize; //Find snap size for the grid.
             }
             else
             {
-                _grid = null;
+                Grid = null;
             }
 
-            GridDistancing = _snapSize;
+            GridDistancing = SnapSize;
 
             var mouseLocal = new Vector2( //Round local coordinates onto the snap grid
-                (float)(MathF.Round((MouseCoords.Position.X / _snapSize - 0.5f), MidpointRounding.AwayFromZero) + 0.5) * _snapSize,
-                (float)(MathF.Round((MouseCoords.Position.Y / _snapSize - 0.5f), MidpointRounding.AwayFromZero) + 0.5) * _snapSize);
+                (float)(MathF.Round((MouseCoords.Position.X / SnapSize - 0.5f), MidpointRounding.AwayFromZero) + 0.5) * SnapSize,
+                (float)(MathF.Round((MouseCoords.Position.Y / SnapSize - 0.5f), MidpointRounding.AwayFromZero) + 0.5) * SnapSize);
 
             //Adjust mouseCoords to new calculated position
             MouseCoords = new EntityCoordinates(MouseCoords.EntityId, mouseLocal + new Vector2(pManager.PlacementOffset.X, pManager.PlacementOffset.Y));

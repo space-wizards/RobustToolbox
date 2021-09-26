@@ -812,6 +812,9 @@ Types:
     Attribute: { All: True }
     AttributeTargets: { }
     AttributeUsageAttribute: { All: True }
+    BitConverter:
+      Methods:
+      - "uint ToUInt32(System.ReadOnlySpan`1<byte>)"
     Base64FormattingOptions: { } # Enum
     Boolean: { All: True }
     Byte: { All: True }

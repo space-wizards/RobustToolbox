@@ -47,11 +47,16 @@ namespace Robust.Server.Map
             // Seemed easier than having this method on GridFixtureSystem
             if (!TryGetGrid(chunk.GridId, out var grid) ||
                 !ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
-                chunk.Fixture == null) return;
+                chunk.Fixtures.Count == 0) return;
 
             // TODO: Like MapManager injecting this is a PITA so need to work out an easy way to do it.
             // Maybe just add like a PostInject method that gets called way later?
-            EntitySystem.Get<SharedBroadphaseSystem>().DestroyFixture(body, chunk.Fixture);
+            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+
+            foreach (var fixture in chunk.Fixtures)
+            {
+                broadphaseSystem.DestroyFixture(body, fixture);
+            }
         }
 
         public GameStateMapData? GetStateData(GameTick fromTick)
@@ -109,18 +114,47 @@ namespace Robust.Server.Map
                 gridDatums.Add(grid.Index, gridDatum);
             }
 
-            var mapDeletionsData = _mapDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.mapId).ToList();
-            var gridDeletionsData = _gridDeletionHistory.Where(d => d.tick >= fromTick).Select(d => d.gridId).ToList();
-            var mapCreations = _mapCreationTick.Where(kv => kv.Value >= fromTick && kv.Key != MapId.Nullspace)
-                .Select(kv => kv.Key).ToArray();
-            var gridCreations = _grids.Values.Where(g => g.CreatedTick >= fromTick && g.ParentMapId != MapId.Nullspace).ToDictionary(g => g.Index,
-                grid => new GameStateMapData.GridCreationDatum(grid.ChunkSize));
+            // -- Map Deletion Data --
+            var mapDeletionsData = new List<MapId>();
+
+            foreach (var (tick, mapId) in _mapDeletionHistory)
+            {
+                if (tick < fromTick) continue;
+                mapDeletionsData.Add(mapId);
+            }
+
+            // -- Grid Deletion Data
+            var gridDeletionsData = new List<GridId>();
+
+            foreach (var (tick, gridId) in _gridDeletionHistory)
+            {
+                if (tick < fromTick) continue;
+                gridDeletionsData.Add(gridId);
+            }
+
+            // -- Map Creations --
+            var mapCreations = new List<MapId>();
+
+            foreach (var (mapId, tick) in _mapCreationTick)
+            {
+                if (tick < fromTick || mapId == MapId.Nullspace) continue;
+                mapCreations.Add(mapId);
+            }
+
+            // - Grid Creation data --
+            var gridCreations = new Dictionary<GridId, GameStateMapData.GridCreationDatum>();
+
+            foreach (var (gridId, grid) in _grids)
+            {
+                if (grid.CreatedTick < fromTick || grid.ParentMapId == MapId.Nullspace) continue;
+                gridCreations.Add(gridId, new GameStateMapData.GridCreationDatum(grid.ChunkSize));
+            }
 
             // no point sending empty collections
             if (gridDatums.Count        == 0)  gridDatums        = default;
             if (gridDeletionsData.Count == 0)  gridDeletionsData = default;
             if (mapDeletionsData.Count  == 0)  mapDeletionsData  = default;
-            if (mapCreations.Length     == 0)  mapCreations      = default;
+            if (mapCreations.Count     == 0)  mapCreations       = default;
             if (gridCreations.Count     == 0)  gridCreations     = default;
 
             // no point even creating an empty map state if no data

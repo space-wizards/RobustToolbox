@@ -74,7 +74,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             // And I don't want to debug that ever again.
             Assert.NotNull(propertyInfo.DeclaringType);
 
-            var dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(propertyInfo.DeclaringType!);
+            var dataDefinition = ((SerializationManager) Serialization).GetDefinition(propertyInfo.DeclaringType!);
             Assert.NotNull(dataDefinition);
 
             var alwaysPushDataField = propertyInfo.GetAttribute<DataFieldAttribute>();
@@ -105,7 +105,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             propertyDefinition =
                 dataDefinition!.BaseFieldDefinitions.Single(e => e.Attribute.Equals(neverPushDataField));
             inheritanceBehaviour = propertyDefinition.InheritanceBehavior;
-            dataDefinition = ((SerializationManager) Serialization).GetDataDefinition(property!.DeclaringType!);
+            dataDefinition = ((SerializationManager) Serialization).GetDefinition(property!.DeclaringType!);
             Assert.NotNull(dataDefinition);
             Assert.That(inheritanceBehaviour, Is.EqualTo(InheritanceBehavior.Never));
         }

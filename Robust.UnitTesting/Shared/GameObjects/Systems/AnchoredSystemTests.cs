@@ -55,7 +55,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
         // TODO: The grid SnapGrid functions are internal, expose the query functions to content.
         // PhysicsComponent.BodyType is not able to be changed by content.
-        // SnapGridComponent is obsolete.
 
         /// <summary>
         /// When an entity is anchored to a grid tile, it's world position is centered on the tile.

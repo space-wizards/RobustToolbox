@@ -8,7 +8,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    [TestFixture, Parallelizable ,TestOf(typeof(ComponentManager))]
+    [TestFixture, Parallelizable ,TestOf(typeof(EntityManager))]
     public class ComponentManager_Tests
     {
         private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);
@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             manager.AddComponent(entity, firstComp);
             manager.RemoveComponent<DummyComponent>(entity.Uid);
             var secondComp = new DummyComponent { Owner = entity };
-            
+
             // Act
             manager.AddComponent(entity, secondComp);
 

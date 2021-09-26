@@ -48,7 +48,7 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            renderHandle.DrawEntity(Sprite.Owner, GlobalPixelPosition + PixelSize / 2, Scale * UIScale, OverrideDirection);
+            renderHandle.DrawEntity(Sprite.Owner, PixelSize / 2, Scale * UIScale, OverrideDirection);
         }
     }
 }

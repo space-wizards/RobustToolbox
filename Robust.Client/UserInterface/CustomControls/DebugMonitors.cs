@@ -12,7 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal sealed class DebugMonitors : VBoxContainer, IDebugMonitors
+    internal sealed class DebugMonitors : BoxContainer, IDebugMonitors
     {
         public bool ShowFPS { get => _fpsCounter.Visible; set => _fpsCounter.Visible = value; }
         public bool ShowCoords { get => _debugCoordsPanel.Visible; set => _debugCoordsPanel.Visible = value; }
@@ -41,12 +41,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             Visible = false;
 
-            /*
-            SetAnchorPreset(LayoutPreset.Wide);
-
-            MarginLeft = 2;
-            MarginTop = 2;
-            */
+            Orientation = LayoutOrientation.Vertical;
 
             _fpsCounter = new FpsCounter(gameTiming1);
             AddChild(_fpsCounter);

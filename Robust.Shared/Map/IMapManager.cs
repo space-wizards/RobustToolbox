@@ -111,6 +111,8 @@ namespace Robust.Shared.Map
 
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
 
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea);
+
         IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false);
 
         void DeleteGrid(GridId gridID);

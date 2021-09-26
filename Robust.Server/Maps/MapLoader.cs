@@ -11,6 +11,8 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
@@ -443,11 +445,47 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
+                var compManager = IoCManager.Resolve<IComponentManager>();
+                var entManager = IoCManager.Resolve<IEntityManager>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
-                foreach (var gridId in _mapManager.GetAllGrids())
+                foreach (var grid in Grids)
                 {
-                    gridFixtures.ProcessGrid(gridId.Index);
+                    var gridInternal = (IMapGridInternal) grid;
+                    var body = compManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
+                    gridFixtures.ProcessGrid(gridInternal);
+
+                    // Need to go through and double-check we don't have any hanging-on fixtures that
+                    // no longer apply (e.g. due to an update in GridFixtureSystem)
+                    var toRemove = new List<Fixture>();
+
+                    foreach (var fixture in body.Fixtures)
+                    {
+                        var found = false;
+
+                        foreach (var (_, chunk) in gridInternal.GetMapChunks())
+                        {
+                            foreach (var cFixture in chunk.Fixtures)
+                            {
+                                if (!cFixture.Equals(fixture)) continue;
+                                found = true;
+                                break;
+                            }
+
+                            if (found) break;
+                        }
+
+                        if (!found)
+                        {
+                            toRemove.Add(fixture);
+                        }
+                    }
+
+                    foreach (var fixture in toRemove)
+                    {
+                        broadphaseSystem.DestroyFixture(fixture);
+                    }
                 }
             }
 

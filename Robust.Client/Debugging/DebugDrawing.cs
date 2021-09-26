@@ -166,7 +166,7 @@ namespace Robust.Client.Debugging
                 var colorEdge = Color.Red.WithAlpha(0.33f);
                 var drawnJoints = new HashSet<Joint>();
 
-                foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewBounds))
+                foreach (var physBody in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(mapId, viewBounds))
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
 

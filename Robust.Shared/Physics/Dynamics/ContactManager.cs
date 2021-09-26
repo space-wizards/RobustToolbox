@@ -208,13 +208,6 @@ namespace Robust.Shared.Physics.Dynamics
                 bodyB.ContactEdges.Previous = c.NodeB;
             }
             bodyB.ContactEdges = c.NodeB;
-
-            // Wake up the bodies
-            if (fixtureA.Hard && fixtureB.Hard)
-            {
-                bodyA.Awake = true;
-                bodyB.Awake = true;
-            }
         }
 
         internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)

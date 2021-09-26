@@ -19,7 +19,7 @@ using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.GameObjects
 {
-    public abstract class SharedPhysicsSystem : EntitySystem
+    public abstract partial class SharedPhysicsSystem : EntitySystem
     {
         /*
          * TODO:
@@ -348,6 +348,9 @@ namespace Robust.Shared.GameObjects
                     controller.BeforeMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
                 }
             }
+
+            // As controllers may update rotations / positions on their own we can't re-use the cache for finding new contacts
+            _broadphaseSystem.EnsureBroadphaseTransforms();
 
             foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {

@@ -219,137 +219,12 @@ namespace Robust.Server.GameStates
                     }, LookupFlags.None);
 
                     //Calculate states for all visible anchored ents
-                    foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
-                    {
-                        var grid = (IMapGridInternal)publicMapGrid;
+                    GetDirtyChunksInRange(mapId, viewBox, chunksSeen, includedChunks);
 
-                        // Can't really check when grid was modified here because we may need to dump new chunks on the person
-                        // as right now if you make a new chunk the client never actually gets these entities here.
-
-                        foreach (var chunk in grid.GetMapChunks(viewBox))
-                        {
-                            // for each chunk, check dirty
-                            if (chunksSeen.TryGetValue(chunk, out var chunkSeen) && chunk.LastAnchoredModifiedTick < chunkSeen)
-                                continue;
-
-                            if (!includedChunks.TryGetValue(grid.Index, out var chunks))
-                            {
-                                chunks = new HashSet<IMapChunkInternal>();
-                                includedChunks[grid.Index] = chunks;
-                            }
-
-                            chunks.Add(chunk);
-                        }
-                    }
-
-                    var newChunkCount = 0;
-
-                    foreach (var (gridId, chunks) in includedChunks)
-                    {
-                        // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
-                        RecursiveAdd(_mapManager.GetGrid(gridId).GridEntityId, visibleEnts, includedChunks, visMask);
-
-                        foreach (var chunk in chunks)
-                        {
-                            if (!chunksSeen.TryGetValue(chunk, out var lastSeenChunk))
-                            {
-                                // Dump the whole thing on them.
-                                lastSeenChunk = GameTick.Zero;
-                                newChunkCount++;
-                            }
-
-                            foreach (var anchoredEnt in chunk.GetAllAnchoredEnts())
-                            {
-                                var ent = _entMan.GetEntity(anchoredEnt);
-
-                                if (ent.LastModifiedTick < lastSeenChunk)
-                                    continue;
-
-                                var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, lastSeenChunk);
-                                entityStates.Add(newState);
-                            }
-
-                            chunksSeen[chunk] = fromTick;
-                        }
-                    }
+                    var newChunkCount = GetAnchoredEntityStates(includedChunks, visibleEnts, visMask, chunksSeen, session, entityStates, fromTick);
 
                     // To fix pop-in we'll go through nearby chunks and send them little-by-little
-                    if (newChunkCount == 0)
-                    {
-                        void StreamChunk(int iteration, IMapChunkInternal chunk, List<EntityState> entityStates)
-                        {
-                            var chunkSize = chunk.ChunkSize;
-                            var index = iteration * StreamingTilesPerTick;
-                            // Logger.Debug($"Streaming chunk {chunk.Indices} iteration {iteration + 1}");
-
-                            for (var i = index; i < Math.Min(index + StreamingTilesPerTick, chunkSize * chunkSize); i++)
-                            {
-                                var x = (ushort) (i / chunkSize);
-                                var y = (ushort) (i % chunkSize);
-
-                                foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
-                                {
-                                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, GameTick.Zero);
-                                    entityStates.Add(newState);
-                                }
-                            }
-                        }
-
-                        var stream = _streamingChunks[session];
-
-                        // Check if we're already streaming a chunk and if so then continue it.
-                        if (stream.Chunk != null)
-                        {
-                            // Came into PVS range so we'll stop streaming.
-                            if (chunksSeen.ContainsKey(stream.Chunk))
-                            {
-                                stream.Chunk = null;
-                                continue;
-                            }
-
-                            var chunkSize = stream.Chunk.ChunkSize;
-                            var streamsRequired = (int) MathF.Ceiling((chunkSize * chunkSize) / (float) StreamingTilesPerTick);
-
-                            StreamChunk(stream.Iterations, stream.Chunk, entityStates);
-                            stream.Iterations += 1;
-
-                            // Chunk loaded in so we'll mark it as sent on the tick we started.
-                            // Doesn't really matter if we send some duplicate data (e.g. entity changes since it started).
-                            if (stream.Iterations >= streamsRequired)
-                            {
-                                chunksSeen[stream.Chunk] = stream.Tick;
-                                stream.Chunk = null;
-                            }
-
-                            continue;
-                        }
-
-                        if (StreamRange <= 0f) continue;
-
-                        // Find a new chunk to start streaming in range.
-                        var enlarged = viewBox.Enlarged(StreamRange);
-
-                        foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
-                        {
-                            var grid = (IMapGridInternal) publicMapGrid;
-
-                            foreach (var chunk in grid.GetMapChunks(enlarged))
-                            {
-                                // if we've ever seen this chunk don't worry about it.
-                                if (chunksSeen.ContainsKey(chunk))
-                                    continue;
-
-                                StreamChunk(0, chunk, entityStates);
-                                // DebugTools.Assert(stream.Chunk == null);
-                                stream.Chunk = chunk;
-                                stream.Tick = fromTick;
-                                stream.Iterations = 1;
-                                break;
-                            }
-
-                            if (stream.Chunk != null) break;
-                        }
-                    }
+                    StreamChunks(newChunkCount, session, chunksSeen, entityStates, viewBox, fromTick, mapId);
                 }
 
                 viewers.Clear();
@@ -361,6 +236,167 @@ namespace Robust.Server.GameStates
 
             // no point sending an empty collection
             return (entityStates.Count == 0 ? default : entityStates, deletions.Count == 0 ? default : deletions);
+        }
+
+        // Look the reason I split these out is because it makes local profiling easier don't @ me
+        private void GetDirtyChunksInRange(
+            MapId mapId,
+            Box2 viewBox,
+            Dictionary<IMapChunkInternal, GameTick> chunksSeen,
+            Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks)
+        {
+            foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
+            {
+                var grid = (IMapGridInternal)publicMapGrid;
+
+                // Can't really check when grid was modified here because we may need to dump new chunks on the person
+                // as right now if you make a new chunk the client never actually gets these entities here.
+
+                foreach (var chunk in grid.GetMapChunks(viewBox))
+                {
+                    // for each chunk, check dirty
+                    if (chunksSeen.TryGetValue(chunk, out var chunkSeen) && chunk.LastAnchoredModifiedTick < chunkSeen)
+                        continue;
+
+                    if (!includedChunks.TryGetValue(grid.Index, out var chunks))
+                    {
+                        chunks = new HashSet<IMapChunkInternal>();
+                        includedChunks[grid.Index] = chunks;
+                    }
+
+                    chunks.Add(chunk);
+                }
+            }
+        }
+
+        private int GetAnchoredEntityStates(
+            Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks,
+            HashSet<EntityUid> visibleEnts,
+            uint visMask,
+            Dictionary<IMapChunkInternal, GameTick> chunksSeen,
+            ICommonSession session,
+            List<EntityState> entityStates,
+            GameTick fromTick)
+        {
+            var count = 0;
+
+            foreach (var (gridId, chunks) in includedChunks)
+            {
+                // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
+                RecursiveAdd(_mapManager.GetGrid(gridId).GridEntityId, visibleEnts, includedChunks, visMask);
+
+                foreach (var chunk in chunks)
+                {
+                    if (!chunksSeen.TryGetValue(chunk, out var lastSeenChunk))
+                    {
+                        // Dump the whole thing on them.
+                        lastSeenChunk = GameTick.Zero;
+                        count++;
+                    }
+
+                    chunk.FastGetAllAnchoredEnts(uid =>
+                    {
+                        var ent = _entMan.GetEntity(uid);
+
+                        if (ent.LastModifiedTick < lastSeenChunk)
+                            return;
+
+                        var newState = ServerGameStateManager.GetEntityState(_entMan, session, uid, lastSeenChunk);
+                        entityStates.Add(newState);
+                    });
+
+                    chunksSeen[chunk] = fromTick;
+                }
+            }
+
+            return count;
+        }
+
+        private void StreamChunks(
+            int newChunkCount,
+            ICommonSession session,
+            Dictionary<IMapChunkInternal, GameTick> chunksSeen,
+            List<EntityState> entityStates,
+            Box2 viewBox,
+            GameTick fromTick,
+            MapId mapId)
+        {
+            if (newChunkCount == 0)
+            {
+                void StreamChunk(int iteration, IMapChunkInternal chunk, List<EntityState> entityStates)
+                {
+                    var chunkSize = chunk.ChunkSize;
+                    var index = iteration * StreamingTilesPerTick;
+                    // Logger.Debug($"Streaming chunk {chunk.Indices} iteration {iteration + 1}");
+
+                    for (var i = index; i < Math.Min(index + StreamingTilesPerTick, chunkSize * chunkSize); i++)
+                    {
+                        var x = (ushort) (i / chunkSize);
+                        var y = (ushort) (i % chunkSize);
+
+                        foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
+                        {
+                            var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, GameTick.Zero);
+                            entityStates.Add(newState);
+                        }
+                    }
+                }
+
+                var stream = _streamingChunks[session];
+
+                // Check if we're already streaming a chunk and if so then continue it.
+                if (stream.Chunk != null)
+                {
+                    // Came into PVS range so we'll stop streaming.
+                    if (chunksSeen.ContainsKey(stream.Chunk))
+                    {
+                        stream.Chunk = null;
+                        return;
+                    }
+
+                    var chunkSize = stream.Chunk.ChunkSize;
+                    var streamsRequired = (int) MathF.Ceiling((chunkSize * chunkSize) / (float) StreamingTilesPerTick);
+
+                    StreamChunk(stream.Iterations, stream.Chunk, entityStates);
+                    stream.Iterations += 1;
+
+                    // Chunk loaded in so we'll mark it as sent on the tick we started.
+                    // Doesn't really matter if we send some duplicate data (e.g. entity changes since it started).
+                    if (stream.Iterations >= streamsRequired)
+                    {
+                        chunksSeen[stream.Chunk] = stream.Tick;
+                        stream.Chunk = null;
+                    }
+
+                    return;
+                }
+
+                if (StreamRange <= 0f) return;
+
+                // Find a new chunk to start streaming in range.
+                var enlarged = viewBox.Enlarged(StreamRange);
+
+                foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
+                {
+                    var grid = (IMapGridInternal) publicMapGrid;
+
+                    foreach (var chunk in grid.GetMapChunks(enlarged))
+                    {
+                        // if we've ever seen this chunk don't worry about it.
+                        if (chunksSeen.ContainsKey(chunk))
+                            continue;
+
+                        StreamChunk(0, chunk, entityStates);
+                        // DebugTools.Assert(stream.Chunk == null);
+                        stream.Chunk = chunk;
+                        stream.Tick = fromTick;
+                        stream.Iterations = 1;
+                        break;
+                    }
+
+                    if (stream.Chunk != null) break;
+                }
+            }
         }
 
         private void GenerateEntityStates(List<EntityState> entityStates, ICommonSession session, GameTick fromTick, HashSet<EntityUid> currentSet, List<EntityUid> deletions)

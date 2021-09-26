@@ -94,7 +94,6 @@ namespace Robust.Shared.Physics
         /// </summary>
         public void ProcessUpdates()
         {
-            _broadphaseTransforms.Clear();
             _handledThisTick.Clear();
             EnsureBroadphaseTransforms();
 

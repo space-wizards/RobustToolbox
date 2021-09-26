@@ -345,7 +345,11 @@ Types:
       - "string ToTitleCase(string)"
       - "string ToTitleCase(string)"
       - "string ToUpper(string)"
+  System.IO.Compression:
+    CompressionMode: { } # Enum
+    DeflateStream: { All: True }
   System.IO:
+    BinaryReader: { All: True }
     FileAccess: { } # Enum
     FileMode: { } # Enum
     FileShare: { } # Enum
@@ -353,6 +357,8 @@ Types:
     InvalidDataException: { All: True }
     IOException: { All: True }
     MemoryStream: { All: True }
+    Path: { All: True }
+    SeekOrigin: { } # Enum
     Stream: { All: True }
     StreamReader:
       Fields:

@@ -47,11 +47,16 @@ namespace Robust.Server.Map
             // Seemed easier than having this method on GridFixtureSystem
             if (!TryGetGrid(chunk.GridId, out var grid) ||
                 !ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
-                chunk.Fixture == null) return;
+                chunk.Fixtures.Count == 0) return;
 
             // TODO: Like MapManager injecting this is a PITA so need to work out an easy way to do it.
             // Maybe just add like a PostInject method that gets called way later?
-            EntitySystem.Get<SharedBroadphaseSystem>().DestroyFixture(body, chunk.Fixture);
+            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+
+            foreach (var fixture in chunk.Fixtures)
+            {
+                broadphaseSystem.DestroyFixture(body, fixture);
+            }
         }
 
         public GameStateMapData? GetStateData(GameTick fromTick)

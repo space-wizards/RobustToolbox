@@ -610,7 +610,7 @@ namespace Robust.Client.Graphics.Clyde
 
             protected override void Dispose(bool disposing)
             {
-                if (disposing)
+                if (_clyde.IsMainThread())
                 {
                     // Main thread, do direct GL deletion.
                     _clyde.DeleteTexture(TextureId);

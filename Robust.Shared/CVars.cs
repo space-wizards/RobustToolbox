@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading;
+using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -81,6 +82,12 @@ namespace Robust.Shared
 
         public static readonly CVarDef<bool> NetPVS =
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        public static readonly CVarDef<float> StreamedTilesPerSecond =
+            CVarDef.Create("net.stream_tps", 500f, CVar.ARCHIVE | CVar.SERVER);
+
+        public static readonly CVarDef<float> StreamedTileRange =
+            CVarDef.Create("net.stream_range", 15f, CVar.ARCHIVE | CVar.SERVER);
 
         public static readonly CVarDef<float> NetMaxUpdateRange =
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
@@ -301,6 +308,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<bool> DisplayBlurLight =
+            CVarDef.Create("display.blur_light", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> DisplayBlurLightFactor =
+            CVarDef.Create("display.blur_light_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
@@ -421,6 +434,9 @@ namespace Robust.Shared
          * AUDIO
          */
 
+        public static readonly CVarDef<int> AudioAttenuation =
+            CVarDef.Create("audio.attenuation", (int) Attenuation.Default, CVar.REPLICATED | CVar.ARCHIVE);
+
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
 
@@ -437,6 +453,13 @@ namespace Robust.Shared
         /*
          * PHYSICS
          */
+
+        // Grid fixtures
+        /// <summary>
+        /// I'ma be real with you: the only reason this exists is to get tests working.
+        /// </summary>
+        public static readonly CVarDef<bool> GenerateGridFixtures =
+            CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
 
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =

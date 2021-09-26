@@ -18,7 +18,7 @@ namespace Robust.Shared.Containers
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
-    [NetworkedComponent()]
+    [NetworkedComponent]
     public class ContainerManagerComponent : Component, IContainerManager
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
@@ -256,9 +256,9 @@ namespace Robust.Shared.Containers
 
         public readonly struct AllContainersEnumerable : IEnumerable<IContainer>
         {
-            private readonly ContainerManagerComponent _manager;
+            private readonly ContainerManagerComponent? _manager;
 
-            public AllContainersEnumerable(ContainerManagerComponent manager)
+            public AllContainersEnumerable(ContainerManagerComponent? manager)
             {
                 _manager = manager;
             }
@@ -283,9 +283,9 @@ namespace Robust.Shared.Containers
         {
             private Dictionary<string, IContainer>.ValueCollection.Enumerator _enumerator;
 
-            public AllContainersEnumerator(ContainerManagerComponent manager)
+            public AllContainersEnumerator(ContainerManagerComponent? manager)
             {
-                _enumerator = manager.Containers.Values.GetEnumerator();
+                _enumerator = manager?.Containers.Values.GetEnumerator() ?? new();
                 Current = default;
             }
 

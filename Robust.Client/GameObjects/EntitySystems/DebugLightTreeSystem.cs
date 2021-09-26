@@ -65,14 +65,15 @@ namespace Robust.Client.GameObjects
                 var map = _eyeManager.CurrentMap;
                 if (map == MapId.Nullspace) return;
 
-                var viewport = _eyeManager.GetWorldViewport();
+                var viewport = _eyeManager.GetWorldViewbounds();
+                var worldBounds = viewport.CalcBoundingBox();
 
-                foreach (var tree in _tree.GetLightTrees(map, viewport))
+                foreach (var tree in _tree.GetRenderTrees(map, viewport))
                 {
-                    foreach (var light in tree)
+                    foreach (var light in tree.LightTree)
                     {
                         var aabb = _lookup.GetWorldAabbFromEntity(light.Owner);
-                        if (!aabb.Intersects(viewport)) continue;
+                        if (!aabb.Intersects(worldBounds)) continue;
 
                         args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.1f));
                     }

@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
-    public interface IEntityManager
+    public interface IEntityManager : IComponentManager
     {
         /// <summary>
         ///     The current simulation tick being processed.

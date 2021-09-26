@@ -158,6 +158,7 @@ namespace Robust.Client.Debugging
                 _hoverStartScreen = mouseScreenPos.Position;
 
                 var viewport = _eyeManager.GetWorldViewport();
+                var viewBounds = _eyeManager.GetWorldViewbounds();
 
                 if (viewport.IsEmpty()) return;
 
@@ -165,7 +166,7 @@ namespace Robust.Client.Debugging
                 var colorEdge = Color.Red.WithAlpha(0.33f);
                 var drawnJoints = new HashSet<Joint>();
 
-                foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewport))
+                foreach (var physBody in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(mapId, viewBounds))
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
 
@@ -175,12 +176,18 @@ namespace Robust.Client.Debugging
                     var worldBox = physBody.GetWorldAABB();
                     if (worldBox.IsEmpty()) continue;
 
+                    var pTransform = physBody.GetTransform();
+
                     foreach (var fixture in physBody.Fixtures)
                     {
                         var shape = fixture.Shape;
                         var sleepPercent = physBody.Awake ? 0.0f : 1.0f;
                         shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, sleepPercent);
+
                         drawing.SetTransform(in Matrix3.Identity);
+
+                        var aabb = shape.ComputeAABB(pTransform, 0);
+                        worldHandle.DrawRect(aabb, Color.Blue, false);
                     }
 
                     foreach (var joint in physBody.Joints)

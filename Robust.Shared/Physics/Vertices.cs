@@ -20,24 +20,29 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
-using System.Collections.Generic;
+using System;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Physics
 {
     public static class Vertices
     {
-        public static void ForceCounterClockwise(this List<Vector2> vertices)
+        public static Vector2[] ForceCounterClockwise(Span<Vector2> vertices)
         {
-            if (vertices.Count < 3) return;
+            if (vertices.Length < 3) return vertices.ToArray();
 
-            if (!vertices.IsCounterClockwise()) vertices.Reverse();
+            if (!IsCounterClockwise(vertices))
+            {
+                vertices.Reverse();
+            }
+
+            return vertices.ToArray();
         }
 
-        public static bool IsCounterClockwise(this List<Vector2> vertices)
+        public static bool IsCounterClockwise(Span<Vector2> vertices)
         {
-            if (vertices.Count < 3) return false;
-            return vertices.GetSignedArea() > 0.0f;
+            if (vertices.Length < 3) return false;
+            return GetSignedArea(vertices) > 0.0f;
         }
 
         /// <summary>
@@ -45,9 +50,9 @@ namespace Robust.Shared.Physics
         /// If the area is less than 0, it indicates that the polygon is clockwise winded.
         /// </summary>
         /// <returns>The signed area</returns>
-        public static float GetSignedArea(this List<Vector2> vertices)
+        public static float GetSignedArea(Span<Vector2> vertices)
         {
-            var count = vertices.Count;
+            var count = vertices.Length;
 
             //The simplest polygon which can exist in the Euclidean plane has 3 sides.
             if (count < 3)

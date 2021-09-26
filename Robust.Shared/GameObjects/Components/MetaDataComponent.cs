@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
-    public interface IMetaDataComponent
+    public interface IMetaDataComponent : IComponent
     {
         /// <summary>
         ///     The in-game name of this entity.

@@ -8,6 +8,7 @@ using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
@@ -19,12 +20,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             bool skipHook,
             ISerializationContext? context = null)
         {
-            string raw = node.Value;
-            string[] args = raw.Split(',');
-
-            if (args.Length != 4)
+            if (!VectorSerializerUtility.TryParseArgs(node.Value, 4, out var args))
             {
-                throw new InvalidMappingException($"Could not parse {nameof(Vector4)}: '{raw}'");
+                throw new InvalidMappingException($"Could not parse {nameof(Vector4)}: '{node.Value}'");
             }
 
             var x = float.Parse(args[0], CultureInfo.InvariantCulture);
@@ -40,12 +38,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            string raw = node.Value;
-            string[] args = raw.Split(',');
-
-            if (args.Length != 4)
+            if (!VectorSerializerUtility.TryParseArgs(node.Value, 4, out var args))
             {
-                return new ErrorNode(node, "Invalid amount of arguments for Vector4.");
+                throw new InvalidMappingException($"Could not parse {nameof(Vector4)}: '{node.Value}'");
             }
 
             return float.TryParse(args[0], NumberStyles.Any, CultureInfo.InvariantCulture, out _) &&

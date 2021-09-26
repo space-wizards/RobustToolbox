@@ -115,8 +115,8 @@ namespace Robust.Shared.Timing
                 _unInitializedMaps.Add(args.Map);
             };
 
-            if(_conhost.IsClient)
-                return;
+            //if(_conhost.IsClient)
+            //  return;
 
             _conhost.RegisterCommand("pausemap",
                 "Pauses a map, pausing all simulation processing on it.",

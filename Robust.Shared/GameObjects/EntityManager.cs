@@ -249,6 +249,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var transform = entity.Transform;
+            var metadata = entity.MetaData;
             entity.LifeStage = EntityLifeStage.Terminating;
 
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
@@ -270,7 +271,7 @@ namespace Robust.Shared.GameObjects
                 transform.DetachParentToNull();
             }
 
-            entity.LifeStage = EntityLifeStage.Deleted;
+            metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
             Entities.Remove(entity.Uid);
@@ -359,8 +360,12 @@ namespace Robust.Shared.GameObjects
             // We do this after the event, so if the event throws we have not committed
             Entities[entity.Uid] = entity;
 
-            // allocate the required MetaDataComponent
-            AddComponent<MetaDataComponent>(entity);
+            // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
+            var metadata = new MetaDataComponent() { Owner = entity };
+            entity.MetaData = metadata;
+
+            // add the required MetaDataComponent directly.
+            AddComponentInternal(uid.Value, metadata);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(entity);

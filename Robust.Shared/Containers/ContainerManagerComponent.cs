@@ -35,7 +35,7 @@ namespace Robust.Shared.Containers
         {
             base.OnRemove();
 
-            // IContianer.Shutdown modifies the _containers collection
+            // IContainer.Shutdown modifies the _containers collection
             foreach (var container in Containers.Values.ToArray())
             {
                 container.Shutdown();
@@ -61,7 +61,7 @@ namespace Robust.Shared.Containers
         public override ComponentState GetComponentState(ICommonSession player)
         {
             // naive implementation that just sends the full state of the component
-            List<ContainerManagerComponentState.ContainerData> containerSet = new();
+            List<ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
 
             foreach (var container in Containers.Values)
             {

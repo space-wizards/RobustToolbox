@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    internal sealed class AnimationPlayerSystem : EntitySystem
+    public sealed class AnimationPlayerSystem : EntitySystem
     {
         private readonly List<AnimationPlayerComponent> _activeAnimations = new();
 
@@ -53,6 +53,42 @@ namespace Robust.Client.GameObjects
             }
 
             return false;
+        }
+
+        /// <summary>
+        ///     Start playing an animation.
+        /// </summary>
+        public void Play(EntityUid uid, Animation animation, string key)
+        {
+            var component = ComponentManager.EnsureComponent<AnimationPlayerComponent>(EntityManager.GetEntity(uid));
+            Play(component, animation, key);
+        }
+
+        /// <summary>
+        ///     Start playing an animation.
+        /// </summary>
+        public void Play(AnimationPlayerComponent component, Animation animation, string key)
+        {
+            AddComponent(component);
+            var playback = new AnimationPlaybackShared.AnimationPlayback(animation);
+
+            component.PlayingAnimations.Add(key, playback);
+        }
+
+        public bool HasRunningAnimation(EntityUid uid, string key)
+        {
+            return ComponentManager.TryGetComponent(uid, out AnimationPlayerComponent? component) &&
+                   component.PlayingAnimations.ContainsKey(key);
+        }
+
+        public bool HasRunningAnimation(AnimationPlayerComponent component, string key)
+        {
+            return component.PlayingAnimations.ContainsKey(key);
+        }
+
+        public void Stop(AnimationPlayerComponent component, string key)
+        {
+            component.PlayingAnimations.Remove(key);
         }
     }
 

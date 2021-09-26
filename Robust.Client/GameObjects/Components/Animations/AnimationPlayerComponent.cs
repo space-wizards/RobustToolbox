@@ -20,6 +20,8 @@ namespace Robust.Client.GameObjects
         internal readonly Dictionary<string, AnimationPlayback> PlayingAnimations
             = new();
 
+        internal bool HasPlayingAnimation = false;
+
         /// <summary>
         ///     Start playing an animation.
         /// </summary>

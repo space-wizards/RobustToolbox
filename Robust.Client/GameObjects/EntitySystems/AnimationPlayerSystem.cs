@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Client.Animations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -17,13 +15,15 @@ namespace Robust.Client.GameObjects
                 var anim = _activeAnimations[i];
                 if (!Update(anim, frameTime)) continue;
                 _activeAnimations.RemoveAt(i);
+                anim.HasPlayingAnimation = false;
             }
         }
 
         internal void AddComponent(AnimationPlayerComponent component)
         {
-            if (_activeAnimations.Contains(component)) return;
+            if (component.HasPlayingAnimation) return;
             _activeAnimations.Add(component);
+            component.HasPlayingAnimation = true;
         }
 
         private bool Update(AnimationPlayerComponent component, float frameTime)

@@ -334,7 +334,7 @@ Types:
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
-    NumberStyles: { All: True } # Enum
+    NumberStyles: { } # Enum
     TextInfo:
       Methods:
       - "bool get_IsRightToLeft()"

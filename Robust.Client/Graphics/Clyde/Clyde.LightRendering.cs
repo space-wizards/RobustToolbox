@@ -4,8 +4,8 @@ using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -44,6 +44,7 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _fovShaderHandle;
         private ClydeHandle _fovLightShaderHandle;
         private ClydeHandle _wallBleedBlurShaderHandle;
+        private ClydeHandle _lightBlurShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
 
         // Sampler used to sample the FovTexture with linear filtering, used in the lighting FOV pass
@@ -199,6 +200,7 @@ namespace Robust.Client.Graphics.Clyde
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
             _fovLightShaderHandle = LoadShaderHandle("/Shaders/Internal/fov-lighting.swsl");
             _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
+            _lightBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/light-blur.swsl");
             _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
         }
 
@@ -333,8 +335,9 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
+            eye.GetViewMatrix(out var eyeTransform, eye.Scale);
 
-            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
+            UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
 
             DrawFov(viewport, eye);
 
@@ -484,6 +487,9 @@ namespace Robust.Client.Graphics.Clyde
 
             CheckGlError();
 
+            if (_cfg.GetCVar(CVars.DisplayBlurLight))
+                BlurLights(viewport, eye);
+
             BlurOntoWalls(viewport, eye);
 
             MergeWallLayer(viewport);
@@ -566,6 +572,69 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             return (_lightsToRenderList, state.count, expandedBounds);
+        }
+
+        private void BlurLights(Viewport viewport, IEye eye)
+        {
+            using var _ = DebugGroup(nameof(BlurLights));
+
+            GL.Disable(EnableCap.Blend);
+            CheckGlError();
+            CalcScreenMatrices(viewport.Size, out var proj, out var view);
+            SetProjViewBuffer(proj, view);
+
+            var shader = _loadedShaders[_lightBlurShaderHandle].Program;
+            shader.Use();
+
+            SetupGlobalUniformsImmediate(shader, viewport.LightRenderTarget.Texture);
+
+            var size = viewport.LightRenderTarget.Size;
+            shader.SetUniformMaybe("size", (Vector2)size);
+            shader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
+
+            GL.Viewport(0, 0, size.X, size.Y);
+            CheckGlError();
+
+            // Initially we're pulling from the light render target.
+            // So we set it out of the loop so
+            // _wallBleedIntermediateRenderTarget2 gets bound at the end of the loop body.
+            SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+
+            // Have to scale the blurring radius based on viewport size and camera zoom.
+            const float refCameraHeight = 14;
+            var facBase = _cfg.GetCVar(CVars.DisplayBlurLightFactor);
+            var cameraSize = eye.Zoom.Y * viewport.Size.Y * (1 / viewport.RenderScale.Y) / EyeManager.PixelsPerMeter;
+            // 7e-3f is just a magic factor that makes it look ok.
+            var factor = facBase * (refCameraHeight / cameraSize);
+
+            // Multi-iteration gaussian blur.
+            for (var i = 3; i > 0; i--)
+            {
+                var scale = (i + 1) * factor;
+                // Set factor.
+                shader.SetUniformMaybe("radius", scale);
+
+                BindRenderTargetFull(viewport.LightBlurTarget);
+
+                // Blur horizontally to _wallBleedIntermediateRenderTarget1.
+                shader.SetUniformMaybe("direction", Vector2.UnitX);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+
+                SetTexture(TextureUnit.Texture0, viewport.LightBlurTarget.Texture);
+
+                BindRenderTargetFull(viewport.LightRenderTarget);
+
+                // Blur vertically to _wallBleedIntermediateRenderTarget2.
+                shader.SetUniformMaybe("direction", Vector2.UnitY);
+                _drawQuad(Vector2.Zero, viewport.Size, Matrix3.Identity, shader);
+
+                SetTexture(TextureUnit.Texture0, viewport.LightRenderTarget.Texture);
+            }
+
+            GL.Enable(EnableCap.Blend);
+            CheckGlError();
+            // We didn't trample over the old _currentMatrices so just roll it back.
+            SetProjViewBuffer(_currentMatrixProj, _currentMatrixView);
         }
 
         private void BlurOntoWalls(Viewport viewport, IEye eye)
@@ -750,7 +819,7 @@ namespace Robust.Client.Graphics.Clyde
             _drawQuad(a, b, Matrix3.Identity, shader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3 eyeTransform)
         {
             // This method generates two sets of occlusion geometry:
             // 3D geometry used during depth projection.
@@ -798,16 +867,16 @@ namespace Robust.Client.Graphics.Clyde
                         var worldTransform = transform.WorldMatrix;
                         var box = occluder.BoundingBox;
 
-                        var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
-                        var (trX, trY) = worldTransform.Transform(box.TopRight);
-                        var (brX, brY) = worldTransform.Transform(box.BottomRight);
-                        var (blX, blY) = worldTransform.Transform(box.BottomLeft);
+                        var tl = worldTransform.Transform(box.TopLeft);
+                        var tr = worldTransform.Transform(box.TopRight);
+                        var br = worldTransform.Transform(box.BottomRight);
+                        var bl = worldTransform.Transform(box.BottomLeft);
 
                         // Faces.
-                        var faceN = new Vector4(tlX, tlY, trX, trY);
-                        var faceE = new Vector4(trX, trY, brX, brY);
-                        var faceS = new Vector4(brX, brY, blX, blY);
-                        var faceW = new Vector4(blX, blY, tlX, tlY);
+                        var faceN = new Vector4(tl.X, tl.Y, tr.X, tr.Y);
+                        var faceE = new Vector4(tr.X, tr.Y, br.X, br.Y);
+                        var faceS = new Vector4(br.X, br.Y, bl.X, bl.Y);
+                        var faceW = new Vector4(bl.X, bl.Y, tl.X, tl.Y);
 
                         //
                         // Buckle up.
@@ -840,10 +909,10 @@ namespace Robust.Client.Graphics.Clyde
                         //
 
                         // Calculate delta positions from camera.
-                        var (dTlX, dTlY) = (tlX, tlY) - eyePosition;
-                        var (dTrX, dTrY) = (trX, trY) - eyePosition;
-                        var (dBlX, dBlY) = (blX, blY) - eyePosition;
-                        var (dBrX, dBrY) = (brX, brY) - eyePosition;
+                        var (dTlX, dTlY) = eyeTransform.Transform(tl);
+                        var (dTrX, dTrY) = eyeTransform.Transform(tr);
+                        var (dBlX, dBlY) = eyeTransform.Transform(bl);
+                        var (dBrX, dBrY) = eyeTransform.Transform(br);
 
                         // Get which neighbors are occluding.
                         var no = (occluder.Occluding & OccluderDir.North) != 0;
@@ -904,10 +973,10 @@ namespace Robust.Client.Graphics.Clyde
                         }
 
                         // Generate mask geometry.
-                        arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
-                        arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);
-                        arrayMaskBuffer[ami + 2] = new Vector2(brX, brY);
-                        arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
+                        arrayMaskBuffer[ami + 0] = new Vector2(tl.X, tl.Y);
+                        arrayMaskBuffer[ami + 1] = new Vector2(tr.X, tr.Y);
+                        arrayMaskBuffer[ami + 2] = new Vector2(br.X, br.Y);
+                        arrayMaskBuffer[ami + 3] = new Vector2(bl.X, bl.Y);
 
                         // Generate mask indices.
                         QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort)ami);
@@ -966,6 +1035,11 @@ namespace Robust.Client.Graphics.Clyde
                 new RenderTargetFormatParameters(lightMapColorFormat, hasDepthStencil: true),
                 lightMapSampleParameters,
                 $"{viewport.Name}-{nameof(viewport.LightRenderTarget)}");
+
+            viewport.LightBlurTarget = CreateRenderTarget(lightMapSize,
+                new RenderTargetFormatParameters(lightMapColorFormat),
+                lightMapSampleParameters,
+                $"{viewport.Name}-{nameof(viewport.LightBlurTarget)}");
 
             viewport.WallBleedIntermediateRenderTarget1 = CreateRenderTarget(lightMapSizeQuart, lightMapColorFormat,
                 lightMapSampleParameters,

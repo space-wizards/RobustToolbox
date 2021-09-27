@@ -386,7 +386,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }, bounds);
+                }, bounds, true);
             }
         }
 
@@ -483,6 +483,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);
+                    FlushRenderQueue();
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {

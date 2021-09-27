@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
-using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -72,6 +71,7 @@ namespace Robust.Shared.GameObjects
             private set
             {
                 if (_gridId.Equals(value)) return;
+
                 _gridId = value;
                 foreach (var transformComponent in Children)
                 {
@@ -218,9 +218,6 @@ namespace Robust.Shared.GameObjects
                 return GetLocalMatrixInv();
             }
         }
-
-        [Obsolete("Use ContainerHelper to check if this entity is inside a container.")]
-        public bool IsMapTransform => !Owner.IsInContainer();
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

@@ -8,7 +8,7 @@ namespace Robust.Shared.Map
     /// <inheritdoc />
     internal interface IMapChunkInternal : IMapChunk
     {
-        Fixture? Fixture { get; set; }
+        List<Fixture> Fixtures { get; set; }
 
         bool SuppressCollisionRegeneration { get; set; }
 

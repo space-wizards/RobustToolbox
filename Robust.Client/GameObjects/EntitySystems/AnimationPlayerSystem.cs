@@ -29,7 +29,8 @@ namespace Robust.Client.GameObjects
 
         private bool Update(AnimationPlayerComponent component, float frameTime)
         {
-            if (component.PlayingAnimationCount == 0)
+            if (component.PlayingAnimationCount == 0 ||
+                component.Deleted)
                 return true;
 
             var remie = new RemQueue<string>();

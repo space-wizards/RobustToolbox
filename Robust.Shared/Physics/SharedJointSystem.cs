@@ -46,7 +46,9 @@ namespace Robust.Shared.Physics
     {
         [Dependency] private readonly IConfigurationManager _configManager = default!;
 
-        private Queue<JointEvent> _events = new();
+        // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
+        // we can delete the component.
+        private HashSet<JointComponent> _dirtyJoints = new();
 
         public override void Initialize()
         {
@@ -59,7 +61,7 @@ namespace Robust.Shared.Physics
         {
             foreach (var joint in component.Joints.Values)
             {
-                RemoveJointDeferred(joint);
+                RemoveJoint(joint);
             }
         }
 
@@ -67,38 +69,11 @@ namespace Robust.Shared.Physics
         {
             base.Update(frameTime);
 
-            while (_events.TryDequeue(out var @event))
+            foreach (var joint in _dirtyJoints)
             {
-                switch (@event)
-                {
-                    case AddJointEvent add:
-                        AddJoint(add);
-                        break;
-                    case RemoveJointEvent remove:
-                        RemoveJoint(remove);
-                        break;
-                    default:
-                        throw new NotImplementedException();
-                }
+                if (joint.Deleted || joint.JointCount != 0) continue;
+                EntityManager.RemoveComponent<JointComponent>(joint.Owner.Uid);
             }
-        }
-
-        public void AddJointDeferred(PhysicsComponent bodyA, PhysicsComponent bodyB, Joint joint)
-        {
-            var msg = new AddJointEvent(bodyA, bodyB, joint);
-            _events.Enqueue(msg);
-        }
-
-        public void AddJointDeferred(Joint joint)
-        {
-            var msg = new AddJointEvent(joint.BodyA, joint.BodyB, joint);
-            _events.Enqueue(msg);
-        }
-
-        public void RemoveJointDeferred(Joint joint)
-        {
-            var msg = new RemoveJointEvent(joint);
-            _events.Enqueue(msg);
         }
 
         private static string GetJointId(Joint joint)
@@ -120,7 +95,7 @@ namespace Robust.Shared.Physics
             var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, _configManager);
             id ??= GetJointId(joint);
             joint.ID = id;
-            AddJointDeferred(bodyA, bodyB, joint);
+            AddJoint(joint);
 
             return joint;
         }
@@ -185,10 +160,10 @@ namespace Robust.Shared.Physics
         }
 
         #region Joints
-        private void AddJoint(AddJointEvent @event)
+        public void AddJoint(Joint joint)
         {
-            var bodyA = @event.BodyA;
-            var bodyB = @event.BodyB;
+            var bodyA = joint.BodyA;
+            var bodyB = joint.BodyB;
 
             // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
             var mapidA = bodyA.Owner.Transform.MapID;
@@ -199,8 +174,6 @@ namespace Robust.Shared.Physics
                 Logger.ErrorS("physics", $"Tried to add joint to ineligible bodies");
                 return;
             }
-
-            var joint = @event.Joint;
 
             if (string.IsNullOrEmpty(joint.ID))
             {
@@ -231,7 +204,7 @@ namespace Robust.Shared.Physics
                 Logger.ErrorS("physics", $"Existing joint {joint.ID} on {bodyB.Owner}");
                 return;
             }
-            Logger.DebugS("physics", $"Added joint {@event.Joint.ID}");
+            Logger.DebugS("physics", $"Added joint {joint.ID}");
 
 
             jointsA.Add(joint.ID, joint);
@@ -264,10 +237,8 @@ namespace Robust.Shared.Physics
             ComponentManager.RemoveComponent<JointComponent>(body.Owner.Uid);
         }
 
-        protected void RemoveJoint(RemoveJointEvent @event)
+        public void RemoveJoint(Joint joint)
         {
-            var joint = @event.Joint;
-
             var bodyAUid = joint.BodyAUid;
             var bodyBUid = joint.BodyBUid;
 
@@ -293,7 +264,7 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            Logger.DebugS("physics", $"Removed joint {@event.Joint.ID}");
+            Logger.DebugS("physics", $"Removed joint {joint.ID}");
 
             // Wake up connected bodies.
             if (ComponentManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA))
@@ -331,13 +302,9 @@ namespace Robust.Shared.Physics
             EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
-            /* TODO: Fix when RemoveComponent bug fixed. Probably defer this to every update just to avoid prediction fuckery.
-            if (jointComponentA.Joints.Count == 0)
-                bodyA.Owner.RemoveComponent<JointComponent>();
-
-            if (jointComponentB.Joints.Count == 0)
-                bodyB.Owner.RemoveComponent<JointComponent>();
-            */
+            // We can't just check up front due to how prediction works.
+            _dirtyJoints.Add(jointComponentA);
+            _dirtyJoints.Add(jointComponentB);
         }
         #endregion
 

@@ -45,7 +45,7 @@ namespace Robust.Client.Physics
                         !ComponentManager.HasComponent<JointComponent>(state.UidB)) continue;
 
                     joint = state.GetJoint();
-                    AddJointDeferred(joint.BodyA, joint.BodyB, joint);
+                    AddJoint(joint);
                     continue;
                 }
 

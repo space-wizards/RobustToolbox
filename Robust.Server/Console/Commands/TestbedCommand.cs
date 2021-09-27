@@ -335,7 +335,7 @@ namespace Robust.Server.Console.Commands
             // TODO: Should Joints be their own entities? Box2D just adds them directly to the world.
             // HMMM
             // At the least it should be its own damn component
-            var revolute = new RevoluteJoint(ground, body)
+            var revolute = new RevoluteJoint(ground.Owner.Uid, body.Owner.Uid)
             {
                 LocalAnchorA = new Vector2(0f, 10f),
                 LocalAnchorB = new Vector2(0f, 0f),
@@ -344,7 +344,8 @@ namespace Robust.Server.Console.Commands
                 MaxMotorTorque = 100000000f,
                 EnableMotor = true
             };
-            body.AddJoint(revolute);
+
+            EntitySystem.Get<SharedJointSystem>().AddJoint(revolute);
 
             // Box2D has this as 800 which is jesus christo.
             // Wouldn't recommend higher than 100 in debug and higher than 300 on release unless

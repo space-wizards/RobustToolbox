@@ -463,12 +463,6 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
-        {
-            return GetAnchoredEntities(TileIndicesFor(coords));
-        }
-
-        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos)
         {
             // Because some content stuff checks neighboring tiles (which may not actually exist) we won't just

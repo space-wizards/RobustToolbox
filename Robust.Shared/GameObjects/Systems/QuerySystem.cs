@@ -17,6 +17,8 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
 
+        private const QueryFlags DefaultFlags = QueryFlags.Anchored | QueryFlags.EntityLookup;
+
         #region AnyIntersecting
 
         /// <summary>
@@ -25,48 +27,54 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public bool AnyEntitiesIntersecting(EntityUid uid, QueryFlags flags)
+        public bool AnyEntitiesIntersecting(EntityUid uid, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(uid, flags).Any();
         }
 
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2 worldAABB, QueryFlags flags)
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2 worldAABB, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(mapId, worldAABB, flags).Any();
         }
 
-        public bool AnyEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, QueryFlags flags)
+        public bool AnyEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(mapId, worldBounds, flags).Any();
         }
 
-        public bool AnyEntitiesIntersecting(EntityCoordinates coordinates, QueryFlags flags)
+        public bool AnyEntitiesIntersecting(EntityCoordinates coordinates, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(coordinates, flags).Any();
         }
 
-        public bool AnyEntitiesIntersecting(MapCoordinates coordinates, QueryFlags flags)
+        public bool AnyEntitiesIntersecting(MapCoordinates coordinates, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(coordinates, flags).Any();
         }
 
-        public bool AnyEntitiesIntersecting(TileRef tileRef, QueryFlags flags)
+        public bool AnyEntitiesIntersecting(TileRef tileRef, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(tileRef, flags).Any();
         }
 
         #endregion
 
+        #region FastIntersecting
+
+
+
+        #endregion
+
         #region GetIntersecting
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entityUid, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entityUid, QueryFlags flags = DefaultFlags)
         {
             var xform = ComponentManager.GetComponent<TransformComponent>(entityUid);
             var bounds = GetBounds(entityUid);
             return GetEntitiesIntersecting(xform.MapID, bounds, flags);
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, QueryFlags flags = DefaultFlags)
         {
             if (mapId == MapId.Nullspace) yield break;
 
@@ -84,22 +92,49 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                foreach (var uid in _lookup.GetEntitiesIntersecting(mapId, worldAABB))
+                var ents = new List<EntityUid>();
+
+                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
                 {
-                    if (!EntityManager.EntityExists(uid)) continue;
+                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                    {
+                        if (data.Deleted) return;
+                        ents.Add(data.Uid);
+                    });
+                });
+
+                foreach (var uid in ents)
+                {
                     yield return uid;
                 }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
             {
-                // TODO: Query
+                var bodies = new HashSet<EntityUid>();
+
+                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+                {
+                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
+                    {
+                        var uid = proxy.Fixture.Body.Owner.Uid;
+
+                        if (!bodies.Add(uid) || !EntityManager.EntityExists(uid)) continue;
+                        yield return uid;
+                    }
+                }
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, QueryFlags flags = DefaultFlags)
         {
             if (mapId == MapId.Nullspace) yield break;
+
+            var worldAABB = worldBounds.CalcBoundingBox();
 
             if ((flags & QueryFlags.Anchored) != 0x0)
             {
@@ -115,7 +150,20 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                foreach (var uid in _lookup.GetEntitiesIntersecting(mapId, worldBounds))
+                var ents = new List<EntityUid>();
+
+                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
+                {
+                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                    {
+                        if (data.Deleted) return;
+                        ents.Add(data.Uid);
+                    });
+                });
+
+                foreach (var uid in ents)
                 {
                     yield return uid;
                 }
@@ -123,17 +171,30 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.Physics) != 0x0)
             {
-                // TODO: Query
+                var bodies = new HashSet<EntityUid>();
+
+                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+                {
+                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
+                    {
+                        var uid = proxy.Fixture.Body.Owner.Uid;
+
+                        if (!bodies.Add(uid) || !EntityManager.EntityExists(uid)) continue;
+                        yield return uid;
+                    }
+                }
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, QueryFlags flags = DefaultFlags)
         {
             var mapCoordinates = coordinates.ToMap(EntityManager);
             return GetEntitiesIntersecting(mapCoordinates, flags);
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates, QueryFlags flags = DefaultFlags)
         {
             if (coordinates.MapId == MapId.Nullspace) yield break;
 
@@ -149,16 +210,45 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                // TODO: Lookup
+                var ents = new List<EntityUid>();
+
+                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
+                {
+                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                    {
+                        if (data.Deleted) return;
+                        ents.Add(data.Uid);
+                    });
+                });
+
+                foreach (var uid in ents)
+                {
+                    yield return uid;
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
             {
-                // TODO: Query
+                var bodies = new HashSet<EntityUid>();
+
+                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+                {
+                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
+                    {
+                        var uid = proxy.Fixture.Body.Owner.Uid;
+
+                        if (!bodies.Add(uid)) continue;
+                        yield return uid;
+                    }
+                }
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, QueryFlags flags = DefaultFlags)
         {
             var bounds = GetBounds(tileRef);
             return GetEntitiesIntersecting(tileRef.MapIndex, bounds, flags);
@@ -168,7 +258,7 @@ namespace Robust.Shared.GameObjects
 
         #region GetInRange
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(EntityUid entityUid, float range, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesInRange(EntityUid entityUid, float range, QueryFlags flags = DefaultFlags)
         {
             var xform = ComponentManager.GetComponent<TransformComponent>(entityUid);
             foreach (var uid in GetEntitiesInRange(xform.MapPosition, range, flags))
@@ -178,14 +268,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, QueryFlags flags = DefaultFlags)
         {
             var mapCoordinates = coordinates.ToMap(EntityManager);
 
             return GetEntitiesInRange(mapCoordinates, range, flags);
         }
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(MapCoordinates coordinates, float range, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesInRange(MapCoordinates coordinates, float range, QueryFlags flags = DefaultFlags)
         {
             // TODO: Technically we should consider the edges of things but we need CollisionManager to be implemented
             // and even then it would rely heavily upon physics.
@@ -208,7 +298,7 @@ namespace Robust.Shared.GameObjects
             throw new NotImplementedException();
         }
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(TileRef tileRef, float range, QueryFlags flags)
+        public IEnumerable<EntityUid> GetEntitiesInRange(TileRef tileRef, float range, QueryFlags flags = DefaultFlags)
         {
             var coordinates = _mapManager.GetGrid(tileRef.GridIndex).InvWorldMatrix
                 .Transform((Vector2) tileRef.GridIndices + 0.5f);
@@ -331,6 +421,9 @@ namespace Robust.Shared.GameObjects
         #endregion
     }
 
+    /// <summary>
+    /// Note: It's possible for duplicate entities to be returned if you query physics and other flags; uniqueness is not guaranteed.
+    /// </summary>
     [Flags]
     public enum QueryFlags : ushort
     {

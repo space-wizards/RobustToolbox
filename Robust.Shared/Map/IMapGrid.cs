@@ -124,7 +124,6 @@ namespace Robust.Shared.Map
 
         IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
-        IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds);

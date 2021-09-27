@@ -72,8 +72,10 @@ namespace Robust.Shared.Physics
             foreach (var joint in _dirtyJoints)
             {
                 if (joint.Deleted || joint.JointCount != 0) continue;
-                EntityManager.RemoveComponent<JointComponent>(joint.Owner.Uid);
+                // TODO FIX WHEN REMOVECOMPONENT IS FIXED EntityManager.RemoveComponent<JointComponent>(joint.Owner.Uid);
             }
+
+            _dirtyJoints.Clear();
         }
 
         private static string GetJointId(Joint joint)

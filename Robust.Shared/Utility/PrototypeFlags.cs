@@ -10,7 +10,6 @@ namespace Robust.Shared.Utility
     ///     Data structure for storing prototype IDs, and ensuring that all stored IDs resolve to valid prototypes.
     /// </summary>
     /// <typeparam name="T">The prototype variant.</typeparam>
-    [Serializable, NetSerializable]
     public sealed class PrototypeFlags<T> : IReadOnlyPrototypeFlags<T>
         where T : class, IPrototype
     {

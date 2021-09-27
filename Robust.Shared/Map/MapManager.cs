@@ -703,7 +703,7 @@ namespace Robust.Shared.Map
                 if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
                     return;
 
-                if (gridEnt.LifeStage <= EntityLifeStage.Initialized)
+                if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
                     gridEnt.Delete();
             }
 

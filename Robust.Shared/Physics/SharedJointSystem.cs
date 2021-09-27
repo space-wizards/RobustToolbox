@@ -89,18 +89,29 @@ namespace Robust.Shared.Physics
         /// Create a DistanceJoint between 2 bodies. This should be called content-side whenever you need one.
         /// BodyA and BodyB on the joint are sorted so may not necessarily match what you pass in.
         /// </summary>
-        public DistanceJoint CreateDistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null)
+        public DistanceJoint CreateDistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2? anchorA = null, Vector2? anchorB = null, string? id = null)
         {
             anchorA ??= Vector2.Zero;
             anchorB ??= Vector2.Zero;
 
-            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value, _configManager);
+            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
 
             return joint;
         }
+
+        public RevoluteJoint CreateRevoluteJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            var joint = new RevoluteJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
         #endregion
 
         public static void LinearStiffness(
@@ -162,7 +173,7 @@ namespace Robust.Shared.Physics
         }
 
         #region Joints
-        public void AddJoint(Joint joint)
+        protected void AddJoint(Joint joint)
         {
             var bodyA = joint.BodyA;
             var bodyB = joint.BodyB;
@@ -184,8 +195,8 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var jointComponentA = bodyA.Owner.EnsureComponent<JointComponent>();
-            var jointComponentB = bodyB.Owner.EnsureComponent<JointComponent>();
+            var jointComponentA = EntityManager.EnsureComponent<JointComponent>(bodyA.Owner);
+            var jointComponentB = EntityManager.EnsureComponent<JointComponent>(bodyB.Owner);
             var jointsA = jointComponentA.Joints;
             var jointsB = jointComponentB.Joints;
 

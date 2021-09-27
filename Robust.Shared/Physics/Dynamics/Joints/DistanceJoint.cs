@@ -47,12 +47,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override Joint GetJoint()
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            var bodyA = entityManager.GetEntity(UidA).GetComponent<PhysicsComponent>();
-            var bodyB = entityManager.GetEntity(UidB).GetComponent<PhysicsComponent>();
-
-            var joint = new DistanceJoint(bodyA, bodyB, LocalAnchorA, LocalAnchorB, configManager)
+            var joint = new DistanceJoint(UidA, UidB, LocalAnchorA, LocalAnchorB)
             {
                 ID = ID,
                 Breakpoint = Breakpoint,
@@ -137,12 +132,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="bodyB">The second body</param>
         /// <param name="anchorA">The first body anchor</param>
         /// <param name="anchorB">The second body anchor</param>
-        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB, IConfigurationManager configManager)
-            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+        public DistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB)
+            : base(bodyA, bodyB)
         {
-            configManager.OnValueChanged(CVars.LinearSlop, value => _linearSlop = value, true);
             Length = MathF.Max(_linearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
-            configManager.OnValueChanged(CVars.WarmStarting, value => _warmStarting = value, true);
             _minLength = _length;
             _maxLength = _length;
         }

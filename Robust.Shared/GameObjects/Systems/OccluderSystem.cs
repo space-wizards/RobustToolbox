@@ -167,7 +167,7 @@ namespace Robust.Shared.GameObjects
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
-            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
+            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
             var list = new List<RayCastResults>();
@@ -194,7 +194,7 @@ namespace Robust.Shared.GameObjects
                         if (!value.Enabled)
                             return true;
 
-                        if (predicate != null && predicate.Invoke(value.Owner))
+                        if (predicate != null && predicate.Invoke(value.Owner.Uid))
                             return true;
 
                         var result = new RayCastResults(distFromOrigin, point, value.Owner);

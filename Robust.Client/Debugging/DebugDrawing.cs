@@ -4,14 +4,11 @@ using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Prototypes;
 
@@ -21,9 +18,9 @@ namespace Robust.Client.Debugging
     public class DebugDrawing : IDebugDrawing
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 
@@ -70,7 +67,9 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
                 {
-                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, _eyeManager));
+                    var lookup = EntitySystem.Get<QuerySystem>();
+
+                    _overlayManager.AddOverlay(new EntityPositionOverlay(lookup, _entManager, _eyeManager));
                 }
                 else
                 {
@@ -262,21 +261,21 @@ namespace Robust.Client.Debugging
                 {
                     _handle.SetTransform(transform);
                 }
-
-
             }
         }
 
         private sealed class EntityPositionOverlay : Overlay
         {
-            private readonly IEntityLookup _lookup;
+            private readonly QuerySystem _lookup;
+            private readonly IEntityManager _entManager;
             private readonly IEyeManager _eyeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(IEntityLookup lookup, IEyeManager eyeManager)
+            public EntityPositionOverlay(QuerySystem lookup, IEntityManager entManager, IEyeManager eyeManager)
             {
                 _lookup = lookup;
+                _entManager = entManager;
                 _eyeManager = eyeManager;
             }
 
@@ -289,7 +288,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var entity in _lookup.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
                 {
-                    var transform = entity.Transform;
+                    var transform = _entManager.GetComponent<TransformComponent>(entity);
 
                     var center = transform.WorldPosition;
                     var worldRotation = transform.WorldRotation;

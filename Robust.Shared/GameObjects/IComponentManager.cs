@@ -124,7 +124,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <param name="uid">Entity UID to look on.</param>
         /// <returns>The component of Type from the Entity.</returns>
-        T GetComponent<T>(EntityUid uid);
+        T GetComponent<T>(EntityUid uid) where T : IComponent;
 
         /// <summary>
         ///     Returns the component of a specific type.

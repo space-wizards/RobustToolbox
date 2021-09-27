@@ -20,14 +20,13 @@ namespace Robust.Shared.Timing
 
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            var lookupSystem = IoCManager.Resolve<IEntityLookup>();
-
             if (paused)
             {
                 _pausedMaps.Add(mapId);
 
-                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
+                foreach (var entity in IoCManager.Resolve<IEntityManager>().GetEntities())
                 {
+                    if (entity.Transform.MapID != mapId) continue;
                     entity.Paused = true;
                 }
             }
@@ -35,8 +34,9 @@ namespace Robust.Shared.Timing
             {
                 _pausedMaps.Remove(mapId);
 
-                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
+                foreach (var entity in IoCManager.Resolve<IEntityManager>().GetEntities())
                 {
+                    if (entity.Transform.MapID != mapId) continue;
                     entity.Paused = false;
                 }
             }
@@ -49,8 +49,9 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityManager>().GetEntities())
             {
+                if (entity.Transform.MapID != mapId) continue;
                 entity.RunMapInit();
                 entity.Paused = false;
             }
@@ -65,7 +66,8 @@ namespace Robust.Shared.Timing
         {
             var mapId = _mapManager.GetGrid(gridId).ParentMapId;
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            // TODO: Should maybe just use GetEntitiesIntersecting instead? Though pausing working on a grid-basis is suss as.
+            foreach (var entity in IoCManager.Resolve<IEntityManager>().GetEntities())
             {
                 if (entity.Transform.GridID != gridId)
                     continue;

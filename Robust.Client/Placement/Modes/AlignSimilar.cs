@@ -29,8 +29,10 @@ namespace Robust.Client.Placement.Modes
             }
 
             var mapId = MouseCoords.GetMapId(pManager.EntityManager);
+            var entManager = IoCManager.Resolve<IEntityManager>();
 
-            var snapToEntities = IoCManager.Resolve<IEntityLookup>().GetEntitiesInRange(MouseCoords, SnapToRange)
+            var snapToEntities = EntitySystem.Get<QuerySystem>().GetEntitiesInRange(MouseCoords, SnapToRange)
+                .Select(entity => entManager.GetEntity(entity))
                 .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapId)
                 .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();

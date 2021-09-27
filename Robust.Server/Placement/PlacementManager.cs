@@ -209,12 +209,15 @@ namespace Robust.Server.Placement
         {
             EntityCoordinates start = msg.EntityCoordinates;
             Vector2 rectSize = msg.RectSize;
-            foreach (IEntity entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
+            var entManager = IoCManager.Resolve<IEntityManager>();
+
+            foreach (var entity in EntitySystem.Get<QuerySystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<ActorComponent>())
+                if (entManager.HasComponent<IMapGridComponent>(entity) || entManager.HasComponent<ActorComponent>(entity))
                     continue;
-                entity.Delete();
+
+                entManager.QueueDeleteEntity(entity);
             }
         }
 

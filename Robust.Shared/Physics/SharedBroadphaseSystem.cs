@@ -1062,7 +1062,7 @@ namespace Robust.Shared.Physics
         /// <returns>A result object describing the hit, if any.</returns>
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
             float maxLength = 50F,
-            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
+            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
@@ -1091,7 +1091,7 @@ namespace Robust.Shared.Physics
                         return true;
                     }
 
-                    if (predicate?.Invoke(proxy.Fixture.Body.Owner) == true)
+                    if (predicate?.Invoke(proxy.Fixture.Body.Owner.Uid) == true)
                     {
                         return true;
                     }
@@ -1128,7 +1128,7 @@ namespace Robust.Shared.Physics
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
         /// <returns>An enumerable of either the first entity hit or everything hit</returns>
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, EntityUid? ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
         /// <summary>

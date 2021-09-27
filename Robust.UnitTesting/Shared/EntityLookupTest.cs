@@ -22,6 +22,7 @@ namespace Robust.UnitTesting.Shared
             var lookup = server.ResolveDependency<IEntityLookup>();
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
+            var query = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<QuerySystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -33,23 +34,23 @@ namespace Robust.UnitTesting.Shared
                 grid.SetTile(new Vector2i(), new Tile(1));
 
                 lookup.Update();
-                Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
+                Assert.That(query.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(1));
 
                 // Setup and check it actually worked
                 var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
                 lookup.Update();
-                Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
+                Assert.That(query.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // When anchoring should still only be 1 entity.
                 dummy.Transform.Anchored = true;
                 Assert.That(dummy.Transform.Anchored);
                 lookup.Update();
-                Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
+                Assert.That(query.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // Even when unanchored should still be there
                 dummy.Transform.Anchored = false;
                 lookup.Update();
-                Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
+                Assert.That(query.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
             });
         }
     }

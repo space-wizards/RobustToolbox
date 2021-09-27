@@ -387,7 +387,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetComponent<T>(EntityUid uid)
+        public T GetComponent<T>(EntityUid uid) where T : IComponent
         {
             return (T)GetComponent(uid, typeof(T));
         }

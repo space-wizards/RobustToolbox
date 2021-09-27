@@ -234,6 +234,8 @@ stored in a single array since multiple arrays lead to multiple misses.
             _positionIterations = cfg.PositionIterations;
             _sleepAllowed = cfg.SleepAllowed;
             _timeToSleep = cfg.TimeToSleep;
+            _linearSlop = cfg.LinearSlop;
+            _angularSlop = cfg.AngularSlop;
 
             _contactSolver.LoadConfig(cfg);
         }
@@ -659,6 +661,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float VelocityThreshold;
         public float Baumgarte;
         public float LinearSlop;
+        public float AngularSlop;
         public float MaxLinearCorrection;
         public float MaxAngularCorrection;
         public int VelocityConstraintsPerThread;

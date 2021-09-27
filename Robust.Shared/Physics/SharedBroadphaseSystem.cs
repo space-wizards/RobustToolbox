@@ -300,6 +300,12 @@ namespace Robust.Shared.Physics
                 {
                     if (other.Fixture.Body.Deleted) continue;
 
+                    // Because we may be colliding with something asleep (due to the way grid movement works) need
+                    // to make sure the contact doesn't fail.
+                    // This is because we generate a contact across 2 different broadphases where both bodies aren't
+                    // moving locally but are moving in world-terms.
+                    proxyA.Fixture.Body.WakeBody();
+                    other.Fixture.Body.WakeBody();
                     contactManager.AddPair(proxyA, other);
                 }
             }
@@ -498,6 +504,11 @@ namespace Robust.Shared.Physics
             CreateFixture(body, fixture);
         }
 
+        public void DestroyFixture(Fixture fixture)
+        {
+            DestroyFixture(fixture.Body, fixture);
+        }
+
         public void DestroyFixture(PhysicsComponent body, Fixture fixture)
         {
             // TODO: Assert world locked
@@ -629,18 +640,21 @@ namespace Robust.Shared.Physics
                 _broadphasePositions[broadphase] = broadphaseOffset;
             }
 
-            // TODO: This needs a matrix transform ya dingus
-            var relativePos1 = new Transform(transform1.Position - broadphaseOffset.Position,
+            var relativePos1 = new Transform(
+                broadphaseTransform.InvWorldMatrix.Transform(transform1.Position),
                 transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
 
             for (var i = 0; i < proxyCount; i++)
             {
                 var proxy = fixture.Proxies[i];
-                var aabb = fixture.Shape.ComputeAABB(relativePos1, i);
-                proxy.AABB = aabb;
+                var bounds = fixture.Shape.ComputeAABB(relativePos1, i);
+                proxy.AABB = bounds;
                 var displacement = Vector2.Zero;
-                broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
-                var worldAABB = proxy.AABB.Translated(broadphaseOffset.Position);
+                broadphase.Tree.MoveProxy(proxy.ProxyId, bounds, displacement);
+
+                var worldAABB = new Box2Rotated(bounds, broadphaseOffset.Rotation, Vector2.Zero)
+                    .CalcBoundingBox()
+                    .Translated(broadphaseOffset.Position);
 
                 AddToMoveBuffer(broadphaseTransform.MapID, proxy, worldAABB);
             }
@@ -710,24 +724,32 @@ namespace Robust.Shared.Physics
             Array.Resize(ref proxies, proxyCount);
             fixture.Proxies = proxies;
 
-            // TODO: Cache above once stable
-            var broadphasePos = broadphase.Owner.Transform.WorldPosition;
-            var broadphaseRot = broadphase.Owner.Transform.WorldRotation;
+            var broadphaseTransform = broadphase.Owner.Transform;
+
+            if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
+            {
+                broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);
+                _broadphasePositions[broadphase] = broadphaseOffset;
+            }
 
             var worldRot = fixture.Body.Owner.Transform.WorldRotation;
+            var localPos = broadphase.Owner.Transform.InvWorldMatrix.Transform(worldPos);
 
-            var posDiff = worldPos - broadphasePos;
-            var rotDiff = worldRot - broadphaseRot;
-            var transform = new Transform(posDiff, (float) rotDiff.Theta);
-            var mapId = broadphase.Owner.Transform.MapID;
+            var transform = new Transform(localPos, worldRot - broadphaseOffset.Rotation);
+            var mapId = broadphaseTransform.MapID;
 
             for (var i = 0; i < proxyCount; i++)
             {
-                var aabb = fixture.Shape.ComputeAABB(transform, i);
-                var proxy = new FixtureProxy(aabb, fixture, i);
+                var bounds = fixture.Shape.ComputeAABB(transform, i);
+                var proxy = new FixtureProxy(bounds, fixture, i);
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
-                AddToMoveBuffer(mapId, proxy, proxy.AABB.Translated(broadphasePos));
+
+                var worldAABB = new Box2Rotated(bounds, broadphaseOffset.Rotation, Vector2.Zero)
+                    .CalcBoundingBox()
+                    .Translated(broadphaseOffset.Position);
+
+                AddToMoveBuffer(mapId, proxy, worldAABB);
             }
         }
 
@@ -873,6 +895,12 @@ namespace Robust.Shared.Physics
 
                 if (!broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
 
+                if (broadphase.Owner.TryGetComponent(out IMapGridComponent? mapGrid) &&
+                    !_mapManager.GetGrid(mapGrid.GridIndex).WorldBounds.Intersects(aabb))
+                {
+                    continue;
+                }
+
                 var transform = physicsComponent.GetTransform();
                 var found = false;
 
@@ -987,6 +1015,28 @@ namespace Robust.Shared.Physics
             return bodies;
         }
 
+        /// <summary>
+        /// Get all entities colliding with a certain body.
+        /// </summary>
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
+        {
+            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
+
+            var bodies = new HashSet<PhysicsComponent>();
+
+            foreach (var broadphase in GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
+            {
+                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
+                {
+                    bodies.Add(proxy.Fixture.Body);
+                }
+            }
+
+            return bodies;
+        }
+
         // TODO: This will get every body but we don't need to do that
         /// <summary>
         ///     Checks whether a body is colliding
@@ -1021,19 +1071,20 @@ namespace Robust.Shared.Physics
 
             foreach (var broadphase in GetBroadphases(mapId, rayBox))
             {
-                var offset = broadphase.Owner.Transform.WorldPosition;
+                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
 
-                var gridRay = new CollisionRay(ray.Position - offset, ray.Direction, ray.CollisionMask);
-                // TODO: Probably need rotation when we get rotatable grids
+                var position = invMatrix.Transform(ray.Position);
+                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var direction = gridRot.RotateVec(ray.Direction);
+
+                var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
                     if (returnOnFirstHit && results.Count > 0) return true;
 
                     if (distFromOrigin > maxLength)
-                    {
                         return true;
-                    }
 
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                     {
@@ -1048,7 +1099,7 @@ namespace Robust.Shared.Physics
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, point + offset, proxy.Fixture.Body.Owner);
+                    var result = new RayCastResults(distFromOrigin, point + position, proxy.Fixture.Body.Owner);
                     results.Add(result);
                     EntityManager.EventBus.QueueEvent(EventSource.Local,
                         new DebugDrawRayMessage(

@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects
     /// Before a component can be spawned, it must be registered so things such as name, networking ID, type, etc...
     /// are known to the factory.
     /// Components are registered into a registry.
-    /// The relevant methods for writing to this registry are <see cref="Register" /> and <see cref="RegisterReference" />.
+    /// The relevant methods for writing to this registry are <see cref="RegisterReference" />.
     /// The data is exposed for reading through <see cref="GetRegistration" /> and its overloads.
     /// This data is returned in the form of a <see cref="IComponentRegistration" />, which represents one component's registration.
     /// </p>
@@ -78,24 +78,9 @@ namespace Robust.Shared.GameObjects
         ComponentAvailability GetComponentAvailability(string componentName, bool ignoreCase = false);
 
         /// <summary>
-        /// Registers a prototype to be available for spawning.
-        /// </summary>
-        /// <param name="overwrite">If the component already exists, will this replace it?</param>
-        /// <remarks>
-        /// This implicitly calls <see cref="RegisterReference{TTarget, TInterface}"/>
-        /// with a <c>TTarget</c> and <c>TInterface</c> of <typeparamref name="T"/>.
-        /// </remarks>
-
-        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
-        void Register<T>(bool overwrite = false) where T : IComponent, new();
-
-        /// <summary>
         /// Registers a component class with the factory.
         /// </summary>
         /// <param name="overwrite">If the component already exists, will this replace it?</param>
-        /// <remarks>
-        ///  Unlike <see cref="Register{T}"/>, this reads the attributes. No more Register/RegisterReference combos.
-        /// </remarks>
         void RegisterClass<T>(bool overwrite = false) where T : IComponent, new();
 
         /// <summary>
@@ -104,15 +89,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="name">The name to be ignored.</param>
         /// <param name="overwrite">Whether to overrde existing settings instead of throwing an exception in the case of duplicates.</param>
         void RegisterIgnore(string name, bool overwrite = false);
-
-        // NOTE: no overwrite here, it'd overcomplicate RegisterReference a LOT.
-        // If you need to overwrite references for some sick reason overwrite the component too.
-        /// <summary>
-        /// Registers <typeparamref name="TTarget" /> to be referenced when
-        /// <typeparamref name="TInterface"/> is used in methods like <see cref="IEntity.GetComponent{T}"/>
-        /// </summary>
-        [Obsolete("Use RegisterClass and Attributes instead of the Register/RegisterReference combo")]
-        void RegisterReference<TTarget, TInterface>() where TTarget : TInterface, IComponent, new();
 
         /// <summary>
         /// Gets a new component instantiated of the specified type.
@@ -285,8 +261,6 @@ namespace Robust.Shared.GameObjects
         /// A list of type references that can be used to get a reference to an instance of this component,
         /// for methods like <see cref="IEntity.GetComponent{T}" />.
         /// These are not unique and can overlap with other components.
-        /// Unlike the other properties, this data is not gotten from a component instance,
-        /// instead this data is set with <see cref="IComponentFactory.RegisterReference{TTarget, TInterface}" />
         /// </summary>
         IReadOnlyList<Type> References { get; }
     }

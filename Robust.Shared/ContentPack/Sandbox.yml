@@ -292,6 +292,8 @@ Types:
     ImmutableSortedSet`1: { All: True }
     ImmutableSortedStack: { All: True }
     ImmutableSortedStack`1: { All: True }
+  System.Collections.Specialized:
+    NameValueCollection: { All: True }
   System.Collections:
     IEnumerable: { All: True }
     IEnumerator: { All: True }
@@ -394,6 +396,7 @@ Types:
     IOrderedEnumerable`1: { All: True }
   System.Net:
     DnsEndPoint: { }
+    HttpStatusCode: { } # Enum
   System.Numerics:
     BitOperations: { All: True }
   System.Reflection:
@@ -665,6 +668,15 @@ Types:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
     Interlocked: { All: True }
+  System.Web:
+    HttpUtility:
+      Methods:
+        - "System.Collections.Specialized.NameValueCollection ParseQueryString(string, System.Text.Encoding)"
+        - "System.Collections.Specialized.NameValueCollection ParseQueryString(string)"
+        - "string UrlDecode(string, System.Text.Encoding)"
+        - "string UrlDecode(string)"
+        - "string UrlEncode(string, System.Text.Encoding)"
+        - "string UrlEncode(string)"
   System:
     IServiceProvider: { All: True }
     Action: { All: True }

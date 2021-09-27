@@ -17,7 +17,7 @@ namespace Robust.Client.UserInterface
 {
     /// <summary>
     ///     A node in the GUI system.
-    ///     See https://hackmd.io/@ss14/ui-system-tutorial for some basic concepts.
+    ///     See https://docs.spacestation14.io/en/engine/user-interface for some basic concepts.
     /// </summary>
     [PublicAPI]
     public partial class Control : IDisposable

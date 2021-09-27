@@ -30,7 +30,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private Button EraseButton;
 
         private EntitySpawnButton MeasureButton;
-        //protected override Vector2 ContentsMinimumSize => MainVBox?.CombinedMinimumSize ?? Vector2.Zero;
 
         // List of prototypes that are visible based on current filter criteria.
         private readonly List<EntityPrototype> _filteredPrototypes = new();

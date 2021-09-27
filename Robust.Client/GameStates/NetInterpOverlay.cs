@@ -1,12 +1,12 @@
 using Robust.Shared.Enums;
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
-using System;
+using Robust.Shared.Containers;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
@@ -35,10 +35,10 @@ namespace Robust.Client.GameStates
             foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
-                var transform = ((IComponent)boundingBox).Owner.Transform;
+                var transform = boundingBox.Owner.Transform;
 
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || !transform.IsMapTransform)
+                if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer())
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it

@@ -1,11 +1,15 @@
 ﻿using JetBrains.Annotations;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public sealed class UserInterfaceSystem : EntitySystem
+    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -24,7 +28,18 @@ namespace Robust.Client.GameObjects
 
         private void MessageReceived(BoundUIWrapMessage ev)
         {
-            var cmp = ComponentManager.GetComponent<ClientUserInterfaceComponent>(ev.Entity);
+            var uid = ev.Entity;
+            var cmp = ComponentManager.GetComponent<ClientUserInterfaceComponent>(uid);
+
+            var message = ev.Message;
+            // This should probably not happen at this point, but better make extra sure!
+            if(_playerManager.LocalPlayer != null)
+                message.Session = _playerManager.LocalPlayer.Session;
+            message.Entity = uid;
+            message.UiKey = ev.UiKey;
+
+            // Raise as object so the correct type is used.
+            RaiseLocalEvent(uid, (object)message);
 
             cmp.MessageReceived(ev);
         }

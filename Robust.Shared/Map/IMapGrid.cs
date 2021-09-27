@@ -63,6 +63,13 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="coords">The location of the tile in coordinates.</param>
         /// <returns>The tile at the world coordinates.</returns>
+        TileRef GetTileRef(MapCoordinates coords);
+
+        /// <summary>
+        ///     Gets a tile a the given world coordinates. This will not create a new chunk.
+        /// </summary>
+        /// <param name="coords">The location of the tile in coordinates.</param>
+        /// <returns>The tile at the world coordinates.</returns>
         TileRef GetTileRef(EntityCoordinates coords);
 
         /// <summary>
@@ -98,6 +105,8 @@ namespace Robust.Shared.Map
         /// <param name="tiles"></param>
         void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles);
 
+        IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true, Predicate<TileRef>? predicate = null);
+
         /// <summary>
         ///     Returns all tiles inside the area that match the predicate.
         /// </summary>
@@ -113,6 +122,7 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
+        IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);

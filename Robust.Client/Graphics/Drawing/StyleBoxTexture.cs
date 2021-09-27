@@ -111,12 +111,6 @@ namespace Robust.Client.Graphics
 
         public Texture? Texture { get; set; }
 
-        [Obsolete("Use SetPatchMargin")]
-        public void SetMargin(Margin margin, float value)
-        {
-            SetPatchMargin(margin, value);
-        }
-
         public void SetPatchMargin(Margin margin, float value)
         {
             if ((margin & Margin.Top) != 0)

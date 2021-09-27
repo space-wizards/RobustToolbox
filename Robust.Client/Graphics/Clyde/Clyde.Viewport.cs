@@ -92,6 +92,8 @@ namespace Robust.Client.Graphics.Clyde
             // Lighting is drawn into this. This then gets sampled later while rendering world-space stuff.
             public RenderTexture LightRenderTarget = default!;
 
+            public RenderTexture LightBlurTarget = default!;
+
             // Unused, to be removed.
             public RenderTexture WallMaskRenderTarget = default!;
 

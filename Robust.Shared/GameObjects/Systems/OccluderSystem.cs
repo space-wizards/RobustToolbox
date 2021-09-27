@@ -178,12 +178,12 @@ namespace Robust.Shared.GameObjects
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
                 var transform = comp.Owner.Transform;
-                var treePos = transform.WorldPosition;
+                var matrix = transform.InvWorldMatrix;
                 var treeRot = transform.WorldRotation;
 
-                var relativePos = new Angle(-treeRot.Theta).RotateVec(ray.Position - treePos);
+                var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
 
-                var treeRay = new Ray(relativePos, new Angle(-treeRot).RotateVec(ray.Direction));
+                var treeRay = new Ray(matrix.Transform(ray.Position), relativeAngle);
 
                 comp.Tree.QueryRay(ref list,
                     (ref List<RayCastResults> state, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>

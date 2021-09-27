@@ -41,13 +41,13 @@ namespace Robust.Client.UserInterface.Controls
 
         public event Action<ItemSelectedEventArgs>? OnItemSelected;
 
-        public string Prefix { get; set; }
+        public string Prefix { get; set; } = string.Empty;
+        public bool PrefixMargin { get; set; } = true;
 
         public OptionButton()
         {
             OptionStyleClasses = new List<string>();
             AddStyleClass(StyleClassButton);
-            Prefix = "";
             OnPressed += OnPressedInternal;
 
             var hBox = new BoxContainer
@@ -216,7 +216,7 @@ namespace Robust.Client.UserInterface.Controls
             }
             var data = _buttonData[idx];
             SelectedId = data.Id;
-            _label.Text = Prefix + data.Text;
+            _label.Text = PrefixMargin ? Prefix + " " + data.Text : Prefix + data.Text;
             data.Button.Pressed = true;
         }
 

@@ -917,7 +917,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (SourceHandle == null) return;
 
-                if (!disposing || Thread.CurrentThread != _master._gameThread)
+                if (!_master.IsMainThread())
                 {
                     // We can't run this code inside another thread so tell Clyde to clear it up later.
                     _master.DeleteBufferedSourceOnMainThread(SourceHandle.Value, FilterHandle);

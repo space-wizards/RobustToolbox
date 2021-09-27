@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -92,5 +93,7 @@ namespace Robust.Client.Graphics
         /// <param name="str">The text to draw.</param>
         public Vector2 DrawString(Font font, Vector2 pos, string str)
             => DrawString(font, pos, str, Color.White);
+
+        public abstract void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
     }
 }

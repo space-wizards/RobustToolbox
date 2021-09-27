@@ -64,25 +64,21 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))
             {
-                var mapGrid = (IMapGridInternal) grid;
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
 
-                var worldPos = gridEnt.Transform.WorldPosition;
-                var worldRot = gridEnt.Transform.WorldRotation;
+                if (!_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body)) continue;
 
-                foreach (var (_, chunk) in mapGrid.GetMapChunks())
+                var transform = body.GetTransform();
+
+                foreach (var fixture in body.Fixtures)
                 {
-                    var chunkBounds = chunk.CalcWorldBounds(worldPos, worldRot);
-                    var aabb = chunkBounds.CalcBoundingBox();
-
-                    // Calc world bounds for chunk.
-                    if (!aabb.Intersects(in viewport))
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
                     {
-                        continue;
-                    }
+                        var aabb = fixture.Shape.ComputeAABB(transform, i);
 
-                    args.WorldHandle.DrawRect(chunkBounds, Color.Green.WithAlpha(0.2f), true);
-                    args.WorldHandle.DrawRect(aabb, Color.Red, false);
+                        args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.2f));
+                        args.WorldHandle.DrawRect(aabb, Color.Red.WithAlpha(0.5f), false);
+                    }
                 }
             }
         }

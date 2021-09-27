@@ -42,7 +42,8 @@ namespace Robust.Client.Graphics.Clyde
                         return;
 
                     var name = GLFW.GetKeyName(key, 0);
-                    _printableKeyNameMap.Add(rKey, name);
+                    if (name != null)
+                        _printableKeyNameMap.Add(rKey, name);
                 }
             }
 

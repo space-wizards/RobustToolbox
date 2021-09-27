@@ -32,9 +32,7 @@ namespace Robust.Shared.Serialization.Manager
 
                     var targetCastVariable = Expression.Variable(tuple.targetType, "targetCastVariable");
 
-                    var returnVariable = Expression.Parameter(typeof(bool), "return");
-                    var returnLabel = Expression.Label(typeof(bool));
-                    var returnExpression = Expression.Label(returnLabel, returnVariable);
+                    var returnVariable = Expression.Variable(typeof(bool), "return");
 
                     var call = Expression.Call(
                         instanceParam,
@@ -54,8 +52,7 @@ namespace Robust.Shared.Serialization.Manager
                         Expression.IfThen(
                             returnVariable,
                             Expression.Assign(targetParam, targetCastVariable)),
-                        Expression.Return(returnLabel, returnVariable),
-                        returnExpression);
+                        returnVariable);
 
                     return Expression.Lambda<CopyDelegate>(
                         block,

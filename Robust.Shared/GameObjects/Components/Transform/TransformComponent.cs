@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
-using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -72,6 +71,7 @@ namespace Robust.Shared.GameObjects
             private set
             {
                 if (_gridId.Equals(value)) return;
+
                 _gridId = value;
                 foreach (var transformComponent in Children)
                 {
@@ -219,9 +219,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [Obsolete("Use ContainerHelper to check if this entity is inside a container.")]
-        public bool IsMapTransform => !Owner.IsInContainer();
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
@@ -354,7 +351,7 @@ namespace Robust.Shared.GameObjects
                 if(Anchored)
                     return;
 
-                if (_localPosition.EqualsApprox(value, 0.00001))
+                if (_localPosition.EqualsApprox(value))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
@@ -929,8 +926,8 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            var anchorStateChangedEvent = default(AnchorStateChangedEvent);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent, false);
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
         }
     }
 

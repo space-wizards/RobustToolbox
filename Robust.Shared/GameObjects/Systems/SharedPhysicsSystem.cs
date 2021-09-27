@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -101,17 +102,35 @@ namespace Robust.Shared.GameObjects
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
 
             IoCManager.Resolve<IIslandManager>().Initialize();
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
         }
 
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
-            component.ContactManager = new ContactManager();
+            IoCManager.InjectDependencies(component);
+            component.BroadphaseSystem = Get<SharedBroadphaseSystem>();
+            component.PhysicsSystem = this;
+            component.ContactManager = new();
+            component.ContactManager.Initialize();
+            component.ContactManager.MapId = component.MapId;
+
             component.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
+        }
+
+        private void OnAutoClearChange(bool value)
+        {
+            foreach (var component in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            {
+                component.AutoClearForces = value;
+            }
         }
 
         private void HandlePhysicsMapRemove(EntityUid uid, SharedPhysicsMapComponent component, ComponentRemove args)
         {
             component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
+            component.ContactManager.Shutdown();
         }
 
         public T GetController<T>() where T : VirtualController
@@ -204,6 +223,9 @@ namespace Robust.Shared.GameObjects
             }
 
             MapManager.MapCreated -= HandleMapCreated;
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         protected abstract void HandleMapCreated(object? sender, MapEventArgs eventArgs);

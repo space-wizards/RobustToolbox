@@ -163,7 +163,7 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal sealed class PointLightUpdateEvent : EntityEventArgs
+    public sealed class PointLightUpdateEvent : EntityEventArgs
     {
 
     }

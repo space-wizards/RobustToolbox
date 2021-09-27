@@ -32,25 +32,21 @@ namespace Robust.Client.GameObjects
             if (component.PlayingAnimationCount == 0)
                 return true;
 
-            List<string>? toRemove = null;
+            var remie = new RemQueue<string>();
             foreach (var (key, playback) in component.PlayingAnimations)
             {
                 var keep = AnimationPlaybackShared.UpdatePlayback(component.Owner, playback, frameTime);
                 if (!keep)
                 {
-                    toRemove ??= new List<string>();
-                    toRemove.Add(key);
+                    remie.Add(key);
                 }
             }
 
-            if (toRemove != null)
+            foreach (var key in remie)
             {
-                foreach (var key in toRemove)
-                {
-                    component.PlayingAnimations.Remove(key);
-                    EntityManager.EventBus.RaiseLocalEvent(component.Owner.Uid, new AnimationCompletedEvent {Uid = component.Owner.Uid, Key = key});
-                    component.AnimationComplete(key);
-                }
+                component.PlayingAnimations.Remove(key);
+                EntityManager.EventBus.RaiseLocalEvent(component.Owner.Uid, new AnimationCompletedEvent {Uid = component.Owner.Uid, Key = key});
+                component.AnimationComplete(key);
             }
 
             return false;

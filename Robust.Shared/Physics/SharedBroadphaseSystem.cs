@@ -159,7 +159,7 @@ namespace Robust.Shared.Physics
         internal void EnsureBroadphaseTransforms()
         {
             // Cache as much broadphase data as we can up front for this map.
-            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
             {
                 UpdateBroadphaseCache(broadphase);
             }

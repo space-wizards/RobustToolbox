@@ -668,14 +668,14 @@ namespace Robust.Shared.GameObjects
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
+            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IComponentManager comp)
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
         {
             foreach (var child in _children)
             {
-                var concrete = comp.GetComponent<TransformComponent>(child);
+                var concrete = entMan.GetComponent<TransformComponent>(child);
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
@@ -683,7 +683,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, comp);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan);
                 }
             }
         }

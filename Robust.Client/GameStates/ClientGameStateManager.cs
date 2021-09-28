@@ -480,7 +480,7 @@ namespace Robust.Client.GameStates
             {
                 var ent = kvStates.Key;
                 var entity = (Entity) ent;
-                HandleEntityState(entity.EntityManager.ComponentManager, entity, _entities.EventBus, kvStates.Value.Item1,
+                HandleEntityState(entity.EntityManager, entity, _entities.EventBus, kvStates.Value.Item1,
                     kvStates.Value.Item2);
             }
 

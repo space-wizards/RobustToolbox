@@ -23,23 +23,21 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entManMock = new Mock<IEntityManager>();
 
-
-            var compManMock = new Mock<IComponentManager>();
             var compFacMock = new Mock<IComponentFactory>();
 
             compRegistration.Setup(m => m.References).Returns(new List<Type> {typeof(MetaDataComponent)});
             compFacMock.Setup(m => m.GetRegistration(typeof(MetaDataComponent))).Returns(compRegistration.Object);
-            compManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
+            entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
-            compManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
+            entManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
                 .Returns(true);
 
-            compManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
+            entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
 
-            entManMock.Setup(m => m.ComponentManager).Returns(compManMock.Object);
+            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
@@ -48,7 +46,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m=>m.EntityAdded += null, entManMock.Object, entUid);
-            compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
 
             // Raise
             var evntArgs = new TestEvent(5);
@@ -130,21 +128,20 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var compRegistration = new Mock<IComponentRegistration>();
 
-            var compManMock = new Mock<IComponentManager>();
             var compFacMock = new Mock<IComponentFactory>();
 
             compRegistration.Setup(m => m.References).Returns(new List<Type> {typeof(MetaDataComponent)});
             compFacMock.Setup(m => m.GetRegistration(typeof(MetaDataComponent))).Returns(compRegistration.Object);
-            compManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
+            entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
 
             IComponent? outIComponent = compInstance;
-            compManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
+            entManMock.Setup(m => m.TryGetComponent(entUid, typeof(MetaDataComponent), out outIComponent))
                 .Returns(true);
 
-            compManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
+            entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
-            entManMock.Setup(m => m.ComponentManager).Returns(compManMock.Object);
+            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
@@ -153,7 +150,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m=>m.EntityAdded += null, entManMock.Object, entUid);
-            compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(compInstance, entUid));
 
             // Raise
             ((IEventBus)bus).RaiseComponentEvent(compInstance, new ComponentInit());
@@ -175,8 +172,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entUid = new EntityUid(7);
 
             var entManMock = new Mock<IEntityManager>();
-
-            var compManMock = new Mock<IComponentManager>();
             var compFacMock = new Mock<IComponentFactory>();
 
             void Setup<T>(out T instance) where T : IComponent, new()
@@ -186,16 +181,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 reg.Setup(m => m.References).Returns(new Type[] {typeof(T)});
 
                 compFacMock.Setup(m => m.GetRegistration(typeof(T))).Returns(reg.Object);
-                compManMock.Setup(m => m.TryGetComponent(entUid, typeof(T), out inst)).Returns(true);
-                compManMock.Setup(m => m.GetComponent(entUid, typeof(T))).Returns(inst);
+                entManMock.Setup(m => m.TryGetComponent(entUid, typeof(T), out inst)).Returns(true);
+                entManMock.Setup(m => m.GetComponent(entUid, typeof(T))).Returns(inst);
             }
 
             Setup<OrderComponentA>(out var instA);
             Setup<OrderComponentB>(out var instB);
             Setup<OrderComponentC>(out var instC);
 
-            compManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
-            entManMock.Setup(m => m.ComponentManager).Returns(compManMock.Object);
+            entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
+            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
@@ -225,9 +220,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // add a component to the system
             entManMock.Raise(m=>m.EntityAdded += null, entManMock.Object, entUid);
-            compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(instA, entUid));
-            compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(instB, entUid));
-            compManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(instC, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(instA, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(instB, entUid));
+            entManMock.Raise(m => m.ComponentAdded += null, new AddedComponentEventArgs(instC, entUid));
 
             // Raise
             var evntArgs = new TestEvent(5);

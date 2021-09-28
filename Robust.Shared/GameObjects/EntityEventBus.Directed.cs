@@ -244,13 +244,13 @@ namespace Robust.Shared.GameObjects
             public EventTables(IEntityManager entMan)
             {
                 _entMan = entMan;
-                _comFac = entMan.ComponentManager.ComponentFactory;
+                _comFac = entMan.ComponentFactory;
 
                 _entMan.EntityAdded += OnEntityAdded;
                 _entMan.EntityDeleted += OnEntityDeleted;
 
-                _entMan.ComponentManager.ComponentAdded += OnComponentAdded;
-                _entMan.ComponentManager.ComponentRemoved += OnComponentRemoved;
+                _entMan.ComponentAdded += OnComponentAdded;
+                _entMan.ComponentRemoved += OnComponentRemoved;
 
                 _eventTables = new();
                 _subscriptions = new();
@@ -423,7 +423,7 @@ namespace Robust.Shared.GameObjects
                     if (reg.ReferenceEvent != byRef)
                         ThrowByRefMisMatch();
 
-                    var component = _entMan.ComponentManager.GetComponent(euid, compType);
+                    var component = _entMan.GetComponent(euid, compType);
 
                     found.Add(((ref Unit ev) => reg.Handler(euid, component, ref ev), reg.Ordering));
                 }
@@ -465,8 +465,8 @@ namespace Robust.Shared.GameObjects
                 _entMan.EntityAdded -= OnEntityAdded;
                 _entMan.EntityDeleted -= OnEntityDeleted;
 
-                _entMan.ComponentManager.ComponentAdded -= OnComponentAdded;
-                _entMan.ComponentManager.ComponentRemoved -= OnComponentRemoved;
+                _entMan.ComponentAdded -= OnComponentAdded;
+                _entMan.ComponentRemoved -= OnComponentRemoved;
 
                 // punishment for use-after-free
                 _entMan = null!;
@@ -497,8 +497,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                enumerator = new(eventType, subscribedComps.GetEnumerator(), _subscriptions, euid,
-                    _entMan.ComponentManager);
+                enumerator = new(eventType, subscribedComps.GetEnumerator(), _subscriptions, euid, _entMan);
                 return true;
             }
 
@@ -545,16 +544,16 @@ namespace Robust.Shared.GameObjects
                 private HashSet<Type>.Enumerator _enumerator;
                 private readonly IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> _subscriptions;
                 private readonly EntityUid _uid;
-                private readonly IComponentManager _componentManager;
+                private readonly IEntityManager _entityManager;
 
                 public SubscriptionsEnumerator(Type eventType, HashSet<Type>.Enumerator enumerator,
                     IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> subscriptions, EntityUid uid,
-                    IComponentManager componentManager)
+                    IEntityManager componentManager)
                 {
                     _eventType = eventType;
                     _enumerator = enumerator;
                     _subscriptions = subscriptions;
-                    _componentManager = componentManager;
+                    _entityManager = componentManager;
                     _uid = uid;
                 }
 
@@ -584,7 +583,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    tuple = (_componentManager.GetComponent(_uid, compType), registration);
+                    tuple = (_entityManager.GetComponent(_uid, compType), registration);
                     return true;
                 }
 

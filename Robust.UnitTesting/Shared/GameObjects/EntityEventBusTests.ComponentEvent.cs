@@ -36,8 +36,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
-
-            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
@@ -88,7 +86,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
-            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
@@ -140,7 +137,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entManMock.Setup(m => m.GetComponent(entUid, typeof(MetaDataComponent)))
                 .Returns(compInstance);
 
-            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe
@@ -189,7 +185,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Setup<OrderComponentC>(out var instC);
 
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
-            entManMock.Setup(m => m.ComponentManager).Returns(entManMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
 
             // Subscribe

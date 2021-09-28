@@ -23,9 +23,6 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IEntityManager EntityManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
 
-        [Dependency, Obsolete("Use EntityManager instead.")]
-        protected readonly IComponentManager ComponentManager = default!;
-
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
 

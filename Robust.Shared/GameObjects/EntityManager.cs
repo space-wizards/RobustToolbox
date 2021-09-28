@@ -31,10 +31,6 @@ namespace Robust.Shared.GameObjects
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
-        [Obsolete("Use EntityManager instead.")]
-        public IComponentManager ComponentManager => this;
-
-        /// <inheritdoc />
         public IEntitySystemManager EntitySysManager => EntitySystemManager;
 
         /// <inheritdoc />

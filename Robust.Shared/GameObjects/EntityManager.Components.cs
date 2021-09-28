@@ -15,7 +15,7 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
-    public partial class EntityManager : IComponentManager
+    public partial class EntityManager
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;

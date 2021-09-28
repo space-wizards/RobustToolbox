@@ -24,7 +24,6 @@ namespace Robust.Server.GameStates
         private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
         private readonly IServerEntityManager _entMan;
-        private readonly IComponentManager _compMan;
         private readonly IMapManager _mapManager;
         private readonly IEntityLookup _lookup;
 
@@ -62,9 +61,7 @@ namespace Robust.Server.GameStates
         public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager, IEntityLookup lookup)
         {
             _entMan = entMan;
-            _compMan = entMan.ComponentManager;
             _mapManager = mapManager;
-            _compMan = _entMan.ComponentManager;
             _lookup = lookup;
         }
 
@@ -201,7 +198,7 @@ namespace Robust.Server.GameStates
                     var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
 
                     uint visMask = 0;
-                    if (_compMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
+                    if (_entMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                         visMask = eyeComp.VisibilityMask;
 
                     //Always include the map entity of the eye, if it exists.
@@ -384,7 +381,7 @@ namespace Robust.Server.GameStates
                 if (!_entMan.EntityExists(entityUid))
                     continue;
 
-                var xform = _compMan.GetComponent<ITransformComponent>(entityUid);
+                var xform = _entMan.GetComponent<ITransformComponent>(entityUid);
 
                 // Anchored entities don't ever leave
                 if (xform.Anchored) continue;
@@ -409,7 +406,7 @@ namespace Robust.Server.GameStates
             {
 
                 // skip sending anchored entities (walls)
-                DebugTools.Assert(!_compMan.GetComponent<ITransformComponent>(entityUid).Anchored);
+                DebugTools.Assert(!_entMan.GetComponent<ITransformComponent>(entityUid).Anchored);
 
                 if (previousSet.Contains(entityUid))
                 {
@@ -470,13 +467,13 @@ namespace Robust.Server.GameStates
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_compMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
+            if (_entMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
             {
                 if ((visMask & visComp.Layer) == 0)
                     return false;
             }
 
-            var xform = _compMan.GetComponent<TransformComponent>(uid);
+            var xform = _entMan.GetComponent<TransformComponent>(uid);
 
             var parentUid = xform.ParentUid;
 
@@ -535,7 +532,7 @@ namespace Robust.Server.GameStates
         // Read Safe
         private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid)
         {
-            var xform = _compMan.GetComponent<ITransformComponent>(euid);
+            var xform = _entMan.GetComponent<ITransformComponent>(euid);
 
             var view = Box2.UnitCentered.Scale(ViewSize).Translated(xform.WorldPosition);
             var map = xform.MapID;

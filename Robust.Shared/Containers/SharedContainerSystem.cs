@@ -25,7 +25,7 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref containerManager))
                 // TODO: I am a Sad Vera. Merge ComponentManager and EntityManager so we don't have to do this. Pretty please?
                 // ps. The to-do above is in effect for this whole file.
-                containerManager = ComponentManager.AddComponent<ContainerManagerComponent>(EntityManager.GetEntity(uid));
+                containerManager = EntityManager.AddComponent<ContainerManagerComponent>(EntityManager.GetEntity(uid));
 
             return containerManager.MakeContainer<T>(id);
         }
@@ -34,7 +34,7 @@ namespace Robust.Shared.Containers
             where T : IContainer
         {
             if (!Resolve(uid, ref containerManager))
-                containerManager = ComponentManager.AddComponent<ContainerManagerComponent>(EntityManager.GetEntity(uid));
+                containerManager = EntityManager.AddComponent<ContainerManagerComponent>(EntityManager.GetEntity(uid));
 
             if (TryGetContainer(uid, id, out var container, containerManager))
                 return (T)container;

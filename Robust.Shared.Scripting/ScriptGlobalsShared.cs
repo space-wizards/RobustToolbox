@@ -16,7 +16,6 @@ namespace Robust.Shared.Scripting
     public abstract class ScriptGlobalsShared
     {
         [field: Dependency] public IEntityManager ent { get; } = default!;
-        [field: Dependency] public IComponentManager comp { get; } = default!;
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
 

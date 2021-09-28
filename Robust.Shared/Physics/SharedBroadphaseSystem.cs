@@ -881,7 +881,7 @@ namespace Robust.Shared.Physics
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
             {
                 if (broadphase.Owner.Transform.MapID != mapId) continue;
 

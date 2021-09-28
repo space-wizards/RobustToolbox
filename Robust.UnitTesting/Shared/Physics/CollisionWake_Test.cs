@@ -31,7 +31,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var server = StartServer(options);
             await server.WaitIdleAsync();
 
-            var compManager = server.ResolveDependency<IComponentManager>();
             var entManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
 
@@ -45,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 grid = mapManager.CreateGrid(mapId);
 
                 var entity = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One, mapId));
-                physics = compManager.GetComponent<PhysicsComponent>(entity.Uid);
+                physics = entManager.GetComponent<PhysicsComponent>(entity.Uid);
             });
 
             // Should still be collidable

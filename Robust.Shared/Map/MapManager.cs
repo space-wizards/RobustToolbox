@@ -16,7 +16,6 @@ namespace Robust.Shared.Map
     internal class MapManager : IMapManagerInternal
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
-        [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         public IGameTiming GameTiming => _gameTiming;
@@ -254,7 +253,7 @@ namespace Robust.Shared.Map
 
             if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
             {
-                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
+                var mapComps = _entityManager.EntityQuery<IMapComponent>(true);
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
@@ -449,7 +448,7 @@ namespace Robust.Shared.Map
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
-                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true))
+                foreach (var comp in _entityManager.EntityQuery<IMapGridComponent>(true))
                 {
                     if (comp.GridIndex != actualID)
                         continue;
@@ -577,10 +576,10 @@ namespace Robust.Shared.Map
                 if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
 
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var xformComp = _entityManager.ComponentManager.GetComponent<TransformComponent>(gridEnt.Uid);
+                var xformComp = _entityManager.GetComponent<TransformComponent>(gridEnt.Uid);
                 var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
 
-                if (_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
+                if (_entityManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
                 {
                     var intersects = false;
 
@@ -626,10 +625,10 @@ namespace Robust.Shared.Map
                 if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldBounds)) continue;
 
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-                var xformComp = _entityManager.ComponentManager.GetComponent<TransformComponent>(gridEnt.Uid);
+                var xformComp = _entityManager.GetComponent<TransformComponent>(gridEnt.Uid);
                 var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
 
-                if (_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
+                if (_entityManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
                 {
                     var intersects = false;
 
@@ -703,7 +702,7 @@ namespace Robust.Shared.Map
                 if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
                     return;
 
-                if (gridEnt.LifeStage <= EntityLifeStage.Initialized)
+                if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
                     gridEnt.Delete();
             }
 

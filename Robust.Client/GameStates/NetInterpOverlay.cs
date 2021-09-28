@@ -13,7 +13,7 @@ namespace Robust.Client.GameStates
 {
     internal class NetInterpOverlay : Overlay
     {
-        [Dependency] private readonly IComponentManager _componentManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
@@ -32,7 +32,7 @@ namespace Robust.Client.GameStates
             handle.UseShader(_shader);
             var worldHandle = (DrawingHandleWorld) handle;
             var viewport = _eyeManager.GetWorldViewport();
-            foreach (var boundingBox in _componentManager.EntityQuery<IPhysBody>(true))
+            foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
                 var transform = boundingBox.Owner.Transform;

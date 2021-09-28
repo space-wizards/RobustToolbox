@@ -443,6 +443,12 @@ namespace Robust.Client.GameObjects
             return Play(filename, entity, audioParams);
         }
 
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
+        {
+            return EntityManager.TryGetEntity(uid, out var entity)
+                ? Play(filename, entity, audioParams) : null;
+        }
+
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {

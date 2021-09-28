@@ -22,7 +22,6 @@ namespace Robust.Server.ViewVariables
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IConGroupController _groupController = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
@@ -122,7 +121,7 @@ namespace Robust.Server.ViewVariables
                 case ViewVariablesComponentSelector componentSelector:
                     var compType = _reflectionManager.GetType(componentSelector.ComponentType);
                     if (compType == null ||
-                        !_componentManager.TryGetComponent(componentSelector.Entity, compType, out var component))
+                        !_entityManager.TryGetComponent(componentSelector.Entity, compType, out var component))
                     {
                         Deny(DenyReason.NoObject);
                         return;

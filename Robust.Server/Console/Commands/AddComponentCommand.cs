@@ -36,7 +36,7 @@ namespace Robust.Server.Console.Commands
 
             var componentName = args[1];
 
-            var compManager = IoCManager.Resolve<IComponentManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
             if (!compFactory.TryGetRegistration(componentName, out var registration, true))
@@ -53,7 +53,7 @@ namespace Robust.Server.Console.Commands
             var component = (Component) compFactory.GetComponent(registration.Type);
 
             component.Owner = entity;
-            compManager.AddComponent(entity, component);
+            entManager.AddComponent(entity, component);
 
             shell.WriteLine($"Added {componentName} component to entity {entity.Name}.");
         }

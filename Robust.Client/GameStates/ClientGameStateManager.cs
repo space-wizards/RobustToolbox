@@ -52,7 +52,6 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -353,7 +352,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // TODO: handle component deletions/creations.
-                foreach (var (netId, comp) in _componentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity.Uid))
                 {
                     DebugTools.AssertNotNull(netId);
 
@@ -389,9 +388,9 @@ namespace Robust.Client.GameStates
                 var compData = new Dictionary<uint, ComponentState>();
                 outputData.Add(createdEntity, compData);
 
-                foreach (var (netId, component) in _componentManager.GetNetComponents(createdEntity))
+                foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    var state = _componentManager.GetComponentState(bus, component, player);
+                    var state = _entityManager.GetComponentState(bus, component, player);
 
                     if(state.GetType() == typeof(ComponentState))
                         continue;
@@ -480,7 +479,7 @@ namespace Robust.Client.GameStates
             {
                 var ent = kvStates.Key;
                 var entity = (Entity) ent;
-                HandleEntityState(entity.EntityManager.ComponentManager, entity, _entities.EventBus, kvStates.Value.Item1,
+                HandleEntityState(entity, _entities.EventBus, kvStates.Value.Item1,
                     kvStates.Value.Item2);
             }
 
@@ -548,7 +547,7 @@ namespace Robust.Client.GameStates
             return created;
         }
 
-        private void HandleEntityState(IComponentManager compMan, IEntity entity, IEventBus bus, EntityState? curState,
+        private void HandleEntityState(IEntity entity, IEventBus bus, EntityState? curState,
             EntityState? nextState)
         {
             var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
@@ -560,21 +559,21 @@ namespace Robust.Client.GameStates
                 {
                     if (compChange.Deleted)
                     {
-                        if (compMan.TryGetComponent(entityUid, compChange.NetID, out var comp))
+                        if (_entityManager.TryGetComponent(entityUid, compChange.NetID, out var comp))
                         {
-                            compMan.RemoveComponent(entityUid, comp);
+                            _entityManager.RemoveComponent(entityUid, comp);
                         }
                     }
                     else
                     {
                         //Right now we just assume every state from an unseen entity is added
 
-                        if (compMan.HasComponent(entityUid, compChange.NetID))
+                        if (_entityManager.HasComponent(entityUid, compChange.NetID))
                             continue;
 
                         var newComp = (Component) _compFactory.GetComponent(compChange.NetID);
                         newComp.Owner = entity;
-                        compMan.AddComponent(entity, newComp, true);
+                        _entityManager.AddComponent(entity, newComp, true);
 
                         compStateWork[compChange.NetID] = (compChange.State, null);
                     }
@@ -606,7 +605,7 @@ namespace Robust.Client.GameStates
 
             foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (compMan.TryGetComponent(entityUid, (ushort) netId, out var component))
+                if (_entityManager.TryGetComponent(entityUid, (ushort) netId, out var component))
                 {
                     try
                     {

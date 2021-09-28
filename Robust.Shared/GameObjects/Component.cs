@@ -164,7 +164,7 @@ namespace Robust.Shared.GameObjects
 
         private IEventBus GetBus()
         {
-            // Apparently components are being created outside of the ComponentManager,
+            // Apparently components are being created outside of the EntityManager,
             // and the Owner is not being set correctly.
             // ReSharper disable once RedundantAssertionStatement
             DebugTools.AssertNotNull(Owner);

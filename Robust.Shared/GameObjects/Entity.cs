@@ -131,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
 #if DEBUG
             // Second integrity check in case of.
-            foreach (var t in EntityManager.ComponentManager.GetComponents(Uid))
+            foreach (var t in EntityManager.GetComponents(Uid))
             {
                 if (!t.Initialized)
                 {
@@ -151,7 +151,6 @@ namespace Robust.Shared.GameObjects
         public void StartAllComponents()
         {
             // TODO: Move this to EntityManager.
-
             // Startup() can modify _components
             // This code can only handle additions to the list. Is there a better way? Probably not.
             var comps = EntityManager.GetComponents(Uid)

@@ -98,7 +98,7 @@ namespace Robust.Client.GameObjects
                 currentEye.Rotation = -parentRotation;
             }
 
-            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>(true))
+            foreach (var eyeComponent in EntityManager.EntityQuery<EyeComponent>(true))
             {
                 eyeComponent.UpdateEyePosition();
             }

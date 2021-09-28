@@ -63,7 +63,6 @@ namespace Robust.Server
             });
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
-        [Dependency] private readonly IComponentManager _components = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
         [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly ILogManager _log = default!;
@@ -83,6 +82,7 @@ namespace Robust.Server
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
+        [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -596,7 +596,7 @@ namespace Robust.Server
 
             using (TickUsage.WithLabels("NetworkedCVar").NewTimer())
             {
-                IoCManager.Resolve<INetConfigurationManager>().TickProcessMessages();
+                _netCfgMan.TickProcessMessages();
             }
 
             using (TickUsage.WithLabels("Timers").NewTimer())
@@ -607,11 +607,6 @@ namespace Robust.Server
             using (TickUsage.WithLabels("AsyncTasks").NewTimer())
             {
                 _taskManager.ProcessPendingTasks();
-            }
-
-            using (TickUsage.WithLabels("ComponentCull").NewTimer())
-            {
-                _components.CullRemovedComponents();
             }
 
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.

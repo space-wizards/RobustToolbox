@@ -161,7 +161,12 @@ namespace Robust.Shared.GameObjects
         {
             var newEntity = CreateEntity(prototypeName);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+
+            // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
+            var oldAnchored = newEntity.Transform.Anchored;
+            newEntity.Transform.Anchored = false;
             newEntity.Transform.WorldPosition = coordinates.Position;
+            newEntity.Transform.Anchored = oldAnchored;
             return newEntity;
         }
 

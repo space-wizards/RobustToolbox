@@ -202,7 +202,7 @@ namespace Robust.Shared.Physics
             if (moveBuffer.Count == 0) return;
 
             // Cache as much broadphase data as we can up front for this map.
-            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
             {
                 var transform = broadphase.Owner.Transform;
 
@@ -882,7 +882,7 @@ namespace Robust.Shared.Physics
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
             {
                 if (broadphase.Owner.Transform.MapID != mapId) continue;
 

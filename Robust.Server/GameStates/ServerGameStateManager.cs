@@ -281,10 +281,9 @@ namespace Robust.Server.GameStates
         internal static EntityState GetEntityState(IEntityManager entMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
             var bus = entMan.EventBus;
-            var compMan = entMan.ComponentManager;
             var changed = new List<ComponentChange>();
 
-            foreach (var (netId, component) in compMan.GetNetComponents(entityUid))
+            foreach (var (netId, component) in entMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(component.Initialized);
 

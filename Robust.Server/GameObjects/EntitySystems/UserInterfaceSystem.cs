@@ -46,7 +46,7 @@ namespace Robust.Server.GameObjects
         private void OnMessageReceived(BoundUIWrapMessage msg, EntitySessionEventArgs args)
         {
             var uid = msg.Entity;
-            if (!ComponentManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var uiComp))
+            if (!EntityManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var uiComp))
                 return;
 
             var message = msg.Message;
@@ -122,7 +122,7 @@ namespace Robust.Server.GameObjects
 
         public bool HasUi(EntityUid uid, object uiKey)
         {
-            if (!ComponentManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var ui))
+            if (!EntityManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var ui))
                 return false;
 
             return ui.HasBoundUserInterface(uiKey);
@@ -130,7 +130,7 @@ namespace Robust.Server.GameObjects
 
         public BoundUserInterface GetUi(EntityUid uid, object uiKey)
         {
-            return ComponentManager.GetComponent<ServerUserInterfaceComponent>(uid).GetBoundUserInterface(uiKey);
+            return EntityManager.GetComponent<ServerUserInterfaceComponent>(uid).GetBoundUserInterface(uiKey);
         }
 
         public BoundUserInterface? GetUiOrNull(EntityUid uid, object uiKey)
@@ -144,7 +144,7 @@ namespace Robust.Server.GameObjects
         {
             ui = null;
 
-            return ComponentManager.TryGetComponent(uid, out ServerUserInterfaceComponent uiComp)
+            return EntityManager.TryGetComponent(uid, out ServerUserInterfaceComponent uiComp)
                    && uiComp.TryGetBoundUserInterface(uiKey, out ui);
         }
 

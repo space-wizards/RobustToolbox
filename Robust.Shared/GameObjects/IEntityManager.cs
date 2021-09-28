@@ -25,6 +25,7 @@ namespace Robust.Shared.GameObjects
         void FrameUpdate(float frameTime);
 
         IComponentFactory ComponentFactory { get; }
+        [Obsolete("Use IEntityManager instead.")]
         IComponentManager ComponentManager { get; }
         IEntitySystemManager EntitySysManager { get; }
         IEntityNetworkManager? EntityNetManager { get; }

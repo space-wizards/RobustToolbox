@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Map
                 var grid = mapManager.CreateGrid(mapId);
 
                 // Should be nothing if grid empty
-                Assert.That(entManager.ComponentManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent gridBody));
+                Assert.That(entManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent gridBody));
                 Assert.That(gridBody.Fixtures.Count, Is.EqualTo(0));
                 Assert.That(gridBody.BodyType, Is.EqualTo(BodyType.Static));
 

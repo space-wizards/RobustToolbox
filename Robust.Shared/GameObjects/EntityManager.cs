@@ -31,6 +31,7 @@ namespace Robust.Shared.GameObjects
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
+        [Obsolete("Use EntityManager instead.")]
         public IComponentManager ComponentManager => this;
 
         /// <inheritdoc />
@@ -266,7 +267,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            ComponentManager.DisposeComponents(entity.Uid);
+            DisposeComponents(entity.Uid);
 
             // map does not have a parent node, everything else needs to be detached
             if (transform.ParentUid != EntityUid.Invalid)

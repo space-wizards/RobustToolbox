@@ -44,7 +44,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!EntityManager.EntityExists(ent)) continue;
 
-                ComponentManager.GetComponent<TransformComponent>(ent).Anchored = false;
+                EntityManager.GetComponent<TransformComponent>(ent).Anchored = false;
             }
         }
 

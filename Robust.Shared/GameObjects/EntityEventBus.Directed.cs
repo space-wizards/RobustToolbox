@@ -548,12 +548,12 @@ namespace Robust.Shared.GameObjects
 
                 public SubscriptionsEnumerator(Type eventType, HashSet<Type>.Enumerator enumerator,
                     IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> subscriptions, EntityUid uid,
-                    IEntityManager componentManager)
+                    IEntityManager entityManager)
                 {
                     _eventType = eventType;
                     _enumerator = enumerator;
                     _subscriptions = subscriptions;
-                    _entityManager = componentManager;
+                    _entityManager = entityManager;
                     _uid = uid;
                 }
 

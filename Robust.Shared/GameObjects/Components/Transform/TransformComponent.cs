@@ -407,7 +407,7 @@ namespace Robust.Shared.GameObjects
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (Owner.EntityManager.ComponentManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
+                    if (Owner.EntityManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
                         gridComp.UnanchorEntity(this);
                     else
                         SetAnchored(false);

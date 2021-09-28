@@ -111,10 +111,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             await server.WaitAssertion(() =>
             {
-                var compMan = IoCManager.Resolve<IComponentManager>();
+                var entMan = IoCManager.Resolve<IEntityManager>();
 
                 // Move item into PVS so it gets sent to the client
-                compMan.GetComponent<ITransformComponent>(itemUid).LocalPosition = (0, 0);
+                entMan.GetComponent<ITransformComponent>(itemUid).LocalPosition = (0, 0);
             });
 
             await server.WaitRunTicks(1);

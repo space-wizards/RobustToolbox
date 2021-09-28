@@ -15,7 +15,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
     [TypeSerializer]
-    public class PrototypeFlagsTypeSerializer<T> : ITypeSerializer<PrototypeFlags<T>, SequenceDataNode>
+    public class PrototypeFlagsTypeSerializer<T>
+        : ITypeSerializer<PrototypeFlags<T>, SequenceDataNode>, ITypeSerializer<PrototypeFlags<T>, ValueDataNode>
         where T : class, IPrototype
     {
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node,
@@ -63,6 +64,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             bool skipHook, ISerializationContext? context = null)
         {
             return new PrototypeFlags<T>(source);
+        }
+
+        public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, ISerializationContext? context = null)
+        {
+            return serializationManager.ValidateNodeWith<string, PrototypeIdSerializer<T>, ValueDataNode>(node, context);
+        }
+
+        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        {
+            return new DeserializedValue<PrototypeFlags<T>>(new PrototypeFlags<T>(node.Value));
         }
     }
 }

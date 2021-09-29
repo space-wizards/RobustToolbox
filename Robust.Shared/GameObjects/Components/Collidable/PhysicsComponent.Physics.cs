@@ -869,7 +869,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [DataField("angularDamping")]
-        private float _angularDamping = 0.1f;
+        private float _angularDamping = 0.2f;
 
         /// <summary>
         /// Get the linear and angular velocities at the same time.

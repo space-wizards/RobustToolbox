@@ -12,8 +12,11 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Broadphase;
+using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Debugging
 {
@@ -170,25 +173,41 @@ namespace Robust.Client.Debugging
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
 
-                    // all entities have a TransformComponent
-                    var transform = physBody.Owner.Transform;
-
                     var worldBox = physBody.GetWorldAABB();
                     if (worldBox.IsEmpty()) continue;
 
-                    var pTransform = physBody.GetTransform();
+                    var xform = physBody.GetTransform();
 
                     foreach (var fixture in physBody.Fixtures)
                     {
-                        var shape = fixture.Shape;
-                        var sleepPercent = physBody.Awake ? 0.0f : 1.0f;
-                        shape.DebugDraw(drawing, transform.WorldMatrix, in viewport, sleepPercent);
-
-                        drawing.SetTransform(in Matrix3.Identity);
-
-                        var aabb = shape.ComputeAABB(pTransform, 0);
-                        worldHandle.DrawRect(aabb, Color.Blue, false);
+                        // Invalid shape - Box2D doesn't check for IsSensor
+                        if (physBody.BodyType == BodyType.Dynamic && fixture.Mass == 0f)
+                        {
+                            DrawShape(worldHandle, fixture, xform, Color.Red);
+                        }
+                        else if (!physBody.CanCollide)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.3f).WithAlpha(0.2f));
+                        }
+                        else if (physBody.BodyType == BodyType.Static)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.9f, 0.5f).WithAlpha(0.2f));
+                        }
+                        else if ((physBody.BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0x0)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.9f));
+                        }
+                        else if (!physBody.Awake)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.6f, 0.6f, 0.6f));
+                        }
+                        else
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.9f, 0.7f, 0.7f).WithAlpha(0.2f));
+                        }
                     }
+
+                    drawing.SetTransform(in Matrix3.Identity);
 
                     foreach (var joint in physBody.Joints)
                     {
@@ -204,8 +223,26 @@ namespace Robust.Client.Debugging
                         _hoverBodies.Add(physBody);
                     }
 
-                    // draw AABB
                     worldHandle.DrawRect(worldBox, colorEdge, false);
+                }
+            }
+
+            private void DrawShape(DrawingHandleWorld worldHandle, Fixture fixture, Transform xform, Color color)
+            {
+                switch (fixture.Shape)
+                {
+                    case PolygonShape poly:
+                        Span<Vector2> verts = stackalloc Vector2[poly.Vertices.Length];
+
+                        for (var i = 0; i < verts.Length; i++)
+                        {
+                            verts[i] = Transform.Mul(xform, poly.Vertices[i]);
+                        }
+
+                        worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, verts, color);
+                        break;
+                    default:
+                        return;
                 }
             }
 

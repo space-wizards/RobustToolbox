@@ -434,13 +434,13 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 }
 
-                if (!MathHelper.CloseTo(lastRange, component.Radius))
+                if (!MathHelper.CloseToPercent(lastRange, component.Radius))
                 {
                     lastRange = component.Radius;
                     lightShader.SetUniformMaybe("lightRange", lastRange);
                 }
 
-                if (!MathHelper.CloseTo(lastPower, component.Energy))
+                if (!MathHelper.CloseToPercent(lastPower, component.Energy))
                 {
                     lastPower = component.Energy;
                     lightShader.SetUniformMaybe("lightPower", lastPower);
@@ -452,7 +452,7 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformMaybe("lightColor", lastColor);
                 }
 
-                if (_enableSoftShadows && !MathHelper.CloseTo(lastSoftness, component.Softness))
+                if (_enableSoftShadows && !MathHelper.CloseToPercent(lastSoftness, component.Softness))
                 {
                     lastSoftness = component.Softness;
                     lightShader.SetUniformMaybe("lightSoftness", lastSoftness);

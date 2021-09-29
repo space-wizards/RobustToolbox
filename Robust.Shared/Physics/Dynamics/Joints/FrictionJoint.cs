@@ -299,8 +299,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
-                   MathHelper.CloseTo(MaxForce, other.MaxForce) &&
-                   MathHelper.CloseTo(MaxTorque, other.MaxTorque) &&
+                   MathHelper.CloseToPercent(MaxForce, other.MaxForce) &&
+                   MathHelper.CloseToPercent(MaxTorque, other.MaxTorque) &&
                    LocalAnchorA.EqualsApprox(other.LocalAnchorA) &&
                    LocalAnchorB.EqualsApprox(other.LocalAnchorB);
         }

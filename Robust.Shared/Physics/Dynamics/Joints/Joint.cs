@@ -158,7 +158,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _breakpoint;
             set
             {
-                if (MathHelper.CloseTo(_breakpoint, value)) return;
+                if (MathHelper.CloseToPercent(_breakpoint, value)) return;
                 _breakpoint = value;
                 _breakpointSquared = _breakpoint * _breakpoint;
                 Dirty();
@@ -243,7 +243,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                    BodyAUid.Equals(other.BodyAUid) &&
                    BodyBUid.Equals(other.BodyBUid) &&
                    CollideConnected == other.CollideConnected &&
-                   MathHelper.CloseTo(_breakpoint, other._breakpoint);
+                   MathHelper.CloseToPercent(_breakpoint, other._breakpoint);
         }
 
         public sealed class JointBreakMessage : EntityEventArgs

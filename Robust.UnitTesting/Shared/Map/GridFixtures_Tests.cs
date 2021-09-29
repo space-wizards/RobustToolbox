@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Map
                 // Also should only be a single tile.
                 var bounds = gridBody.Fixtures[0].Shape.ComputeAABB(new Transform(Vector2.Zero, (float) Angle.Zero.Theta), 0);
                 // Poly probably has Box2D's radius added to it so won't be a unit square
-                Assert.That(MathHelper.CloseTo(Box2.Area(bounds), 1.0f, 0.1f));
+                Assert.That(MathHelper.CloseToPercent(Box2.Area(bounds), 1.0f, 0.1f));
 
                 // Now do 2 tiles (same chunk)
                 grid.SetTile(Vector2i.One, new Tile(1));
@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Map
                 bounds = gridBody.Fixtures[0].Shape.ComputeAABB(new Transform(Vector2.Zero, (float) Angle.Zero.Theta), 0);
 
                 // Even if we add a new tile old fixture should stay the same if they don't connect.
-                Assert.That(MathHelper.CloseTo(Box2.Area(bounds), 1.0f, 0.1f));
+                Assert.That(MathHelper.CloseToPercent(Box2.Area(bounds), 1.0f, 0.1f));
 
                 // If we add a new chunk should be 3 now
                 grid.SetTile(new Vector2i(-1, -1), new Tile(1));

@@ -254,16 +254,16 @@ namespace Robust.Shared.Physics.Collision
         {
             return Id == other.Id &&
                    LocalPoint.EqualsApprox(other.LocalPoint) &&
-                   MathHelper.CloseTo(NormalImpulse, other.NormalImpulse) &&
-                   MathHelper.CloseTo(TangentImpulse, other.TangentImpulse);
+                   MathHelper.CloseToPercent(NormalImpulse, other.NormalImpulse) &&
+                   MathHelper.CloseToPercent(TangentImpulse, other.TangentImpulse);
         }
 
         public bool EqualsApprox(ManifoldPoint other, double tolerance)
         {
             return Id == other.Id &&
                    LocalPoint.EqualsApprox(other.LocalPoint, tolerance) &&
-                   MathHelper.CloseTo(NormalImpulse, other.NormalImpulse, tolerance) &&
-                   MathHelper.CloseTo(TangentImpulse, other.TangentImpulse, tolerance);
+                   MathHelper.CloseToPercent(NormalImpulse, other.NormalImpulse, tolerance) &&
+                   MathHelper.CloseToPercent(TangentImpulse, other.TangentImpulse, tolerance);
         }
     }
 }

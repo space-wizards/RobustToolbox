@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
+#if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
+#endif
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
@@ -13,7 +15,7 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
-    public class ComponentManager : IComponentManager
+    public partial class EntityManager
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
@@ -49,33 +51,31 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
-        private bool initialized;
-        public void Initialize()
+        public void InitializeComponents()
         {
-            if (initialized)
+            if (Initialized)
                 throw new InvalidOperationException("Already initialized.");
 
-            initialized = true;
+            Initialized = true;
 
             FillComponentDict();
             _componentFactory.ComponentAdded += OnComponentAdded;
             _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
         }
 
-        /// <inheritdoc />
-        public void Clear()
+        /// <summary>
+        ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
+        ///     Any entities relying on existing components will be broken.
+        /// </summary>
+        public void ClearComponents()
         {
+            _componentFactory.ComponentAdded -= OnComponentAdded;
+            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
             _netComponents.Clear();
             _entTraitDict.Clear();
             _entCompIndex.Clear();
             _deleteSet.Clear();
             FillComponentDict();
-        }
-
-        public void Dispose()
-        {
-            _componentFactory.ComponentAdded -= OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
         }
 
         private void OnComponentAdded(IComponentRegistration obj)

@@ -12,15 +12,15 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityQueryCallback(IEntity entity);
 
+    public delegate void EntityUidQueryCallback(EntityUid uid);
+
     /// <inheritdoc />
-    public class EntityManager : IEntityManager
+    public partial class EntityManager : IEntityManager
     {
         #region Dependencies
 
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [IoC.Dependency] protected readonly IComponentFactory ComponentFactory = default!;
-        [IoC.Dependency] private readonly IComponentManager _componentManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
         [IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
@@ -31,9 +31,6 @@ namespace Robust.Shared.GameObjects
         public GameTick CurrentTick => _gameTiming.CurTick;
 
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
-
-        /// <inheritdoc />
-        public IComponentManager ComponentManager => _componentManager;
 
         /// <inheritdoc />
         public IEntitySystemManager EntitySysManager => EntitySystemManager;
@@ -61,6 +58,7 @@ namespace Robust.Shared.GameObjects
         public event EventHandler<EntityUid>? EntityDeleted;
 
         public bool Started { get; protected set; }
+        public bool Initialized { get; protected set; }
 
         /// <summary>
         /// Constructs a new instance of <see cref="EntityManager"/>.
@@ -71,17 +69,18 @@ namespace Robust.Shared.GameObjects
 
         public virtual void Initialize()
         {
+            if (Initialized)
+                throw new InvalidOperationException("Initialize() called multiple times");
+
             _eventBus = new EntityEventBus(this);
 
-            ComponentManager.Initialize();
+            InitializeComponents();
         }
 
         public virtual void Startup()
         {
             if (Started)
-            {
                 throw new InvalidOperationException("Startup() called multiple times");
-            }
 
             EntitySystemManager.Initialize();
             Started = true;
@@ -92,8 +91,9 @@ namespace Robust.Shared.GameObjects
             FlushEntities();
             _eventBus.ClearEventTables();
             EntitySystemManager.Shutdown();
+            ClearComponents();
+            Initialized = false;
             Started = false;
-            _componentManager.Clear();
         }
 
         public virtual void TickUpdate(float frameTime, Histogram? histogram)
@@ -120,7 +120,7 @@ namespace Robust.Shared.GameObjects
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
             {
-                _componentManager.CullRemovedComponents();
+                CullRemovedComponents();
             }
         }
 
@@ -160,7 +160,12 @@ namespace Robust.Shared.GameObjects
         {
             var newEntity = CreateEntity(prototypeName);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+
+            // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
+            var oldAnchored = newEntity.Transform.Anchored;
+            newEntity.Transform.Anchored = false;
             newEntity.Transform.WorldPosition = coordinates.Position;
+            newEntity.Transform.Anchored = oldAnchored;
             return newEntity;
         }
 
@@ -260,7 +265,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            ComponentManager.DisposeComponents(entity.Uid);
+            DisposeComponents(entity.Uid);
 
             // map does not have a parent node, everything else needs to be detached
             if (transform.ParentUid != EntityUid.Invalid)
@@ -359,10 +364,10 @@ namespace Robust.Shared.GameObjects
             Entities[entity.Uid] = entity;
 
             // allocate the required MetaDataComponent
-            _componentManager.AddComponent<MetaDataComponent>(entity);
+            AddComponent<MetaDataComponent>(entity);
 
             // allocate the required TransformComponent
-            _componentManager.AddComponent<TransformComponent>(entity);
+            AddComponent<TransformComponent>(entity);
 
 
             return entity;
@@ -435,12 +440,12 @@ namespace Robust.Shared.GameObjects
             var uid = netMsg.EntityUid;
             if (compMsg.Directed)
             {
-                if (_componentManager.TryGetComponent(uid, (ushort) netMsg.NetId, out var component))
+                if (TryGetComponent(uid, (ushort) netMsg.NetId, out var component))
                     component.HandleNetworkMessage(compMsg, compChannel, session);
             }
             else
             {
-                foreach (var component in _componentManager.GetComponents(uid))
+                foreach (var component in GetComponents(uid))
                 {
                     component.HandleNetworkMessage(compMsg, compChannel, session);
                 }

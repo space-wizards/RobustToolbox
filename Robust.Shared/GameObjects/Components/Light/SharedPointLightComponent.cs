@@ -38,6 +38,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightToggleEvent(_enabled));
                 Dirty();
             }
         }
@@ -60,7 +61,7 @@ namespace Robust.Shared.GameObjects
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
                 Dirty();
             }
@@ -76,6 +77,16 @@ namespace Robust.Shared.GameObjects
                 _offset = value;
                 Dirty();
             }
+        }
+    }
+
+    public sealed class PointLightToggleEvent : EntityEventArgs
+    {
+        public bool Enabled;
+
+        public PointLightToggleEvent(bool enabled)
+        {
+            Enabled = enabled;
         }
     }
 }

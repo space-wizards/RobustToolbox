@@ -184,7 +184,7 @@ namespace Robust.Shared.Prototypes
             }
 
             var factory = IoCManager.Resolve<IComponentFactory>();
-            var componentManager = IoCManager.Resolve<IComponentManager>();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
             var oldPrototype = entity.Prototype;
 
             var oldPrototypeComponents = oldPrototype.Components.Keys
@@ -207,10 +207,10 @@ namespace Robust.Shared.Prototypes
                     continue;
                 }
 
-                componentManager.RemoveComponent(entity.Uid, type);
+                entityManager.RemoveComponent(entity.Uid, type);
             }
 
-            componentManager.CullRemovedComponents();
+            entityManager.CullRemovedComponents();
 
             var componentDependencyManager = IoCManager.Resolve<IComponentDependencyManager>();
 

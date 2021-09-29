@@ -404,5 +404,11 @@ namespace Robust.Shared.Maths
         {
             return MathHelper.CloseTo(X, other.X, tolerance) && MathHelper.CloseTo(Y, other.Y, tolerance);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly bool EqualsApproxPercent(Vector2 other, double tolerance = 0.0001)
+        {
+            return MathHelper.CloseToPercent(X, other.X, tolerance) && MathHelper.CloseToPercent(Y, other.Y, tolerance);
+        }
     }
 }

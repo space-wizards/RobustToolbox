@@ -53,7 +53,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
             }
@@ -86,7 +86,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public bool Equals(IPhysShape? other)
         {
             if (other is not PhysShapeCircle otherCircle) return false;
-            return MathHelper.CloseTo(_radius, otherCircle._radius);
+            return MathHelper.CloseToPercent(_radius, otherCircle._radius);
         }
     }
 }

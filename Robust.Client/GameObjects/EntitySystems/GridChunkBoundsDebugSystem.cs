@@ -66,7 +66,7 @@ namespace Robust.Client.GameObjects
             {
                 var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
 
-                if (!_entityManager.ComponentManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body)) continue;
+                if (!_entityManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body)) continue;
 
                 var transform = body.GetTransform();
 

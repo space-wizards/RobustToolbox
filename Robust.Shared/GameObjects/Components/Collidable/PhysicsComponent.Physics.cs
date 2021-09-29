@@ -272,7 +272,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _sleepTime))
+                if (MathHelper.CloseToPercent(value, _sleepTime))
                     return;
 
                 _sleepTime = value;
@@ -714,7 +714,7 @@ namespace Robust.Shared.GameObjects
 
                 if (_bodyType != BodyType.Dynamic) return;
 
-                if (MathHelper.CloseTo(_inertia, value)) return;
+                if (MathHelper.CloseToPercent(_inertia, value)) return;
 
                 if (value > 0.0f && !_fixedRotation)
                 {
@@ -813,7 +813,7 @@ namespace Robust.Shared.GameObjects
             get => _friction;
             set
             {
-                if (MathHelper.CloseTo(value, _friction))
+                if (MathHelper.CloseToPercent(value, _friction))
                     return;
 
                 _friction = value;
@@ -836,7 +836,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _linearDamping))
+                if (MathHelper.CloseToPercent(value, _linearDamping))
                     return;
 
                 _linearDamping = value;
@@ -845,7 +845,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [DataField("linearDamping")]
-        private float _linearDamping = 0.02f;
+        private float _linearDamping = 0.2f;
 
         /// <summary>
         ///     This is a set amount that the body's angular velocity is reduced every tick.
@@ -860,7 +860,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _angularDamping))
+                if (MathHelper.CloseToPercent(value, _angularDamping))
                     return;
 
                 _angularDamping = value;
@@ -869,7 +869,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [DataField("angularDamping")]
-        private float _angularDamping = 0.02f;
+        private float _angularDamping = 0.2f;
 
         /// <summary>
         /// Get the linear and angular velocities at the same time.
@@ -915,7 +915,7 @@ namespace Robust.Shared.GameObjects
                 if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
-                if (_linVelocity.EqualsApprox(value))
+                if (_linVelocity.EqualsApprox(value, 0.0001f))
                     return;
 
                 _linVelocity = value;
@@ -970,7 +970,7 @@ namespace Robust.Shared.GameObjects
                 if (value * value > 0.0f)
                     Awake = true;
 
-                if (MathHelper.CloseTo(_angVelocity, value))
+                if (MathHelper.CloseToPercent(_angVelocity, value, 0.0001f))
                     return;
 
                 _angVelocity = value;
@@ -1243,6 +1243,10 @@ namespace Robust.Shared.GameObjects
                     Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsUpdateMessage(this));
                 }
             }
+            else
+            {
+                _awake = false;
+            }
         }
 
         public void ClearJoints()
@@ -1348,7 +1352,7 @@ namespace Robust.Shared.GameObjects
             if (_inertia > 0.0f && !_fixedRotation)
             {
                 // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
+                _inertia -= _mass * Vector2.Dot(Vector2.Zero, Vector2.Zero);
 
                 DebugTools.Assert(_inertia > 0.0f);
                 InvI = 1.0f / _inertia;
@@ -1359,7 +1363,7 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            LocalCenter = localCenter;
+            LocalCenter = Vector2.Zero;
             /*
             var oldCenter = _sweep.Center;
             _sweep.LocalCenter = localCenter;

@@ -151,7 +151,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
-        private void FindGridContacts(MapId mapId)
+        private void FindGridContacts(MapId mapId, bool prediction)
         {
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
@@ -164,7 +164,7 @@ namespace Robust.Shared.Physics
             {
                 var fixture = proxy.Fixture;
 
-                if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
+                if (!_broadphases.Contains(fixture.Body.Owner.Uid) || prediction && !fixture.Body.Predict) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 var offset = _offsets[broadphase];
@@ -195,14 +195,14 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Go through every single created, moved, or touched proxy on the map and try to find any new contacts that should be created.
         /// </summary>
-        internal void FindNewContacts(MapId mapId)
+        internal void FindNewContacts(MapId mapId, bool prediction)
         {
             var moveBuffer = _moveBuffer[mapId];
 
             if (moveBuffer.Count == 0) return;
 
             // Cache as much broadphase data as we can up front for this map.
-            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
             {
                 var transform = broadphase.Owner.Transform;
 
@@ -219,7 +219,7 @@ namespace Robust.Shared.Physics
             }
 
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(mapId);
+            FindGridContacts(mapId, prediction);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
@@ -234,6 +234,8 @@ namespace Robust.Shared.Physics
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
+                if (prediction && !proxy.Fixture.Body.Predict) continue;
+
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, offset) in _offsets)
                 {
@@ -882,7 +884,7 @@ namespace Robust.Shared.Physics
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var broadphase in ComponentManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
             {
                 if (broadphase.Owner.Transform.MapID != mapId) continue;
 

@@ -53,7 +53,7 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             var edge = new EdgeShape(Vector2.Zero, Vector2.One);
             var aabb = edge.ComputeAABB(_rotatedTransform, 0);
-            Assert.That(MathHelper.CloseTo(aabb.Width, 0.02f));
+            Assert.That(MathHelper.CloseToPercent(aabb.Width, 0.02f));
             Assert.That(aabb.EqualsApprox(new Box2(0.99f, 0.99f, 1.01f, 2.42f), 0.01f));
         }
 

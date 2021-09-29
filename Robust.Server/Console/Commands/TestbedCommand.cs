@@ -111,7 +111,7 @@ namespace Robust.Server.Console.Commands
             if (mapId == MapId.Nullspace) return;
             var pauseManager = IoCManager.Resolve<IPauseManager>();
             pauseManager.SetMapPaused(mapId, false);
-            IoCManager.Resolve<IMapManager>().GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -4.9f);
+            IoCManager.Resolve<IMapManager>().GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
             return;
         }
@@ -297,14 +297,13 @@ namespace Robust.Server.Console.Commands
         private void CreateTumbler(MapId mapId)
         {
             var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-            var compManager = IoCManager.Resolve<IComponentManager>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var groundEnt = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            var ground = compManager.AddComponent<PhysicsComponent>(groundEnt);
+            var ground = entityManager.AddComponent<PhysicsComponent>(groundEnt);
 
             var bodyEnt = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-            var body = compManager.AddComponent<PhysicsComponent>(bodyEnt);
+            var body = entityManager.AddComponent<PhysicsComponent>(bodyEnt);
 
             body.BodyType = BodyType.Dynamic;
             body.SleepingAllowed = false;
@@ -358,7 +357,7 @@ namespace Robust.Server.Console.Commands
                 {
                     if (!mapManager.MapExists(mapId)) return;
                     var ent = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-                    var box = compManager.AddComponent<PhysicsComponent>(ent);
+                    var box = entityManager.AddComponent<PhysicsComponent>(ent);
                     box.BodyType = BodyType.Dynamic;
                     box.FixedRotation = false;
                     var shape = new PolygonShape();

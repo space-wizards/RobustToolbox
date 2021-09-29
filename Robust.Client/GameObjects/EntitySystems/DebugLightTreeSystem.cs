@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     _lightOverlay = new DebugLightOverlay(
-                        IoCManager.Resolve<IEntityLookup>(),
+                        Get<QuerySystem>(),
                         IoCManager.Resolve<IEyeManager>(),
                         Get<RenderingTreeSystem>());
 
@@ -43,14 +43,14 @@ namespace Robust.Client.GameObjects
 
         private sealed class DebugLightOverlay : Overlay
         {
-            private IEntityLookup _lookup;
+            private QuerySystem _lookup;
             private IEyeManager _eyeManager;
 
             private RenderingTreeSystem _tree;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugLightOverlay(IEntityLookup lookup, IEyeManager eyeManager, RenderingTreeSystem tree)
+            public DebugLightOverlay(QuerySystem lookup, IEyeManager eyeManager, RenderingTreeSystem tree)
             {
                 _lookup = lookup;
                 _eyeManager = eyeManager;

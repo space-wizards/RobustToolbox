@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
                 if(_noLocalRotation)
                     return;
 
-                if (_localRotation.EqualsApprox(value, 0.00001))
+                if (_localRotation.EqualsApprox(value, 0.0001f))
                     return;
 
                 var oldRotation = _localRotation;

@@ -94,7 +94,7 @@ namespace Robust.Client.Audio.Midi
             get => _volume;
             set
             {
-                if (MathHelper.CloseTo(_volume, value))
+                if (MathHelper.CloseToPercent(_volume, value))
                     return;
 
                 _cfgMan.SetCVar(CVars.MidiVolume, value);

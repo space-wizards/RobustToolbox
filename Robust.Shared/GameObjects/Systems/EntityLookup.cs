@@ -446,8 +446,8 @@ namespace Robust.Shared.GameObjects
             {
                 var transform = entity.Transform;
                 var entPos = transform.WorldPosition;
-                if (MathHelper.CloseTo(entPos.X, mapPosition.X)
-                    && MathHelper.CloseTo(entPos.Y, mapPosition.Y))
+                if (MathHelper.CloseToPercent(entPos.X, mapPosition.X)
+                    && MathHelper.CloseToPercent(entPos.Y, mapPosition.Y))
                 {
                     return true;
                 }

@@ -811,7 +811,7 @@ namespace Robust.Shared.Maths
             //Credit: https://stackoverflow.com/a/18504573
 
             var d = Determinant;
-            if (MathHelper.CloseTo(d, 0))
+            if (MathHelper.CloseToPercent(d, 0))
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
             var m = this;

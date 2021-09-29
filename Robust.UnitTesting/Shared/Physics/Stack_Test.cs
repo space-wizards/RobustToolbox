@@ -216,6 +216,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         var circle = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
 
+                        circle.LinearDamping = 0.05f;
                         circle.BodyType = BodyType.Dynamic;
                         shape = new PhysShapeCircle {Radius = 0.5f};
 
@@ -245,7 +246,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             // Assert
 
-            await server.WaitRunTicks(150);
+            await server.WaitRunTicks(200);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>
@@ -257,9 +258,11 @@ namespace Robust.UnitTesting.Shared.Physics
                         var body = bodies[j * columnCount + i];
                         var worldPos = body.Owner.Transform.WorldPosition;
 
+                        var expectedY = 0.5f + i;
+
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
-                        Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.1f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
+                        Assert.That(worldPos.EqualsApproxPercent(new Vector2(0.0f, expectedY), 0.1f), $"Expected y-value of {expectedY} but found {worldPos.Y}");
                     }
                 }
             });

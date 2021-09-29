@@ -27,8 +27,8 @@ namespace Robust.Client.UserInterface
 
         private bool _horizontalExpand;
         private bool _verticalExpand;
-        private HAlignment _horizontalAlignment;
-        private VAlignment _verticalAlignment;
+        private HAlignment _horizontalAlignment = HAlignment.Stretch;
+        private VAlignment _verticalAlignment = VAlignment.Stretch;
         private Thickness _margin;
         private bool _measuring;
 

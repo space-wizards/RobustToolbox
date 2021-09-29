@@ -1243,6 +1243,10 @@ namespace Robust.Shared.GameObjects
                     Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsUpdateMessage(this));
                 }
             }
+            else
+            {
+                _awake = false;
+            }
         }
 
         public void ClearJoints()

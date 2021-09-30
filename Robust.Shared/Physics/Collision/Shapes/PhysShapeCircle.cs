@@ -75,14 +75,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// <inheritdoc />
         public void ApplyState() { }
 
-        /// <inheritdoc />
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
-        {
-            handle.SetTransform(in modelMatrix);
-            handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-        }
-
         public bool Equals(IPhysShape? other)
         {
             if (other is not PhysShapeCircle otherCircle) return false;

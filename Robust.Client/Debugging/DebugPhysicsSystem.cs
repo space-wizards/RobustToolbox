@@ -24,18 +24,20 @@
 
 using System;
 using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 
 namespace Robust.Client.Debugging
 {
-    internal sealed class DebugPhysicsSystem : SharedDebugPhysicsSystem
+    public sealed class DebugPhysicsSystem : SharedDebugPhysicsSystem
     {
         /*
          * Used for debugging shapes, controllers, joints, contacts
@@ -56,7 +58,11 @@ namespace Robust.Client.Debugging
                 if (value == _flags) return;
 
                 if (_flags == PhysicsDebugFlags.None)
-                    IoCManager.Resolve<IOverlayManager>().AddOverlay(new PhysicsDebugOverlay(this));
+                    IoCManager.Resolve<IOverlayManager>().AddOverlay(
+                        new PhysicsDebugOverlay(
+                            IoCManager.Resolve<IEyeManager>(),
+                            this,
+                            Get<SharedBroadphaseSystem>()));
 
                 if (value == PhysicsDebugFlags.None)
                     IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsDebugOverlay));
@@ -108,7 +114,7 @@ namespace Robust.Client.Debugging
     }
 
     [Flags]
-    internal enum PhysicsDebugFlags : byte
+    public enum PhysicsDebugFlags : byte
     {
         None = 0,
         ContactPoints = 1 << 0,
@@ -118,24 +124,70 @@ namespace Robust.Client.Debugging
 
     internal sealed class PhysicsDebugOverlay : Overlay
     {
+        private IEyeManager _eyeManager = default!;
         private DebugPhysicsSystem _physics = default!;
+        private SharedBroadphaseSystem _broadphaseSystem = default!;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        public PhysicsDebugOverlay(DebugPhysicsSystem system)
+        public PhysicsDebugOverlay(IEyeManager eyeManager, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
         {
+            _eyeManager = eyeManager;
             _physics = system;
+            _broadphaseSystem = broadphaseSystem;
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
         {
             if (_physics.Flags == PhysicsDebugFlags.None) return;
 
+            var viewport = _eyeManager.GetWorldViewport();
+            var viewBounds = _eyeManager.GetWorldViewbounds();
             var worldHandle = args.WorldHandle;
 
-            if ((_physics.Flags & PhysicsDebugFlags.Shapes) != 0)
+            if ((_physics.Flags & PhysicsDebugFlags.Shapes) != 0 && !viewport.IsEmpty())
             {
-                // Port DebugDrawing over.
+                if (viewport.IsEmpty()) return;
+
+                var mapId = _eyeManager.CurrentMap;
+
+                foreach (var physBody in _broadphaseSystem.GetCollidingEntities(mapId, viewBounds))
+                {
+                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+
+                    var xform = physBody.GetTransform();
+
+                    const float AlphaModifier = 0.2f;
+
+                    foreach (var fixture in physBody.Fixtures)
+                    {
+                        // Invalid shape - Box2D doesn't check for IsSensor
+                        if (physBody.BodyType == BodyType.Dynamic && fixture.Mass == 0f)
+                        {
+                            DrawShape(worldHandle, fixture, xform, Color.Red.WithAlpha(AlphaModifier));
+                        }
+                        else if (!physBody.CanCollide)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.3f).WithAlpha(AlphaModifier));
+                        }
+                        else if (physBody.BodyType == BodyType.Static)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.9f, 0.5f).WithAlpha(AlphaModifier));
+                        }
+                        else if ((physBody.BodyType & (BodyType.Kinematic | BodyType.KinematicController)) != 0x0)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.5f, 0.5f, 0.9f).WithAlpha(AlphaModifier));
+                        }
+                        else if (!physBody.Awake)
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.6f, 0.6f, 0.6f).WithAlpha(AlphaModifier));
+                        }
+                        else
+                        {
+                            DrawShape(worldHandle, fixture, xform, new Color(0.9f, 0.7f, 0.7f).WithAlpha(AlphaModifier));
+                        }
+                    }
+                }
             }
 
             if ((_physics.Flags & PhysicsDebugFlags.ContactPoints) != 0)
@@ -160,6 +212,41 @@ namespace Robust.Client.Debugging
                 }
 
                 _physics.PointCount = 0;
+            }
+        }
+
+        private void DrawShape(DrawingHandleWorld worldHandle, Fixture fixture, Transform xform, Color color)
+        {
+            switch (fixture.Shape)
+            {
+                case PhysShapeCircle circle:
+                    var center = Transform.Mul(xform, circle.Position);
+                    worldHandle.DrawCircle(center, circle.Radius, color);
+                    break;
+                case EdgeShape edge:
+                    var v1 = Transform.Mul(xform, edge.Vertex1);
+                    var v2 = Transform.Mul(xform, edge.Vertex2);
+                    worldHandle.DrawLine(v1, v2, color);
+
+                    if (edge.OneSided)
+                    {
+                        worldHandle.DrawCircle(v1, 0.5f, color);
+                        worldHandle.DrawCircle(v2, 0.5f, color);
+                    }
+
+                    break;
+                case PolygonShape poly:
+                    Span<Vector2> verts = stackalloc Vector2[poly.Vertices.Length];
+
+                    for (var i = 0; i < verts.Length; i++)
+                    {
+                        verts[i] = Transform.Mul(xform, poly.Vertices[i]);
+                    }
+
+                    worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, verts, color);
+                    break;
+                default:
+                    return;
             }
         }
     }

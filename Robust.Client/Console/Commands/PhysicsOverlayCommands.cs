@@ -7,7 +7,7 @@ namespace Robust.Client.Console.Commands
     public sealed class PhysicsOverlayCommands : IConsoleCommand
     {
         public string Command => "physics";
-        public string Description => $"Shows a debug physics overlay. The arg supplied specifis the overlay.";
+        public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
         public string Help => $"{Command} <contactnormals / contactpoints / shapes / shapeinfo>";
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {

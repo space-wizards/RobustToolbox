@@ -23,8 +23,10 @@
 /* Heavily inspired by Farseer */
 
 using System;
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
+using Robust.Client.ResourceManagement;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -48,7 +50,7 @@ namespace Robust.Client.Debugging
         private const int MaxContactPoints = 2048;
         internal int PointCount;
 
-        internal ContactPoint[] _points = new ContactPoint[MaxContactPoints];
+        internal ContactPoint[] Points = new ContactPoint[MaxContactPoints];
 
         public PhysicsDebugFlags Flags
         {
@@ -61,6 +63,7 @@ namespace Robust.Client.Debugging
                     IoCManager.Resolve<IOverlayManager>().AddOverlay(
                         new PhysicsDebugOverlay(
                             IoCManager.Resolve<IEyeManager>(),
+                            IoCManager.Resolve<IInputManager>(),
                             this,
                             Get<SharedBroadphaseSystem>()));
 
@@ -75,7 +78,7 @@ namespace Robust.Client.Debugging
 
         public override void HandlePreSolve(Contact contact, in Manifold oldManifold)
         {
-            if ((Flags & PhysicsDebugFlags.ContactPoints) != 0)
+            if ((Flags & (PhysicsDebugFlags.ContactPoints | PhysicsDebugFlags.ContactNormals)) != 0)
             {
                 Manifold manifold = contact.Manifold;
 
@@ -84,22 +87,24 @@ namespace Robust.Client.Debugging
 
                 Fixture fixtureA = contact.FixtureA!;
 
-                PointState[] state1, state2;
-                CollisionManager.GetPointStates(out state1, out state2, oldManifold, manifold);
+                var state1 = new PointState[2];
+                var state2 = new PointState[2];
+
+                CollisionManager.GetPointStates(ref state1, ref state2, oldManifold, manifold);
 
                 Span<Vector2> points = stackalloc Vector2[2];
                 contact.GetWorldManifold(_physicsManager, out var normal, points);
 
-                for (int i = 0; i < manifold.PointCount && PointCount < MaxContactPoints; ++i)
+                ContactPoint cp = Points[PointCount];
+                for (var i = 0; i < manifold.PointCount && PointCount < MaxContactPoints; ++i)
                 {
                     if (fixtureA == null)
-                        _points[i] = new ContactPoint();
+                        Points[i] = new ContactPoint();
 
-                    ContactPoint cp = _points[PointCount];
                     cp.Position = points[i];
                     cp.Normal = normal;
                     cp.State = state2[i];
-                    _points[PointCount] = cp;
+                    Points[PointCount] = cp;
                     ++PointCount;
                 }
             }
@@ -117,40 +122,50 @@ namespace Robust.Client.Debugging
     public enum PhysicsDebugFlags : byte
     {
         None = 0,
+        /// <summary>
+        /// Shows the world point for each contact in the viewport.
+        /// </summary>
         ContactPoints = 1 << 0,
+        /// <summary>
+        /// Shows the world normal for each contact in the viewport.
+        /// </summary>
         ContactNormals = 1 << 1,
+        /// <summary>
+        /// Shows all physics shapes in the viewport.
+        /// </summary>
         Shapes = 1 << 2,
+        ShapeInfo = 1 << 3,
     }
 
     internal sealed class PhysicsDebugOverlay : Overlay
     {
         private IEyeManager _eyeManager = default!;
+        private IInputManager _inputManager = default!;
         private DebugPhysicsSystem _physics = default!;
         private SharedBroadphaseSystem _broadphaseSystem = default!;
 
-        public override OverlaySpace Space => OverlaySpace.WorldSpace;
+        public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
-        public PhysicsDebugOverlay(IEyeManager eyeManager, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
+        private readonly Font _font;
+
+        public PhysicsDebugOverlay(IEyeManager eyeManager, IInputManager inputManager, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
         {
             _eyeManager = eyeManager;
+            _inputManager = inputManager;
             _physics = system;
             _broadphaseSystem = broadphaseSystem;
+            var cache = IoCManager.Resolve<IResourceCache>();
+            _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
-        protected internal override void Draw(in OverlayDrawArgs args)
+        private void DrawWorld(DrawingHandleWorld worldHandle)
         {
-            if (_physics.Flags == PhysicsDebugFlags.None) return;
-
             var viewport = _eyeManager.GetWorldViewport();
             var viewBounds = _eyeManager.GetWorldViewbounds();
-            var worldHandle = args.WorldHandle;
+            var mapId = _eyeManager.CurrentMap;
 
             if ((_physics.Flags & PhysicsDebugFlags.Shapes) != 0 && !viewport.IsEmpty())
             {
-                if (viewport.IsEmpty()) return;
-
-                var mapId = _eyeManager.CurrentMap;
-
                 foreach (var physBody in _broadphaseSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
@@ -190,28 +205,88 @@ namespace Robust.Client.Debugging
                 }
             }
 
-            if ((_physics.Flags & PhysicsDebugFlags.ContactPoints) != 0)
+            if ((_physics.Flags & (PhysicsDebugFlags.ContactPoints | PhysicsDebugFlags.ContactNormals)) != 0)
             {
                 const float axisScale = 0.3f;
 
-                for (int i = 0; i < _physics.PointCount; ++i)
+                for (var i = 0; i < _physics.PointCount; ++i)
                 {
-                    DebugPhysicsSystem.ContactPoint point = _physics._points[i];
+                    var point = _physics.Points[i];
 
-                    if (point.State == PointState.Add)
-                        worldHandle.DrawCircle(point.Position, 0.5f, new Color(255, 77, 243, 77));
-                    else if (point.State == PointState.Persist)
-                        worldHandle.DrawCircle(point.Position, 0.5f, new Color(255, 77, 77, 77));
+                    const float radius = 0.1f;
+
+                    if ((_physics.Flags & PhysicsDebugFlags.ContactPoints) != 0)
+                    {
+                        if (point.State == PointState.Add)
+                            worldHandle.DrawCircle(point.Position, radius, new Color(255, 77, 243, 255));
+                        else if (point.State == PointState.Persist)
+                            worldHandle.DrawCircle(point.Position, radius, new Color(255, 77, 77, 255));
+                    }
 
                     if ((_physics.Flags & PhysicsDebugFlags.ContactNormals) != 0)
                     {
                         Vector2 p1 = point.Position;
                         Vector2 p2 = p1 + point.Normal * axisScale;
-                        worldHandle.DrawLine(p1, p2, new Color(255, 102, 230, 102));
+                        worldHandle.DrawLine(p1, p2, new Color(255, 102, 230, 255));
                     }
                 }
 
                 _physics.PointCount = 0;
+            }
+        }
+
+        private void DrawScreen(DrawingHandleScreen screenHandle)
+        {
+            var mapId = _eyeManager.CurrentMap;
+            var mousePos = _inputManager.MouseScreenPosition;
+
+            if ((_physics.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
+            {
+                var hoverBodies = new List<PhysicsComponent>();
+                var bounds = Box2.UnitCentered.Translated(_eyeManager.ScreenToMap(mousePos.Position).Position);
+
+                foreach (var physBody in _broadphaseSystem.GetCollidingEntities(mapId, bounds))
+                {
+                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+                    hoverBodies.Add(physBody);
+                }
+
+                var lineHeight = _font.GetLineHeight(1f);
+                var drawPos = mousePos.Position + new Vector2(20, 0) + new Vector2(0, -(hoverBodies.Count * 4 * lineHeight / 2f));
+                int row = 0;
+
+                foreach (var body in hoverBodies)
+                {
+                    if (body != hoverBodies[0])
+                    {
+                        screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), "------");
+                        row++;
+                    }
+
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Ent: {body.Owner}");
+                    row++;
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Layer: {Convert.ToString(body.CollisionLayer, 2)}");
+                    row++;
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Mask: {Convert.ToString(body.CollisionMask, 2)}");
+                    row++;
+                    screenHandle.DrawString(_font, drawPos + new Vector2(0, row * lineHeight), $"Enabled: {body.CanCollide}, Hard: {body.Hard}, Anchored: {(body).BodyType == BodyType.Static}");
+                    row++;
+                }
+            }
+        }
+
+        protected internal override void Draw(in OverlayDrawArgs args)
+        {
+            if (_physics.Flags == PhysicsDebugFlags.None) return;
+
+            switch (args.Space)
+            {
+                case OverlaySpace.ScreenSpace:
+                    DrawScreen((DrawingHandleScreen) args.DrawingHandle);
+                    break;
+                case OverlaySpace.WorldSpace:
+                    DrawWorld((DrawingHandleWorld) args.DrawingHandle);
+                    break;
             }
         }
 

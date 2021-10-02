@@ -8,7 +8,7 @@ namespace Robust.Client.Graphics
         public bool DrawShadows { get; set; } = true;
         public bool DrawHardFov { get; set; } = true;
         public bool DrawLighting { get; set; } = true;
-        public float MinimumShadowCastLightRadius { get; set; } = 2.0f;
+        public float MinimumShadowCastLightRadius { get; set; } = 1.5f;
         public bool LockConsoleAccess { get; set; } = false;
         public Color AmbientLightColor { get; set; } = Color.FromSrgb(Color.Black);
     }

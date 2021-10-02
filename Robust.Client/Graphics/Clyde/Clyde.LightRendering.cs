@@ -361,6 +361,12 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         var (light, lightPos, _) = lights[i];
 
+                        // Don't cast shadows for lights that have a sufficiently small radius,
+                        // since they're likely to be very numerous, might not cast shadows anyway,
+                        // and any shadows casted will not really be missed
+                        if (light.Radius <= _lightManager.MinimumShadowCastLightRadius && !light.AlwaysCastShadows)
+                            continue;
+
                         DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
                     }
                 }

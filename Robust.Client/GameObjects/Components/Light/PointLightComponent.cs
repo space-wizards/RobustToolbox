@@ -123,7 +123,7 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Whether this pointlight should cast shadows
         /// </summary>
-        [DataField("alwaysCastShadows")]
+        [DataField("castShadows")]
         public bool CastShadows = true;
 
         [DataField("nestedvisible")]

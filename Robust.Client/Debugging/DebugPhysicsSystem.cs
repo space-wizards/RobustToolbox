@@ -380,10 +380,17 @@ namespace Robust.Client.Debugging
             if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xf1) ||
                 !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xf2)) return;
 
+            var pos1 = xf1.WorldPosition;
+            var pos2 = xf2.WorldPosition;
+
             switch (joint)
             {
-                case DistanceJoint distance:
-                    worldHandle.DrawLine(xf1.WorldPosition, xf2.WorldPosition, JointColor);
+                case DistanceJoint:
+                    worldHandle.DrawLine(pos1, pos2, JointColor);
+                    break;
+                default:
+                    // TODO: Draw from the LocalAnchor for each point to its position.
+                    worldHandle.DrawLine(pos1, pos2, JointColor);
                     break;
             }
         }

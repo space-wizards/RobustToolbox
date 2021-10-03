@@ -14,7 +14,7 @@ namespace Robust.Shared.Physics
 {
     [RegisterComponent]
     [NetworkedComponent]
-    [Friend(typeof(SharedJointSystem))]
+    // [Friend(typeof(SharedJointSystem))]
     public sealed class JointComponent : Component
     {
         public override string Name => "Joint";
@@ -30,7 +30,7 @@ namespace Robust.Shared.Physics
         [Serializable, NetSerializable]
         public sealed class JointComponentState : ComponentState
         {
-            public Dictionary<string, JointState> Joints = new();
+            public Dictionary<string, JointState> Joints;
 
             public JointComponentState(Dictionary<string, JointState> joints)
             {

@@ -332,8 +332,12 @@ namespace Robust.Server.Console.Commands
             }
 
             var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(ground.Owner.Uid, body.Owner.Uid);
-
-
+            revolute.LocalAnchorA = new Vector2(0f, 10f);
+            revolute.LocalAnchorB = new Vector2(0f, 0f);
+            revolute.ReferenceAngle = 0f;
+            revolute.MotorSpeed = 0.05f * MathF.PI;
+            revolute.MaxMotorTorque = 100000000f;
+            revolute.EnableMotor = true;
 
             // Box2D has this as 800 which is jesus christo.
             // Wouldn't recommend higher than 100 in debug and higher than 300 on release unless

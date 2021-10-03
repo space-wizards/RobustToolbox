@@ -377,20 +377,27 @@ namespace Robust.Client.Debugging
 
         private void DrawJoint(DrawingHandleWorld worldHandle, Joint joint)
         {
-            if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xf1) ||
-                !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xf2)) return;
+            if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xform1) ||
+                !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xform2)) return;
 
-            var pos1 = xf1.WorldPosition;
-            var pos2 = xf2.WorldPosition;
+            var matrix1 = xform1.WorldMatrix;
+            var matrix2 = xform2.WorldMatrix;
+
+            var xf1 = new Vector2(matrix1.R0C2, matrix1.R1C2);
+            var xf2 = new Vector2(matrix2.R0C2, matrix2.R1C2);
+
+            var p1 = matrix1.Transform(joint.LocalAnchorA);
+            var p2 = matrix2.Transform(joint.LocalAnchorB);
 
             switch (joint)
             {
                 case DistanceJoint:
-                    worldHandle.DrawLine(pos1, pos2, JointColor);
+                    worldHandle.DrawLine(xf1, xf2, JointColor);
                     break;
                 default:
-                    // TODO: Draw from the LocalAnchor for each point to its position.
-                    worldHandle.DrawLine(pos1, pos2, JointColor);
+                    worldHandle.DrawLine(xf1, p1, JointColor);
+                    worldHandle.DrawLine(p1, p2, JointColor);
+                    worldHandle.DrawLine(xf2, p2, JointColor);
                     break;
             }
         }

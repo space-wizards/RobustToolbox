@@ -247,7 +247,7 @@ namespace Robust.Shared.Physics
         {
             if (!body.Owner.HasComponent<JointComponent>()) return;
 
-            ComponentManager.RemoveComponent<JointComponent>(body.Owner.Uid);
+            EntityManager.RemoveComponent<JointComponent>(body.Owner.Uid);
         }
 
         public void RemoveJoint(Joint joint)
@@ -257,12 +257,12 @@ namespace Robust.Shared.Physics
 
             // Originally I logged these but because of prediction the client can just nuke them multiple times in a row
             // because each body has its own JointComponent, bleh.
-            if (!ComponentManager.TryGetComponent<JointComponent>(bodyAUid, out var jointComponentA))
+            if (!EntityManager.TryGetComponent<JointComponent>(bodyAUid, out var jointComponentA))
             {
                 return;
             }
 
-            if (!ComponentManager.TryGetComponent<JointComponent>(bodyBUid, out var jointComponentB))
+            if (!EntityManager.TryGetComponent<JointComponent>(bodyBUid, out var jointComponentB))
             {
                 return;
             }
@@ -280,12 +280,12 @@ namespace Robust.Shared.Physics
             Logger.DebugS("physics", $"Removed joint {joint.ID}");
 
             // Wake up connected bodies.
-            if (ComponentManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA))
             {
                 bodyA.Awake = true;
             }
 
-            if (ComponentManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB))
             {
                 bodyB.Awake = true;
             }

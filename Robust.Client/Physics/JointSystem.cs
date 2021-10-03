@@ -41,8 +41,8 @@ namespace Robust.Client.Physics
                 {
                     // Add new joint (if possible).
                     // Need to wait for BOTH joint components to come in first before we can add it. Yay dependencies!
-                    if (!ComponentManager.HasComponent<JointComponent>(state.UidA) ||
-                        !ComponentManager.HasComponent<JointComponent>(state.UidB)) continue;
+                    if (!EntityManager.HasComponent<JointComponent>(state.UidA) ||
+                        !EntityManager.HasComponent<JointComponent>(state.UidB)) continue;
 
                     joint = state.GetJoint();
                     AddJoint(joint);

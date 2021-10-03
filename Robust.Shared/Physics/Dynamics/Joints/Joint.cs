@@ -115,7 +115,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     Get the first body attached to this joint.
         /// </summary>
         public PhysicsComponent BodyA =>
-            IoCManager.Resolve<IComponentManager>().GetComponent<PhysicsComponent>(BodyAUid);
+            IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyAUid);
 
         public EntityUid BodyAUid { get; init; }
 
@@ -123,7 +123,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     Get the second body attached to this joint.
         /// </summary>
         public PhysicsComponent BodyB =>
-            IoCManager.Resolve<IComponentManager>().GetComponent<PhysicsComponent>(BodyBUid);
+            IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyBUid);
 
         public EntityUid BodyBUid { get; init; }
 

@@ -62,6 +62,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 LocalAnchorB = LocalAnchorB
             };
 
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            joint.LinearSlop = configManager.GetCVar(CVars.LinearSlop);
+            joint.WarmStarting = configManager.GetCVar(CVars.WarmStarting);
+
             return joint;
         }
 
@@ -115,8 +119,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _currentLength;
         private float _softMass;
 
-        private float _linearSlop;
-        private bool _warmStarting;
+        internal float LinearSlop;
+        internal bool WarmStarting;
 
         public override JointType JointType => JointType.Distance;
 
@@ -135,7 +139,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public DistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB)
             : base(bodyA, bodyB)
         {
-            Length = MathF.Max(_linearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            Length = MathF.Max(LinearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             _minLength = _length;
             _maxLength = _length;
         }
@@ -150,10 +154,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _length;
             set
             {
-                if (MathHelper.CloseToPercent(value, _length)) return;
+                if (MathHelper.CloseTo(value, _length)) return;
 
                 _impulse = 0.0f;
-                _length = MathF.Max(_linearSlop, _length);
+                _length = MathF.Max(value, LinearSlop);
                 Dirty();
             }
         }
@@ -169,7 +173,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _maxLength;
             set
             {
-                if (MathHelper.CloseToPercent(value, _maxLength)) return;
+                if (MathHelper.CloseTo(value, _maxLength)) return;
 
                 _upperImpulse = 0.0f;
                 _maxLength = MathF.Max(value, _minLength);
@@ -188,10 +192,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _minLength;
             set
             {
-                if (MathHelper.CloseToPercent(value, _minLength)) return;
+                if (MathHelper.CloseTo(value, _minLength)) return;
 
                 _lowerImpulse = 0.0f;
-                _minLength = Math.Clamp(_minLength, _linearSlop, MaxLength);
+                _minLength = Math.Clamp(value, LinearSlop, MaxLength);
                 Dirty();
             }
         }
@@ -204,7 +208,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _stiffness;
             set
             {
-                if (MathHelper.CloseToPercent(_stiffness, value)) return;
+                if (MathHelper.CloseTo(_stiffness, value)) return;
 
                 _stiffness = value;
                 Dirty();
@@ -219,7 +223,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _damping;
             set
             {
-                if (MathHelper.CloseToPercent(_damping, value)) return;
+                if (MathHelper.CloseTo(_damping, value)) return;
 
                 _damping = value;
                 Dirty();
@@ -308,7 +312,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             // Handle singularity.
 	        _currentLength = _u.Length;
-	        if (_currentLength > _linearSlop)
+	        if (_currentLength > LinearSlop)
 	        {
 		        _u *= 1.0f / _currentLength;
 	        }
@@ -354,7 +358,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        _softMass = _mass;
 	        }
 
-	        if (_warmStarting)
+	        if (WarmStarting)
 	        {
 		        // Scale the impulse to support a variable time step.
 		        _impulse *= data.DtRatio;
@@ -489,7 +493,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             float length = u.Length;
             u = u.Normalized;
             float C;
-            if (MathHelper.CloseToPercent(_minLength, _maxLength))
+            if (MathHelper.CloseTo(_minLength, _maxLength))
             {
                 C = length - _minLength;
             }
@@ -519,7 +523,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             data.Positions[_indexB] = cB;
             data.Angles[_indexB] = aB;
 
-            return MathF.Abs(C) < _linearSlop;
+            return MathF.Abs(C) < LinearSlop;
         }
 
         public bool Equals(DistanceJoint? other)

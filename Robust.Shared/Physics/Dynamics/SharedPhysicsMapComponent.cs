@@ -36,7 +36,6 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public abstract class SharedPhysicsMapComponent : Component
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
         internal SharedBroadphaseSystem BroadphaseSystem = default!;

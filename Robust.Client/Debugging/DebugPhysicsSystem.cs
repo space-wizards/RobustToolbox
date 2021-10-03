@@ -173,6 +173,8 @@ namespace Robust.Client.Debugging
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
+        private static readonly Color JointColor = new(0.5f, 0.8f, 0.8f);
+
         private readonly Font _font;
 
         private HashSet<Joint> _drawnJoints = new();
@@ -378,12 +380,10 @@ namespace Robust.Client.Debugging
             if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xf1) ||
                 !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xf2)) return;
 
-            var color = new Color(0.5f, 0.8f, 0.8f);
-
             switch (joint)
             {
                 case DistanceJoint distance:
-                    worldHandle.DrawLine(xf1.WorldPosition, xf2.WorldPosition, color);
+                    worldHandle.DrawLine(xf1.WorldPosition, xf2.WorldPosition, JointColor);
                     break;
             }
         }

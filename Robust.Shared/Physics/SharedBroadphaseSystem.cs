@@ -164,7 +164,8 @@ namespace Robust.Shared.Physics
             {
                 var fixture = proxy.Fixture;
 
-                if (!_broadphases.Contains(fixture.Body.Owner.Uid) || prediction && !fixture.Body.Predict) continue;
+                //  || prediction && !fixture.Body.Predict
+                if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 var offset = _offsets[broadphase];
@@ -234,7 +235,7 @@ namespace Robust.Shared.Physics
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
-                if (prediction && !proxy.Fixture.Body.Predict) continue;
+                // if (prediction && !proxy.Fixture.Body.Predict) continue;
 
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, offset) in _offsets)

@@ -58,6 +58,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Dynamics.Joints;
 
 namespace Robust.Client.Debugging
 {
@@ -84,6 +85,7 @@ namespace Robust.Client.Debugging
                 if (_flags == PhysicsDebugFlags.None)
                     IoCManager.Resolve<IOverlayManager>().AddOverlay(
                         new PhysicsDebugOverlay(
+                            EntityManager,
                             IoCManager.Resolve<IEyeManager>(),
                             IoCManager.Resolve<IInputManager>(),
                             IoCManager.Resolve<IResourceCache>(),
@@ -158,10 +160,12 @@ namespace Robust.Client.Debugging
         /// </summary>
         Shapes = 1 << 2,
         ShapeInfo = 1 << 3,
+        Joints = 1 << 4,
     }
 
     internal sealed class PhysicsDebugOverlay : Overlay
     {
+        private IEntityManager _entityManager = default!;
         private IEyeManager _eyeManager = default!;
         private IInputManager _inputManager = default!;
         private DebugPhysicsSystem _physics = default!;
@@ -171,8 +175,11 @@ namespace Robust.Client.Debugging
 
         private readonly Font _font;
 
-        public PhysicsDebugOverlay(IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
+        private HashSet<Joint> _drawnJoints = new();
+
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
         {
+            _entityManager = entityManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
             _physics = system;
@@ -223,6 +230,25 @@ namespace Robust.Client.Debugging
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.9f, 0.7f, 0.7f).WithAlpha(AlphaModifier));
                         }
+                    }
+                }
+            }
+
+            if ((_physics.Flags & PhysicsDebugFlags.Joints) != 0x0)
+            {
+                _drawnJoints.Clear();
+
+                foreach (var jointComponent in _entityManager.EntityQuery<JointComponent>(true))
+                {
+                    if (jointComponent.JointCount == 0 ||
+                        !_entityManager.TryGetComponent(jointComponent.Owner.Uid, out TransformComponent? xf1) ||
+                        !viewport.Contains(xf1.WorldPosition)) continue;
+
+                    foreach (var (_, joint) in jointComponent.Joints)
+                    {
+                        if (_drawnJoints.Contains(joint)) continue;
+                        DrawJoint(worldHandle, joint);
+                        _drawnJoints.Add(joint);
                     }
                 }
             }
@@ -344,6 +370,21 @@ namespace Robust.Client.Debugging
                     break;
                 default:
                     return;
+            }
+        }
+
+        private void DrawJoint(DrawingHandleWorld worldHandle, Joint joint)
+        {
+            if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xf1) ||
+                !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xf2)) return;
+
+            var color = new Color(0.5f, 0.8f, 0.8f);
+
+            switch (joint)
+            {
+                case DistanceJoint distance:
+                    worldHandle.DrawLine(xf1.WorldPosition, xf2.WorldPosition, color);
+                    break;
             }
         }
     }

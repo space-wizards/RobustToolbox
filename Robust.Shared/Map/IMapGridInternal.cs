@@ -10,8 +10,6 @@ namespace Robust.Shared.Map
 
         GameTick CurTick { get; }
 
-        Box2 LocalBounds { get; }
-
         /// <summary>
         ///     The total number of chunks contained on this grid.
         /// </summary>

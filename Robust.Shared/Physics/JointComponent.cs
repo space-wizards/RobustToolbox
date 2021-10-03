@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Log;
@@ -13,6 +14,7 @@ namespace Robust.Shared.Physics
 {
     [RegisterComponent]
     [NetworkedComponent]
+    [Friend(typeof(SharedJointSystem))]
     public sealed class JointComponent : Component
     {
         public override string Name => "Joint";

@@ -86,6 +86,7 @@ namespace Robust.Client.Debugging
                         new PhysicsDebugOverlay(
                             IoCManager.Resolve<IEyeManager>(),
                             IoCManager.Resolve<IInputManager>(),
+                            IoCManager.Resolve<IResourceCache>(),
                             this,
                             Get<SharedBroadphaseSystem>()));
 
@@ -170,13 +171,12 @@ namespace Robust.Client.Debugging
 
         private readonly Font _font;
 
-        public PhysicsDebugOverlay(IEyeManager eyeManager, IInputManager inputManager, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
+        public PhysicsDebugOverlay(IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
         {
             _eyeManager = eyeManager;
             _inputManager = inputManager;
             _physics = system;
             _broadphaseSystem = broadphaseSystem;
-            var cache = IoCManager.Resolve<IResourceCache>();
             _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 

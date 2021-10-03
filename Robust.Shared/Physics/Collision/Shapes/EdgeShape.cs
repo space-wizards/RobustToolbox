@@ -165,14 +165,5 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             return;
         }
-
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
-        {
-            var m = Matrix3.Identity;
-            m.R0C2 = modelMatrix.R0C2;
-            m.R1C2 = modelMatrix.R1C2;
-            handle.SetTransform(m);
-            handle.DrawLine(Vertex1, Vertex2, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-        }
     }
 }

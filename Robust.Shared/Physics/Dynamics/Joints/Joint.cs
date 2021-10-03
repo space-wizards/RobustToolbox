@@ -206,8 +206,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             BodyB.Dirty();
         }
 
-        public virtual void DebugDraw(DebugDrawingHandle handle) {}
-
         protected Joint(EntityUid bodyAUid, EntityUid bodyBUid)
         {
             var uidA = bodyAUid;

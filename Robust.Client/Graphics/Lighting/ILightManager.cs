@@ -21,12 +21,6 @@ namespace Robust.Client.Graphics
         /// </summary>
         bool DrawLighting { get; set; }
         /// <summary>
-        /// Minimum radius at which to draw lights with shadow casting. Helps with performance to opt out of shadow
-        /// casting for very small lights. This isn't a cvar since setting it high enough is essentially equivalent
-        /// to turning off shadows.
-        /// </summary>
-        float MinimumShadowCastLightRadius { get; set; }
-        /// <summary>
         /// This is useful to prevent players messing with lighting setup when they shouldn't.
         /// </summary>
         bool LockConsoleAccess { get; set; }

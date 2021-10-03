@@ -29,7 +29,8 @@ namespace Robust.Client.GameObjects
 
         private bool Update(AnimationPlayerComponent component, float frameTime)
         {
-            if (component.PlayingAnimationCount == 0)
+            if (component.PlayingAnimationCount == 0 ||
+                component.Deleted)
                 return true;
 
             var remie = new RemQueue<string>();
@@ -57,7 +58,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Play(EntityUid uid, Animation animation, string key)
         {
-            var component = ComponentManager.EnsureComponent<AnimationPlayerComponent>(EntityManager.GetEntity(uid));
+            var component = EntityManager.EnsureComponent<AnimationPlayerComponent>(EntityManager.GetEntity(uid));
             Play(component, animation, key);
         }
 
@@ -74,7 +75,7 @@ namespace Robust.Client.GameObjects
 
         public bool HasRunningAnimation(EntityUid uid, string key)
         {
-            return ComponentManager.TryGetComponent(uid, out AnimationPlayerComponent? component) &&
+            return EntityManager.TryGetComponent(uid, out AnimationPlayerComponent? component) &&
                    component.PlayingAnimations.ContainsKey(key);
         }
 

@@ -281,10 +281,9 @@ namespace Robust.Server.GameStates
         internal static EntityState GetEntityState(IEntityManager entMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
             var bus = entMan.EventBus;
-            var compMan = entMan.ComponentManager;
             var changed = new List<ComponentChange>();
 
-            foreach (var (netId, component) in compMan.GetNetComponents(entityUid))
+            foreach (var (netId, component) in entMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(component.Initialized);
 
@@ -301,7 +300,7 @@ namespace Robust.Server.GameStates
                 {
                     ComponentState? state = null;
                     if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
-                        state = compMan.GetComponentState(bus, component, player);
+                        state = entMan.GetComponentState(bus, component, player);
 
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
@@ -309,7 +308,7 @@ namespace Robust.Server.GameStates
                 }
                 else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
                 {
-                    changed.Add(ComponentChange.Changed(netId, compMan.GetComponentState(bus, component, player)));
+                    changed.Add(ComponentChange.Changed(netId, entMan.GetComponentState(bus, component, player)));
                 }
                 else if (component.Deleted && component.LastModifiedTick >= fromTick)
                 {

@@ -150,7 +150,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _length;
             set
             {
-                if (MathHelper.CloseTo(value, _length)) return;
+                if (MathHelper.CloseToPercent(value, _length)) return;
 
                 _impulse = 0.0f;
                 _length = MathF.Max(_linearSlop, _length);
@@ -169,7 +169,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _maxLength;
             set
             {
-                if (MathHelper.CloseTo(value, _maxLength)) return;
+                if (MathHelper.CloseToPercent(value, _maxLength)) return;
 
                 _upperImpulse = 0.0f;
                 _maxLength = MathF.Max(value, _minLength);
@@ -188,7 +188,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _minLength;
             set
             {
-                if (MathHelper.CloseTo(value, _minLength)) return;
+                if (MathHelper.CloseToPercent(value, _minLength)) return;
 
                 _lowerImpulse = 0.0f;
                 _minLength = Math.Clamp(_minLength, _linearSlop, MaxLength);
@@ -204,7 +204,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _stiffness;
             set
             {
-                if (MathHelper.CloseTo(_stiffness, value)) return;
+                if (MathHelper.CloseToPercent(_stiffness, value)) return;
 
                 _stiffness = value;
                 Dirty();
@@ -219,7 +219,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _damping;
             set
             {
-                if (MathHelper.CloseTo(_damping, value)) return;
+                if (MathHelper.CloseToPercent(_damping, value)) return;
 
                 _damping = value;
                 Dirty();
@@ -489,7 +489,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             float length = u.Length;
             u = u.Normalized;
             float C;
-            if (MathHelper.CloseTo(_minLength, _maxLength))
+            if (MathHelper.CloseToPercent(_minLength, _maxLength))
             {
                 C = length - _minLength;
             }

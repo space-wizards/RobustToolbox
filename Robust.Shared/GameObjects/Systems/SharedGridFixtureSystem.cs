@@ -71,8 +71,6 @@ namespace Robust.Shared.GameObjects
             // on the grid (e.g. mass) which we want to preserve.
             var newFixtures = new List<Fixture>();
 
-            var oldFixtures = chunk.Fixtures.ToList();
-
             Span<Vector2> vertices = stackalloc Vector2[4];
 
             foreach (var rectangle in rectangles)
@@ -97,7 +95,11 @@ namespace Robust.Shared.GameObjects
                 newFixtures.Add(newFixture);
             }
 
-            foreach (var oldFixture in chunk.Fixtures.ToArray())
+            var toRemove = new RemQueue<Fixture>();
+            // Check if we even need to issue an eventbus event
+            var updated = false;
+
+            foreach (var oldFixture in chunk.Fixtures)
             {
                 var existing = false;
 
@@ -108,15 +110,25 @@ namespace Robust.Shared.GameObjects
                     var fixture = newFixtures[i];
                     if (!oldFixture.Equals(fixture)) continue;
                     existing = true;
-                    newFixtures.RemoveAt(i);
+                    newFixtures.RemoveSwap(i);
                     break;
                 }
 
                 // Doesn't align with any new fixtures so delete
                 if (existing) continue;
 
-                chunk.Fixtures.Remove(oldFixture);
-                _broadphase.DestroyFixture(physicsComponent, oldFixture);
+                toRemove.Add(oldFixture);
+            }
+
+            foreach (var fixture in toRemove)
+            {
+                chunk.Fixtures.Remove(fixture);
+                _broadphase.DestroyFixture(fixture);
+            }
+
+            if (newFixtures.Count > 0 || toRemove.List?.Count > 0)
+            {
+                updated = true;
             }
 
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
@@ -135,13 +147,13 @@ namespace Robust.Shared.GameObjects
                 _broadphase.CreateFixture(physicsComponent, fixture);
             }
 
-            EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {OldFixtures = oldFixtures, NewFixtures = chunk.Fixtures});
+            if (updated)
+                EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
         }
     }
 
     public sealed class GridFixtureChangeEvent : EntityEventArgs
     {
-        public List<Fixture> OldFixtures { get; init; } = default!;
         public List<Fixture> NewFixtures { get; init; } = default!;
     }
 }

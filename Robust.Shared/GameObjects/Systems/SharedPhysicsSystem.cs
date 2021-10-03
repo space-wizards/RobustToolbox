@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnAutoClearChange(bool value)
         {
-            foreach (var component in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            foreach (var component in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 component.AutoClearForces = value;
             }
@@ -330,7 +330,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.Step(deltaTime, prediction);
             }
@@ -351,7 +351,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Go through and run all of the deferred events now
-            foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.ProcessQueue();
             }

@@ -46,7 +46,6 @@ namespace Robust.Client
             IoCManager.Register<IMapManagerInternal, ClientMapManager>();
             IoCManager.Register<IClientMapManager, ClientMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IComponentManager, ClientEntityManager>();
             IoCManager.Register<IEntityLookup, EntityLookup>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IConsoleHost, ClientConsoleHost>();

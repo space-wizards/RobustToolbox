@@ -271,6 +271,20 @@ namespace Robust.Shared.Map
             }
         }
 
+        public void FastGetAllAnchoredEnts(EntityUidQueryCallback callback)
+        {
+            foreach (var cell in _snapGrid)
+            {
+                if (cell.Center is null)
+                    continue;
+
+                foreach (var euid in cell.Center)
+                {
+                    callback(euid);
+                }
+            }
+        }
+
         public bool SuppressCollisionRegeneration { get; set; }
 
         public void RegenerateCollision()

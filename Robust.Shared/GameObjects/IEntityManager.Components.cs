@@ -6,12 +6,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <summary>
-    ///     Holds a collection of ECS components that are attached to entities.
-    /// </summary>
-    [Obsolete("Use IEntityManager instead.")]
-    [PublicAPI]
-    public interface IComponentManager
+    public partial interface IEntityManager
     {
         /// <summary>
         ///     A component was added to the manager.
@@ -28,8 +23,6 @@ namespace Robust.Shared.GameObjects
         ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
         /// </summary>
         event EventHandler<ComponentEventArgs>? ComponentDeleted;
-
-        void Initialize();
 
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
@@ -259,7 +252,5 @@ namespace Robust.Shared.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
-
-        IComponentFactory ComponentFactory { get; }
     }
 }

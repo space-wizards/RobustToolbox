@@ -58,6 +58,7 @@ using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
+using Robust.Shared.Physics.Dynamics.Joints;
 
 namespace Robust.Client.Debugging
 {
@@ -84,6 +85,7 @@ namespace Robust.Client.Debugging
                 if (_flags == PhysicsDebugFlags.None)
                     IoCManager.Resolve<IOverlayManager>().AddOverlay(
                         new PhysicsDebugOverlay(
+                            EntityManager,
                             IoCManager.Resolve<IEyeManager>(),
                             IoCManager.Resolve<IInputManager>(),
                             IoCManager.Resolve<IResourceCache>(),
@@ -158,10 +160,12 @@ namespace Robust.Client.Debugging
         /// </summary>
         Shapes = 1 << 2,
         ShapeInfo = 1 << 3,
+        Joints = 1 << 4,
     }
 
     internal sealed class PhysicsDebugOverlay : Overlay
     {
+        private IEntityManager _entityManager = default!;
         private IEyeManager _eyeManager = default!;
         private IInputManager _inputManager = default!;
         private DebugPhysicsSystem _physics = default!;
@@ -169,10 +173,15 @@ namespace Robust.Client.Debugging
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
+        private static readonly Color JointColor = new(0.5f, 0.8f, 0.8f);
+
         private readonly Font _font;
 
-        public PhysicsDebugOverlay(IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
+        private HashSet<Joint> _drawnJoints = new();
+
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
         {
+            _entityManager = entityManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
             _physics = system;
@@ -223,6 +232,25 @@ namespace Robust.Client.Debugging
                         {
                             DrawShape(worldHandle, fixture, xform, new Color(0.9f, 0.7f, 0.7f).WithAlpha(AlphaModifier));
                         }
+                    }
+                }
+            }
+
+            if ((_physics.Flags & PhysicsDebugFlags.Joints) != 0x0)
+            {
+                _drawnJoints.Clear();
+
+                foreach (var jointComponent in _entityManager.EntityQuery<JointComponent>(true))
+                {
+                    if (jointComponent.JointCount == 0 ||
+                        !_entityManager.TryGetComponent(jointComponent.Owner.Uid, out TransformComponent? xf1) ||
+                        !viewport.Contains(xf1.WorldPosition)) continue;
+
+                    foreach (var (_, joint) in jointComponent.Joints)
+                    {
+                        if (_drawnJoints.Contains(joint)) continue;
+                        DrawJoint(worldHandle, joint);
+                        _drawnJoints.Add(joint);
                     }
                 }
             }
@@ -344,6 +372,33 @@ namespace Robust.Client.Debugging
                     break;
                 default:
                     return;
+            }
+        }
+
+        private void DrawJoint(DrawingHandleWorld worldHandle, Joint joint)
+        {
+            if (!_entityManager.TryGetComponent(joint.BodyAUid, out TransformComponent? xform1) ||
+                !_entityManager.TryGetComponent(joint.BodyBUid, out TransformComponent? xform2)) return;
+
+            var matrix1 = xform1.WorldMatrix;
+            var matrix2 = xform2.WorldMatrix;
+
+            var xf1 = new Vector2(matrix1.R0C2, matrix1.R1C2);
+            var xf2 = new Vector2(matrix2.R0C2, matrix2.R1C2);
+
+            var p1 = matrix1.Transform(joint.LocalAnchorA);
+            var p2 = matrix2.Transform(joint.LocalAnchorB);
+
+            switch (joint)
+            {
+                case DistanceJoint:
+                    worldHandle.DrawLine(xf1, xf2, JointColor);
+                    break;
+                default:
+                    worldHandle.DrawLine(xf1, p1, JointColor);
+                    worldHandle.DrawLine(p1, p2, JointColor);
+                    worldHandle.DrawLine(xf2, p2, JointColor);
+                    break;
             }
         }
     }

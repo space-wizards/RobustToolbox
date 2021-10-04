@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Server.Map;
@@ -179,20 +179,20 @@ namespace Robust.Server.GameStates
 
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
 
-            var oldestAck = GameTick.MaxValue;
+            var oldestAckValue = GameTick.MaxValue.Value;
 
             var mainThread = Thread.CurrentThread;
-            (MsgState, INetChannel) GenerateMail(IPlayerSession session)
+            var parentDeps = IoCManager.Instance!;
+
+            void SendStateUpdate(IPlayerSession session)
             {
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
-                    IoCManager.InitThread(new DependencyCollection(), true);
+                    IoCManager.InitThread(new DependencyCollection(parentDeps), true);
 
                 // people not in the game don't get states
                 if (session.Status != SessionStatus.InGame)
-                {
-                    return default;
-                }
+                    return;
 
                 var channel = session.ConnectedClient;
 
@@ -209,10 +209,8 @@ namespace Robust.Server.GameStates
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
                 var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates?.ToArray(), playerStates?.ToArray(), deletions?.ToArray(), mapData);
-                if (lastAck < oldestAck)
-                {
-                    oldestAck = lastAck;
-                }
+
+                InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
                 DebugTools.Assert(state.MapData?.CreatedMaps is null || (state.MapData?.CreatedMaps is not null && state.EntityStates is not null), "Sending new maps, but no entity state.");
 
@@ -226,40 +224,29 @@ namespace Robust.Server.GameStates
                 // When we send them reliably, we immediately update the ack so that the next state will not be huge.
                 if (stateUpdateMessage.ShouldSendReliably())
                 {
-                    _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
+                    // TODO: remove this lock by having a single state object per session that contains all per-session state needed.
+                    lock (_ackedStates)
+                    {
+                        _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
+                    }
                 }
 
-                return (stateUpdateMessage, channel);
+                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            (MsgState, INetChannel?) SafeGenerateMail(IPlayerSession session)
+            Parallel.ForEach(_playerManager.GetAllPlayers(), session =>
             {
                 try
                 {
-                    return GenerateMail(session);
+                    SendStateUpdate(session);
                 }
                 catch (Exception e) // Catch EVERY exception
                 {
                     _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
                 }
+            });
 
-                var msg = _networkManager.CreateNetMessage<MsgState>();
-                msg.MsgChannel = session.ConnectedClient;
-
-                return (msg, null);
-            }
-
-            var mailBag = _playerManager.GetAllPlayers()
-                .Where(s => s.Status == SessionStatus.InGame)
-                .AsParallel()
-                .Select(SafeGenerateMail);
-
-            foreach (var (msg, chan) in mailBag)
-            {
-                // see session.Status != SessionStatus.InGame above
-                if (chan == null) continue;
-                _networkManager.ServerSendMessage(msg, chan);
-            }
+            var oldestAck = new GameTick(oldestAckValue);
 
             // keep the deletion history buffers clean
             if (oldestAck > _lastOldestAck)

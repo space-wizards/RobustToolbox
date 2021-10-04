@@ -237,6 +237,24 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
+        ///     Adds all players from a different filter into this one.
+        /// </summary>
+        public Filter Merge(Filter other)
+        {
+            return AddPlayers(other._recipients);
+        }
+
+        /// <summary>
+        ///     Adds all players attached to the given entities to this filter, then returns it.
+        /// </summary>
+        public Filter FromEntities(params EntityUid[] entities)
+        {
+            return EntitySystem.TryGet(out SharedFilterSystem? filterSystem)
+                ? filterSystem.FromEntities(this, entities)
+                : this;
+        }
+
+        /// <summary>
         ///     Returns a new filter with the same parameters as this one.
         /// </summary>
         public Filter Clone()
@@ -347,6 +365,14 @@ namespace Robust.Shared.Player
         public static Filter Pvs(MapCoordinates origin, float rangeMultiplier = 2f)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier);
+        }
+
+        /// <summary>
+        ///     A filter with every player attached to the given entities.
+        /// </summary>
+        public static Filter Entities(params EntityUid[] entities)
+        {
+            return Empty().FromEntities(entities);
         }
 
         /// <summary>

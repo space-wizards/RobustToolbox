@@ -530,7 +530,13 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other);
+            if (!base.Equals(other)) return false;
+
+            return MathHelper.CloseTo(_length, other._length) &&
+                   MathHelper.CloseTo(_minLength, other._minLength) &&
+                   MathHelper.CloseTo(_maxLength, other._maxLength) &&
+                   MathHelper.CloseTo(_stiffness, other._stiffness) &&
+                   MathHelper.CloseTo(_damping, other._damping);
         }
     }
 }

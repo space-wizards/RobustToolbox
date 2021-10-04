@@ -299,7 +299,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                    BodyAUid.Equals(other.BodyAUid) &&
                    BodyBUid.Equals(other.BodyBUid) &&
                    CollideConnected == other.CollideConnected &&
-                   MathHelper.CloseToPercent(_breakpoint, other._breakpoint);
+                   MathHelper.CloseTo(_breakpoint, other._breakpoint) &&
+                   _localAnchorA.EqualsApprox(other._localAnchorA) &&
+                   _localAnchorB.EqualsApprox(other._localAnchorB);
         }
 
         // TODO: Need to check localanchor or something as well.

@@ -63,7 +63,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
     }
 
-    public class RevoluteJoint : Joint
+    public class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
     {
         // Temporary
         private Vector2 _impulse;
@@ -387,6 +387,59 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        data.Angles[_indexB] = aB;
 
 	        return positionError <= data.LinearSlop && angularError <= data.AngularSlop;
+        }
+
+        public bool Equals(RevoluteJoint? other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (!base.Equals(other)) return false;
+
+            return EnableLimit == other.EnableLimit &&
+                   EnableMotor == other.EnableMotor &&
+                   MathHelper.CloseTo(ReferenceAngle, other.ReferenceAngle) &&
+                   MathHelper.CloseTo(LowerAngle, other.LowerAngle) &&
+                   MathHelper.CloseTo(UpperAngle, other.UpperAngle) &&
+                   MathHelper.CloseTo(MotorSpeed, other.MotorSpeed) &&
+                   MathHelper.CloseTo(MaxMotorTorque, other.MaxMotorTorque);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (obj.GetType() != GetType()) return false;
+            return Equals((RevoluteJoint) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            hashCode.Add(base.GetHashCode());
+            hashCode.Add(_impulse);
+            hashCode.Add(_indexA);
+            hashCode.Add(_indexB);
+            hashCode.Add(_localCenterA);
+            hashCode.Add(_localCenterB);
+            hashCode.Add(_invMassA);
+            hashCode.Add(_invMassB);
+            hashCode.Add(_invIA);
+            hashCode.Add(_invIB);
+            hashCode.Add(_rA);
+            hashCode.Add(_rB);
+            hashCode.Add(_K);
+            hashCode.Add(_axialMass);
+            hashCode.Add(_angle);
+            hashCode.Add(_motorImpulse);
+            hashCode.Add(_lowerImpulse);
+            hashCode.Add(_upperImpulse);
+            hashCode.Add(EnableLimit);
+            hashCode.Add(EnableMotor);
+            hashCode.Add(ReferenceAngle);
+            hashCode.Add(LowerAngle);
+            hashCode.Add(UpperAngle);
+            hashCode.Add(MotorSpeed);
+            hashCode.Add(MaxMotorTorque);
+            return hashCode.ToHashCode();
         }
     }
 }

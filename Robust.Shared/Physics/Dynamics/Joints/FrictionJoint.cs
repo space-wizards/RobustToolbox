@@ -311,7 +311,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return base.Equals(other);
+            if (!base.Equals(other)) return false;
+
+            return MathHelper.CloseTo(MaxForce, other.MaxForce) &&
+                   MathHelper.CloseTo(MaxTorque, other.MaxTorque);
         }
     }
 }

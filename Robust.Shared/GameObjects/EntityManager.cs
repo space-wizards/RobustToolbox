@@ -75,6 +75,8 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+
+            Initialized = true;
         }
 
         public virtual void Startup()

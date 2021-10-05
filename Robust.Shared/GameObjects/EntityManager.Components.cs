@@ -56,8 +56,6 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Already initialized.");
 
-            Initialized = true;
-
             FillComponentDict();
             _componentFactory.ComponentAdded += OnComponentAdded;
             _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;

@@ -106,11 +106,8 @@ namespace Robust.Shared.Physics.Collision
         /// <param name="state2"></param>
         /// <param name="manifold1"></param>
         /// <param name="manifold2"></param>
-        public static void GetPointStates(out PointState[] state1, out PointState[] state2, in Manifold manifold1, in Manifold manifold2)
+        public static void GetPointStates(ref PointState[] state1, ref PointState[] state2, in Manifold manifold1, in Manifold manifold2)
         {
-            state1 = new PointState[2];
-            state2 = new PointState[2];
-
             // Detect persists and removes.
             for (int i = 0; i < manifold1.PointCount; ++i)
             {

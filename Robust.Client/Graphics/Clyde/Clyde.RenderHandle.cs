@@ -376,7 +376,7 @@ namespace Robust.Client.Graphics.Clyde
                     int divisions = Math.Max(16,(int)(radius * 16));
                     float arcLength = MathF.PI * 2 / divisions;
 
-                    var filledTriangle = new Vector2[3];
+                    Span<Vector2> filledTriangle = stackalloc Vector2[3];
 
                     // Draws a "circle", but its just a polygon with a bunch of sides
                     // this is the GL_LINES version, not GL_LINE_STRIP
@@ -389,9 +389,9 @@ namespace Robust.Client.Graphics.Clyde
                             _renderHandle.DrawLine(startPos, endPos, color);
                         else
                         {
-                            filledTriangle[0] = startPos;
-                            filledTriangle[1] = endPos;
-                            filledTriangle[2] = Vector2.Zero;
+                            filledTriangle[0] = startPos + position;
+                            filledTriangle[1] = endPos + position;
+                            filledTriangle[2] = Vector2.Zero + position;
 
                             _renderHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleList, filledTriangle, color);
                         }

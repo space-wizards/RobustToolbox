@@ -200,7 +200,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IComponentManager, ComponentManager>();
             container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
@@ -249,7 +248,7 @@ namespace Robust.UnitTesting.Server
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
-            entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<SharedTransformSystem>();

@@ -40,7 +40,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public void RemoveViewSubscriber(EntityUid uid, IPlayerSession session)
         {
-            if(!ComponentManager.TryGetComponent(uid, out ViewSubscriberComponent? viewSubscriber))
+            if(!EntityManager.TryGetComponent(uid, out ViewSubscriberComponent? viewSubscriber))
                 return; // Entity didn't have any subscriptions, do nothing.
 
             if (!viewSubscriber.SubscribedSessions.Remove(session))

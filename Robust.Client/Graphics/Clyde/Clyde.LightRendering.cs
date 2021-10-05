@@ -335,8 +335,9 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
+            eye.GetViewMatrix(out var eyeTransform, eye.Scale);
 
-            UpdateOcclusionGeometry(mapId, expandedBounds, eye.Position.Position);
+            UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
 
             DrawFov(viewport, eye);
 
@@ -433,13 +434,13 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
                 }
 
-                if (!MathHelper.CloseTo(lastRange, component.Radius))
+                if (!MathHelper.CloseToPercent(lastRange, component.Radius))
                 {
                     lastRange = component.Radius;
                     lightShader.SetUniformMaybe("lightRange", lastRange);
                 }
 
-                if (!MathHelper.CloseTo(lastPower, component.Energy))
+                if (!MathHelper.CloseToPercent(lastPower, component.Energy))
                 {
                     lastPower = component.Energy;
                     lightShader.SetUniformMaybe("lightPower", lastPower);
@@ -451,7 +452,7 @@ namespace Robust.Client.Graphics.Clyde
                     lightShader.SetUniformMaybe("lightColor", lastColor);
                 }
 
-                if (_enableSoftShadows && !MathHelper.CloseTo(lastSoftness, component.Softness))
+                if (_enableSoftShadows && !MathHelper.CloseToPercent(lastSoftness, component.Softness))
                 {
                     lastSoftness = component.Softness;
                     lightShader.SetUniformMaybe("lightSoftness", lastSoftness);
@@ -818,7 +819,7 @@ namespace Robust.Client.Graphics.Clyde
             _drawQuad(a, b, Matrix3.Identity, shader);
         }
 
-        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Vector2 eyePosition)
+        private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3 eyeTransform)
         {
             // This method generates two sets of occlusion geometry:
             // 3D geometry used during depth projection.
@@ -866,16 +867,16 @@ namespace Robust.Client.Graphics.Clyde
                         var worldTransform = transform.WorldMatrix;
                         var box = occluder.BoundingBox;
 
-                        var (tlX, tlY) = worldTransform.Transform(box.TopLeft);
-                        var (trX, trY) = worldTransform.Transform(box.TopRight);
-                        var (brX, brY) = worldTransform.Transform(box.BottomRight);
-                        var (blX, blY) = worldTransform.Transform(box.BottomLeft);
+                        var tl = worldTransform.Transform(box.TopLeft);
+                        var tr = worldTransform.Transform(box.TopRight);
+                        var br = worldTransform.Transform(box.BottomRight);
+                        var bl = worldTransform.Transform(box.BottomLeft);
 
                         // Faces.
-                        var faceN = new Vector4(tlX, tlY, trX, trY);
-                        var faceE = new Vector4(trX, trY, brX, brY);
-                        var faceS = new Vector4(brX, brY, blX, blY);
-                        var faceW = new Vector4(blX, blY, tlX, tlY);
+                        var faceN = new Vector4(tl.X, tl.Y, tr.X, tr.Y);
+                        var faceE = new Vector4(tr.X, tr.Y, br.X, br.Y);
+                        var faceS = new Vector4(br.X, br.Y, bl.X, bl.Y);
+                        var faceW = new Vector4(bl.X, bl.Y, tl.X, tl.Y);
 
                         //
                         // Buckle up.
@@ -908,10 +909,10 @@ namespace Robust.Client.Graphics.Clyde
                         //
 
                         // Calculate delta positions from camera.
-                        var (dTlX, dTlY) = (tlX, tlY) - eyePosition;
-                        var (dTrX, dTrY) = (trX, trY) - eyePosition;
-                        var (dBlX, dBlY) = (blX, blY) - eyePosition;
-                        var (dBrX, dBrY) = (brX, brY) - eyePosition;
+                        var (dTlX, dTlY) = eyeTransform.Transform(tl);
+                        var (dTrX, dTrY) = eyeTransform.Transform(tr);
+                        var (dBlX, dBlY) = eyeTransform.Transform(bl);
+                        var (dBrX, dBrY) = eyeTransform.Transform(br);
 
                         // Get which neighbors are occluding.
                         var no = (occluder.Occluding & OccluderDir.North) != 0;
@@ -972,10 +973,10 @@ namespace Robust.Client.Graphics.Clyde
                         }
 
                         // Generate mask geometry.
-                        arrayMaskBuffer[ami + 0] = new Vector2(tlX, tlY);
-                        arrayMaskBuffer[ami + 1] = new Vector2(trX, trY);
-                        arrayMaskBuffer[ami + 2] = new Vector2(brX, brY);
-                        arrayMaskBuffer[ami + 3] = new Vector2(blX, blY);
+                        arrayMaskBuffer[ami + 0] = new Vector2(tl.X, tl.Y);
+                        arrayMaskBuffer[ami + 1] = new Vector2(tr.X, tr.Y);
+                        arrayMaskBuffer[ami + 2] = new Vector2(br.X, br.Y);
+                        arrayMaskBuffer[ami + 3] = new Vector2(bl.X, bl.Y);
 
                         // Generate mask indices.
                         QuadBatchIndexWrite(indexMaskBuffer, ref imi, (ushort)ami);

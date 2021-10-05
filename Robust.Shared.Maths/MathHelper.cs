@@ -500,53 +500,75 @@ namespace Robust.Shared.Maths
 
         #endregion Clamp
 
+        #region CloseToPercent
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(float a, float b, double percentage = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * percentage, percentage);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(float a, double b, double percentage = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * percentage, percentage);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(double a, float b, double percentage = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * percentage, percentage);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        /// <summary>
+        /// Returns whether two floating point numbers are within <paramref name="percentage"/> of eachother
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CloseToPercent(double a, double b, double percentage = .00001)
+        {
+            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
+            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * percentage, percentage);
+            return Math.Abs(a - b) <= epsilon;
+        }
+
+        #endregion CloseToPercent
+
         #region CloseTo
 
         /// <summary>
         /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool CloseTo(float a, float b, double tolerance = .00001)
+        public static bool CloseTo(float a, float b, float tolerance = .0000001f)
         {
-            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
-            return Math.Abs(a - b) <= epsilon;
+            return MathF.Abs(a - b) <= tolerance;
         }
 
         /// <summary>
         /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool CloseTo(float a, double b, double tolerance = .00001)
+        public static bool CloseTo(double a, double b, double tolerance = .0000001)
         {
-            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
-            return Math.Abs(a - b) <= epsilon;
+            return Math.Abs(a - b) <= tolerance;
         }
 
-        /// <summary>
-        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool CloseTo(double a, float b, double tolerance = .00001)
-        {
-            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
-            return Math.Abs(a - b) <= epsilon;
-        }
-
-        /// <summary>
-        /// Returns whether two floating point numbers are within <paramref name="tolerance"/> of eachother
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool CloseTo(double a, double b, double tolerance = .00001)
-        {
-            // .001% of the smaller value for the epsilon check as per MSDN reference suggestion
-            double epsilon = Math.Max(Math.Max(Math.Abs(a), Math.Abs(b)) * tolerance, tolerance);
-            return Math.Abs(a - b) <= epsilon;
-        }
-
-        #endregion CloseTo
+        #endregion
 
         #region Lerp
 

@@ -31,13 +31,6 @@ namespace Robust.Client.UserInterface.Controls
         private bool _dragging;
         private SplitOrientation _orientation;
 
-        // min / max x and y extents in relative virtual pixels of where the split can go regardless
-        // of anything else.
-        private float SplitMin => SplitWidth + SplitEdgeSeparation;
-
-        private float SplitMax =>
-            Vertical ? Height - (SplitWidth + SplitEdgeSeparation) : Width - (SplitWidth + SplitEdgeSeparation);
-
         private bool Vertical => Orientation == SplitOrientation.Vertical;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -71,7 +64,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 var newOffset = Vertical ? args.RelativePosition.Y : args.RelativePosition.X;
 
-                _splitCenter = ClampSplitCenter(newOffset);
+                _splitCenter = ClampSplitCenter(newOffset, Size);
                 DefaultCursorShape = Vertical ? CursorShape.VResize : CursorShape.HResize;
                 InvalidateArrange();
             }
@@ -131,9 +124,14 @@ namespace Robust.Client.UserInterface.Controls
         /// <param name="firstMinSize">min size of the first child, will calculate if null</param>
         /// <param name="secondMinSize">min size of the second child, will calculate if null</param>
         /// <returns></returns>
-        private float ClampSplitCenter(float splitCenter, float? firstMinSize = null, float? secondMinSize = null)
+        private float ClampSplitCenter(float splitCenter, Vector2 controlSize, float? firstMinSize = null, float? secondMinSize = null)
         {
-            splitCenter = MathHelper.Clamp(splitCenter, SplitMin, SplitMax);
+            // min / max x and y extents in relative virtual pixels of where the split can go regardless
+            // of anything else.
+
+            var splitMin = SplitWidth + SplitEdgeSeparation;
+            var splitMax = Vertical ? controlSize.Y - splitMin : controlSize.X - splitMin;
+            splitCenter = MathHelper.Clamp(splitCenter, splitMin, splitMax);
 
             if (ResizeMode == SplitResizeMode.RespectChildrenMinSize && ChildCount == 2)
             {
@@ -142,7 +140,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 firstMinSize ??= (Vertical ? first.DesiredSize.Y : first.DesiredSize.X);
                 secondMinSize ??= (Vertical ? second.DesiredSize.Y : second.DesiredSize.X);
-                var size = Vertical ? Height : Width;
+                var size = Vertical ? controlSize.Y : controlSize.X;
 
                 splitCenter = MathHelper.Clamp(splitCenter, firstMinSize.Value,
                     size - (secondMinSize.Value + SplitWidth));
@@ -167,7 +165,7 @@ namespace Robust.Client.UserInterface.Controls
             var firstMinSize = Vertical ? first.DesiredSize.Y : first.DesiredSize.X;
             var secondMinSize = Vertical ? second.DesiredSize.Y : second.DesiredSize.X;
 
-            var size = Vertical ? Height : Width;
+            var size = Vertical ? finalSize.Y : finalSize.X;
 
             var ratio = first.SizeFlagsStretchRatio / (first.SizeFlagsStretchRatio + second.SizeFlagsStretchRatio);
 
@@ -175,7 +173,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 case SplitState.Manual:
                     // min sizes of children may have changed, ensure the offset still respects the defined limits
-                    _splitCenter = ClampSplitCenter(_splitCenter, firstMinSize, secondMinSize);
+                    _splitCenter = ClampSplitCenter(_splitCenter, finalSize, firstMinSize, secondMinSize);
                     break;
                 case SplitState.Auto:
                 {
@@ -200,13 +198,13 @@ namespace Robust.Client.UserInterface.Controls
 
             if (Vertical)
             {
-                first.Arrange(new UIBox2(0, 0, Width, _splitCenter));
-                second.Arrange(new UIBox2(0, _splitCenter + SplitWidth, Width, Height));
+                first.Arrange(new UIBox2(0, 0, finalSize.X, _splitCenter));
+                second.Arrange(new UIBox2(0, _splitCenter + SplitWidth, finalSize.X, finalSize.Y));
             }
             else
             {
-                first.Arrange(new UIBox2(0, 0, _splitCenter, Height));
-                second.Arrange(new UIBox2(_splitCenter + SplitWidth, 0, Width, Height));
+                first.Arrange(new UIBox2(0, 0, _splitCenter, finalSize.Y));
+                second.Arrange(new UIBox2(_splitCenter + SplitWidth, 0, finalSize.X, finalSize.Y));
             }
 
             return finalSize;

@@ -18,7 +18,7 @@ namespace Robust.Shared.Containers
     /// Holds data about a set of entity containers on this entity.
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
-    [NetworkedComponent()]
+    [NetworkedComponent]
     public class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
@@ -44,7 +44,7 @@ namespace Robust.Shared.Containers
         {
             base.OnRemove();
 
-            // IContianer.Shutdown modifies the _containers collection
+            // IContainer.Shutdown modifies the _containers collection
             foreach (var container in Containers.Values.ToArray())
             {
                 container.Shutdown();
@@ -70,7 +70,7 @@ namespace Robust.Shared.Containers
         public override ComponentState GetComponentState(ICommonSession player)
         {
             // naive implementation that just sends the full state of the component
-            List<ContainerManagerComponentState.ContainerData> containerSet = new();
+            List<ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);
 
             foreach (var container in Containers.Values)
             {
@@ -265,9 +265,9 @@ namespace Robust.Shared.Containers
 
         public readonly struct AllContainersEnumerable : IEnumerable<IContainer>
         {
-            private readonly ContainerManagerComponent _manager;
+            private readonly ContainerManagerComponent? _manager;
 
-            public AllContainersEnumerable(ContainerManagerComponent manager)
+            public AllContainersEnumerable(ContainerManagerComponent? manager)
             {
                 _manager = manager;
             }
@@ -292,9 +292,9 @@ namespace Robust.Shared.Containers
         {
             private Dictionary<string, IContainer>.ValueCollection.Enumerator _enumerator;
 
-            public AllContainersEnumerator(ContainerManagerComponent manager)
+            public AllContainersEnumerator(ContainerManagerComponent? manager)
             {
-                _enumerator = manager.Containers.Values.GetEnumerator();
+                _enumerator = manager?.Containers.Values.GetEnumerator() ?? new();
                 Current = default;
             }
 

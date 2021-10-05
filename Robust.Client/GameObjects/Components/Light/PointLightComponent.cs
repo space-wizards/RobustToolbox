@@ -142,7 +142,7 @@ namespace Robust.Client.GameObjects
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(value, _radius)) return;
+                if (MathHelper.CloseToPercent(value, _radius)) return;
 
                 base.Radius = value;
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
@@ -163,7 +163,7 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal sealed class PointLightUpdateEvent : EntityEventArgs
+    public sealed class PointLightUpdateEvent : EntityEventArgs
     {
 
     }

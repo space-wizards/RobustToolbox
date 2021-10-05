@@ -43,7 +43,6 @@ namespace Robust.Server.Maps
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IServerEntityManagerInternal _serverEntityManager = default!;
         [Dependency] private readonly IPauseManager _pauseManager = default!;
-        [Dependency] private readonly IComponentManager _componentManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public event Action<YamlStream, string>? LoadedMapData;
@@ -53,8 +52,7 @@ namespace Robust.Server.Maps
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                _componentManager, _prototypeManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _prototypeManager);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -122,7 +120,7 @@ namespace Robust.Server.Maps
                 }
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                    _componentManager, _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
+                    _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
                 grid = context.Grids[0];
 
@@ -150,8 +148,7 @@ namespace Robust.Server.Maps
         public void SaveMap(MapId mapId, string yamlPath)
         {
             Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                _componentManager, _prototypeManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _prototypeManager);
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 context.RegisterGrid(grid);
@@ -217,7 +214,7 @@ namespace Robust.Server.Maps
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
-                    _componentManager, _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
+                    _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
 
                 if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
@@ -242,7 +239,6 @@ namespace Robust.Server.Maps
             private readonly ITileDefinitionManager _tileDefinitionManager;
             private readonly IServerEntityManagerInternal _serverEntityManager;
             private readonly IPauseManager _pauseManager;
-            private readonly IComponentManager _componentManager;
             private readonly IPrototypeManager _prototypeManager;
 
             private readonly MapLoadOptions? _loadOptions;
@@ -276,14 +272,12 @@ namespace Robust.Server.Maps
             public bool MapIsPostInit { get; private set; }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
-                IServerEntityManagerInternal entities, IPauseManager pauseManager, IComponentManager componentManager,
-                IPrototypeManager prototypeManager)
+                IServerEntityManagerInternal entities, IPauseManager pauseManager, IPrototypeManager prototypeManager)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
                 _pauseManager = pauseManager;
-                _componentManager = componentManager;
                 _prototypeManager = prototypeManager;
 
                 RootNode = new YamlMappingNode();
@@ -303,14 +297,13 @@ namespace Robust.Server.Maps
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
                 IServerEntityManagerInternal entities,
-                IPauseManager pauseManager, IComponentManager componentManager, IPrototypeManager prototypeManager,
+                IPauseManager pauseManager, IPrototypeManager prototypeManager,
                 YamlMappingNode node, MapId targetMapId, MapLoadOptions options)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
                 _pauseManager = pauseManager;
-                _componentManager = componentManager;
                 _loadOptions = options;
 
                 RootNode = node;
@@ -414,7 +407,7 @@ namespace Robust.Server.Maps
                         continue;
                     }
 
-                    foreach (var (netId, component) in _componentManager.GetNetComponents(entity.Uid))
+                    foreach (var (netId, component) in _serverEntityManager.GetNetComponents(entity.Uid))
                     {
                         var castComp = (Component) component;
 
@@ -445,7 +438,6 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
-                var compManager = IoCManager.Resolve<IComponentManager>();
                 var entManager = IoCManager.Resolve<IEntityManager>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
                 var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
@@ -453,7 +445,7 @@ namespace Robust.Server.Maps
                 foreach (var grid in Grids)
                 {
                     var gridInternal = (IMapGridInternal) grid;
-                    var body = compManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
+                    var body = entManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
                     gridFixtures.ProcessGrid(gridInternal);
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that

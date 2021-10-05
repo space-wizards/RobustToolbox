@@ -86,25 +86,33 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
+        {
+            return Play(playerFilter, filename, entity.Uid, audioParams);
+        }
+
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
+
+            if(!EntityManager.TryGetComponent<ITransformComponent>(uid, out var transform))
+                return null;
 
             var id = CacheIdentifier();
 
             var msg = new PlayAudioEntityMessage
             {
                 FileName = filename,
-                Coordinates = entity.Transform.Coordinates,
-                EntityUid = entity.Uid,
+                Coordinates = transform.Coordinates,
+                EntityUid = uid,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
             };
 
             // We clone the filter here as to not modify the original instance.
             if (range > 0.0f)
-                playerFilter = playerFilter.Clone().AddInRange(entity.Transform.MapPosition, range);
+                playerFilter = playerFilter.Clone().AddInRange(transform.MapPosition, range);
 
             RaiseNetworkEvent(msg, playerFilter);
 

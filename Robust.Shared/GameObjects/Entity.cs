@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
@@ -24,18 +23,10 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
-        private EntityLifeStage _lifeStage;
-
-        /// <inheritdoc cref="IEntity.LifeStage" />
-        [ViewVariables]
-        internal EntityLifeStage LifeStage
-        {
-            get => _lifeStage;
-            set => _lifeStage = value;
-        }
-
         /// <inheritdoc />
         EntityLifeStage IEntity.LifeStage { get => LifeStage; set => LifeStage = value; }
+
+        public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -76,20 +67,7 @@ namespace Robust.Shared.GameObjects
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
-        public bool Paused
-        {
-            get => _paused;
-            set
-            {
-                if (_paused == value || value && HasComponent<IgnorePauseComponent>())
-                    return;
-
-                _paused = value;
-                EntityManager.EventBus.RaiseLocalEvent(Uid, new EntityPausedEvent(Uid, value));
-            }
-        }
-
-        private bool _paused;
+        public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
         private ITransformComponent? _transform;
 
@@ -97,11 +75,15 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
 
-        private IMetaDataComponent? _metaData;
+        private MetaDataComponent? _metaData;
 
         /// <inheritdoc />
         [ViewVariables]
-        public IMetaDataComponent MetaData => _metaData ??= GetComponent<IMetaDataComponent>();
+        public MetaDataComponent MetaData
+        {
+            get => _metaData ??= GetComponent<MetaDataComponent>();
+            internal set => _metaData = value;
+        }
 
         #endregion Members
 
@@ -124,11 +106,13 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void InitializeComponents()
         {
+            // TODO: Move this to EntityManager.
+
             DebugTools.Assert(LifeStage == EntityLifeStage.PreInit);
             LifeStage = EntityLifeStage.Initializing;
 
             // Initialize() can modify the collection of components.
-            var components = EntityManager.ComponentManager.GetComponents(Uid)
+            var components = EntityManager.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
@@ -147,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
 #if DEBUG
             // Second integrity check in case of.
-            foreach (var t in EntityManager.ComponentManager.GetComponents(Uid))
+            foreach (var t in EntityManager.GetComponents(Uid))
             {
                 if (!t.Initialized)
                 {
@@ -166,11 +150,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void StartAllComponents()
         {
+            // TODO: Move this to EntityManager.
             // Startup() can modify _components
-            var compMan = EntityManager.ComponentManager;
-
             // This code can only handle additions to the list. Is there a better way? Probably not.
-            var comps = compMan.GetComponents(Uid)
+            var comps = EntityManager.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {
                     ITransformComponent _ => 0,
@@ -196,7 +179,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendMessage(IComponent? owner, ComponentMessage message)
         {
-            var components = EntityManager.ComponentManager.GetComponents(Uid);
+            var components = EntityManager.GetComponents(Uid);
             foreach (var component in components)
             {
                 if (owner != component)
@@ -222,32 +205,32 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">The component to add.</param>
         public void AddComponent(Component component)
         {
-            EntityManager.ComponentManager.AddComponent(this, component);
+            EntityManager.AddComponent(this, component);
         }
 
         /// <inheritdoc />
         public T AddComponent<T>()
             where T : Component, new()
         {
-            return EntityManager.ComponentManager.AddComponent<T>(this);
+            return EntityManager.AddComponent<T>(this);
         }
 
         /// <inheritdoc />
         public void RemoveComponent<T>()
         {
-            EntityManager.ComponentManager.RemoveComponent<T>(Uid);
+            EntityManager.RemoveComponent<T>(Uid);
         }
 
         /// <inheritdoc />
         public bool HasComponent<T>()
         {
-            return EntityManager.ComponentManager.HasComponent<T>(Uid);
+            return EntityManager.HasComponent<T>(Uid);
         }
 
         /// <inheritdoc />
         public bool HasComponent(Type type)
         {
-            return EntityManager.ComponentManager.HasComponent(Uid, type);
+            return EntityManager.HasComponent(Uid, type);
         }
 
         /// <inheritdoc />
@@ -255,7 +238,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return (T)EntityManager.ComponentManager.GetComponent(Uid, typeof(T));
+            return (T)EntityManager.GetComponent(Uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -263,7 +246,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.ComponentManager.GetComponent(Uid, type);
+            return EntityManager.GetComponent(Uid, type);
         }
 
         /// <inheritdoc />
@@ -271,7 +254,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.ComponentManager.TryGetComponent(Uid, out component);
+            return EntityManager.TryGetComponent(Uid, out component);
         }
 
         public T? GetComponentOrNull<T>() where T : class
@@ -284,7 +267,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.ComponentManager.TryGetComponent(Uid, type, out component);
+            return EntityManager.TryGetComponent(Uid, type, out component);
         }
 
         public IComponent? GetComponentOrNull(Type type)
@@ -307,13 +290,13 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents()
         {
-            return EntityManager.ComponentManager.GetComponents(Uid);
+            return EntityManager.GetComponents(Uid);
         }
 
         /// <inheritdoc />
         public IEnumerable<T> GetAllComponents<T>()
         {
-            return EntityManager.ComponentManager.GetComponents<T>(Uid);
+            return EntityManager.GetComponents<T>(Uid);
         }
 
         #endregion Components
@@ -325,10 +308,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Dirty()
         {
+            // TODO: Move this to EntityManager.
+
             LastModifiedTick = EntityManager.CurrentTick;
 
             if (LifeStage >= EntityLifeStage.Initialized && Transform.Anchored)
-                EntityManager.ComponentManager.GetComponent<IMapGridComponent>(Transform.ParentUid).AnchoredEntityDirty(Transform);
+                EntityManager.GetComponent<IMapGridComponent>(Transform.ParentUid).AnchoredEntityDirty(Transform);
         }
 
         #endregion GameState

@@ -38,9 +38,12 @@ namespace Robust.UnitTesting.Shared.Maths
         public void TestDirectionToVec([ValueSource(nameof(sources))] (float, float, Direction, double) test)
         {
             var control = new Vector2(test.Item1, test.Item2).Normalized;
+            var controlInt = new Vector2i((int)test.Item1, (int)test.Item2);
             var val = test.Item3.ToVec();
+            var intVec = test.Item3.ToIntVec();
 
             Assert.That(val, Is.Approximately(control));
+            Assert.That(intVec, Is.Approximately(controlInt));
         }
 
         [Test]

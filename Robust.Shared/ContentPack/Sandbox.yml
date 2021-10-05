@@ -357,7 +357,6 @@ Types:
     InvalidDataException: { All: True }
     IOException: { All: True }
     MemoryStream: { All: True }
-    Path: { All: True }
     SeekOrigin: { } # Enum
     Stream: { All: True }
     StreamReader:

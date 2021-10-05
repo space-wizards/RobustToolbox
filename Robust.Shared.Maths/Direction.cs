@@ -84,28 +84,26 @@ namespace Robust.Shared.Maths
             return ang;
         }
 
-        private static Vector2[] directionVectors = new[]
-        {
-            new Vector2(0, -1),
+        private static readonly Vector2[] DirectionVectors = {
+            new (0, -1),
             new Vector2(1, -1).Normalized,
-            new Vector2(1, 0),
+            new (1, 0),
             new Vector2(1, 1).Normalized,
-            new Vector2(0, 1),
+            new (0, 1),
             new Vector2(-1, 1).Normalized,
-            new Vector2(-1, 0),
+            new (-1, 0),
             new Vector2(-1, -1).Normalized
         };
         
-        private static readonly Vector2i[] IntDirectionVectors = new[]
-        {
-            new Vector2i(0, -1),
-            new Vector2i(1, -1),
-            new Vector2i(1, 0),
-            new Vector2i(1, 1),
-            new Vector2i(0, 1),
-            new Vector2i(-1, 1),
-            new Vector2i(-1, 0),
-            new Vector2i(-1, -1)
+        private static readonly Vector2i[] IntDirectionVectors = {
+            new (0, -1),
+            new (1, -1),
+            new (1, 0),
+            new (1, 1),
+            new (0, 1),
+            new (-1, 1),
+            new (-1, 0),
+            new (-1, -1)
         };
         
         /// <summary>
@@ -117,7 +115,7 @@ namespace Robust.Shared.Maths
         /// <seealso cref="Vector2"/>
         public static Vector2 ToVec(this Direction dir)
         {
-            return directionVectors[(int) dir];
+            return DirectionVectors[(int) dir];
         }
 
         /// <summary>

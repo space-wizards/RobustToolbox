@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Robust.Shared.Maths;
 using NUnit.Framework;
 
@@ -7,70 +6,75 @@ namespace Robust.UnitTesting.Shared.Maths
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    internal class Direction_Test
+    internal class DirectionTest
     {
         private const double Epsilon = 1.0e-8;
 
-        private static IEnumerable<(float x, float y, Direction dir, double angle)> sources => new(float, float, Direction, double)[]
+        private static IEnumerable<TestCaseData> Sources()
         {
-            (1, 0, Direction.East, Angle.FromDegrees(90)),
-            (1, 1, Direction.NorthEast, Angle.FromDegrees(135)),
-            (0, 1, Direction.North, Angle.FromDegrees(180)),
-            (-1, 1, Direction.NorthWest, Angle.FromDegrees(-135)),
-            (-1, 0, Direction.West, Angle.FromDegrees(-90)),
-            (-1, -1, Direction.SouthWest, Angle.FromDegrees(-45)),
-            (0, -1, Direction.South, 0),
-            (1, -1, Direction.SouthEast, Angle.FromDegrees(45))
-        };
+            yield return new TestCaseData(1, 0, Direction.East, Angle.FromDegrees(90));
+            yield return new TestCaseData(1, 1, Direction.NorthEast, Angle.FromDegrees(135));
+            yield return new TestCaseData(0, 1, Direction.North, Angle.FromDegrees(180));
+            yield return new TestCaseData(-1, 1, Direction.NorthWest, Angle.FromDegrees(-135));
+            yield return new TestCaseData(-1, 0, Direction.West, Angle.FromDegrees(-90));
+            yield return new TestCaseData(-1, -1, Direction.SouthWest, Angle.FromDegrees(-45));
+            yield return new TestCaseData(0, -1, Direction.South, Angle.FromDegrees(0));
+            yield return new TestCaseData(1, -1, Direction.SouthEast, Angle.FromDegrees(45));
+        }
 
         [Test]
-        [Sequential]
-        public void TestDirectionToAngle([ValueSource(nameof(sources))] (float, float, Direction, double) test)
+        [TestCaseSource(nameof(Sources))]
+        [Parallelizable]
+        public void TestDirectionToAngle(float x, float y, Direction dir, Angle angle)
         {
-            var control = test.Item4;
-            var val = test.Item3.ToAngle();
+            double control = angle;
+            var val = dir.ToAngle();
 
             Assert.That(val.Theta, Is.EqualTo(control).Within(Epsilon));
         }
 
         [Test]
-        [Sequential]
-        public void TestDirectionToVec([ValueSource(nameof(sources))] (float, float, Direction, double) test)
+        [TestCaseSource(nameof(Sources))]
+        [Parallelizable]
+        public void TestDirectionToVec(float x, float y, Direction dir, Angle _)
         {
-            var control = new Vector2(test.Item1, test.Item2).Normalized;
-            var controlInt = new Vector2i((int)test.Item1, (int)test.Item2);
-            var val = test.Item3.ToVec();
-            var intVec = test.Item3.ToIntVec();
+            var control = new Vector2(x, y).Normalized;
+            var controlInt = new Vector2i((int)x, (int)y);
+            var val = dir.ToVec();
+            var intVec = dir.ToIntVec();
 
             Assert.That(val, Is.Approximately(control));
-            Assert.That(intVec, Is.Approximately(controlInt));
+            Assert.That(intVec, Is.EqualTo(controlInt));
         }
 
         [Test]
-        [Sequential]
-        public void TestVecToAngle([ValueSource(nameof(sources))] (float, float, Direction, double) test)
+        [TestCaseSource(nameof(Sources))]
+        [Parallelizable]
+        public void TestVecToAngle(float x, float y, Direction dir, Angle angle)
         {
-            var target = new Vector2(test.Item1, test.Item2).Normalized;
+            var target = new Vector2(x, y).Normalized;
 
-            Assert.That(target.ToWorldAngle().Reduced(), Is.Approximately(new Angle(test.Item4)));
+            Assert.That(target.ToWorldAngle().Reduced(), Is.Approximately(new Angle(angle)));
         }
 
         [Test]
-        [Sequential]
-        public void TestVector2ToDirection([ValueSource(nameof(sources))] (float, float, Direction, double) test)
+        [TestCaseSource(nameof(Sources))]
+        [Parallelizable]
+        public void TestVector2ToDirection(float x, float y, Direction dir, Angle angle)
         {
-            var target = new Vector2(test.Item1, test.Item2).Normalized;
+            var target = new Vector2(x, y).Normalized;
 
-            Assert.That(target.GetDir(), Is.EqualTo(test.Item3));
+            Assert.That(target.GetDir(), Is.EqualTo(dir));
         }
 
         [Test]
-        [Sequential]
-        public void TestAngleToDirection([ValueSource(nameof(sources))] (float, float, Direction, double) test)
+        [TestCaseSource(nameof(Sources))]
+        [Parallelizable]
+        public void TestAngleToDirection(float x, float y, Direction dir, Angle angle)
         {
-            var target = new Angle(test.Item4);
+            var target = new Angle(angle);
 
-            Assert.That(target.GetDir(), Is.EqualTo(test.Item3));
+            Assert.That(target.GetDir(), Is.EqualTo(dir));
         }
 
     }

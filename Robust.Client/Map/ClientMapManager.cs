@@ -33,10 +33,11 @@ namespace Robust.Client.Map
                     //get shared euid of map comp entity
                     foreach (var entityState in entityStates!)
                     {
-                        if(entityState.ComponentChanges is null)
+                        var changes = entityState.ComponentChanges.Array;
+                        if (changes is null)
                             continue;
 
-                        foreach (var compChange in entityState.ComponentChanges)
+                        foreach (var compChange in changes)
                         {
                             if (compChange.State is not MapComponentState mapCompState || mapCompState.MapId != mapId)
                                 continue;
@@ -68,10 +69,11 @@ namespace Robust.Client.Map
                     //get shared euid of map comp entity
                     foreach (var entityState in entityStates!)
                     {
-                        if (entityState.ComponentChanges is null)
+                        var changes = entityState.ComponentChanges.Array;
+                        if (changes is null)
                             continue;
 
-                        foreach (var compState in entityState.ComponentChanges)
+                        foreach (var compState in changes)
                         {
                             if (compState.State is not MapGridComponentState gridCompState || gridCompState.GridIndex != gridId)
                                 continue;

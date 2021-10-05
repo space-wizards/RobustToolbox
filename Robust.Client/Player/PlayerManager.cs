@@ -103,9 +103,9 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
-        public void ApplyPlayerStates(IEnumerable<PlayerState>? list)
+        public void ApplyPlayerStates(PlayerState[] list)
         {
-            if (list == null)
+            if (list.Length == 0)
             {
                 // This happens when the server says "nothing changed!"
                 return;

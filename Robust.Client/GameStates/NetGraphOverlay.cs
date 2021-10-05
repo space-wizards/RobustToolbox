@@ -79,17 +79,17 @@ namespace Robust.Client.GameStates
             var conShell = IoCManager.Resolve<IConsoleHost>().LocalShell;
 
             var entStates = args.AppliedState.EntityStates;
-            if (entStates is not null)
+            if (entStates.HasContents)
             {
                 var sb = new StringBuilder();
-                foreach (var entState in entStates)
+                foreach (var entState in entStates.Array)
                 {
                     if (entState.Uid == WatchEntId)
                     {
-                        if(entState.ComponentChanges is not null)
+                        if(entState.ComponentChanges.Array is { } changes)
                         {
                             sb.Append($"\n  Changes:");
-                            foreach (var compChange in entState.ComponentChanges)
+                            foreach (var compChange in changes)
                             {
                                 var registration = _componentFactory.GetRegistration(compChange.NetID);
                                 var create = compChange.Created ? 'C' : '\0';
@@ -107,10 +107,10 @@ namespace Robust.Client.GameStates
             }
 
             var entDeletes = args.AppliedState.EntityDeletions;
-            if (entDeletes is not null)
+            if (entDeletes.HasContents)
             {
                 var sb = new StringBuilder();
-                foreach (var entDelete in entDeletes)
+                foreach (var entDelete in entDeletes.Array)
                 {
                     if (entDelete == WatchEntId)
                     {

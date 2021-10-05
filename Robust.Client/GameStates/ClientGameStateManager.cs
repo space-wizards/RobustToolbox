@@ -412,10 +412,10 @@ namespace Robust.Client.GameStates
         private List<EntityUid> ApplyGameState(GameState curState, GameState? nextState)
         {
             _config.TickProcessMessages();
-            _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates);
-            var createdEntities = ApplyEntityStates(curState.EntityStates, curState.EntityDeletions,
-                nextState?.EntityStates);
-            _players.ApplyPlayerStates(curState.PlayerStates);
+            _mapManager.ApplyGameStatePre(curState.MapData, curState.EntityStates.Array);
+            var createdEntities = ApplyEntityStates(curState.EntityStates.Array, curState.EntityDeletions.Array,
+                nextState?.EntityStates.Array);
+            _players.ApplyPlayerStates(curState.PlayerStates.Array);
             _mapManager.ApplyGameStatePost(curState.MapData);
 
             GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
@@ -442,7 +442,7 @@ namespace Robust.Client.GameStates
                     }
                     else //Unknown entities
                     {
-                        var metaState = (MetaDataComponentState?) es.ComponentChanges?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
+                        var metaState = (MetaDataComponentState?) es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                         if (metaState == null)
                         {
                             throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
@@ -553,9 +553,9 @@ namespace Robust.Client.GameStates
             var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
             var entityUid = entity.Uid;
 
-            if (curState?.ComponentChanges != null)
+            if (curState?.ComponentChanges.Array is { } changes)
             {
-                foreach (var compChange in curState.ComponentChanges)
+                foreach (var compChange in changes)
                 {
                     if (compChange.Deleted)
                     {
@@ -580,17 +580,17 @@ namespace Robust.Client.GameStates
                 }
             }
 
-            if (curState?.ComponentChanges != null)
+            if (curState?.ComponentChanges.Array is { } changes2)
             {
-                foreach (var compChange in curState.ComponentChanges)
+                foreach (var compChange in changes2)
                 {
                     compStateWork[compChange.NetID] = (compChange.State, null);
                 }
             }
 
-            if (nextState?.ComponentChanges != null)
+            if (nextState?.ComponentChanges.Array is { } nextChanges)
             {
-                foreach (var compState in nextState.ComponentChanges)
+                foreach (var compState in nextChanges)
                 {
                     if (compStateWork.TryGetValue(compState.NetID, out var state))
                     {

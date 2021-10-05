@@ -229,7 +229,7 @@ namespace Robust.Server.GameStates
                 _viewerEntsPool.Return(viewers);
             }
 
-            Logger.Debug($"Visible ent count is {visibleEnts.Count}");
+            // Logger.Debug($"Visible ent count is {visibleEnts.Count}");
 
             /*
             foreach (var ent in visibleEnts)

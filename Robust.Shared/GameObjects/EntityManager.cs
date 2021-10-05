@@ -75,6 +75,8 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+
+            Initialized = true;
         }
 
         public virtual void Startup()
@@ -176,11 +178,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-
-            InitializeAndStartEntity((Entity) entity);
-
-            if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this))) entity.RunMapInit();
-
+            InitializeAndStartEntity((Entity) entity, coordinates.GetMapId(this));
             return entity;
         }
 
@@ -188,7 +186,7 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity);
+            InitializeAndStartEntity((Entity) entity, coordinates.MapId);
             return entity;
         }
 
@@ -301,13 +299,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            if (!TryGetEntity(uid, out var ent))
-                return false;
-
-            if (ent.Deleted)
-                return false;
-
-            return true;
+            return TryGetEntity(uid, out _);
         }
 
         /// <summary>
@@ -406,13 +398,16 @@ namespace Robust.Shared.GameObjects
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private protected void InitializeAndStartEntity(Entity entity)
+        private void InitializeAndStartEntity(Entity entity, MapId mapId)
         {
             try
             {
                 InitializeEntity(entity);
-                EntityInitialized?.Invoke(this, entity.Uid);
                 StartEntity(entity);
+
+                // If the map we're initializing the entity on is initialized, run map init on it.
+                if (_pauseManager.IsMapInitialized(mapId))
+                    entity.RunMapInit();
             }
             catch (Exception e)
             {
@@ -421,9 +416,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected static void InitializeEntity(Entity entity)
+        protected void InitializeEntity(Entity entity)
         {
             entity.InitializeComponents();
+            EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)

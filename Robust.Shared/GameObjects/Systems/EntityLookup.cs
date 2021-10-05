@@ -769,7 +769,7 @@ namespace Robust.Shared.GameObjects
             // for debugging
             var necessary = 0;
 
-            if (_compManager.HasComponent<ContainerManagerComponent>(entity.Uid))
+            if (_entityManager.HasComponent<ContainerManagerComponent>(entity.Uid))
             {
                 if (lookup.ContainerManagerTree.AddOrUpdate(entity, aabb))
                 {

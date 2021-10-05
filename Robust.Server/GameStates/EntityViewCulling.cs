@@ -7,6 +7,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -227,6 +228,8 @@ namespace Robust.Server.GameStates
                 viewers.Clear();
                 _viewerEntsPool.Return(viewers);
             }
+
+            Logger.Debug($"Visible ent count is {visibleEnts.Count}");
 
             deletions = GetDeletedEntities(fromTick);
             GenerateEntityStates(entityStates, session, fromTick, visibleEnts, deletions);

@@ -301,13 +301,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            if (!TryGetEntity(uid, out var ent))
-                return false;
-
-            if (ent.Deleted)
-                return false;
-
-            return true;
+            return TryGetEntity(uid, out _);
         }
 
         /// <summary>

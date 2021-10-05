@@ -231,6 +231,13 @@ namespace Robust.Server.GameStates
 
             Logger.Debug($"Visible ent count is {visibleEnts.Count}");
 
+            /*
+            foreach (var ent in visibleEnts)
+            {
+                Logger.Debug($"{_entMan.GetEntity(ent)}");
+            }
+            */
+
             deletions = GetDeletedEntities(fromTick);
             GenerateEntityStates(entityStates, session, fromTick, visibleEnts, deletions);
 

@@ -405,7 +405,6 @@ namespace Robust.Shared.GameObjects
             try
             {
                 InitializeEntity(entity);
-                EntityInitialized?.Invoke(this, entity.Uid);
                 StartEntity(entity);
             }
             catch (Exception e)
@@ -415,9 +414,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected static void InitializeEntity(Entity entity)
+        protected void InitializeEntity(Entity entity)
         {
             entity.InitializeComponents();
+            EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)

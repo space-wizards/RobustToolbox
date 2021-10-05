@@ -5,7 +5,9 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
+using Robust.Shared.Containers.Events;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -148,6 +150,8 @@ namespace Robust.Shared.GameObjects
 
             eventBus.SubscribeEvent<EntInsertedIntoContainerMessage>(EventSource.Local, this, HandleContainerInsert);
             eventBus.SubscribeEvent<EntRemovedFromContainerMessage>(EventSource.Local, this, HandleContainerRemove);
+            eventBus.SubscribeEvent<ContainerManagerInitializedEvent>(EventSource.Local, this, OnContainerManagerInit);
+            eventBus.SubscribeEvent<ContainerManagerShutdownEvent>(EventSource.Local, this, OnContainerManagerShutdown);
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
@@ -157,6 +161,22 @@ namespace Robust.Shared.GameObjects
             _entityManager.EntityStarted += HandleEntityStarted;
             _mapManager.MapCreated += HandleMapCreated;
             Started = true;
+        }
+
+        private void OnContainerManagerShutdown(ref ContainerManagerShutdownEvent ev)
+        {
+            var entity = _entityManager.GetEntity(ev.Uid);
+            var lookup = GetLookup(entity);
+            // TODO: Another one of those ordering situations where I need to suss out if this should even be happening
+            lookup?.ContainerManagerTree.Remove(entity);
+        }
+
+        private void OnContainerManagerInit(ref ContainerManagerInitializedEvent ev)
+        {
+            var entity = _entityManager.GetEntity(ev.Uid);
+            var lookup = GetLookup(entity);
+            // TODO: Another one of those ordering situations where I need to suss out if this should even be happening
+            lookup?.ContainerManagerTree.AddOrUpdate(entity);
         }
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
@@ -203,6 +223,20 @@ namespace Robust.Shared.GameObjects
             if (@event.Entity.Transform.Anchored)
             {
                 RemoveFromEntityTrees(@event.Entity);
+
+                if (_entityManager.HasComponent<ContainerManagerComponent>(@event.Entity.Uid))
+                {
+                    var lookup = GetLookup(@event.Entity);
+                    if (lookup == null)
+                    {
+                        // Given it's anchored this really shouldn't be happening
+                        DebugTools.Assert($"No {nameof(EntityLookupComponent)} found for {@event.Entity} despite being anchored!");
+                        Logger.Error($"No {nameof(EntityLookupComponent)} found for {@event.Entity} despite being anchored!");
+                        return;
+                    }
+
+                    lookup.ContainerManagerTree.AddOrUpdate(@event.Entity);
+                }
             }
             else
             {

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.Containers.Events;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -64,6 +65,9 @@ namespace Robust.Shared.Containers
                 baseContainer.Manager = this;
                 baseContainer.ID = container.Key;
             }
+
+            var @event = new ContainerManagerInitializedEvent {Uid = Owner.Uid, Component = this};
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref @event);
         }
 
         /// <inheritdoc />
@@ -183,6 +187,9 @@ namespace Robust.Shared.Containers
                         new UpdateContainerOcclusionMessage(containerEntity));
                 }
             }
+
+            var @event = new ContainerManagerShutdownEvent {Uid = Owner.Uid, Component = this};
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref @event);
         }
 
         private IContainer MakeContainer(string id, Type type)

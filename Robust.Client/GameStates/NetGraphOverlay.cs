@@ -82,14 +82,14 @@ namespace Robust.Client.GameStates
             if (entStates.HasContents)
             {
                 var sb = new StringBuilder();
-                foreach (var entState in entStates.Array)
+                foreach (var entState in entStates.Span)
                 {
                     if (entState.Uid == WatchEntId)
                     {
-                        if(entState.ComponentChanges.Array is { } changes)
+                        if(entState.ComponentChanges.HasContents)
                         {
                             sb.Append($"\n  Changes:");
-                            foreach (var compChange in changes)
+                            foreach (var compChange in entState.ComponentChanges.Span)
                             {
                                 var registration = _componentFactory.GetRegistration(compChange.NetID);
                                 var create = compChange.Created ? 'C' : '\0';
@@ -110,7 +110,7 @@ namespace Robust.Client.GameStates
             if (entDeletes.HasContents)
             {
                 var sb = new StringBuilder();
-                foreach (var entDelete in entDeletes.Array)
+                foreach (var entDelete in entDeletes.Span)
                 {
                     if (entDelete == WatchEntId)
                     {

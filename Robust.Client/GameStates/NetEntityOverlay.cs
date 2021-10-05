@@ -68,7 +68,7 @@ namespace Robust.Client.GameStates
             if(gameState.EntityStates.HasContents)
             {
                 // Loop over every entity that gets updated this state and record the traffic
-                foreach (var entityState in gameState.EntityStates.Array)
+                foreach (var entityState in gameState.EntityStates.Span)
                 {
                     var newEnt = true;
                     for(var i=0;i<_netEnts.Count;i++)

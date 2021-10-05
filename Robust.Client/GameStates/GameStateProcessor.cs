@@ -168,13 +168,13 @@ namespace Robust.Client.GameStates
             }
             else
             {
-                foreach (var deletion in state.EntityDeletions.Array)
+                foreach (var deletion in state.EntityDeletions.Span)
                 {
                     _lastStateFullRep.Remove(deletion);
                 }
             }
 
-            foreach (var entityState in state.EntityStates.Array)
+            foreach (var entityState in state.EntityStates.Span)
             {
                 if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
                 {
@@ -182,18 +182,15 @@ namespace Robust.Client.GameStates
                     _lastStateFullRep.Add(entityState.Uid, compData);
                 }
 
-                if (entityState.ComponentChanges.Array is { } changes)
+                foreach (var change in entityState.ComponentChanges.Span)
                 {
-                    foreach (var change in changes)
+                    if (change.Deleted)
                     {
-                        if (change.Deleted)
-                        {
-                            compData.Remove(change.NetID);
-                        }
-                        else if (change.State is not null)
-                        {
-                            compData[change.NetID] = change.State;
-                        }
+                        compData.Remove(change.NetID);
+                    }
+                    else if (change.State is not null)
+                    {
+                        compData[change.NetID] = change.State;
                     }
                 }
             }

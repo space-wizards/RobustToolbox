@@ -24,7 +24,7 @@ namespace Robust.Client.Player
         void Startup();
         void Shutdown();
 
-        void ApplyPlayerStates(PlayerState[] list);
+        void ApplyPlayerStates(IReadOnlyCollection<PlayerState> list);
     }
 
     public class LocalPlayerChangedEventArgs : EventArgs

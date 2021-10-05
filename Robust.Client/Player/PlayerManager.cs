@@ -103,9 +103,9 @@ namespace Robust.Client.Player
         }
 
         /// <inheritdoc />
-        public void ApplyPlayerStates(PlayerState[] list)
+        public void ApplyPlayerStates(IReadOnlyCollection<PlayerState> list)
         {
-            if (list.Length == 0)
+            if (list.Count == 0)
             {
                 // This happens when the server says "nothing changed!"
                 return;

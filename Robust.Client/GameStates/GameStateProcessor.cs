@@ -168,38 +168,29 @@ namespace Robust.Client.GameStates
             }
             else
             {
-                if (state.EntityDeletions != null)
+                foreach (var deletion in state.EntityDeletions.Span)
                 {
-                    foreach (var deletion in state.EntityDeletions)
-                    {
-                        _lastStateFullRep.Remove(deletion);
-                    }
+                    _lastStateFullRep.Remove(deletion);
                 }
             }
 
-            if (state.EntityStates != null)
+            foreach (var entityState in state.EntityStates.Span)
             {
-                foreach (var entityState in state.EntityStates)
+                if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
                 {
-                    if (!_lastStateFullRep.TryGetValue(entityState.Uid, out var compData))
-                    {
-                        compData = new Dictionary<uint, ComponentState>();
-                        _lastStateFullRep.Add(entityState.Uid, compData);
-                    }
+                    compData = new Dictionary<uint, ComponentState>();
+                    _lastStateFullRep.Add(entityState.Uid, compData);
+                }
 
-                    if (entityState.ComponentChanges != null)
+                foreach (var change in entityState.ComponentChanges.Span)
+                {
+                    if (change.Deleted)
                     {
-                        foreach (var change in entityState.ComponentChanges)
-                        {
-                            if (change.Deleted)
-                            {
-                                compData.Remove(change.NetID);
-                            }
-                            else if (change.State is not null)
-                            {
-                                compData[change.NetID] = change.State;
-                            }
-                        }
+                        compData.Remove(change.NetID);
+                    }
+                    else if (change.State is not null)
+                    {
+                        compData[change.NetID] = change.State;
                     }
                 }
             }
@@ -352,7 +343,7 @@ namespace Robust.Client.GameStates
         /// </summary>
         private static GameState ExtrapolateState(GameTick fromSequence, GameTick toSequence, uint lastInput)
         {
-            var state = new GameState(fromSequence, toSequence, lastInput, null, null, null, null);
+            var state = new GameState(fromSequence, toSequence, lastInput, default, default, default, null);
             state.Extrapolated = true;
             return state;
         }

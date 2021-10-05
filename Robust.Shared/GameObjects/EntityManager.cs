@@ -178,11 +178,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-
-            InitializeAndStartEntity((Entity) entity);
-
-            if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this))) entity.RunMapInit();
-
+            InitializeAndStartEntity((Entity) entity, coordinates.GetMapId(this));
             return entity;
         }
 
@@ -190,7 +186,7 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity);
+            InitializeAndStartEntity((Entity) entity, coordinates.MapId);
             return entity;
         }
 
@@ -402,12 +398,16 @@ namespace Robust.Shared.GameObjects
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private protected void InitializeAndStartEntity(Entity entity)
+        private void InitializeAndStartEntity(Entity entity, MapId mapId)
         {
             try
             {
                 InitializeEntity(entity);
                 StartEntity(entity);
+
+                // If the map we're initializing the entity on is initialized, run map init on it.
+                if (_pauseManager.IsMapInitialized(mapId))
+                    entity.RunMapInit();
             }
             catch (Exception e)
             {

@@ -266,10 +266,10 @@ namespace Robust.Client.GameStates
 
             DebugTools.Assert(_timing.InSimulation);
 
-            if (!Predicting) return;
-
-            using(var _ = _timing.StartPastPredictionArea())
+            if (Predicting)
             {
+                using var _ = _timing.StartPastPredictionArea();
+
                 if (_pendingInputs.Count > 0)
                 {
                     Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");

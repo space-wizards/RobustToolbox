@@ -131,6 +131,18 @@ namespace Robust.Shared.Maths
         }
 
         /// <summary>
+        ///     Offset 2D integer vector by a given direction.
+        ///     Convenience for adding <see cref="ToIntVec"/> to <see cref="Vector2i"/>
+        /// </summary>
+        /// <param name="vec">2D integer vector</param>
+        /// <param name="dir">Direction by which we offset</param>
+        /// <returns>a newly vector offset by the <param name="dir">dir</param> or exception if the direction is invalid</returns>
+        public static Vector2i Offset(this Vector2i vec, Direction dir)
+        {
+            return vec + dir.ToIntVec();
+        }
+
+        /// <summary>
         /// Converts a direction vector to an angle, where angle is -PI to +PI.
         /// </summary>
         /// <param name="vec">Vector to get the angle from.</param>

@@ -46,6 +46,17 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(val, Is.Approximately(control));
             Assert.That(intVec, Is.EqualTo(controlInt));
         }
+        
+        [Test]
+        [Parallelizable]
+        public void TestDirectionOffset()
+        {
+            var v = new Vector2i(1, 1);
+            var expected = new Vector2i(2, 2);
+            var dir = Direction.NorthEast; 
+            
+            Assert.That(v.Offset(dir), Is.EqualTo(expected));
+        }
 
         [Test]
         [TestCaseSource(nameof(Sources))]

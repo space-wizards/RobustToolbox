@@ -9,5 +9,7 @@ namespace Robust.Client.CEF
         void Update();
 
         void Shutdown();
+        
+        IBrowserWindow CreateBrowserWindow(BrowserWindowCreateParameters createParams);
     }
 }

@@ -15,7 +15,10 @@ namespace Robust.Server.Console.Commands
     class AddMapCommand : IConsoleCommand
     {
         public string Command => "addmap";
-        public string Description => "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
+
+        public string Description =>
+            "Adds a new empty map to the round. If the mapID already exists, this command does nothing.";
+
         public string Help => "addmap <mapID> [initialize]";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
@@ -35,11 +38,12 @@ namespace Robust.Server.Console.Commands
                 {
                     pauseMgr.AddUninitializedMap(mapId);
                 }
+
                 shell.WriteLine($"Map with ID {mapId} created.");
                 return;
             }
 
-            shell.WriteLine($"Map with ID {mapId} already exists!");
+            shell.WriteError($"Map with ID {mapId} already exists!");
         }
     }
 
@@ -48,11 +52,12 @@ namespace Robust.Server.Console.Commands
         public string Command => "rmmap";
         public string Description => "Removes a map from the world. You cannot remove nullspace.";
         public string Help => "rmmap <mapId>";
+
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
-                shell.WriteLine("Wrong number of args.");
+                shell.WriteError("Wrong number of args.");
                 return;
             }
 
@@ -61,7 +66,7 @@ namespace Robust.Server.Console.Commands
 
             if (!mapManager.MapExists(mapId))
             {
-                shell.WriteLine($"Map {mapId.Value} does not exist.");
+                shell.WriteError($"Map {mapId.Value} does not exist.");
                 return;
             }
 
@@ -80,13 +85,13 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length < 2)
             {
-                shell.WriteLine("Not enough arguments.");
+                shell.WriteError("Not enough arguments.");
                 return;
             }
 
             if (!int.TryParse(args[0], out var intGridId))
             {
-                shell.WriteLine("Not a valid grid ID.");
+                shell.WriteError("Not a valid grid ID.");
                 return;
             }
 
@@ -97,7 +102,7 @@ namespace Robust.Server.Console.Commands
             // no saving default grid
             if (!mapManager.TryGetGrid(gridId, out var grid))
             {
-                shell.WriteLine("That grid does not exist.");
+                shell.WriteError("That grid does not exist.");
                 return;
             }
 
@@ -129,14 +134,14 @@ namespace Robust.Server.Console.Commands
             // no loading into null space
             if (mapId == MapId.Nullspace)
             {
-                shell.WriteLine("Cannot load into nullspace.");
+                shell.WriteError("Cannot load into nullspace.");
                 return;
             }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
             if (!mapManager.MapExists(mapId))
             {
-                shell.WriteLine("Target map does not exist.");
+                shell.WriteError("Target map does not exist.");
                 return;
             }
 
@@ -174,7 +179,7 @@ namespace Robust.Server.Console.Commands
             var mapManager = IoCManager.Resolve<IMapManager>();
             if (!mapManager.MapExists(mapId))
             {
-                shell.WriteLine("Target map does not exist.");
+                shell.WriteError("Target map does not exist.");
                 return;
             }
 
@@ -202,14 +207,14 @@ namespace Robust.Server.Console.Commands
             // no loading null space
             if (mapId == MapId.Nullspace)
             {
-                shell.WriteLine("You cannot load into map 0.");
+                shell.WriteError("You cannot load into map 0.");
                 return;
             }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
             if (mapManager.MapExists(mapId))
             {
-                shell.WriteLine($"Map {mapId} already exists.");
+                shell.WriteError($"Map {mapId} already exists.");
                 return;
             }
 
@@ -233,7 +238,8 @@ namespace Robust.Server.Console.Commands
             var pos = player.AttachedEntity.Transform.Coordinates;
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            shell.WriteLine($"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
+            shell.WriteLine(
+                $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
         }
     }
 
@@ -247,7 +253,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length < 3 || args.Length > 4)
             {
-                shell.WriteLine("Wrong number of args.");
+                shell.WriteError("Wrong number of args.");
             }
 
             var gridId = new GridId(int.Parse(args[0]));
@@ -273,11 +279,12 @@ namespace Robust.Server.Console.Commands
         public string Command => "rmgrid";
         public string Description => "Removes a grid from a map. You cannot remove the default grid.";
         public string Help => "rmgrid <gridId>";
+
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
             {
-                shell.WriteLine("Wrong number of args.");
+                shell.WriteError("Wrong number of args.");
                 return;
             }
 
@@ -286,7 +293,7 @@ namespace Robust.Server.Console.Commands
 
             if (!mapManager.GridExists(gridId))
             {
-                shell.WriteLine($"Grid {gridId.Value} does not exist.");
+                shell.WriteError($"Grid {gridId.Value} does not exist.");
                 return;
             }
 
@@ -305,7 +312,7 @@ namespace Robust.Server.Console.Commands
         {
             if (args.Length != 1)
             {
-                shell.WriteLine("Wrong number of args.");
+                shell.WriteError("Wrong number of args.");
                 return;
             }
 
@@ -317,13 +324,13 @@ namespace Robust.Server.Console.Commands
 
             if (!mapManager.MapExists(mapId))
             {
-                shell.WriteLine("Map does not exist!");
+                shell.WriteError("Map does not exist!");
                 return;
             }
 
             if (pauseManager.IsMapInitialized(mapId))
             {
-                shell.WriteLine("Map is already initialized!");
+                shell.WriteError("Map is already initialized!");
                 return;
             }
 

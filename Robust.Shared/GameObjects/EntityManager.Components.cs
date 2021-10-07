@@ -343,29 +343,24 @@ namespace Robust.Shared.GameObjects
 
             var entityUid = component.Owner.Uid;
 
-            // If another component of the same type was added, then we can't actually remove this properly.
-            // To test this case, have a component that gets removed, and then is EnsureComponent'd.
-            // If this is broken, the removal of the old component will get rid of the new component.
-            if (_entCompIndex.Remove(entityUid, component))
+            foreach (var refType in reg.References)
             {
-                foreach (var refType in reg.References)
-                {
-                    _entTraitDict[refType].Remove(entityUid);
-                }
-
-                // ReSharper disable once InvertIf
-                if (reg.NetID != null)
-                {
-                    var netSet = _netComponents[entityUid];
-                    if (netSet.Count == 1)
-                        _netComponents.Remove(entityUid);
-                    else
-                        netSet.Remove(reg.NetID.Value);
-
-                    component.Owner.Dirty();
-                }
+                _entTraitDict[refType].Remove(entityUid);
             }
 
+            // ReSharper disable once InvertIf
+            if (reg.NetID != null)
+            {
+                var netSet = _netComponents[entityUid];
+                if (netSet.Count == 1)
+                    _netComponents.Remove(entityUid);
+                else
+                    netSet.Remove(reg.NetID.Value);
+
+                component.Owner.Dirty();
+            }
+
+            _entCompIndex.Remove(entityUid, component);
             ComponentDeleted?.Invoke(this, new DeletedComponentEventArgs(component, entityUid));
         }
 

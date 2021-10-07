@@ -14,7 +14,7 @@ namespace Robust.Client.CEF
     // TODO CEF: think if making this inherit CefApp is a good idea...
     // TODO CEF: A way to handle external window browsers...
     [UsedImplicitly]
-    public partial class CefManager
+    public partial class CefManager : ICefManager
     {
         private CefApp _app = default!;
         private bool _initialized = false;

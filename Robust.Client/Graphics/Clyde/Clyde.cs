@@ -206,6 +206,11 @@ namespace Robust.Client.Graphics.Clyde
                 GL.PrimitiveRestartIndex(PrimitiveRestartIndex);
                 CheckGlError();
             }
+            if (_hasGLPrimitiveRestartFixedIndex)
+            {
+                GL.Enable(EnableCap.PrimitiveRestartFixedIndex);
+                CheckGlError();
+            }
             if (!HasGLAnyVertexArrayObjects)
             {
                 _sawmillOgl.Warning("NO VERTEX ARRAY OBJECTS! Things will probably go terribly, terribly wrong (no fallback path yet)");

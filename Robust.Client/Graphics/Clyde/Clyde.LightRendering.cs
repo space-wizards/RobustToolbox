@@ -749,9 +749,8 @@ namespace Robust.Client.Graphics.Clyde
             SetTexture(TextureUnit.Texture0, FovTexture);
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            fovShader.SetUniformMaybe("center", eye.Position.Position);
 
-            DrawBlit(viewport, fovShader);
+            FovSetTransformAndBlit(viewport, eye.Position.Position, fovShader);
 
             GL.StencilMask(0x00);
             GL.Disable(EnableCap.StencilTest);
@@ -786,7 +785,6 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             fovShader.SetUniformTextureMaybe(UniIMainTexture, TextureUnit.Texture0);
-            fovShader.SetUniformMaybe("center", eye.Position.Position);
 
             GL.StencilMask(0xFF);
             CheckGlError();
@@ -795,7 +793,7 @@ namespace Robust.Client.Graphics.Clyde
             GL.StencilOp(TKStencilOp.Keep, TKStencilOp.Keep, TKStencilOp.Replace);
             CheckGlError();
 
-            DrawBlit(viewport, fovShader);
+            FovSetTransformAndBlit(viewport, eye.Position.Position, fovShader);
 
             if (_hasGLSamplerObjects)
             {
@@ -811,12 +809,33 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void DrawBlit(Viewport vp, GLShaderProgram shader)
+        private void FovSetTransformAndBlit(Viewport vp, Vector2 fovCentre, GLShaderProgram fovShader)
         {
-            var a = ScreenToMap((-1, -1), vp);
-            var b = ScreenToMap(vp.Size + Vector2i.One, vp);
+            // It might be an idea if there was a proper way to get the LocalToWorld matrix.
+            // But actually constructing the matrix tends to be more trouble than it's worth in most cases.
+            // (Maybe if there was some way to observe Eye matrix changes that wouldn't be the case, as viewport could dynamically update.)
+            // This is expected to run a grand total of twice per frame for 6 LocalToWorld calls.
+            // Something else to note is that modifications must be made anyway.
 
-            _drawQuad(a, b, Matrix3.Identity, shader);
+            // First modification is that uX and uY vectors must have the uZero offset removed.
+            var uZero = vp.LocalToWorld(Vector2.Zero).Position;
+            var uX = vp.LocalToWorld(Vector2.UnitX).Position - uZero;
+            var uY = vp.LocalToWorld(Vector2.UnitY).Position - uZero;
+
+            // Second modification is that output must be fov-centred (difference-space)
+            uZero -= fovCentre;
+
+            // Third modification is shenanigans because Viewport works in pixel-space, where 0,0 is the top-left of the screen, etc.
+            // Matrices in this last part are numbered by application order from a clip-space point.
+
+            var m1translation = Matrix3.CreateTranslation(1.0f, -1.0f);
+            var m2scale = Matrix3.CreateScale(vp.Size.X / 2.0f, vp.Size.Y / -2.0f);
+            var m3localToDiff = new Matrix3(ref uX, ref uY, ref uZero);
+
+            var clipToDiff = m1translation * m2scale * m3localToDiff;
+
+            fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
+            _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);
         }
 
         private void UpdateOcclusionGeometry(MapId map, Box2 expandedBounds, Matrix3 eyeTransform)

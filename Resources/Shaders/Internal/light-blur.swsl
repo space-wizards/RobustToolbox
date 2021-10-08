@@ -3,6 +3,7 @@ preset raw;
 uniform highp vec2 direction;
 uniform highp vec2 size;
 uniform highp float radius;
+uniform highp float final;
 
 varying highp vec2 pos;
 varying highp vec4 blurPos1;
@@ -37,5 +38,5 @@ void fragment()
     sum += zTexture(blurPos2.xy) * 0.0625;
     sum += zTexture(blurPos2.zw) * 0.0625;
 
-    COLOR = sum;
+    COLOR = sum * final;
 }

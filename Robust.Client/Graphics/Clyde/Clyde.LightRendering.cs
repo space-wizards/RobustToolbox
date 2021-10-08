@@ -199,7 +199,6 @@ namespace Robust.Client.Graphics.Clyde
             _lightHardShaderHandle = LoadShaderHandle("/Shaders/Internal/light-hard.swsl");
             _fovShaderHandle = LoadShaderHandle("/Shaders/Internal/fov.swsl");
             _fovLightShaderHandle = LoadShaderHandle("/Shaders/Internal/fov-lighting.swsl");
-            _wallBleedBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-bleed-blur.swsl");
             _lightBlurShaderHandle = LoadShaderHandle("/Shaders/Internal/light-blur.swsl");
             _mergeWallLayerShaderHandle = LoadShaderHandle("/Shaders/Internal/wall-merge.swsl");
         }
@@ -494,7 +493,8 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             Blur(viewport, eye, viewport.LightRenderTarget,
-                viewport.WallBleedIntermediateRenderTarget1, viewport.WallBleedIntermediateRenderTarget2, 7e-3f);
+                viewport.WallBleedIntermediateRenderTarget1, viewport.WallBleedIntermediateRenderTarget2,
+                7e-3f, 1.1f);
 
             MergeWallLayer(viewport);
 
@@ -579,7 +579,8 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private void Blur(Viewport viewport, IEye eye,
-            RenderTexture main, RenderTexture first, RenderTexture secondary, float blurFactor)
+            RenderTexture main, RenderTexture first, RenderTexture secondary,
+            float blurFactor, float finalFactor=1.0f)
         {
             using var _ = DebugGroup(nameof(Blur));
 
@@ -614,6 +615,7 @@ namespace Robust.Client.Graphics.Clyde
                 var scale = (i + 1) * factor;
                 // Set factor.
                 shader.SetUniformMaybe("radius", scale);
+                shader.SetUniformMaybe("final", finalFactor);
 
                 BindRenderTargetFull(first);
 

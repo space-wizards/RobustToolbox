@@ -61,7 +61,10 @@ namespace Robust.Shared.GameObjects
             if (!EntityManager.TryGetComponent<PhysicsComponent>(uid, out var body)) return;
 
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
-            body.CanCollide = !component.Enabled || body.Awake || body.Joints.Any() || EntityManager.GetComponent<TransformComponent>(uid).GridID == GridId.Invalid;
+            body.CanCollide = !component.Enabled ||
+                              body.Awake ||
+                              (EntityManager.TryGetComponent(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
+                              EntityManager.GetComponent<TransformComponent>(uid).GridID == GridId.Invalid;
         }
     }
 

@@ -86,17 +86,18 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
             return Play(playerFilter, filename, entity.Uid, audioParams);
         }
 
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
 
-            var transform = EntityManager.GetComponent<ITransformComponent>(uid);
+            if(!EntityManager.TryGetComponent<ITransformComponent>(uid, out var transform))
+                return null;
 
             var id = CacheIdentifier();
 

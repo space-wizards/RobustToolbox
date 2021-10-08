@@ -11,7 +11,7 @@ namespace Robust.Client.Map
 {
     internal class ClientMapManager : MapManager, IClientMapManager
     {
-        public void ApplyGameStatePre(GameStateMapData? data, EntityState[]? entityStates)
+        public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
         {
             // There was no map data this tick, so nothing to do.
             if(data == null)
@@ -20,7 +20,7 @@ namespace Robust.Client.Map
             // First we need to figure out all the NEW MAPS.
             if(data.CreatedMaps != null)
             {
-                DebugTools.Assert(entityStates is not null, "Received new maps, but no entity state.");
+                DebugTools.Assert(!entityStates.IsEmpty, "Received new maps, but no entity state.");
 
                 foreach (var mapId in data.CreatedMaps)
                 {
@@ -33,10 +33,7 @@ namespace Robust.Client.Map
                     //get shared euid of map comp entity
                     foreach (var entityState in entityStates!)
                     {
-                        if(entityState.ComponentChanges is null)
-                            continue;
-
-                        foreach (var compChange in entityState.ComponentChanges)
+                        foreach (var compChange in entityState.ComponentChanges.Span)
                         {
                             if (compChange.State is not MapComponentState mapCompState || mapCompState.MapId != mapId)
                                 continue;
@@ -68,10 +65,7 @@ namespace Robust.Client.Map
                     //get shared euid of map comp entity
                     foreach (var entityState in entityStates!)
                     {
-                        if (entityState.ComponentChanges is null)
-                            continue;
-
-                        foreach (var compState in entityState.ComponentChanges)
+                        foreach (var compState in entityState.ComponentChanges.Span)
                         {
                             if (compState.State is not MapGridComponentState gridCompState || gridCompState.GridIndex != gridId)
                                 continue;

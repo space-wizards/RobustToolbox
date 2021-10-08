@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
@@ -24,18 +23,10 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
-        private EntityLifeStage _lifeStage;
-
-        /// <inheritdoc cref="IEntity.LifeStage" />
-        [ViewVariables]
-        internal EntityLifeStage LifeStage
-        {
-            get => _lifeStage;
-            set => _lifeStage = value;
-        }
-
         /// <inheritdoc />
         EntityLifeStage IEntity.LifeStage { get => LifeStage; set => LifeStage = value; }
+
+        public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -76,20 +67,7 @@ namespace Robust.Shared.GameObjects
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
-        public bool Paused
-        {
-            get => _paused;
-            set
-            {
-                if (_paused == value || value && HasComponent<IgnorePauseComponent>())
-                    return;
-
-                _paused = value;
-                EntityManager.EventBus.RaiseLocalEvent(Uid, new EntityPausedEvent(Uid, value));
-            }
-        }
-
-        private bool _paused;
+        public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
         private ITransformComponent? _transform;
 
@@ -97,11 +75,15 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
 
-        private IMetaDataComponent? _metaData;
+        private MetaDataComponent? _metaData;
 
         /// <inheritdoc />
         [ViewVariables]
-        public IMetaDataComponent MetaData => _metaData ??= GetComponent<IMetaDataComponent>();
+        public MetaDataComponent MetaData
+        {
+            get => _metaData ??= GetComponent<MetaDataComponent>();
+            internal set => _metaData = value;
+        }
 
         #endregion Members
 
@@ -124,6 +106,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void InitializeComponents()
         {
+            // TODO: Move this to EntityManager.
+
             DebugTools.Assert(LifeStage == EntityLifeStage.PreInit);
             LifeStage = EntityLifeStage.Initializing;
 
@@ -166,6 +150,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void StartAllComponents()
         {
+            // TODO: Move this to EntityManager.
             // Startup() can modify _components
             // This code can only handle additions to the list. Is there a better way? Probably not.
             var comps = EntityManager.GetComponents(Uid)
@@ -323,6 +308,8 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void Dirty()
         {
+            // TODO: Move this to EntityManager.
+
             LastModifiedTick = EntityManager.CurrentTick;
 
             if (LifeStage >= EntityLifeStage.Initialized && Transform.Anchored)

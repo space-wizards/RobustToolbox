@@ -164,7 +164,8 @@ namespace Robust.Shared.Physics
             {
                 var fixture = proxy.Fixture;
 
-                if (!_broadphases.Contains(fixture.Body.Owner.Uid) || prediction && !fixture.Body.Predict) continue;
+                //  || prediction && !fixture.Body.Predict
+                if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 var offset = _offsets[broadphase];
@@ -234,7 +235,7 @@ namespace Robust.Shared.Physics
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
-                if (prediction && !proxy.Fixture.Body.Predict) continue;
+                // if (prediction && !proxy.Fixture.Body.Predict) continue;
 
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, offset) in _offsets)
@@ -257,9 +258,7 @@ namespace Robust.Shared.Physics
                     }
                     else
                     {
-                        aabb = proxy.AABB
-                            .Translated(_offsets[proxyBroad!])
-                            .Translated(-offset);
+                        aabb = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
                     }
 
                     foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
@@ -943,7 +942,7 @@ namespace Robust.Shared.Physics
             foreach (var broadphase in GetBroadphases(mapId, collider))
             {
                 // TODO: Is rotation a problem here?
-                var gridCollider = collider.Translated(-broadphase.Owner.Transform.WorldPosition);
+                var gridCollider = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(collider);
 
                 broadphase.Tree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
                 {
@@ -1006,7 +1005,7 @@ namespace Robust.Shared.Physics
 
             foreach (var broadphase in GetBroadphases(mapId, worldAABB))
             {
-                var gridAABB = worldAABB.Translated(-broadphase.Owner.Transform.WorldPosition);
+                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
                 {

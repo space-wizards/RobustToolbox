@@ -23,9 +23,10 @@
 using System;
 using System.Diagnostics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
@@ -57,6 +58,20 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     }
 
     [Serializable, NetSerializable]
+    public abstract class JointState
+    {
+        public string ID { get; internal set; } = default!;
+        public bool Enabled { get; internal set; }
+        public bool CollideConnected { get; internal set; }
+        public EntityUid UidA { get; internal set; }
+        public EntityUid UidB { get; internal set; }
+        public Vector2 LocalAnchorA { get; internal set; }
+        public Vector2 LocalAnchorB { get; internal set; }
+        public float Breakpoint { get; internal set; }
+
+        public abstract Joint GetJoint();
+    }
+
     public abstract class Joint : IEquatable<Joint>
     {
         /// <summary>
@@ -82,16 +97,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
-        [DataField("enabled")]
         private bool _enabled = true;
-
-        [NonSerialized] internal JointEdge EdgeA = new();
-        [NonSerialized] internal JointEdge EdgeB = new();
 
         /// <summary>
         ///     Has this joint already been added to an island.
         /// </summary>
-        [NonSerialized] internal bool IslandFlag;
+        internal bool IslandFlag;
 
         // For some reason in FPE this is settable?
         /// <summary>
@@ -103,28 +114,46 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <summary>
         ///     Get the first body attached to this joint.
         /// </summary>
-        [field:NonSerialized] public PhysicsComponent BodyA { get; internal set; }
+        public PhysicsComponent BodyA =>
+            IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyAUid);
 
-        public EntityUid BodyAUid { get; internal set; }
+        public EntityUid BodyAUid { get; init; }
 
         /// <summary>
         ///     Get the second body attached to this joint.
         /// </summary>
-        [field:NonSerialized] public PhysicsComponent BodyB { get; internal set; }
+        public PhysicsComponent BodyB =>
+            IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyBUid);
 
-        public EntityUid BodyBUid { get; internal set; }
+        public EntityUid BodyBUid { get; init; }
 
-        /// <summary>
-        /// Get the anchor point on bodyA in world coordinates.
-        /// On some joints, this value indicate the anchor point within the world.
-        /// </summary>
-        public abstract Vector2 WorldAnchorA { get; set; }
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LocalAnchorA
+        {
+            get => _localAnchorA;
+            set
+            {
+                if (_localAnchorA.EqualsApprox(value)) return;
+                _localAnchorA = value;
+                Dirty();
+            }
+        }
 
-        /// <summary>
-        ///     Get the anchor point on bodyB in world coordinates.
-        ///     On some joints, this value indicate the anchor point within the world.
-        /// </summary>
-        public abstract Vector2 WorldAnchorB { get; set; }
+        private Vector2 _localAnchorA;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        public Vector2 LocalAnchorB
+        {
+            get => _localAnchorB;
+            set
+            {
+                if (_localAnchorB.EqualsApprox(value)) return;
+                _localAnchorB = value;
+                Dirty();
+            }
+        }
+
+        private Vector2 _localAnchorB;
 
         /// <summary>
         ///     Set this flag to true if the attached bodies should collide.
@@ -139,13 +168,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 _collideConnected = value;
 
                 if (!_collideConnected)
-                    EntitySystem.Get<SharedPhysicsSystem>().FilterContactsForJoint(this);
+                    EntitySystem.Get<SharedJointSystem>().FilterContactsForJoint(this);
 
                 Dirty();
             }
         }
 
-        [DataField("collideConnected")]
         private bool _collideConnected = true;
 
         /// <summary>
@@ -178,15 +206,51 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             BodyB.Dirty();
         }
 
-        public virtual void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport) {}
-
-        protected Joint(PhysicsComponent bodyA, PhysicsComponent bodyB)
+        protected Joint(EntityUid bodyAUid, EntityUid bodyBUid)
         {
-            //Can't connect a joint to the same body twice.
-            Debug.Assert(bodyA != bodyB);
+            var uidA = bodyAUid;
+            var uidB = bodyBUid;
 
-            BodyA = bodyA;
-            BodyB = bodyB;
+            if (uidA.CompareTo(uidB) >= 0)
+            {
+                BodyAUid = uidB;
+                BodyBUid = uidA;
+            }
+            else
+            {
+                BodyAUid = uidA;
+                BodyBUid = uidB;
+            }
+
+            //Can't connect a joint to the same body twice.
+            Debug.Assert(BodyAUid != BodyBUid);
+        }
+
+        /// <summary>
+        /// Applies our properties to the provided state
+        /// </summary>
+        /// <param name="state"></param>
+        protected void GetState(JointState state)
+        {
+            state.ID = ID;
+            state.CollideConnected = _collideConnected;
+            state.Enabled = _enabled;
+            state.UidA = BodyAUid;
+            state.UidB = BodyBUid;
+            state.Breakpoint = _breakpoint;
+        }
+
+        public abstract JointState GetState();
+
+        internal virtual void ApplyState(JointState state)
+        {
+            ID = state.ID;
+            CollideConnected = state.CollideConnected;
+            Enabled = state.Enabled;
+            Breakpoint = state.Breakpoint;
+            _breakpointSquared = Breakpoint * Breakpoint;
+            _localAnchorA = state.LocalAnchorA;
+            _localAnchorB = state.LocalAnchorB;
         }
 
         /// <summary>
@@ -201,29 +265,21 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="invDt">The inverse delta time.</param>
         public abstract float GetReactionTorque(float invDt);
 
-        protected void WakeBodies()
-        {
-            if (BodyA != null)
-                BodyA.Awake = true;
-
-            if (BodyB != null)
-                BodyB.Awake = true;
-        }
-
         internal abstract void InitVelocityConstraints(SolverData data);
 
-        internal void Validate(float invDt)
+        internal float Validate(float invDt)
         {
             if (!Enabled)
-                return;
+                return 0.0f;
 
-            float jointErrorSquared = GetReactionForce(invDt).LengthSquared;
+            var jointErrorSquared = GetReactionForce(invDt).LengthSquared;
 
             if (MathF.Abs(jointErrorSquared) <= _breakpointSquared)
-                return;
+                return 0.0f;
 
+            Logger.DebugS("physics", $"Broke joint {ID}; force was {MathF.Sqrt(jointErrorSquared)}");
             Enabled = false;
-            BodyA.Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new JointBreakMessage(this, MathF.Sqrt(jointErrorSquared)));
+            return jointErrorSquared;
         }
 
         internal abstract void SolveVelocityConstraints(SolverData data);
@@ -243,7 +299,18 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                    BodyAUid.Equals(other.BodyAUid) &&
                    BodyBUid.Equals(other.BodyBUid) &&
                    CollideConnected == other.CollideConnected &&
-                   MathHelper.CloseToPercent(_breakpoint, other._breakpoint);
+                   MathHelper.CloseTo(_breakpoint, other._breakpoint) &&
+                   _localAnchorA.EqualsApprox(other._localAnchorA) &&
+                   _localAnchorB.EqualsApprox(other._localAnchorB);
+        }
+
+        // TODO: Need to check localanchor or something as well.
+        public override int GetHashCode()
+        {
+            var hashcode = BodyAUid.GetHashCode();
+            hashcode = hashcode * 397 ^ BodyBUid.GetHashCode();
+            hashcode = hashcode * 397 ^ JointType.GetHashCode();
+            return hashcode;
         }
 
         public sealed class JointBreakMessage : EntityEventArgs

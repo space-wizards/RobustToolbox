@@ -817,22 +817,19 @@ namespace Robust.Client.Graphics.Clyde
             // This is expected to run a grand total of twice per frame for 6 LocalToWorld calls.
             // Something else to note is that modifications must be made anyway.
 
-            // First modification is that uX and uY vectors must have the uZero offset removed.
-            var uZero = vp.LocalToWorld(Vector2.Zero).Position;
-            var uX = vp.LocalToWorld(Vector2.UnitX).Position - uZero;
-            var uY = vp.LocalToWorld(Vector2.UnitY).Position - uZero;
+            // Something ELSE to note is that it's absolutely critical that this be calculated in the "right way" due to precision issues!
+
+            // Bit of an interesting little trick here - need to set things up correctly.
+            // 0, 0 in clip-space is the centre of the screen, and 1, 1 is the top-right corner.
+            var halfSize = vp.Size / 2.0f;
+            var uZero = vp.LocalToWorld(halfSize).Position;
+            var uX = vp.LocalToWorld(halfSize + (Vector2.UnitX * halfSize.X)).Position - uZero;
+            var uY = vp.LocalToWorld(halfSize - (Vector2.UnitY * halfSize.Y)).Position - uZero;
 
             // Second modification is that output must be fov-centred (difference-space)
             uZero -= fovCentre;
 
-            // Third modification is shenanigans because Viewport works in pixel-space, where 0,0 is the top-left of the screen, etc.
-            // Matrices in this last part are numbered by application order from a clip-space point.
-
-            var m1translation = Matrix3.CreateTranslation(1.0f, -1.0f);
-            var m2scale = Matrix3.CreateScale(vp.Size.X / 2.0f, vp.Size.Y / -2.0f);
-            var m3localToDiff = new Matrix3(ref uX, ref uY, ref uZero);
-
-            var clipToDiff = m1translation * m2scale * m3localToDiff;
+            var clipToDiff = new Matrix3(ref uX, ref uY, ref uZero);
 
             fovShader.SetUniformMaybe("clipToDiff", clipToDiff);
             _drawQuad(Vector2.Zero, Vector2.One, Matrix3.Identity, fovShader);

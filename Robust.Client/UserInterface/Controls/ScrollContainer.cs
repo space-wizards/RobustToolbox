@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.Maths;
 
@@ -93,7 +93,16 @@ namespace Robust.Client.UserInterface.Controls
 
             // Unlike WPF/Avalonia we default to reporting ZERO here instead of available size. This is to fix a bunch
             // of jank with e.g. BoxContainer.
-            return ReturnMeasure ? size : Vector2.Zero;
+            if (!ReturnMeasure)
+                return Vector2.Zero;
+
+            if (_vScrollEnabled)
+                size.X += _vScrollBar.DesiredSize.X;
+
+            if (_hScrollEnabled)
+                size.Y += _hScrollBar.DesiredSize.Y;
+
+            return size;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)

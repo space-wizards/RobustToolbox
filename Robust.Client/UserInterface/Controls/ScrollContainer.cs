@@ -20,6 +20,8 @@ namespace Robust.Client.UserInterface.Controls
         public int ScrollSpeedX { get; set; } = 50;
         public int ScrollSpeedY { get; set; } = 50;
 
+        public bool ReturnMeasure { get; set; } = false;
+
         public ScrollContainer()
         {
             MouseFilter = MouseFilterMode.Pass;
@@ -89,11 +91,9 @@ namespace Robust.Client.UserInterface.Controls
                 size = Vector2.ComponentMax(size, child.DesiredSize);
             }
 
-            // Unlike WPF/Avalonia we report ZERO here instead of available size.
-            // This is to fix a bunch of jank with e.g. BoxContainer.
-            // Tbh this might be a mistake.
-            // DockPanel when.
-            return Vector2.Zero;
+            // Unlike WPF/Avalonia we default to reporting ZERO here instead of available size. This is to fix a bunch
+            // of jank with e.g. BoxContainer.
+            return ReturnMeasure ? size : Vector2.Zero;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)

@@ -242,7 +242,7 @@ namespace Robust.Shared.Containers
             // Is the user contained in the other entity?
             if (userContainer?.Owner == other) return true;
 
-            // Does the user contains the other and can they see through themselves?
+            // Does the user contain the other and can they see through themselves?
             if (userSeeInsideSelf && otherContainer?.Owner == user) return true;
 
             // Next we check for see-through containers. This uses some recursion, but it should be fine unless people

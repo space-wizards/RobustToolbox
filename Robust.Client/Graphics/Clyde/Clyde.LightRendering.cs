@@ -361,6 +361,8 @@ namespace Robust.Client.Graphics.Clyde
                     {
                         var (light, lightPos, _) = lights[i];
 
+                        if (!light.CastShadows) continue;
+
                         DrawOcclusionDepth(lightPos, ShadowMapSize, light.Radius, i);
                     }
                 }
@@ -459,7 +461,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 lightShader.SetUniformMaybe("lightCenter", lightPos);
-                lightShader.SetUniformMaybe("lightIndex", (i + 0.5f) / ShadowTexture.Height);
+                lightShader.SetUniformMaybe("lightIndex", component.CastShadows ? (i + 0.5f) / ShadowTexture.Height : -1);
 
                 var offset = new Vector2(component.Radius, component.Radius);
 

@@ -293,12 +293,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return;
         }
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
-        {
-            handle.SetTransform(modelMatrix);
-            handle.DrawPolygonShape(Vertices, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-        }
-
         public static explicit operator PolygonShape(PhysShapeAabb aabb)
         {
             // TODO: Need a test for this probably, if there is no AABB manifold generator done at least.

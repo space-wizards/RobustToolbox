@@ -28,14 +28,49 @@ using System;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
+    [Serializable, NetSerializable]
+    internal sealed class DistanceJointState : JointState
+    {
+        public float Length { get; internal set; }
+        public float MinLength { get; internal set; }
+        public float MaxLength { get; internal set; }
+        public float Stiffness { get; internal set; }
+        public float Damping { get; internal set; }
+
+        public override Joint GetJoint()
+        {
+            var joint = new DistanceJoint(UidA, UidB, LocalAnchorA, LocalAnchorB)
+            {
+                ID = ID,
+                Breakpoint = Breakpoint,
+                CollideConnected = CollideConnected,
+                Enabled = Enabled,
+                Damping = Damping,
+                Length = Length,
+                MinLength = MinLength,
+                MaxLength = MaxLength,
+                Stiffness = Stiffness,
+                LocalAnchorA = LocalAnchorA,
+                LocalAnchorB = LocalAnchorB
+            };
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            joint.LinearSlop = configManager.GetCVar(CVars.LinearSlop);
+            joint.WarmStarting = configManager.GetCVar(CVars.WarmStarting);
+
+            return joint;
+        }
+
+    }
+
     // 1-D rained system
     // m (v2 - v1) = lambda
     // v2 + (beta/h) * x1 + gamma * lambda = 0, gamma has units of inverse mass.
@@ -56,36 +91,36 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// to remain at a fixed distance from each other. You can view
     /// this as a massless, rigid rod.
     /// </summary>
-    [Serializable, NetSerializable]
     public sealed class DistanceJoint : Joint, IEquatable<DistanceJoint>
     {
         // Sloth note:
         // Box2D is replacing rope with distance hence this is also a partial port of Box2D
 
          // Solver shared
-        [NonSerialized] private float _bias;
-        [NonSerialized] private float _gamma;
-        [NonSerialized] private float _impulse;
-        [NonSerialized] private float _lowerImpulse;
-        [NonSerialized] private float _upperImpulse;
+        private float _bias;
+        private float _gamma;
+        private float _impulse;
+        private float _lowerImpulse;
+        private float _upperImpulse;
 
         // Solver temp
-        [NonSerialized] private int _indexA;
-        [NonSerialized] private int _indexB;
-        [NonSerialized] private Vector2 _u;
-        [NonSerialized] private Vector2 _rA;
-        [NonSerialized] private Vector2 _rB;
-        [NonSerialized] private Vector2 _localCenterA;
-        [NonSerialized] private Vector2 _localCenterB;
-        [NonSerialized] private float _invMassA;
-        [NonSerialized] private float _invMassB;
-        [NonSerialized] private float _invIA;
-        [NonSerialized] private float _invIB;
-        [NonSerialized] private float _mass;
-        [NonSerialized] private float _currentLength;
-        [NonSerialized] private float _softMass;
+        private int _indexA;
+        private int _indexB;
+        private Vector2 _u;
+        private Vector2 _rA;
+        private Vector2 _rB;
+        private Vector2 _localCenterA;
+        private Vector2 _localCenterB;
+        private float _invMassA;
+        private float _invMassB;
+        private float _invIA;
+        private float _invIB;
+        private float _mass;
+        private float _currentLength;
+        private float _softMass;
 
-        [NonSerialized] private float _linearSlop;
+        internal float LinearSlop;
+        internal bool WarmStarting;
 
         public override JointType JointType => JointType.Distance;
 
@@ -101,84 +136,12 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="bodyB">The second body</param>
         /// <param name="anchorA">The first body anchor</param>
         /// <param name="anchorB">The second body anchor</param>
-        public DistanceJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchorA, Vector2 anchorB)
+        public DistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB)
             : base(bodyA, bodyB)
         {
-            LocalAnchorA = anchorA;
-            LocalAnchorB = anchorB;
-            // TODO: Just pass this into the ctor.
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            Length = MathF.Max(configManager.GetCVar(CVars.LinearSlop), (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
-            WarmStarting = configManager.GetCVar(CVars.WarmStarting);
-            _linearSlop = configManager.GetCVar(CVars.LinearSlop);
+            Length = MathF.Max(LinearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             _minLength = _length;
             _maxLength = _length;
-        }
-
-        /// <summary>
-        ///     Does the DistanceJoint warmstart? Can be overridden from the cvar default.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool WarmStarting
-        {
-            get => _warmStarting;
-            set
-            {
-                if (_warmStarting == value) return;
-
-                _warmStarting = value;
-                Dirty();
-            }
-        }
-
-        private bool _warmStarting;
-
-        /// <summary>
-        /// The local anchor point relative to bodyA's origin.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorA
-        {
-            get => _localAnchorA;
-            set
-            {
-                if (_localAnchorA.EqualsApprox(value)) return;
-
-                _localAnchorA = value;
-                Dirty();
-            }
-        }
-
-        private Vector2 _localAnchorA;
-
-        /// <summary>
-        /// The local anchor point relative to bodyB's origin.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 LocalAnchorB
-        {
-            get => _localAnchorB;
-            set
-            {
-                if (_localAnchorB.EqualsApprox(value)) return;
-
-                _localAnchorB = value;
-                Dirty();
-            }
-        }
-
-        private Vector2 _localAnchorB;
-
-        public override Vector2 WorldAnchorA
-        {
-            get => BodyA.GetWorldPoint(LocalAnchorA);
-            set => DebugTools.Assert(false, "You can't set the world anchor on this joint type.");
-        }
-
-        public override Vector2 WorldAnchorB
-        {
-            get => BodyB.GetWorldPoint(LocalAnchorB);
-            set => DebugTools.Assert(false, "You can't set the world anchor on this joint type.");
         }
 
         /// <summary>
@@ -191,10 +154,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _length;
             set
             {
-                if (MathHelper.CloseToPercent(value, _length)) return;
+                if (MathHelper.CloseTo(value, _length)) return;
 
                 _impulse = 0.0f;
-                _length = MathF.Max(IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop), _length);
+                _length = MathF.Max(value, LinearSlop);
                 Dirty();
             }
         }
@@ -210,7 +173,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _maxLength;
             set
             {
-                if (MathHelper.CloseToPercent(value, _maxLength)) return;
+                if (MathHelper.CloseTo(value, _maxLength)) return;
 
                 _upperImpulse = 0.0f;
                 _maxLength = MathF.Max(value, _minLength);
@@ -229,10 +192,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _minLength;
             set
             {
-                if (MathHelper.CloseToPercent(value, _minLength)) return;
+                if (MathHelper.CloseTo(value, _minLength)) return;
 
                 _lowerImpulse = 0.0f;
-                _minLength = Math.Clamp(_minLength, IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.LinearSlop), MaxLength);
+                _minLength = Math.Clamp(value, LinearSlop, MaxLength);
                 Dirty();
             }
         }
@@ -245,7 +208,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _stiffness;
             set
             {
-                if (MathHelper.CloseToPercent(_stiffness, value)) return;
+                if (MathHelper.CloseTo(_stiffness, value)) return;
 
                 _stiffness = value;
                 Dirty();
@@ -260,7 +223,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             get => _damping;
             set
             {
-                if (MathHelper.CloseToPercent(_damping, value)) return;
+                if (MathHelper.CloseTo(_damping, value)) return;
 
                 _damping = value;
                 Dirty();
@@ -280,44 +243,33 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             return F;
         }
 
-        public void LinearStiffness(float frequency, float dampingRatio)
+        public override JointState GetState()
         {
-            var massA = BodyA.Mass;
-            var massB = BodyB.Mass;
-            float mass;
+            var distanceState = new DistanceJointState
+            {
+                Damping = _damping,
+                Length = _length,
+                MinLength = _minLength,
+                MaxLength = _maxLength,
+                Stiffness = _stiffness,
+                LocalAnchorA = LocalAnchorA,
+                LocalAnchorB = LocalAnchorB
+            };
 
-            if (massA > 0.0f && massB > 0.0f)
-            {
-                mass = massA * massB / (massA + massB);
-            }
-            else if (massA > 0.0f)
-            {
-                mass = massA;
-            }
-            else
-            {
-                mass = massB;
-            }
-
-            var omega = 2.0f * MathF.PI * frequency;
-            Stiffness = mass * omega * omega;
-            Damping = 2.0f * mass * dampingRatio * omega;
+            base.GetState(distanceState);
+            return distanceState;
         }
 
-        public override void DebugDraw(DebugDrawingHandle handle, in Box2 worldViewport)
+        internal override void ApplyState(JointState state)
         {
-            base.DebugDraw(handle, in worldViewport);
+            base.ApplyState(state);
+            if (state is not DistanceJointState distanceState) return;
 
-            var matrixB = BodyB.Owner.Transform.WorldMatrix;
-            var vector = WorldAnchorA - WorldAnchorB;
-            var distance = vector.Length;
-
-            if (distance <= 0.0f) return;
-
-            var line = new Box2Rotated(new Box2(-0.08f, 0, 0.08f, distance), vector.ToWorldAngle().Opposite());
-
-            handle.SetTransform(matrixB);
-            handle.DrawRect(line, Color.Blue.WithAlpha(0.7f));
+            _damping = distanceState.Damping;
+            _length = distanceState.Length;
+            _minLength = distanceState.MinLength;
+            _maxLength = distanceState.MaxLength;
+            _stiffness = distanceState.Stiffness;
         }
 
         /// <summary>
@@ -358,12 +310,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        _rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
 	        _u = cB + _rB - cA - _rA;
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            var linearSlop = configManager.GetCVar(CVars.LinearSlop);
-
-	        // Handle singularity.
+            // Handle singularity.
 	        _currentLength = _u.Length;
-	        if (_currentLength > linearSlop)
+	        if (_currentLength > LinearSlop)
 	        {
 		        _u *= 1.0f / _currentLength;
 	        }
@@ -409,7 +358,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        _softMass = _mass;
 	        }
 
-	        if (_warmStarting)
+	        if (WarmStarting)
 	        {
 		        // Scale the impulse to support a variable time step.
 		        _impulse *= data.DtRatio;
@@ -544,7 +493,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             float length = u.Length;
             u = u.Normalized;
             float C;
-            if (MathHelper.CloseToPercent(_minLength, _maxLength))
+            if (MathHelper.CloseTo(_minLength, _maxLength))
             {
                 C = length - _minLength;
             }
@@ -574,20 +523,20 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             data.Positions[_indexB] = cB;
             data.Angles[_indexB] = aB;
 
-            return MathF.Abs(C) < _linearSlop;
+            return MathF.Abs(C) < LinearSlop;
         }
 
         public bool Equals(DistanceJoint? other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return LocalAnchorA.EqualsApprox(other.LocalAnchorA) &&
-                   LocalAnchorB.EqualsApprox(other.LocalAnchorB) &&
-                   MathHelper.CloseToPercent(Length, other.Length) &&
-                   MathHelper.CloseToPercent(Stiffness, other.Stiffness) &&
-                   MathHelper.CloseToPercent(Damping, other.Damping) &&
-                   MathHelper.CloseToPercent(MaxLength, other.MaxLength) &&
-                   MathHelper.CloseToPercent(MinLength, other.MinLength);
+            if (!base.Equals(other)) return false;
+
+            return MathHelper.CloseTo(_length, other._length) &&
+                   MathHelper.CloseTo(_minLength, other._minLength) &&
+                   MathHelper.CloseTo(_maxLength, other._maxLength) &&
+                   MathHelper.CloseTo(_stiffness, other._stiffness) &&
+                   MathHelper.CloseTo(_damping, other._damping);
         }
     }
 }

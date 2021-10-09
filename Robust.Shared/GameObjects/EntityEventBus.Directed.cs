@@ -485,10 +485,13 @@ namespace Robust.Shared.GameObjects
             /// <summary>
             ///     Enumerates all subscriptions for an event on a specific entity, returning the component instances and registrations.
             /// </summary>
-            private bool TryGetSubscriptions(Type eventType, EntityUid euid,
-                [NotNullWhen(true)] out SubscriptionsEnumerator enumerator)
+            private bool TryGetSubscriptions(Type eventType, EntityUid euid, [NotNullWhen(true)] out SubscriptionsEnumerator enumerator)
             {
-                var eventTable = _eventTables[euid];
+                if (!_eventTables.TryGetValue(euid, out var eventTable))
+                {
+                    enumerator = default!;
+                    return false;
+                }
 
                 // No subscriptions to this event type, return null.
                 if (!eventTable.TryGetValue(eventType, out var subscribedComps))

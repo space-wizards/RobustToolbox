@@ -4,30 +4,27 @@ preset raw;
 
 const highp float g_MinVariance = 0.0;
 
-varying highp vec2 worldPosition;
+// World-space position offset from centre to pixel.
+varying highp vec2 worldSpaceDiff;
 
-// Center of the FOV, in world coordinates.
-uniform highp vec2 center;
+// Inverted transformation matrix from clip coordinates to difference coordinates.
+uniform highp mat3 clipToDiff;
 
 void vertex()
 {
-    highp vec3 transformed = modelMatrix * vec3(VERTEX, 1.0);
-    worldPosition = transformed.xy;
-    transformed = projectionMatrix * viewMatrix * transformed;
-
-    VERTEX = transformed.xy;
+    // Convert quad-space (0.0 to 1.0) to clip-space (-1.0 to 1.0)
+    VERTEX = (VERTEX.xy - 0.5) * 2.0;
+    worldSpaceDiff = (clipToDiff * vec3(VERTEX, 1.0)).xy;
 }
 
 void fragment()
 {
-    highp vec2 diff = worldPosition - center;
+    highp float ourDist = length(worldSpaceDiff);
 
-    highp float ourDist = length(diff);
-
-    highp float occlDist = occludeDepth(diff, TEXTURE, 0.75).r;
+    highp float occlDist = occludeDepth(worldSpaceDiff, TEXTURE, 0.75).r;
 
     // *Very* simple biased shadow check for FOV.
-    if (!doesOcclude(diff, TEXTURE, 0.75, -0.75/32.0))
+    if (!doesOcclude(worldSpaceDiff, TEXTURE, 0.75, -0.75/32.0))
     {
         discard;
     }

@@ -2146,7 +2146,7 @@ namespace Robust.Client.GameObjects
             }
 
             public ITransformComponent Transform { get; } = null!;
-            public IMetaDataComponent MetaData { get; } = null!;
+            public MetaDataComponent MetaData { get; } = null!;
 
             private Dictionary<Type, IComponent> _components = new();
             private EntityLifeStage _lifeStage;

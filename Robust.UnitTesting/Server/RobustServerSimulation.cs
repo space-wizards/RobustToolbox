@@ -248,7 +248,7 @@ namespace Robust.UnitTesting.Server
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
-            entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<SharedTransformSystem>();

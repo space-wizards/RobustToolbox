@@ -18,7 +18,7 @@ namespace Robust.Server.GameObjects
         private Vector2 _zoom = Vector2.One;
         private Vector2 _offset;
         private Angle _rotation;
-        private uint _visibilityMask;
+        private uint _visibilityMask = 1;
 
         public override bool DrawFov
         {

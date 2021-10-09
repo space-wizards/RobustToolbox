@@ -80,17 +80,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// <inheritdoc />
         public void ApplyState() { }
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
-        {
-            var m = Matrix3.Identity;
-            m.R0C2 = modelMatrix.R0C2;
-            m.R1C2 = modelMatrix.R1C2;
-
-            handle.SetTransform(m);
-            handle.DrawRect(LocalBounds, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-        }
-
         // TODO
         [field: NonSerialized]
         public event Action? OnDataChanged;

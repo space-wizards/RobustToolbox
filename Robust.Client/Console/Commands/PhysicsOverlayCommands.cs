@@ -7,8 +7,8 @@ namespace Robust.Client.Console.Commands
     public sealed class PhysicsOverlayCommands : IConsoleCommand
     {
         public string Command => "physics";
-        public string Description => $"{Command} <contactnormals / contactpoints / shapes>";
-        public string Help => $"{Command} <overlay>";
+        public string Description => $"Shows a debug physics overlay. The arg supplied specifies the overlay.";
+        public string Help => $"{Command} <contactnormals / contactpoints / joints / shapeinfo / shapes>";
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             if (args.Length != 1)
@@ -26,6 +26,12 @@ namespace Robust.Client.Console.Commands
                     break;
                 case "contactpoints":
                     system.Flags ^= PhysicsDebugFlags.ContactPoints;
+                    break;
+                case "joints":
+                    system.Flags ^= PhysicsDebugFlags.Joints;
+                    break;
+                case "shapeinfo":
+                    system.Flags ^= PhysicsDebugFlags.ShapeInfo;
                     break;
                 case "shapes":
                     system.Flags ^= PhysicsDebugFlags.Shapes;

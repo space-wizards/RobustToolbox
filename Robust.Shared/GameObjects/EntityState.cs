@@ -1,5 +1,6 @@
 using Robust.Shared.Serialization;
 using System;
+using NetSerializer;
 
 namespace Robust.Shared.GameObjects
 {
@@ -8,16 +9,15 @@ namespace Robust.Shared.GameObjects
     {
         public EntityUid Uid { get; }
 
-        public ComponentChange[]? ComponentChanges { get; }
+        public NetListAsArray<ComponentChange> ComponentChanges { get; }
 
-        public bool Empty => ComponentChanges is null;
+        public bool Empty => ComponentChanges.Value is null or { Count: 0 };
 
-        public EntityState(EntityUid uid, ComponentChange[]? changedComponents)
+        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents)
         {
             Uid = uid;
 
-            // empty lists are 5 bytes each
-            ComponentChanges = changedComponents == null || changedComponents.Length == 0 ? null : changedComponents;
+            ComponentChanges = changedComponents;
         }
     }
 

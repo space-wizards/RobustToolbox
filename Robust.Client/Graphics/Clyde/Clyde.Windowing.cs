@@ -28,7 +28,10 @@ namespace Robust.Client.Graphics.Clyde
         private WindowReg? _mainWindow;
 
         private IWindowingImpl? _windowing;
+#pragma warning disable 414
+        // Keeping this for if/when we ever get a new renderer.
         private Renderer _chosenRenderer;
+#pragma warning restore 414
 
         private ResourcePath? _windowIconPath;
         private Thread? _windowingThread;

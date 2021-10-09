@@ -926,7 +926,7 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner);
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
         }
     }
@@ -985,9 +985,12 @@ namespace Robust.Shared.GameObjects
     {
         public readonly IEntity Entity;
 
-        public AnchorStateChangedEvent(IEntity entity)
+        public readonly bool Anchored;
+
+        public AnchorStateChangedEvent(IEntity entity, bool anchored)
         {
             Entity = entity;
+            Anchored = anchored;
         }
     }
 }

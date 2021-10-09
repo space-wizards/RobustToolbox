@@ -4,7 +4,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
-    /// A component that leads to an entity being non-collidable upon being anchored and collidable upon beeing un-anchored.
+    /// A component that toggles collision on an entity being toggled.
     /// </summary>
     [RegisterComponent]
     public sealed class CollideOnAnchorComponent : Component

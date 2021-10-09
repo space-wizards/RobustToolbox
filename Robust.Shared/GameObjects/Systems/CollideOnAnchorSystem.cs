@@ -11,22 +11,23 @@ namespace Robust.Shared.GameObjects
 
         private void OnStartup(EntityUid uid, CollideOnAnchorComponent component, ComponentStartup args)
         {
-            SetCollide(uid, component);
+            if (!EntityManager.TryGetComponent(uid, out TransformComponent? transformComponent)) return;
+
+            SetCollide(uid, component, transformComponent.Anchored);
         }
 
         private void OnAnchor(EntityUid uid, CollideOnAnchorComponent component, ref AnchorStateChangedEvent args)
         {
-            SetCollide(uid, component);
+            SetCollide(uid, component, args.Anchored);
         }
 
-        private void SetCollide(EntityUid uid, CollideOnAnchorComponent component)
+        private void SetCollide(EntityUid uid, CollideOnAnchorComponent component, bool anchored)
         {
-            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body) ||
-                !EntityManager.TryGetComponent(uid, out TransformComponent? xform)) return;
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body)) return;
 
             var enabled = component.Enable;
 
-            if (!xform.Anchored)
+            if (!anchored)
             {
                 enabled ^= true;
             }

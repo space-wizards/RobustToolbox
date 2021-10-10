@@ -51,8 +51,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 var transform = _entityManager.GetComponent<ITransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
+                grid.GetMapChunks(worldBounds, out var enumerator);
 
-                foreach (var chunk in grid.GetMapChunks(worldBounds))
+                while (enumerator.MoveNext(out var chunk))
                 {
                     if (_isChunkDirty(grid, chunk))
                     {

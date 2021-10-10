@@ -1,5 +1,4 @@
 using Robust.Shared.GameObjects;
-using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map

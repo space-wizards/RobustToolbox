@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
@@ -109,11 +107,24 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
-        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea);
+        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAABB, out FindGridsEnumerator enumerator, bool approx = false);
 
-        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea);
+        /// <summary>
+        /// Returns the grids intersecting this AABB.
+        /// </summary>
+        /// <param name="mapId">The relevant MapID</param>
+        /// <param name="worldAABB">The AABB to intersect</param>
+        /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
+        /// <returns></returns>
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAABB, bool approx = false);
 
-        IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false);
+        /// <summary>
+        /// Returns the grids intersecting this AABB.
+        /// </summary>
+        /// <param name="mapId">The relevant MapID</param>
+        /// <param name="worldArea">The AABB to intersect</param>
+        /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
         void DeleteGrid(GridId gridID);
 

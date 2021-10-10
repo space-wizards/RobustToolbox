@@ -85,7 +85,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Like <see cref="GetAllAnchoredEnts"/>... but fast.
         /// </summary>
-        void FastGetAllAnchoredEnts(EntityUidQueryCallback callback);
+        MapChunk.AnchoredEntsEnumerator GetAllAnchoredEntsEnumerator();
 
         Box2i CalcLocalBounds();
 

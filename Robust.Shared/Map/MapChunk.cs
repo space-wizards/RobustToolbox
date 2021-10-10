@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
@@ -271,17 +272,62 @@ namespace Robust.Shared.Map
             }
         }
 
-        public void FastGetAllAnchoredEnts(EntityUidQueryCallback callback)
+        public AnchoredEntsEnumerator GetAllAnchoredEntsEnumerator()
         {
-            foreach (var cell in _snapGrid)
-            {
-                if (cell.Center is null)
-                    continue;
+            return new(_snapGrid);
+        }
 
-                foreach (var euid in cell.Center)
+        public struct AnchoredEntsEnumerator
+        {
+            private SnapGridCell[,] _snapgrid;
+            private List<EntityUid>.Enumerator? _currentEnumerator;
+
+            private int _index;
+
+            internal AnchoredEntsEnumerator(SnapGridCell[,] snapgrid)
+            {
+                _snapgrid = snapgrid;
+                _index = 0;
+                _currentEnumerator = null;
+            }
+
+            public bool MoveNext([NotNullWhen(true)] out EntityUid? uid)
+            {
+                if (_currentEnumerator?.MoveNext() == true)
                 {
-                    callback(euid);
+                    uid = _currentEnumerator.Value.Current;
+                    _index++;
+                    return true;
                 }
+
+                _currentEnumerator?.Dispose();
+                _currentEnumerator = null;
+                var length = _snapgrid.Length;
+                var rootLength = (int) Math.Sqrt(length);
+
+                var xIndex = _index / length;
+                var yIndex = _index % length;
+
+                for (var x = xIndex; x < rootLength; x++)
+                {
+                    for (var y = yIndex; y < rootLength; y++)
+                    {
+                        var cell = _snapgrid[x, y];
+                        if (cell.Center is null) continue;
+
+                        var enumerator = cell.Center.GetEnumerator();
+
+                        if (!enumerator.MoveNext()) continue;
+
+                        _index = x * rootLength + y + 1;
+                        uid = enumerator.Current;
+                        _currentEnumerator = enumerator;
+                        return true;
+                    }
+                }
+
+                uid = null;
+                return false;
             }
         }
 
@@ -349,7 +395,7 @@ namespace Robust.Shared.Map
             return $"Chunk {_gridIndices}";
         }
 
-        private struct SnapGridCell
+        internal struct SnapGridCell
         {
             public List<EntityUid>? Center;
         }

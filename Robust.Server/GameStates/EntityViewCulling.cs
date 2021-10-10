@@ -291,16 +291,18 @@ namespace Robust.Server.GameStates
                         count++;
                     }
 
-                    chunk.FastGetAllAnchoredEnts(uid =>
+                    var snapEnumerator = chunk.GetAllAnchoredEntsEnumerator();
+
+                    while (snapEnumerator.MoveNext(out var uid))
                     {
-                        var ent = _entMan.GetEntity(uid);
+                        var ent = _entMan.GetEntity(uid.Value);
 
                         if (ent.LastModifiedTick < lastSeenChunk)
-                            return;
+                            continue;
 
-                        var newState = ServerGameStateManager.GetEntityState(_entMan, session, uid, lastSeenChunk);
+                        var newState = ServerGameStateManager.GetEntityState(_entMan, session, uid.Value, lastSeenChunk);
                         entityStates.Add(newState);
-                    });
+                    }
 
                     chunksSeen[chunk] = fromTick;
                 }

@@ -564,7 +564,7 @@ namespace Robust.Client.GameObjects
                 Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
-            return AddLayer(stateId, res?.RSI);
+            return AddLayer(stateId, res?.RSI, newIndex);
         }
 
         public int AddLayerState(string stateId, ResourcePath rsiPath, int? newIndex = null)

@@ -342,7 +342,7 @@ namespace Robust.Server.Console.Commands
             // Box2D has this as 800 which is jesus christo.
             // Wouldn't recommend higher than 100 in debug and higher than 300 on release unless
             // you really want a profile.
-            var count = 200;
+            var count = 300;
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             for (var i = 0; i < count; i++)

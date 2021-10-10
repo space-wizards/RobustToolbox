@@ -927,7 +927,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -1050,7 +1050,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
         {
-            return EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(this, offset, approx);
+            return EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
         }
 
         /// <inheritdoc />

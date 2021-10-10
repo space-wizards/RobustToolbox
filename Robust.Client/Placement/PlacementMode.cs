@@ -233,7 +233,7 @@ namespace Robust.Client.Placement
                 bounds.Width,
                 bounds.Height);
 
-            return EntitySystem.Get<SharedBroadphaseSystem>().TryCollideRect(collisionBox, mapCoords.MapId);
+            return EntitySystem.Get<SharedPhysicsSystem>().TryCollideRect(collisionBox, mapCoords.MapId);
         }
 
         protected Vector2 ScreenToWorld(Vector2 point)

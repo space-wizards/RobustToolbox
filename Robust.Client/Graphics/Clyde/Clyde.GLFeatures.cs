@@ -19,6 +19,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLSamplerObjects;
         private bool _hasGLSrgb;
         private bool _hasGLPrimitiveRestart;
+        private bool _hasGLPrimitiveRestartFixedIndex;
         private bool _hasGLReadFramebuffer;
         private bool _hasGLUniformBuffers;
         private bool HasGLAnyVertexArrayObjects => _hasGLVertexArrayObject || _hasGLVertexArrayObjectOes;
@@ -105,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (3, 0));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (3, 0), "GL_OES_standard_derivatives");
                 CheckGLCap(ref _hasGLReadFramebuffer, "read_framebuffer", (3, 0));
-                CheckGLCap(ref _hasGLPrimitiveRestart, "primitive_restart", (3, 1));
+                CheckGLCap(ref _hasGLPrimitiveRestartFixedIndex, "primitive_restart", (3, 0));
                 CheckGLCap(ref _hasGLUniformBuffers, "uniform_buffers", (3, 0));
                 CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2), "GL_EXT_color_buffer_float");
                 CheckGLCap(ref _hasGLES3Shaders, "gles3_shaders", (3, 0));

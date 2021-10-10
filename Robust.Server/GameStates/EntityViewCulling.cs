@@ -49,6 +49,10 @@ namespace Robust.Server.GameStates
         private readonly ObjectPool<Dictionary<GridId, HashSet<IMapChunkInternal>>> _includedChunksPool =
             new DefaultObjectPool<Dictionary<GridId, HashSet<IMapChunkInternal>>>(new DefaultPooledObjectPolicy<Dictionary<GridId, HashSet<IMapChunkInternal>>>(), MaxVisPoolSize);
 
+        private readonly ObjectPool<HashSet<IMapChunkInternal>> _chunkPool =
+            new DefaultObjectPool<HashSet<IMapChunkInternal>>(
+                new DefaultPooledObjectPolicy<HashSet<IMapChunkInternal>>(), MaxVisPoolSize);
+
         private ushort _transformNetId = 0;
 
         /// <summary>
@@ -244,6 +248,12 @@ namespace Robust.Server.GameStates
                     // To fix pop-in we'll go through nearby chunks and send them little-by-little
                     StreamChunks(newChunkCount, session, chunksSeen, entityStates, viewBox, fromTick, mapId);
 
+                    foreach (var (_, chunks) in includedChunks)
+                    {
+                        chunks.Clear();
+                        _chunkPool.Return(chunks);
+                    }
+
                     includedChunks.Clear();
                     _includedChunksPool.Return(includedChunks);
                 }
@@ -281,7 +291,7 @@ namespace Robust.Server.GameStates
 
                     if (!includedChunks.TryGetValue(grid.Index, out var chunks))
                     {
-                        chunks = new HashSet<IMapChunkInternal>();
+                        chunks = _chunkPool.Get();
                         includedChunks[grid.Index] = chunks;
                     }
 
@@ -581,7 +591,7 @@ namespace Robust.Server.GameStates
 
             if (!includedChunks.TryGetValue(xform.GridID, out var chunks))
             {
-                chunks = new HashSet<IMapChunkInternal>();
+                chunks = _chunkPool.Get();
                 includedChunks[xform.GridID] = chunks;
             }
 

@@ -172,6 +172,7 @@ namespace Robust.Shared.GameObjects
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
                 var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
+                var matrix = broadphase.Owner.Transform.WorldMatrix;
 
                 var position = invMatrix.Transform(ray.Position);
                 var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
@@ -199,21 +200,25 @@ namespace Robust.Shared.GameObjects
                     // TODO: Shape raycast here
 
                     // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, point + position, proxy.Fixture.Body.Owner);
+                    var result = new RayCastResults(distFromOrigin, matrix.Transform(point), proxy.Fixture.Body.Owner);
                     results.Add(result);
+#if DEBUG
                     EntityManager.EventBus.QueueEvent(EventSource.Local,
                         new DebugDrawRayMessage(
                             new DebugRayData(ray, maxLength, result)));
+#endif
                     return true;
                 }, gridRay);
             }
 
+#if DEBUG
             if (results.Count == 0)
             {
                 EntityManager.EventBus.QueueEvent(EventSource.Local,
                     new DebugDrawRayMessage(
                         new DebugRayData(ray, maxLength, null)));
             }
+#endif
 
             results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
             return results;
@@ -271,6 +276,15 @@ namespace Robust.Shared.GameObjects
                     return true;
                 }, gridRay);
             }
+
+#if DEBUG
+            if (penetration > 0f)
+            {
+                EntityManager.EventBus.QueueEvent(EventSource.Local,
+                    new DebugDrawRayMessage(
+                        new DebugRayData(ray, maxLength, null)));
+            }
+#endif
 
             return penetration;
         }

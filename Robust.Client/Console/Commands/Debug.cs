@@ -188,16 +188,16 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (!int.TryParse(args[0], out var id))
+            if (!float.TryParse(args[0], out var duration))
             {
-                shell.WriteError($"{args[0]} is not a valid integer.");
+                shell.WriteError($"{args[0]} is not a valid float.");
                 return;
             }
 
-            var mgr = IoCManager.Resolve<IDebugDrawingManager>();
+            var mgr = EntitySystem.Get<DebugRayDrawingSystem>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
-            shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays.ToString());
-            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(args[0], CultureInfo.InvariantCulture));
+            shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays);
+            mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
 

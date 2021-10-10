@@ -161,6 +161,7 @@ namespace Robust.Client.Debugging
         Shapes = 1 << 2,
         ShapeInfo = 1 << 3,
         Joints = 1 << 4,
+        AABBs = 1 << 5,
     }
 
     internal sealed class PhysicsDebugOverlay : Overlay
@@ -233,6 +234,32 @@ namespace Robust.Client.Debugging
                             DrawShape(worldHandle, fixture, xform, new Color(0.9f, 0.7f, 0.7f).WithAlpha(AlphaModifier));
                         }
                     }
+                }
+            }
+
+            if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.AABBs) != 0 && !viewport.IsEmpty())
+            {
+                foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
+                {
+                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+
+                    var xform = physBody.GetTransform();
+
+                    const float AlphaModifier = 0.2f;
+                    Box2? aabb = null;
+
+                    foreach (var fixture in physBody.Fixtures)
+                    {
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        {
+                            var shapeBB = fixture.Shape.ComputeAABB(xform, i);
+                            aabb = aabb?.Union(shapeBB) ?? shapeBB;
+                        }
+                    }
+
+                    if (aabb == null) continue;
+
+                    worldHandle.DrawRect(aabb.Value, Color.Red.WithAlpha(AlphaModifier), false);
                 }
             }
 

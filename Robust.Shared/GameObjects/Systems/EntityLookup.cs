@@ -430,6 +430,11 @@ namespace Robust.Shared.GameObjects
 
         private void GetRecursiveChildrenCallback(IEntity entity, EntityQueryCallback callback)
         {
+            // TODO: It's possible this will throw on any callers for FastEntitiesIntersecting with no recourse
+            // The ideal solution is to just use EntityUids instead but that's muh effort and given
+            // only node visualization should be the potential thing that can explode I'll do it after this PR
+            // when I get around to cleaning up EntityLookup
+
             foreach (var child in entity.Transform.ChildEntityUids)
             {
                 var childEnt = _entityManager.GetEntity(child);

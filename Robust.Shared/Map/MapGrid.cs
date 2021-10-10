@@ -437,12 +437,13 @@ namespace Robust.Shared.Map
                     for (var y = _yIndex; y <= _chunkRT.Y; y++)
                     {
                         var gridChunk = new Vector2i(x, y);
-
                         if (!_chunks.TryGetValue(gridChunk, out chunk)) continue;
                         _xIndex = x;
                         _yIndex = y + 1;
                         return true;
                     }
+
+                    _yIndex = _chunkLB.Y;
                 }
 
                 chunk = null;

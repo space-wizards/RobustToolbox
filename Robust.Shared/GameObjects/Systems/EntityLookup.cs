@@ -398,7 +398,12 @@ namespace Robust.Shared.GameObjects
 
                 lookup.ContainerManagerTree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) =>
                 {
-                    if (!data.TryGetComponent(out ContainerManagerComponent? containerManager)) return;
+                    // If (for whatever reason) we don't have the component
+                    // OR we're stored in another container that isn't visible then just early out.
+                    if (!data.TryGetComponent(out ContainerManagerComponent? containerManager) ||
+                        (flags & LookupFlags.ContainerVisibility) != 0x0 &&
+                        data.TryGetContainer(out var ourContainer) &&
+                        ourContainer.Visibility == ContainerVisibility.None) return;
 
                     foreach (var container in containerManager.GetAllContainers())
                     {
@@ -409,7 +414,6 @@ namespace Robust.Shared.GameObjects
                         foreach (var child in container.ContainedEntities)
                         {
                             callback(child);
-                            GetRecursiveChildrenCallback(child, callback);
                         }
                     }
                 });
@@ -423,50 +427,6 @@ namespace Robust.Shared.GameObjects
                     {
                         if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
                         callback(ent);
-                    }
-                }
-            }
-        }
-
-        private void GetRecursiveChildrenCallback(IEntity entity, EntityQueryCallback callback)
-        {
-            // TODO: It's possible this will throw on any callers for FastEntitiesIntersecting with no recourse
-            // The ideal solution is to just use EntityUids instead but that's muh effort and given
-            // only node visualization should be the potential thing that can explode I'll do it after this PR
-            // when I get around to cleaning up EntityLookup
-
-            foreach (var child in entity.Transform.ChildEntityUids)
-            {
-                var childEnt = _entityManager.GetEntity(child);
-
-                callback(childEnt);
-
-                foreach (var childOfChild in childEnt.Transform.ChildEntityUids)
-                {
-                    var childOfChildEnt = _entityManager.GetEntity(childOfChild);
-                    callback(childOfChildEnt);
-                    GetRecursiveChildrenCallback(childOfChildEnt, callback);
-                }
-            }
-        }
-
-        private IEnumerable<IEntity> GetRecursiveChildren(IEntity entity)
-        {
-            foreach (var child in entity.Transform.ChildEntityUids)
-            {
-                if (!_entityManager.TryGetEntity(child, out var childEnt)) continue;
-
-                yield return childEnt;
-
-                foreach (var childOfChild in childEnt.Transform.ChildEntityUids)
-                {
-                    if (!_entityManager.TryGetEntity(childOfChild, out var childOfChildEnt)) continue;
-
-                    yield return childOfChildEnt;
-
-                    foreach (var rec in GetRecursiveChildren(childOfChildEnt))
-                    {
-                        yield return rec;
                     }
                 }
             }
@@ -507,11 +467,6 @@ namespace Robust.Shared.GameObjects
                         {
                             if (child.Deleted) continue;
                             list.Add(child);
-
-                            foreach (var childOfChild in GetRecursiveChildren(child))
-                            {
-                                list.Add(childOfChild);
-                            }
                         }
                     }
 
@@ -564,11 +519,6 @@ namespace Robust.Shared.GameObjects
                         {
                             if (child.Deleted) continue;
                             list.Add(child);
-
-                            foreach (var childOfChild in GetRecursiveChildren(child))
-                            {
-                                list.Add(childOfChild);
-                            }
                         }
                     }
 
@@ -746,11 +696,6 @@ namespace Robust.Shared.GameObjects
                         {
                             if (child.Deleted) continue;
                             list.Add(child);
-
-                            foreach (var childOfChild in GetRecursiveChildren(child))
-                            {
-                                list.Add(childOfChild);
-                            }
                         }
                     }
 
@@ -809,9 +754,24 @@ namespace Robust.Shared.GameObjects
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.
-            if (entity.Deleted || entity.IsInContainer())
+            if (entity.Deleted)
             {
                 RemoveFromEntityTrees(entity);
+                return true;
+            }
+
+            var isContainerManager = _entityManager.HasComponent<ContainerManagerComponent>(entity.Uid);
+            EntityLookupComponent? lookup;
+
+            if (entity.IsInContainer())
+            {
+                // Need to make sure nested containers still work and that we still store the component on the tree.
+                RemoveFromEntityTrees(entity);
+                if (isContainerManager)
+                {
+                    lookup = GetLookup(entity);
+                    lookup?.ContainerManagerTree.AddOrUpdate(entity);
+                }
                 return true;
             }
 
@@ -821,7 +781,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(entity.Initialized);
             DebugTools.Assert(!entity.Transform.Anchored);
 
-            var lookup = GetLookup(entity);
+            lookup = GetLookup(entity);
 
             if (lookup == null)
             {
@@ -847,7 +807,7 @@ namespace Robust.Shared.GameObjects
             // for debugging
             var necessary = 0;
 
-            if (_entityManager.HasComponent<ContainerManagerComponent>(entity.Uid))
+            if (isContainerManager)
             {
                 if (lookup.ContainerManagerTree.AddOrUpdate(entity, aabb))
                 {

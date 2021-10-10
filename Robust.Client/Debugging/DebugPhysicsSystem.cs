@@ -90,7 +90,7 @@ namespace Robust.Client.Debugging
                             IoCManager.Resolve<IInputManager>(),
                             IoCManager.Resolve<IResourceCache>(),
                             this,
-                            Get<SharedBroadphaseSystem>()));
+                            Get<SharedPhysicsSystem>()));
 
                 if (value == PhysicsDebugFlags.None)
                     IoCManager.Resolve<IOverlayManager>().RemoveOverlay(typeof(PhysicsDebugOverlay));
@@ -168,8 +168,8 @@ namespace Robust.Client.Debugging
         private IEntityManager _entityManager = default!;
         private IEyeManager _eyeManager = default!;
         private IInputManager _inputManager = default!;
-        private DebugPhysicsSystem _physics = default!;
-        private SharedBroadphaseSystem _broadphaseSystem = default!;
+        private DebugPhysicsSystem _debugPhysicsSystem = default!;
+        private SharedPhysicsSystem _physicsSystem = default!;
 
         public override OverlaySpace Space => OverlaySpace.WorldSpace | OverlaySpace.ScreenSpace;
 
@@ -179,13 +179,13 @@ namespace Robust.Client.Debugging
 
         private HashSet<Joint> _drawnJoints = new();
 
-        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedBroadphaseSystem broadphaseSystem)
+        public PhysicsDebugOverlay(IEntityManager entityManager, IEyeManager eyeManager, IInputManager inputManager, IResourceCache cache, DebugPhysicsSystem system, SharedPhysicsSystem physicsSystem)
         {
             _entityManager = entityManager;
             _eyeManager = eyeManager;
             _inputManager = inputManager;
-            _physics = system;
-            _broadphaseSystem = broadphaseSystem;
+            _debugPhysicsSystem = system;
+            _physicsSystem = physicsSystem;
             _font = new VectorFont(cache.GetResource<FontResource>("/Fonts/NotoSans/NotoSans-Regular.ttf"), 10);
         }
 
@@ -195,9 +195,9 @@ namespace Robust.Client.Debugging
             var viewBounds = _eyeManager.GetWorldViewbounds();
             var mapId = _eyeManager.CurrentMap;
 
-            if ((_physics.Flags & PhysicsDebugFlags.Shapes) != 0 && !viewport.IsEmpty())
+            if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Shapes) != 0 && !viewport.IsEmpty())
             {
-                foreach (var physBody in _broadphaseSystem.GetCollidingEntities(mapId, viewBounds))
+                foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
 
@@ -236,7 +236,7 @@ namespace Robust.Client.Debugging
                 }
             }
 
-            if ((_physics.Flags & PhysicsDebugFlags.Joints) != 0x0)
+            if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.Joints) != 0x0)
             {
                 _drawnJoints.Clear();
 
@@ -255,17 +255,17 @@ namespace Robust.Client.Debugging
                 }
             }
 
-            if ((_physics.Flags & (PhysicsDebugFlags.ContactPoints | PhysicsDebugFlags.ContactNormals)) != 0)
+            if ((_debugPhysicsSystem.Flags & (PhysicsDebugFlags.ContactPoints | PhysicsDebugFlags.ContactNormals)) != 0)
             {
                 const float axisScale = 0.3f;
 
-                for (var i = 0; i < _physics.PointCount; ++i)
+                for (var i = 0; i < _debugPhysicsSystem.PointCount; ++i)
                 {
-                    var point = _physics.Points[i];
+                    var point = _debugPhysicsSystem.Points[i];
 
                     const float radius = 0.1f;
 
-                    if ((_physics.Flags & PhysicsDebugFlags.ContactPoints) != 0)
+                    if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ContactPoints) != 0)
                     {
                         if (point.State == PointState.Add)
                             worldHandle.DrawCircle(point.Position, radius, new Color(255, 77, 243, 255));
@@ -273,7 +273,7 @@ namespace Robust.Client.Debugging
                             worldHandle.DrawCircle(point.Position, radius, new Color(255, 77, 77, 255));
                     }
 
-                    if ((_physics.Flags & PhysicsDebugFlags.ContactNormals) != 0)
+                    if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ContactNormals) != 0)
                     {
                         Vector2 p1 = point.Position;
                         Vector2 p2 = p1 + point.Normal * axisScale;
@@ -281,7 +281,7 @@ namespace Robust.Client.Debugging
                     }
                 }
 
-                _physics.PointCount = 0;
+                _debugPhysicsSystem.PointCount = 0;
             }
         }
 
@@ -290,12 +290,12 @@ namespace Robust.Client.Debugging
             var mapId = _eyeManager.CurrentMap;
             var mousePos = _inputManager.MouseScreenPosition;
 
-            if ((_physics.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
+            if ((_debugPhysicsSystem.Flags & PhysicsDebugFlags.ShapeInfo) != 0x0)
             {
                 var hoverBodies = new List<PhysicsComponent>();
                 var bounds = Box2.UnitCentered.Translated(_eyeManager.ScreenToMap(mousePos.Position).Position);
 
-                foreach (var physBody in _broadphaseSystem.GetCollidingEntities(mapId, bounds))
+                foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
                     if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
                     hoverBodies.Add(physBody);
@@ -327,7 +327,7 @@ namespace Robust.Client.Debugging
 
         protected internal override void Draw(in OverlayDrawArgs args)
         {
-            if (_physics.Flags == PhysicsDebugFlags.None) return;
+            if (_debugPhysicsSystem.Flags == PhysicsDebugFlags.None) return;
 
             switch (args.Space)
             {

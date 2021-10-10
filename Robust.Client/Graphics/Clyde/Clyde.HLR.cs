@@ -214,8 +214,9 @@ namespace Robust.Client.Graphics.Clyde
             RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB);
 
             var screenSize = viewport.Size;
+            eye.GetViewMatrix(out var eyeMatrix, eye.Scale);
 
-            ProcessSpriteEntities(mapId, worldBounds, _drawingSpriteList);
+            ProcessSpriteEntities(mapId, eyeMatrix, worldBounds, _drawingSpriteList);
 
             var worldOverlays = new List<Overlay>();
 
@@ -364,7 +365,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private void ProcessSpriteEntities(MapId map, Box2Rotated worldBounds,
+        private void ProcessSpriteEntities(MapId map, Matrix3 eyeMatrix, Box2Rotated worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
@@ -382,10 +383,10 @@ namespace Robust.Client.Graphics.Clyde
                     entry.sprite = value;
                     entry.worldRot = transform.WorldRotation;
                     entry.matrix = transform.WorldMatrix;
-                    var worldPos = new Vector2(entry.matrix.R0C2, entry.matrix.R1C2);
+                    var eyePos = eyeMatrix.Transform(new Vector2(entry.matrix.R0C2, entry.matrix.R1C2));
                     // Didn't use the bounds from the query as that has to be re-calculated (and is probably more expensive than this).
-                    var bounds = value.CalculateBoundingBox(worldPos);
-                    entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
+                    var bounds = value.CalculateBoundingBox(eyePos);
+                    entry.yWorldPos = eyePos.Y - bounds.Extents.Y;
                     return true;
 
                 }, bounds, true);

@@ -78,7 +78,6 @@ namespace Robust.Shared.GameObjects
     [UsedImplicitly]
     public class EntityLookup : IEntityLookup, IEntityEventSubscriber
     {
-        private readonly IComponentManager _compManager;
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
 
@@ -112,9 +111,8 @@ namespace Robust.Shared.GameObjects
 
         public bool Started { get; private set; } = false;
 
-        public EntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager)
+        public EntityLookup(IEntityManager entityManager, IMapManager mapManager)
         {
-            _compManager = compManager;
             _entityManager = entityManager;
             _mapManager = mapManager;
         }
@@ -448,8 +446,8 @@ namespace Robust.Shared.GameObjects
             {
                 var transform = entity.Transform;
                 var entPos = transform.WorldPosition;
-                if (MathHelper.CloseTo(entPos.X, mapPosition.X)
-                    && MathHelper.CloseTo(entPos.Y, mapPosition.Y))
+                if (MathHelper.CloseToPercent(entPos.X, mapPosition.X)
+                    && MathHelper.CloseToPercent(entPos.Y, mapPosition.Y))
                 {
                     return true;
                 }
@@ -510,7 +508,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert((flags & LookupFlags.Approximate) == 0x0);
 
-            foreach (EntityLookupComponent comp in _compManager.EntityQuery<EntityLookupComponent>(true))
+            foreach (EntityLookupComponent comp in _entityManager.EntityQuery<EntityLookupComponent>(true))
             {
                 if (comp.Owner.Transform.MapID != mapId) continue;
 
@@ -671,9 +669,10 @@ namespace Robust.Shared.GameObjects
         {
             // TODO: Need to fix ordering issues and then we can just directly remove it from the tree
             // rather than this O(n) legacy garbage.
-            foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
+            // Also we can't early returns because somehow it gets added to multiple trees!!!
+            foreach (var lookup in _entityManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (lookup.Tree.Remove(entity)) return;
+                lookup.Tree.Remove(entity);
             }
         }
 

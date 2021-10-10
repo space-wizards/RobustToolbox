@@ -208,13 +208,6 @@ namespace Robust.Shared.Physics.Dynamics
                 bodyB.ContactEdges.Previous = c.NodeB;
             }
             bodyB.ContactEdges = c.NodeB;
-
-            // Wake up the bodies
-            if (fixtureA.Hard && fixtureB.Hard)
-            {
-                bodyA.Awake = true;
-                bodyB.Awake = true;
-            }
         }
 
         internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -360,8 +353,8 @@ namespace Robust.Shared.Physics.Dynamics
                         // These should really be destroyed before map changes.
                         DebugTools.Assert(broadphaseA.Owner.Transform.MapID == broadphaseB.Owner.Transform.MapID);
 
-                        var proxyAWorldAABB = proxyA.AABB.Translated(broadphaseA.Owner.Transform.WorldPosition);
-                        var proxyBWorldAABB = proxyB.AABB.Translated(broadphaseB.Owner.Transform.WorldPosition);
+                        var proxyAWorldAABB = broadphaseA.Owner.Transform.WorldMatrix.TransformBox(proxyA.AABB);
+                        var proxyBWorldAABB = broadphaseB.Owner.Transform.WorldMatrix.TransformBox(proxyB.AABB);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }

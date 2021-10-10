@@ -136,7 +136,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (_clyde._windowMode == WindowMode.Fullscreen)
                 {
                     win.PrevWindowSize = win.WindowSize;
-                    win.PrevWindowPos = win.PrevWindowPos;
+                    win.PrevWindowPos = win.WindowPos;
 
                     SendCmd(new CmdWinSetFullscreen((nint) win.GlfwWindow));
                 }
@@ -262,7 +262,10 @@ namespace Robust.Client.Graphics.Clyde
                 var (reg, errorResult) = task.Result;
 
                 if (reg != null)
+                {
+                    reg.Owner = reg.Handle;
                     return (reg, null);
+                }
 
                 var (desc, errCode) = errorResult!.Value;
                 return (null, $"[{errCode}]: {desc}");

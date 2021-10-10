@@ -53,7 +53,7 @@ namespace Robust.Shared.Physics
             for (int i = 1; i < vertices.Length; ++i)
             {
                 float x = vertices[i].X;
-                if (x > x0 || (MathHelper.CloseTo(x, x0) && vertices[i].Y < vertices[i0].Y))
+                if (x > x0 || (MathHelper.CloseToPercent(x, x0) && vertices[i].Y < vertices[i0].Y))
                 {
                     i0 = i;
                     x0 = x;

@@ -38,6 +38,11 @@ namespace Robust.Shared.Map
         Box2 WorldBounds { get; }
 
         /// <summary>
+        ///     The bounding box of the grid in local coordinates.
+        /// </summary>
+        Box2 LocalBounds { get; }
+
+        /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
         /// </summary>
         ushort ChunkSize { get; }
@@ -57,6 +62,13 @@ namespace Robust.Shared.Map
         Matrix3 InvWorldMatrix { get; }
 
         #region TileAccess
+
+        /// <summary>
+        ///     Gets a tile a the given world coordinates. This will not create a new chunk.
+        /// </summary>
+        /// <param name="coords">The location of the tile in coordinates.</param>
+        /// <returns>The tile at the world coordinates.</returns>
+        TileRef GetTileRef(MapCoordinates coords);
 
         /// <summary>
         ///     Gets a tile a the given world coordinates. This will not create a new chunk.
@@ -115,6 +127,7 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
+        IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);

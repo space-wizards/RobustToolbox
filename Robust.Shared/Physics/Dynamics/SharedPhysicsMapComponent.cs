@@ -22,7 +22,6 @@
 
 using System;
 using System.Collections.Generic;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -37,17 +36,16 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public abstract class SharedPhysicsMapComponent : Component
     {
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
-        private SharedBroadphaseSystem _broadphaseSystem = default!;
-        private SharedPhysicsSystem _physicsSystem = default!;
+        internal SharedBroadphaseSystem BroadphaseSystem = default!;
+        internal SharedPhysicsSystem PhysicsSystem = default!;
 
         public override string Name => "PhysicsMap";
 
         internal ContactManager ContactManager = default!;
 
-        private bool _autoClearForces;
+        public bool AutoClearForces;
 
         /// <summary>
         ///     Change the global gravity vector.
@@ -92,9 +90,9 @@ namespace Robust.Shared.Physics.Dynamics
         private List<PhysicsComponent> _awakeBodyList = new();
 
         /// <summary>
-        ///     Get all the joints on this map
+        /// Temporary joint storage during solving
         /// </summary>
-        public List<Joint> Joints { get; private set; } = new();
+        private List<Joint> _joints = new();
 
         /// <summary>
         ///     Temporarily store island-bodies for easier iteration.
@@ -123,34 +121,6 @@ namespace Robust.Shared.Physics.Dynamics
 
         public MapId MapId => Owner.Transform.MapID;
 
-        protected override void Initialize()
-        {
-            base.Initialize();
-            _broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-            _physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-
-            IoCManager.InjectDependencies(this);
-            ContactManager.Initialize();
-            ContactManager.MapId = MapId;
-
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
-        }
-
-        protected override void Shutdown()
-        {
-            base.Shutdown();
-            ContactManager.Shutdown();
-
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
-        }
-
-        private void OnAutoClearChange(bool value)
-        {
-            _autoClearForces = value;
-        }
-
         #region AddRemove
         public void AddAwakeBody(PhysicsComponent body)
         {
@@ -168,153 +138,6 @@ namespace Robust.Shared.Physics.Dynamics
         {
             _queuedSleep.Add(body);
         }
-
-        public void AddJoint(Joint joint)
-        {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
-
-            // BodyA and BodyB should share joints so we can just check if BodyA already has this joint.
-            for (var je = bodyA.JointEdges; je != null; je = je.Next)
-            {
-                if (je.Joint.Equals(joint)) continue;
-            }
-
-            // TODO: Optimise dafuk out of this.
-            if (Joints.Contains(joint))
-            {
-                Logger.ErrorS("physics", $"Tried to add joint id: {joint.ID} owner: {joint.BodyA.Owner} that's already on map");
-                return;
-            }
-
-            // Connect to the world list.
-            Joints.Add(joint);
-
-            // Connect to the bodies' doubly linked lists.
-            joint.EdgeA.Joint = joint;
-            joint.EdgeA.Other = bodyB;
-            joint.EdgeA.Prev = null;
-            joint.EdgeA.Next = bodyA.JointEdges;
-
-            if (bodyA.JointEdges != null)
-                bodyA.JointEdges.Prev = joint.EdgeA;
-
-            bodyA.JointEdges = joint.EdgeA;
-
-            joint.EdgeB.Joint = joint;
-            joint.EdgeB.Other = bodyA;
-            joint.EdgeB.Prev = null;
-            joint.EdgeB.Next = bodyB.JointEdges;
-
-            if (bodyB.JointEdges != null)
-                bodyB.JointEdges.Prev = joint.EdgeB;
-
-            bodyB.JointEdges = joint.EdgeB;
-
-            joint.BodyAUid = bodyA.Owner.Uid;
-            joint.BodyBUid = bodyB.Owner.Uid;
-
-            // If the joint prevents collisions, then flag any contacts for filtering.
-            if (!joint.CollideConnected)
-            {
-                _physicsSystem.FilterContactsForJoint(joint);
-            }
-
-            bodyA.Dirty();
-            bodyB.Dirty();
-            // Note: creating a joint doesn't wake the bodies.
-
-            // Raise broadcast last so we can do both sides of directed first.
-            var vera = new JointAddedEvent(joint, bodyA, bodyB);
-            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
-            var smug = new JointAddedEvent(joint, bodyB, bodyA);
-            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
-        }
-
-        public void RemoveJoint(Joint joint)
-        {
-            if (!Joints.Contains(joint))
-            {
-                Logger.ErrorS("physics", $"Tried to remove joint id: {joint.ID} owner: {joint.BodyA.Owner} that's not on map");
-                return;
-            }
-
-            bool collideConnected = joint.CollideConnected;
-
-            // Remove from the world list.
-            Joints.Remove(joint);
-
-            // Disconnect from island graph.
-            PhysicsComponent bodyA = joint.BodyA;
-            PhysicsComponent bodyB = joint.BodyB;
-
-            // Wake up connected bodies.
-            bodyA.Awake = true;
-            bodyB.Awake = true;
-
-            // Remove from body 1.
-            if (joint.EdgeA.Prev != null)
-            {
-                joint.EdgeA.Prev.Next = joint.EdgeA.Next;
-            }
-
-            if (joint.EdgeA.Next != null)
-            {
-                joint.EdgeA.Next.Prev = joint.EdgeA.Prev;
-            }
-
-            if (joint.EdgeA == bodyA.JointEdges)
-            {
-                bodyA.JointEdges = joint.EdgeA.Next;
-            }
-
-            joint.EdgeA.Prev = null;
-            joint.EdgeA.Next = null;
-
-            // Remove from body 2
-            if (joint.EdgeB.Prev != null)
-            {
-                joint.EdgeB.Prev.Next = joint.EdgeB.Next;
-            }
-
-            if (joint.EdgeB.Next != null)
-            {
-                joint.EdgeB.Next.Prev = joint.EdgeB.Prev;
-            }
-
-            if (joint.EdgeB == bodyB.JointEdges)
-            {
-                bodyB.JointEdges = joint.EdgeB.Next;
-            }
-
-            joint.EdgeB.Prev = null;
-            joint.EdgeB.Next = null;
-
-            // If the joint prevents collisions, then flag any contacts for filtering.
-            if (!collideConnected)
-            {
-                ContactEdge? edge = bodyB.ContactEdges;
-                while (edge != null)
-                {
-                    if (edge.Other == bodyA)
-                    {
-                        // Flag the contact for filtering at the next time step (where either
-                        // body is awake).
-                        edge.Contact!.FilterFlag = true;
-                    }
-
-                    edge = edge.Next;
-                }
-            }
-
-            var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
-            var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
-            _entityManager.EventBus.RaiseEvent(EventSource.Local, vera);
-        }
-
         #endregion
 
         #region Queue
@@ -399,12 +222,12 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            _broadphaseSystem.FindNewContacts(MapId);
+            BroadphaseSystem.FindNewContacts(MapId, prediction);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
-            foreach (var controller in _physicsSystem.Controllers)
+            foreach (var controller in PhysicsSystem.Controllers)
             {
                 controller.UpdateBeforeMapSolve(prediction, this, frameTime);
             }
@@ -422,13 +245,13 @@ namespace Robust.Shared.Physics.Dynamics
 
             // TODO: SolveTOI
 
-            foreach (var controller in _physicsSystem.Controllers)
+            foreach (var controller in PhysicsSystem.Controllers)
             {
                 controller.UpdateAfterMapSolve(prediction, this, frameTime);
             }
 
             // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
-            if (!prediction && _autoClearForces)
+            if (!prediction && AutoClearForces)
                 ClearForces();
 
             _invDt0 = invDt;
@@ -459,11 +282,6 @@ namespace Robust.Shared.Physics.Dynamics
                 c!.IslandFlag = false;
             }
 
-            foreach (var joint in Joints)
-            {
-                joint.IslandFlag = false;
-            }
-
             // Build and simulated islands from awake bodies.
             // Ideally you don't need a stack size for all bodies but we'll TODO: optimise it later.
             var stackSize = Bodies.Count;
@@ -473,6 +291,7 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             _awakeBodyList.AddRange(AwakeBodies);
+
 
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in _awakeBodyList)
@@ -541,20 +360,19 @@ namespace Robust.Shared.Physics.Dynamics
                         other.Island = true;
                     }
 
-                    for (JointEdge? je = body.JointEdges; je != null; je = je.Next)
-                    {
-                        if (je.Joint.IslandFlag)
-                        {
-                            continue;
-                        }
+                    if (!body.Owner.TryGetComponent(out JointComponent? jointComponent)) continue;
 
-                        PhysicsComponent other = je.Other;
+                    foreach (var (_, joint) in jointComponent.Joints)
+                    {
+                        if (joint.IslandFlag) continue;
+
+                        var other = joint.BodyA == body ? joint.BodyB : joint.BodyA;
 
                         // Don't simulate joints connected to inactive bodies.
                         if (!other.CanCollide) continue;
 
-                        _islandJoints.Add(je.Joint);
-                        je.Joint.IslandFlag = true;
+                        _islandJoints.Add(joint);
+                        joint.IslandFlag = true;
 
                         if (other.Island) continue;
 
@@ -568,6 +386,8 @@ namespace Robust.Shared.Physics.Dynamics
                 _islandManager
                     .AllocateIsland(_islandBodies.Count, _islandContacts.Count, _islandJoints.Count)
                     .Append(_islandBodies, _islandContacts, _islandJoints);
+
+                _joints.AddRange(_islandJoints);
 
                 // Allow static bodies to be re-used in other islands
                 for (var i = 0; i < _islandBodies.Count; i++)
@@ -606,6 +426,13 @@ namespace Robust.Shared.Physics.Dynamics
 
             _islandSet.Clear();
             _awakeBodyList.Clear();
+
+            foreach (var joint in _joints)
+            {
+                joint.IslandFlag = false;
+            }
+
+            _joints.Clear();
         }
 
         private void SolveIslands(float frameTime, float dtRatio, float invDt, bool prediction)

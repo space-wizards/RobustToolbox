@@ -308,6 +308,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> DisplaySoftShadows =
             CVarDef.Create("display.softshadows", true, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<bool> DisplayBlurLight =
+            CVarDef.Create("display.blur_light", true, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        public static readonly CVarDef<float> DisplayBlurLightFactor =
+            CVarDef.Create("display.blur_light_factor", 0.001f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         public static readonly CVarDef<float> DisplayUIScale =
             CVarDef.Create("display.uiScale", 0f, CVar.ARCHIVE | CVar.CLIENTONLY);
 
@@ -448,6 +454,13 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        // Grid fixtures
+        /// <summary>
+        /// I'ma be real with you: the only reason this exists is to get tests working.
+        /// </summary>
+        public static readonly CVarDef<bool> GenerateGridFixtures =
+            CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
+
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =
             CVarDef.Create("physics.contact_multithread_threshold", 32);
@@ -457,10 +470,10 @@ namespace Robust.Shared
 
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
-            CVarDef.Create("physics.angsleeptol", 2.0f / 180.0f * MathF.PI);
+            CVarDef.Create("physics.angsleeptol", 0.25f / 180.0f * MathF.PI);
 
         public static readonly CVarDef<float> LinearSleepTolerance =
-            CVarDef.Create("physics.linsleeptol", 0.001f);
+            CVarDef.Create("physics.linsleeptol", 0.1f);
 
         public static readonly CVarDef<bool> SleepAllowed =
             CVarDef.Create("physics.sleepallowed", true);

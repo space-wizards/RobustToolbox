@@ -33,7 +33,7 @@ namespace Robust.Shared.Map
 
         private Box2i _cachedBounds;
 
-        public Fixture? Fixture { get; set; }
+        public List<Fixture> Fixtures { get; set; } = new();
 
         /// <inheritdoc />
         public GameTick LastTileModifiedTick { get; private set; }
@@ -271,6 +271,20 @@ namespace Robust.Shared.Map
             }
         }
 
+        public void FastGetAllAnchoredEnts(EntityUidQueryCallback callback)
+        {
+            foreach (var cell in _snapGrid)
+            {
+                if (cell.Center is null)
+                    continue;
+
+                foreach (var euid in cell.Center)
+                {
+                    callback(euid);
+                }
+            }
+        }
+
         public bool SuppressCollisionRegeneration { get; set; }
 
         public void RegenerateCollision()
@@ -284,8 +298,13 @@ namespace Robust.Shared.Map
             }
 
             // generate collision rects
-            GridChunkPartition.PartitionChunk(this, out _cachedBounds);
-            _grid.NotifyChunkCollisionRegenerated(this);
+            GridChunkPartition.PartitionChunk(this, out _cachedBounds, out var rectangles);
+
+            _grid.UpdateAABB();
+
+            // TryGet because unit tests YAY
+            if (ValidTiles > 0 && EntitySystem.TryGet(out SharedGridFixtureSystem? system))
+                system.RegenerateCollision(this, rectangles);
         }
 
         /// <inheritdoc />

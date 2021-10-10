@@ -21,7 +21,6 @@ namespace Robust.Shared.GameObjects
     public abstract partial class EntitySystem : IEntitySystem
     {
         [Dependency] protected readonly IEntityManager EntityManager = default!;
-        [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
 
         protected internal List<Type> UpdatesAfter { get; } = new();

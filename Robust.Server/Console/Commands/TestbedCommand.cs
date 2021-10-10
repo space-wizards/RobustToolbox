@@ -111,7 +111,7 @@ namespace Robust.Server.Console.Commands
             if (mapId == MapId.Nullspace) return;
             var pauseManager = IoCManager.Resolve<IPauseManager>();
             pauseManager.SetMapPaused(mapId, false);
-            IoCManager.Resolve<IMapManager>().GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -4.9f);
+            IoCManager.Resolve<IMapManager>().GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
             return;
         }
@@ -297,14 +297,13 @@ namespace Robust.Server.Console.Commands
         private void CreateTumbler(MapId mapId)
         {
             var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-            var compManager = IoCManager.Resolve<IComponentManager>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var groundEnt = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            var ground = compManager.AddComponent<PhysicsComponent>(groundEnt);
+            var ground = entityManager.AddComponent<PhysicsComponent>(groundEnt);
 
             var bodyEnt = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-            var body = compManager.AddComponent<PhysicsComponent>(bodyEnt);
+            var body = entityManager.AddComponent<PhysicsComponent>(bodyEnt);
 
             body.BodyType = BodyType.Dynamic;
             body.SleepingAllowed = false;
@@ -332,24 +331,18 @@ namespace Robust.Server.Console.Commands
                 fixture.CollisionLayer = 2;
             }
 
-            // TODO: Should Joints be their own entities? Box2D just adds them directly to the world.
-            // HMMM
-            // At the least it should be its own damn component
-            var revolute = new RevoluteJoint(ground, body)
-            {
-                LocalAnchorA = new Vector2(0f, 10f),
-                LocalAnchorB = new Vector2(0f, 0f),
-                ReferenceAngle = 0f,
-                MotorSpeed = 0.05f * MathF.PI,
-                MaxMotorTorque = 100000000f,
-                EnableMotor = true
-            };
-            body.AddJoint(revolute);
+            var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(ground.Owner.Uid, body.Owner.Uid);
+            revolute.LocalAnchorA = new Vector2(0f, 10f);
+            revolute.LocalAnchorB = new Vector2(0f, 0f);
+            revolute.ReferenceAngle = 0f;
+            revolute.MotorSpeed = 0.05f * MathF.PI;
+            revolute.MaxMotorTorque = 100000000f;
+            revolute.EnableMotor = true;
 
             // Box2D has this as 800 which is jesus christo.
             // Wouldn't recommend higher than 100 in debug and higher than 300 on release unless
             // you really want a profile.
-            var count = 200;
+            var count = 300;
             var mapManager = IoCManager.Resolve<IMapManager>();
 
             for (var i = 0; i < count; i++)
@@ -358,7 +351,7 @@ namespace Robust.Server.Console.Commands
                 {
                     if (!mapManager.MapExists(mapId)) return;
                     var ent = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-                    var box = compManager.AddComponent<PhysicsComponent>(ent);
+                    var box = entityManager.AddComponent<PhysicsComponent>(ent);
                     box.BodyType = BodyType.Dynamic;
                     box.FixedRotation = false;
                     var shape = new PolygonShape();

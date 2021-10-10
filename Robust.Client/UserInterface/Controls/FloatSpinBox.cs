@@ -7,7 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///  Number input LineEdit with increment buttons.
     /// </summary>
-    public class FloatSpinBox : HBoxContainer
+    public class FloatSpinBox : BoxContainer
     {
         private readonly float _stepSize;
         private readonly byte _precision;
@@ -45,6 +45,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public FloatSpinBox(float stepSize, byte precision)
         {
+            Orientation = LayoutOrientation.Horizontal;
             MouseFilter = MouseFilterMode.Pass;
 
             _lineEdit = new LineEdit

@@ -26,7 +26,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IClydeAudio _clyde = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadPhaseSystem = default!;
+        [Dependency] private readonly SharedPhysicsSystem _broadPhaseSystem = default!;
 
         private readonly List<PlayingStream> _playingClydeStreams = new();
 
@@ -441,6 +441,12 @@ namespace Robust.Client.GameObjects
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
             return Play(filename, entity, audioParams);
+        }
+
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
+        {
+            return EntityManager.TryGetEntity(uid, out var entity)
+                ? Play(filename, entity, audioParams) : null;
         }
 
         /// <inheritdoc />

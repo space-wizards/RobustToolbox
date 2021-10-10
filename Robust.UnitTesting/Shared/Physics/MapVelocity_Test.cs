@@ -26,7 +26,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var server = StartServer(new ServerIntegrationOptions {ExtraPrototypes = Prototypes});
 
             await server.WaitIdleAsync();
-            var compManager = server.ResolveDependency<IComponentManager>();
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
 
@@ -35,7 +34,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 var mapId = mapManager.CreateMap();
                 var grid = mapManager.CreateGrid(mapId);
 
-                Assert.That(compManager.TryGetComponent<PhysicsComponent>(grid.GridEntityId, out var gridPhysics));
+                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(grid.GridEntityId, out var gridPhysics));
 
                 // TODO: Once grid rotations are a stable thing try it with angular velocity too.
                 // Check that grid even moving first
@@ -45,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
                 // Check that map velocity is correct for entity
                 var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
-                Assert.That(compManager.TryGetComponent<PhysicsComponent>(dummy.Uid, out var body));
+                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(dummy.Uid, out var body));
                 Assert.That(body.LinearVelocity, Is.EqualTo(Vector2.Zero));
 
                 Assert.That(body.MapLinearVelocity, Is.EqualTo(Vector2.One));

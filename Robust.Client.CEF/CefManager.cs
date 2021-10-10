@@ -51,15 +51,12 @@ namespace Robust.Client.CEF
 
             // --------------------------- README --------------------------------------------------
             // By the way! You're gonna need the CEF binaries in your client's bin folder.
-            // More specifically, version cef_binary_91.1.21+g9dd45fe+chromium-91.0.4472.114
-            // https://cef-builds.spotifycdn.com/cef_binary_91.1.21%2Bg9dd45fe%2Bchromium-91.0.4472.114_windows64_minimal.tar.bz2
-            // https://cef-builds.spotifycdn.com/cef_binary_91.1.21%2Bg9dd45fe%2Bchromium-91.0.4472.114_linux64_minimal.tar.bz2
+            // More specifically, version cef_binary_94.4.1+g4b61a8c+chromium-94.0.4606.54
+            // Windows: https://cef-builds.spotifycdn.com/cef_binary_94.4.1%2Bg4b61a8c%2Bchromium-94.0.4606.54_windows64_minimal.tar.bz2
+            // Linux: https://cef-builds.spotifycdn.com/cef_binary_94.4.1%2Bg4b61a8c%2Bchromium-94.0.4606.54_linux64_minimal.tar.bz2
             // Here's how to get it to work:
-            // 1. Copy all the contents of "Release" to the bin folder.
-            // 2. Copy all the contents of "Resources" to the bin folder.
-            // Supposedly, you should just need libcef.so in Release and icudtl.dat in Resources...
-            // The rest might be optional.
-            // Maybe. Good luck! If you get odd crashes with no info and a weird exit code, use GDB!
+            // 1. Copy all the contents of "Release" to the bin/Content.Client folder.
+            // 2. Copy all the contents of "Resources" to the bin/Content.Client folder.
             // -------------------------------------------------------------------------------------
 
             _app = new RobustCefApp();

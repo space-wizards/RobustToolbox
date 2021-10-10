@@ -1,0 +1,16 @@
+// Shared between fov-lighting.swsl and fov.swsl, which both use the Clyde quad,
+//  manually transformed into clip-space to cover the entire viewport
+
+// World-space position offset from centre to pixel.
+varying highp vec2 worldSpaceDiff;
+
+// Inverted transformation matrix from clip coordinates to difference coordinates.
+uniform highp mat3 clipToDiff;
+
+void vertex()
+{
+    // Convert quad-space (0.0 to 1.0) to clip-space (-1.0 to 1.0)
+    VERTEX = (VERTEX.xy - 0.5) * 2.0;
+    worldSpaceDiff = (clipToDiff * vec3(VERTEX, 1.0)).xy;
+}
+

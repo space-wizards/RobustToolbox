@@ -40,7 +40,6 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            var compMan = _entityManager.ComponentManager;
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
@@ -50,7 +49,7 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
+                var transform = _entityManager.GetComponent<ITransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
 
                 foreach (var chunk in grid.GetMapChunks(worldBounds))

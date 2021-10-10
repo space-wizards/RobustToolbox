@@ -140,7 +140,6 @@ namespace Robust.Server.Maps
             }
 
             chunk.SuppressCollisionRegeneration = false;
-            chunk.RegenerateCollision();
             mapMan.SuppressOnTileChanged = false;
         }
     }

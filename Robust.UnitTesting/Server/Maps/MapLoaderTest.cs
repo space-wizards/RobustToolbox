@@ -4,13 +4,11 @@ using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Physics;
-using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -105,6 +103,7 @@ entities:
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             var mapId = map.CreateMap();
+            map.GetMapEntity(mapId).EnsureComponent<PhysicsMapComponent>();
             var mapLoad = IoCManager.Resolve<IMapLoader>();
             var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
 

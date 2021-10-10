@@ -18,4 +18,4 @@
 	url = https://github.com/space-wizards/Linguini
 [submodule "cefglue"]
 	path = cefglue
-	url = https://gitlab.com/xiliumhq/chromiumembedded/cefglue/
+	url = https://github.com/space-wizards/cefglue.git

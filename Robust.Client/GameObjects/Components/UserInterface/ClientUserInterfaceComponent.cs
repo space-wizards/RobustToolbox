@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Robust.Client.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -85,6 +86,10 @@ namespace Robust.Client.GameObjects
                 SendMessage(new CloseBoundInterfaceMessage(), uiKey);
             _openInterfaces.Remove(uiKey);
             boundUserInterface.Dispose();
+
+            var playerSession = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.Session;
+            if(playerSession != null)
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new BoundUIClosedEvent(uiKey, Owner.Uid, playerSession));
         }
 
         internal void SendMessage(BoundUserInterfaceMessage message, object uiKey)

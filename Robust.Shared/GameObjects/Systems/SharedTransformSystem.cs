@@ -46,7 +46,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var ent in anchoredEnts) // changing anchored modifies this set
             {
-                var transform = ComponentManager.GetComponent<TransformComponent>(ent);
+                var transform = EntityManager.GetComponent<TransformComponent>(ent);
                 transform.Anchored = false;
                 // If the tile was nuked than that means no longer intersecting the grid hence parent to the map
                 transform.AttachParent(mapEnt);

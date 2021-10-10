@@ -149,7 +149,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.MouseWheel(args);
 
-            if (MathHelper.CloseTo(0, args.Delta.Y))
+            if (MathHelper.CloseToPercent(0, args.Delta.Y))
             {
                 return;
             }

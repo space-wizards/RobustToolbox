@@ -14,7 +14,6 @@ namespace Robust.Client.GameObjects
     public class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();

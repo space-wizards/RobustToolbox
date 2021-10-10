@@ -59,7 +59,7 @@ namespace Robust.Server.GameObjects
             var uid = entity.Uid;
 
             // Check if there was a player attached to the entity already...
-            if (ComponentManager.TryGetComponent(uid, out ActorComponent actor))
+            if (EntityManager.TryGetComponent(uid, out ActorComponent actor))
             {
                 // If we're not forcing the attach, this fails.
                 if (!force)
@@ -76,7 +76,7 @@ namespace Robust.Server.GameObjects
             }
 
             // We add the actor component.
-            actor = ComponentManager.AddComponent<ActorComponent>(entity);
+            actor = EntityManager.AddComponent<ActorComponent>(entity);
             actor.PlayerSession = player;
             player.SetAttachedEntity(entity);
 
@@ -89,7 +89,7 @@ namespace Robust.Server.GameObjects
         private void OnActorPlayerDetach(EntityUid uid, ActorComponent component, DetachPlayerEvent args)
         {
             // Removing the component will call shutdown, and our subscription will handle the rest of the detach logic.
-            ComponentManager.RemoveComponent<ActorComponent>(uid);
+            EntityManager.RemoveComponent<ActorComponent>(uid);
             args.Result = true;
         }
 

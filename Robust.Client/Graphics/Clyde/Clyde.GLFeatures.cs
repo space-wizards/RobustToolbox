@@ -9,6 +9,8 @@ namespace Robust.Client.Graphics.Clyde
         // OpenGL feature detection go here.
 
         private bool _hasGLKhrDebug;
+        private bool _glDebuggerPresent;
+
         // As per the extension specification, when implemented as extension in an ES context,
         // function names have to be suffixed by "KHR"
         // This keeps track of whether that's necessary.
@@ -17,6 +19,7 @@ namespace Robust.Client.Graphics.Clyde
         private bool _hasGLSamplerObjects;
         private bool _hasGLSrgb;
         private bool _hasGLPrimitiveRestart;
+        private bool _hasGLPrimitiveRestartFixedIndex;
         private bool _hasGLReadFramebuffer;
         private bool _hasGLUniformBuffers;
         private bool HasGLAnyVertexArrayObjects => _hasGLVertexArrayObject || _hasGLVertexArrayObjectOes;
@@ -56,6 +59,8 @@ namespace Robust.Client.Graphics.Clyde
         private void DetectOpenGLFeatures(int major, int minor)
         {
             var extensions = GetGLExtensions();
+
+            CheckGLDebuggerStatus(extensions);
 
             _sawmillOgl.Debug("OpenGL capabilities:");
 
@@ -101,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
                 CheckGLCap(ref _hasGLPixelBufferObjects, "pixel_buffer_object", (3, 0));
                 CheckGLCap(ref _hasGLStandardDerivatives, "standard_derivatives", (3, 0), "GL_OES_standard_derivatives");
                 CheckGLCap(ref _hasGLReadFramebuffer, "read_framebuffer", (3, 0));
-                CheckGLCap(ref _hasGLPrimitiveRestart, "primitive_restart", (3, 1));
+                CheckGLCap(ref _hasGLPrimitiveRestartFixedIndex, "primitive_restart", (3, 0));
                 CheckGLCap(ref _hasGLUniformBuffers, "uniform_buffers", (3, 0));
                 CheckGLCap(ref _hasGLFloatFramebuffers, "float_framebuffers", (3, 2), "GL_EXT_color_buffer_float");
                 CheckGLCap(ref _hasGLES3Shaders, "gles3_shaders", (3, 0));
@@ -147,6 +152,19 @@ namespace Robust.Client.Graphics.Clyde
 
                 _sawmillOgl.Debug($"  {capName}: {cap}");
             }
+        }
+
+        private void CheckGLDebuggerStatus(HashSet<string> extensions)
+        {
+            if (!extensions.Contains("GL_EXT_debug_tool"))
+                return;
+
+            const int GL_DEBUG_TOOL_EXT = 0x6789;
+            const int GL_DEBUG_TOOL_NAME_EXT = 0x678A;
+
+            _glDebuggerPresent = GL.IsEnabled((EnableCap)GL_DEBUG_TOOL_EXT);
+            var name = GL.GetString((StringName)GL_DEBUG_TOOL_NAME_EXT);
+            _sawmillOgl.Debug($"OpenGL debugger present: {name}");
         }
 
         private void RegisterBlockCVars()

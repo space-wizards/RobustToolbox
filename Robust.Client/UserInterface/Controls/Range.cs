@@ -94,7 +94,7 @@ namespace Robust.Client.UserInterface.Controls
         private void _ensureValueClamped()
         {
             var newValue = ClampValue(_value);
-            if (!MathHelper.CloseTo(newValue, _value))
+            if (!MathHelper.CloseToPercent(newValue, _value))
             {
                 _value = newValue;
                 OnValueChanged?.Invoke(this);

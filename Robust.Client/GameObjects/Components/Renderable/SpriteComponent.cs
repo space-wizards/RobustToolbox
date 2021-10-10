@@ -564,7 +564,7 @@ namespace Robust.Client.GameObjects
                 Logger.ErrorS(LogCategory, "Unable to load RSI '{0}'. Trace:\n{1}", rsiPath, Environment.StackTrace);
             }
 
-            return AddLayer(stateId, res?.RSI);
+            return AddLayer(stateId, res?.RSI, newIndex);
         }
 
         public int AddLayerState(string stateId, ResourcePath rsiPath, int? newIndex = null)
@@ -1261,7 +1261,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                angle = CalcRectWorldAngle(worldRotation, numDirs);
+                angle = CalcRectWorldAngle(worldRotation + eyeRotation, numDirs) - eyeRotation;
             }
 
             var sWorldRotation = angle;
@@ -1285,13 +1285,13 @@ namespace Robust.Client.GameObjects
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
-                RenderLayer(drawingHandle, layer, worldRotation, overrideDirection);
+                RenderLayer(drawingHandle, layer, eyeRotation, worldRotation, overrideDirection);
             }
         }
 
-        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle worldRotation, Direction? overrideDirection)
+        private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection)
         {
-            var texture = GetRenderTexture(layer, worldRotation, overrideDirection);
+            var texture = GetRenderTexture(layer, worldRotation + eyeRotation, overrideDirection);
 
             if (layer.Shader != null)
             {
@@ -2146,7 +2146,7 @@ namespace Robust.Client.GameObjects
             }
 
             public ITransformComponent Transform { get; } = null!;
-            public IMetaDataComponent MetaData { get; } = null!;
+            public MetaDataComponent MetaData { get; } = null!;
 
             private Dictionary<Type, IComponent> _components = new();
             private EntityLifeStage _lifeStage;

@@ -65,7 +65,7 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IConfigurationManager _cfgMan = default!;
 
-        private SharedBroadphaseSystem _broadPhaseSystem = default!;
+        private SharedPhysicsSystem _broadPhaseSystem = default!;
 
         [ViewVariables]
         public bool IsAvailable
@@ -94,7 +94,7 @@ namespace Robust.Client.Audio.Midi
             get => _volume;
             set
             {
-                if (MathHelper.CloseTo(_volume, value))
+                if (MathHelper.CloseToPercent(_volume, value))
                     return;
 
                 _cfgMan.SetCVar(CVars.MidiVolume, value);
@@ -175,7 +175,7 @@ namespace Robust.Client.Audio.Midi
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
 
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+            _broadPhaseSystem = EntitySystem.Get<SharedPhysicsSystem>();
             FluidsynthInitialized = true;
         }
 

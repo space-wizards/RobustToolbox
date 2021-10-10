@@ -118,6 +118,8 @@ namespace Robust.Client.Graphics.Clyde
 
                     overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox);
                 }
+
+                FlushRenderQueue();
             }
         }
 
@@ -386,7 +388,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.yWorldPos = worldPos.Y - bounds.Extents.Y;
                     return true;
 
-                }, bounds);
+                }, bounds, true);
             }
         }
 
@@ -469,7 +471,6 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
                     RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB);
-                    FlushRenderQueue();
 
                     using (DebugGroup("Grids"))
                     {
@@ -516,7 +517,6 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB);
-                FlushRenderQueue();
 
                 _currentViewport = oldVp;
             });

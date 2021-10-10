@@ -22,6 +22,8 @@ namespace Robust.Shared.Maths
         public readonly int Height => Math.Abs(Top - Bottom);
         public readonly Vector2i Size => new(Width, Height);
 
+        public readonly int Area => Width * Height;
+
         public Box2i(Vector2i bottomLeft, Vector2i topRight)
         {
             Unsafe.SkipInit(out this);

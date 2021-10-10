@@ -79,7 +79,7 @@ namespace Robust.Shared.Physics.Dynamics
             get => _friction;
             set
             {
-                if (MathHelper.CloseTo(value, _friction)) return;
+                if (MathHelper.CloseToPercent(value, _friction)) return;
 
                 _friction = value;
                 Body.FixtureChanged(this);
@@ -99,7 +99,7 @@ namespace Robust.Shared.Physics.Dynamics
             get => _restitution;
             set
             {
-                if (MathHelper.CloseTo(value, _restitution)) return;
+                if (MathHelper.CloseToPercent(value, _restitution)) return;
 
                 _restitution = value;
                 Body.FixtureChanged(this);
@@ -151,12 +151,12 @@ namespace Robust.Shared.Physics.Dynamics
             get => _mass;
             set
             {
-                if (MathHelper.CloseTo(value, _mass)) return;
+                if (MathHelper.CloseToPercent(value, _mass)) return;
 
                 _mass = MathF.Max(0f, value);
+                ComputeProperties();
                 Body.FixtureChanged(this);
                 Body.ResetMassData();
-                ComputeProperties();
             }
         }
 

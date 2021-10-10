@@ -151,6 +151,17 @@ namespace Robust.Server.GameObjects
             return Resolve(uid, ref ui) && ui.TryGetBoundUserInterface(uiKey, out bui);
         }
 
+        public bool IsUiOpen(EntityUid uid, object uiKey, ServerUserInterfaceComponent? ui = null)
+        {
+            if (!Resolve(uid, ref ui))
+                return false;
+
+            if (!TryGetUi(uid, uiKey, out var bui, ui))
+                return false;
+
+            return bui.SubscribedSessions.Count > 0;
+        }
+
         public bool TrySetUiState(EntityUid uid, object uiKey, BoundUserInterfaceState state, IPlayerSession? session = null, ServerUserInterfaceComponent? ui = null)
         {
             if (!Resolve(uid, ref ui))

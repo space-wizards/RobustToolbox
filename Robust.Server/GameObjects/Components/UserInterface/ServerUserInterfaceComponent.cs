@@ -105,7 +105,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     All of the sessions currently subscribed to this UserInterface.
         /// </summary>
-        public IEnumerable<IPlayerSession> SubscribedSessions => _subscribedSessions;
+        public IReadOnlyCollection<IPlayerSession> SubscribedSessions => _subscribedSessions;
 
         public event Action<ServerBoundUserInterfaceMessage>? OnReceiveMessage;
         public event Action<IPlayerSession>? OnClosed;

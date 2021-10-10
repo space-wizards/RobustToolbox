@@ -9,9 +9,13 @@ namespace Robust.Shared.Containers
 {
     public enum ContainerVisibility : byte
     {
-        // This container is never visible
+        /// <summary>
+        /// This container is never visible
+        /// </summary>
         None = 0,
-        // This container is always visible (within PVS range).
+        /// <summary>
+        /// This container is always visible (within PVS range).
+        /// </summary>
         Always = 1 << 0,
     }
 

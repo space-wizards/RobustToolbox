@@ -409,6 +409,7 @@ namespace Robust.Shared.GameObjects
                         foreach (var child in container.ContainedEntities)
                         {
                             callback(child);
+                            GetRecursiveChildrenCallback(child, callback);
                         }
                     }
                 });
@@ -422,6 +423,45 @@ namespace Robust.Shared.GameObjects
                     {
                         if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
                         callback(ent);
+                    }
+                }
+            }
+        }
+
+        private void GetRecursiveChildrenCallback(IEntity entity, EntityQueryCallback callback)
+        {
+            foreach (var child in entity.Transform.ChildEntityUids)
+            {
+                var childEnt = _entityManager.GetEntity(child);
+
+                callback(childEnt);
+
+                foreach (var childOfChild in childEnt.Transform.ChildEntityUids)
+                {
+                    var childOfChildEnt = _entityManager.GetEntity(childOfChild);
+                    callback(childOfChildEnt);
+                    GetRecursiveChildrenCallback(childOfChildEnt, callback);
+                }
+            }
+        }
+
+        private IEnumerable<IEntity> GetRecursiveChildren(IEntity entity)
+        {
+            foreach (var child in entity.Transform.ChildEntityUids)
+            {
+                if (!_entityManager.TryGetEntity(child, out var childEnt)) continue;
+
+                yield return childEnt;
+
+                foreach (var childOfChild in childEnt.Transform.ChildEntityUids)
+                {
+                    if (!_entityManager.TryGetEntity(childOfChild, out var childOfChildEnt)) continue;
+
+                    yield return childOfChildEnt;
+
+                    foreach (var rec in GetRecursiveChildren(childOfChildEnt))
+                    {
+                        yield return rec;
                     }
                 }
             }
@@ -462,6 +502,11 @@ namespace Robust.Shared.GameObjects
                         {
                             if (child.Deleted) continue;
                             list.Add(child);
+
+                            foreach (var childOfChild in GetRecursiveChildren(child))
+                            {
+                                list.Add(childOfChild);
+                            }
                         }
                     }
 
@@ -514,6 +559,11 @@ namespace Robust.Shared.GameObjects
                         {
                             if (child.Deleted) continue;
                             list.Add(child);
+
+                            foreach (var childOfChild in GetRecursiveChildren(child))
+                            {
+                                list.Add(childOfChild);
+                            }
                         }
                     }
 
@@ -691,6 +741,11 @@ namespace Robust.Shared.GameObjects
                         {
                             if (child.Deleted) continue;
                             list.Add(child);
+
+                            foreach (var childOfChild in GetRecursiveChildren(child))
+                            {
+                                list.Add(childOfChild);
+                            }
                         }
                     }
 

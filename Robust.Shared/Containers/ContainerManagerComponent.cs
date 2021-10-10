@@ -19,7 +19,7 @@ namespace Robust.Shared.Containers
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
     [NetworkedComponent]
-    public class ContainerManagerComponent : Component, IContainerManager
+    public class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
@@ -29,6 +29,15 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         public sealed override string Name => "ContainerContainer";
+
+        void ISerializationHooks.AfterDeserialization()
+        {
+            foreach (var (_, container) in Containers)
+            {
+                var baseContainer = (BaseContainer) container;
+                baseContainer.Manager = this;
+            }
+        }
 
         /// <inheritdoc />
         protected override void OnRemove()

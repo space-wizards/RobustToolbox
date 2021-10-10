@@ -552,7 +552,7 @@ namespace Robust.Server
 
             if (_config.GetCVar(CVars.LogRuntimeLog))
             {
-                // Wrtie down exception log
+                // Write down exception log
                 var logPath = _config.GetCVar(CVars.LogPath);
                 var relPath = PathHelpers.ExecutableRelativeFile(logPath);
                 Directory.CreateDirectory(relPath);

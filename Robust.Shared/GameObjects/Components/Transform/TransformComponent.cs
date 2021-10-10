@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
                 if(_noLocalRotation)
                     return;
 
-                if (_localRotation.EqualsApprox(value, 0.00001))
+                if (_localRotation.EqualsApprox(value))
                     return;
 
                 var oldRotation = _localRotation;
@@ -775,7 +775,7 @@ namespace Robust.Shared.GameObjects
                     rebuildMatrices = true;
                 }
 
-                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
+                if (!_localPosition.EqualsApprox(newState.LocalPosition))
                 {
                     var oldPos = Coordinates;
                     _localPosition = newState.LocalPosition;
@@ -926,7 +926,7 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner);
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
         }
     }
@@ -985,9 +985,12 @@ namespace Robust.Shared.GameObjects
     {
         public readonly IEntity Entity;
 
-        public AnchorStateChangedEvent(IEntity entity)
+        public readonly bool Anchored;
+
+        public AnchorStateChangedEvent(IEntity entity, bool anchored)
         {
             Entity = entity;
+            Anchored = anchored;
         }
     }
 }

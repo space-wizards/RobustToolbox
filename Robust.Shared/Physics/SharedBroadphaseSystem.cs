@@ -197,7 +197,8 @@ namespace Robust.Shared.Physics
             {
                 var fixture = proxy.Fixture;
 
-                if (!_broadphases.Contains(fixture.Body.Owner.Uid) || prediction && !fixture.Body.Predict) continue;
+                //  || prediction && !fixture.Body.Predict
+                if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 var broadphaseXForm = _broadphaseTransforms[broadphase];
@@ -251,9 +252,8 @@ namespace Robust.Shared.Physics
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
-                if (prediction && !proxy.Fixture.Body.Predict) continue;
-
                 var proxyBody = proxy.Fixture.Body;
+                // if (prediction && !proxyBody.Predict) continue;
 
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, broadphaseXForm) in _broadphaseTransforms)
@@ -277,10 +277,7 @@ namespace Robust.Shared.Physics
                     }
                     else
                     {
-                        // We're intersecting another broadphase so need to get our AABB in their terms.
-                        aabb = proxy.AABB
-                            .Translated(_broadphaseTransforms[proxyBroad].Position)
-                            .Translated(-broadphaseXForm.Position);
+                        aabb = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
                     }
 
                     foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
@@ -924,7 +921,7 @@ namespace Robust.Shared.Physics
         {
             return GetBroadphases(mapId, new Box2(worldPos, worldPos));
         }
-
+        
         private sealed class InvalidBroadphaseException : Exception
         {
             public InvalidBroadphaseException() {}

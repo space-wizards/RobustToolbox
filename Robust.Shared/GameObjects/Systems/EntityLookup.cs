@@ -446,8 +446,8 @@ namespace Robust.Shared.GameObjects
             {
                 var transform = entity.Transform;
                 var entPos = transform.WorldPosition;
-                if (MathHelper.CloseTo(entPos.X, mapPosition.X)
-                    && MathHelper.CloseTo(entPos.Y, mapPosition.Y))
+                if (MathHelper.CloseToPercent(entPos.X, mapPosition.X)
+                    && MathHelper.CloseToPercent(entPos.Y, mapPosition.Y))
                 {
                     return true;
                 }
@@ -669,9 +669,10 @@ namespace Robust.Shared.GameObjects
         {
             // TODO: Need to fix ordering issues and then we can just directly remove it from the tree
             // rather than this O(n) legacy garbage.
+            // Also we can't early returns because somehow it gets added to multiple trees!!!
             foreach (var lookup in _entityManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (lookup.Tree.Remove(entity)) return;
+                lookup.Tree.Remove(entity);
             }
         }
 

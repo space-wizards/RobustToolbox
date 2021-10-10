@@ -120,6 +120,12 @@ namespace Robust.Client.GameObjects
             set => _visibleNested = value;
         }
 
+        /// <summary>
+        ///     Whether this pointlight should cast shadows
+        /// </summary>
+        [DataField("castShadows")]
+        public bool CastShadows = true;
+
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
         [DataField("autoRot")]
@@ -142,7 +148,7 @@ namespace Robust.Client.GameObjects
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(value, _radius)) return;
+                if (MathHelper.CloseToPercent(value, _radius)) return;
 
                 base.Radius = value;
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));

@@ -38,6 +38,11 @@ namespace Robust.Shared.Map
         Box2 WorldBounds { get; }
 
         /// <summary>
+        ///     The bounding box of the grid in local coordinates.
+        /// </summary>
+        Box2 LocalBounds { get; }
+
+        /// <summary>
         ///     The length of a side of the square chunk in number of tiles.
         /// </summary>
         ushort ChunkSize { get; }

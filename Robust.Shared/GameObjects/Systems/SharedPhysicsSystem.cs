@@ -235,7 +235,7 @@ namespace Robust.Shared.GameObjects
             if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
                 return;
 
-            physicsComponent.ClearJoints();
+            Get<SharedJointSystem>().ClearJoints(physicsComponent);
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
@@ -294,7 +294,7 @@ namespace Robust.Shared.GameObjects
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
-            physicsComponent.ClearJoints();
+			Get<SharedJointSystem>().ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
                 MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
@@ -308,25 +308,6 @@ namespace Robust.Shared.GameObjects
 
             if (mapId != MapId.Nullspace)
                 MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
-        }
-
-        internal void FilterContactsForJoint(Joint joint)
-        {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
-
-            var edge = bodyB.ContactEdges;
-            while (edge != null)
-            {
-                if (edge.Other == bodyA)
-                {
-                    // Flag the contact for filtering at the next time step (where either
-                    // body is awake).
-                    edge.Contact!.FilterFlag = true;
-                }
-
-                edge = edge.Next;
-            }
         }
 
         /// <summary>

@@ -82,6 +82,11 @@ namespace Robust.Shared.Map
         void RemoveFromSnapGridCell(ushort xCell, ushort yCell, EntityUid euid);
         IEnumerable<EntityUid> GetAllAnchoredEnts();
 
+        /// <summary>
+        /// Like <see cref="GetAllAnchoredEnts"/>... but fast.
+        /// </summary>
+        void FastGetAllAnchoredEnts(EntityUidQueryCallback callback);
+
         Box2i CalcLocalBounds();
 
         // TODO: We can rely on the fixture instead for the bounds in the future but we also need to

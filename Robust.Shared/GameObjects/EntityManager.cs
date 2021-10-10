@@ -12,6 +12,8 @@ namespace Robust.Shared.GameObjects
 {
     public delegate void EntityQueryCallback(IEntity entity);
 
+    public delegate void EntityUidQueryCallback(EntityUid uid);
+
     /// <inheritdoc />
     public partial class EntityManager : IEntityManager
     {
@@ -73,6 +75,8 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+
+            Initialized = true;
         }
 
         public virtual void Startup()
@@ -174,11 +178,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-
-            InitializeAndStartEntity((Entity) entity);
-
-            if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this))) entity.RunMapInit();
-
+            InitializeAndStartEntity((Entity) entity, coordinates.GetMapId(this));
             return entity;
         }
 
@@ -186,7 +186,7 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity);
+            InitializeAndStartEntity((Entity) entity, coordinates.MapId);
             return entity;
         }
 
@@ -251,6 +251,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var transform = entity.Transform;
+            var metadata = entity.MetaData;
             entity.LifeStage = EntityLifeStage.Terminating;
 
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
@@ -272,7 +273,7 @@ namespace Robust.Shared.GameObjects
                 transform.DetachParentToNull();
             }
 
-            entity.LifeStage = EntityLifeStage.Deleted;
+            metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
             Entities.Remove(entity.Uid);
@@ -298,13 +299,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            if (!TryGetEntity(uid, out var ent))
-                return false;
-
-            if (ent.Deleted)
-                return false;
-
-            return true;
+            return TryGetEntity(uid, out _);
         }
 
         /// <summary>
@@ -361,8 +356,12 @@ namespace Robust.Shared.GameObjects
             // We do this after the event, so if the event throws we have not committed
             Entities[entity.Uid] = entity;
 
-            // allocate the required MetaDataComponent
-            AddComponent<MetaDataComponent>(entity);
+            // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
+            var metadata = new MetaDataComponent() { Owner = entity };
+            entity.MetaData = metadata;
+
+            // add the required MetaDataComponent directly.
+            AddComponentInternal(uid.Value, metadata);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(entity);
@@ -399,13 +398,16 @@ namespace Robust.Shared.GameObjects
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private protected void InitializeAndStartEntity(Entity entity)
+        private void InitializeAndStartEntity(Entity entity, MapId mapId)
         {
             try
             {
                 InitializeEntity(entity);
-                EntityInitialized?.Invoke(this, entity.Uid);
                 StartEntity(entity);
+
+                // If the map we're initializing the entity on is initialized, run map init on it.
+                if (_pauseManager.IsMapInitialized(mapId))
+                    entity.RunMapInit();
             }
             catch (Exception e)
             {
@@ -414,9 +416,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected static void InitializeEntity(Entity entity)
+        protected void InitializeEntity(Entity entity)
         {
             entity.InitializeComponents();
+            EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)

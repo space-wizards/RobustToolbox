@@ -42,8 +42,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, collider))
             {
-                // TODO: Is rotation a problem here?
-                var gridCollider = collider.Translated(-broadphase.Owner.Transform.WorldPosition);
+                var gridCollider = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(collider);
 
                 broadphase.Tree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
                 {
@@ -106,7 +105,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
             {
-                var gridAABB = worldAABB.Translated(-broadphase.Owner.Transform.WorldPosition);
+                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
                 {
@@ -249,10 +248,11 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var offset = broadphase.Owner.Transform.WorldPosition;
+                var offset = broadphase.Owner.Transform.InvWorldMatrix.Transform(ray.Position);
+                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var direction = gridRot.RotateVec(ray.Direction);
 
-                var gridRay = new CollisionRay(ray.Position - offset, ray.Direction, ray.CollisionMask);
-                // TODO: Probably need rotation when we get rotatable grids
+                var gridRay = new CollisionRay(offset, direction, ray.CollisionMask);
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {

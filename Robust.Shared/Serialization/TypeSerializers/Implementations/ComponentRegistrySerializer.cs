@@ -62,7 +62,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 var read = serializationManager.ReadWithValueOrThrow<IComponent>(type, copy, skipHook: skipHook);
 
                 components[compType] = read.value;
-                mappings.Add(DeserializationResult.Value(compType), read.result);
+                mappings.Add(new DeserializedValue<string>(compType), read.result);
             }
 
             var referenceTypes = new List<Type>();
@@ -108,7 +108,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                         continue;
 
                     case ComponentAvailability.Unknown:
-                        list.Add(new ErrorNode(componentMapping, "Unknown ComponentType."));
+                        list.Add(new ErrorNode(componentMapping, $"Unknown component type {compType}."));
                         continue;
                 }
 

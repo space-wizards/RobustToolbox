@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
@@ -30,11 +31,17 @@ namespace Robust.Client.UserInterface
         private HAlignment _horizontalAlignment;
         private VAlignment _verticalAlignment;
         private Thickness _margin;
-        private bool _isLayoutUpdateOverrideUsed;
         private bool _measuring;
 
+        /// <summary>
+        /// The desired minimum size this control needs for layout to avoid cutting off content or such.
+        /// </summary>
+        /// <remarks>
+        /// This is calculated by calling <see cref="Measure"/>.
+        /// </remarks>
         [ViewVariables] public Vector2 DesiredSize { get; private set; }
         [ViewVariables] public Vector2i DesiredPixelSize => (Vector2i) (DesiredSize * UIScale);
+
         [ViewVariables] public bool IsMeasureValid { get; private set; }
         [ViewVariables] public bool IsArrangeValid { get; private set; }
 
@@ -252,8 +259,6 @@ namespace Robust.Client.UserInterface
                     SizeFlags.ShrinkEnd => HAlignment.Right,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
-                Parent?.UpdateLayout();
             }
         }
 
@@ -291,11 +296,14 @@ namespace Robust.Client.UserInterface
                     SizeFlags.ShrinkEnd => VAlignment.Bottom,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
-                Parent?.UpdateLayout();
             }
         }
 
+        /// <summary>
+        /// Horizontal alignment mode.
+        /// This determines how the control should be laid out horizontally
+        /// if it gets more available space than its <see cref="DesiredSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public HAlignment HorizontalAlignment
         {
@@ -307,7 +315,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
-
+        /// <summary>
+        /// Vertical alignment mode.
+        /// This determines how the control should be laid out vertically
+        /// if it gets more available space than its <see cref="DesiredSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public VAlignment VerticalAlignment
         {
@@ -319,6 +331,13 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Whether to horizontally expand and push other controls in layout controls that support this.
+        /// This does nothing unless the parent is a control like <see cref="BoxContainer"/> which supports this behavior.
+        /// </summary>
+        /// <remarks>
+        /// If I was redesigning the UI system from scratch today, this would be an attached property instead.
+        /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
         public bool HorizontalExpand
         {
@@ -330,6 +349,13 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Whether to vertically expand and push other controls in layout controls that support this.
+        /// This does nothing unless the parent is a control like <see cref="BoxContainer"/> which supports this behavior.
+        /// </summary>
+        /// <remarks>
+        /// If I was redesigning the UI system from scratch today, this would be an attached property instead.
+        /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
         public bool VerticalExpand
         {
@@ -366,54 +392,70 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     A combination of <see cref="MinSize" /> and <see cref="CalculateMinimumSize" />,
-        ///     Whichever is greater.
-        ///     Use this for whenever you need the *actual* minimum size of something.
+        /// A settable minimum size for this control.
+        /// This is factored into <see cref="MeasureCore"/> so that this control itself always has at least this size.
         /// </summary>
         /// <remarks>
-        ///     This is in virtual pixels.
+        /// <para>
+        /// This is not to be confused with <see cref="DesiredSize"/>,
+        /// which contains the actual calculated minimum size from the layout system.
+        /// This property is just an input parameter.
+        /// </para>
+        /// <para>
+        /// If <see cref="MaxSize"/>, <see cref="MinSize"/> and/or <see cref="SetSize"/> are in conflict,
+        /// <see cref="MinSize"/> is the most important, then <see cref="MaxSize"/>, then <see cref="SetSize"/>.
+        /// </para>
         /// </remarks>
-        /// <seealso cref="CombinedPixelMinimumSize"/>
-        [Obsolete("Use DesiredSize and Measure()")]
-        public Vector2 CombinedMinimumSize => DesiredSize;
-
-        /// <summary>
-        ///     The <see cref="CombinedMinimumSize"/>, in physical pixels.
-        /// </summary>
-        [Obsolete("Use DesiredSize and Measure()")]
-        public Vector2i CombinedPixelMinimumSize => (Vector2i) (CombinedMinimumSize * UIScale);
-
-        /// <summary>
-        ///     A custom minimum size. If the control-calculated size is is smaller than this, this is used instead.
-        /// </summary>
-        /// <seealso cref="CalculateMinimumSize" />
-        /// <seealso cref="CombinedMinimumSize" />
-        [ViewVariables]
-        [Obsolete("Use MinSize instead.")]
-        public Vector2 CustomMinimumSize
-        {
-            get => (_minWidth, _minHeight);
-            set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
-        }
-
+        /// <seealso cref="MinWidth"/>
+        /// <seealso cref="MinHeight"/>
         public Vector2 MinSize
         {
             get => (_minWidth, _minHeight);
             set => (MinWidth, MinHeight) = Vector2.ComponentMax(Vector2.Zero, value);
         }
 
+        /// <summary>
+        /// A settable exact size for this control.
+        /// This is factored into <see cref="MeasureCore"/> so that this control itself always has exactly this size.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This is not to be confused with <see cref="Size"/>,
+        /// which contains the actual calculated size from the layout system.
+        /// This property is just an input parameter.
+        /// </para>
+        /// <para>
+        /// If <see cref="MaxSize"/>, <see cref="MinSize"/> and/or <see cref="SetSize"/> are in conflict,
+        /// <see cref="MinSize"/> is the most important, then <see cref="MaxSize"/>, then <see cref="SetSize"/>.
+        /// </para>
+        /// </remarks>
+        /// <seealso cref="SetWidth"/>
+        /// <seealso cref="SetHeight"/>
         public Vector2 SetSize
         {
             get => (_setWidth, _setHeight);
             set => (SetWidth, SetHeight) = value;
         }
 
+        /// <summary>
+        /// A settable maximum size for this control.
+        /// This is factored into <see cref="MeasureCore"/> so that this control itself always has at most this size.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="MaxSize"/>, <see cref="MinSize"/> and/or <see cref="SetSize"/> are in conflict,
+        /// <see cref="MinSize"/> is the most important, then <see cref="MaxSize"/>, then <see cref="SetSize"/>.
+        /// </remarks>
+        /// <seealso cref="MaxWidth"/>
+        /// <seealso cref="MaxHeight"/>
         public Vector2 MaxSize
         {
             get => (_maxWidth, _maxHeight);
             set => (MaxWidth, MaxHeight) = value;
         }
 
+        /// <summary>
+        /// Width component of <see cref="MinSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float MinWidth
         {
@@ -425,6 +467,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Height component of <see cref="MinSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float MinHeight
         {
@@ -436,6 +481,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Width component of <see cref="SetSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float SetWidth
         {
@@ -447,6 +495,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Height component of <see cref="SetSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float SetHeight
         {
@@ -458,6 +509,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Width component of <see cref="MaxSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float MaxWidth
         {
@@ -469,6 +523,9 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Height component of <see cref="MaxSize"/>.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float MaxHeight
         {
@@ -481,26 +538,9 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Override this to calculate a minimum size for this control.
-        ///     Do NOT call this directly to get the minimum size for layout purposes!
-        ///     Use <see cref="CombinedMinimumSize" /> for the ACTUAL minimum size.
+        /// Notify the layout system that this control's <see cref="Measure"/> result may have changed
+        /// and must be recalculated.
         /// </summary>
-        [Obsolete("Implement MeasureOverride instead")]
-        protected virtual Vector2 CalculateMinimumSize()
-        {
-            return Vector2.Zero;
-        }
-
-        /// <summary>
-        ///     Tells the GUI system that the minimum size of this control may have changed,
-        ///     so that say containers will re-sort it if necessary.
-        /// </summary>
-        [Obsolete("Use InvalidateMeasure()")]
-        public void MinimumSizeChanged()
-        {
-            InvalidateMeasure();
-        }
-
         public void InvalidateMeasure()
         {
             if (!IsMeasureValid)
@@ -513,21 +553,9 @@ namespace Robust.Client.UserInterface
         }
 
         /// <summary>
-        ///     Forces this component to immediately calculate layout.
+        /// Notify the layout system that this control's <see cref="Arrange"/> result may have changed
+        /// and must be recalculated.
         /// </summary>
-        /// <remarks>
-        ///     This should only be used for unit testing,
-        ///     where running the deferred layout updating system in the UI manager can be annoying.
-        ///     If you are forced to use this in regular code, you have found a bug.
-        /// </remarks>
-        [Obsolete("Call Arrange manually for unit tests or call Measure manually for early measures.")]
-        public void ForceRunLayoutUpdate()
-        {
-            // TODO: Fix or remove this
-            if (PreviousArrange.HasValue)
-                Arrange(PreviousArrange.Value);
-        }
-
         public void InvalidateArrange()
         {
             if (!IsArrangeValid)
@@ -540,12 +568,15 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal.QueueArrangeUpdate(this);
         }
 
-        [Obsolete("Use InvalidateArrange()")]
-        protected void UpdateLayout()
-        {
-            InvalidateArrange();
-        }
-
+        /// <summary>
+        /// Measure the desired size of this control, if given a specific available space.
+        /// The result of this measure is stored in <see cref="DesiredSize"/>.
+        /// </summary>
+        /// <remarks>
+        /// Available size is given to this method so that controls can handle special cases such as text layout,
+        /// where word wrapping can cause the vertical size to change based on available horizontal size.
+        /// </remarks>
+        /// <param name="availableSize">The space available to this control, that it should measure for.</param>
         public void Measure(Vector2 availableSize)
         {
             if (!IsMeasureValid || PreviousMeasure != availableSize)
@@ -565,6 +596,12 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Core logic implementation of <see cref="Measure"/>,
+        /// implementing stuff such as margins and <see cref="MinSize"/>.
+        /// In almost all cases, you want to override <see cref="MeasureOverride"/> instead, which is called by this.
+        /// </summary>
+        /// <returns>The actual measured desired size of the control.</returns>
         protected virtual Vector2 MeasureCore(Vector2 availableSize)
         {
             if (!Visible)
@@ -581,12 +618,7 @@ namespace Robust.Client.UserInterface
             try
             {
                 _measuring = true;
-                measured = Vector2.ComponentMax(
-                    MeasureOverride(constrained),
-                    // For the time being keep the old CalculateMinimumSize around.
-#pragma warning disable 618
-                    CalculateMinimumSize());
-#pragma warning restore 618
+                measured = MeasureOverride(constrained);
             }
             finally
             {
@@ -608,9 +640,14 @@ namespace Robust.Client.UserInterface
             measured.Y = Math.Clamp(measured.Y, MinHeight, MaxHeight);
 
             measured = _margin.Inflate(measured);
-            return Vector2.ComponentMin(measured, availableSize);
+            measured = Vector2.ComponentMin(measured, availableSize);
+            measured = Vector2.ComponentMax(measured, Vector2.Zero);
+            return measured;
         }
 
+        /// <summary>
+        /// Calculates the actual desired size for the contents of this control, based on available size.
+        /// </summary>
         protected virtual Vector2 MeasureOverride(Vector2 availableSize)
         {
             var min = Vector2.Zero;
@@ -624,6 +661,9 @@ namespace Robust.Client.UserInterface
             return min;
         }
 
+        /// <summary>
+        /// Lay out this control in the given space of its parent, by pixel coordinates.
+        /// </summary>
         public void ArrangePixel(UIBox2i finalRect)
         {
             var topLeft = finalRect.TopLeft / UIScale;
@@ -632,6 +672,10 @@ namespace Robust.Client.UserInterface
             Arrange(new UIBox2(topLeft, bottomRight));
         }
 
+        /// <summary>
+        /// Lay out this control in the given space of its parent.
+        /// This sets <see cref="Position"/> and <see cref="Size"/> and also arranges any child controls.
+        /// </summary>
         public void Arrange(UIBox2 finalRect)
         {
             if (!IsMeasureValid)
@@ -645,6 +689,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
+        /// <summary>
+        /// Core logic implementation of <see cref="Arrange"/>,
+        /// implementing stuff such as margins and <see cref="MinSize"/>.
+        /// In almost all cases, you want to override <see cref="ArrangeOverride"/> instead, which is called by this.
+        /// </summary>
         protected virtual void ArrangeCore(UIBox2 finalRect)
         {
             if (!Visible)
@@ -664,17 +713,9 @@ namespace Robust.Client.UserInterface
 
             size = ApplySizeConstraints(this, size);
 
-            Size = size;
-            _isLayoutUpdateOverrideUsed = true;
-#pragma warning disable 618
-            LayoutUpdateOverride();
-#pragma warning restore 618
-            if (!_isLayoutUpdateOverrideUsed)
-            {
-                var arranged = ArrangeOverride(size);
+            var arranged = ArrangeOverride(size);
 
-                size = Vector2.ComponentMin(arranged, size);
-            }
+            size = Vector2.ComponentMin(arranged, size);
 
             switch (HorizontalAlignment)
             {
@@ -702,6 +743,14 @@ namespace Robust.Client.UserInterface
             Size = size;
         }
 
+        /// <summary>
+        /// Lay out this control and its children for the specified final size.
+        /// </summary>
+        /// <param name="finalSize">
+        /// The final size for this control,
+        /// after calculation of things like margins and alignment.
+        /// </param>
+        /// <returns>The actual space used by this control.</returns>
         protected virtual Vector2 ArrangeOverride(Vector2 finalSize)
         {
             foreach (var child in Children)
@@ -710,24 +759,6 @@ namespace Robust.Client.UserInterface
             }
 
             return finalSize;
-        }
-
-        [Obsolete("Use Control.ArrangePixel")]
-        protected void FitChildInPixelBox(Control child, UIBox2i pixelBox)
-        {
-            child.ArrangePixel(pixelBox);
-        }
-
-        [Obsolete("Use Control.Arrange")]
-        protected void FitChildInBox(Control child, UIBox2 box)
-        {
-            child.Arrange(box);
-        }
-
-        [Obsolete("Implement ArrangeOverride instead.")]
-        protected virtual void LayoutUpdateOverride()
-        {
-            _isLayoutUpdateOverrideUsed = false;
         }
 
         private static Vector2 ApplySizeConstraints(Control control, Vector2 avail)
@@ -750,7 +781,7 @@ namespace Robust.Client.UserInterface
             maxH = MathHelper.Clamp(maxConstraint, minH, maxH);
 
             minConstraint = float.IsNaN(setH) ? 0 : setH;
-            minH = MathHelper.Clamp(minW, minConstraint, minH);
+            minH = MathHelper.Clamp(maxH, minConstraint, minH);
 
             return (
                 Math.Clamp(avail.X, minW, maxW),
@@ -762,6 +793,7 @@ namespace Robust.Client.UserInterface
         /// </summary>
         [Flags]
         [PublicAPI]
+        [Obsolete("Use HAlignment/VAlignment/VerticalExpand/HorizontalExpand instead")]
         public enum SizeFlags : byte
         {
             /// <summary>
@@ -796,19 +828,57 @@ namespace Robust.Client.UserInterface
             ShrinkEnd = 8,
         }
 
+        /// <summary>
+        /// Specifies horizontal alignment modes.
+        /// </summary>
+        /// <seealso cref="Control.HorizontalAlignment"/>
         public enum HAlignment
         {
+            /// <summary>
+            /// The control should take up all available horizontal space.
+            /// </summary>
             Stretch,
+
+            /// <summary>
+            /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align to the left of its given space.
+            /// </summary>
             Left,
+
+            /// <summary>
+            /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align in the center of its given space.
+            /// </summary>
             Center,
+
+            /// <summary>
+            /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align to the right of its given space.
+            /// </summary>
             Right
         }
 
+        /// <summary>
+        /// Specifies vertical alignment modes.
+        /// </summary>
+        /// <seealso cref="Control.VerticalAlignment"/>
         public enum VAlignment
         {
+            /// <summary>
+            /// The control should take up all available vertical space.
+            /// </summary>
             Stretch,
+
+            /// <summary>
+            /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align to the top of its given space.
+            /// </summary>
             Top,
+
+            /// <summary>
+            /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align in the center of its given space.
+            /// </summary>
             Center,
+
+            /// <summary>
+            /// The control should take up minimal (<see cref="Control.DesiredSize"/>) space and align to the bottom of its given space.
+            /// </summary>
             Bottom
         }
     }

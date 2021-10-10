@@ -84,6 +84,7 @@ namespace Robust.Client.UserInterface.Controls
             get => GetCount(Dimension.Row);
             set => SetCount(Dimension.Row, value);
         }
+
         /// <summary>
         ///     The max width (in virtual pixels) the grid of elements can have. This dynamically determines
         ///     the number of columns based on the size of the elements. Setting this puts this grid
@@ -100,12 +101,6 @@ namespace Robust.Client.UserInterface.Controls
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        [Obsolete("Use MaxGridWidth")]
-        public new float MaxWidth
-        {
-            set => MaxGridWidth = value;
-        }
-
         public float MaxGridWidth
         {
             set => SetMaxSize(Dimension.Column, value);
@@ -127,12 +122,6 @@ namespace Robust.Client.UserInterface.Controls
         /// <exception cref="ArgumentOutOfRangeException">
         ///     Thrown if the value assigned is less than or equal to 0.
         /// </exception>
-        [Obsolete("Use MaxGridHeight")]
-        public new float MaxHeight
-        {
-            set => MaxGridHeight = value;
-        }
-
         public float MaxGridHeight
         {
             set => SetMaxSize(Dimension.Row, value);
@@ -462,8 +451,8 @@ namespace Robust.Client.UserInterface.Controls
             var (vSepActual, hSepActual) = (Vector2i) (Separations * UIScale);
             var hSep = _limitDimension == Dimension.Column ? hSepActual : vSepActual;
             var vSep = _limitDimension == Dimension.Column ? vSepActual : hSepActual;
-            var width = _limitDimension == Dimension.Column ? PixelWidth : PixelHeight;
-            var height = _limitDimension == Dimension.Column ? PixelHeight : PixelWidth;
+            var width = (_limitDimension == Dimension.Column ? finalSize.X : finalSize.Y) * UIScale;
+            var height = (_limitDimension == Dimension.Column ? finalSize.Y : finalSize.X) * UIScale;
 
             var stretchMaxX = width - hSep * (cols - 1);
             var stretchMaxY = height - vSep * (rows - 1);

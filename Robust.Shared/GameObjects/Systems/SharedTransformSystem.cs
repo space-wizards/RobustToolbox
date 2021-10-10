@@ -38,17 +38,22 @@ namespace Robust.Shared.GameObjects
 
         private void UnanchorAllEntsOnTile(IMapGrid grid, Vector2i tileIndices)
         {
-            var anchoredEnts = grid.GetAnchoredEntities(tileIndices);
+            var anchoredEnts = grid.GetAnchoredEntities(tileIndices).Where(e => EntityManager.EntityExists(e)).ToList();
 
-            foreach (var ent in anchoredEnts.ToList()) // changing anchored modifies this set
+            if (anchoredEnts.Count == 0) return;
+
+            var mapEnt = _mapManager.GetMapEntity(grid.ParentMapId);
+
+            foreach (var ent in anchoredEnts) // changing anchored modifies this set
             {
-                if (!EntityManager.EntityExists(ent)) continue;
-
-                ComponentManager.GetComponent<TransformComponent>(ent).Anchored = false;
+                var transform = EntityManager.GetComponent<TransformComponent>(ent);
+                transform.Anchored = false;
+                // If the tile was nuked than that means no longer intersecting the grid hence parent to the map
+                transform.AttachParent(mapEnt);
             }
         }
 
-        public void DeferMoveEvent(MoveEvent moveEvent)
+        public void DeferMoveEvent(ref MoveEvent moveEvent)
         {
             if (moveEvent.Sender.HasComponent<IMapGridComponent>())
                 _gridMoves.Enqueue(moveEvent);
@@ -77,7 +82,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    RaiseLocalEvent(ev.Sender.Uid, ev);
+                    RaiseLocalEvent(ev.Sender.Uid, ref ev);
                 }
             }
         }

@@ -14,6 +14,7 @@ namespace Robust.Shared.GameObjects
         protected Subscriptions Subs { get; }
 
         // NOTE: EntityEventHandler<T> and EntitySessionEventHandler<T> CANNOT BE ORDERED BETWEEN EACH OTHER.
+        // EntityEventRefHandler<T> and EntityEventHandler<T> can be, however. They're essentially the same.
 
         protected void SubscribeNetworkEvent<T>(
             EntityEventHandler<T> handler,
@@ -25,6 +26,14 @@ namespace Robust.Shared.GameObjects
 
         protected void SubscribeLocalEvent<T>(
             EntityEventHandler<T> handler,
+            Type[]? before = null, Type[]? after = null)
+            where T : notnull
+        {
+            SubEvent(EventSource.Local, handler, before, after);
+        }
+
+        protected void SubscribeLocalEvent<T>(
+            EntityEventRefHandler<T> handler,
             Type[]? before = null, Type[]? after = null)
             where T : notnull
         {
@@ -75,6 +84,18 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubBroadcast<T>(src));
         }
 
+        private void SubEvent<T>(
+            EventSource src,
+            EntityEventRefHandler<T> handler,
+            Type[]? before, Type[]? after)
+            where T : notnull
+        {
+            EntityManager.EventBus.SubscribeEvent(src, this, handler, GetType(), before, after);
+
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubBroadcast<T>(src));
+        }
+
         private void SubSessionEvent<T>(
             EventSource src,
             EntitySessionEventHandler<T> handler,
@@ -87,46 +108,28 @@ namespace Robust.Shared.GameObjects
             _subscriptions.Add(new SubBroadcast<EntitySessionMessage<T>>(src));
         }
 
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeNetworkEvent<T>()
-            where T : notnull
-        {
-            EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Network, this);
-        }
-
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeLocalEvent<T>()
-            where T : notnull
-        {
-            EntityManager.EventBus.UnsubscribeEvent<T>(EventSource.Local, this);
-        }
-
         protected void SubscribeLocalEvent<TComp, TEvent>(
             ComponentEventHandler<TComp, TEvent> handler,
             Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
-            EntityManager.EventBus.SubscribeLocalEvent(handler);
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
             _subscriptions ??= new();
             _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeLocalEvent<TComp, TEvent>(ComponentEventHandler<TComp, TEvent> handler)
+        protected void SubscribeLocalEvent<TComp, TEvent>(
+            ComponentEventRefHandler<TComp, TEvent> handler,
+            Type[]? before = null, Type[]? after = null)
             where TComp : IComponent
-            where TEvent : EntityEventArgs
+            where TEvent : notnull
         {
-            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
-        }
+            EntityManager.EventBus.SubscribeLocalEvent(handler, GetType(), before, after);
 
-        [Obsolete("Unsubscribing of entity system events is now automatic")]
-        protected void UnsubscribeLocalEvent<TComp, TEvent>()
-            where TComp : IComponent
-            where TEvent : EntityEventArgs
-        {
-            EntityManager.EventBus.UnsubscribeLocalEvent<TComp, TEvent>();
+            _subscriptions ??= new();
+            _subscriptions.Add(new SubLocal<TComp, TEvent>());
         }
 
         private void ShutdownSubscriptions()
@@ -207,7 +210,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private sealed class SubLocal<TComp, TBase> : SubBase where TComp : IComponent where TBase : EntityEventArgs
+        private sealed class SubLocal<TComp, TBase> : SubBase where TComp : IComponent where TBase : notnull
         {
             public override void Unsubscribe(EntitySystem sys, IEventBus bus)
             {

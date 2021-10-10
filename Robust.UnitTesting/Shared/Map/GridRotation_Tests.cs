@@ -41,15 +41,15 @@ namespace Robust.UnitTesting.Shared.Map
                 gridEnt.Transform.WorldRotation += new Angle(MathF.PI);
                 Assert.That(gridEnt.Transform.WorldRotation, Is.EqualTo(new Angle(MathF.PI)));
                 // Check the map coordinate rotates correctly
-                Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(-10, 0)));
-                Assert.That(grid.LocalToWorld(coordinates.Position).EqualsApprox(new Vector2(-10, 0)));
+                Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(-10, 0), 0.01f));
+                Assert.That(grid.LocalToWorld(coordinates.Position).EqualsApprox(new Vector2(-10, 0), 0.01f));
 
                 // Now we'll do the same for 180 degrees.
                 gridEnt.Transform.WorldRotation += MathF.PI / 2f;
                 // If grid facing down then worldpos of 10, 0 gets rotated 90 degrees CCW and hence should be 0, 10
-                Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(0, 10)));
+                Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(0, 10), 0.01f));
                 // If grid facing down then local 10,0 pos should just return 0, -10 given it's aligned with the rotation.
-                Assert.That(grid.LocalToWorld(coordinates.Position).EqualsApprox(new Vector2(0, -10)));
+                Assert.That(grid.LocalToWorld(coordinates.Position).EqualsApprox(new Vector2(0, -10), 0.01f));
             });
         }
 
@@ -63,7 +63,6 @@ namespace Robust.UnitTesting.Shared.Map
 
             var entMan = server.ResolveDependency<IEntityManager>();
             var mapMan = server.ResolveDependency<IMapManager>();
-            var gridSystem = server.ResolveDependency<IEntitySystemManager>().GetEntitySystem<GridFixtureSystem>();
 
             await server.WaitAssertion(() =>
             {
@@ -84,8 +83,6 @@ namespace Robust.UnitTesting.Shared.Map
                 }
 
                 var chunks = gridInternal.GetMapChunks().Select(c => c.Value).ToList();
-
-                gridSystem.Process();
 
                 Assert.That(chunks.Count, Is.EqualTo(1));
                 var chunk = chunks[0];

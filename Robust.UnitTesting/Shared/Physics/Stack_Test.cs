@@ -49,7 +49,6 @@ namespace Robust.UnitTesting.Shared.Physics
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-            var physicsSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
             var broadphaseSystem = entitySystemManager.GetEntitySystem<SharedBroadphaseSystem>();
             MapId mapId;
 
@@ -61,7 +60,8 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                physicsSystem.Maps[mapId].Gravity = new Vector2(0, -9.8f);
+
+                mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
                 var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
 
@@ -90,8 +90,6 @@ namespace Robust.UnitTesting.Shared.Physics
                     0.0f, -10.0f, -5.0f, 5.0f, 10.0f
                 };
 
-                PolygonShape shape;
-
                 for (var j = 0; j < columnCount; j++)
                 {
                     for (var i = 0; i < rowCount; i++)
@@ -102,15 +100,16 @@ namespace Robust.UnitTesting.Shared.Physics
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
 
                         box.BodyType = BodyType.Dynamic;
-                        shape = new PolygonShape(0.001f) {Vertices = new List<Vector2>()
+                        var poly = new PolygonShape(0.001f);
+                        poly.SetVertices(new List<Vector2>()
                         {
                             new(0.5f, -0.5f),
                             new(0.5f, 0.5f),
                             new(-0.5f, 0.5f),
                             new(-0.5f, -0.5f),
-                        }};
+                        });
 
-                        var fixture = new Fixture(box, shape)
+                        var fixture = new Fixture(box, poly)
                         {
                             CollisionMask = 1,
                             CollisionLayer = 1,
@@ -177,7 +176,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                physicsSystem.Maps[mapId].Gravity = new Vector2(0, -9.8f);
+                mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
                 var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
 
@@ -217,6 +216,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         var circle = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
 
+                        circle.LinearDamping = 0.05f;
                         circle.BodyType = BodyType.Dynamic;
                         shape = new PhysShapeCircle {Radius = 0.5f};
 
@@ -246,7 +246,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             // Assert
 
-            await server.WaitRunTicks(150);
+            await server.WaitRunTicks(200);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>
@@ -258,9 +258,11 @@ namespace Robust.UnitTesting.Shared.Physics
                         var body = bodies[j * columnCount + i];
                         var worldPos = body.Owner.Transform.WorldPosition;
 
+                        var expectedY = 0.5f + i;
+
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
-                        Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.1f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
+                        Assert.That(worldPos.EqualsApproxPercent(new Vector2(0.0f, expectedY), 0.1f), $"Expected y-value of {expectedY} but found {worldPos.Y}");
                     }
                 }
             });

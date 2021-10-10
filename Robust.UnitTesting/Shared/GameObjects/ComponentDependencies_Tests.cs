@@ -168,6 +168,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
+            prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadFromStream(new StringReader(Prototypes));
             prototypeManager.Resync();
         }
@@ -377,7 +378,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(testThree.TestOne, Is.Null);
 
             // Let's actually remove the removed components first.
-            dummy.EntityManager.ComponentManager.CullRemovedComponents();
+            dummy.EntityManager.CullRemovedComponents();
 
             // Re-add test one and two.
             testOne = dummy.AddComponent<TestOneComponent>();

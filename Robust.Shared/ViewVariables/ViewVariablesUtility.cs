@@ -1,6 +1,8 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.ViewVariables
@@ -19,7 +21,31 @@ namespace Robust.Shared.ViewVariables
         public static bool TypeHasVisibleMembers(Type type)
         {
             return type.GetAllFields().Cast<MemberInfo>().Concat(type.GetAllProperties())
-                .Any(f => f.GetCustomAttribute<ViewVariablesAttribute>() != null);
+                .Any(f => TryGetViewVariablesAccess(f, out _));
+        }
+
+        /// <summary>
+        /// Gets the <see cref="VVAccess"/> defined for the member, if defined.
+        /// </summary>
+        /// <param name="info">The member to check access for.</param>
+        /// <param name="access">The found access. Will be null if no access is defined</param>
+        /// <returns>True if access is defined, false if not.</returns>
+        public static bool TryGetViewVariablesAccess(MemberInfo info, [NotNullWhen(true)] out VVAccess? access)
+        {
+            if (info.TryGetCustomAttribute<ViewVariablesAttribute>(out var vv))
+            {
+                access = vv.Access;
+                return true;
+            }
+
+            if (info.HasCustomAttribute<DataFieldAttribute>())
+            {
+                access = VVAccess.ReadOnly;
+                return true;
+            }
+
+            access = null;
+            return false;
         }
     }
 }

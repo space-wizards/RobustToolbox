@@ -21,6 +21,20 @@ namespace Robust.Client.UserInterface.Controls
 
         [ViewVariables(VVAccess.ReadWrite)] public bool Debug { get; set; }
 
+        /// <summary>
+        /// If true, measurements of this control will be at least the size of any contained controls.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool InheritChildMeasure
+        {
+            get => _inheritChildMeasure;
+            set
+            {
+                _inheritChildMeasure = value;
+                InvalidateMeasure();
+            }
+        }
+
         public static readonly AttachedProperty MarginLeftProperty = AttachedProperty.Create("MarginLeft",
             typeof(LayoutContainer), typeof(float), changed: LayoutPropertyChangedCallback);
 
@@ -53,6 +67,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public static readonly AttachedProperty<bool> DebugProperty = AttachedProperty<bool>.Create("Debug",
             typeof(LayoutContainer));
+
+        private bool _inheritChildMeasure = true;
 
 
         public static void SetMarginLeft(Control control, float value)
@@ -117,12 +133,6 @@ namespace Robust.Client.UserInterface.Controls
             SetMarginTop(control, diffY + control.GetValue<float>(MarginTopProperty));
             SetMarginRight(control, diffX + control.GetValue<float>(MarginRightProperty));
             SetMarginBottom(control, diffY + control.GetValue<float>(MarginBottomProperty));
-        }
-
-        [Obsolete("Change SetSize on the control instead.")]
-        public new static void SetSize(Control control, Vector2 size)
-        {
-            control.SetSize = size;
         }
 
         /// <summary>
@@ -469,7 +479,7 @@ namespace Robust.Client.UserInterface.Controls
                 min = Vector2.ComponentMax(min, child.DesiredSize);
             }
 
-            return min;
+            return InheritChildMeasure ? min : Vector2.Zero;
         }
 
         protected override Vector2 ArrangeOverride(Vector2 finalSize)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
-using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -72,6 +71,7 @@ namespace Robust.Shared.GameObjects
             private set
             {
                 if (_gridId.Equals(value)) return;
+
                 _gridId = value;
                 foreach (var transformComponent in Children)
                 {
@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
                 if(_noLocalRotation)
                     return;
 
-                if (_localRotation.EqualsApprox(value, 0.00001))
+                if (_localRotation.EqualsApprox(value))
                     return;
 
                 var oldRotation = _localRotation;
@@ -122,7 +122,8 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, oldRotation, _localRotation));
+                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref rotateEvent);
                 }
                 else
                 {
@@ -218,9 +219,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [Obsolete("Use ContainerHelper to check if this entity is inside a container.")]
-        public bool IsMapTransform => !Owner.IsInContainer();
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
@@ -272,16 +270,21 @@ namespace Robust.Shared.GameObjects
                 if(value.EntityId == _parent && _anchored)
                     return;
 
-                var oldPosition = Coordinates;
-                _localPosition = value.Position;
+                var sameParent = value.EntityId == _parent;
 
-                var changedParent = false;
-
-                if (value.EntityId != _parent)
+                if (!sameParent)
                 {
+                    // Need to set anchored before we update position so that we can clear snapgrid cells correctly.
                     if(_parent != EntityUid.Invalid) // Allow setting Transform.Parent in Prototypes
                         Anchored = false; // changing the parent un-anchors the entity
+                }
 
+                var oldPosition = Coordinates;
+                _localPosition = value.Position;
+                var changedParent = false;
+
+                if (!sameParent)
+                {
                     changedParent = true;
                     var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
                     var newParent = newParentEnt.Transform;
@@ -305,7 +308,8 @@ namespace Robust.Shared.GameObjects
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex();
 
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
+                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref entParentChangedMessage);
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -321,7 +325,10 @@ namespace Robust.Shared.GameObjects
                     if (Running)
                     {
                         if(!oldPosition.Position.Equals(Coordinates.Position))
-                            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldPosition, Coordinates));
+                        {
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates);
+                            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
+                        }
                     }
                 }
                 else
@@ -344,7 +351,7 @@ namespace Robust.Shared.GameObjects
                 if(Anchored)
                     return;
 
-                if (_localPosition.EqualsApprox(value, 0.00001))
+                if (_localPosition.EqualsApprox(value))
                     return;
 
                 // Set _nextPosition to null to break any on-going lerps if this is done in a client side prediction.
@@ -357,7 +364,8 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, oldGridPos, Coordinates));
+                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
                 }
                 else
                 {
@@ -384,6 +392,11 @@ namespace Robust.Shared.GameObjects
                     {
                         _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
                     }
+                    // If no grid found then unanchor it.
+                    else
+                    {
+                        _anchored = false;
+                    }
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
@@ -394,7 +407,7 @@ namespace Robust.Shared.GameObjects
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (Owner.EntityManager.ComponentManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
+                    if (Owner.EntityManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
                         gridComp.UnanchorEntity(this);
                     else
                         SetAnchored(false);
@@ -541,13 +554,15 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB));
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB));
+                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref rotateEvent);
                 _oldLocalRotation = null;
             }
         }
@@ -614,7 +629,8 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntParentChangedMessage(Owner, oldParent?.Owner));
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref entParentChangedMessage);
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
 
@@ -652,14 +668,14 @@ namespace Robust.Shared.GameObjects
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
+            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IComponentManager comp)
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
         {
             foreach (var child in _children)
             {
-                var concrete = comp.GetComponent<TransformComponent>(child);
+                var concrete = entMan.GetComponent<TransformComponent>(child);
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
@@ -667,7 +683,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, comp);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan);
                 }
             }
         }
@@ -759,13 +775,13 @@ namespace Robust.Shared.GameObjects
                     rebuildMatrices = true;
                 }
 
-                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
+                if (!_localPosition.EqualsApprox(newState.LocalPosition))
                 {
                     var oldPos = Coordinates;
                     _localPosition = newState.LocalPosition;
 
                     var ev = new MoveEvent(Owner, oldPos, Coordinates);
-                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ev);
+                    EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ref ev);
 
                     rebuildMatrices = true;
                 }
@@ -910,7 +926,8 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new AnchorStateChangedEvent());
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
         }
     }
 
@@ -918,7 +935,7 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever an entity moves.
     ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
     /// </summary>
-    public class MoveEvent : HandledEntityEventArgs
+    public readonly struct MoveEvent
     {
         public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, Box2? worldAABB = null)
         {
@@ -928,20 +945,20 @@ namespace Robust.Shared.GameObjects
             WorldAABB = worldAABB;
         }
 
-        public IEntity Sender { get; }
-        public EntityCoordinates OldPosition { get; }
-        public EntityCoordinates NewPosition { get; }
+        public readonly IEntity Sender;
+        public readonly EntityCoordinates OldPosition;
+        public readonly EntityCoordinates NewPosition;
 
         /// <summary>
         ///     New AABB of the entity.
         /// </summary>
-        public Box2? WorldAABB { get; }
+        public readonly Box2? WorldAABB;
     }
 
     /// <summary>
     ///     Raised whenever this entity rotates in relation to their parent.
     /// </summary>
-    public class RotateEvent : EntityEventArgs
+    public readonly struct RotateEvent
     {
         public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
         {
@@ -951,17 +968,29 @@ namespace Robust.Shared.GameObjects
             WorldAABB = worldAABB;
         }
 
-        public IEntity Sender { get; }
-        public Angle OldRotation { get; }
-        public Angle NewRotation { get; }
+        public readonly IEntity Sender;
+        public readonly Angle OldRotation;
+        public readonly Angle NewRotation;
+
         /// <summary>
         ///     New AABB of the entity.
         /// </summary>
-        public Box2? WorldAABB { get; }
+        public readonly Box2? WorldAABB;
     }
 
     /// <summary>
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
-    public class AnchorStateChangedEvent : EntityEventArgs { }
+    public readonly struct AnchorStateChangedEvent
+    {
+        public readonly IEntity Entity;
+
+        public readonly bool Anchored;
+
+        public AnchorStateChangedEvent(IEntity entity, bool anchored)
+        {
+            Entity = entity;
+            Anchored = anchored;
+        }
+    }
 }

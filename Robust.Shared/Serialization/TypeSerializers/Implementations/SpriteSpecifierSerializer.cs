@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
@@ -18,8 +19,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeSerializer<Texture, ValueDataNode>,
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
-        ITypeReader<SpriteSpecifier, MappingDataNode>,
-        ITypeReader<SpriteSpecifier, ValueDataNode>
+        ITypeSerializer<SpriteSpecifier, MappingDataNode>,
+        ITypeSerializer<SpriteSpecifier, ValueDataNode>
     {
         DeserializationResult ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
@@ -27,7 +28,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             bool skipHook, ISerializationContext? context)
         {
             var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
-            return DeserializationResult.Value(new Texture(path));
+            return new DeserializedValue<Texture>(new Texture(path));
         }
 
         DeserializationResult ITypeReader<SpriteSpecifier, ValueDataNode>.Read(
@@ -56,7 +57,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
-            return DeserializationResult.Value(new EntityPrototype(node.Value));
+            return new DeserializedValue<EntityPrototype>(new EntityPrototype(node.Value));
         }
 
         DeserializationResult ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
@@ -75,7 +76,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             }
 
             var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context, skipHook);
-            return DeserializationResult.Value(new Rsi(path, valueDataNode.Value));
+            return new DeserializedValue<Rsi>(new Rsi(path, valueDataNode.Value));
         }
 
 
@@ -190,6 +191,42 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ISerializationContext? context = null)
         {
             return new(source.RsiPath, source.RsiState);
+        }
+
+        public DataNode Write(ISerializationManager serializationManager, SpriteSpecifier value, bool alwaysWrite = false,
+            ISerializationContext? context = null)
+        {
+            return value switch
+            {
+                Rsi rsi
+                    => Write(serializationManager, rsi, alwaysWrite, context),
+
+                Texture texture
+                    => Write(serializationManager, texture, alwaysWrite, context),
+
+                EntityPrototype entityPrototype
+                    => Write(serializationManager, entityPrototype, alwaysWrite, context),
+
+                _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
+            };
+        }
+
+        public SpriteSpecifier Copy(ISerializationManager serializationManager, SpriteSpecifier source, SpriteSpecifier target,
+            bool skipHook, ISerializationContext? context = null)
+        {
+            return source switch
+            {
+                Rsi rsi
+                    => new Rsi(rsi.RsiPath, rsi.RsiState),
+
+                Texture texture
+                    => new Texture(texture.TexturePath),
+
+                EntityPrototype entityPrototype
+                    => new EntityPrototype(entityPrototype.EntityPrototypeId),
+
+                _ => throw new InvalidOperationException("Invalid SpriteSpecifier specified!")
+            };
         }
     }
 }

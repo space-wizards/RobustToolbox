@@ -1,14 +1,6 @@
-using System;
-using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.ResourceManagement;
 using Robust.Shared.Animations;
-using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
-using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -17,41 +9,28 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    [ComponentReference(typeof(IPointLightComponent))]
-    [NetworkedComponent()]
-    public class PointLightComponent : Component, IPointLightComponent, ISerializationHooks
+    [ComponentReference(typeof(SharedPointLightComponent))]
+    public class PointLightComponent : SharedPointLightComponent, ISerializationHooks
     {
-        [Dependency] private readonly IResourceCache _resourceCache = default!;
-
-        public override string Name => "PointLight";
-
         internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public Color Color
+        public override Color Color
         {
             get => _color;
-            set => _color = value;
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Vector2 Offset
-        {
-            get => _offset;
-            set => _offset = value;
+            set => base.Color = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public bool Enabled
+        public override bool Enabled
         {
             get => _enabled;
             set
             {
                 if (_enabled == value) return;
-
-                _enabled = value;
+                base.Enabled = value;
                 Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
             }
         }
@@ -92,7 +71,6 @@ namespace Robust.Client.GameObjects
             set => _rotation = value;
         }
 
-        /// <inheritdoc />
         /// <summary>
         /// The resource path to the mask texture the light will use.
         /// </summary>
@@ -102,8 +80,9 @@ namespace Robust.Client.GameObjects
             get => _maskPath;
             set
             {
+                if (_maskPath?.Equals(value) != false) return;
                 _maskPath = value;
-                UpdateMask();
+                EntitySystem.Get<PointLightSystem>().UpdateMask(this);
             }
         }
 
@@ -141,16 +120,14 @@ namespace Robust.Client.GameObjects
             set => _visibleNested = value;
         }
 
-        [DataField("radius")]
-        private float _radius = 5f;
+        /// <summary>
+        ///     Whether this pointlight should cast shadows
+        /// </summary>
+        [DataField("castShadows")]
+        public bool CastShadows = true;
+
         [DataField("nestedvisible")]
         private bool _visibleNested = true;
-        [DataField("color")]
-        private Color _color = Color.White;
-        [DataField("offset")]
-        private Vector2 _offset = Vector2.Zero;
-        [DataField("enabled")]
-        private bool _enabled = true;
         [DataField("autoRot")]
         private bool _maskAutoRotate;
         private Angle _rotation;
@@ -159,74 +136,27 @@ namespace Robust.Client.GameObjects
         [DataField("softness")]
         private float _softness = 1f;
         [DataField("mask")]
-        private string? _maskPath;
+        internal string? _maskPath;
 
         /// <summary>
         ///     Radius, in meters.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public float Radius
+        public override float Radius
         {
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(value, _radius)) return;
+                if (MathHelper.CloseToPercent(value, _radius)) return;
 
-                _radius = MathF.Max(value, 0.01f); // setting radius to 0 causes exceptions, so just use a value close enough to zero that it's unnoticeable.
+                base.Radius = value;
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
         }
 
-        private void UpdateMask()
-        {
-            if (_maskPath is not null)
-                Mask = _resourceCache.GetResource<TextureResource>(_maskPath);
-            else
-                Mask = null;
-        }
-
         [ViewVariables]
         internal RenderingTreeComponent? RenderTree { get; set; }
-
-        void ISerializationHooks.AfterDeserialization()
-        {
-            if (_maskPath != null)
-            {
-                Mask = IoCManager.Resolve<IResourceCache>().GetResource<TextureResource>(_maskPath);
-            }
-        }
-
-        protected override void Initialize()
-        {
-            base.Initialize();
-            UpdateMask();
-        }
-
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-
-            var map = Owner.Transform.MapID;
-            if (map != MapId.Nullspace)
-            {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new RenderTreeRemoveLightEvent(this, map));
-            }
-        }
-
-        /// <inheritdoc />
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            if (curState == null)
-                return;
-
-            var newState = (PointLightComponentState) curState;
-            Enabled = newState.Enabled;
-            Radius = newState.Radius;
-            Offset = newState.Offset;
-            Color = newState.Color;
-        }
     }
 
     public class PointLightRadiusChangedEvent : EntityEventArgs
@@ -239,7 +169,7 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    internal sealed class PointLightUpdateEvent : EntityEventArgs
+    public sealed class PointLightUpdateEvent : EntityEventArgs
     {
 
     }

@@ -140,8 +140,8 @@ stored in a single array since multiple arrays lead to multiple misses.
     public sealed class PhysicsIsland
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-#if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
+#if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
 
@@ -157,6 +157,10 @@ stored in a single array since multiple arrays lead to multiple misses.
         private int _velocityIterations;
         private float _maxLinearVelocity;
         private float _maxAngularVelocity;
+        private float _maxLinearCorrection;
+        private float _maxAngularCorrection;
+        private float _linearSlop;
+        private float _angularSlop;
         private int _positionIterations;
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
@@ -164,6 +168,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
         private Joint[] _joints = Array.Empty<Joint>();
+
+        private List<(Joint Joint, float ErrorSquared)> _brokenJoints = new();
 
         // These are joint in box2d / derivatives
         private Vector2[] _linearVelocities = Array.Empty<Vector2>();
@@ -223,9 +229,13 @@ stored in a single array since multiple arrays lead to multiple misses.
             _velocityIterations = cfg.VelocityIterations;
             _maxLinearVelocity = cfg.MaxLinearVelocity;
             _maxAngularVelocity = cfg.MaxAngularVelocity;
+            _maxLinearCorrection = cfg.MaxLinearCorrection;
+            _maxAngularCorrection = cfg.MaxAngularCorrection;
             _positionIterations = cfg.PositionIterations;
             _sleepAllowed = cfg.SleepAllowed;
             _timeToSleep = cfg.TimeToSleep;
+            _linearSlop = cfg.LinearSlop;
+            _angularSlop = cfg.AngularSlop;
 
             _contactSolver.LoadConfig(cfg);
         }
@@ -362,6 +372,11 @@ stored in a single array since multiple arrays lead to multiple misses.
             SolverData.DtRatio = dtRatio;
             SolverData.InvDt = invDt;
             SolverData.IslandIndex = ID;
+            SolverData.WarmStarting = _warmStarting;
+            SolverData.LinearSlop = _linearSlop;
+            SolverData.AngularSlop = _angularSlop;
+            SolverData.MaxLinearCorrection = _maxLinearCorrection;
+            SolverData.MaxAngularCorrection = _maxAngularCorrection;
 
             SolverData.LinearVelocities = _linearVelocities;
             SolverData.AngularVelocities = _angularVelocities;
@@ -396,7 +411,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                         continue;
 
                     joint.SolveVelocityConstraints(SolverData);
-                    joint.Validate(invDt);
+
+                    var error = joint.Validate(invDt);
+
+                    if (error > 0.0f)
+                        _brokenJoints.Add((joint, error));
                 }
 
                 _contactSolver.SolveVelocityConstraints();
@@ -468,6 +487,17 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
         {
+            foreach (var (joint, error) in _brokenJoints)
+            {
+                var msg = new Joint.JointBreakMessage(joint, MathF.Sqrt(error));
+                var eventBus = _entityManager.EventBus;
+                eventBus.RaiseLocalEvent(joint.BodyAUid, msg, false);
+                eventBus.RaiseLocalEvent(joint.BodyBUid, msg, false);
+                eventBus.RaiseEvent(EventSource.Local, msg);
+            }
+
+            _brokenJoints.Clear();
+
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
@@ -601,6 +631,12 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float DtRatio { get; set; }
         public float InvDt { get; set; }
 
+        public bool WarmStarting { get; set; }
+        public float LinearSlop { get; set; }
+        public float AngularSlop { get; set; }
+        public float MaxLinearCorrection { get; set; }
+        public float MaxAngularCorrection { get; set; }
+
         public Vector2[] LinearVelocities { get; set; } = default!;
         public float[] AngularVelocities { get; set; } = default!;
 
@@ -625,7 +661,9 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float VelocityThreshold;
         public float Baumgarte;
         public float LinearSlop;
+        public float AngularSlop;
         public float MaxLinearCorrection;
+        public float MaxAngularCorrection;
         public int VelocityConstraintsPerThread;
         public int VelocityConstraintsMinimumThreads;
         public int PositionConstraintsPerThread;

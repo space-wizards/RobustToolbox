@@ -1,9 +1,12 @@
+using JetBrains.Annotations;
+
 namespace Robust.Shared.Console
 {
     /// <summary>
     /// Basic interface to handle console commands. Any class implementing this will be
     /// registered with the console system through reflection.
     /// </summary>
+    [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors)]
     public interface IConsoleCommand
     {
         /// <summary>

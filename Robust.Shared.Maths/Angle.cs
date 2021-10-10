@@ -11,9 +11,6 @@ namespace Robust.Shared.Maths
     {
         public static Angle Zero { get; } = new();
 
-        [Obsolete("Use Angle.Zero")]
-        public static Angle South { get; } = new(-MathHelper.PiOver2);
-
         /// <summary>
         ///     Angle in radians.
         /// </summary>
@@ -103,6 +100,9 @@ namespace Robust.Shared.Maths
         [Pure]
         public Vector2 RotateVec(in Vector2 vec)
         {
+            // No calculation necessery when theta is zero
+            if (Theta == 0) return vec;
+
             var (x, y) = vec;
             var cos = Math.Cos(Theta);
             var sin = Math.Sin(Theta);
@@ -133,9 +133,9 @@ namespace Robust.Shared.Maths
 
             // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
             // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
-            return MathHelper.CloseTo(aPositive, bPositive)
-                || MathHelper.CloseTo(aPositive + MathHelper.TwoPi, bPositive)
-                || MathHelper.CloseTo(aPositive, bPositive + MathHelper.TwoPi);
+            return MathHelper.CloseToPercent(aPositive, bPositive)
+                || MathHelper.CloseToPercent(aPositive + MathHelper.TwoPi, bPositive)
+                || MathHelper.CloseToPercent(aPositive, bPositive + MathHelper.TwoPi);
         }
 
         private static bool EqualsApprox(Angle a, Angle b, double tolerance)
@@ -149,9 +149,9 @@ namespace Robust.Shared.Maths
 
             // The second two expressions cover an edge case where one number is barely non-negative while the other number is negative.
             // In this case, the negative number will get FlipPositived to ~2pi and the comparison will give a false negative.
-            return MathHelper.CloseTo(aPositive, bPositive, tolerance)
-                || MathHelper.CloseTo(aPositive + MathHelper.TwoPi, bPositive, tolerance)
-                || MathHelper.CloseTo(aPositive, bPositive + MathHelper.TwoPi, tolerance);
+            return MathHelper.CloseToPercent(aPositive, bPositive, tolerance)
+                || MathHelper.CloseToPercent(aPositive + MathHelper.TwoPi, bPositive, tolerance)
+                || MathHelper.CloseToPercent(aPositive, bPositive + MathHelper.TwoPi, tolerance);
         }
 
         /// <summary>

@@ -99,20 +99,22 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 }
 
                 var container = containerManagerComp.GetContainer("dummy");
-                Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
+                Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
+                Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
+                /*
                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(itemUid));
                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(1));
+                */
             });
 
             await server.WaitAssertion(() =>
             {
-                var compMan = IoCManager.Resolve<IComponentManager>();
+                var entMan = IoCManager.Resolve<IEntityManager>();
 
                 // Move item into PVS so it gets sent to the client
-                compMan.GetComponent<ITransformComponent>(itemUid).LocalPosition = (0, 0);
+                entMan.GetComponent<ITransformComponent>(itemUid).LocalPosition = (0, 0);
             });
 
             await server.WaitRunTicks(1);
@@ -224,12 +226,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 }
 
                 var container = containerManagerComp.GetContainer("dummy");
-                Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
-                Assert.That(container.ExpectedEntities.Count, Is.EqualTo(1));
+                Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
+                Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
+                /*
                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
                 Assert.That(containerSystem.ExpectedEntities.ContainsKey(itemUid));
                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(1));
+                */
             });
 
             await server.WaitAssertion(() =>
@@ -261,9 +265,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 Assert.That(container.ContainedEntities.Count, Is.EqualTo(0));
                 Assert.That(container.ExpectedEntities.Count, Is.EqualTo(0));
 
+                /*
                 var containerSystem = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<ContainerSystem>();
                 Assert.That(!containerSystem.ExpectedEntities.ContainsKey(itemUid));
                 Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
+                */
             });
         }
 

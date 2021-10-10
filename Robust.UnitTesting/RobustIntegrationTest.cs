@@ -590,7 +590,7 @@ namespace Robust.UnitTesting
                     (CVars.DiscordEnabled.Name, "false"),
 
                     // Avoid preloading textures.
-                    (CVars.TexturePreloadingEnabled.Name, "false"),
+                    (CVars.ResTexturePreloadingEnabled.Name, "false"),
                 });
 
                 GameLoop = new IntegrationGameLoop(DependencyCollection.Resolve<IGameTiming>(),

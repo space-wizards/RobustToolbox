@@ -6,10 +6,10 @@ using Robust.Shared.IoC;
 using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Prototypes
@@ -18,9 +18,9 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public class EntityPrototype : IPrototype, IInheritingPrototype
+    public class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
-        private readonly ILocalizationManager _loc = IoCManager.Resolve<ILocalizationManager>();
+        private ILocalizationManager _loc = default!;
 
         private static readonly Dictionary<string, string> LocPropertiesDefault = new();
 
@@ -155,6 +155,11 @@ namespace Robust.Shared.Prototypes
             Components.Add("MetaData", new MetaDataComponent());
         }
 
+        void ISerializationHooks.AfterDeserialization()
+        {
+            _loc = IoCManager.Resolve<ILocalizationManager>();
+        }
+
         public bool TryGetComponent<T>(string name, [NotNullWhen(true)] out T? component) where T : IComponent
         {
             if (!Components.TryGetValue(name, out var componentUnCast))
@@ -179,7 +184,7 @@ namespace Robust.Shared.Prototypes
             }
 
             var factory = IoCManager.Resolve<IComponentFactory>();
-            var componentManager = IoCManager.Resolve<IComponentManager>();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
             var oldPrototype = entity.Prototype;
 
             var oldPrototypeComponents = oldPrototype.Components.Keys
@@ -202,10 +207,10 @@ namespace Robust.Shared.Prototypes
                     continue;
                 }
 
-                componentManager.RemoveComponent(entity.Uid, type);
+                entityManager.RemoveComponent(entity.Uid, type);
             }
 
-            componentManager.CullRemovedComponents();
+            entityManager.CullRemovedComponents();
 
             var componentDependencyManager = IoCManager.Resolve<IComponentDependencyManager>();
 

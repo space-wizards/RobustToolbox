@@ -16,3 +16,6 @@
 [submodule "Linguini"]
 	path = Linguini
 	url = https://github.com/space-wizards/Linguini
+[submodule "cefglue"]
+	path = cefglue
+	url = https://github.com/space-wizards/cefglue.git

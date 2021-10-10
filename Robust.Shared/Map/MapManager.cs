@@ -7,7 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -113,6 +112,11 @@ namespace Robust.Shared.Map
                     DeleteGrid(gridIndex);
                 }
             }
+        }
+
+        public virtual void ChunkRemoved(MapChunk chunk)
+        {
+            return;
         }
 
         /// <inheritdoc />
@@ -249,7 +253,7 @@ namespace Robust.Shared.Map
 
             if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
             {
-                var mapComps = _entityManager.ComponentManager.EntityQuery<IMapComponent>(true);
+                var mapComps = _entityManager.EntityQuery<IMapComponent>(true);
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
@@ -444,7 +448,7 @@ namespace Robust.Shared.Map
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
-                foreach (var comp in _entityManager.ComponentManager.EntityQuery<IMapGridComponent>(true))
+                foreach (var comp in _entityManager.EntityQuery<IMapGridComponent>(true))
                 {
                     if (comp.GridIndex != actualID)
                         continue;
@@ -523,23 +527,36 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            // TODO: this won't actually "work" but tests are fucking me hard
-            // We probably need to move these methods over to SharedBroadphaseSystem as they need to go through
-            // physics to find grids intersecting a point anyway but the level of refactoring required for that
-            // will kill me.
-            foreach (var mapGrid in _grids.Values)
+            foreach (var (_, mapGrid) in _grids)
             {
+                // So not sure if doing the transform for WorldBounds and early out here is faster than just
+                // checking if we have a relevant chunk, need to profile.
                 if (mapGrid.ParentMapId != mapId)
                     continue;
 
-                if (!mapGrid.WorldBounds.Contains(worldPos))
-                    continue;
+                // Turn the worldPos into a localPos and work out the relevant chunk we need to check
+                // This is much faster than iterating over every chunk individually.
+                // (though now we need some extra calcs up front).
 
+                // Doesn't use WorldBounds because it's just an AABB.
+                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
+                var matrix = gridEnt.Transform.InvWorldMatrix;
+                var localPos = matrix.Transform(worldPos);
+
+                var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
+                var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
+
+                if (!mapGrid.HasChunk(chunkIndices)) continue;
+
+                var chunk = mapGrid.GetChunk(chunkIndices);
+                var chunkTile = chunk.GetTileRef(chunk.GridTileToChunkTile(tile));
+
+                if (chunkTile.Tile.IsEmpty) continue;
                 grid = mapGrid;
                 return true;
             }
 
-            grid = default;
+            grid = null;
             return false;
         }
 
@@ -549,11 +566,102 @@ namespace Robust.Shared.Map
             return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }
 
+        /// <inheritdoc />
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldArea)
         {
-            // TODO: Unfortunately can't use BroadphaseSystem here as it will explode. Need to suss it out with DI
-            // TryFindGridAt works as is and helps with grid traversals.
-            return _grids.Values.Where(g => g.ParentMapId == mapId && g.WorldBounds.Intersects(worldArea));
+            // So despite the fact we have accurate bounds the reason I didn't make this tile-based is because
+            // at some stage we may want to overwrite the default behavior e.g. if you allow diagonals
+            foreach (var (_, grid) in _grids)
+            {
+                if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldArea)) continue;
+
+                var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
+                var xformComp = _entityManager.GetComponent<TransformComponent>(gridEnt.Uid);
+                var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
+
+                if (_entityManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
+                {
+                    var intersects = false;
+
+                    foreach (var chunk in grid.GetMapChunks(worldArea))
+                    {
+                        foreach (var fixture in chunk.Fixtures)
+                        {
+                            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                            {
+                                if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldArea)) continue;
+
+                                intersects = true;
+                                break;
+                            }
+
+                            if (intersects) break;
+                        }
+
+                        if (intersects) break;
+                    }
+
+                    if (intersects)
+                    {
+                        yield return grid;
+                        continue;
+                    }
+                }
+
+                if (grid.ChunkCount == 0 && worldArea.Contains(transform.Position))
+                {
+                    yield return grid;
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea)
+        {
+            var worldBounds = worldArea.CalcBoundingBox();
+
+            foreach (var (_, grid) in _grids)
+            {
+                if (grid.ParentMapId != mapId || !grid.WorldBounds.Intersects(worldBounds)) continue;
+
+                var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
+                var xformComp = _entityManager.GetComponent<TransformComponent>(gridEnt.Uid);
+                var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
+
+                if (_entityManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body))
+                {
+                    var intersects = false;
+
+                    foreach (var chunk in grid.GetMapChunks(worldArea))
+                    {
+                        foreach (var fixture in chunk.Fixtures)
+                        {
+                            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                            {
+                                if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldBounds)) continue;
+
+                                intersects = true;
+                                break;
+                            }
+
+                            if (intersects) break;
+                        }
+
+                        if (intersects) break;
+                    }
+
+                    if (intersects)
+                    {
+                        yield return grid;
+                        continue;
+                    }
+                }
+
+                if (grid.ChunkCount == 0 && worldArea.Contains(transform.Position))
+                {
+                    yield return grid;
+                }
+            }
         }
 
         public IEnumerable<GridId> FindGridIdsIntersecting(MapId mapId, Box2 worldArea, bool includeInvalid = false)
@@ -582,20 +690,26 @@ namespace Robust.Shared.Map
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
 #endif
-
-            if (gridID == GridId.Invalid)
+            // Possible the grid was already deleted / is invalid
+            if (!_grids.TryGetValue(gridID, out var grid))
                 return;
 
-            var grid = _grids[gridID];
             var mapId = grid.ParentMapId;
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) &&
-                gridEnt.LifeStage <= EntityLifeStage.Initialized)
-                gridEnt.Delete();
+            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
+            {
+                // Because deleting a grid also removes its MapGridComponent which also deletes its grid again we'll check for that here.
+                if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
+                    return;
+
+                if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
+                    gridEnt.Delete();
+            }
 
             grid.Dispose();
             _grids.Remove(grid.Index);
 
+            Logger.DebugS("map", $"Deleted grid {gridID}");
             OnGridRemoved?.Invoke(mapId, gridID);
         }
 

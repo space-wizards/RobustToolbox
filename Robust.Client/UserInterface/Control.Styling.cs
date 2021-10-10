@@ -125,7 +125,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal.QueueStyleUpdate(this);
         }
 
-        private void StyleSheetUpdate()
+        internal void StyleSheetUpdate()
         {
             _stylesheetUpdateNeeded = true;
 
@@ -256,6 +256,14 @@ namespace Robust.Client.UserInterface
 
             value = default;
             return false;
+        }
+
+        public T StylePropertyDefault<T>(string param, T defaultValue)
+        {
+            if (TryGetStyleProperty<T>(param, out var value))
+                return value;
+
+            return defaultValue;
         }
 
         private sealed class StyleClassCollection : ICollection<string>, IReadOnlyCollection<string>

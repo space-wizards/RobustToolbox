@@ -37,6 +37,18 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public float MaxLightRadius { get; private set; }
 
+        internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2Rotated worldBounds)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            {
+                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+            }
+
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+        }
+
         internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
         {
             if (mapId == MapId.Nullspace) yield break;
@@ -47,22 +59,6 @@ namespace Robust.Client.GameObjects
             }
 
             yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
-        }
-
-        internal IEnumerable<DynamicTree<SpriteComponent>> GetSpriteTrees(MapId mapId, Box2 worldAABB)
-        {
-            foreach (var comp in GetRenderTrees(mapId, worldAABB))
-            {
-                yield return comp.SpriteTree;
-            }
-        }
-
-        internal IEnumerable<DynamicTree<PointLightComponent>> GetLightTrees(MapId mapId, Box2 worldAABB)
-        {
-            foreach (var comp in GetRenderTrees(mapId, worldAABB))
-            {
-                yield return comp.LightTree;
-            }
         }
 
         public override void Initialize()
@@ -108,7 +104,7 @@ namespace Robust.Client.GameObjects
             QueueSpriteUpdate(component);
         }
 
-        private void AnythingMoved(MoveEvent args)
+        private void AnythingMoved(ref MoveEvent args)
         {
             AnythingMovedSubHandler(args.Sender.Transform);
         }
@@ -146,7 +142,7 @@ namespace Robust.Client.GameObjects
             QueueSpriteUpdate(component);
         }
 
-        private void SpriteParentChanged(EntityUid uid, SpriteComponent component, EntParentChangedMessage args)
+        private void SpriteParentChanged(EntityUid uid, SpriteComponent component, ref EntParentChangedMessage args)
         {
             QueueSpriteUpdate(component);
         }
@@ -179,7 +175,7 @@ namespace Robust.Client.GameObjects
             QueueLightUpdate(component);
         }
 
-        private void LightParentChanged(EntityUid uid, PointLightComponent component, EntParentChangedMessage args)
+        private void LightParentChanged(EntityUid uid, PointLightComponent component, ref EntParentChangedMessage args)
         {
             QueueLightUpdate(component);
         }
@@ -267,6 +263,11 @@ namespace Robust.Client.GameObjects
             return null;
         }
 
+        private bool IsVisible(SpriteComponent component)
+        {
+            return component.Visible && !component.ContainerOccluded;
+        }
+
         public override void FrameUpdate(float frameTime)
         {
             _checkedChildren.Clear();
@@ -274,7 +275,7 @@ namespace Robust.Client.GameObjects
             foreach (var sprite in _spriteQueue)
             {
                 sprite.TreeUpdateQueued = false;
-                if (!sprite.Visible || sprite.ContainerOccluded)
+                if (!IsVisible(sprite))
                 {
                     ClearSprite(sprite);
                     continue;
@@ -335,7 +336,6 @@ namespace Robust.Client.GameObjects
                     Logger.WarningS(LoggerSawmill, $"Light radius for {light.Owner} set above max radius of {MaxLightRadius}. This may lead to pop-in.");
                 }
 
-                var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
                 var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos);
 
                 // If we're on a new map then clear the old one.

@@ -155,17 +155,6 @@ namespace Robust.Shared.Localization
             FlushEntityCache();
         }
 
-        /// <summary>
-        /// Remnants of the old Localization system.
-        /// It exists to prevent source errors and allow existing game text to *mostly* work
-        /// </summary>
-        [Obsolete]
-        [StringFormatMethod("text")]
-        public string GetString(string text, params object[] args)
-        {
-            return string.Format(text, args);
-        }
-
         public CultureInfo? DefaultCulture
         {
             get => _defaultCulture;

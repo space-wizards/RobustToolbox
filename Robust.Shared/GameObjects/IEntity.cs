@@ -75,7 +75,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The MetaData Component of this entity.
         /// </summary>
-        IMetaDataComponent MetaData { get; }
+        MetaDataComponent MetaData { get; }
 
         /// <summary>
         ///     Public method to add a component to an entity.

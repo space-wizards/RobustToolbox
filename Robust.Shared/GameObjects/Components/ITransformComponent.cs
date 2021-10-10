@@ -89,11 +89,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public EntityUid ParentUid { get; set; }
 
-        /// <summary>
-        /// Whether or not this entity is on the map, AKA it has no parent.
-        /// </summary>
-        bool IsMapTransform { get; }
-
         Vector2? LerpDestination { get; }
 
         /// <summary>

@@ -1,7 +1,6 @@
-using System.Collections.Generic;
+using System;
 using NUnit.Framework;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.UnitTesting.Shared.Physics
@@ -13,18 +12,18 @@ namespace Robust.UnitTesting.Shared.Physics
         [Test]
         public void TestPolyNormals()
         {
-            var poly = new PolygonShape
-            {
-                Vertices = new List<Vector2>
-                {
-                    new(1, -1),
-                    new(1, 1),
-                    new(-1, 1),
-                    new(-1, -1),
-                }
-            };
+            var poly = new PolygonShape();
 
-            Assert.That(poly.Normals.Count, Is.EqualTo(4));
+            Span<Vector2> verts = stackalloc Vector2[4];
+
+            verts[0] = new Vector2(1f, -1f);
+            verts[1] = new Vector2(1f, 1f);
+            verts[2] = new Vector2(-1f, 1f);
+            verts[3] = new Vector2(-1f, -1f);
+
+            poly.SetVertices(verts);
+
+            Assert.That(poly.Normals.Length, Is.EqualTo(4));
 
             Assert.That(poly.Normals[0], Is.EqualTo(new Vector2(1, 0)), $"Vert is {poly.Vertices[0]}");
             Assert.That(poly.Normals[1], Is.EqualTo(new Vector2(0, 1)), $"Vert is {poly.Vertices[1]}");

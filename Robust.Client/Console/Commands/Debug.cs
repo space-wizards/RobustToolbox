@@ -161,19 +161,6 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ShowBoundingBoxesCommand : IConsoleCommand
-    {
-        public string Command => "showbb";
-        public string Help => "";
-        public string Description => "Enables debug drawing over all bounding boxes in the game, showing their size.";
-
-        public void Execute(IConsoleShell shell, string argStr, string[] args)
-        {
-            var mgr = IoCManager.Resolve<IDebugDrawing>();
-            mgr.DebugColliders = !mgr.DebugColliders;
-        }
-    }
-
     internal class ShowPositionsCommand : IConsoleCommand
     {
         public string Command => "showpos";
@@ -201,16 +188,16 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            if (!int.TryParse(args[0], out var id))
+            if (!float.TryParse(args[0], out var duration))
             {
-                shell.WriteError($"{args[0]} is not a valid integer.");
+                shell.WriteError($"{args[0]} is not a valid float.");
                 return;
             }
 
-            var mgr = IoCManager.Resolve<IDebugDrawingManager>();
+            var mgr = EntitySystem.Get<DebugRayDrawingSystem>();
             mgr.DebugDrawRays = !mgr.DebugDrawRays;
-            shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays.ToString());
-            mgr.DebugRayLifetime = TimeSpan.FromSeconds((double)int.Parse(args[0], CultureInfo.InvariantCulture));
+            shell.WriteError("Toggled showing rays to:" + mgr.DebugDrawRays);
+            mgr.DebugRayLifetime = TimeSpan.FromSeconds(duration);
         }
     }
 
@@ -460,13 +447,18 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var root = IoCManager.Resolve<IUserInterfaceManager>().RootControl;
+            var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             var res = IoCManager.Resolve<IResourceManager>();
 
             using (var stream = res.UserData.Create(new ResourcePath("/guidump.txt")))
             using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
             {
-                _writeNode(root, 0, writer);
+                foreach (var root in uiMgr.AllRoots)
+                {
+                    writer.WriteLine($"ROOT: {root}");
+                    _writeNode(root, 0, writer);
+                    writer.WriteLine("---------------");
+                }
             }
 
             shell.WriteLine("Saved guidump");
@@ -476,7 +468,7 @@ namespace Robust.Client.Console.Commands
         {
             var indentation = new string(' ', indents * 2);
             writer.WriteLine("{0}{1}", indentation, control);
-            foreach (var (key, value) in _propertyValuesFor(control))
+            foreach (var (key, value) in PropertyValuesFor(control))
             {
                 writer.WriteLine("{2} * {0}: {1}", key, value, indentation);
             }
@@ -487,14 +479,14 @@ namespace Robust.Client.Console.Commands
             }
         }
 
-        private static List<(string, string)> _propertyValuesFor(Control control)
+        internal static List<(string, string)> PropertyValuesFor(Control control)
         {
             var members = new List<(string, string)>();
             var type = control.GetType();
 
             foreach (var fieldInfo in type.GetAllFields())
             {
-                if (fieldInfo.GetCustomAttribute<ViewVariablesAttribute>() == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(fieldInfo, out _))
                 {
                     continue;
                 }
@@ -504,7 +496,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var propertyInfo in type.GetAllProperties())
             {
-                if (propertyInfo.GetCustomAttribute<ViewVariablesAttribute>() == null)
+                if (!ViewVariablesUtility.TryGetViewVariablesAccess(propertyInfo, out _))
                 {
                     continue;
                 }
@@ -627,8 +619,9 @@ namespace Robust.Client.Console.Commands
                 }
             });
 
-            tabContainer.AddChild(new HSplitContainer
+            tabContainer.AddChild(new SplitContainer
             {
+                Orientation = SplitContainer.SplitOrientation.Horizontal,
                 Children =
                 {
                     new PanelContainer

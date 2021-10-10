@@ -153,11 +153,11 @@ namespace Robust.Server.Console.Commands
             {
                 var network = IoCManager.Resolve<IServerNetManager>();
 
-                var reason = "Kicked by console.";
+                string reason;
                 if (args.Length >= 2)
-                {
-                    reason = reason + args[1];
-                }
+                    reason = $"Kicked by console: {string.Join(' ', args[1..])}";
+                else
+                    reason = "Kicked by console";
 
                 network.DisconnectChannel(target.ConnectedClient, reason);
             }

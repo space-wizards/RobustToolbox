@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
 using Robust.Server.Map;
@@ -13,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -78,6 +79,29 @@ namespace Robust.Server.GameStates
             _playerManager.PlayerStatusChanged += HandlePlayerStatusChanged;
 
             _entityManager.EntityDeleted += HandleEntityDeleted;
+
+            _mapManager.OnGridRemoved += HandleGridRemove;
+
+            // If you want to make this modifiable at runtime you need to subscribe to tickrate updates and streaming updates
+            // plus invalidate any chunks currently being streamed as well.
+            _entityView.StreamingTilesPerTick = (int) (_configurationManager.GetCVar(CVars.StreamedTilesPerSecond) / _gameTiming.TickRate);
+            _configurationManager.OnValueChanged(CVars.StreamedTileRange, value => _entityView.StreamRange = value, true);
+        }
+
+        private void HandleGridRemove(MapId mapid, GridId gridid)
+        {
+            // Remove any sort of tracking for when a chunk was sent.
+            foreach (var (_, chunks) in _entityView.PlayerChunks)
+            {
+                foreach (var (chunk, _) in chunks.ToArray())
+                {
+                    if (chunk is not MapChunk mapChunk ||
+                        mapChunk.GridId == gridid)
+                    {
+                        chunks.Remove(chunk);
+                    }
+                }
+            }
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid e)
@@ -155,20 +179,20 @@ namespace Robust.Server.GameStates
 
             var inputSystem = _systemManager.GetEntitySystem<InputSystem>();
 
-            var oldestAck = GameTick.MaxValue;
+            var oldestAckValue = GameTick.MaxValue.Value;
 
             var mainThread = Thread.CurrentThread;
-            (MsgState, INetChannel) GenerateMail(IPlayerSession session)
+            var parentDeps = IoCManager.Instance!;
+
+            void SendStateUpdate(IPlayerSession session)
             {
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
-                    IoCManager.InitThread(new DependencyCollection(), true);
+                    IoCManager.InitThread(new DependencyCollection(parentDeps), true);
 
                 // people not in the game don't get states
                 if (session.Status != SessionStatus.InGame)
-                {
-                    return default;
-                }
+                    return;
 
                 var channel = session.ConnectedClient;
 
@@ -184,13 +208,11 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates?.ToArray(), playerStates?.ToArray(), deletions?.ToArray(), mapData);
-                if (lastAck < oldestAck)
-                {
-                    oldestAck = lastAck;
-                }
+                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates, playerStates, deletions, mapData);
 
-                DebugTools.Assert(state.MapData?.CreatedMaps is null || (state.MapData?.CreatedMaps is not null && state.EntityStates is not null), "Sending new maps, but no entity state.");
+                InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
+
+                DebugTools.Assert(state.MapData?.CreatedMaps is null || (state.MapData?.CreatedMaps is not null && state.EntityStates.HasContents), "Sending new maps, but no entity state.");
 
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
@@ -202,40 +224,29 @@ namespace Robust.Server.GameStates
                 // When we send them reliably, we immediately update the ack so that the next state will not be huge.
                 if (stateUpdateMessage.ShouldSendReliably())
                 {
-                    _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
+                    // TODO: remove this lock by having a single state object per session that contains all per-session state needed.
+                    lock (_ackedStates)
+                    {
+                        _ackedStates[channel.ConnectionId] = _gameTiming.CurTick;
+                    }
                 }
 
-                return (stateUpdateMessage, channel);
+                _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            (MsgState, INetChannel?) SafeGenerateMail(IPlayerSession session)
+            Parallel.ForEach(_playerManager.GetAllPlayers(), session =>
             {
                 try
                 {
-                    return GenerateMail(session);
+                    SendStateUpdate(session);
                 }
                 catch (Exception e) // Catch EVERY exception
                 {
                     _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
                 }
+            });
 
-                var msg = _networkManager.CreateNetMessage<MsgState>();
-                msg.MsgChannel = session.ConnectedClient;
-
-                return (msg, null);
-            }
-
-            var mailBag = _playerManager.GetAllPlayers()
-                .Where(s => s.Status == SessionStatus.InGame)
-                .AsParallel()
-                .Select(SafeGenerateMail);
-
-            foreach (var (msg, chan) in mailBag)
-            {
-                // see session.Status != SessionStatus.InGame above
-                if (chan == null) continue;
-                _networkManager.ServerSendMessage(msg, chan);
-            }
+            var oldestAck = new GameTick(oldestAckValue);
 
             // keep the deletion history buffers clean
             if (oldestAck > _lastOldestAck)
@@ -249,16 +260,17 @@ namespace Robust.Server.GameStates
         /// <summary>
         /// Generates a network entity state for the given entity.
         /// </summary>
-        /// <param name="compMan">ComponentManager that contains the components for the entity.</param>
+        /// <param name="entMan">EntityManager that contains the entity.</param>
         /// <param name="player">The player to generate this state for.</param>
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
         /// <returns>New entity State for the given entity.</returns>
-        internal static EntityState GetEntityState(IComponentManager compMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
+        internal static EntityState GetEntityState(IEntityManager entMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
+            var bus = entMan.EventBus;
             var changed = new List<ComponentChange>();
 
-            foreach (var (netId, component) in compMan.GetNetComponents(entityUid))
+            foreach (var (netId, component) in entMan.GetNetComponents(entityUid))
             {
                 DebugTools.Assert(component.Initialized);
 
@@ -275,7 +287,7 @@ namespace Robust.Server.GameStates
                 {
                     ComponentState? state = null;
                     if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
-                        state = component.GetComponentState(player);
+                        state = entMan.GetComponentState(bus, component, player);
 
                     // Can't be null since it's returned by GetNetComponents
                     // ReSharper disable once PossibleInvalidOperationException
@@ -283,7 +295,7 @@ namespace Robust.Server.GameStates
                 }
                 else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
                 {
-                    changed.Add(ComponentChange.Changed(netId, component.GetComponentState(player)));
+                    changed.Add(ComponentChange.Changed(netId, entMan.GetComponentState(bus, component, player)));
                 }
                 else if (component.Deleted && component.LastModifiedTick >= fromTick)
                 {
@@ -312,7 +324,7 @@ namespace Robust.Server.GameStates
                 DebugTools.Assert(entity.Initialized);
 
                 if (entity.LastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(entityMan.ComponentManager, player, entity.Uid, fromTick));
+                    stateEntities.Add(GetEntityState(entityMan, player, entity.Uid, fromTick));
             }
 
             // no point sending an empty collection

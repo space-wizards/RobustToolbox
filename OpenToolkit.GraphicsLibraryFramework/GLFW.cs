@@ -5551,5 +5551,15 @@ namespace OpenToolkit.GraphicsLibraryFramework
         {
             return glfwGetX11Window(window);
         }
+
+        public static unsafe IntPtr GetX11Display(Window* window)
+        {
+            return glfwGetX11Display(window);
+        }
+
+        public static unsafe IntPtr GetWin32Window(Window* window)
+        {
+            return glfwGetWin32Window(window);
+        }
     }
 }

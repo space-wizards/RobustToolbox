@@ -2,6 +2,7 @@
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Collision.Shapes
@@ -52,22 +53,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
             }
-        }
-
-        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
-        {
-            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
-            return bounds.Intersects(worldAABB);
-        }
-
-        /// <inheritdoc />
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            return new(-_radius, -_radius, _radius, _radius);
         }
 
         public float CalculateArea()
@@ -75,21 +64,21 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return MathF.PI * _radius * _radius;
         }
 
-        /// <inheritdoc />
-        public void ApplyState() { }
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+
+            var p = transform.Position + Transform.Mul(transform.Quaternion2D, Position);
+            return new Box2(p.X - _radius, p.Y - _radius, p.X + _radius, p.Y + _radius);
+        }
 
         /// <inheritdoc />
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
-        {
-            handle.SetTransform(in modelMatrix);
-            handle.DrawCircle(Vector2.Zero, _radius, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-        }
+        public void ApplyState() { }
 
         public bool Equals(IPhysShape? other)
         {
             if (other is not PhysShapeCircle otherCircle) return false;
-            return MathHelper.CloseTo(_radius, otherCircle._radius);
+            return MathHelper.CloseToPercent(_radius, otherCircle._radius);
         }
     }
 }

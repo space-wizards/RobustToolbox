@@ -30,7 +30,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
                 OnDataChanged?.Invoke();
             }
@@ -69,39 +69,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public PhysShapeAabb()
         {
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
+        }
+
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            return new Box2Rotated(_localBounds.Translated(transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox().Enlarged(_radius);
         }
 
         /// <inheritdoc />
         public void ApplyState() { }
 
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport,
-            float sleepPercent)
-        {
-            var m = Matrix3.Identity;
-            m.R0C2 = modelMatrix.R0C2;
-            m.R1C2 = modelMatrix.R1C2;
-
-            handle.SetTransform(m);
-            handle.DrawRect(LocalBounds, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
-        }
-
         // TODO
         [field: NonSerialized]
         public event Action? OnDataChanged;
-
-        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
-        {
-            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
-            return bounds.Intersects(worldAABB);
-        }
-
-        /// <inheritdoc />
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            // TODO: Make a new ComputeAABB func or just wrap ComputeAABB into the existing methods?
-            return _localBounds.Scale(1 + Radius);
-        }
 
         [Pure]
         internal List<Vector2> GetVertices()

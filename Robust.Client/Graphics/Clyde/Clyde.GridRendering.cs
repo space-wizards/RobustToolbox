@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -19,7 +20,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
@@ -39,7 +40,6 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            var compMan = _entityManager.ComponentManager;
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
@@ -49,19 +49,11 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
+                var transform = _entityManager.GetComponent<ITransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
-                var worldPos = transform.WorldPosition;
-                var worldRot = transform.WorldRotation;
 
-                foreach (var (_, chunk) in grid.GetMapChunks())
+                foreach (var chunk in grid.GetMapChunks(worldBounds))
                 {
-                    // Calc world bounds for chunk.
-                    if (!chunk.CalcWorldAABB(worldPos, worldRot).Intersects(in worldBounds))
-                    {
-                        continue;
-                    }
-
                     if (_isChunkDirty(grid, chunk))
                     {
                         _updateChunkMesh(grid, chunk);
@@ -211,11 +203,14 @@ namespace Robust.Client.Graphics.Clyde
 
         private void _updateOnGridCreated(MapId mapId, GridId gridId)
         {
+            Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
         private void _updateOnGridRemoved(MapId mapId, GridId gridId)
         {
+            Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
+
             var data = _mapChunkData[gridId];
             foreach (var chunkDatum in data.Values)
             {

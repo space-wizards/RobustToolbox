@@ -48,7 +48,7 @@ namespace Robust.Client.GameObjects
             container.Insert(ev.Entity);
         }
 
-        private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ComponentHandleState args)
+        private void HandleComponentState(EntityUid uid, ContainerManagerComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not ContainerManagerComponentState cast)
                 return;
@@ -59,6 +59,7 @@ namespace Robust.Client.GameObjects
             {
                 if (!cast.ContainerSet.Any(data => data.Id == id))
                 {
+                    container.EmptyContainer(true);
                     container.Shutdown();
                     toDelete ??= new List<string>();
                     toDelete.Add(id);

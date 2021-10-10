@@ -60,7 +60,6 @@ namespace Robust.Client.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-            UnsubscribeNetworkEvent<SendGridTileLookupMessage>();
             IoCManager.Resolve<IUserInterfaceManager>().StateRoot.RemoveChild(_label);
         }
 

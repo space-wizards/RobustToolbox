@@ -26,6 +26,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Collision.Shapes
 {
@@ -73,7 +74,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
                 //ComputeProperties();
             }
@@ -91,7 +92,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public EdgeShape(Vector2 start, Vector2 end)
         {
             Set(start, end);
-            _radius = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.PolygonRadius);
+            _radius = PhysicsConstants.PolygonRadius;
         }
 
         /// <summary>
@@ -140,6 +141,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return aabb;
         }
 
+        public Box2 ComputeAABB(Transform transform, int childIndex)
+        {
+            DebugTools.Assert(childIndex == 0);
+
+            var v1 = Transform.Mul(transform, Vertex1);
+            var v2 = Transform.Mul(transform, Vertex2);
+
+            var lower = Vector2.ComponentMin(v1, v2);
+            var upper = Vector2.ComponentMax(v1, v2);
+
+            var radius = new Vector2(_radius, _radius);
+            return new Box2(lower - radius, upper + radius);
+        }
+
         public float CalculateArea()
         {
             // It's a line
@@ -149,15 +164,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public void ApplyState()
         {
             return;
-        }
-
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
-        {
-            var m = Matrix3.Identity;
-            m.R0C2 = modelMatrix.R0C2;
-            m.R1C2 = modelMatrix.R1C2;
-            handle.SetTransform(m);
-            handle.DrawLine(Vertex1, Vertex2, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
         }
     }
 }

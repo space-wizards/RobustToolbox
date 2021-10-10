@@ -384,6 +384,13 @@ namespace Robust.Shared.GameObjects
             return found;
         }
 
+        private bool CanGetContainer(IEntity entity, LookupFlags flags)
+        {
+            return (flags & LookupFlags.ContainerVisibility) == 0x0 ||
+                   !entity.TryGetContainer(out var ourContainer) ||
+                   ourContainer.Visibility != ContainerVisibility.None;
+        }
+
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void FastEntitiesIntersecting(in MapId mapId, ref Box2 position, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored | LookupFlags.IncludeContained)
@@ -401,9 +408,7 @@ namespace Robust.Shared.GameObjects
                     // If (for whatever reason) we don't have the component
                     // OR we're stored in another container that isn't visible then just early out.
                     if (!data.TryGetComponent(out ContainerManagerComponent? containerManager) ||
-                        (flags & LookupFlags.ContainerVisibility) != 0x0 &&
-                        data.TryGetContainer(out var ourContainer) &&
-                        ourContainer.Visibility == ContainerVisibility.None) return;
+                        !CanGetContainer(data, flags)) return;
 
                     foreach (var container in containerManager.GetAllContainers())
                     {
@@ -456,7 +461,10 @@ namespace Robust.Shared.GameObjects
 
                 lookup.ContainerManagerTree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager)) return true;
+                    // If (for whatever reason) we don't have the component
+                    // OR we're stored in another container that isn't visible then just early out.
+                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager) ||
+                        !CanGetContainer(ent, flags)) return true;
 
                     foreach (var container in containerManager.GetAllContainers())
                     {
@@ -508,7 +516,8 @@ namespace Robust.Shared.GameObjects
 
                 lookup.ContainerManagerTree.QueryPoint(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager)) return true;
+                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager) ||
+                        !CanGetContainer(ent, flags)) return true;
 
                     foreach (var container in containerManager.GetAllContainers())
                     {
@@ -685,7 +694,8 @@ namespace Robust.Shared.GameObjects
 
                 lookup.ContainerManagerTree.QueryPoint(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager)) return true;
+                    if (!ent.TryGetComponent(out ContainerManagerComponent? containerManager) ||
+                        !CanGetContainer(ent, flags)) return true;
 
                     foreach (var container in containerManager.GetAllContainers())
                     {

@@ -17,12 +17,12 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> UpdatesBefore { get; }
 
         /// <summary>
-        ///     How often should TimedUpdate() be called, in seconds.
+        ///     How often should <see cref="TimedUpdate"/>be called, in seconds.
         /// </summary>
         float TimedInterval { get; set; }
 
         /// <summary>
-        ///     How much time has passed since the last TimedUpdate() call.
+        ///     How much time has passed since the last <see cref="TimedUpdate"/> call.
         /// </summary>
         float AccumulatedFrametime { get; set; }
 

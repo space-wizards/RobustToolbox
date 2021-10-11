@@ -312,7 +312,7 @@ namespace Robust.Shared.GameObjects
 
             LastModifiedTick = EntityManager.CurrentTick;
 
-            if (LifeStage >= EntityLifeStage.Initialized && Transform.Anchored)
+            if (LifeStage >= EntityLifeStage.Initialized && Transform.Anchored && Transform.ParentUid.IsValid())
                 EntityManager.GetComponent<IMapGridComponent>(Transform.ParentUid).AnchoredEntityDirty(Transform);
         }
 

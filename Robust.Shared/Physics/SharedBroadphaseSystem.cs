@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -17,6 +16,7 @@ namespace Robust.Shared.Physics
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private const int MinimumBroadphaseCapacity = 256;
 
@@ -47,14 +47,14 @@ namespace Robust.Shared.Physics
 
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
-        private Dictionary<BroadphaseComponent, Vector2> _offsets = new(8);
-        private Dictionary<BroadphaseComponent, Box2> _broadphaseBounding = new(8);
+        private Dictionary<EntityUid, Box2> _broadphaseBounding = new(8);
+        private Dictionary<EntityUid, Matrix3> _broadphaseInvMatrices = new(8);
         private HashSet<EntityUid> _broadphases = new(8);
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
 
         // Caching for Synchronize
-        private Dictionary<BroadphaseComponent, (Vector2 Position, float Rotation)> _broadphasePositions = new();
+        private Dictionary<BroadphaseComponent, (Vector2 Position, float Rotation)> _broadphaseTransforms = new();
 
         public override void Initialize()
         {
@@ -95,6 +95,7 @@ namespace Robust.Shared.Physics
         public void ProcessUpdates()
         {
             _handledThisTick.Clear();
+            EnsureBroadphaseTransforms();
 
             while (_queuedBodyUpdates.TryDequeue(out var update))
             {
@@ -127,10 +128,10 @@ namespace Robust.Shared.Physics
                     !move.Sender.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
-                // TODO: Also need WorldRot here?
                 var worldPos = move.NewPosition.ToMapPos(EntityManager);
+                var worldRot = (float) move.Sender.Transform.WorldRotation.Theta;
 
-                SynchronizeFixtures(body, worldPos);
+                SynchronizeFixtures(body, worldPos, worldRot);
             }
 
             while (_queuedRotates.TryDequeue(out var rotate))
@@ -141,11 +142,43 @@ namespace Robust.Shared.Physics
                     !body.CanCollide) continue;
 
                 var worldPos = rotate.Sender.Transform.WorldPosition;
+                var worldRot = (float) rotate.NewRotation.Theta;
 
-                SynchronizeFixtures(body, worldPos);
+                SynchronizeFixtures(body, worldPos, worldRot);
             }
 
-            _broadphasePositions.Clear();
+            _broadphaseBounding.Clear();
+            _broadphases.Clear();
+            _broadphaseTransforms.Clear();
+            // Unfortunately we can't re-use our broadphase transforms as controllers may update them.
+            _physicsManager.ClearTransforms();
+        }
+
+        // because physics is damn expensive we're gonna cache as much broadphase data up front as we can to re-use across
+        // all bodies that need updating.
+        internal void EnsureBroadphaseTransforms()
+        {
+            // Cache as much broadphase data as we can up front for this map.
+            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
+            {
+                UpdateBroadphaseCache(broadphase);
+            }
+        }
+
+        private void UpdateBroadphaseCache(BroadphaseComponent broadphase)
+        {
+            var uid = broadphase.Owner.Uid;
+
+            var transform = _physicsManager.UpdateTransform(uid);
+            _broadphases.Add(uid);
+            _broadphaseTransforms[broadphase] = (transform.Position, transform.Quaternion2D.Angle);
+
+            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? physicsComponent))
+            {
+                _broadphaseBounding[uid] = physicsComponent.GetWorldAABB(transform.Position);
+            }
+
+            _broadphaseInvMatrices[uid] = EntityManager.GetComponent<TransformComponent>(uid).InvWorldMatrix;
         }
 
         /// <summary>
@@ -168,10 +201,11 @@ namespace Robust.Shared.Physics
                 if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
-                var offset = _offsets[broadphase];
+                var broadphaseXForm = _broadphaseTransforms[broadphase];
                 var body = fixture.Body;
-                var translatedAABB = worldAABB.Translated(-offset);
+                var translatedAABB = worldAABB.Translated(-broadphaseXForm.Position);
 
+                // TODO: Use the callback for this you ape.
                 // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
                 foreach (var other in broadphase!.Tree.QueryAabb(_queryBuffer, translatedAABB))
                 {
@@ -181,7 +215,7 @@ namespace Robust.Shared.Physics
                     if (other.Fixture.Body == body || moveBuffer.ContainsKey(other)) continue;
 
                     // To avoid updating during iteration.
-                    _gridMoveBuffer[other] = other.AABB.Translated(offset);
+                    _gridMoveBuffer[other] = other.AABB.Translated(broadphaseXForm.Position);
                 }
 
                 _queryBuffer.Clear();
@@ -202,23 +236,6 @@ namespace Robust.Shared.Physics
 
             if (moveBuffer.Count == 0) return;
 
-            // Cache as much broadphase data as we can up front for this map.
-            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
-            {
-                var transform = broadphase.Owner.Transform;
-
-                if (transform.MapID != mapId) continue;
-
-                _broadphases.Add(broadphase.Owner.Uid);
-                var worldPos = transform.WorldPosition;
-                _offsets[broadphase] = worldPos;
-
-                if (broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent))
-                {
-                    _broadphaseBounding[broadphase] = physicsComponent.GetWorldAABB(worldPos);
-                }
-            }
-
             // Find any entities being driven over that might need to be considered
             FindGridContacts(mapId, prediction);
 
@@ -235,21 +252,23 @@ namespace Robust.Shared.Physics
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
-                // if (prediction && !proxy.Fixture.Body.Predict) continue;
+                var proxyBody = proxy.Fixture.Body;
+                // if (prediction && !proxyBody.Predict) continue;
 
                 // Get every broadphase we may be intersecting.
-                foreach (var (broadphase, offset) in _offsets)
+                foreach (var (broadphase, broadphaseXForm) in _broadphaseTransforms)
                 {
                     // Broadphase can't intersect with entities on itself so skip.
-                    if (proxy.Fixture.Body.Owner == broadphase.Owner) continue;
+                    if (proxyBody.Owner.Uid == broadphase.Owner.Uid ||
+                        broadphase.Owner.Transform.MapID != proxyBody.Owner.Transform.MapID) continue;
 
                     // If we're a map / our BB intersects then we'll do the work
-                    if (_broadphaseBounding.TryGetValue(broadphase, out var broadphaseAABB) &&
+                    if (_broadphaseBounding.TryGetValue(broadphase.Owner.Uid, out var broadphaseAABB) &&
                         !broadphaseAABB.Intersects(worldAABB)) continue;
 
                     // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
                     Box2 aabb;
-                    var proxyBroad = proxy.Fixture.Body.Broadphase;
+                    var proxyBroad = proxyBody.Broadphase!;
 
                     // If it's the same broadphase as our body's one then don't need to translate the AABB.
                     if (proxyBroad == broadphase)
@@ -305,8 +324,12 @@ namespace Robust.Shared.Physics
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't
                     // moving locally but are moving in world-terms.
-                    proxyA.Fixture.Body.WakeBody();
-                    other.Fixture.Body.WakeBody();
+                    if (proxyA.Fixture.Hard && other.Fixture.Hard)
+                    {
+                        proxyA.Fixture.Body.WakeBody();
+                        other.Fixture.Body.WakeBody();
+                    }
+
                     contactManager.AddPair(proxyA, other);
                 }
             }
@@ -314,9 +337,6 @@ namespace Robust.Shared.Physics
             _pairBuffer.Clear();
             _moveBuffer[mapId].Clear();
             _gridMoveBuffer.Clear();
-            _offsets.Clear();
-            _broadphaseBounding.Clear();
-            _broadphases.Clear();
         }
 
         private void HandleParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
@@ -338,7 +358,7 @@ namespace Robust.Shared.Physics
             DestroyProxies(body);
 
             // Shouldn't need to null-check as this already checks for nullspace so should be okay...?
-            CreateProxies(body);
+            CreateProxies(body, true);
         }
 
         /// <summary>
@@ -364,7 +384,7 @@ namespace Robust.Shared.Physics
             _queuedBodyUpdates.Enqueue(ev);
         }
 
-        internal void AddBody(PhysicsComponent body)
+        private void AddBody(PhysicsComponent body)
         {
             // TODO: Good idea? Ehhhhhhhhhhhh
             // The problem is there's some fuckery with events while an entity is initializing.
@@ -372,7 +392,7 @@ namespace Robust.Shared.Physics
             //
             if (body.Broadphase != null) return;
 
-            CreateProxies(body);
+            CreateProxies(body, true);
         }
 
         internal void RemoveBody(PhysicsComponent body)
@@ -482,7 +502,8 @@ namespace Robust.Shared.Physics
             // Should only happen for nullspace / initializing entities
             if (body.Broadphase != null)
             {
-                CreateProxies(fixture, body.Owner.Transform.WorldPosition);
+                UpdateBroadphaseCache(body.Broadphase);
+                CreateProxies(fixture, body.Owner.Transform.WorldPosition, false);
             }
 
             // Supposed to be wrapped in density but eh
@@ -550,10 +571,11 @@ namespace Robust.Shared.Physics
             body.Dirty();
         }
 
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot)
         {
             // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
-            var xf = new Transform(worldPos, (float) body.Owner.Transform.WorldRotation.Theta);
+            // Don't cache this as controllers may change it freely before we run physics!
+            var xf = new Transform(worldPos, worldRot);
 
             if (body.Awake)
             {
@@ -580,46 +602,13 @@ namespace Robust.Shared.Physics
                     Synchronize(fixture, xf);
                 }
             }
-        }
 
-        /// <summary>
-        /// The standard Synchronize from Box2D
-        /// </summary>
-        private void SynchronizeTOI(Fixture fixture, Transform transform1, Transform transform2)
-        {
-            var broadphase = fixture.Body.Broadphase!;
-            var proxyCount = fixture.ProxyCount;
+            // Ensure cache remains up to date if the broadphase is moving.
+            var uid = body.Owner.Uid;
 
-            // TODO: Inefficient as fuck
-            var broadphaseTransform = broadphase.Owner.Transform;
-
-            if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
+            if (EntityManager.TryGetComponent(uid, out BroadphaseComponent? broadphase))
             {
-                broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);
-                _broadphasePositions[broadphase] = broadphaseOffset;
-            }
-
-            var relativePos1 = new Transform(transform1.Position - broadphaseOffset.Position,
-                transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
-
-            var relativePos2 = new Transform(transform2.Position - broadphaseOffset.Position,
-                transform2.Quaternion2D.Angle - broadphaseOffset.Rotation);
-
-            var angle1 = new Angle(relativePos1.Quaternion2D.Angle);
-            var angle2 = new Angle(relativePos2.Quaternion2D.Angle);
-
-            for (var i = 0; i < proxyCount; i++)
-            {
-                 var proxy = fixture.Proxies[i];
-
-                 var aabb1 = fixture.Shape.ComputeAABB(relativePos1, i);
-                 var aabb2 = fixture.Shape.ComputeAABB(relativePos2, i);
-
-                 var aabb = aabb1.Union(aabb2);
-                 proxy.AABB = aabb;
-                 var displacement = aabb2.Center - aabb1.Center;
-                 broadphase.Tree.MoveProxy(proxy.ProxyId, aabb, displacement);
-                 AddToMoveBuffer(broadphaseTransform.MapID, proxy, proxy.AABB.Translated(broadphaseOffset.Position));
+                UpdateBroadphaseCache(broadphase);
             }
         }
 
@@ -631,19 +620,14 @@ namespace Robust.Shared.Physics
             // tl;dr update our bounding boxes stored in broadphase.
             var broadphase = fixture.Body.Broadphase!;
             var proxyCount = fixture.ProxyCount;
-            var broadphaseTransform = broadphase.Owner.Transform;
 
-            // TODO: Cache these up front. Probably use the same thing you're gonna use for the
-            // physics worldtransform caching.
-            if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
-            {
-                broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);
-                _broadphasePositions[broadphase] = broadphaseOffset;
-            }
+            var broadphaseMapId = broadphase.Owner.Transform.MapID;
+            var broadphaseInvMatrix = _broadphaseInvMatrices[broadphase.Owner.Uid];
+            var broadphaseXform = _broadphaseTransforms[broadphase];
 
             var relativePos1 = new Transform(
-                broadphaseTransform.InvWorldMatrix.Transform(transform1.Position),
-                transform1.Quaternion2D.Angle - broadphaseOffset.Rotation);
+                broadphaseInvMatrix.Transform(transform1.Position),
+                transform1.Quaternion2D.Angle - broadphaseXform.Rotation);
 
             for (var i = 0; i < proxyCount; i++)
             {
@@ -653,11 +637,11 @@ namespace Robust.Shared.Physics
                 var displacement = Vector2.Zero;
                 broadphase.Tree.MoveProxy(proxy.ProxyId, bounds, displacement);
 
-                var worldAABB = new Box2Rotated(bounds, broadphaseOffset.Rotation, Vector2.Zero)
+                var worldAABB = new Box2Rotated(bounds, broadphaseXform.Rotation, Vector2.Zero)
                     .CalcBoundingBox()
-                    .Translated(broadphaseOffset.Position);
+                    .Translated(broadphaseXform.Position);
 
-                AddToMoveBuffer(broadphaseTransform.MapID, proxy, worldAABB);
+                AddToMoveBuffer(broadphaseMapId, proxy, worldAABB);
             }
         }
 
@@ -666,7 +650,13 @@ namespace Robust.Shared.Physics
             _moveBuffer[mapId][proxy] = aabb;
         }
 
-        private void CreateProxies(PhysicsComponent body)
+        /// <summary>
+        /// Get broadphase proxies from the body's fixtures and add them to the relevant broadphase.
+        /// </summary>
+        /// <param name="body">The body to update the proxies for.</param>
+        /// <param name="useCache">Whether we should use cached broadphase data. This is only valid during the physics step.</param>
+        /// <exception cref="InvalidBroadphaseException"></exception>
+        private void CreateProxies(PhysicsComponent body, bool useCache)
         {
             if (body.Owner.Transform.MapID == MapId.Nullspace) return;
 
@@ -694,7 +684,15 @@ namespace Robust.Shared.Physics
 
             foreach (var fixture in body.Fixtures)
             {
-                CreateProxies(fixture, worldPos);
+                CreateProxies(fixture, worldPos, useCache);
+            }
+
+            // Ensure cache remains up to date if the broadphase is moving.
+            var uid = body.Owner.Uid;
+
+            if (EntityManager.TryGetComponent(uid, out BroadphaseComponent? broadphaseComp))
+            {
+                UpdateBroadphaseCache(broadphaseComp);
             }
 
             // Logger.DebugS("physics", $"Created proxies for {body.Owner} on {broadphase.Owner}");
@@ -703,8 +701,11 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Create the proxies for this fixture on the body's broadphase.
         /// </summary>
-        private void CreateProxies(Fixture fixture, Vector2 worldPos)
+        private void CreateProxies(Fixture fixture, Vector2 worldPos, bool useCache)
         {
+            // Ideally we would always just defer this until Update / FrameUpdate but that will have to wait for a future
+            // PR for my own sanity.
+
             DebugTools.Assert(fixture.ProxyCount == 0);
             DebugTools.Assert(fixture.Body.Owner.Transform.MapID != MapId.Nullspace);
 
@@ -725,19 +726,26 @@ namespace Robust.Shared.Physics
             Array.Resize(ref proxies, proxyCount);
             fixture.Proxies = proxies;
 
-            var broadphaseTransform = broadphase.Owner.Transform;
+            Matrix3 broadphaseInvMatrix;
+            (Vector2 Position, float Rotation) broadphaseTransform;
+            var xform = broadphase.Owner.Transform;
 
-            if (!_broadphasePositions.TryGetValue(broadphase, out var broadphaseOffset))
+            if (useCache)
             {
-                broadphaseOffset = (broadphaseTransform.WorldPosition, (float) broadphaseTransform.WorldRotation.Theta);
-                _broadphasePositions[broadphase] = broadphaseOffset;
+                broadphaseInvMatrix = _broadphaseInvMatrices[broadphase.Owner.Uid];
+                broadphaseTransform = _broadphaseTransforms[broadphase];
+            }
+            else
+            {
+                broadphaseInvMatrix = xform.InvWorldMatrix;
+                broadphaseTransform = (xform.WorldPosition, (float) xform.WorldRotation.Theta);
             }
 
             var worldRot = fixture.Body.Owner.Transform.WorldRotation;
-            var localPos = broadphase.Owner.Transform.InvWorldMatrix.Transform(worldPos);
+            var localPos = broadphaseInvMatrix.Transform(worldPos);
 
-            var transform = new Transform(localPos, worldRot - broadphaseOffset.Rotation);
-            var mapId = broadphaseTransform.MapID;
+            var transform = new Transform(localPos, worldRot - broadphaseTransform.Rotation);
+            var mapId = xform.MapID;
 
             for (var i = 0; i < proxyCount; i++)
             {
@@ -746,9 +754,9 @@ namespace Robust.Shared.Physics
                 proxy.ProxyId = broadphase.Tree.AddProxy(ref proxy);
                 fixture.Proxies[i] = proxy;
 
-                var worldAABB = new Box2Rotated(bounds, broadphaseOffset.Rotation, Vector2.Zero)
+                var worldAABB = new Box2Rotated(bounds, broadphaseTransform.Rotation, Vector2.Zero)
                     .CalcBoundingBox()
-                    .Translated(broadphaseOffset.Position);
+                    .Translated(broadphaseTransform.Position);
 
                 AddToMoveBuffer(mapId, proxy, worldAABB);
             }
@@ -860,19 +868,6 @@ namespace Robust.Shared.Physics
             return null;
         }
 
-        #region Queries
-        /// <summary>
-        ///     Get the percentage that 2 bodies overlap. Ignores whether collision is turned on for either body.
-        /// </summary>
-        /// <param name="bodyA"></param>
-        /// <param name="bodyB"></param>
-        /// <returns> 0 -> 1.0f based on WorldAABB overlap</returns>
-        public float IntersectionPercent(PhysicsComponent bodyA, PhysicsComponent bodyB)
-        {
-            // TODO: Use actual shapes and not just the AABB?
-            return bodyA.GetWorldAABB().IntersectPercentage(bodyB.GetWorldAABB());
-        }
-
         // TODO: The below is slow and should just query the map's broadphase directly. The problem is that
         // there's some ordering stuff going on where the broadphase has queued all of its updates but hasn't applied
         // them yet so this query will fail on initialization which chains into a whole lot of issues.
@@ -926,256 +921,7 @@ namespace Robust.Shared.Physics
         {
             return GetBroadphases(mapId, new Box2(worldPos, worldPos));
         }
-
-        /// <summary>
-        /// Checks to see if the specified collision rectangle collides with any of the physBodies under management.
-        /// Also fires the OnCollide event of the first managed physBody to intersect with the collider.
-        /// </summary>
-        /// <param name="collider">Collision rectangle to check</param>
-        /// <param name="mapId">Map to check on</param>
-        /// <param name="approximate"></param>
-        /// <returns>true if collides, false if not</returns>
-        public bool TryCollideRect(Box2 collider, MapId mapId, bool approximate = true)
-        {
-            var state = (collider, mapId, found: false);
-
-            foreach (var broadphase in GetBroadphases(mapId, collider))
-            {
-                // TODO: Is rotation a problem here?
-                var gridCollider = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(collider);
-
-                broadphase.Tree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
-                {
-                    if (proxy.Fixture.CollisionLayer == 0x0)
-                        return true;
-
-                    if (proxy.AABB.Intersects(gridCollider))
-                    {
-                        state.found = true;
-                        return false;
-                    }
-                    return true;
-                }, gridCollider, approximate);
-            }
-
-            return state.found;
-        }
-
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
-        {
-            var broadphase = body.Broadphase;
-            if (broadphase == null)
-            {
-                return Array.Empty<PhysicsComponent>();
-            }
-
-            var entities = new List<PhysicsComponent>();
-
-            var state = (body, entities);
-
-            foreach (var fixture in body._fixtures)
-            {
-                foreach (var proxy in fixture.Proxies)
-                {
-                    broadphase.Tree.QueryAabb(ref state,
-                        (ref (PhysicsComponent body, List<PhysicsComponent> entities) state,
-                            in FixtureProxy other) =>
-                        {
-                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
-                            if ((proxy.Fixture.CollisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
-                            if (!body.ShouldCollide(other.Fixture.Body)) return true;
-
-                            state.entities.Add(other.Fixture.Body);
-                            return true;
-                        }, proxy.AABB, approximate);
-                }
-            }
-
-            return entities;
-        }
-
-        /// <summary>
-        /// Get all entities colliding with a certain body.
-        /// </summary>
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)
-        {
-            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
-
-            var bodies = new HashSet<PhysicsComponent>();
-
-            foreach (var broadphase in GetBroadphases(mapId, worldAABB))
-            {
-                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
-
-                foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
-                {
-                    bodies.Add(proxy.Fixture.Body);
-                }
-            }
-
-            return bodies;
-        }
-
-        /// <summary>
-        /// Get all entities colliding with a certain body.
-        /// </summary>
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2Rotated worldBounds)
-        {
-            if (mapId == MapId.Nullspace) return Array.Empty<PhysicsComponent>();
-
-            var bodies = new HashSet<PhysicsComponent>();
-
-            foreach (var broadphase in GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
-            {
-                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
-
-                foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
-                {
-                    bodies.Add(proxy.Fixture.Body);
-                }
-            }
-
-            return bodies;
-        }
-
-        // TODO: This will get every body but we don't need to do that
-        /// <summary>
-        ///     Checks whether a body is colliding
-        /// </summary>
-        /// <param name="body"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public bool IsColliding(PhysicsComponent body, Vector2 offset, bool approximate)
-        {
-            return GetCollidingEntities(body, offset, approximate).Any();
-        }
-        #endregion
-
-        #region RayCast
-        /// <summary>
-        ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="ray">Ray to cast in the world.</param>
-        /// <param name="maxLength">Maximum length of the ray in meters.</param>
-        /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
-        /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
-        /// <returns>A result object describing the hit, if any.</returns>
-        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            float maxLength = 50F,
-            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
-        {
-            List<RayCastResults> results = new();
-            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
-
-            foreach (var broadphase in GetBroadphases(mapId, rayBox))
-            {
-                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
-
-                var position = invMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
-                var direction = gridRot.RotateVec(ray.Direction);
-
-                var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
-
-                broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
-                {
-                    if (returnOnFirstHit && results.Count > 0) return true;
-
-                    if (distFromOrigin > maxLength)
-                        return true;
-
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
-                        return true;
-                    }
-
-                    if (predicate?.Invoke(proxy.Fixture.Body.Owner) == true)
-                    {
-                        return true;
-                    }
-
-                    // TODO: Shape raycast here
-
-                    // Need to convert it back to world-space.
-                    var result = new RayCastResults(distFromOrigin, point + position, proxy.Fixture.Body.Owner);
-                    results.Add(result);
-                    EntityManager.EventBus.QueueEvent(EventSource.Local,
-                        new DebugDrawRayMessage(
-                            new DebugRayData(ray, maxLength, result)));
-                    return true;
-                }, gridRay);
-            }
-
-            if (results.Count == 0)
-            {
-                EntityManager.EventBus.QueueEvent(EventSource.Local,
-                    new DebugDrawRayMessage(
-                        new DebugRayData(ray, maxLength, null)));
-            }
-
-            results.Sort((a, b) => a.Distance.CompareTo(b.Distance));
-            return results;
-        }
-
-        /// <summary>
-        ///     Casts a ray in the world and returns the first entity it hits, or a list of all entities it hits.
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="ray">Ray to cast in the world.</param>
-        /// <param name="maxLength">Maximum length of the ray in meters.</param>
-        /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
-        /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
-        /// <returns>An enumerable of either the first entity hit or everything hit</returns>
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
-
-        /// <summary>
-        ///     Casts a ray in the world and returns the distance the ray traveled while colliding with entities
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="ray">Ray to cast in the world.</param>
-        /// <param name="maxLength">Maximum length of the ray in meters.</param>
-        /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
-        /// <returns>The distance the ray traveled while colliding with entities</returns>
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
-        {
-            var penetration = 0f;
-            var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
-            var rayBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint),
-                Vector2.ComponentMax(ray.Position, endPoint));
-
-            foreach (var broadphase in GetBroadphases(mapId, rayBox))
-            {
-                var offset = broadphase.Owner.Transform.WorldPosition;
-
-                var gridRay = new CollisionRay(ray.Position - offset, ray.Direction, ray.CollisionMask);
-                // TODO: Probably need rotation when we get rotatable grids
-
-                broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
-                {
-                    if (distFromOrigin > maxLength || proxy.Fixture.Body.Owner == ignoredEnt) return true;
-
-                    if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
-                        return true;
-                    }
-
-                    if (new Ray(point + ray.Direction * proxy.AABB.Size.Length * 2, -ray.Direction).Intersects(
-                        proxy.AABB, out _, out var exitPoint))
-                    {
-                        penetration += (point - exitPoint).Length;
-                    }
-                    return true;
-                }, gridRay);
-            }
-
-            return penetration;
-        }
-        #endregion
-
+        
         private sealed class InvalidBroadphaseException : Exception
         {
             public InvalidBroadphaseException() {}

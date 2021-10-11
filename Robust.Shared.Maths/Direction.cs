@@ -84,25 +84,62 @@ namespace Robust.Shared.Maths
             return ang;
         }
 
-        private static Vector2[] directionVectors = new[]
-        {
-            new Vector2(0, -1),
+        private static readonly Vector2[] DirectionVectors = {
+            new (0, -1),
             new Vector2(1, -1).Normalized,
-            new Vector2(1, 0),
+            new (1, 0),
             new Vector2(1, 1).Normalized,
-            new Vector2(0, 1),
+            new (0, 1),
             new Vector2(-1, 1).Normalized,
-            new Vector2(-1, 0),
+            new (-1, 0),
             new Vector2(-1, -1).Normalized
         };
+        
+        private static readonly Vector2i[] IntDirectionVectors = {
+            new (0, -1),
+            new (1, -1),
+            new (1, 0),
+            new (1, 1),
+            new (0, 1),
+            new (-1, 1),
+            new (-1, 0),
+            new (-1, -1)
+        };
+        
         /// <summary>
         /// Converts a Direction to a normalized Direction vector.
         /// </summary>
         /// <param name="dir"></param>
-        /// <returns></returns>
+        /// <returns>a normalized 2D Vector</returns>
+        /// <exception cref="IndexOutOfRangeException">if invalid Direction is used</exception>
+        /// <seealso cref="Vector2"/>
         public static Vector2 ToVec(this Direction dir)
         {
-            return directionVectors[(int) dir];
+            return DirectionVectors[(int) dir];
+        }
+
+        /// <summary>
+        /// Converts a Direction to a Vector2i. Useful for getting adjacent tiles.
+        /// </summary>
+        /// <param name="dir">Direction</param>
+        /// <returns>an 2D int Vector</returns>
+        /// <exception cref="IndexOutOfRangeException">if invalid Direction is used</exception>
+        /// <seealso cref="Vector2i"/>
+        public static Vector2i ToIntVec(this Direction dir)
+        {
+            return IntDirectionVectors[(int) dir];
+        }
+
+        /// <summary>
+        ///     Offset 2D integer vector by a given direction.
+        ///     Convenience for adding <see cref="ToIntVec"/> to <see cref="Vector2i"/>
+        /// </summary>
+        /// <param name="vec">2D integer vector</param>
+        /// <param name="dir">Direction by which we offset</param>
+        /// <returns>a newly vector offset by the <param name="dir">dir</param> or exception if the direction is invalid</returns>
+        public static Vector2i Offset(this Vector2i vec, Direction dir)
+        {
+            return vec + dir.ToIntVec();
         }
 
         /// <summary>

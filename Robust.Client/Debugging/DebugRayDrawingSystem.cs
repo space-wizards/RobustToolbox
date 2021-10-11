@@ -2,21 +2,22 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
+using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.Debugging
 {
-    internal class DebugDrawingManager : IDebugDrawingManager
+    internal sealed class DebugRayDrawingSystem : EntitySystem
     {
-        [Dependency] private readonly IClientNetManager _net = default!;
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IGameTiming _gameTimer = default!;
 
-        private readonly List<RayWithLifetime> raysWithLifeTime = new();
+        private readonly List<RayWithLifetime> _raysWithLifeTime = new();
         private bool _debugDrawRays;
 
         private struct RayWithLifetime
@@ -52,9 +53,30 @@ namespace Robust.Client.Debugging
 
         public TimeSpan DebugRayLifetime { get; set; } = TimeSpan.FromSeconds(5);
 
-        public void Initialize()
+        public override void Initialize()
         {
-            _net.RegisterNetMessage<MsgRay>(HandleDrawRay);
+            base.Initialize();
+            SubscribeNetworkEvent<MsgRay>(HandleDrawRay);
+            // To catch anything that's client-only and not sent by the server.
+            SubscribeLocalEvent<DebugDrawRayMessage>(OnDebugDrawRay);
+        }
+
+        private void OnDebugDrawRay(DebugDrawRayMessage ev)
+        {
+            if (!_debugDrawRays)
+            {
+                return;
+            }
+
+            var newRayWithLifetime = new RayWithLifetime
+            {
+                DidActuallyHit = ev.Data.Results != null,
+                RayOrigin = ev.Data.Ray.Position,
+                RayHit = ev.Data.Results?.HitPos ?? ev.Data.Ray.Direction * ev.Data.MaxLength + ev.Data.Ray.Position,
+                LifeTime = _gameTimer.RealTime + DebugRayLifetime
+            };
+
+            _raysWithLifeTime.Add(newRayWithLifetime);
         }
 
         private void HandleDrawRay(MsgRay msg)
@@ -74,15 +96,15 @@ namespace Robust.Client.Debugging
                 LifeTime = _gameTimer.RealTime + DebugRayLifetime
             };
 
-            raysWithLifeTime.Add(newRayWithLifetime);
+            _raysWithLifeTime.Add(newRayWithLifetime);
         }
 
         private sealed class DebugDrawRayOverlay : Overlay
         {
-            private readonly DebugDrawingManager _owner;
+            private readonly DebugRayDrawingSystem _owner;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugDrawRayOverlay(DebugDrawingManager owner)
+            public DebugDrawRayOverlay(DebugRayDrawingSystem owner)
             {
                 _owner = owner;
             }
@@ -90,7 +112,7 @@ namespace Robust.Client.Debugging
             protected internal override void Draw(in OverlayDrawArgs args)
             {
                 var handle = args.WorldHandle;
-                foreach (var ray in _owner.raysWithLifeTime)
+                foreach (var ray in _owner._raysWithLifeTime)
                 {
                     handle.DrawLine(
                         ray.RayOrigin,
@@ -103,7 +125,7 @@ namespace Robust.Client.Debugging
             {
                 base.FrameUpdate(args);
 
-                _owner.raysWithLifeTime.RemoveAll(r => r.LifeTime < _owner._gameTimer.RealTime);
+                _owner._raysWithLifeTime.RemoveAll(r => r.LifeTime < _owner._gameTimer.RealTime);
             }
         }
     }

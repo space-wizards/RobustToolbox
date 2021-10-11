@@ -11,7 +11,6 @@ namespace Robust.Shared.Physics.Controllers
     [MeansImplicitUse]
     public abstract class VirtualController
     {
-        [Dependency] protected readonly IComponentManager ComponentManager = default!;
         [Dependency] protected readonly IEntityManager EntityManager = default!;
 
         public Histogram.Child BeforeMonitor = default!;

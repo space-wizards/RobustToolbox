@@ -334,6 +334,21 @@ namespace Robust.Client.Graphics.Clyde
                 // Nada.
             }
 
+            public void SetMaxDistance(float maxDistance)
+            {
+                // Nada.
+            }
+
+            public void SetRolloffFactor(float rolloffFactor)
+            {
+                // Nada.
+            }
+
+            public void SetReferenceDistance(float refDistance)
+            {
+                // Nada.
+            }
+
             public void SetOcclusion(float blocks)
             {
                 // Nada.

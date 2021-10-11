@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     public class ComponentDependencyManager : IComponentDependencyManager
     {
         [IoC.Dependency] private readonly IComponentFactory _componentFactory = null!;
-        [IoC.Dependency] private readonly IComponentManager _componentManager = null!;
+        [IoC.Dependency] private readonly IEntityManager _entityManager = null!;
 
         /// <summary>
         /// Cache of queries and their corresponding field offsets
@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
             }
 
             //get all present components in entity
-            foreach (var entityComp in _componentManager.GetComponents(eUid))
+            foreach (var entityComp in _entityManager.GetComponents(eUid))
             {
                 var entityCompReg = _componentFactory.GetRegistration(entityComp);
                 foreach (var reference in entityCompReg.References)
@@ -74,7 +74,7 @@ namespace Robust.Shared.GameObjects
             var compReg = _componentFactory.GetRegistration(compType);
 
             //check if any are requesting our component as a dependency
-            var entityComponents = _componentManager.GetComponents(eUid);
+            var entityComponents = _entityManager.GetComponents(eUid);
             foreach (var entityComponent in entityComponents)
             {
                 //get entry for out entityComponent

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -92,7 +93,7 @@ namespace Robust.Analyzers
                             continue;
 
                         // If we find that the containing class is specified in the attribute, return! All is good.
-                        if (SymbolEqualityComparer.Default.Equals(containingType, t))
+                        if (InheritsFromOrEquals(containingType, t))
                             return;
                     }
 
@@ -101,6 +102,27 @@ namespace Robust.Analyzers
                         Diagnostic.Create(Rule, context.Node.GetLocation(),
                             $"{context.Node.ToString().Split('.').LastOrDefault()}", $"{type.Name}"));
                 }
+            }
+        }
+
+        private bool InheritsFromOrEquals(INamedTypeSymbol type, INamedTypeSymbol baseType)
+        {
+            foreach (var otherType in GetBaseTypesAndThis(type))
+            {
+                if (SymbolEqualityComparer.Default.Equals(otherType, baseType))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private IEnumerable<INamedTypeSymbol> GetBaseTypesAndThis(INamedTypeSymbol namedType)
+        {
+            var current = namedType;
+            while (current != null)
+            {
+                yield return current;
+                current = current.BaseType;
             }
         }
     }

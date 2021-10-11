@@ -15,7 +15,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public class TypeSerializer : ITypeSerializer<Type, ValueDataNode>
     {
-        private static readonly Dictionary<string, Type> _shortcuts = new ()
+        private static readonly Dictionary<string, Type> Shortcuts = new ()
         {
             {"bool", typeof(bool)}
         };
@@ -23,7 +23,8 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            if (_shortcuts.ContainsKey(node.Value)) return new ValidatedValueNode(node);
+            if (Shortcuts.ContainsKey(node.Value))
+                return new ValidatedValueNode(node);
 
             return dependencies.Resolve<IReflectionManager>().GetType(node.Value) == null
                 ? new ErrorNode(node, $"Type '{node.Value}' not found.")
@@ -33,11 +34,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
-            if(_shortcuts.TryGetValue(node.Value, out var shortcutType)) return DeserializationResult.Value(shortcutType);
+            if (Shortcuts.TryGetValue(node.Value, out var shortcutType))
+                return new DeserializedValue<Type>(shortcutType);
 
             var type = dependencies.Resolve<IReflectionManager>().GetType(node.Value);
-            if (type == null) throw new InvalidMappingException($"Type '{node.Value}' not found.");
-            return DeserializationResult.Value(type);
+
+            return type == null
+                ? throw new InvalidMappingException($"Type '{node.Value}' not found.")
+                : new DeserializedValue<Type>(type);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Type value, bool alwaysWrite = false,

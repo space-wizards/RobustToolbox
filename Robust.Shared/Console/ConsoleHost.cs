@@ -7,6 +7,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Console
 {
@@ -19,6 +20,7 @@ namespace Robust.Shared.Console
         [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
 
+        [ViewVariables]
         protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
 
         /// <inheritdoc />

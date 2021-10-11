@@ -111,5 +111,6 @@ namespace Robust.Shared.Reflection
         bool TryParseEnumReference(string reference, [NotNullWhen(true)] out Enum? @enum);
 
         Type? YamlTypeTagLookup(Type baseType, string typeName);
+        IEnumerable<Type> FindAllTypes();
     }
 }

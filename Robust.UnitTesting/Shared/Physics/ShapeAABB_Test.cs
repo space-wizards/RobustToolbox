@@ -22,7 +22,7 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public async Task TestCircleAABB()
+        public void TestCircleAABB()
         {
             var circle = new PhysShapeCircle {Radius = 0.5f};
             var aabb = circle.ComputeAABB(_transform, 0);
@@ -31,7 +31,7 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public async Task TestRotatedCircleAABB()
+        public void TestRotatedCircleAABB()
         {
             var circle = new PhysShapeCircle {Radius = 0.5f};
             var aabb = circle.ComputeAABB(_rotatedTransform, 0);
@@ -40,7 +40,7 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public async Task TestEdgeAABB()
+        public void TestEdgeAABB()
         {
             var edge = new EdgeShape(Vector2.Zero, Vector2.One);
             var aabb = edge.ComputeAABB(_transform, 0);
@@ -49,16 +49,16 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public async Task TestRotatedEdgeAABB()
+        public void TestRotatedEdgeAABB()
         {
             var edge = new EdgeShape(Vector2.Zero, Vector2.One);
             var aabb = edge.ComputeAABB(_rotatedTransform, 0);
-            Assert.That(MathHelper.CloseTo(aabb.Width, 0.02f));
+            Assert.That(MathHelper.CloseToPercent(aabb.Width, 0.02f));
             Assert.That(aabb.EqualsApprox(new Box2(0.99f, 0.99f, 1.01f, 2.42f), 0.01f));
         }
 
         [Test]
-        public async Task TestPolyAABB()
+        public void TestPolyAABB()
         {
             var polygon = new PolygonShape();
             // Radius is added to the AABB hence we'll just deduct it here for simplicity
@@ -69,7 +69,7 @@ namespace Robust.UnitTesting.Shared.Physics
         }
 
         [Test]
-        public async Task TestRotatedPolyAABB()
+        public void TestRotatedPolyAABB()
         {
             var polygon = new PolygonShape();
             // Radius is added to the AABB hence we'll just deduct it here for simplicity

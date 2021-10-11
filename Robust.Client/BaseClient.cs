@@ -31,7 +31,6 @@ namespace Robust.Client
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IClientGameStateManager _gameStates = default!;
-        [Dependency] private readonly IDebugDrawingManager _debugDrawMan = default!;
 
         /// <inheritdoc />
         public ushort DefaultPort { get; } = 1212;
@@ -57,7 +56,6 @@ namespace Robust.Client
             _configManager.OnValueChanged(CVars.NetTickrate, TickRateChanged, invokeImmediately: true);
 
             _playMan.Initialize();
-            _debugDrawMan.Initialize();
             Reset();
         }
 

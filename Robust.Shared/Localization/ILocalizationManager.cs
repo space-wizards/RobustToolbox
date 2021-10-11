@@ -63,14 +63,6 @@ namespace Robust.Shared.Localization
         /// <summary>
         ///     Load data for a culture.
         /// </summary>
-        /// <param name="resourceManager"></param>
-        /// <param name="culture"></param>
-        [Obsolete("Use LoadCulture without IResourceManager overload instead.")]
-        void LoadCulture(IResourceManager resourceManager, CultureInfo culture) => LoadCulture(culture);
-
-        /// <summary>
-        ///     Load data for a culture.
-        /// </summary>
         /// <param name="culture"></param>
         void LoadCulture(CultureInfo culture);
 
@@ -86,14 +78,6 @@ namespace Robust.Shared.Localization
         /// <param name="name">The name of the function.</param>
         /// <param name="function">The function itself.</param>
         void AddFunction(CultureInfo culture, string name, LocFunction function);
-
-        /// <summary>
-        /// Remnants of the old Localization system.
-        /// It exists to prevent source errors and allow existing game text to *mostly* work
-        /// </summary>
-        [Obsolete]
-        [StringFormatMethod("text")]
-        string GetString(string text, params object[] args);
 
         /// <summary>
         ///     Gets localization data for an entity prototype.

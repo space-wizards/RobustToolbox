@@ -1,4 +1,4 @@
-﻿# This file controls all whitelists and other rules enforced by AssemblyTypeChecker.
+# This file controls all whitelists and other rules enforced by AssemblyTypeChecker.
 # Yes, I typed most of this out by hand.
 
 # ILVerify errors that are allowed.
@@ -13,6 +13,7 @@ AllowedVerifierErrors:
 WhitelistedNamespaces:
 - Robust
 - Content
+- OpenDreamShared
 
 # The type whitelist does NOT care about which assembly types come from.
 # This is because types switch assembly all the time.
@@ -292,11 +293,14 @@ Types:
     ImmutableSortedSet`1: { All: True }
     ImmutableSortedStack: { All: True }
     ImmutableSortedStack`1: { All: True }
+  System.Collections.Specialized:
+    NameValueCollection: { All: True }
   System.Collections:
     IEnumerable: { All: True }
     IEnumerator: { All: True }
     IReadOnlyList`1: { All: True }
   System.ComponentModel:
+    CancelEventArgs: { All: True }
     PropertyDescriptor: { }
     ISite: { All: True }
     IComponent: { All: True }
@@ -330,6 +334,7 @@ Types:
     CompareOptions: { }
     CultureInfo: { All: True }
     DateTimeStyles: { All: True } # Enum
+    NumberStyles: { } # Enum
     TextInfo:
       Methods:
       - "bool get_IsRightToLeft()"
@@ -340,13 +345,19 @@ Types:
       - "string ToTitleCase(string)"
       - "string ToTitleCase(string)"
       - "string ToUpper(string)"
+  System.IO.Compression:
+    CompressionMode: { } # Enum
+    DeflateStream: { All: True }
   System.IO:
+    BinaryReader: { All: True }
     FileAccess: { } # Enum
     FileMode: { } # Enum
     FileShare: { } # Enum
+    FileNotFoundException: { All: True }
     InvalidDataException: { All: True }
     IOException: { All: True }
     MemoryStream: { All: True }
+    SeekOrigin: { } # Enum
     Stream: { All: True }
     StreamReader:
       Fields:
@@ -393,6 +404,7 @@ Types:
     IOrderedEnumerable`1: { All: True }
   System.Net:
     DnsEndPoint: { }
+    HttpStatusCode: { } # Enum
   System.Numerics:
     BitOperations: { All: True }
   System.Reflection:
@@ -463,6 +475,8 @@ Types:
     UnmanagedType: { } # `unmanaged` constraint in C# modreqs with this.
   System.Runtime.Versioning:
     TargetFrameworkAttribute: { All: True }
+  System.Text.Json.Serialization:
+    JsonIgnoreAttribute: { All: True }
   System.Text.RegularExpressions:
     Capture: { All: True }
     CaptureCollection: { All: True }
@@ -664,6 +678,15 @@ Types:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
     Interlocked: { All: True }
+  System.Web:
+    HttpUtility:
+      Methods:
+        - "System.Collections.Specialized.NameValueCollection ParseQueryString(string, System.Text.Encoding)"
+        - "System.Collections.Specialized.NameValueCollection ParseQueryString(string)"
+        - "string UrlDecode(string, System.Text.Encoding)"
+        - "string UrlDecode(string)"
+        - "string UrlEncode(string, System.Text.Encoding)"
+        - "string UrlEncode(string)"
   System:
     IServiceProvider: { All: True }
     Action: { All: True }
@@ -788,6 +811,9 @@ Types:
     Attribute: { All: True }
     AttributeTargets: { }
     AttributeUsageAttribute: { All: True }
+    BitConverter:
+      Methods:
+      - "uint ToUInt32(System.ReadOnlySpan`1<byte>)"
     Base64FormattingOptions: { } # Enum
     Boolean: { All: True }
     Byte: { All: True }

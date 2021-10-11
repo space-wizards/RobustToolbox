@@ -204,7 +204,7 @@ namespace Robust.Client.Graphics.Clyde
             ) : CmdBase;
 
             private sealed record CmdWinCreate(
-                Renderer Renderer,
+                GLContextSpec? GLSpec,
                 WindowCreateParameters Parameters,
                 nint ShareWindow,
                 nint OwnerWindow,
@@ -212,7 +212,8 @@ namespace Robust.Client.Graphics.Clyde
             ) : CmdBase;
 
             private sealed record CmdWinDestroy(
-                nint Window
+                nint Window,
+                bool hadOwner
             ) : CmdBase;
 
             private sealed record GlfwWindowCreateResult(

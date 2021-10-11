@@ -48,6 +48,32 @@ namespace Robust.Shared.GameObjects
         void UnsubscribeLocalEvent<TComp, TEvent>()
             where TComp : IComponent
             where TEvent : notnull;
+
+        /// <summary>
+        /// Dispatches an event directly to a specific component.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
+            where TEvent : notnull;
+
+        /// <summary>
+        /// Dispatches an event directly to a specific component, by-ref.
+        /// </summary>
+        /// <remarks>
+        /// This has a very specific purpose, and has massive potential to be abused.
+        /// DO NOT EXPOSE THIS TO CONTENT.
+        /// </remarks>
+        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
+        /// <param name="component">Component receiving the event.</param>
+        /// <param name="args">Event arguments for the event.</param>
+        internal void RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+            where TEvent : notnull;
     }
 
     internal partial class EntityEventBus : IDirectedEventBus, IEventBus, IDisposable
@@ -70,20 +96,20 @@ namespace Robust.Shared.GameObjects
             _eventTables = new EventTables(_entMan);
         }
 
-        /// <summary>
-        /// Dispatches an event directly to a specific component.
-        /// </summary>
-        /// <remarks>
-        /// This has a very specific purpose, and has massive potential to be abused.
-        /// DO NOT EXPOSE THIS TO CONTENT.
-        /// </remarks>
-        /// <typeparam name="TEvent">Event to dispatch.</typeparam>
-        /// <param name="component">Component receiving the event.</param>
-        /// <param name="args">Event arguments for the event.</param>
-        internal void RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
-            where TEvent : EntityEventArgs
+        /// <inheritdoc />
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, TEvent args)
         {
-            _eventTables.DispatchComponent(component.Owner.Uid, component, args);
+            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
+
+            _eventTables.DispatchComponent<TEvent>(component.Owner.Uid, component, ref unitRef, false);
+        }
+
+        /// <inheritdoc />
+        void IDirectedEventBus.RaiseComponentEvent<TEvent>(IComponent component, ref TEvent args)
+        {
+            ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
+
+            _eventTables.DispatchComponent<TEvent>(component.Owner.Uid, component, ref unitRef, true);
         }
 
         /// <inheritdoc />
@@ -218,13 +244,13 @@ namespace Robust.Shared.GameObjects
             public EventTables(IEntityManager entMan)
             {
                 _entMan = entMan;
-                _comFac = entMan.ComponentManager.ComponentFactory;
+                _comFac = entMan.ComponentFactory;
 
                 _entMan.EntityAdded += OnEntityAdded;
                 _entMan.EntityDeleted += OnEntityDeleted;
 
-                _entMan.ComponentManager.ComponentAdded += OnComponentAdded;
-                _entMan.ComponentManager.ComponentRemoved += OnComponentRemoved;
+                _entMan.ComponentAdded += OnComponentAdded;
+                _entMan.ComponentRemoved += OnComponentRemoved;
 
                 _eventTables = new();
                 _subscriptions = new();
@@ -397,13 +423,13 @@ namespace Robust.Shared.GameObjects
                     if (reg.ReferenceEvent != byRef)
                         ThrowByRefMisMatch();
 
-                    var component = _entMan.ComponentManager.GetComponent(euid, compType);
+                    var component = _entMan.GetComponent(euid, compType);
 
                     found.Add(((ref Unit ev) => reg.Handler(euid, component, ref ev), reg.Ordering));
                 }
             }
 
-            public void DispatchComponent<TEvent>(EntityUid euid, IComponent component, TEvent args)
+            public void DispatchComponent<TEvent>(EntityUid euid, IComponent component, ref Unit args, bool dispatchByReference)
                 where TEvent : notnull
             {
                 var enumerator = GetReferences(component.GetType());
@@ -415,11 +441,10 @@ namespace Robust.Shared.GameObjects
                     if (!compSubs.TryGetValue(typeof(TEvent), out var reg))
                         continue;
 
-                    if (reg.ReferenceEvent)
+                    if (reg.ReferenceEvent != dispatchByReference)
                         ThrowByRefMisMatch();
 
-                    var handler = (DirectedEventHandler<TEvent>)reg.Original;
-                    handler(euid, component, ref args);
+                    reg.Handler(euid, component, ref args);
                 }
             }
 
@@ -440,8 +465,8 @@ namespace Robust.Shared.GameObjects
                 _entMan.EntityAdded -= OnEntityAdded;
                 _entMan.EntityDeleted -= OnEntityDeleted;
 
-                _entMan.ComponentManager.ComponentAdded -= OnComponentAdded;
-                _entMan.ComponentManager.ComponentRemoved -= OnComponentRemoved;
+                _entMan.ComponentAdded -= OnComponentAdded;
+                _entMan.ComponentRemoved -= OnComponentRemoved;
 
                 // punishment for use-after-free
                 _entMan = null!;
@@ -460,10 +485,13 @@ namespace Robust.Shared.GameObjects
             /// <summary>
             ///     Enumerates all subscriptions for an event on a specific entity, returning the component instances and registrations.
             /// </summary>
-            private bool TryGetSubscriptions(Type eventType, EntityUid euid,
-                [NotNullWhen(true)] out SubscriptionsEnumerator enumerator)
+            private bool TryGetSubscriptions(Type eventType, EntityUid euid, [NotNullWhen(true)] out SubscriptionsEnumerator enumerator)
             {
-                var eventTable = _eventTables[euid];
+                if (!_eventTables.TryGetValue(euid, out var eventTable))
+                {
+                    enumerator = default!;
+                    return false;
+                }
 
                 // No subscriptions to this event type, return null.
                 if (!eventTable.TryGetValue(eventType, out var subscribedComps))
@@ -472,8 +500,7 @@ namespace Robust.Shared.GameObjects
                     return false;
                 }
 
-                enumerator = new(eventType, subscribedComps.GetEnumerator(), _subscriptions, euid,
-                    _entMan.ComponentManager);
+                enumerator = new(eventType, subscribedComps.GetEnumerator(), _subscriptions, euid, _entMan);
                 return true;
             }
 
@@ -520,16 +547,16 @@ namespace Robust.Shared.GameObjects
                 private HashSet<Type>.Enumerator _enumerator;
                 private readonly IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> _subscriptions;
                 private readonly EntityUid _uid;
-                private readonly IComponentManager _componentManager;
+                private readonly IEntityManager _entityManager;
 
                 public SubscriptionsEnumerator(Type eventType, HashSet<Type>.Enumerator enumerator,
                     IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> subscriptions, EntityUid uid,
-                    IComponentManager componentManager)
+                    IEntityManager entityManager)
                 {
                     _eventType = eventType;
                     _enumerator = enumerator;
                     _subscriptions = subscriptions;
-                    _componentManager = componentManager;
+                    _entityManager = entityManager;
                     _uid = uid;
                 }
 
@@ -559,7 +586,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    tuple = (_componentManager.GetComponent(_uid, compType), registration);
+                    tuple = (_entityManager.GetComponent(_uid, compType), registration);
                     return true;
                 }
 

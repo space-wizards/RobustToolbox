@@ -16,7 +16,6 @@ namespace Robust.Shared.GameObjects
         public readonly bool FixedRotation;
         public readonly BodyStatus Status;
         public readonly List<Fixture> Fixtures;
-        public readonly List<Joint> Joints;
 
         public readonly Vector2 LinearVelocity;
         public readonly float AngularVelocity;
@@ -40,7 +39,6 @@ namespace Robust.Shared.GameObjects
             bool fixedRotation,
             BodyStatus status,
             List<Fixture> fixtures,
-            List<Joint> joints,
             Vector2 linearVelocity,
             float angularVelocity,
             BodyType bodyType)
@@ -50,7 +48,6 @@ namespace Robust.Shared.GameObjects
             FixedRotation = fixedRotation;
             Status = status;
             Fixtures = fixtures;
-            Joints = joints;
 
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;

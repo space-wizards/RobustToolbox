@@ -337,6 +337,28 @@ namespace Robust.Shared.Maths
             R2C2 = matrix.Row2.Z;
         }
 
+        /// <summary>
+        /// Constructs a new instance from 3 vectors to quickly synthesize affine transforms.
+        /// </summary>
+        /// <param name="x">A Vector2 for the first, conventionally X basis, vector.</param>
+        /// <param name="y">A Vector2 for the second, conventionally Y basis, vector.</param>
+        /// <param name="origin">A Vector2 for the third, conventionally origin vector.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Matrix3(ref Vector2 x, ref Vector2 y, ref Vector2 origin)
+        {
+            R0C0 = x.X;
+            R0C1 = y.X;
+            R0C2 = origin.X;
+
+            R1C0 = x.Y;
+            R1C1 = y.Y;
+            R1C2 = origin.Y;
+
+            R2C0 = 0;
+            R2C1 = 0;
+            R2C2 = 1;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateTranslation(float x, float y)
         {
@@ -811,7 +833,7 @@ namespace Robust.Shared.Maths
             //Credit: https://stackoverflow.com/a/18504573
 
             var d = Determinant;
-            if (MathHelper.CloseTo(d, 0))
+            if (MathHelper.CloseToPercent(d, 0))
                 throw new InvalidOperationException("Matrix is singular and cannot be inverted.");
 
             var m = this;
@@ -872,9 +894,60 @@ namespace Robust.Shared.Maths
             return Transform(this, vector);
         }
 
+        // TODO: These 2 are big-ass SIMD candidates. Trying to make it use the existing Box2Rotated SIMD seemed jank
+        // These are also gonna be called a decent amount.
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2 TransformBox(in Box2Rotated box)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = Transform(box.BottomLeft);
+            vertices[1] = Transform(box.BottomRight);
+            vertices[2] = Transform(box.TopRight);
+            vertices[3] = Transform(box.TopLeft);
+
+            var botLeft = vertices[0];
+            var topRight = vertices[0];
+
+            for (var i = 0; i < 4; i++)
+            {
+                var vertex = vertices[i];
+
+                botLeft = Vector2.ComponentMin(vertex, botLeft);
+                topRight = Vector2.ComponentMax(vertex, topRight);
+            }
+
+            return new Box2(botLeft, topRight);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Box2 TransformBox(in Box2 box)
+        {
+            Span<Vector2> vertices = stackalloc Vector2[4];
+            vertices[0] = Transform(box.BottomLeft);
+            vertices[1] = Transform(box.BottomRight);
+            vertices[2] = Transform(box.TopRight);
+            vertices[3] = Transform(box.TopLeft);
+
+            var botLeft = vertices[0];
+            var topRight = vertices[0];
+
+            for (var i = 0; i < 4; i++)
+            {
+                var vertex = vertices[i];
+
+                botLeft = Vector2.ComponentMin(vertex, botLeft);
+                topRight = Vector2.ComponentMax(vertex, topRight);
+            }
+
+            return new Box2(botLeft, topRight);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Vector2 Transform(in Matrix3 matrix, Vector2 vector)
         {
+            // TODO: Look at SIMD coz holy fak this is called a lot
+
             var x = matrix.R0C0 * vector.X + matrix.R0C1 * vector.Y + matrix.R0C2;
             var y = matrix.R1C0 * vector.X + matrix.R1C1 * vector.Y + matrix.R1C2;
 

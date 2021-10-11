@@ -429,7 +429,7 @@ namespace Robust.Client.ViewVariables.Instances
             {
                 var comp = (Component) componentFactory.GetComponent(registration.Type);
                 comp.Owner = _entity;
-                _entityManager.ComponentManager.AddComponent(_entity, comp);
+                _entityManager.AddComponent(_entity, comp);
             }
             catch (Exception e)
             {
@@ -446,7 +446,7 @@ namespace Robust.Client.ViewVariables.Instances
         {
             try
             {
-                _entityManager.ComponentManager.RemoveComponent(_entity.Uid, component);
+                _entityManager.RemoveComponent(_entity.Uid, component);
             }
             catch (Exception e)
             {

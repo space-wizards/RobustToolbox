@@ -84,6 +84,23 @@ namespace Robust.Client.GameObjects
             if (curState is not AppearanceComponentState actualState)
                 return;
 
+            var stateDiff = data.Count != actualState.Data.Count;
+
+            if (!stateDiff)
+            {
+                foreach (var (key, value) in data)
+                {
+                    if (!actualState.Data.TryGetValue(key, out var stateValue) ||
+                        !value.Equals(stateValue))
+                    {
+                        stateDiff = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!stateDiff) return;
+
             data = actualState.Data;
             MarkDirty();
         }
@@ -139,24 +156,6 @@ namespace Robust.Client.GameObjects
         /// <param name="component">The appearance component of the entity that might need updating.</param>
         public virtual void OnChangeData(AppearanceComponent component)
         {
-        }
-    }
-
-    sealed class AppearanceTestComponent : Component
-    {
-        public override string Name => "AppearanceTest";
-
-        float time;
-        bool state;
-
-        public void OnUpdate(float frameTime)
-        {
-            time += frameTime;
-            if (time > 1)
-            {
-                time -= 1;
-                Owner.GetComponent<AppearanceComponent>().SetData("test", state = !state);
-            }
         }
     }
 }

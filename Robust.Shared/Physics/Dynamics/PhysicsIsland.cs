@@ -140,8 +140,8 @@ stored in a single array since multiple arrays lead to multiple misses.
     public sealed class PhysicsIsland
     {
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
-#if DEBUG
         [Dependency] private readonly IEntityManager _entityManager = default!;
+#if DEBUG
         private List<IPhysBody> _debugBodies = new(8);
 #endif
 
@@ -168,6 +168,8 @@ stored in a single array since multiple arrays lead to multiple misses.
         public PhysicsComponent[] Bodies = Array.Empty<PhysicsComponent>();
         private Contact[] _contacts = Array.Empty<Contact>();
         private Joint[] _joints = Array.Empty<Joint>();
+
+        private List<(Joint Joint, float ErrorSquared)> _brokenJoints = new();
 
         // These are joint in box2d / derivatives
         private Vector2[] _linearVelocities = Array.Empty<Vector2>();
@@ -232,6 +234,8 @@ stored in a single array since multiple arrays lead to multiple misses.
             _positionIterations = cfg.PositionIterations;
             _sleepAllowed = cfg.SleepAllowed;
             _timeToSleep = cfg.TimeToSleep;
+            _linearSlop = cfg.LinearSlop;
+            _angularSlop = cfg.AngularSlop;
 
             _contactSolver.LoadConfig(cfg);
         }
@@ -407,7 +411,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                         continue;
 
                     joint.SolveVelocityConstraints(SolverData);
-                    joint.Validate(invDt);
+
+                    var error = joint.Validate(invDt);
+
+                    if (error > 0.0f)
+                        _brokenJoints.Add((joint, error));
                 }
 
                 _contactSolver.SolveVelocityConstraints();
@@ -479,6 +487,17 @@ stored in a single array since multiple arrays lead to multiple misses.
 
         internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
         {
+            foreach (var (joint, error) in _brokenJoints)
+            {
+                var msg = new Joint.JointBreakMessage(joint, MathF.Sqrt(error));
+                var eventBus = _entityManager.EventBus;
+                eventBus.RaiseLocalEvent(joint.BodyAUid, msg, false);
+                eventBus.RaiseLocalEvent(joint.BodyBUid, msg, false);
+                eventBus.RaiseEvent(EventSource.Local, msg);
+            }
+
+            _brokenJoints.Clear();
+
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
@@ -642,6 +661,7 @@ stored in a single array since multiple arrays lead to multiple misses.
         public float VelocityThreshold;
         public float Baumgarte;
         public float LinearSlop;
+        public float AngularSlop;
         public float MaxLinearCorrection;
         public float MaxAngularCorrection;
         public int VelocityConstraintsPerThread;

@@ -41,7 +41,5 @@ namespace Robust.Shared.Physics.Collision.Shapes
         Box2 ComputeAABB(Transform transform, int childIndex);
 
         void ApplyState();
-
-        void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent);
     }
 }

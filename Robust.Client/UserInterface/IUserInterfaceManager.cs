@@ -104,6 +104,12 @@ namespace Robust.Client.UserInterface
         WindowRoot CreateWindowRoot(IClydeWindow window);
         void DestroyWindowRoot(IClydeWindow window);
 
+        /// <summary>
+        /// Get the UI root associated with a window.
+        /// </summary>
+        /// <returns>Null if the window has no UI root.</returns>
+        WindowRoot? GetWindowRoot(IClydeWindow window);
+
         IEnumerable<UIRoot> AllRoots { get; }
 
         event Action<PostDrawUIRootEventArgs> OnPostDrawUIRoot;

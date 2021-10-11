@@ -20,7 +20,7 @@ namespace Robust.Client.ResourceManagement
         {
             var sawmill = _logManager.GetSawmill("res.preload");
 
-            if (!_configurationManager.GetCVar(CVars.TexturePreloadingEnabled))
+            if (!_configurationManager.GetCVar(CVars.ResTexturePreloadingEnabled))
             {
                 sawmill.Debug($"Skipping texture preloading due to CVar value.");
                 return;

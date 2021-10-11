@@ -80,7 +80,7 @@ namespace Robust.Client.GameObjects
                 var position = Owner.Transform.Coordinates;
                 foreach (var neighbor in grid.GetInDir(position, dir))
                 {
-                    if (Owner.EntityManager.ComponentManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
+                    if (Owner.EntityManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;

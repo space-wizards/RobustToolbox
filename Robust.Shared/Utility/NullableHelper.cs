@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Robust.Shared.Utility
@@ -49,7 +50,19 @@ namespace Robust.Shared.Utility
 
         public static bool IsNullable(this Type type)
         {
-            return Nullable.GetUnderlyingType(type) != type;
+            return IsNullable(type, out _);
+        }
+
+        public static bool IsNullable(this Type type, [NotNullWhen(true)] out Type? underlyingType)
+        {
+            underlyingType = Nullable.GetUnderlyingType(type);
+
+            if (underlyingType == null)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static byte[] GetNullableFlags(FieldInfo field)

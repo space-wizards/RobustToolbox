@@ -186,6 +186,10 @@ namespace Robust.UnitTesting.Server
                 .Setup(x => x.FindTypesWithAttribute<TypeSerializerAttribute>())
                 .Returns(() => realReflection.FindTypesWithAttribute<TypeSerializerAttribute>());
 
+            reflectionManager
+                .Setup(x => x.FindAllTypes())
+                .Returns(() => realReflection.FindAllTypes());
+
             container.RegisterInstance<IReflectionManager>(reflectionManager.Object); // tests should not be searching for types
             container.RegisterInstance<IRobustSerializer>(new Mock<IRobustSerializer>().Object);
             container.RegisterInstance<IResourceManager>(new Mock<IResourceManager>().Object); // no disk access for tests
@@ -196,14 +200,13 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IComponentManager, ComponentManager>();
             container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IIslandManager, IslandManager>();
-            container.Register<ICollisionManager, CollisionManager>();
+            container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
             container.Register<IPhysicsManager, PhysicsManager>();
@@ -245,7 +248,7 @@ namespace Robust.UnitTesting.Server
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
-            entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<SharedTransformSystem>();

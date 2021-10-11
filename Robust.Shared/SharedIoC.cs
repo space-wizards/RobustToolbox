@@ -23,7 +23,6 @@ namespace Robust.Shared
         public static void RegisterIoC()
         {
             IoCManager.Register<ISerializationManager, SerializationManager>();
-            IoCManager.Register<IComponentManager, ComponentManager>();
             IoCManager.Register<IConfigurationManager, NetConfigurationManager>();
             IoCManager.Register<INetConfigurationManager, NetConfigurationManager>();
             IoCManager.Register<IConfigurationManagerInternal, NetConfigurationManager>();
@@ -46,9 +45,10 @@ namespace Robust.Shared
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
             IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
-            IoCManager.Register<ICollisionManager, CollisionManager>();
+            IoCManager.Register<IManifoldManager, CollisionManager>();
             IoCManager.Register<IIslandManager, IslandManager>();
             IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
+            IoCManager.Register<IShapeManager, ShapeManager>();
         }
     }
 }

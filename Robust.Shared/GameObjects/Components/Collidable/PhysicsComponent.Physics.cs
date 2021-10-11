@@ -28,6 +28,7 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Localization;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -36,7 +37,6 @@ using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Physics.Dynamics.Joints;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -139,13 +139,6 @@ namespace Robust.Shared.GameObjects
         ///     Linked-list of all of our contacts.
         /// </summary>
         internal ContactEdge? ContactEdges { get; set; } = null;
-
-        /// <summary>
-        ///     Linked-list of all of our joints.
-        /// </summary>
-        internal JointEdge? JointEdges { get; set; } = null;
-        // TODO: Should there be a VV thing for joints? Would be useful. Same with contacts.
-        // Though not sure how to do it well with the linked-list.
 
         public bool IgnorePaused { get; set; }
 
@@ -271,7 +264,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _sleepTime))
+                if (MathHelper.CloseToPercent(value, _sleepTime))
                     return;
 
                 _sleepTime = value;
@@ -309,14 +302,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession session)
         {
-            // TODO: Could optimise the shit out of this because only linear velocity and angular velocity are changing 99% of the time.
-            var joints = new List<Joint>();
-            for (var je = JointEdges; je != null; je = je.Next)
-            {
-                joints.Add(je.Joint);
-            }
-
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, joints, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, LinearVelocity, AngularVelocity, BodyType);
         }
 
         /// <inheritdoc />
@@ -332,72 +318,6 @@ namespace Robust.Shared.GameObjects
 
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
-
-            // We will pray that this deferred joint is handled properly.
-
-            /*
-             * -- Joints --
-             */
-
-            // TODO: Iterating like this is inefficient and bloated as fuck but on the other hand the linked-list is very convenient
-            // for bodies with a large number of fixtures / joints.
-            // Probably store them in Dictionaries but still store the linked-list stuff on the fixture / joint itself.
-            var existingJoints = Joints.ToList();
-            var toAddJoints = new List<Joint>();
-            var toRemoveJoints = new List<Joint>();
-
-            foreach (var newJoint in newState.Joints)
-            {
-                var jointFound = false;
-
-                foreach (var joint in existingJoints)
-                {
-                    if (joint.ID.Equals(newJoint.ID))
-                    {
-                        if (!newJoint.Equals(joint) && TrySetupNetworkedJoint(newJoint))
-                        {
-                            toAddJoints.Add(newJoint);
-                            toRemoveJoints.Add(joint);
-                        }
-
-                        jointFound = true;
-                        break;
-                    }
-                }
-
-                if (!jointFound && TrySetupNetworkedJoint(newJoint))
-                {
-                    toAddJoints.Add(newJoint);
-                }
-            }
-
-            foreach (var joint in existingJoints)
-            {
-                var jointFound = false;
-
-                foreach (var newJoint in newState.Joints)
-                {
-                    if (joint.ID.Equals(newJoint.ID))
-                    {
-                        jointFound = true;
-                        break;
-                    }
-                }
-
-                if (jointFound) continue;
-
-                toRemoveJoints.Add(joint);
-            }
-
-            foreach (var joint in toRemoveJoints)
-            {
-                RemoveJoint(joint);
-            }
-
-            foreach (var joint in toAddJoints)
-            {
-                AddJoint(joint);
-            }
 
             /*
              * -- Fixtures --
@@ -495,29 +415,6 @@ namespace Robust.Shared.GameObjects
             Predict = false;
         }
 
-        private bool TrySetupNetworkedJoint(Joint joint)
-        {
-            // This can fail if we've already deleted the entity or remove physics from it I think?
-
-            if (!Owner.EntityManager.TryGetEntity(joint.BodyAUid, out var entityA) ||
-                !entityA.TryGetComponent(out PhysicsComponent? bodyA))
-            {
-                return false;
-            }
-
-            if (!Owner.EntityManager.TryGetEntity(joint.BodyBUid, out var entityB) ||
-                !entityB.TryGetComponent(out PhysicsComponent? bodyB))
-            {
-                return false;
-            }
-
-            joint.BodyA = bodyA;
-            joint.BodyB = bodyB;
-            joint.EdgeA = new JointEdge();
-            joint.EdgeB = new JointEdge();
-            return true;
-        }
-
         public Fixture? GetFixture(string name)
         {
             // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
@@ -569,26 +466,12 @@ namespace Robust.Shared.GameObjects
             return bounds;
         }
 
+        [ViewVariables]
+        public int FixtureCount { get; internal set; }
+
         /// <inheritdoc />
         [ViewVariables]
         public IReadOnlyList<Fixture> Fixtures => _fixtures;
-
-        public IEnumerable<Joint> Joints
-        {
-            get
-            {
-                JointEdge? edge = JointEdges;
-
-                while (edge != null)
-                {
-                    yield return edge.Joint;
-                    edge = edge.Next;
-                }
-            }
-        }
-
-        [ViewVariables]
-        public int FixtureCount { get; internal set; }
 
         [DataField("fixtures")]
         [NeverPushInheritance]
@@ -606,7 +489,8 @@ namespace Robust.Shared.GameObjects
             get => _canCollide;
             set
             {
-                if (_canCollide == value)
+                if (_canCollide == value ||
+                    value && Owner.IsInContainer())
                     return;
 
                 _canCollide = value;
@@ -705,14 +589,14 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(Vector2.Zero, Vector2.Zero); // TODO: Sweep.LocalCenter
+            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
                 if (_bodyType != BodyType.Dynamic) return;
 
-                if (MathHelper.CloseTo(_inertia, value)) return;
+                if (MathHelper.CloseToPercent(_inertia, value)) return;
 
                 if (value > 0.0f && !_fixedRotation)
                 {
@@ -776,7 +660,7 @@ namespace Robust.Shared.GameObjects
                 if (_bodyType != BodyType.Dynamic) return;
                 if (value.EqualsApprox(_localCenter)) return;
 
-                throw new NotImplementedException();
+                _localCenter = value;
             }
         }
 
@@ -811,7 +695,7 @@ namespace Robust.Shared.GameObjects
             get => _friction;
             set
             {
-                if (MathHelper.CloseTo(value, _friction))
+                if (MathHelper.CloseToPercent(value, _friction))
                     return;
 
                 _friction = value;
@@ -834,7 +718,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _linearDamping))
+                if (MathHelper.CloseToPercent(value, _linearDamping))
                     return;
 
                 _linearDamping = value;
@@ -843,7 +727,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [DataField("linearDamping")]
-        private float _linearDamping = 0.02f;
+        private float _linearDamping = 0.2f;
 
         /// <summary>
         ///     This is a set amount that the body's angular velocity is reduced every tick.
@@ -858,7 +742,7 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!float.IsNaN(value));
 
-                if (MathHelper.CloseTo(value, _angularDamping))
+                if (MathHelper.CloseToPercent(value, _angularDamping))
                     return;
 
                 _angularDamping = value;
@@ -867,7 +751,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [DataField("angularDamping")]
-        private float _angularDamping = 0.02f;
+        private float _angularDamping = 0.2f;
 
         /// <summary>
         /// Get the linear and angular velocities at the same time.
@@ -913,7 +797,7 @@ namespace Robust.Shared.GameObjects
                 if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
-                if (_linVelocity.EqualsApprox(value, 0.0001))
+                if (_linVelocity.EqualsApprox(value, 0.0001f))
                     return;
 
                 _linVelocity = value;
@@ -968,7 +852,7 @@ namespace Robust.Shared.GameObjects
                 if (value * value > 0.0f)
                     Awake = true;
 
-                if (MathHelper.CloseTo(_angVelocity, value))
+                if (MathHelper.CloseToPercent(_angVelocity, value, 0.0001f))
                     return;
 
                 _angVelocity = value;
@@ -1043,7 +927,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -1105,49 +989,33 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private string GetJointName(Joint joint)
-        {
-            var id = joint.ID;
-
-            if (!string.IsNullOrEmpty(id)) return id;
-
-            var jointCount = Joints.Count();
-
-            for (var i = 0; i < jointCount + 1; i++)
-            {
-                id = $"joint-{i}";
-                if (GetJoint(id) != null) continue;
-                return id;
-            }
-
-            Logger.WarningS("physics", $"Unable to get a joint ID; using its hashcode instead.");
-            return joint.GetHashCode().ToString();
-        }
-
-        /// <summary>
-        /// Get a joint with the specified ID.
-        /// </summary>
-        public Joint? GetJoint(string id)
-        {
-            foreach (var joint in Joints)
-            {
-                if (joint.ID == id) return joint;
-            }
-
-            return null;
-        }
-
         internal Transform GetTransform()
         {
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }
 
+        /// <summary>
+        /// Applies an impulse to the centre of mass.
+        /// </summary>
         public void ApplyLinearImpulse(in Vector2 impulse)
         {
             if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
             Awake = true;
 
             LinearVelocity += impulse * _invMass;
+        }
+
+        /// <summary>
+        /// Applies an impulse from the specified point.
+        /// </summary>
+        public void ApplyLinearImpulse(in Vector2 impulse, in Vector2 point)
+        {
+            if ((_bodyType & (BodyType.Dynamic | BodyType.KinematicController)) == 0x0) return;
+            Awake = true;
+
+            LinearVelocity += impulse * _invMass;
+            // TODO: Sweep here
+            AngularVelocity += InvI * Vector2.Cross(point, impulse);
         }
 
         public void ApplyAngularImpulse(float impulse)
@@ -1182,7 +1050,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
         {
-            return EntitySystem.Get<SharedBroadphaseSystem>().GetCollidingEntities(this, offset, approx);
+            return EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
         }
 
         /// <inheritdoc />
@@ -1225,35 +1093,10 @@ namespace Robust.Shared.GameObjects
                     Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsUpdateMessage(this));
                 }
             }
-        }
-
-        public void ClearJoints()
-        {
-            for (var je = JointEdges; je != null; je = je.Next)
+            else
             {
-                RemoveJoint(je.Joint);
+                _awake = false;
             }
-        }
-
-        public void AddJoint(Joint joint)
-        {
-            var id = GetJointName(joint);
-
-            foreach (var existing in Joints)
-            {
-                // This can happen if a server created joint is sent and applied before the client can create it locally elsewhere
-                if (existing.ID.Equals(id)) return;
-            }
-
-            PhysicsMap?.AddJoint(joint);
-            joint.ID = id;
-            Logger.DebugS("physics", $"Added joint id: {joint.ID} type: {joint.GetType().Name} to {Owner}");
-        }
-
-        public void RemoveJoint(Joint joint)
-        {
-            PhysicsMap?.RemoveJoint(joint);
-            Logger.DebugS("physics", $"Removed joint id: {joint.ID} type: {joint.GetType().Name} from {Owner}");
         }
 
         protected override void OnRemove()
@@ -1272,6 +1115,7 @@ namespace Robust.Shared.GameObjects
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
+            LocalCenter = Vector2.Zero;
             // Sweep
 
             if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
@@ -1329,7 +1173,7 @@ namespace Robust.Shared.GameObjects
             if (_inertia > 0.0f && !_fixedRotation)
             {
                 // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
+                _inertia -= _mass * Vector2.Dot(Vector2.Zero, Vector2.Zero);
 
                 DebugTools.Assert(_inertia > 0.0f);
                 InvI = 1.0f / _inertia;
@@ -1340,8 +1184,8 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            /* TODO
-            // Move center of mass;
+            LocalCenter = Vector2.Zero;
+            /*
             var oldCenter = _sweep.Center;
             _sweep.LocalCenter = localCenter;
             _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);
@@ -1366,11 +1210,29 @@ namespace Robust.Shared.GameObjects
             }
 
             // Does a joint prevent collision?
-            for (var jn = JointEdges; jn != null; jn = jn.Next)
+            // if one of them doesn't have jointcomp then they can't share a common joint.
+            // otherwise, only need to iterate over the joints of one component as they both store the same joint.
+            if (Owner.TryGetComponent(out JointComponent? jointComponentA) &&
+                other.Owner.TryGetComponent(out JointComponent? jointComponentB))
             {
-                if (jn.Other != other) continue;
-                if (jn.Joint.CollideConnected) continue;
-                return false;
+                var aUid = jointComponentA.Owner.Uid;
+                var bUid = jointComponentB.Owner.Uid;
+
+                ValueTuple<EntityUid, EntityUid> uids;
+
+                uids = aUid.CompareTo(bUid) < 0 ?
+                    new ValueTuple<EntityUid, EntityUid>(aUid, bUid) :
+                    new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
+
+                foreach (var (_, joint) in jointComponentA.Joints)
+                {
+                    // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
+                    if (joint.CollideConnected ||
+                        uids.Item1 != joint.BodyAUid ||
+                        uids.Item2 != joint.BodyBUid) continue;
+
+                    return false;
+                }
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);

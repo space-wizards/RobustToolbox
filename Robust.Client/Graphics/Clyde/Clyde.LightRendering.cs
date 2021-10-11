@@ -43,7 +43,6 @@ namespace Robust.Client.Graphics.Clyde
         private ClydeHandle _lightHardShaderHandle;
         private ClydeHandle _fovShaderHandle;
         private ClydeHandle _fovLightShaderHandle;
-        private ClydeHandle _wallBleedBlurShaderHandle;
         private ClydeHandle _lightBlurShaderHandle;
         private ClydeHandle _mergeWallLayerShaderHandle;
 

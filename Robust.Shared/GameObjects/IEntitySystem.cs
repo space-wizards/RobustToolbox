@@ -17,6 +17,16 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> UpdatesBefore { get; }
 
         /// <summary>
+        ///     How often should TimedUpdate() be called, in seconds.
+        /// </summary>
+        float TimedInterval { get; set; }
+
+        /// <summary>
+        ///     How much time has passed since the last TimedUpdate() call.
+        /// </summary>
+        float AccumulatedFrametime { get; set; }
+
+        /// <summary>
         ///     Called once when the system is created to initialize its state.
         /// </summary>
         void Initialize();
@@ -32,5 +42,10 @@ namespace Robust.Shared.GameObjects
         /// <param name="frameTime">Delta time since Update() was last called.</param>
         void Update(float frameTime);
         void FrameUpdate(float frameTime);
+
+        /// <summary>
+        ///     Called once every <see cref="TimedInterval"/> seconds.
+        /// </summary>
+        void TimedUpdate();
     }
 }

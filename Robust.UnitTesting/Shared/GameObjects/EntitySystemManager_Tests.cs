@@ -14,12 +14,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         public abstract class ESystemBase : IEntitySystem
         {
+            public virtual float TimedInterval { get; set; }
+            public float AccumulatedFrametime { get; set; }
+
             public virtual IEnumerable<Type> UpdatesAfter => Enumerable.Empty<Type>();
             public virtual IEnumerable<Type> UpdatesBefore => Enumerable.Empty<Type>();
             public void Initialize() { }
             public void Shutdown() { }
             public void Update(float frameTime) { }
             public void FrameUpdate(float frameTime) { }
+            public void TimedUpdate() { }
         }
         public class ESystemA : ESystemBase { }
         public class ESystemC : ESystemA { }

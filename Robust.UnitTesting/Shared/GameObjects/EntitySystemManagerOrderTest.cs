@@ -26,6 +26,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public Counter? Counter;
             public int LastUpdate;
 
+            public virtual float TimedInterval { get; set; } = 0.0f;
+
+            public float AccumulatedFrametime { get; set; } = 0.0f;
+
             public virtual IEnumerable<Type> UpdatesAfter => Enumerable.Empty<Type>();
             public virtual IEnumerable<Type> UpdatesBefore => Enumerable.Empty<Type>();
             public void Initialize() { }
@@ -36,6 +40,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 LastUpdate = Counter!.X++;
             }
             public void FrameUpdate(float frameTime) { }
+
+            public void TimedUpdate() { }
         }
 
         // Expected update order is is A -> D -> C -> B

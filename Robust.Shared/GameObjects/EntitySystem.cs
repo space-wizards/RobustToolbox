@@ -26,6 +26,10 @@ namespace Robust.Shared.GameObjects
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
 
+        public virtual float TimedInterval { get; set; }
+
+        public float AccumulatedFrametime { get; set; }
+
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
@@ -42,6 +46,9 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public virtual void FrameUpdate(float frameTime) { }
+
+        /// <inheritdoc />
+        public virtual void TimedUpdate() { }
 
         /// <inheritdoc />
         public virtual void Shutdown()

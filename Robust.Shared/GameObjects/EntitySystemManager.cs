@@ -230,6 +230,17 @@ namespace Robust.Shared.GameObjects
                 {
 #endif
                     updReg.System.Update(frameTime);
+
+                    if (updReg.System.TimedInterval > 0)
+                    {
+                        updReg.System.AccumulatedFrametime += frameTime;
+                        if (updReg.System.AccumulatedFrametime > updReg.System.TimedInterval)
+                        {
+                            updReg.System.TimedUpdate();
+                            updReg.System.AccumulatedFrametime = 0.0f;
+                        }
+                    }
+
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

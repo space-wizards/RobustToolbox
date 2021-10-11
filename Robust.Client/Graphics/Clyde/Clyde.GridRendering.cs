@@ -86,8 +86,6 @@ namespace Robust.Client.Graphics.Clyde
                 datum = _initChunkBuffers(grid, chunk);
             }
 
-            var sw = new Stopwatch();
-            sw.Start();
             Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
             Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
@@ -121,8 +119,6 @@ namespace Robust.Client.Graphics.Clyde
             datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
             datum.Dirty = false;
             datum.TileCount = i;
-
-            Logger.Debug(sw.Elapsed.ToString());
         }
 
         private MapChunkData _initChunkBuffers(IMapGrid grid, IMapChunk chunk)

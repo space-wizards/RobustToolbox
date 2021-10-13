@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Packages a full release build of the client that can be unzipped and you'll have your client engine redistributable.
+# Packages a full release build of the client that can be loaded by the launcher.
+# Native libraries are not included.
 
 import os
 import shutil
@@ -35,6 +36,40 @@ IGNORED_RESOURCES = {
     ".gitignore",
     ".directory",
     ".DS_Store"
+}
+
+IGNORED_FILES_WINDOWS = {
+    "libGLESv2.dll",
+    "openal32.dll",
+    "e_sqlite3.dll",
+    "libsndfile-1.dll",
+    "libglib-2.0-0.dll",
+    "freetype6.dll",
+    "libinstpatch-2.dll",
+    "fluidsynth.dll",
+    "libgobject-2.0-0.dll",
+    "libintl-8.dll",
+    "Robust.Client.exe",
+    "glfw3.dll",
+    "libgthread-2.0-0.dll",
+    "libEGL.dll",
+    "swnfd.dll"
+}
+
+IGNORED_FILES_MACOS = {
+    "libe_sqlite3.dylib",
+    "libfreetype.6.dylib",
+    "libglfw.3.dylib",
+    "Robust.Client",
+    "libswnfd.dylib"
+}
+
+IGNORED_FILES_LINUX = {
+    "libe_sqlite3.so",
+    "libopenal.so",
+    "libglfw.so.3",
+    "Robust.Client",
+    "libswnfd.so"
 }
 
 def main() -> None:
@@ -110,7 +145,7 @@ def build_windows(skip_build: bool) -> None:
         p("release", "Robust.Client_win-x64.zip"), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", "win-x64", "publish"), "", client_zip)
+    copy_dir_into_zip(p("bin", "Client", "win-x64", "publish"), "", client_zip, IGNORED_FILES_WINDOWS)
     copy_resources("Resources", client_zip)
     # Cool we're done.
     client_zip.close()
@@ -128,7 +163,7 @@ def build_macos(skip_build: bool) -> None:
 
     contents = p("Space Station 14.app", "Contents", "Resources")
     copy_dir_into_zip(p("BuildFiles", "Mac", "Space Station 14.app"), "Space Station 14.app", client_zip)
-    copy_dir_into_zip(p("bin", "Client", "osx-x64", "publish"), contents, client_zip)
+    copy_dir_into_zip(p("bin", "Client", "osx-x64", "publish"), contents, client_zip, IGNORED_FILES_MACOS)
     copy_resources(p(contents, "Resources"), client_zip)
     client_zip.close()
 
@@ -146,7 +181,7 @@ def build_linux(skip_build: bool) -> None:
         p("release", "Robust.Client_linux-x64.zip"), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", "linux-x64", "publish"), "", client_zip)
+    copy_dir_into_zip(p("bin", "Client", "linux-x64", "publish"), "", client_zip, IGNORED_FILES_LINUX)
     copy_resources("Resources", client_zip)
     # Cool we're done.
     client_zip.close()
@@ -223,7 +258,7 @@ def zip_entry_exists(zipf, name):
     return True
 
 
-def copy_dir_into_zip(directory, basepath, zipf):
+def copy_dir_into_zip(directory, basepath, zipf, ignored={}):
     if basepath and not zip_entry_exists(zipf, basepath):
         zipf.write(directory, basepath)
 
@@ -235,6 +270,9 @@ def copy_dir_into_zip(directory, basepath, zipf):
         for filename in files:
             zippath = p(basepath, relpath, filename)
             filepath = p(root, filename)
+
+            if filename in ignored:
+                continue
 
             message = "{dim}{diskroot}{sep}{zipfile}{dim} -> {ziproot}{sep}{zipfile}".format(
                 sep=os.sep + Style.NORMAL,

@@ -28,6 +28,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private OptionButton OverrideMenu;
         private Button ClearButton;
         private Button EraseButton;
+        private Label RotationLabel;
 
         private EntitySpawnButton MeasureButton;
 
@@ -122,6 +123,7 @@ namespace Robust.Client.UserInterface.CustomControls
                             })
                         }
                     },
+                    (RotationLabel = new Label()),
                     new DoNotMeasure
                     {
                         Visible = false,
@@ -149,6 +151,8 @@ namespace Robust.Client.UserInterface.CustomControls
             BuildEntityList();
 
             this.placementManager.PlacementChanged += OnPlacementCanceled;
+            this.placementManager.DirectionChanged += OnDirectionChanged;
+            UpdateDirectionLabel();
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -162,6 +166,7 @@ namespace Robust.Client.UserInterface.CustomControls
                 placementManager.Clear();
 
             placementManager.PlacementChanged -= OnPlacementCanceled;
+            placementManager.DirectionChanged -= OnDirectionChanged;
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
@@ -510,6 +515,16 @@ namespace Robust.Client.UserInterface.CustomControls
 
             EraseButton.Pressed = false;
             OverrideMenu.Disabled = false;
+        }
+
+        private void OnDirectionChanged(object? sender, EventArgs e)
+        {
+            UpdateDirectionLabel();
+        }
+
+        private void UpdateDirectionLabel()
+        {
+            RotationLabel.Text = placementManager.Direction.ToString();
         }
 
         private class DoNotMeasure : Control

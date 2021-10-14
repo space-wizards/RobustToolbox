@@ -280,18 +280,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.DeclareLocal(Type);
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Unbox_Any, Type);
-                generator.Emit(OpCodes.Stloc_0);
-                generator.Emit(OpCodes.Ldloca, 0);
+                generator.Emit(OpCodes.Unbox, Type);
                 generator.Emit(OpCodes.Ldarg_1);
                 generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
 
                 EmitSetField(generator, fieldDefinition.BackingField);
-
-                generator.Emit(OpCodes.Ldarg_0);
-                generator.Emit(OpCodes.Ldloc_0);
-                generator.Emit(OpCodes.Box, Type);
-                generator.Emit(OpCodes.Stind_Ref);
 
                 generator.Emit(OpCodes.Ret);
             }

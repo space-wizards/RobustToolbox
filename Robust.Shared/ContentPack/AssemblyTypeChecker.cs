@@ -809,7 +809,9 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    return new PEReader(File.OpenRead(path));
+                    return new PEReader(File.OpenRead(path),
+                        OperatingSystem.IsLinux() ? PEStreamOptions.PrefetchEntireImage : PEStreamOptions.Default
+                    );
                 }
 
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
@@ -823,7 +825,9 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         var path = resLoadPath / dllName;
-                        return new PEReader(_parent._res.ContentFileRead(path));
+                        return new PEReader(_parent._res.ContentFileRead(path),
+                            OperatingSystem.IsLinux() ? PEStreamOptions.PrefetchEntireImage : PEStreamOptions.Default
+                        );
                     }
                     catch (FileNotFoundException)
                     {

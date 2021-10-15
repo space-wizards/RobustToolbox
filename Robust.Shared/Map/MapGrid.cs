@@ -765,7 +765,7 @@ namespace Robust.Shared.Map
             var locX = gridTile.X * TileSize + (TileSize / 2f);
             var locY = gridTile.Y * TileSize + (TileSize / 2f);
 
-            return new Vector2(locX, locY) + WorldPosition;
+            return WorldMatrix.Transform(new Vector2(locX, locY));
         }
 
         public MapCoordinates GridTileToWorld(Vector2i gridTile)

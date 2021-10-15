@@ -201,12 +201,8 @@ namespace Robust.Server.GameStates
                     if (_entMan.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                         visMask = eyeComp.VisibilityMask;
 
-                    //Always include the map entity of the eye, if it exists.
-                    if(_mapManager.MapExists(mapId))
-                        visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
-
                     //Always include viewable ent itself
-                    visibleEnts.Add(eyeEuid);
+                    RecursiveAdd(eyeEuid, visibleEnts, includedChunks, chunksSeen, visMask);
 
                     // grid entity should be added through this
                     // assume there are no deleted ents in here, cull them first in ent/comp manager

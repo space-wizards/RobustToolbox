@@ -172,6 +172,7 @@ namespace Robust.Server.GameStates
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
+                _entityManager.CullDeletionHistory(GameTick.MaxValue);
                 _entityView.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 return;
@@ -252,6 +253,7 @@ namespace Robust.Server.GameStates
             if (oldestAck > _lastOldestAck)
             {
                 _lastOldestAck = oldestAck;
+                _entityManager.CullDeletionHistory(oldestAck);
                 _entityView.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }
@@ -265,7 +267,7 @@ namespace Robust.Server.GameStates
         /// <param name="entityUid">Uid of the entity to generate the state from.</param>
         /// <param name="fromTick">Only provide delta changes from this tick.</param>
         /// <returns>New entity State for the given entity.</returns>
-        internal static EntityState GetEntityState(IEntityManager entMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
+        internal static EntityState GetEntityState(IServerEntityManager entMan, ICommonSession player, EntityUid entityUid, GameTick fromTick)
         {
             var bus = entMan.EventBus;
             var changed = new List<ComponentChange>();
@@ -297,12 +299,11 @@ namespace Robust.Server.GameStates
                 {
                     changed.Add(ComponentChange.Changed(netId, entMan.GetComponentState(bus, component, player)));
                 }
-                else if (component.Deleted && component.LastModifiedTick >= fromTick)
-                {
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Removed(netId));
-                }
+            }
+
+            foreach (var netId in entMan.GetDeletedComponents(entityUid, fromTick))
+            {
+                changed.Add(ComponentChange.Removed(netId));
             }
 
             return new EntityState(entityUid, changed.ToArray());
@@ -311,7 +312,7 @@ namespace Robust.Server.GameStates
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.
         /// </summary>
-        internal static List<EntityState>? GetAllEntityStates(IEntityManager entityMan, ICommonSession player, GameTick fromTick)
+        internal static List<EntityState>? GetAllEntityStates(IServerEntityManager entityMan, ICommonSession player, GameTick fromTick)
         {
             var stateEntities = new List<EntityState>();
             foreach (var entity in entityMan.GetEntities())

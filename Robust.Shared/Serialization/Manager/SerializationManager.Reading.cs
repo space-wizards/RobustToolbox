@@ -127,24 +127,21 @@ namespace Robust.Shared.Serialization.Manager
                     var instantiator = instance.GetOrCreateInstantiator(value) ?? throw new NullReferenceException($"No instantiator could be made for type {value}");
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    if (value.IsValueType)
+                    call = value.IsValueType switch
                     {
-                        call = Expression.Call(
+                        true when nullable => call = Expression.Call(
                             instanceConst,
                             nameof(ReadSelfSerializeNullableStruct),
-                            new[] { value },
+                            new[] {value},
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst);
-                    }
-                    else
-                    {
-                        call = Expression.Call(
+                            instantiatorConst),
+                        _ => call = Expression.Call(
                             instanceConst,
                             nameof(ReadSelfSerialize),
                             new[] { value },
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst);
-                    }
+                            instantiatorConst)
+                    };
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
                 {

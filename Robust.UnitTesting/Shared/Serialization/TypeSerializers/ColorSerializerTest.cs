@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -39,6 +40,41 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var color = new Color(r, g, b, a);
 
             Assert.That(deserializedColor.ToString(), Is.EqualTo(color.ToString()));
+        }
+
+        [Test]
+        public void DeserializeNullableNullTest()
+        {
+            var node = new ValueDataNode("null");
+            var color = Serialization.ReadValue<Color?>(node);
+
+            Assert.That(color, Is.Null);
+        }
+
+        [Test]
+        public void DeserializeNullableNotNullTest()
+        {
+            var node = new ValueDataNode("#FFFFFFFF");
+            var color = Serialization.ReadValue<Color?>(node);
+
+            Assert.That(color, Is.Not.Null);
+            Assert.That(color, Is.EqualTo(Color.White));
+        }
+
+        [Test]
+        public void DeserializeNullTest()
+        {
+            var node = new ValueDataNode("null");
+            Assert.That(() => Serialization.ReadValue<Color>(node), Throws.Exception);
+        }
+
+        [Test]
+        public void DeserializeNotNullTest()
+        {
+            var node = new ValueDataNode("#FFFFFFFF");
+            var color = Serialization.ReadValue<Color>(node);
+
+            Assert.That(color, Is.EqualTo(Color.White));
         }
     }
 }

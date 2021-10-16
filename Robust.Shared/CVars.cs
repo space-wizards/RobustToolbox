@@ -430,6 +430,12 @@ namespace Robust.Shared
         public static readonly CVarDef<string> DisplaySplashLogo =
             CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Use english hotkeys.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayEnglishHotkeys =
+            CVarDef.Create("display.use_english_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * AUDIO
          */

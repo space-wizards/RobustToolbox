@@ -861,7 +861,7 @@ namespace Robust.UnitTesting
             public bool ContentStart { get; set; } = false;
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
-            public bool Asynchronous { get; set; }
+            public bool Asynchronous { get; set; } = true;
             public bool Pool { get; set; }
         }
 

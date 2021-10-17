@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -20,7 +21,7 @@ namespace Robust.Client.Graphics.Clyde
         private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
         private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
-        private void _drawGrids(Viewport viewport, Box2 worldBounds, IEye eye)
+        private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
         {
             var mapId = eye.Position.MapId;
             if (!_mapManager.MapExists(mapId))
@@ -40,7 +41,6 @@ namespace Robust.Client.Graphics.Clyde
             gridProgram.SetUniform(UniIModUV, new Vector4(0, 0, 1, 1));
             gridProgram.SetUniform(UniIModulate, Color.White);
 
-            var compMan = _entityManager.ComponentManager;
             foreach (var mapGrid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 var grid = (IMapGridInternal) mapGrid;
@@ -50,7 +50,7 @@ namespace Robust.Client.Graphics.Clyde
                     continue;
                 }
 
-                var transform = compMan.GetComponent<ITransformComponent>(grid.GridEntityId);
+                var transform = _entityManager.GetComponent<ITransformComponent>(grid.GridEntityId);
                 gridProgram.SetUniform(UniIModelMatrix, transform.WorldMatrix);
 
                 foreach (var chunk in grid.GetMapChunks(worldBounds))
@@ -86,50 +86,39 @@ namespace Robust.Client.Graphics.Clyde
                 datum = _initChunkBuffers(grid, chunk);
             }
 
-            var vertexPool = ArrayPool<Vertex2D>.Shared;
-            var indexPool = ArrayPool<ushort>.Shared;
+            Span<ushort> indexBuffer = stackalloc ushort[_indicesPerChunk(chunk)];
+            Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
-            var vertexBuffer = vertexPool.Rent(_verticesPerChunk(chunk));
-            var indexBuffer = indexPool.Rent(_indicesPerChunk(chunk));
-
-            try
+            var i = 0;
+            foreach (var tile in chunk)
             {
-                var i = 0;
-                foreach (var tile in chunk)
+                var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
+                if (regionMaybe == null)
                 {
-                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
-                    if (regionMaybe == null)
-                    {
-                        continue;
-                    }
-
-                    var region = regionMaybe.Value;
-
-                    var vIdx = i * 4;
-                    vertexBuffer[vIdx + 0] = new Vertex2D(tile.X, tile.Y, region.Left, region.Bottom);
-                    vertexBuffer[vIdx + 1] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Bottom);
-                    vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y + 1, region.Right, region.Top);
-                    vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y + 1, region.Left, region.Top);
-                    var nIdx = i * GetQuadBatchIndexCount();
-                    var tIdx = (ushort) (i * 4);
-                    QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
-                    i += 1;
+                    continue;
                 }
 
-                GL.BindVertexArray(datum.VAO);
-                CheckGlError();
-                datum.EBO.Use();
-                datum.VBO.Use();
-                datum.EBO.Reallocate(new Span<ushort>(indexBuffer, 0, i * GetQuadBatchIndexCount()));
-                datum.VBO.Reallocate(new Span<Vertex2D>(vertexBuffer, 0, i * 4));
-                datum.Dirty = false;
-                datum.TileCount = i;
+                var region = regionMaybe.Value;
+
+                var vIdx = i * 4;
+                vertexBuffer[vIdx + 0] = new Vertex2D(tile.X, tile.Y, region.Left, region.Bottom);
+                vertexBuffer[vIdx + 1] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Bottom);
+                vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y + 1, region.Right, region.Top);
+                vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y + 1, region.Left, region.Top);
+                var nIdx = i * GetQuadBatchIndexCount();
+                var tIdx = (ushort) (i * 4);
+                QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+                i += 1;
             }
-            finally
-            {
-                vertexPool.Return(vertexBuffer);
-                indexPool.Return(indexBuffer);
-            }
+
+            GL.BindVertexArray(datum.VAO);
+            CheckGlError();
+            datum.EBO.Use();
+            datum.VBO.Use();
+            datum.EBO.Reallocate(indexBuffer[..(i * GetQuadBatchIndexCount())]);
+            datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
+            datum.Dirty = false;
+            datum.TileCount = i;
         }
 
         private MapChunkData _initChunkBuffers(IMapGrid grid, IMapChunk chunk)

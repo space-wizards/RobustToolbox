@@ -37,6 +37,18 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public float MaxLightRadius { get; private set; }
 
+        internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2Rotated worldBounds)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            {
+                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+            }
+
+            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+        }
+
         internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
         {
             if (mapId == MapId.Nullspace) yield break;
@@ -47,22 +59,6 @@ namespace Robust.Client.GameObjects
             }
 
             yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
-        }
-
-        internal IEnumerable<DynamicTree<SpriteComponent>> GetSpriteTrees(MapId mapId, Box2 worldAABB)
-        {
-            foreach (var comp in GetRenderTrees(mapId, worldAABB))
-            {
-                yield return comp.SpriteTree;
-            }
-        }
-
-        internal IEnumerable<DynamicTree<PointLightComponent>> GetLightTrees(MapId mapId, Box2 worldAABB)
-        {
-            foreach (var comp in GetRenderTrees(mapId, worldAABB))
-            {
-                yield return comp.LightTree;
-            }
         }
 
         public override void Initialize()
@@ -340,7 +336,6 @@ namespace Robust.Client.GameObjects
                     Logger.WarningS(LoggerSawmill, $"Light radius for {light.Owner} set above max radius of {MaxLightRadius}. This may lead to pop-in.");
                 }
 
-                var treePos = newMapTree?.Owner.Transform.WorldPosition ?? Vector2.Zero;
                 var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos);
 
                 // If we're on a new map then clear the old one.

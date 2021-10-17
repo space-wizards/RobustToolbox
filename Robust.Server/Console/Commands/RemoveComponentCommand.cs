@@ -36,7 +36,7 @@ namespace Robust.Server.Console.Commands
 
             var componentName = args[1];
 
-            var compManager = IoCManager.Resolve<IComponentManager>();
+            var entManager = IoCManager.Resolve<IEntityManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
             if (!compFactory.TryGetRegistration(componentName, out var registration, true))
@@ -51,7 +51,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            compManager.RemoveComponent(uid, registration.Type);
+            entManager.RemoveComponent(uid, registration.Type);
 
             shell.WriteLine($"Removed {componentName} component from entity {entity.Name}.");
         }

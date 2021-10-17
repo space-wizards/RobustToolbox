@@ -205,9 +205,11 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
+            DebugTools.Assert(renderTarget.FramebufferHandle != default);
             DebugTools.Assert(!renderTarget.IsWindow, "Cannot delete window-backed render targets directly.");
 
             GL.DeleteFramebuffer(renderTarget.FramebufferHandle.Handle);
+            renderTarget.FramebufferHandle = default;
             CheckGlError();
             _renderTargets.Remove(handle);
             DeleteTexture(renderTarget.TextureHandle);
@@ -271,7 +273,11 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i Size;
             public bool IsSrgb;
 
+#pragma warning disable 649
+            // Gets assigned by (currently commented out) GLContextAngle.
+            // It's fine don't worry about it.
             public bool FlipY;
+#pragma warning restore 649
 
             public RTCF ColorFormat;
 
@@ -364,7 +370,7 @@ namespace Robust.Client.Graphics.Clyde
 
             protected override void Dispose(bool disposing)
             {
-                if (disposing)
+                if (Clyde.IsMainThread())
                 {
                     Clyde.DeleteRenderTexture(Handle);
                 }

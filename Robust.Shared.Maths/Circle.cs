@@ -69,7 +69,7 @@ namespace Robust.Shared.Maths
             var r2 = Radius * Radius;
 
             // Instead of d2 <= r2, use MathHelper.CloseTo to allow for some tolerance.
-            return (d2 < r2) || MathHelper.CloseTo(d2, r2);
+            return (d2 < r2) || MathHelper.CloseToPercent(d2, r2);
         }
 
         /// <inheritdoc />

@@ -218,8 +218,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var result = childTrans.WorldPosition;
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(result.X, 0));
-                Assert.That(MathHelper.CloseTo(result.Y, 2));
+                Assert.That(MathHelper.CloseToPercent(result.X, 0));
+                Assert.That(MathHelper.CloseToPercent(result.Y, 2));
             });
         }
 
@@ -245,8 +245,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var result = childTrans.WorldPosition;
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(result.X, 1));
-                Assert.That(MathHelper.CloseTo(result.Y, 2));
+                Assert.That(MathHelper.CloseToPercent(result.X, 1));
+                Assert.That(MathHelper.CloseToPercent(result.Y, 2));
             });
         }
 
@@ -327,8 +327,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             // Assert
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(oldWpos.X, newWpos.Y), $"{oldWpos.X} should be {newWpos.Y}");
-                Assert.That(MathHelper.CloseTo(oldWpos.Y, newWpos.Y), newWpos.ToString);
+                Assert.That(MathHelper.CloseToPercent(oldWpos.X, newWpos.Y), $"{oldWpos.X} should be {newWpos.Y}");
+                Assert.That(MathHelper.CloseToPercent(oldWpos.Y, newWpos.Y), newWpos.ToString);
             });
         }
 
@@ -374,8 +374,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             Assert.Multiple(() =>
             {
-                Assert.That(MathHelper.CloseTo(oldWpos.X, newWpos.Y));
-                Assert.That(MathHelper.CloseTo(oldWpos.Y, newWpos.Y));
+                Assert.That(MathHelper.CloseToPercent(oldWpos.X, newWpos.Y));
+                Assert.That(MathHelper.CloseToPercent(oldWpos.Y, newWpos.Y));
             });
         }
 

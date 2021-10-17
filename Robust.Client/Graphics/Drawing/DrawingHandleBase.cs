@@ -90,6 +90,8 @@ namespace Robust.Client.Graphics
         public abstract void DrawCircle(Vector2 position, float radius, Color color, bool filled = true);
 
         public abstract void DrawLine(Vector2 from, Vector2 to, Color color);
+
+        public abstract void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default);
     }
 
     /// <summary>

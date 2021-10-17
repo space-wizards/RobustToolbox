@@ -14,7 +14,6 @@ namespace Robust.Client.GameObjects
     public class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
@@ -39,9 +38,7 @@ namespace Robust.Client.GameObjects
                 sprite.DoUpdateIsInert();
             }
 
-            // So we could calculate the correct size of the entities based on the contents of their sprite...
-            // Or we can just assume that no entity is larger than 10x10 and get a stupid easy check.
-            var pvsBounds = _eyeManager.GetWorldViewport().Enlarged(5);
+            var pvsBounds = _eyeManager.GetWorldViewbounds();
 
             var currentMap = _eyeManager.CurrentMap;
             if (currentMap == MapId.Nullspace)
@@ -51,7 +48,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var bounds = pvsBounds.Translated(-comp.Owner.Transform.WorldPosition);
+                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(pvsBounds);
 
                 comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
                 {

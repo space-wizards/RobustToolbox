@@ -1015,10 +1015,10 @@ namespace Robust.Shared.Maths
         public readonly bool Equals(Color other)
         {
             return
-                MathHelper.CloseTo(R, other.R) &&
-                MathHelper.CloseTo(G, other.G) &&
-                MathHelper.CloseTo(B, other.B) &&
-                MathHelper.CloseTo(A, other.A);
+                MathHelper.CloseToPercent(R, other.R) &&
+                MathHelper.CloseToPercent(G, other.G) &&
+                MathHelper.CloseToPercent(B, other.B) &&
+                MathHelper.CloseToPercent(A, other.A);
         }
 
         [PublicAPI]

@@ -50,6 +50,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         [ViewVariables]
         public Vector2[] Normals = Array.Empty<Vector2>();
 
+        [ViewVariables]
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
         public int ChildCount => 1;
@@ -63,7 +64,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             get => _radius;
             set
             {
-                if (MathHelper.CloseTo(_radius, value)) return;
+                if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
                 // TODO: Update
             }
@@ -213,11 +214,17 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public void SetAsBox(float halfWidth, float halfHeight, Vector2 center, float angle)
         {
             Span<Vector2> verts = stackalloc Vector2[4];
+            // Damn normies
+            Span<Vector2> norms = stackalloc Vector2[4];
 
             verts[0] = new Vector2(-halfWidth, -halfHeight);
             verts[1] = new Vector2(halfWidth, -halfHeight);
             verts[2] = new Vector2(halfWidth, halfHeight);
             verts[3] = new Vector2(-halfWidth, halfHeight);
+            norms[0] = new Vector2(0f, -1f);
+            norms[1] = new Vector2(1f, 0f);
+            norms[2] = new Vector2(0f, 1f);
+            norms[3] = new Vector2(-1f, 0f);
 
             Centroid = center;
 
@@ -228,9 +235,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
             // Transform vertices and normals.
             for (var i = 0; i < verts.Length; ++i)
             {
-                var vector = verts[i];
-                Vertices[i] = Transform.Mul(xf, vector);
-                Normals[i] = Transform.Mul(xf.Quaternion2D, vector);
+                Vertices[i] = Transform.Mul(xf, verts[i]);
+                Normals[i] = Transform.Mul(xf.Quaternion2D, norms[i]);
             }
         }
 
@@ -285,12 +291,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public void ApplyState()
         {
             return;
-        }
-
-        public void DebugDraw(DebugDrawingHandle handle, in Matrix3 modelMatrix, in Box2 worldViewport, float sleepPercent)
-        {
-            handle.SetTransform(modelMatrix);
-            handle.DrawPolygonShape(Vertices, handle.CalcWakeColor(handle.RectFillColor, sleepPercent));
         }
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)

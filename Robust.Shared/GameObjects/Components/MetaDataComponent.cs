@@ -46,41 +46,22 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
-    public interface IMetaDataComponent
+    [NetworkedComponent]
+    public class MetaDataComponent : Component
     {
-        /// <summary>
-        ///     The in-game name of this entity.
-        /// </summary>
-        string EntityName { get; set; }
-
-        /// <summary>
-        ///     The in-game description of this entity.
-        /// </summary>
-        string EntityDescription { get; set; }
-
-        /// <summary>
-        ///     The prototype this entity was created from, if any.
-        /// </summary>
-        EntityPrototype? EntityPrototype { get; set; }
-    }
-
-    /// <inheritdoc cref="IMetaDataComponent"/>
-    [ComponentReference(typeof(IMetaDataComponent))]
-    [NetworkedComponent()]
-    internal class MetaDataComponent : Component, IMetaDataComponent
-    {
-        [Dependency] private readonly IPrototypeManager _prototypes = default!;
-
         [DataField("name")]
         private string? _entityName;
         [DataField("desc")]
         private string? _entityDescription;
         private EntityPrototype? _entityPrototype;
+        private bool _entityPaused;
 
         /// <inheritdoc />
         public override string Name => "MetaData";
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The in-game name of this entity.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityName
         {
@@ -104,7 +85,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The in-game description of this entity.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public string EntityDescription
         {
@@ -128,7 +111,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The prototype this entity was created from, if any.
+        /// </summary>
         [ViewVariables]
         public EntityPrototype? EntityPrototype
         {
@@ -140,14 +125,37 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <param name="player"></param>
-        /// <inheritdoc />
+        /// <summary>
+        ///     The current lifetime stage of this entity. You can use this to check
+        ///     if the entity is initialized or being deleted.
+        /// </summary>
+        [ViewVariables]
+        public EntityLifeStage EntityLifeStage { get; internal set; }
+
+        [ViewVariables]
+        public bool EntityPaused
+        {
+            get => _entityPaused;
+            set
+            {
+                if (_entityPaused == value || value && Owner.HasComponent<IgnorePauseComponent>())
+                    return;
+
+                _entityPaused = value;
+                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntityPausedEvent(Owner.Uid, value));
+            }
+        }
+
+        public bool EntityInitialized => EntityLifeStage >= EntityLifeStage.Initialized;
+        public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
+        public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
+
+
         public override ComponentState GetComponentState(ICommonSession player)
         {
             return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
         }
 
-        /// <inheritdoc />
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
@@ -159,7 +167,7 @@ namespace Robust.Shared.GameObjects
             _entityDescription = state.Description;
 
             if(state.PrototypeId != null)
-                _entityPrototype = _prototypes.Index<EntityPrototype>(state.PrototypeId);
+                _entityPrototype = IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(state.PrototypeId);
         }
 
         internal override void ClearTicks()

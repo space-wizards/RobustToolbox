@@ -59,6 +59,7 @@ namespace Robust.Client.GameObjects
             {
                 if (!cast.ContainerSet.Any(data => data.Id == id))
                 {
+                    container.EmptyContainer(true);
                     container.Shutdown();
                     toDelete ??= new List<string>();
                     toDelete.Add(id);

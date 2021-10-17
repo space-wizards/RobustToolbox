@@ -31,6 +31,8 @@ namespace Robust.Client.Graphics
         /// </summary>
         Box2 GetWorldViewport();
 
+        Box2Rotated GetWorldViewbounds();
+
         /// <summary>
         /// Calculates the projection matrix to transform a point from camera space
         /// to UI screen space.
@@ -51,6 +53,8 @@ namespace Robust.Client.Graphics
         /// <param name="point">Point in world to transform.</param>
         /// <returns>Corresponding point in UI screen space.</returns>
         ScreenCoordinates CoordinatesToScreen(EntityCoordinates point);
+
+        ScreenCoordinates MapToScreen(MapCoordinates point);
 
         /// <summary>
         /// Unprojects a point from UI screen space to world space using the viewport under the screen coordinates.

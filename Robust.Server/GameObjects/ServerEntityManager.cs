@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var (netId, component) in ComponentManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, component) in GetNetComponents(entity.Uid))
                 {
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
@@ -102,12 +102,18 @@ namespace Robust.Server.GameObjects
         private readonly Dictionary<IPlayerSession, uint> _lastProcessedSequencesCmd =
             new();
 
+        private readonly Dictionary<EntityUid, List<(GameTick tick, ushort netId)>> _componentDeletionHistory = new();
+
         private bool _logLateMsgs;
 
         /// <inheritdoc />
         public void SetupNetworking()
         {
             _networkManager.RegisterNetMessage<MsgEntity>(HandleEntityNetworkMessage);
+
+            // For syncing component deletions.
+            EntityDeleted += OnEntityRemoved;
+            ComponentRemoved += OnComponentRemoved;
 
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
@@ -133,6 +139,65 @@ namespace Robust.Server.GameObjects
         public uint GetLastMessageSequence(IPlayerSession session)
         {
             return _lastProcessedSequencesCmd[session];
+        }
+
+        private void OnEntityRemoved(object? sender, EntityUid e)
+        {
+            if (_componentDeletionHistory.ContainsKey(e))
+                _componentDeletionHistory.Remove(e);
+        }
+
+        private void OnComponentRemoved(object? sender, ComponentEventArgs e)
+        {
+            var reg = ComponentFactory.GetRegistration(e.Component.GetType());
+
+            // We only keep track of networked components being removed.
+            if (reg.NetID is not {} netId)
+                return;
+
+            var uid = e.OwnerUid;
+
+            if (!_componentDeletionHistory.TryGetValue(uid, out var list))
+            {
+                list = new List<(GameTick tick, ushort netId)>();
+                _componentDeletionHistory[uid] = list;
+            }
+
+            list.Add((_gameTiming.CurTick, netId));
+        }
+
+        public List<ushort> GetDeletedComponents(EntityUid uid, GameTick fromTick)
+        {
+            // TODO: Maybe make this a struct enumerator? Right now it's a list for consistency...
+            var list = new List<ushort>();
+
+            if (!_componentDeletionHistory.TryGetValue(uid, out var history))
+                return list;
+
+            foreach (var (tick, id) in history)
+            {
+                if (tick >= fromTick) list.Add(id);
+            }
+
+            return list;
+        }
+
+        public void CullDeletionHistory(GameTick oldestAck)
+        {
+            var remQueue = new RemQueue<EntityUid>();
+
+            foreach (var (uid, list) in _componentDeletionHistory)
+            {
+                list.RemoveAll(hist => hist.tick < oldestAck);
+
+                if(list.Count == 0)
+                    remQueue.Add(uid);
+            }
+
+            foreach (var uid in remQueue)
+            {
+                _componentDeletionHistory.Remove(uid);
+            }
         }
 
         /// <inheritdoc />

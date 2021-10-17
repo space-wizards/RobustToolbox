@@ -11,7 +11,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, Parallelizable, TestOf(typeof(MapChunk))]
-    class MapChunk_Tests
+    sealed class MapChunk_Tests : RobustUnitTest
     {
         [Test]
         public void GetChunkSize()

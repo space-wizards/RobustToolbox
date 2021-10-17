@@ -78,7 +78,6 @@ namespace Robust.Shared.GameObjects
     [UsedImplicitly]
     public class EntityLookup : IEntityLookup, IEntityEventSubscriber
     {
-        private readonly IComponentManager _compManager;
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
 
@@ -112,9 +111,8 @@ namespace Robust.Shared.GameObjects
 
         public bool Started { get; private set; } = false;
 
-        public EntityLookup(IComponentManager compManager, IEntityManager entityManager, IMapManager mapManager)
+        public EntityLookup(IEntityManager entityManager, IMapManager mapManager)
         {
-            _compManager = compManager;
             _entityManager = entityManager;
             _mapManager = mapManager;
         }
@@ -199,10 +197,12 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 GetRelativeAABBFromEntity(in IEntity entity)
         {
+            // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
+
             var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
 
-            return aabb.Translated(-tree?.Owner.Transform.WorldPosition ?? Vector2.Zero);
+            return tree?.Owner.Transform.InvWorldMatrix.TransformBox(aabb) ?? aabb;
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -296,7 +296,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, box))
             {
-                var offsetBox = box.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(box);
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
@@ -324,7 +324,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
-                var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(position);
 
                 lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
             }
@@ -351,7 +351,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, position))
             {
-                var offsetBox = position.Translated(-lookup.Owner.Transform.WorldPosition);
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(position);
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
@@ -382,16 +382,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var lookup in GetLookupsIntersecting(mapId, aabb))
             {
-                var offsetBox = aabb.Translated(-lookup.Owner.Transform.WorldPosition);
+                var localPoint = lookup.Owner.Transform.InvWorldMatrix.Transform(position);
 
-                lookup.Tree.QueryAabb(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
+                lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
                     if (Intersecting(ent, state.position))
                     {
                         state.list.Add(ent);
                     }
                     return true;
-                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+                }, localPoint, (flags & LookupFlags.Approximate) != 0x0);
             }
 
             if ((flags & LookupFlags.IncludeAnchored) != 0x0 &&
@@ -446,8 +446,8 @@ namespace Robust.Shared.GameObjects
             {
                 var transform = entity.Transform;
                 var entPos = transform.WorldPosition;
-                if (MathHelper.CloseTo(entPos.X, mapPosition.X)
-                    && MathHelper.CloseTo(entPos.Y, mapPosition.Y))
+                if (MathHelper.CloseToPercent(entPos.X, mapPosition.X)
+                    && MathHelper.CloseToPercent(entPos.Y, mapPosition.Y))
                 {
                     return true;
                 }
@@ -508,7 +508,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert((flags & LookupFlags.Approximate) == 0x0);
 
-            foreach (EntityLookupComponent comp in _compManager.EntityQuery<EntityLookupComponent>(true))
+            foreach (EntityLookupComponent comp in _entityManager.EntityQuery<EntityLookupComponent>(true))
             {
                 if (comp.Owner.Transform.MapID != mapId) continue;
 
@@ -638,7 +638,7 @@ namespace Robust.Shared.GameObjects
             var transform = entity.Transform;
             DebugTools.Assert(transform.Initialized);
 
-            var aabb = worldAABB.Value.Translated(-lookup.Owner.Transform.WorldPosition);
+            var aabb = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB.Value);
 
             // for debugging
             var necessary = 0;
@@ -669,9 +669,10 @@ namespace Robust.Shared.GameObjects
         {
             // TODO: Need to fix ordering issues and then we can just directly remove it from the tree
             // rather than this O(n) legacy garbage.
-            foreach (var lookup in _compManager.EntityQuery<EntityLookupComponent>(true))
+            // Also we can't early returns because somehow it gets added to multiple trees!!!
+            foreach (var lookup in _entityManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (lookup.Tree.Remove(entity)) return;
+                lookup.Tree.Remove(entity);
             }
         }
 

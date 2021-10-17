@@ -48,8 +48,8 @@ namespace Robust.UnitTesting.Shared.Maths
             var control = testCase.Item1;
             var result = test.Xy;
 
-            Assert.That(MathHelper.CloseTo(control.X, result.X), Is.True, result.ToString);
-            Assert.That(MathHelper.CloseTo(control.Y, result.Y), Is.True, result.ToString);
+            Assert.That(MathHelper.CloseToPercent(control.X, result.X), Is.True, result.ToString);
+            Assert.That(MathHelper.CloseToPercent(control.Y, result.Y), Is.True, result.ToString);
         }
 
         [Test]
@@ -114,8 +114,8 @@ namespace Robust.UnitTesting.Shared.Maths
             var result = test.Xy;
 
             // Assert
-            Assert.That(MathHelper.CloseTo(result.X, 2), result.ToString);
-            Assert.That(MathHelper.CloseTo(result.Y, 2), result.ToString);
+            Assert.That(MathHelper.CloseToPercent(result.X, 2), result.ToString);
+            Assert.That(MathHelper.CloseToPercent(result.Y, 2), result.ToString);
         }
 
         [Test]
@@ -137,8 +137,8 @@ namespace Robust.UnitTesting.Shared.Maths
             Matrix3.Transform(in invMatrix, in localPoint, out var result);
 
             // Assert
-            Assert.That(MathHelper.CloseTo(startPoint.X, result.X), Is.True, result.ToString);
-            Assert.That(MathHelper.CloseTo(startPoint.Y, result.Y), Is.True, result.ToString);
+            Assert.That(MathHelper.CloseToPercent(startPoint.X, result.X), Is.True, result.ToString);
+            Assert.That(MathHelper.CloseToPercent(startPoint.Y, result.Y), Is.True, result.ToString);
         }
     }
 }

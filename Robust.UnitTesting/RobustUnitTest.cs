@@ -30,6 +30,22 @@ namespace Robust.UnitTesting
     {
         public virtual UnitTestProject Project => UnitTestProject.Server;
 
+        #region Github Actions
+        [SetUp]
+        public void GhActionsGroupStart()
+        {
+            if(Helpers.IsRunByGithubActions())
+                Console.WriteLine("::group::Test log output");
+        }
+
+        [TearDown]
+        public void GhActionsGroupEnd()
+        {
+            if(Helpers.IsRunByGithubActions())
+                Console.WriteLine("::endgroup::");
+        }
+        #endregion
+
         [OneTimeSetUp]
         public void BaseSetup()
         {

@@ -20,5 +20,10 @@ namespace Robust.UnitTesting
             stream.Position = 0;
             resourceManager.MountStreamAt(stream, new ResourcePath(path));
         }
+
+        public static bool IsRunByGithubActions()
+        {
+            return Environment.GetEnvironmentVariable("GITHUB_ACTIONS") == "true";
+        }
     }
 }

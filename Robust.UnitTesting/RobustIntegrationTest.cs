@@ -38,6 +38,22 @@ namespace Robust.UnitTesting
     {
         private readonly List<IntegrationInstance> _integrationInstances = new();
 
+        #region Github Actions
+        [SetUp]
+        public void GhActionsGroupStart()
+        {
+            if(Helpers.IsRunByGithubActions())
+                Console.WriteLine("::group::Test log output");
+        }
+
+        [TearDown]
+        public void GhActionsGroupEnd()
+        {
+            if(Helpers.IsRunByGithubActions())
+                Console.WriteLine("::endgroup::");
+        }
+        #endregion
+
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>

@@ -204,8 +204,23 @@ namespace Robust.Shared.ContentPack
 
             Parallel.ForEach(partitioner.GetPartitions(Environment.ProcessorCount), handle =>
             {
-                var ver = new Verifier(resolver);
-                ver.SetSystemModuleName(new AssemblyName(SystemAssemblyName));
+                var rtc = 0;
+                Verifier ver;
+retry:
+                try {
+                    ver = new Verifier(resolver);
+                    ver.SetSystemModuleName(new AssemblyName(SystemAssemblyName));
+                } catch (Exception e) {
+                    const int RETRIES = 15;
+                    if (rtc < RETRIES) {
+                        rtc++;
+                        _sawmill.Warning($"{name}: IL Verification crashed, retrying... ({0}/{1} tries)", rtc, RETRIES);
+                        goto retry;
+                    } else {
+                        _sawmill.Error($"{name}: IL Verification crashed. I quit.");
+                        throw;
+                    }
+                }
                 while (handle.MoveNext())
                 {
                     foreach (var result in ver.Verify(peReader, handle.Current, verifyMethods: true))

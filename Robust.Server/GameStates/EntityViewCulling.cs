@@ -272,14 +272,16 @@ namespace Robust.Server.GameStates
             Dictionary<IMapChunkInternal, GameTick> chunksSeen,
             Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks)
         {
-            foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
+            _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
+
+            while (gridEnumerator.MoveNext(out var mapGrid))
             {
-                var grid = (IMapGridInternal)publicMapGrid;
+                var grid = (IMapGridInternal) mapGrid;
+                grid.GetMapChunks(viewBox, out var enumerator);
 
                 // Can't really check when grid was modified here because we may need to dump new chunks on the person
                 // as right now if you make a new chunk the client never actually gets these entities here.
-
-                foreach (var chunk in grid.GetMapChunks(viewBox))
+                while (enumerator.MoveNext(out var chunk))
                 {
                     // for each chunk, check dirty
                     if (chunksSeen.TryGetValue(chunk, out var chunkSeen) && chunk.LastAnchoredModifiedTick < chunkSeen)
@@ -403,12 +405,14 @@ namespace Robust.Server.GameStates
 
                 // Find a new chunk to start streaming in range.
                 var enlarged = viewBox.Enlarged(StreamRange);
+                _mapManager.FindGridsIntersectingEnumerator(mapId, enlarged, out var gridEnumerator, true);
 
-                foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
+                while (gridEnumerator.MoveNext(out var mapGrid))
                 {
-                    var grid = (IMapGridInternal) publicMapGrid;
+                    var grid = (IMapGridInternal) mapGrid;
+                    grid.GetMapChunks(enlarged, out var enumerator);
 
-                    foreach (var chunk in grid.GetMapChunks(enlarged))
+                    while (enumerator.MoveNext(out var chunk))
                     {
                         // if we've ever seen this chunk don't worry about it.
                         if (chunksSeen.ContainsKey(chunk))

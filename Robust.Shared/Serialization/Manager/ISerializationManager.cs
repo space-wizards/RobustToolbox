@@ -92,6 +92,8 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>A result with the populated object.</returns>
         DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false);
 
+        DeserializationResult MergePopulate(object obj, DeserializationResult deserialization);
+
         #endregion
 
         #region Read

@@ -848,10 +848,10 @@ namespace Robust.Server.Maps
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    var mapData = (IDeserializedDefinition) serializationManager.Read(
+                    var mapData = serializationManager.Read(
                         factory.GetRegistration(componentName).Type,
                         mapping.ToDataNode(), this);
-                    var newData = serializationManager.PopulateDataDefinition(data, mapData);
+                    var newData = serializationManager.MergePopulate(data, mapData);
                     data = (IComponent) newData.RawValue!;
                 }
 

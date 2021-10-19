@@ -14,7 +14,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private delegate DeserializationResult PopulateDelegateSignature(
             object target,
             DeserializedFieldEntry[] deserializationResults,
-            object?[] defaultValues);
+            object?[] defaultValues,
+            ISerializationManager serializationManager,
+            bool merging);
 
         private delegate MappingDataNode SerializeDelegateSignature(
             object obj,
@@ -36,5 +38,10 @@ namespace Robust.Shared.Serialization.Manager.Definition
         private delegate TValue AccessField<TTarget, TValue>(ref TTarget target);
 
         private delegate void AssignField<TTarget, TValue>(ref TTarget target, TValue? value);
+
+        private delegate void MergeField<TTarget>(
+            ref TTarget target,
+            DeserializedFieldEntry entry,
+            ISerializationManager serializationManager);
     }
 }

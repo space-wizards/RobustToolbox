@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -317,7 +318,9 @@ namespace Robust.Shared.Serialization.Manager
             return PopulateDataDefinition(obj, (IDeserializedDefinition) definition, skipHook);
         }
 
-        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false)
+        public DeserializationResult PopulateDataDefinition(object obj,
+            IDeserializedDefinition definition,
+            bool skipHook = false)
         {
             if (!TryGetDefinition(obj.GetType(), out var dataDefinition))
                 throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
@@ -327,7 +330,7 @@ namespace Robust.Shared.Serialization.Manager
                 populateDefaultValues.PopulateDefaultValues();
             }
 
-            var res = dataDefinition.Populate(obj, definition.Mapping);
+            var res = dataDefinition.Populate(obj, definition.Mapping, this, merging:false);
 
             if (!skipHook && res.RawValue is ISerializationHooks serializationHooksAfter)
             {

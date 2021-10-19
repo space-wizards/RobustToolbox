@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -8,6 +9,13 @@ namespace Robust.Shared.Serialization.Markdown
 {
     public static class YamlNodeHelpers
     {
+        public static DataNode StringToDataNode(string yaml)
+        {
+            var stream = new YamlStream();
+            stream.Load(new StringReader(yaml));
+            return stream.Documents[0].RootNode.ToDataNode();
+        }
+
         public static DataNode ToDataNode(this YamlNode node)
         {
             return node switch

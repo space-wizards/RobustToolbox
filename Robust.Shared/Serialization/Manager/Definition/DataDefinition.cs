@@ -48,6 +48,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var fieldAccessors = new AccessField<object, object?>[BaseFieldDefinitions.Length];
             var fieldAssigners = new AssignField<object, object?>[BaseFieldDefinitions.Length];
+            var fieldMergers = new MergeField<object>?[BaseFieldDefinitions.Length];
 
             for (var i = 0; i < BaseFieldDefinitions.Length; i++)
             {
@@ -55,10 +56,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                 fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
                 fieldAssigners[i] = EmitFieldAssigner(fieldDefinition);
+                fieldMergers[i] = EmitFieldMergerIfNecessary(fieldDefinition);
             }
 
             FieldAccessors = fieldAccessors.ToImmutableArray();
             FieldAssigners = fieldAssigners.ToImmutableArray();
+            FieldMergers = fieldMergers.ToImmutableArray();
         }
 
         public Type Type { get; }
@@ -68,12 +71,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private ImmutableArray<AccessField<object, object?>> FieldAccessors { get; }
         private ImmutableArray<AssignField<object, object?>> FieldAssigners { get; }
+        private ImmutableArray<MergeField<object>?> FieldMergers { get; }
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
 
-        public DeserializationResult Populate(object target, DeserializedFieldEntry[] fields)
+        public DeserializationResult Populate(
+            object target,
+            DeserializedFieldEntry[] fields,
+            ISerializationManager mgr,
+            bool merging)
         {
-            return _populate(target, fields, DefaultValues);
+            return _populate(target, fields, DefaultValues, mgr, merging);
         }
 
         public DeserializationResult Populate(
@@ -84,7 +92,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             bool skipHook)
         {
             var fields = _deserialize(mapping, serialization, context, skipHook);
-            return _populate(target, fields, DefaultValues);
+            return _populate(target, fields, DefaultValues, serialization, false);
         }
 
         public MappingDataNode Serialize(

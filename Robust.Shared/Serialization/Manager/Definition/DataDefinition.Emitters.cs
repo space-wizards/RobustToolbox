@@ -73,7 +73,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
             DeserializationResult PopulateDelegate(
                 object target,
                 DeserializedFieldEntry[] deserializedFields,
-                object?[] defaultValues)
+                object?[] defaultValues,
+                ISerializationManager manager,
+                bool merging)
             {
                 for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
@@ -82,12 +84,19 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     var defValue = defaultValues[i];
 
-                    if (Equals(res.Result?.RawValue, defValue))
+                    var rawValue = res.Result?.RawValue;
+                    if (Equals(rawValue, defValue))
                     {
                         continue;
                     }
 
-                    FieldAssigners[i](ref target, res.Result?.RawValue);
+                    if (merging && FieldMergers[i] is { } merger)
+                    {
+                        var obj = FieldAccessors[i](ref target);
+                        manager.MergePopulate(obj!, res.Result!);
+                    }
+                    else
+                        FieldAssigners[i](ref target, rawValue);
                 }
 
                 return createDefinitionDelegate(target, deserializedFields);
@@ -302,6 +311,20 @@ namespace Robust.Shared.Serialization.Manager.Definition
             }
 
             return method.CreateDelegate<AssignField<object, object?>>();
+        }
+
+        private MergeField<object>? EmitFieldMergerIfNecessary(FieldDefinition fieldDefinition)
+        {
+            // TODO: Reshuffle serv3 around so that we have access to other data definitions here
+            // and can opt-out in more cases if possible.
+
+            if (fieldDefinition.FieldType.IsValueType
+                || fieldDefinition.FieldType == typeof(string))
+                return null;
+
+
+
+            return (ref object target, DeserializedFieldEntry entry, ISerializationManager manager) => {};
         }
     }
 }

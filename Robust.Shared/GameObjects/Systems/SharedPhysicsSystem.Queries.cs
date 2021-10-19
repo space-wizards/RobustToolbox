@@ -138,6 +138,60 @@ namespace Robust.Shared.GameObjects
             return bodies;
         }
 
+        // TODO: This is mainly just a hack to get rotated grid doors working in SS14 but whenever we do querysystem we'll clean this shit up
+        /// <summary>
+        /// Returns all enabled physics bodies intersecting this body.
+        /// </summary>
+        /// <remarks>
+        /// Does not consider CanCollide on the provided body.
+        /// </remarks>
+        /// <param name="body">The body to check for intersection</param>
+        /// <param name="enlarge">How much to enlarge / shrink the bounds by given we often extend them slightly.</param>
+        /// <returns></returns>
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, float enlarge = 0f)
+        {
+            // TODO: Should use the collisionmanager test for overlap instead (once I optimise and check it actually works).
+            var mapId = body.Owner.Transform.MapID;
+
+            if (mapId == MapId.Nullspace || body.FixtureCount == 0) return Array.Empty<PhysicsComponent>();
+
+            var bodies = new HashSet<PhysicsComponent>();
+            var transform = body.GetTransform();
+            var worldAABB = body.GetWorldAABB(transform.Position, transform.Quaternion2D.Angle);
+
+            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+            {
+                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
+
+                var localTransform = new Transform(invMatrix.Transform(transform.Position), transform.Quaternion2D.Angle - broadphase.Owner.Transform.WorldRotation);
+
+                foreach (var fixture in body._fixtures)
+                {
+                    var collisionMask = fixture.CollisionMask;
+                    var collisionLayer = fixture.CollisionLayer;
+
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        var aabb = fixture.Shape.ComputeAABB(localTransform, i).Enlarged(enlarge);
+
+                        foreach (var proxy in broadphase.Tree.QueryAabb(aabb, false))
+                        {
+                            var proxyFixture = proxy.Fixture;
+                            var proxyBody = proxyFixture.Body;
+
+                            if (proxyBody == body ||
+                                (proxyFixture.CollisionMask & collisionLayer) == 0x0 &&
+                                (collisionMask & proxyFixture.CollisionLayer) == 0x0) continue;
+
+                            bodies.Add(proxyBody);
+                        }
+                    }
+                }
+            }
+
+            return bodies;
+        }
+
         // TODO: This will get every body but we don't need to do that
         /// <summary>
         ///     Checks whether a body is colliding

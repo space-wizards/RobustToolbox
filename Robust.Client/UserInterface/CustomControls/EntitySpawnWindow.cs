@@ -450,7 +450,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 foreach (var child in Children)
                 {
-                    child.Arrange(UIBox2.FromDimensions(0, offset, Width, height));
+                    child.Arrange(UIBox2.FromDimensions(0, offset, finalSize.X, height));
                     offset += Separation + height;
                 }
 

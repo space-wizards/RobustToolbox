@@ -145,7 +145,7 @@ namespace Robust.Shared.GameObjects
                 if (duplicate is ITransformComponent || duplicate is MetaDataComponent)
                     throw new InvalidOperationException("Tried to overwrite a protected component.");
 
-                RemoveComponentImmediate(duplicate);
+                RemoveComponentImmediate(duplicate, uid, false);
             }
 
             // add the component to the grid
@@ -300,14 +300,18 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
-        private void RemoveComponentImmediate(Component component)
+        private void RemoveComponentImmediate(Component component, EntityUid uid, bool removeProtected)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
             if (!component.Deleted)
             {
                 // these two components are required on all entities and cannot be removed.
-                if (component is ITransformComponent || component is MetaDataComponent)
+                if (!removeProtected && component is ITransformComponent || component is MetaDataComponent)
                 {
                     DebugTools.Assert("Tried to remove a protected component.");
                     return;
@@ -319,9 +323,17 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(); // Sets delete
 
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, component.Owner.Uid));
-
+                _componentDependencyManager.OnComponentRemove(uid, component);
+                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
             }
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                _runtimeLog.LogException(e,
+                    $"RemoveComponentImmediate, owner={component.Owner}, type={component.GetType()}");
+            }
+#endif
 
             DeleteComponent(component);
         }

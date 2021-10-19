@@ -184,7 +184,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
-        private void FindGridContacts(MapId mapId, bool prediction)
+        private void FindGridContacts(MapId mapId)
         {
             // This is so that if we're on a broadphase that's moving (e.g. a grid) we need to make sure anything
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
@@ -196,18 +196,18 @@ namespace Robust.Shared.Physics
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
                 var fixture = proxy.Fixture;
+                var uid = fixture.Body.Owner.Uid;
 
                 //  || prediction && !fixture.Body.Predict
-                if (!_broadphases.Contains(fixture.Body.Owner.Uid)) continue;
+                if (!_broadphases.Contains(uid)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
-                var broadphaseXForm = _broadphaseTransforms[broadphase];
+                DebugTools.Assert(broadphase.Owner.Transform.MapPosition.Position.Equals(Vector2.Zero));
                 var body = fixture.Body;
-                var translatedAABB = worldAABB.Translated(-broadphaseXForm.Position);
 
                 // TODO: Use the callback for this you ape.
                 // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
-                foreach (var other in broadphase!.Tree.QueryAabb(_queryBuffer, translatedAABB))
+                foreach (var other in broadphase!.Tree.QueryAabb(_queryBuffer, worldAABB))
                 {
                     // 99% of the time it's just going to be the broadphase (for now the grid) itself.
                     // hence this body check makes this run significantly better.
@@ -215,7 +215,7 @@ namespace Robust.Shared.Physics
                     if (other.Fixture.Body == body || moveBuffer.ContainsKey(other)) continue;
 
                     // To avoid updating during iteration.
-                    _gridMoveBuffer[other] = other.AABB.Translated(broadphaseXForm.Position);
+                    _gridMoveBuffer[other] = other.AABB;
                 }
 
                 _queryBuffer.Clear();
@@ -237,7 +237,7 @@ namespace Robust.Shared.Physics
             if (moveBuffer.Count == 0) return;
 
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(mapId, prediction);
+            FindGridContacts(mapId);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
@@ -921,7 +921,7 @@ namespace Robust.Shared.Physics
         {
             return GetBroadphases(mapId, new Box2(worldPos, worldPos));
         }
-        
+
         private sealed class InvalidBroadphaseException : Exception
         {
             public InvalidBroadphaseException() {}

@@ -17,7 +17,7 @@ namespace Robust.Server.GameStates
 {
     internal sealed class EntityViewCulling
     {
-        private const int ViewSetCapacity = 128; // starting number of entities that are in view
+        private const int ViewSetCapacity = 256; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
         private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
 
@@ -41,10 +41,17 @@ namespace Robust.Server.GameStates
         private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
         private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
-            = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
+            = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
 
         private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
+
+        private readonly ObjectPool<Dictionary<GridId, HashSet<IMapChunkInternal>>> _includedChunksPool =
+            new DefaultObjectPool<Dictionary<GridId, HashSet<IMapChunkInternal>>>(new DefaultPooledObjectPolicy<Dictionary<GridId, HashSet<IMapChunkInternal>>>(), MaxVisPoolSize);
+
+        private readonly ObjectPool<HashSet<IMapChunkInternal>> _chunkPool =
+            new DefaultObjectPool<HashSet<IMapChunkInternal>>(
+                new DefaultPooledObjectPolicy<HashSet<IMapChunkInternal>>(), MaxVisPoolSize);
 
         private ushort _transformNetId = 0;
 
@@ -57,6 +64,22 @@ namespace Robust.Server.GameStates
         /// Size of the side of the view bounds square.
         /// </summary>
         public float ViewSize { get; set; }
+
+        private sealed class VisSetPolicy : PooledObjectPolicy<HashSet<EntityUid>>
+        {
+            public override HashSet<EntityUid> Create()
+            {
+                return new(ViewSetCapacity);
+            }
+
+            public override bool Return(HashSet<EntityUid> obj)
+            {
+                // TODO: This clear can be pretty expensive so maybe make a custom datatype given we're swapping
+                // 70 - 300 entities a tick? Or do we even need to clear given it's just value types?
+                obj.Clear();
+                return true;
+            }
+        }
 
         public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager, IEntityLookup lookup)
         {
@@ -97,7 +120,9 @@ namespace Robust.Server.GameStates
         // Not thread safe
         public void AddPlayer(ICommonSession session)
         {
-            _playerVisibleSets.Add(session, new HashSet<EntityUid>(ViewSetCapacity));
+            var visSet = _visSetPool.Get();
+
+            _playerVisibleSets.Add(session, visSet);
             PlayerChunks.Add(session, new Dictionary<IMapChunkInternal, GameTick>(32));
             _streamingChunks.Add(session, new ChunkStreamingData());
         }
@@ -193,7 +218,7 @@ namespace Robust.Server.GameStates
 
                 foreach (var eyeEuid in viewers)
                 {
-                    var includedChunks = new Dictionary<GridId, HashSet<IMapChunkInternal>>();
+                    var includedChunks = _includedChunksPool.Get();
 
                     var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
 
@@ -218,6 +243,15 @@ namespace Robust.Server.GameStates
 
                     // To fix pop-in we'll go through nearby chunks and send them little-by-little
                     StreamChunks(newChunkCount, session, chunksSeen, entityStates, viewBox, fromTick, mapId);
+
+                    foreach (var (_, chunks) in includedChunks)
+                    {
+                        chunks.Clear();
+                        _chunkPool.Return(chunks);
+                    }
+
+                    includedChunks.Clear();
+                    _includedChunksPool.Return(includedChunks);
                 }
 
                 viewers.Clear();
@@ -238,14 +272,16 @@ namespace Robust.Server.GameStates
             Dictionary<IMapChunkInternal, GameTick> chunksSeen,
             Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks)
         {
-            foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, viewBox))
+            _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
+
+            while (gridEnumerator.MoveNext(out var mapGrid))
             {
-                var grid = (IMapGridInternal)publicMapGrid;
+                var grid = (IMapGridInternal) mapGrid;
+                grid.GetMapChunks(viewBox, out var enumerator);
 
                 // Can't really check when grid was modified here because we may need to dump new chunks on the person
                 // as right now if you make a new chunk the client never actually gets these entities here.
-
-                foreach (var chunk in grid.GetMapChunks(viewBox))
+                while (enumerator.MoveNext(out var chunk))
                 {
                     // for each chunk, check dirty
                     if (chunksSeen.TryGetValue(chunk, out var chunkSeen) && chunk.LastAnchoredModifiedTick < chunkSeen)
@@ -253,7 +289,7 @@ namespace Robust.Server.GameStates
 
                     if (!includedChunks.TryGetValue(grid.Index, out var chunks))
                     {
-                        chunks = new HashSet<IMapChunkInternal>();
+                        chunks = _chunkPool.Get();
                         includedChunks[grid.Index] = chunks;
                     }
 
@@ -369,12 +405,14 @@ namespace Robust.Server.GameStates
 
                 // Find a new chunk to start streaming in range.
                 var enlarged = viewBox.Enlarged(StreamRange);
+                _mapManager.FindGridsIntersectingEnumerator(mapId, enlarged, out var gridEnumerator, true);
 
-                foreach (var publicMapGrid in _mapManager.FindGridsIntersecting(mapId, enlarged))
+                while (gridEnumerator.MoveNext(out var mapGrid))
                 {
-                    var grid = (IMapGridInternal) publicMapGrid;
+                    var grid = (IMapGridInternal) mapGrid;
+                    grid.GetMapChunks(enlarged, out var enumerator);
 
-                    foreach (var chunk in grid.GetMapChunks(enlarged))
+                    while (enumerator.MoveNext(out var chunk))
                     {
                         // if we've ever seen this chunk don't worry about it.
                         if (chunksSeen.ContainsKey(chunk))
@@ -467,7 +505,6 @@ namespace Robust.Server.GameStates
 
             // swap out vis sets
             _playerVisibleSets[session] = currentSet;
-            previousSet.Clear();
             _visSetPool.Return(previousSet);
         }
 
@@ -559,7 +596,7 @@ namespace Robust.Server.GameStates
 
             if (!includedChunks.TryGetValue(xform.GridID, out var chunks))
             {
-                chunks = new HashSet<IMapChunkInternal>();
+                chunks = _chunkPool.Get();
                 includedChunks[xform.GridID] = chunks;
             }
 

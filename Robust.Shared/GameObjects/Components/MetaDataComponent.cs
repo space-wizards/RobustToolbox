@@ -132,6 +132,13 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
+        /// <summary>
+        ///     The sum of our visibility layer and our parent's visibility layers.
+        ///     Server-only.
+        /// </summary>
+        [ViewVariables]
+        public int VisibilityMask { get; internal set; }
+
         [ViewVariables]
         public bool EntityPaused
         {

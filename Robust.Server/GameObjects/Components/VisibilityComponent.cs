@@ -1,27 +1,28 @@
+using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
+    [Friend(typeof(VisibilitySystem))]
     public class VisibilityComponent : Component
     {
-        [DataField("layer")]
-        private int _layer = 1;
         public override string Name => "Visibility";
 
         /// <summary>
         ///     The visibility layer for the entity.
         ///     Players whose visibility masks don't match this won't get state updates for it.
         /// </summary>
+        [DataField("layer")]
+        public int Layer = 1;
+
         [ViewVariables(VVAccess.ReadWrite)]
-        public int Layer
+        public int LayerVV
         {
-            get => _layer;
-            set => _layer = value;
+            get => Layer;
+            set => EntitySystem.Get<VisibilitySystem>().SetLayer(this, value);
         }
     }
 }

@@ -227,13 +227,17 @@ namespace Robust.Server.GameStates
                         visMask = eyeComp.VisibilityMask;
 
                     //Always include viewable ent itself
-                    RecursiveAdd(eyeEuid, visibleEnts, includedChunks, chunksSeen, visMask);
+                    RecursiveAdd(eyeEuid, visibleEnts, includedChunks, chunksSeen);
 
                     // grid entity should be added through this
                     // assume there are no deleted ents in here, cull them first in ent/comp manager
                     _lookup.FastEntitiesIntersecting(in mapId, ref viewBox, entity =>
                     {
-                        RecursiveAdd(entity.Uid, visibleEnts, includedChunks, chunksSeen, visMask);
+                        var entVisible = _entMan.GetComponent<MetaDataComponent>(entity.Uid).VisibilityMask;
+
+                        if ((entVisible & visMask) != entVisible) return;
+
+                        RecursiveAdd(entity.Uid, visibleEnts, includedChunks, chunksSeen);
                     }, LookupFlags.None);
 
                     //Calculate states for all visible anchored ents
@@ -312,7 +316,7 @@ namespace Robust.Server.GameStates
             foreach (var (gridId, chunks) in includedChunks)
             {
                 // at least 1 anchored entity is going to be added, so add the grid (all anchored ents are parented to grid)
-                RecursiveAdd(_mapManager.GetGrid(gridId).GridEntityId, visibleEnts, includedChunks, chunksSeen, visMask);
+                RecursiveAdd(_mapManager.GetGrid(gridId).GridEntityId, visibleEnts, includedChunks, chunksSeen);
 
                 foreach (var chunk in chunks)
                 {
@@ -530,51 +534,41 @@ namespace Robust.Server.GameStates
         // Read Safe
 
         [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-        private bool RecursiveAdd(EntityUid uid, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, Dictionary<IMapChunkInternal, GameTick> chunksSeen, uint visMask)
+        private void RecursiveAdd(EntityUid uid, HashSet<EntityUid> visSet, Dictionary<GridId, HashSet<IMapChunkInternal>> includedChunks, Dictionary<IMapChunkInternal, GameTick> chunksSeen)
         {
             // we are done, this ent has already been checked and is visible
             if (visSet.Contains(uid))
-                return true;
-
-            // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_entMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
-            {
-                if ((visMask & visComp.Layer) == 0)
-                    return false;
-            }
+                return;
 
             var xform = _entMan.GetComponent<TransformComponent>(uid);
-
             var parentUid = xform.ParentUid;
 
             // this is the world entity, it is always visible
             if (!parentUid.IsValid())
             {
                 visSet.Add(uid);
-                return true;
+                return;
             }
+
+            // Make sure any chunks the entity depends on (e.g. parented to an anchored entity) are included.
+            // This often happens with stuff like containers on anchored entities.
+            EnsureAnchoredChunk(xform, includedChunks, chunksSeen);
 
             // parent is already in the set
             if (visSet.Contains(parentUid))
             {
-                EnsureAnchoredChunk(xform, includedChunks, chunksSeen);
                 if (!xform.Anchored)
                     visSet.Add(uid);
 
-                return true;
+                return;
             }
 
-            // parent was not added, so we are not either
-            if (!RecursiveAdd(parentUid, visSet, includedChunks, chunksSeen, visMask))
-                return false;
-
-            EnsureAnchoredChunk(xform, includedChunks, chunksSeen);
+            // Add parents
+            RecursiveAdd(parentUid, visSet, includedChunks, chunksSeen);
 
             // add us
             if (!xform.Anchored)
                 visSet.Add(uid);
-
-            return true;
         }
 
         /// <summary>

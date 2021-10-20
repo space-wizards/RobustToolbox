@@ -50,6 +50,8 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
+            ServerIntegrationInstance instance;
+
             if (options?.Pool ?? false)
             {
                 if (ServersReady.TryDequeue(out var server))
@@ -60,17 +62,22 @@ namespace Robust.UnitTesting
                     OnServerReturn(server).Wait();
 
                     _serversRunning[server] = 0;
-                    return server;
+                    instance = server;
                 }
-
-                var pooledInstance = new ServerIntegrationInstance(options);
-                _serversRunning[pooledInstance] = 0;
-
-                return pooledInstance;
+                else
+                {
+                    instance = new ServerIntegrationInstance(options);
+                    _serversRunning[instance] = 0;
+                }
+            }
+            else
+            {
+                instance = new ServerIntegrationInstance(options);
+                _integrationInstances.Add(instance);
             }
 
-            var instance = new ServerIntegrationInstance(options);
-            _integrationInstances.Add(instance);
+            instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
+            Console.WriteLine($"Tests ran: {string.Join('\n', instance.TestsRan)}");
             return instance;
         }
 
@@ -79,6 +86,8 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ClientIntegrationInstance StartClient(ClientIntegrationOptions? options = null)
         {
+            ClientIntegrationInstance instance;
+
             if (options?.Pool ?? false)
             {
                 if (ClientsReady.TryDequeue(out var client))
@@ -89,17 +98,22 @@ namespace Robust.UnitTesting
                     OnClientReturn(client).Wait();
 
                     _clientsRunning[client] = 0;
-                    return client;
+                    instance = client;
                 }
-
-                var pooledInstance = new ClientIntegrationInstance(options);
-                _clientsRunning[pooledInstance] = 0;
-
-                return pooledInstance;
+                else
+                {
+                    instance = new ClientIntegrationInstance(options);
+                    _clientsRunning[instance] = 0;
+                }
+            }
+            else
+            {
+                instance = new ClientIntegrationInstance(options);
+                _integrationInstances.Add(instance);
             }
 
-            var instance = new ClientIntegrationInstance(options);
-            _integrationInstances.Add(instance);
+            instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
+            Console.WriteLine($"Tests ran: {string.Join('\n', instance.TestsRan)}");
             return instance;
         }
 
@@ -237,6 +251,8 @@ namespace Robust.UnitTesting
                     return _unhandledException;
                 }
             }
+
+            public List<string> TestsRan { get; } = new();
 
             private protected IntegrationInstance(IntegrationOptions? options)
             {
@@ -476,7 +492,11 @@ namespace Robust.UnitTesting
                 DependencyCollection = new DependencyCollection();
                 if (options?.Asynchronous == true)
                 {
-                    InstanceThread = new Thread(_serverMain) {Name = "Server Instance Thread"};
+                    InstanceThread = new Thread(_serverMain)
+                    {
+                        Name = "Server Instance Thread",
+                        IsBackground = true
+                    };
                     InstanceThread.Start();
                 }
                 else
@@ -601,7 +621,11 @@ namespace Robust.UnitTesting
 
                 if (options?.Asynchronous == true)
                 {
-                    InstanceThread = new Thread(ThreadMain) {Name = "Client Instance Thread"};
+                    InstanceThread = new Thread(ThreadMain)
+                    {
+                        Name = "Client Instance Thread",
+                        IsBackground = true
+                    };
                     InstanceThread.Start();
                 }
                 else
@@ -862,7 +886,7 @@ namespace Robust.UnitTesting
 
             public Dictionary<string, string> CVarOverrides { get; } = new();
             public bool Asynchronous { get; set; } = true;
-            public bool Pool { get; set; }
+            public bool Pool { get; set; } = true;
         }
 
         /// <summary>

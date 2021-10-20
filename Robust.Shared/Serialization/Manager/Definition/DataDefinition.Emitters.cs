@@ -93,7 +93,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     if (merging && FieldMergers[i] is { } merger)
                     {
                         var obj = FieldAccessors[i](ref target);
-                        manager.MergePopulate(obj!, res.Result!);
+                        manager.MergePopulate(ref obj!, res.Result!);
+                        FieldAssigners[i](ref target, obj);
                     }
                     else
                         FieldAssigners[i](ref target, rawValue);

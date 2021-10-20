@@ -851,8 +851,9 @@ namespace Robust.Server.Maps
                     var mapData = serializationManager.Read(
                         factory.GetRegistration(componentName).Type,
                         mapping.ToDataNode(), this);
-                    var newData = serializationManager.MergePopulate(data, mapData);
-                    data = (IComponent) newData.RawValue!;
+                    object dataObj = data;
+                    serializationManager.MergePopulate(ref dataObj, mapData);
+                    data = (IComponent) dataObj;
                 }
 
                 return data;

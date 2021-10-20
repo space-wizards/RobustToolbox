@@ -21,7 +21,9 @@ defs:
 ";
 
             var deserialization = Serialization.Read(typeof(DataDefA), YamlNodeHelpers.StringToDataNode(yaml));
-            Serialization.MergePopulate(defA, deserialization);
+            object defAObj = defA;
+            Serialization.MergePopulate(ref defAObj, deserialization);
+            defA = (DataDefA)defAObj;
 
             Assert.That(defA.Defs["foo"].A, Is.EqualTo(5));
             Assert.That(defA.Defs["foo"].B, Is.EqualTo(20));

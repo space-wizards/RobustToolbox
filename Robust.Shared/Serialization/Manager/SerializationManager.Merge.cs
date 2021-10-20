@@ -9,19 +9,26 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate DeserializationResult MergeDelegate(
+        private delegate void MergeDelegate(
             object obj,
             DeserializationResult deserialization,
             bool skipHook = false);
 
-        private readonly ConcurrentDictionary<Type, MergeDelegate> _mergers = new();
+        private readonly ConcurrentDictionary<Type, MergeDelegate?> _mergers = new();
 
-        public DeserializationResult MergePopulate(object obj, DeserializationResult deserialization)
+        public void MergePopulate(ref object? obj, DeserializationResult deserialization)
         {
-            return GetOrCreateMerger(obj.GetType())(obj, deserialization);
+            var merger = obj == null ? null : GetOrCreateMerger(obj.GetType());
+            if (merger == null)
+            {
+                obj = deserialization.RawValue;
+                return;
+            }
+
+            merger.Invoke(obj!, deserialization);
         }
 
-        private MergeDelegate GetOrCreateMerger(Type objType)
+        private MergeDelegate? GetOrCreateMerger(Type objType)
         {
             return _mergers.GetOrAdd(objType, static (type, instance) =>
             {
@@ -46,9 +53,8 @@ namespace Robust.Shared.Serialization.Manager
                             genericArguments[1]))
                     );
                 }
-                else
+                else if (instance.TryGetDefinition(type, out var definition))
                 {
-                    var definition = instance.GetDefinition(type);
                     var definitionConst = Expression.Constant(definition, typeof(DataDefinition));
 
                     call = Expression.Call(
@@ -59,6 +65,10 @@ namespace Robust.Shared.Serialization.Manager
                         Expression.Convert(deserializationParam, typeof(IDeserializedDefinition)),
                         definitionConst);
                 }
+                else
+                {
+                    return null;
+                }
 
                 return Expression.Lambda<MergeDelegate>(
                     call,
@@ -68,28 +78,27 @@ namespace Robust.Shared.Serialization.Manager
             }, this);
         }
 
-        private DeserializationResult MergeDictionary<TKey, TValue>(
+        private void MergeDictionary<TKey, TValue>(
             IDictionary<TKey, TValue> target,
             DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue> result)
             where TKey : notnull
         {
             foreach (var (k, v) in result.Mappings)
             {
-                var kRes = (DeserializationResult<TKey>)k;
-                if (target.TryGetValue(kRes.Value!, out var targetV))
+                var kValue = (TKey) k.RawValue!;
+                if (!typeof(TValue).IsValueType && target.TryGetValue(kValue, out var targetV) && targetV != null)
                 {
                     // Merge
-                    MergePopulate(targetV!, v);
+                    object? objValue = targetV;
+                    MergePopulate(ref objValue, v);
+                    target[kValue] = (TValue) objValue!;
                 }
                 else
                 {
                     // Populate
-                    var vRes = (DeserializationResult<TValue>)v;
-                    target.Add(kRes.Value!, vRes.Value!);
+                    target[kValue] = (TValue) v.RawValue!;
                 }
             }
-
-            return null!;
         }
 
         private DeserializationResult MergeDataDefinition(

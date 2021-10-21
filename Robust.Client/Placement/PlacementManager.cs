@@ -143,10 +143,21 @@ namespace Robust.Client.Placement
             set => _colliderAABB = value;
         }
 
-        /// <summary>
-        /// The directional to spawn the entity in
-        /// </summary>
-        public Direction Direction { get; set; } = Direction.South;
+        private Direction _direction = Direction.South;
+
+        /// <inheritdoc />
+        public Direction Direction
+        {
+            get => _direction;
+            set
+            {
+                _direction = value;
+                DirectionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <inheritdoc />
+        public event EventHandler? DirectionChanged;
 
         private PlacementOverlay _drawOverlay = default!;
         private bool _isActive;

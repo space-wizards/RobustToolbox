@@ -271,7 +271,7 @@ namespace Robust.Shared.GameObjects
             {
 #endif
             // these two components are required on all entities and cannot be removed normally.
-            if (!removeProtected && (component is ITransformComponent || component is MetaDataComponent))
+            if (!removeProtected && component is ITransformComponent or MetaDataComponent)
             {
                 DebugTools.Assert("Tried to remove a protected component.");
                 return;
@@ -311,7 +311,7 @@ namespace Robust.Shared.GameObjects
             if (!component.Deleted)
             {
                 // these two components are required on all entities and cannot be removed.
-                if (!removeProtected && component is ITransformComponent || component is MetaDataComponent)
+                if (!removeProtected && component is ITransformComponent or MetaDataComponent)
                 {
                     DebugTools.Assert("Tried to remove a protected component.");
                     return;

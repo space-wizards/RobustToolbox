@@ -7,29 +7,18 @@ namespace Robust.Client.UserInterface.Controls
         private Slider _slider;
         private SpinBox _spinBox;
 
-        private int _minValue = 0;
-        private int _maxValue = 100;
-        private int _value = 0;
-        private float _divisionRatio = 0.3f;
+        private int _value;
 
         public int MinValue
         {
-            get => _minValue;
-            set
-            {
-                _slider.MinValue = value;
-                _minValue = value;
-            }
+            get => (int) _slider.MinValue;
+            set => _slider.MinValue = value;
         }
 
         public int MaxValue
         {
-            get => _maxValue;
-            set
-            {
-                _slider.MaxValue = value;
-                _maxValue = value;
-            }
+            get => (int)_slider.MaxValue;
+            set => _slider.MaxValue = value;
         }
 
         public int Value
@@ -50,7 +39,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public float DivisionRatio
         {
-            get => _divisionRatio;
+            get => _slider.SizeFlagsStretchRatio;
             set => _slider.SizeFlagsStretchRatio = value;
         }
 
@@ -67,9 +56,6 @@ namespace Robust.Client.UserInterface.Controls
             // create slider
             _slider = new Slider
             {
-                MinValue = MinValue,
-                MaxValue = MaxValue,
-                Value = MinValue,
                 HorizontalExpand = true
             };
             _slider.OnValueChanged += OnSliderValueChanged;
@@ -78,10 +64,10 @@ namespace Robust.Client.UserInterface.Controls
             // and conected spin box
             _spinBox = new SpinBox
             {
-                Value = MinValue,
+                Value = Value,
                 IsValid = ValidateSpinBox,
                 HorizontalExpand = true,
-                SizeFlagsStretchRatio = _divisionRatio,
+                SizeFlagsStretchRatio = 0.3f,
                 Margin = new Shared.Maths.Thickness(8, 0)
             };
             _spinBox.ValueChanged += OnSpinBoxChanged;

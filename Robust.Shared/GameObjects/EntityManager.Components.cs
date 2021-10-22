@@ -200,14 +200,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Type type)
         {
-            RemoveComponentDeferred((Component)GetComponent(uid, type), uid, false);
+            RemoveComponentImmediate((Component)GetComponent(uid, type), uid, false);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, ushort netId)
         {
-            RemoveComponentDeferred((Component)GetComponent(uid, netId), uid, false);
+            RemoveComponentImmediate((Component)GetComponent(uid, netId), uid, false);
         }
 
         /// <inheritdoc />
@@ -219,7 +219,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred((Component)component, uid, false);
+            RemoveComponentImmediate((Component)component, uid, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
@@ -243,7 +243,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentDeferred(comp, uid, false);
+                RemoveComponentImmediate(comp, uid, false);
             }
         }
 
@@ -252,7 +252,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentDeferred(comp, uid, true);
+                RemoveComponentImmediate(comp, uid, true);
             }
 
             // DisposeComponents means the entity is getting deleted.

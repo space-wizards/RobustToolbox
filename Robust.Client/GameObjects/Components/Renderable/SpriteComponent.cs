@@ -1297,8 +1297,7 @@ namespace Robust.Client.GameObjects
 
         private void RenderLayer(DrawingHandleWorld drawingHandle, Layer layer, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection)
         {
-            var rotation = worldRotation + eyeRotation;
-            var texture = GetRenderTexture(layer, rotation, overrideDirection);
+            var texture = GetRenderTexture(layer, worldRotation + eyeRotation, overrideDirection);
 
             if (layer.Shader != null)
             {

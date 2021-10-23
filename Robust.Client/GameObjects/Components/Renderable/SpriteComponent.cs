@@ -1270,6 +1270,12 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
+            // Reduce the angles to fix math shenanigans
+            worldRotation = worldRotation.Reduced();
+
+            if (worldRotation.Theta < 0)
+                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
+
             var localMatrix = GetLocalMatrix();
 
             foreach (var layer in Layers)
@@ -1321,7 +1327,7 @@ namespace Robust.Client.GameObjects
         public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
-            var segSize = (MathF.PI * 2) / (numDirections * 2);
+            var segSize = (Math.PI * 2) / (numDirections * 2);
             var segments = (int)(theta / segSize);
             var odd = segments % 2;
             var result = theta - (segments * segSize) - (odd * segSize);

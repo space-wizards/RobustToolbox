@@ -88,6 +88,7 @@ namespace Robust.Client.Audio.Midi
         private float _volume = 0f;
         private bool _volumeDirty = true;
 
+        // Not reliable until Fluidsynth is initialized!
         [ViewVariables(VVAccess.ReadWrite)]
         public float Volume
         {
@@ -134,6 +135,7 @@ namespace Robust.Client.Audio.Midi
         {
             if (FluidsynthInitialized || _failedInitialize) return;
 
+            _volume = _cfgMan.GetCVar(CVars.MidiVolume);
             _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
             {
                 _volume = value;
@@ -254,11 +256,12 @@ namespace Robust.Client.Audio.Midi
                         renderer.LoadSoundfont(WindowsSoundfont, true);
                 }
 
+                renderer.Source.SetVolume(Volume);
+
                 lock (_renderers)
                 {
                     _renderers.Add(renderer);
                 }
-
                 return renderer;
             }
             finally

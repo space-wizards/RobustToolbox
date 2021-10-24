@@ -32,7 +32,7 @@ namespace Robust.Server.Console.Commands
             }
             else if (player?.AttachedEntity != null)
             {
-                var coords = new MapCoordinates( float.Parse(args[1]),
+                var coords = new MapCoordinates(float.Parse(args[1]),
                     float.Parse(args[2]), player.AttachedEntity.Transform.MapID);
                 ent.SpawnEntity(args[0], coords);
             }

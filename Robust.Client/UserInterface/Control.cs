@@ -1001,8 +1001,11 @@ namespace Robust.Client.UserInterface
 
     public enum AccessLevel
     {
-        Private,
-        Protected,
         Public,
+        Protected,
+        Internal,
+        ProtectedInternal,
+        Private,
+        PrivateProtected,
     }
 }

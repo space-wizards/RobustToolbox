@@ -999,6 +999,7 @@ namespace Robust.Client.UserInterface
         public readonly int NewIndex;
     }
 
+    // If you change this enum, also change the one in Robust.Client.NameGenerator.XamlUiPartialClassGenerator!
     public enum AccessLevel
     {
         Public,

@@ -19,7 +19,7 @@ namespace Robust.Server.Console.Commands
             var ent = IoCManager.Resolve<IServerEntityManager>();
             if (args.Length is < 1 or > 3)
             {
-                shell.WriteError("Incorrect number of arguments");
+                shell.WriteError("Incorrect number of arguments. " + Help);
             }
 
             if (args.Length == 1 && player?.AttachedEntity != null)

@@ -22,7 +22,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Incorrect number of arguments");
             }
 
-            if (player?.AttachedEntity != null && args.Length == 1)
+            if (args.Length == 1 && player?.AttachedEntity != null)
             {
                 ent.SpawnEntity(args[0], player.AttachedEntity.Transform.Coordinates);
             }

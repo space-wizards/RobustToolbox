@@ -1286,12 +1286,13 @@ namespace Robust.Client.GameObjects
                 }
 
                 var numDirs = GetLayerDirectionCount(layer);
+                var layerRotation = worldRotation + layer.Rotation;
 
-                CalcModelMatrix(numDirs, eyeRotation, worldRotation, worldPosition, out var modelMatrix);
+                CalcModelMatrix(numDirs, eyeRotation, layerRotation, worldPosition, out var modelMatrix);
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
-                RenderLayer(drawingHandle, layer, eyeRotation, worldRotation, overrideDirection);
+                RenderLayer(drawingHandle, layer, eyeRotation, layerRotation, overrideDirection);
             }
         }
 

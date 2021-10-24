@@ -40,11 +40,6 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public string? Name { get; set; }
 
-        /// <summary>
-        ///     The access level for this control, for XAML.
-        ///     This is really only here to trick your IDE into recognizing the property, the actual compilation
-        ///     happens in <see cref="XamlUiPartialClassGenerator"/>.
-        /// </summary>
         // ReSharper disable once ValueParameterNotUsed
         public AccessLevel? Access { set { } }
 

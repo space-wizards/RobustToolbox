@@ -6,6 +6,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
+using Robust.Client.UserInterface;
 using XamlX.Ast;
 using XamlX.Emit;
 using XamlX.IL;
@@ -341,17 +342,6 @@ namespace {nameSpace}
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new NameReferenceSyntaxReceiver());
-        }
-
-        // If you change this enum, also change the one in Robust.Client.UserInterface.Control!
-        private enum AccessLevel
-        {
-            Public,
-            Protected,
-            Internal,
-            ProtectedInternal,
-            Private,
-            PrivateProtected,
         }
     }
 }

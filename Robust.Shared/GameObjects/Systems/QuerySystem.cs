@@ -217,8 +217,8 @@ namespace Robust.Shared.GameObjects
                 {
                     foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                     {
-                        if (!EntityManager.EntityExists(uid) || !ents.Add(uid)) continue;
-                        yield return uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
+                        ents.Add(uid);
                     }
                 }
             }
@@ -248,9 +248,9 @@ namespace Robust.Shared.GameObjects
                     foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
                     {
                         var uid = proxy.Fixture.Body.Owner.Uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
 
-                        if (!ents.Add(uid) || !EntityManager.EntityExists(uid)) continue;
-                        yield return uid;
+                        ents.Add(uid);
                     }
                 }
             }
@@ -274,8 +274,8 @@ namespace Robust.Shared.GameObjects
                 {
                     foreach (var uid in grid.GetAnchoredEntities(worldBounds))
                     {
-                        if (!EntityManager.EntityExists(uid) || !ents.Add(uid)) continue;
-                        yield return uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
+                        ents.Add(uid);
                     }
                 }
             }
@@ -305,9 +305,9 @@ namespace Robust.Shared.GameObjects
                     foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
                     {
                         var uid = proxy.Fixture.Body.Owner.Uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
 
-                        if (!ents.Add(uid) || !EntityManager.EntityExists(uid)) continue;
-                        yield return uid;
+                        ents.Add(uid);
                     }
                 }
             }
@@ -336,8 +336,8 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var uid in grid.GetAnchoredEntities(coordinates))
                 {
-                    if (!EntityManager.EntityExists(uid) || !ents.Add(uid)) continue;
-                    yield return uid;
+                    if (!EntityManager.EntityExists(uid)) continue;
+                    ents.Add(uid);
                 }
             }
 
@@ -367,7 +367,9 @@ namespace Robust.Shared.GameObjects
                     {
                         var uid = data.Fixture.Body.Owner.Uid;
 
-                        if (!ents.Add(uid) || !EntityManager.EntityExists(uid)) return true;
+                        if (!EntityManager.EntityExists(uid)) return true;
+
+                        ents.Add(uid);
 
                         return true;
                     }, localPos);
@@ -419,10 +421,10 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(localBounds))
                 {
-                    var ent = proxy.Fixture.Body.Owner;
-                    if (ent.Deleted) continue;
+                    var uid = proxy.Fixture.Body.Owner.Uid;
+                    if (!EntityManager.EntityExists(uid)) continue;
 
-                    ents.Add(ent.Uid);
+                    ents.Add(uid);
                 }
             }
 
@@ -469,8 +471,8 @@ namespace Robust.Shared.GameObjects
                 {
                     foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                     {
-                        if (!EntityManager.EntityExists(uid) || !ents.Add(uid)) continue;
-                        yield return uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
+                        ents.Add(uid);
                     }
                 }
             }
@@ -501,8 +503,8 @@ namespace Robust.Shared.GameObjects
                     {
                         var uid = proxy.Fixture.Body.Owner.Uid;
 
-                        if (!ents.Add(uid) || !EntityManager.EntityExists(uid)) continue;
-                        yield return uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
+                        ents.Add(uid);
                     }
                 }
             }
@@ -537,6 +539,40 @@ namespace Robust.Shared.GameObjects
             var center = gridXform.WorldMatrix.Transform((Vector2) tileRef.GridIndices + 0.5f);
 
             return new Box2Rotated(Box2.UnitCentered.Translated(center), -gridXform.WorldRotation, center);
+        }
+
+        /// <summary>
+        /// Gets the Axis-Aligned Bounding Box (AABB) for this entity.
+        /// This AABB is not suitable for usage with rotated grids.
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <returns></returns>
+        public Box2 GetWorldAABB(EntityUid uid)
+        {
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
+            var worldPos = xform.WorldPosition;
+
+            if (EntityManager.TryGetComponent<PhysicsComponent>(uid, out var body))
+            {
+                var transform = new Transform(worldPos, xform.WorldRotation);
+                Box2? aabb = null;
+
+                foreach (var fixture in body.Fixtures)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        // if no aabb -> set it, otherwise union it.
+                        aabb = aabb?.Union(fixture.Shape.ComputeAABB(transform, i)) ?? fixture.Shape.ComputeAABB(transform, i);
+                    }
+                }
+
+                if (aabb != null)
+                {
+                    return aabb.Value;
+                }
+            }
+
+            return new Box2(worldPos, worldPos);
         }
 
         /// <summary>
@@ -634,6 +670,8 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+
+        // TODO: Struct enumerators, also so we can short out AnyEntitiesIntersecting
     }
 
     /// <summary>

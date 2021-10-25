@@ -372,11 +372,6 @@ namespace Robust.Shared.GameObjects
                         return true;
                     }, localPos);
                 }
-
-                foreach (var uid in ents)
-                {
-                    yield return uid;
-                }
             }
 
             foreach (var uid in ents)

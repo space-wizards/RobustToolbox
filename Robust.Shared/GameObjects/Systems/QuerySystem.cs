@@ -411,10 +411,7 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.Anchored) != 0x0)
             {
-                // TODO: JFC this is disgusting you fucking cretin.
-                var worldBounds = lookup.Owner.Transform.WorldMatrix.TransformBox(localBounds);
-
-                foreach (var ent in grid.GetAnchoredEntities(worldBounds))
+                foreach (var ent in grid.GetAnchoredEntities(gridIndices))
                 {
                     if (!EntityManager.EntityExists(ent)) continue;
                     ents.Add(ent);
@@ -602,7 +599,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public Box2 GetGridAABB(EntityUid uid)
+        public Box2 GetRelativeAABB(EntityUid uid)
         {
             var xform = EntityManager.GetComponent<TransformComponent>(uid);
             TransformComponent parentXform;

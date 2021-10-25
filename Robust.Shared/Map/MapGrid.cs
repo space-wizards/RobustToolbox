@@ -512,6 +512,18 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
+        public IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds)
+        {
+            foreach (var tile in GetTilesIntersecting(worldBounds))
+            {
+                foreach (var ent in GetAnchoredEntities(tile.GridIndices))
+                {
+                    yield return ent;
+                }
+            }
+        }
+
+        /// <inheritdoc />
         public Vector2i TileIndicesFor(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));

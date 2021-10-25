@@ -325,6 +325,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        private IEnumerable<IEntity> GetAnchored(MapId mapId, Box2Rotated worldBounds, LookupFlags flags)
+        {
+            if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            {
+                foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+                {
+                    if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                    yield return ent;
+                }
+            }
+        }
+
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
@@ -403,6 +416,37 @@ namespace Robust.Shared.GameObjects
             }
 
             foreach (var ent in GetAnchored(mapId, worldAABB, flags))
+            {
+                list.Add(ent);
+            }
+
+            return list;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = LookupFlags.IncludeAnchored)
+        {
+            if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
+
+            var list = new List<IEntity>();
+            var worldAABB = worldBounds.CalcBoundingBox();
+            var enumerator = GetLookupsIntersecting(mapId, worldAABB);
+
+            while (enumerator.MoveNext(out var lookup))
+            {
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.Deleted)
+                    {
+                        list.Add(ent);
+                    }
+                    return true;
+                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            foreach (var ent in GetAnchored(mapId, worldBounds, flags))
             {
                 list.Add(ent);
             }

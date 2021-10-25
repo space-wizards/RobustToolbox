@@ -835,6 +835,11 @@ namespace Robust.Shared.Physics
             return GetBroadphase(body.Owner);
         }
 
+        internal BroadphaseComponent GetBroadphase(EntityUid uid)
+        {
+            return EntityManager.GetComponent<BroadphaseComponent>(uid);
+        }
+
         /// <summary>
         /// Attempt to get the relevant broadphase for this entity.
         /// Can return null if it's the map entity.

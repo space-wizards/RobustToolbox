@@ -146,17 +146,10 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
         /// </summary>
-        public void FastEntitiesIntersecting(EntityCoordinates coordinates, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
-        {
-            var mapCoordinates = coordinates.ToMap(EntityManager);
-            FastEntitiesIntersecting(mapCoordinates, callback, flags);
-        }
-
-        /// <summary>
-        /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
-        /// </summary>
         public void FastEntitiesIntersecting(MapCoordinates coordinates, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
         {
+            if (coordinates.MapId == MapId.Nullspace) return;
+
             if ((flags & QueryFlags.Anchored) != 0x0)
             {
                 if (_mapManager.TryFindGridAt(coordinates, out var grid))
@@ -199,15 +192,6 @@ namespace Robust.Shared.GameObjects
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
-        /// </summary>
-        public void FastEntitiesIntersecting(TileRef tileRef, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
-        {
-            var bounds = GetBounds(tileRef);
-            FastEntitiesIntersecting(tileRef.MapIndex, bounds, callback, flags);
         }
 
         #endregion
@@ -401,17 +385,59 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        // TODO: We can short-circuit both of these as we already know the relevant EntityLookupComponent.
         public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, QueryFlags flags = DefaultFlags)
         {
-            var bounds = GetBounds(tileRef);
-            return GetEntitiesIntersecting(tileRef.MapIndex, bounds, flags);
+            return GetEntitiesIntersecting(tileRef.GridIndex, tileRef.GridIndices, flags);
         }
 
         public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, QueryFlags flags = DefaultFlags)
         {
-            var tileRef = _mapManager.GetGrid(gridId).GetTileRef(gridIndices);
-            return GetEntitiesIntersecting(tileRef, flags);
+            // With tiles we can short-circuit and use the lookup directly without needing to enumerate.
+            if (gridId == GridId.Invalid ||
+                !_mapManager.TryGetGrid(gridId, out var grid)) yield break;
+
+            var lookup = EntityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
+            var ents = new HashSet<EntityUid>();
+            var localBounds = new Box2(gridIndices, gridIndices + 1);
+
+            if ((flags & QueryFlags.EntityLookup) != 0x0)
+            {
+                lookup.Tree._b2Tree.FastQuery(ref localBounds, (ref IEntity data) =>
+                {
+                    if (data.Deleted) return;
+                    ents.Add(data.Uid);
+                });
+            }
+
+            if ((flags & QueryFlags.Anchored) != 0x0)
+            {
+                // TODO: JFC this is disgusting you fucking cretin.
+                var worldBounds = lookup.Owner.Transform.WorldMatrix.TransformBox(localBounds);
+
+                foreach (var ent in grid.GetAnchoredEntities(worldBounds))
+                {
+                    if (!EntityManager.EntityExists(ent)) continue;
+                    ents.Add(ent);
+                }
+            }
+
+            if ((flags & QueryFlags.Physics) != 0x0)
+            {
+                var broadphase = _broadphaseSystem.GetBroadphase(grid.GridEntityId);
+
+                foreach (var proxy in broadphase.Tree.QueryAabb(localBounds))
+                {
+                    var ent = proxy.Fixture.Body.Owner;
+                    if (ent.Deleted) continue;
+
+                    ents.Add(ent.Uid);
+                }
+            }
+
+            foreach (var ent in ents)
+            {
+                yield return ent;
+            }
         }
 
         #endregion

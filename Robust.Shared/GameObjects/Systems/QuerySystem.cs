@@ -401,6 +401,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        // TODO: We can short-circuit both of these as we already know the relevant EntityLookupComponent.
         public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, QueryFlags flags = DefaultFlags)
         {
             var bounds = GetBounds(tileRef);

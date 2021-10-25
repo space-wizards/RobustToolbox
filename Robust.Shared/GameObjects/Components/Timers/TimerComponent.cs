@@ -22,11 +22,9 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Should this component be removed when no more timers are running?
-        /// N.B. This is set to false because https://github.com/space-wizards/RobustToolbox/pull/2091 caused massive issues.
-        /// Changing this to false won't cause issues but masks the underlying problem, while leaving the option to turn it on for testing available.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool RemoveOnEmpty { get; set; } = false;
+        public bool RemoveOnEmpty { get; set; } = true;
 
         public void Update(float frameTime)
         {

@@ -9,6 +9,7 @@ using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 #nullable enable
 
@@ -28,6 +29,9 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private bool _isLerping = false;
+        private ITransformComponent? _lastParent;
+
+        private float _accumulator;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -59,27 +63,6 @@ namespace Robust.Client.GameObjects
             var currentEye = _eyeManager.CurrentEye;
 
             // TODO: Content should have its own way of handling this. We should have a default behavior that they can overwrite.
-            /*
-            var inputSystem = EntitySystemManager.GetEntitySystem<InputSystem>();
-
-            var direction = 0;
-            if (inputSystem.CmdStates[EngineKeyFunctions.CameraRotateRight] == BoundKeyState.Down)
-            {
-                direction += 1;
-            }
-
-            if (inputSystem.CmdStates[EngineKeyFunctions.CameraRotateLeft] == BoundKeyState.Down)
-            {
-                direction -= 1;
-            }
-
-            // apply camera rotation
-            if(direction != 0)
-            {
-                currentEye.Rotation += CameraRotateSpeed * frameTime * direction;
-                currentEye.Rotation = currentEye.Rotation.Reduced();
-            }
-            */
 
             var playerTransform = _playerManager.LocalPlayer?.ControlledEntity?.Transform;
 
@@ -91,14 +74,29 @@ namespace Robust.Client.GameObjects
                 gridEnt.Transform
                 : _mapManager.GetMapEntity(playerTransform.MapID).Transform;
 
-            if (!_isLerping)
+            if (parent != _lastParent)
+            {
+                _accumulator += frameTime;
+
+                if (_accumulator >= 0.3f)
+                {
+                    _accumulator = 0f;
+                    _lastParent = parent;
+                }
+            }
+            else
+            {
+                _lastParent = parent;
+            }
+
+            if (_lastParent == parent)
             {
                 // TODO: Detect parent change and start lerping
                 var parentRotation = parent.WorldRotation;
                 currentEye.Rotation = -parentRotation;
             }
 
-            foreach (var eyeComponent in EntityManager.ComponentManager.EntityQuery<EyeComponent>(true))
+            foreach (var eyeComponent in EntityManager.EntityQuery<EyeComponent>(true))
             {
                 eyeComponent.UpdateEyePosition();
             }

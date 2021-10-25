@@ -40,7 +40,7 @@ void fragment()
     highp vec2 diff = worldPosition - lightCenter;
 
     // Totally not hacky PCF on top of VSM.
-    highp float occlusion = createOcclusion(diff);
+    highp float occlusion = lightIndex < 0.0 ? 1.0 : createOcclusion(diff);
 
     if (occlusion == 0.0)
     {

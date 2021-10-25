@@ -22,10 +22,8 @@ namespace Robust.Shared.Containers
         public T MakeContainer<T>(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
             where T : IContainer
         {
-            if (!Resolve(uid, ref containerManager))
-                // TODO: I am a Sad Vera. Merge ComponentManager and EntityManager so we don't have to do this. Pretty please?
-                // ps. The to-do above is in effect for this whole file.
-                containerManager = ComponentManager.AddComponent<ContainerManagerComponent>(EntityManager.GetEntity(uid));
+            if (!Resolve(uid, ref containerManager, false))
+                containerManager = EntityManager.AddComponent<ContainerManagerComponent>(uid); // Happy Vera.
 
             return containerManager.MakeContainer<T>(id);
         }
@@ -33,8 +31,8 @@ namespace Robust.Shared.Containers
         public T EnsureContainer<T>(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
             where T : IContainer
         {
-            if (!Resolve(uid, ref containerManager))
-                containerManager = ComponentManager.AddComponent<ContainerManagerComponent>(EntityManager.GetEntity(uid));
+            if (!Resolve(uid, ref containerManager, false))
+                containerManager = EntityManager.AddComponent<ContainerManagerComponent>(uid);
 
             if (TryGetContainer(uid, id, out var container, containerManager))
                 return (T)container;
@@ -52,7 +50,7 @@ namespace Robust.Shared.Containers
 
         public bool HasContainer(EntityUid uid, string id, ContainerManagerComponent? containerManager)
         {
-            if (!Resolve(uid, ref containerManager))
+            if (!Resolve(uid, ref containerManager, false))
                 return false;
 
             return containerManager.HasContainer(id);
@@ -60,7 +58,7 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainer(EntityUid uid, string id, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null)
         {
-            if (Resolve(uid, ref containerManager))
+            if (Resolve(uid, ref containerManager, false))
                 return containerManager.TryGetContainer(id, out container);
 
             container = null;
@@ -69,7 +67,7 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null)
         {
-            if (Resolve(uid, ref containerManager) && EntityManager.TryGetEntity(containedUid, out var containedEntity))
+            if (Resolve(uid, ref containerManager, false) && EntityManager.TryGetEntity(containedUid, out var containedEntity))
                 return containerManager.TryGetContainer(containedEntity, out container);
 
             container = null;
@@ -110,7 +108,7 @@ namespace Robust.Shared.Containers
         public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, ITransformComponent? transform = null)
         {
             container = null;
-            if (!Resolve(uid, ref transform))
+            if (!Resolve(uid, ref transform, false))
                 return false;
 
             if (!transform.ParentUid.IsValid())

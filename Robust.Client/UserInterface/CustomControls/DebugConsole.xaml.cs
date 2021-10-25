@@ -49,8 +49,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private readonly ConcurrentQueue<FormattedMessage> _messageQueue = new();
 
-        public HistoryLineEdit CommandBarPub => CommandBar;
-
         private bool commandChanged = true;
         private readonly List<string> searchResults;
         private int searchIndex = 0;

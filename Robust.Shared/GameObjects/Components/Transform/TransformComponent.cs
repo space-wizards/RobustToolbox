@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
                 if(_noLocalRotation)
                     return;
 
-                if (_localRotation.EqualsApprox(value, 0.00001))
+                if (_localRotation.EqualsApprox(value))
                     return;
 
                 var oldRotation = _localRotation;
@@ -407,7 +407,7 @@ namespace Robust.Shared.GameObjects
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (Owner.EntityManager.ComponentManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
+                    if (Owner.EntityManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
                         gridComp.UnanchorEntity(this);
                     else
                         SetAnchored(false);
@@ -668,14 +668,14 @@ namespace Robust.Shared.GameObjects
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager.ComponentManager);
+            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IComponentManager comp)
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
         {
             foreach (var child in _children)
             {
-                var concrete = comp.GetComponent<TransformComponent>(child);
+                var concrete = entMan.GetComponent<TransformComponent>(child);
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
@@ -683,7 +683,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, comp);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan);
                 }
             }
         }
@@ -775,7 +775,7 @@ namespace Robust.Shared.GameObjects
                     rebuildMatrices = true;
                 }
 
-                if (!_localPosition.EqualsApprox(newState.LocalPosition, 0.0001))
+                if (!_localPosition.EqualsApprox(newState.LocalPosition))
                 {
                     var oldPos = Coordinates;
                     _localPosition = newState.LocalPosition;
@@ -926,7 +926,7 @@ namespace Robust.Shared.GameObjects
             _anchored = value;
             Dirty();
 
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner);
+            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
         }
     }
@@ -985,9 +985,12 @@ namespace Robust.Shared.GameObjects
     {
         public readonly IEntity Entity;
 
-        public AnchorStateChangedEvent(IEntity entity)
+        public readonly bool Anchored;
+
+        public AnchorStateChangedEvent(IEntity entity, bool anchored)
         {
             Entity = entity;
+            Anchored = anchored;
         }
     }
 }

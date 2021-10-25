@@ -15,7 +15,7 @@ using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
-    public partial class EntityManager : IComponentManager
+    public partial class EntityManager
     {
         [Dependency] private readonly IComponentFactory _componentFactory = default!;
         [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
@@ -56,8 +56,6 @@ namespace Robust.Shared.GameObjects
             if (Initialized)
                 throw new InvalidOperationException("Already initialized.");
 
-            Initialized = true;
-
             FillComponentDict();
             _componentFactory.ComponentAdded += OnComponentAdded;
             _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
@@ -90,7 +88,6 @@ namespace Robust.Shared.GameObjects
 
         #region Component Management
 
-        /// <inheritdoc />
         public T AddComponent<T>(IEntity entity) where T : Component, new()
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -104,18 +101,32 @@ namespace Robust.Shared.GameObjects
             return newComponent;
         }
 
-        /// <inheritdoc />
+        public T AddComponent<T>(EntityUid uid) where T : Component, new()
+        {
+            if (!TryGetEntity(uid, out var entity)) throw new ArgumentException("Entity is not valid or deleted.", nameof(uid));
+
+            return AddComponent<T>(entity);
+        }
+
         public void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component
         {
-            if (entity == null || !entity.IsValid())
-                throw new ArgumentException("Entity is not valid.", nameof(entity));
+            AddComponent(entity.Uid, component, overwrite);
+        }
+
+        public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+        {
+            if (!uid.IsValid() || !EntityExists(uid))
+                throw new ArgumentException("Entity is not valid.", nameof(uid));
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner != entity) throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.Owner.Uid != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
-            var uid = entity.Uid;
+            AddComponentInternal(uid, component, overwrite);
+        }
 
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+        {
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
 
@@ -131,10 +142,10 @@ namespace Robust.Shared.GameObjects
                         $"Component reference type {type} already occupied by {duplicate}");
 
                 // these two components are required on all entities and cannot be overwritten.
-                if (duplicate is ITransformComponent || duplicate is IMetaDataComponent)
+                if (duplicate is ITransformComponent || duplicate is MetaDataComponent)
                     throw new InvalidOperationException("Tried to overwrite a protected component.");
 
-                RemoveComponentImmediate(duplicate);
+                RemoveComponentImmediate(duplicate, uid, false);
             }
 
             // add the component to the grid
@@ -163,16 +174,18 @@ namespace Robust.Shared.GameObjects
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
-            _componentDependencyManager.OnComponentAdd(entity.Uid, component);
+            _componentDependencyManager.OnComponentAdd(uid, component);
 
             component.LifeAddToEntity();
 
-            if (!entity.Initialized && !entity.Initializing)
+            var metadata = GetComponent<MetaDataComponent>(uid);
+
+            if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
 
             component.LifeInitialize();
 
-            if (entity.Initialized)
+            if (metadata.EntityInitialized)
                 component.LifeStartup();
         }
 
@@ -187,14 +200,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, Type type)
         {
-            RemoveComponentDeferred((Component)GetComponent(uid, type), uid, false);
+            RemoveComponentImmediate((Component)GetComponent(uid, type), uid, false);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, ushort netId)
         {
-            RemoveComponentDeferred((Component)GetComponent(uid, netId), uid, false);
+            RemoveComponentImmediate((Component)GetComponent(uid, netId), uid, false);
         }
 
         /// <inheritdoc />
@@ -206,7 +219,7 @@ namespace Robust.Shared.GameObjects
             if (component.Owner == null || component.Owner.Uid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentDeferred((Component)component, uid, false);
+            RemoveComponentImmediate((Component)component, uid, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
@@ -214,8 +227,8 @@ namespace Robust.Shared.GameObjects
             static int Sequence(IComponent x)
                 => x switch
                 {
-                    ITransformComponent _ => 0,
-                    IMetaDataComponent _ => 1,
+                    MetaDataComponent _ => 0,
+                    ITransformComponent _ => 1,
                     IPhysBody _ => 2,
                     _ => int.MaxValue
                 };
@@ -230,7 +243,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentDeferred(comp, uid, false);
+                RemoveComponentImmediate(comp, uid, false);
             }
         }
 
@@ -239,7 +252,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var comp in InSafeOrder(_entCompIndex[uid]))
             {
-                RemoveComponentDeferred(comp, uid, true);
+                RemoveComponentImmediate(comp, uid, true);
             }
 
             // DisposeComponents means the entity is getting deleted.
@@ -258,7 +271,7 @@ namespace Robust.Shared.GameObjects
             {
 #endif
             // these two components are required on all entities and cannot be removed normally.
-            if (!removeProtected && (component is ITransformComponent || component is IMetaDataComponent))
+            if (!removeProtected && component is ITransformComponent or MetaDataComponent)
             {
                 DebugTools.Assert("Tried to remove a protected component.");
                 return;
@@ -287,14 +300,18 @@ namespace Robust.Shared.GameObjects
 #endif
         }
 
-        private void RemoveComponentImmediate(Component component)
+        private void RemoveComponentImmediate(Component component, EntityUid uid, bool removeProtected)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
+#if EXCEPTION_TOLERANCE
+            try
+            {
+#endif
             if (!component.Deleted)
             {
                 // these two components are required on all entities and cannot be removed.
-                if (component is ITransformComponent || component is IMetaDataComponent)
+                if (!removeProtected && component is ITransformComponent or MetaDataComponent)
                 {
                     DebugTools.Assert("Tried to remove a protected component.");
                     return;
@@ -306,9 +323,17 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(); // Sets delete
 
-                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, component.Owner.Uid));
-
+                _componentDependencyManager.OnComponentRemove(uid, component);
+                ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
             }
+#if EXCEPTION_TOLERANCE
+            }
+            catch (Exception e)
+            {
+                _runtimeLog.LogException(e,
+                    $"RemoveComponentImmediate, owner={component.Owner}, type={component.GetType()}");
+            }
+#endif
 
             DeleteComponent(component);
         }
@@ -383,6 +408,15 @@ namespace Robust.Shared.GameObjects
             }
 
             return AddComponent<T>(entity);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T EnsureComponent<T>(EntityUid uid) where T : Component, new()
+        {
+            if (TryGetComponent<T>(uid, out var component))
+                return component;
+
+            return AddComponent<T>(uid);
         }
 
         /// <inheritdoc />

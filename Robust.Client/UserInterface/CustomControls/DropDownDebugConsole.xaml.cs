@@ -23,7 +23,7 @@ namespace Robust.Client.UserInterface.CustomControls
             LayoutContainer.SetAnchorPreset(MainControl, LayoutContainer.LayoutPreset.TopWide);
             LayoutContainer.SetAnchorBottom(MainControl, 0.35f);
 
-            MainControl.CommandBarPub.OnKeyBindDown += CommandBarPubOnOnKeyBindDown;
+            MainControl.CommandBar.OnKeyBindDown += CommandBarPubOnOnKeyBindDown;
 
         }
 
@@ -72,7 +72,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public void Toggle()
         {
-            var bar = MainControl.CommandBarPub;
+            var bar = MainControl.CommandBar;
             _targetVisible = !_targetVisible;
             if (_targetVisible)
             {

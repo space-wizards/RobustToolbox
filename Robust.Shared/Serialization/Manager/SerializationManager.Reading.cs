@@ -127,12 +127,21 @@ namespace Robust.Shared.Serialization.Manager
                     var instantiator = instance.GetOrCreateInstantiator(value) ?? throw new NullReferenceException($"No instantiator could be made for type {value}");
                     var instantiatorConst = Expression.Constant(instantiator);
 
-                    call = Expression.Call(
-                        instanceConst,
-                        nameof(ReadSelfSerialize),
-                        new[] { value },
-                        Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                        instantiatorConst);
+                    call = value.IsValueType switch
+                    {
+                        true when nullable => call = Expression.Call(
+                            instanceConst,
+                            nameof(ReadSelfSerializeNullableStruct),
+                            new[] {value},
+                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                            instantiatorConst),
+                        _ => call = Expression.Call(
+                            instanceConst,
+                            nameof(ReadSelfSerialize),
+                            new[] { value },
+                            Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                            instantiatorConst)
+                    };
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
                 {
@@ -315,6 +324,22 @@ namespace Robust.Shared.Serialization.Manager
             if (node.Value == "null")
             {
                 return new DeserializedValue<TValue?>(default);
+            }
+
+            var value = (TValue) instantiator();
+            value.Deserialize(node.Value);
+
+            return new DeserializedValue<TValue?>(value);
+        }
+
+        private DeserializationResult ReadSelfSerializeNullableStruct<TValue>(
+            ValueDataNode node,
+            InstantiationDelegate<object> instantiator)
+            where TValue : struct, ISelfSerialize
+        {
+            if (node.Value == "null")
+            {
+                return new DeserializedValue<TValue?>(null);
             }
 
             var value = (TValue) instantiator();

@@ -63,7 +63,7 @@ namespace Robust.Client.Console.Commands
 
             var conGroup = IoCManager.Resolve<IClientConGroupController>();
             foreach (var command in shell.ConsoleHost.RegisteredCommands.Values
-                .Where(p => p.Command.Contains(filter) && conGroup.CanCommand(p.Command))
+                .Where(p => p.Command.Contains(filter) && (p is not ServerDummyCommand || conGroup.CanCommand(p.Command)))
                 .OrderBy(c => c.Command))
             {
                 shell.WriteLine(command.Command + ": " + command.Description);

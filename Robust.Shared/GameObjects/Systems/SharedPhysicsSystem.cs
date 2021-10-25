@@ -19,7 +19,7 @@ using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.GameObjects
 {
-    public abstract class SharedPhysicsSystem : EntitySystem
+    public abstract partial class SharedPhysicsSystem : EntitySystem
     {
         /*
          * TODO:
@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnAutoClearChange(bool value)
         {
-            foreach (var component in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            foreach (var component in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 component.AutoClearForces = value;
             }
@@ -235,7 +235,7 @@ namespace Robust.Shared.GameObjects
             if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
                 return;
 
-            physicsComponent.ClearJoints();
+            Get<SharedJointSystem>().ClearJoints(physicsComponent);
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
@@ -294,7 +294,7 @@ namespace Robust.Shared.GameObjects
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
-            physicsComponent.ClearJoints();
+			Get<SharedJointSystem>().ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
                 MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
@@ -308,25 +308,6 @@ namespace Robust.Shared.GameObjects
 
             if (mapId != MapId.Nullspace)
                 MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
-        }
-
-        internal void FilterContactsForJoint(Joint joint)
-        {
-            var bodyA = joint.BodyA;
-            var bodyB = joint.BodyB;
-
-            var edge = bodyB.ContactEdges;
-            while (edge != null)
-            {
-                if (edge.Other == bodyA)
-                {
-                    // Flag the contact for filtering at the next time step (where either
-                    // body is awake).
-                    edge.Contact!.FilterFlag = true;
-                }
-
-                edge = edge.Next;
-            }
         }
 
         /// <summary>
@@ -349,7 +330,10 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            // As controllers may update rotations / positions on their own we can't re-use the cache for finding new contacts
+            _broadphaseSystem.EnsureBroadphaseTransforms();
+
+            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.Step(deltaTime, prediction);
             }
@@ -370,7 +354,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Go through and run all of the deferred events now
-            foreach (var comp in ComponentManager.EntityQuery<SharedPhysicsMapComponent>(true))
+            foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.ProcessQueue();
             }

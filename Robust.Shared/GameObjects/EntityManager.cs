@@ -33,15 +33,13 @@ namespace Robust.Shared.GameObjects
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
-        public IComponentManager ComponentManager => this;
-
-        /// <inheritdoc />
         public IEntitySystemManager EntitySysManager => EntitySystemManager;
 
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
 
-        protected readonly HashSet<EntityUid> QueuedDeletions = new();
+        protected readonly Queue<EntityUid> QueuedDeletions = new();
+        protected readonly HashSet<EntityUid> QueuedDeletionsSet = new();
 
         /// <summary>
         ///     All entities currently stored in the manager.
@@ -78,6 +76,8 @@ namespace Robust.Shared.GameObjects
             _eventBus = new EntityEventBus(this);
 
             InitializeComponents();
+
+            Initialized = true;
         }
 
         public virtual void Startup()
@@ -113,12 +113,12 @@ namespace Robust.Shared.GameObjects
 
             using (histogram?.WithLabels("QueuedDeletion").NewTimer())
             {
-                foreach (var uid in QueuedDeletions)
+                while (QueuedDeletions.TryDequeue(out var uid))
                 {
                     DeleteEntity(uid);
                 }
 
-                QueuedDeletions.Clear();
+                QueuedDeletionsSet.Clear();
             }
 
             using (histogram?.WithLabels("ComponentCull").NewTimer())
@@ -163,7 +163,12 @@ namespace Robust.Shared.GameObjects
         {
             var newEntity = CreateEntity(prototypeName);
             newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+
+            // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
+            var oldAnchored = newEntity.Transform.Anchored;
+            newEntity.Transform.Anchored = false;
             newEntity.Transform.WorldPosition = coordinates.Position;
+            newEntity.Transform.Anchored = oldAnchored;
             return newEntity;
         }
 
@@ -174,11 +179,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-
-            InitializeAndStartEntity((Entity) entity);
-
-            if (_pauseManager.IsMapInitialized(coordinates.GetMapId(this))) entity.RunMapInit();
-
+            InitializeAndStartEntity((Entity) entity, coordinates.GetMapId(this));
             return entity;
         }
 
@@ -186,7 +187,7 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity);
+            InitializeAndStartEntity((Entity) entity, coordinates.MapId);
             return entity;
         }
 
@@ -251,6 +252,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var transform = entity.Transform;
+            var metadata = entity.MetaData;
             entity.LifeStage = EntityLifeStage.Terminating;
 
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
@@ -263,7 +265,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            ComponentManager.DisposeComponents(entity.Uid);
+            DisposeComponents(entity.Uid);
 
             // map does not have a parent node, everything else needs to be detached
             if (transform.ParentUid != EntityUid.Invalid)
@@ -272,7 +274,7 @@ namespace Robust.Shared.GameObjects
                 transform.DetachParentToNull();
             }
 
-            entity.LifeStage = EntityLifeStage.Deleted;
+            metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
             Entities.Remove(entity.Uid);
@@ -285,7 +287,8 @@ namespace Robust.Shared.GameObjects
 
         public void QueueDeleteEntity(EntityUid uid)
         {
-            QueuedDeletions.Add(uid);
+            if(QueuedDeletionsSet.Add(uid))
+                QueuedDeletions.Enqueue(uid);
         }
 
         public void DeleteEntity(EntityUid uid)
@@ -298,13 +301,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            if (!TryGetEntity(uid, out var ent))
-                return false;
-
-            if (ent.Deleted)
-                return false;
-
-            return true;
+            return TryGetEntity(uid, out _);
         }
 
         /// <summary>
@@ -361,8 +358,12 @@ namespace Robust.Shared.GameObjects
             // We do this after the event, so if the event throws we have not committed
             Entities[entity.Uid] = entity;
 
-            // allocate the required MetaDataComponent
-            AddComponent<MetaDataComponent>(entity);
+            // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
+            var metadata = new MetaDataComponent() { Owner = entity };
+            entity.MetaData = metadata;
+
+            // add the required MetaDataComponent directly.
+            AddComponentInternal(uid.Value, metadata);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(entity);
@@ -399,13 +400,16 @@ namespace Robust.Shared.GameObjects
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private protected void InitializeAndStartEntity(Entity entity)
+        private void InitializeAndStartEntity(Entity entity, MapId mapId)
         {
             try
             {
                 InitializeEntity(entity);
-                EntityInitialized?.Invoke(this, entity.Uid);
                 StartEntity(entity);
+
+                // If the map we're initializing the entity on is initialized, run map init on it.
+                if (_pauseManager.IsMapInitialized(mapId))
+                    entity.RunMapInit();
             }
             catch (Exception e)
             {
@@ -414,9 +418,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected static void InitializeEntity(Entity entity)
+        protected void InitializeEntity(Entity entity)
         {
             entity.InitializeComponents();
+            EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)

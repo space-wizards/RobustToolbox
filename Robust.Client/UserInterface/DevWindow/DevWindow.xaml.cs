@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface
         public string Description => "A";
         public string Help => "A";
 
-        public async void Execute(IConsoleShell shell, string argStr, string[] args)
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var clyde = IoCManager.Resolve<IClyde>();
             var monitor = clyde.EnumerateMonitors().First();

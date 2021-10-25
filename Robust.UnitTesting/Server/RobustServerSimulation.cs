@@ -198,7 +198,6 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
             container.Register<IEntityManager, EntityManager>();
-            container.Register<IComponentManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IEntityLookup, EntityLookup>();
@@ -249,7 +248,7 @@ namespace Robust.UnitTesting.Server
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
-            entitySystemMan.LoadExtraSystemType<SharedDebugPhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<SharedTransformSystem>();

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Text;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
@@ -9,8 +10,6 @@ namespace Robust.Shared.Map
         GameTick LastTileModifiedTick { get; }
 
         GameTick CurTick { get; }
-
-        Box2 LocalBounds { get; }
 
         /// <summary>
         ///     The total number of chunks contained on this grid.
@@ -65,8 +64,8 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Returns all the <see cref="IMapChunkInternal"/> intersecting the worldAABB.
         /// </summary>
-        IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB);
+        void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
 
-        IEnumerable<IMapChunkInternal> GetMapChunks(Box2Rotated worldArea);
+        void GetMapChunks(Box2Rotated worldArea, out MapGrid.ChunkEnumerator enumerator);
     }
 }

@@ -50,7 +50,7 @@ namespace Robust.Client.UserInterface.Controls
             get
             {
                 var offset = ValueTarget + Page;
-                return offset > MaxValue || MathHelper.CloseTo(offset, MaxValue);
+                return offset > MaxValue || MathHelper.CloseToPercent(offset, MaxValue);
             }
         }
 
@@ -64,7 +64,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.FrameUpdate(args);
 
-            if (!VisibleInTree || MathHelper.CloseTo(Value, ValueTarget))
+            if (!VisibleInTree || MathHelper.CloseToPercent(Value, ValueTarget))
             {
                 Value = ValueTarget;
             }

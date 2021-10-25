@@ -148,7 +148,7 @@ namespace Robust.Server.Player
 
             if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity))
             {
-                Logger.Warning($"Couldn't detach player \"{this}\" to entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
+                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
         }
 

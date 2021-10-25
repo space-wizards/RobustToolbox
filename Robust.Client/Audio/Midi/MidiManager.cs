@@ -65,7 +65,7 @@ namespace Robust.Client.Audio.Midi
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IConfigurationManager _cfgMan = default!;
 
-        private SharedBroadphaseSystem _broadPhaseSystem = default!;
+        private SharedPhysicsSystem _broadPhaseSystem = default!;
 
         [ViewVariables]
         public bool IsAvailable
@@ -88,13 +88,14 @@ namespace Robust.Client.Audio.Midi
         private float _volume = 0f;
         private bool _volumeDirty = true;
 
+        // Not reliable until Fluidsynth is initialized!
         [ViewVariables(VVAccess.ReadWrite)]
         public float Volume
         {
             get => _volume;
             set
             {
-                if (MathHelper.CloseTo(_volume, value))
+                if (MathHelper.CloseToPercent(_volume, value))
                     return;
 
                 _cfgMan.SetCVar(CVars.MidiVolume, value);
@@ -134,6 +135,7 @@ namespace Robust.Client.Audio.Midi
         {
             if (FluidsynthInitialized || _failedInitialize) return;
 
+            _volume = _cfgMan.GetCVar(CVars.MidiVolume);
             _cfgMan.OnValueChanged(CVars.MidiVolume, value =>
             {
                 _volume = value;
@@ -175,7 +177,7 @@ namespace Robust.Client.Audio.Midi
             _midiThread = new Thread(ThreadUpdate);
             _midiThread.Start();
 
-            _broadPhaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+            _broadPhaseSystem = EntitySystem.Get<SharedPhysicsSystem>();
             FluidsynthInitialized = true;
         }
 
@@ -254,11 +256,12 @@ namespace Robust.Client.Audio.Midi
                         renderer.LoadSoundfont(WindowsSoundfont, true);
                 }
 
+                renderer.Source.SetVolume(Volume);
+
                 lock (_renderers)
                 {
                     _renderers.Add(renderer);
                 }
-
                 return renderer;
             }
             finally

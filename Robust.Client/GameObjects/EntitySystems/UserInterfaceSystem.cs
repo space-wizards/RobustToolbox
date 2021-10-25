@@ -29,7 +29,8 @@ namespace Robust.Client.GameObjects
         private void MessageReceived(BoundUIWrapMessage ev)
         {
             var uid = ev.Entity;
-            var cmp = ComponentManager.GetComponent<ClientUserInterfaceComponent>(uid);
+            if (!EntityManager.TryGetComponent<ClientUserInterfaceComponent>(uid, out var cmp))
+                return;
 
             var message = ev.Message;
             // This should probably not happen at this point, but better make extra sure!

@@ -38,6 +38,11 @@ namespace Robust.Client.Audio.Midi
         bool LoopMidi { get; set; }
 
         /// <summary>
+        ///     This increases all note on velocities to 127.
+        /// </summary>
+        bool VolumeBoost { get; set; }
+
+        /// <summary>
         ///     The midi program (instrument) the renderer is using.
         /// </summary>
         byte MidiProgram { get; set; }
@@ -298,6 +303,9 @@ namespace Robust.Client.Audio.Midi
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
+        public bool VolumeBoost { get; set; }
+
+        [ViewVariables(VVAccess.ReadWrite)]
         public IEntity? TrackingEntity { get; set; } = null;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -539,6 +547,8 @@ namespace Robust.Client.Audio.Midi
 
                         // Note On 0x90
                         case 144:
+                            if (VolumeBoost)
+                                midiEvent.Velocity = 127;
                             _synth.NoteOn(midiEvent.Channel, midiEvent.Key, midiEvent.Velocity);
                             break;
 

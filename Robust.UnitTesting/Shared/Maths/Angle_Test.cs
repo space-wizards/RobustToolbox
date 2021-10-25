@@ -142,7 +142,7 @@ namespace Robust.UnitTesting.Shared.Maths
 
             var result = angle.RotateVec(vec);
 
-            Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f)));
+            Assert.That(result, new ApproxEqualityConstraint(new Vector2(0.183013f, 0.683013f), 0.001));
         }
 
         [TestCase(0, 4, ExpectedResult = 0f)]

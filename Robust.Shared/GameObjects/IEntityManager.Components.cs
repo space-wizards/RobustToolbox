@@ -6,12 +6,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects
 {
-    /// <summary>
-    ///     Holds a collection of ECS components that are attached to entities.
-    /// </summary>
-    [Obsolete("Use IEntityManager instead.")]
-    [PublicAPI]
-    public interface IComponentManager
+    public partial interface IEntityManager
     {
         /// <summary>
         ///     A component was added to the manager.
@@ -29,8 +24,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
-        void Initialize();
-
         /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
@@ -40,6 +33,14 @@ namespace Robust.Shared.GameObjects
         T AddComponent<T>(IEntity entity) where T : Component, new();
 
         /// <summary>
+        ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
+        ///     automatically be Initialized and Started.
+        /// </summary>
+        /// <typeparam name="T">Concrete component type to add.</typeparam>
+        /// <returns>The newly added component.</returns>
+        T AddComponent<T>(EntityUid uid) where T : Component, new();
+
+        /// <summary>
         ///     Adds a Component to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>
@@ -47,6 +48,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component to add.</param>
         /// <param name="overwrite">Should it overwrite existing components?</param>
         void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component;
+
+        /// <summary>
+        ///     Adds a Component to an entity. If the entity is already Initialized, the component will
+        ///     automatically be Initialized and Started.
+        /// </summary>
+        /// <param name="uid">Entity being modified.</param>
+        /// <param name="component">Component to add.</param>
+        /// <param name="overwrite">Should it overwrite existing components?</param>
+        void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component;
 
         /// <summary>
         ///     Removes the component with the specified reference type,
@@ -116,7 +126,21 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
         bool HasComponent(EntityUid uid, ushort netId);
 
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="entity">Entity to modify.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>The component in question</returns>
         T EnsureComponent<T>(IEntity entity) where T : Component, new();
+
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>The component in question</returns>
+        T EnsureComponent<T>(EntityUid uid) where T : Component, new();
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -259,7 +283,5 @@ namespace Robust.Shared.GameObjects
         ///     Culls all components from the collection that are marked as deleted. This needs to be called often.
         /// </summary>
         void CullRemovedComponents();
-
-        IComponentFactory ComponentFactory { get; }
     }
 }

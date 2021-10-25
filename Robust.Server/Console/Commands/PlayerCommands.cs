@@ -24,7 +24,10 @@ namespace Robust.Server.Console.Commands
                 return;
 
             if (args.Length < 2 || !float.TryParse(args[0], out var posX) || !float.TryParse(args[1], out var posY))
+            {
+                shell.WriteError(Help);
                 return;
+            }
 
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
@@ -68,8 +71,8 @@ namespace Robust.Server.Console.Commands
     public class TeleportToPlayerCommand : IConsoleCommand
     {
         public string Command => "tpto";
-        public string Description => "Teleports the current player to the location of another player.";
-        public string Help => "tpto <username>";
+        public string Description => "Teleports the current player or the specified players to the location of last player specified.";
+        public string Help => "tpto <username> [username]...";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -77,18 +80,66 @@ namespace Robust.Server.Console.Commands
             if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
                 return;
 
-            if (args.Length < 1)
-                return;
-
-            var players = IoCManager.Resolve<IPlayerManager>();
-            var name = args[0];
-
-            if (players.TryGetSessionByUsername(name, out var target))
+            if (args.Length == 0)
             {
-                if (target.AttachedEntity == null)
-                    return;
+                shell.WriteError(Help);
+            }
+            else if (args.Length == 1)
+            {
+                var players = IoCManager.Resolve<IPlayerManager>();
 
-                player.AttachedEntity.Transform.Coordinates = target.AttachedEntity.Transform.Coordinates;
+                var username = args[0];
+
+                if (!players.TryGetSessionByUsername(username, out var playerSession))
+                {
+                    shell.WriteError("Can't find username: " + username);
+                    return;
+                }
+
+                if (playerSession.AttachedEntity == null)
+                {
+                    shell.WriteError(username + " does not have an entity.");
+                    return;
+                }
+
+                player.AttachedEntity.Transform.Coordinates = playerSession.AttachedEntity.Transform.Coordinates;
+            }
+            else if (args.Length > 1)
+            {
+                var players = IoCManager.Resolve<IPlayerManager>();
+
+                var target = args[^1];
+                if (!players.TryGetSessionByUsername(target, out var targetSession))
+                {
+                    shell.WriteError("Can't find username: " + target);
+                    return;
+                }
+
+                if (targetSession.AttachedEntity == null)
+                {
+                    shell.WriteError(target + " does not have an entity.");
+                    return;
+                }
+
+                foreach (var username in args)
+                {
+                    if (username == target)
+                        continue;
+
+                    if (!players.TryGetSessionByUsername(username, out var playerSession))
+                    {
+                        shell.WriteError("Can't find username: " + username);
+                        continue;
+                    }
+
+                    if (playerSession.AttachedEntity == null)
+                    {
+                        shell.WriteError(username + " does not have an entity.");
+                        continue;
+                    }
+
+                    playerSession.AttachedEntity.Transform.Coordinates = targetSession.AttachedEntity.Transform.Coordinates;
+                }
             }
         }
     }
@@ -153,11 +204,11 @@ namespace Robust.Server.Console.Commands
             {
                 var network = IoCManager.Resolve<IServerNetManager>();
 
-                var reason = "Kicked by console.";
+                string reason;
                 if (args.Length >= 2)
-                {
-                    reason = reason + args[1];
-                }
+                    reason = $"Kicked by console: {string.Join(' ', args[1..])}";
+                else
+                    reason = "Kicked by console";
 
                 network.DisconnectChannel(target.ConnectedClient, reason);
             }

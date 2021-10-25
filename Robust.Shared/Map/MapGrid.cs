@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -141,7 +141,7 @@ namespace Robust.Shared.Map
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldMatrix;
+                    return _mapManager.EntityManager.GetComponent<TransformComponent>(GridEntityId).WorldMatrix;
 
                 return Matrix3.Identity;
             }
@@ -155,7 +155,7 @@ namespace Robust.Shared.Map
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.InvWorldMatrix;
+                    return _mapManager.EntityManager.GetComponent<TransformComponent>(GridEntityId).InvWorldMatrix;
 
                 return Matrix3.Identity;
             }
@@ -404,46 +404,70 @@ namespace Robust.Shared.Map
             return _chunks;
         }
 
-        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2 worldAABB)
+        internal struct ChunkEnumerator
         {
-            var matrix = InvWorldMatrix;
-            var localArea = matrix.TransformBox(worldAABB);
+            private Dictionary<Vector2i, IMapChunkInternal> _chunks;
+            private Vector2i _chunkLB;
+            private Vector2i _chunkRT;
 
-            var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
-            var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
+            private int _xIndex;
+            private int _yIndex;
 
-            for (var x = chunkLB.X; x <= chunkRT.X; x++)
+            internal ChunkEnumerator(Dictionary<Vector2i, IMapChunkInternal> chunks, Box2 localAABB, int chunkSize)
             {
-                for (var y = chunkLB.Y; y <= chunkRT.Y; y++)
+                _chunks = chunks;
+
+                _chunkLB = new Vector2i((int)Math.Floor(localAABB.Left / chunkSize), (int)Math.Floor(localAABB.Bottom / chunkSize));
+                _chunkRT = new Vector2i((int)Math.Floor(localAABB.Right / chunkSize), (int)Math.Floor(localAABB.Top / chunkSize));
+
+                _xIndex = _chunkLB.X;
+                _yIndex = _chunkLB.Y;
+            }
+
+            public bool MoveNext([NotNullWhen(true)] out IMapChunkInternal? chunk)
+            {
+                if (_yIndex > _chunkRT.Y)
                 {
-                    var gridChunk = new Vector2i(x, y);
-
-                    if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
-
-                    yield return chunk;
+                    _yIndex = _chunkLB.Y;
+                    _xIndex += 1;
                 }
+
+                for (var x = _xIndex; x <= _chunkRT.X; x++)
+                {
+                    for (var y = _yIndex; y <= _chunkRT.Y; y++)
+                    {
+                        var gridChunk = new Vector2i(x, y);
+                        if (!_chunks.TryGetValue(gridChunk, out chunk)) continue;
+                        _xIndex = x;
+                        _yIndex = y + 1;
+                        return true;
+                    }
+
+                    _yIndex = _chunkLB.Y;
+                }
+
+                chunk = null;
+                return false;
             }
         }
 
-        public IEnumerable<IMapChunkInternal> GetMapChunks(Box2Rotated worldArea)
+        public void GetMapChunks(Box2 worldAABB, out ChunkEnumerator enumerator)
+        {
+            var localArea = InvWorldMatrix.TransformBox(worldAABB);
+            enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
+        }
+
+        public void GetMapChunks(Box2Rotated worldArea, out ChunkEnumerator enumerator)
         {
             var matrix = InvWorldMatrix;
             var localArea = matrix.TransformBox(worldArea);
 
-            var chunkLB = new Vector2i((int)Math.Floor(localArea.Left / ChunkSize), (int)Math.Floor(localArea.Bottom / ChunkSize));
-            var chunkRT = new Vector2i((int)Math.Floor(localArea.Right / ChunkSize), (int)Math.Floor(localArea.Top / ChunkSize));
+            enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
+        }
 
-            for (var x = chunkLB.X; x <= chunkRT.X; x++)
-            {
-                for (var y = chunkLB.Y; y <= chunkRT.Y; y++)
-                {
-                    var gridChunk = new Vector2i(x, y);
-
-                    if (!_chunks.TryGetValue(gridChunk, out var chunk)) continue;
-
-                    yield return chunk;
-                }
-            }
+        public void GetLocalMapChunks(Box2 localAABB, out ChunkEnumerator enumerator)
+        {
+            enumerator = new ChunkEnumerator(_chunks, localAABB, ChunkSize);
         }
 
         #endregion ChunkAccess
@@ -479,18 +503,6 @@ namespace Robust.Shared.Map
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
         {
             foreach (var tile in GetTilesIntersecting(worldAABB))
-            {
-                foreach (var ent in GetAnchoredEntities(tile.GridIndices))
-                {
-                    yield return ent;
-                }
-            }
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds)
-        {
-            foreach (var tile in GetTilesIntersecting(worldBounds))
             {
                 foreach (var ent in GetAnchoredEntities(tile.GridIndices))
                 {
@@ -777,7 +789,7 @@ namespace Robust.Shared.Map
             var locX = gridTile.X * TileSize + (TileSize / 2f);
             var locY = gridTile.Y * TileSize + (TileSize / 2f);
 
-            return new Vector2(locX, locY) + WorldPosition;
+            return WorldMatrix.Transform(new Vector2(locX, locY));
         }
 
         public MapCoordinates GridTileToWorld(Vector2i gridTile)

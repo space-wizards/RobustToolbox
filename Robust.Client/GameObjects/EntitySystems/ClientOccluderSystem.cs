@@ -52,7 +52,7 @@ namespace Robust.Client.GameObjects
             while (_dirtyEntities.TryDequeue(out var entity))
             {
                 if (EntityManager.EntityExists(entity)
-                    && ComponentManager.TryGetComponent(entity, out ClientOccluderComponent? occluder)
+                    && EntityManager.TryGetComponent(entity, out ClientOccluderComponent? occluder)
                     && occluder.UpdateGeneration != _updateGeneration)
                 {
                     occluder.Update();
@@ -100,7 +100,7 @@ namespace Robust.Client.GameObjects
         {
             foreach (var entity in candidates)
             {
-                if (ComponentManager.HasComponent<ClientOccluderComponent>(entity))
+                if (EntityManager.HasComponent<ClientOccluderComponent>(entity))
                 {
                     _dirtyEntities.Enqueue(entity);
                 }

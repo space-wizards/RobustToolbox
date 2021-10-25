@@ -43,6 +43,8 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = LookupFlags.IncludeAnchored);
 
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldAABB, LookupFlags flags = LookupFlags.IncludeAnchored);
+
         IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);

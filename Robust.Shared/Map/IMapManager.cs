@@ -109,6 +109,8 @@ namespace Robust.Shared.Map
 
         void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAABB, out FindGridsEnumerator enumerator, bool approx = false);
 
+        void FindGridsIntersectingEnumerator(MapId mapId, Vector2 worldPos, out FindGridsEnumerator enumerator, bool approx = false);
+
         /// <summary>
         /// Returns the grids intersecting this AABB.
         /// </summary>

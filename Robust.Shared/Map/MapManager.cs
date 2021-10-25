@@ -571,6 +571,12 @@ namespace Robust.Shared.Map
             enumerator = new FindGridsEnumerator(_entityManager, _grids.GetEnumerator(), mapId, worldAABB, approx);
         }
 
+        public void FindGridsIntersectingEnumerator(MapId mapId, Vector2 worldPos, out FindGridsEnumerator enumerator, bool approx = false)
+        {
+            var worldAABB = new Box2(worldPos, worldPos);
+            enumerator = new FindGridsEnumerator(_entityManager, _grids.GetEnumerator(), mapId, worldAABB, approx);
+        }
+
         /// <inheritdoc />
         public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAABB, bool approx = false)
         {

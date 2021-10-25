@@ -80,7 +80,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void FastEntitiesIntersecting(EntityUid entityUid, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
         {
-            var xform = ComponentManager.GetComponent<TransformComponent>(entityUid);
+            var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
             var bounds = GetBounds(entityUid);
             FastEntitiesIntersecting(xform.MapID, bounds, callback, flags);
         }
@@ -105,15 +105,17 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
-                {
-                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
 
-                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                while (enumerator.MoveNext(out var lookup))
+                {
+                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
                         callback(data.Uid);
                     });
-                });
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
@@ -170,16 +172,18 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                _lookup.GetLookupsIntersecting(mapId, coordinates.Position, comp =>
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, coordinates.Position);
+
+                while (enumerator.MoveNext(out var lookup))
                 {
-                    var localPos = comp.Owner.Transform.InvWorldMatrix.Transform(coordinates.Position);
+                    var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(coordinates.Position);
                     var localAABB = new Box2(localPos - float.Epsilon, localPos + float.Epsilon);
 
-                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
                         callback(data.Uid);
                     });
-                });
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
@@ -212,7 +216,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entityUid, QueryFlags flags = DefaultFlags)
         {
-            var xform = ComponentManager.GetComponent<TransformComponent>(entityUid);
+            var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
             var bounds = GetBounds(entityUid);
             return GetEntitiesIntersecting(xform.MapID, bounds, flags);
         }
@@ -237,16 +241,18 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
-                {
-                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
 
-                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                while (enumerator.MoveNext(out var lookup))
+                {
+                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
                         if (data.Deleted) return;
                         ents.Add(data.Uid);
                     });
-                });
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
@@ -292,16 +298,18 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
-                {
-                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
 
-                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                while (enumerator.MoveNext(out var lookup))
+                {
+                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
                         if (data.Deleted) return;
                         ents.Add(data.Uid);
                     });
-                });
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
@@ -351,20 +359,18 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                _lookup.GetLookupsIntersecting(mapId, coordinates.Position, comp =>
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, coordinates.Position);
+
+                while (enumerator.MoveNext(out var lookup))
                 {
-                    var localPos = comp.Owner.Transform.InvWorldMatrix.Transform(coordinates.Position);
+                    var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(coordinates.Position);
 
-                    comp.Tree.QueryPoint((in IEntity data) =>
+                    foreach (var entity in lookup.Tree.QueryPoint(localPos))
                     {
-                        if (!data.Deleted)
-                        {
-                            ents.Add(data.Uid);
-                        }
-
-                        return true;
-                    }, localPos);
-                });
+                        if (entity.Deleted) continue;
+                        ents.Add(entity.Uid);
+                    }
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
@@ -413,7 +419,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<EntityUid> GetEntitiesInRange(EntityUid entityUid, float range, QueryFlags flags = DefaultFlags)
         {
-            var xform = ComponentManager.GetComponent<TransformComponent>(entityUid);
+            var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
             foreach (var uid in GetEntitiesInRange(xform.MapPosition, range, flags))
             {
                 if (uid == entityUid) continue;
@@ -452,16 +458,18 @@ namespace Robust.Shared.GameObjects
 
             if ((flags & QueryFlags.EntityLookup) != 0x0)
             {
-                _lookup.GetLookupsIntersecting(mapId, worldAABB, comp =>
-                {
-                    var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
 
-                    comp.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                while (enumerator.MoveNext(out var lookup))
+                {
+                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
                         if (data.Deleted) return;
                         ents.Add(data.Uid);
                     });
-                });
+                }
             }
 
             if ((flags & QueryFlags.Physics) != 0x0)
@@ -505,7 +513,7 @@ namespace Robust.Shared.GameObjects
         public Box2Rotated GetBounds(TileRef tileRef)
         {
             var grid = _mapManager.GetGrid(tileRef.GridIndex);
-            var gridXform = ComponentManager.GetComponent<TransformComponent>(grid.GridEntityId);
+            var gridXform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
 
             var center = gridXform.WorldMatrix.Transform((Vector2) tileRef.GridIndices + 0.5f);
 
@@ -520,19 +528,19 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         private Box2Rotated GetBounds(EntityUid uid)
         {
-            var xform = ComponentManager.GetComponent<TransformComponent>(uid);
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
             TransformComponent parentXform;
 
             if (xform.GridID == GridId.Invalid)
             {
-                parentXform = ComponentManager.GetComponent<TransformComponent>(_mapManager.GetMapEntity(xform.MapID).Uid);
+                parentXform = EntityManager.GetComponent<TransformComponent>(_mapManager.GetMapEntity(xform.MapID).Uid);
             }
             else
             {
-                parentXform = ComponentManager.GetComponent<TransformComponent>(_mapManager.GetGrid(xform.GridID).GridEntityId);
+                parentXform = EntityManager.GetComponent<TransformComponent>(_mapManager.GetGrid(xform.GridID).GridEntityId);
             }
 
-            if (ComponentManager.TryGetComponent<PhysicsComponent>(uid, out var body))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(uid, out var body))
             {
                 var parentInvMatrix = parentXform.InvWorldMatrix;
                 var localXform = parentInvMatrix.Transform(xform.WorldPosition);
@@ -569,22 +577,22 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         public Box2 GetGridAABB(EntityUid uid)
         {
-            var xform = ComponentManager.GetComponent<TransformComponent>(uid);
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
             TransformComponent parentXform;
 
             if (xform.GridID == GridId.Invalid)
             {
-                parentXform = ComponentManager.GetComponent<TransformComponent>(_mapManager.GetMapEntity(xform.MapID).Uid);
+                parentXform = EntityManager.GetComponent<TransformComponent>(_mapManager.GetMapEntity(xform.MapID).Uid);
             }
             else
             {
-                parentXform = ComponentManager.GetComponent<TransformComponent>(_mapManager.GetGrid(xform.GridID).GridEntityId);
+                parentXform = EntityManager.GetComponent<TransformComponent>(_mapManager.GetGrid(xform.GridID).GridEntityId);
             }
 
             var parentInvMatrix = parentXform.InvWorldMatrix;
             var localXform = parentInvMatrix.Transform(xform.WorldPosition);
 
-            if (ComponentManager.TryGetComponent<PhysicsComponent>(uid, out var body))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(uid, out var body))
             {
                 var aabb = new Box2();
                 var localRot = xform.WorldRotation - parentXform.WorldRotation;

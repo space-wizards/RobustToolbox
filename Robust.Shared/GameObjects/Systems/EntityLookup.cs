@@ -45,7 +45,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldAABB, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, float enlarged = 0f, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
@@ -509,10 +509,66 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, float enlarged = 0f, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var worldAABB = GetWorldAabbFromEntity(entity);
-            return GetEntitiesIntersecting(entity.Transform.MapID, worldAABB, flags);
+            var xform = _entityManager.GetComponent<ITransformComponent>(entity.Uid);
+            var worldPos = xform.WorldPosition;
+            var worldRot = xform.WorldRotation;
+
+            var enumerator = GetLookupsIntersecting(xform.MapID, worldAABB);
+            var list = new List<IEntity>();
+
+            while (enumerator.MoveNext(out var lookup))
+            {
+                // To get the tightest bounds possible we'll re-calculate it for each lookup.
+                var localBounds = GetLookupBounds(entity.Uid, lookup, worldPos, worldRot, enlarged);
+
+                lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.Deleted)
+                    {
+                        list.Add(ent);
+                    }
+                    return true;
+                }, localBounds, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            foreach (var ent in GetAnchored(xform.MapID, worldAABB, flags))
+            {
+                list.Add(ent);
+            }
+
+            return list;
+        }
+
+        private Box2 GetLookupBounds(EntityUid uid, EntityLookupComponent lookup, Vector2 worldPos, Angle worldRot, float enlarged)
+        {
+            var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(worldPos);
+            var localRot = worldRot - lookup.Owner.Transform.WorldRotation;
+
+            if (_entityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            {
+                var transform = new Transform(localPos, localRot);
+                Box2? aabb = null;
+
+                foreach (var fixture in body.Fixtures)
+                {
+                    if (!fixture.Hard) continue;
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        aabb = aabb?.Union(fixture.Shape.ComputeAABB(transform, i)) ?? fixture.Shape.ComputeAABB(transform, i);
+                    }
+                }
+
+                if (aabb != null)
+                {
+                    return aabb.Value.Enlarged(enlarged);
+                }
+            }
+
+            // So IsEmpty checks don't get triggered
+            return new Box2(localPos - float.Epsilon, localPos + float.Epsilon);
         }
 
         /// <inheritdoc />

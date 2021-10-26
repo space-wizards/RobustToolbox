@@ -121,7 +121,7 @@ namespace Robust.Server.Placement
             {
                 var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
-                created.Transform.LocalRotation = dirRcv.ToAngle();
+                created.Transform.LocalRotation = dirRcv;
             }
             else
             {

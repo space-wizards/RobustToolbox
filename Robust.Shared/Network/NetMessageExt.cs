@@ -24,6 +24,17 @@ namespace Robust.Shared.Network
             message.Write(coordinates.Position);
         }
 
+        public static Angle ReadAngle(this NetIncomingMessage message)
+        {
+            var angle = new Angle(message.ReadDouble());
+            return angle;
+        }
+
+        public static void Write(this NetOutgoingMessage message, Angle angle)
+        {
+            message.Write(angle.Theta);
+        }
+
         public static Vector2 ReadVector2(this NetIncomingMessage message)
         {
             var x = message.ReadFloat();

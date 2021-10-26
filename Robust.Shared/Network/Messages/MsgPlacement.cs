@@ -19,7 +19,7 @@ namespace Robust.Shared.Network.Messages
         public ushort TileType { get; set; }
         public string EntityTemplateName { get; set; }
         public EntityCoordinates EntityCoordinates { get; set; }
-        public Direction DirRcv { get; set; }
+        public Angle DirRcv { get; set; }
         public EntityUid EntityUid { get; set; }
 
         public int Range { get; set; }
@@ -40,7 +40,7 @@ namespace Robust.Shared.Network.Messages
                     else EntityTemplateName = buffer.ReadString();
 
                     EntityCoordinates = buffer.ReadEntityCoordinates();
-                    DirRcv = (Direction)buffer.ReadByte();
+                    DirRcv = buffer.ReadAngle();
                     break;
                 case PlacementManagerMessage.StartPlacement:
                     Range = buffer.ReadInt32();
@@ -74,7 +74,7 @@ namespace Robust.Shared.Network.Messages
                     else buffer.Write(EntityTemplateName);
 
                     buffer.Write(EntityCoordinates);
-                    buffer.Write((byte)DirRcv);
+                    buffer.Write(DirRcv);
                     break;
                 case PlacementManagerMessage.StartPlacement:
                     buffer.Write(Range);

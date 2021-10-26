@@ -709,8 +709,7 @@ namespace Robust.Client.Placement
 
             // world x and y
             message.EntityCoordinates = coordinates;
-
-            message.DirRcv = Direction;
+            message.DirRcv = Direction.ToAngle();
 
             NetworkManager.ClientSendMessage(message);
         }

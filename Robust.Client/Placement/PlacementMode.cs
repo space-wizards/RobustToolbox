@@ -94,6 +94,8 @@ namespace Robust.Client.Placement
             if (TexturesToDraw == null || TexturesToDraw.Count == 0)
                 return;
 
+            var eyeRotation = pManager.eyeManager.CurrentEye.Rotation;
+
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
             {
@@ -115,14 +117,17 @@ namespace Robust.Client.Placement
             foreach (var coordinate in locationcollection)
             {
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
+                var pos = worldPos;
+                handle.SetTransform(pos, -eyeRotation + pManager.Direction.ToAngle());
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
 
                 foreach (var texture in TexturesToDraw)
                 {
-                    handle.DrawTexture(texture, pos, color);
+                    handle.DrawTexture(texture, -size / (float)EyeManager.PixelsPerMeter / 2f, color);
                 }
             }
+
+            handle.SetTransform(in Matrix3.Identity);
         }
 
         public IEnumerable<EntityCoordinates> SingleCoordinate()

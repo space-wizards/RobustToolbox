@@ -130,10 +130,10 @@ namespace Robust.Client.UserInterface.CustomControls
                 var (left, top) = Position;
                 var (right, bottom) = Position + SetSize;
 
-                if (Double.IsNaN(SetSize.X)) {
+                if (float.IsNaN(SetSize.X)) {
                     right = Position.X + Size.X;
                 }
-                if (Double.IsNaN(SetSize.Y)) {
+                if (float.IsNaN(SetSize.Y)) {
                     bottom = Position.Y + Size.Y;
                 }
 

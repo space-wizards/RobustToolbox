@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.Bql
 {
@@ -17,6 +18,17 @@ namespace Robust.Server.Bql
         {
             var comp = (Type) arguments[0];
             return input.Where(x => x.HasComponent(comp) ^ isInverted);
+        }
+
+        public override IEnumerable<IEntity> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted)
+        {
+            if (isInverted)
+            {
+                return base.DoInitialSelection(arguments, isInverted);
+            }
+
+            return IoCManager.Resolve<IEntityManager>().GetAllComponents((Type) arguments[0])
+                .Select(x => x.Owner);
         }
     }
 

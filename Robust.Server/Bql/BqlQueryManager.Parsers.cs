@@ -5,18 +5,19 @@ using JetBrains.Annotations;
 using Pidgin;
 using Robust.Shared.GameObjects;
 using static Pidgin.Parser;
+using static Pidgin.Parser<char>;
 
 namespace Robust.Server.Bql
 {
     public partial class BqlQueryManager
     {
-        static Parser<char, T> Tok<T>(Parser<char, T> p) =>
-            Try(p).Before(SkipWhitespaces);
+        private readonly Dictionary<Type, Parser<char, BqlQuerySelectorParsed>> _parsers = new();
+        private Parser<char, BqlQuerySelectorParsed> _allQuerySelectors = default!;
+        private Parser<char, (IEnumerable<BqlQuerySelectorParsed>, string)> _simpleQuery => Parser.Map((en, _, rest) => (en, rest), SkipWhitespaces.Then(_allQuerySelectors).Many(), String("do").Then(SkipWhitespaces), Any.ManyString());
 
-        private static Parser<char, string> Word => Tok(
+        private static Parser<char, string> Word =>
             from chars in OneOf(LetterOrDigit, Char('_')).ManyString()
-            select chars
-        );
+            select chars;
 
         private static Parser<char, object> Objectify<T>(Parser<char, T> inp)
         {
@@ -34,31 +35,31 @@ namespace Robust.Server.Bql
         }
 
         private static Parser<char, SubstitutionData> Substitution =>
-            Try(Char('$').Then(Tok(
+            Try(Char('$').Then(
                 from chars in OneOf(Uppercase, Char('_')).ManyString()
                 select chars
-            ))).MapWithInput((x, _) => new SubstitutionData(x.ToString()));
+            )).MapWithInput((x, _) => new SubstitutionData(x.ToString()));
 
         private static Parser<char, int> Integer =>
-            Try(Tok(Int(10)));
+            Try(Int(10));
 
         private static Parser<char, object> SubstitutableInteger =>
             Objectify(Integer).Or(Objectify(Try(Substitution)));
 
         private static Parser<char, double> Float =>
-            Try(Tok(Real));
+            Try(Real);
 
         private static Parser<char, object> SubstitutableFloat =>
             Objectify(Float).Or(Objectify(Try(Substitution)));
 
         private static Parser<char, double> Percentage =>
-            Try(Tok(Real).Before(Char('%')));
+            Try(Real).Before(Char('%'));
 
         private static Parser<char, object> SubstitutablePercentage =>
             Objectify(Percentage).Or(Objectify(Try(Substitution)));
 
         private static Parser<char, EntityUid> EntityId =>
-            Try(Parser.Map(x => new EntityUid(x), Tok(Int(10))));
+            Try(Parser.Map(x => new EntityUid(x), Int(10)));
 
         private static Parser<char, object> SubstitutableEntityId =>
             Objectify(EntityId).Or(Objectify(Try(Substitution)));
@@ -69,11 +70,14 @@ namespace Robust.Server.Bql
         private static Parser<char, object> SubstitutableComponent =>
             Objectify(Component).Or(Objectify(Try(Substitution)));
 
-        private static Parser<char, string> String =>
-            Try(Word); //TODO: Actually parse a string input.
+        private static Parser<char, string> QuotedString =>
+            OneOf(Try(Char('"').Then(OneOf(new []
+            {
+                AnyCharExcept("\"")
+            }).ManyString().Before(Char('"')))), Try(Word));
 
         private static Parser<char, object> SubstitutableString =>
-            Objectify(String).Or(Objectify(Try(Substitution)));
+            Objectify(QuotedString).Or(Objectify(Try(Substitution)));
 
         // thing to make sure it all compiles.
         [UsedImplicitly]
@@ -85,15 +89,17 @@ namespace Robust.Server.Bql
                 Objectify(EntityId),
                 Objectify(Component),
                 Objectify(Float),
-                Objectify(String)
+                Objectify(QuotedString)
             });
 
-        private Parser<char, BqlQuerySelectorParsed> BqlQueryParser(string token)
+        private Parser<char, BqlQuerySelectorParsed> BuildBqlQueryParser(BqlQuerySelector inst)
         {
-            var inst = _queriesByToken[token];
+            var leadToken = String(inst.Token);
 
             if (inst.Arguments.Length == 0)
-                return new Pidgin.Parser.String;
+            {
+                return Parser.Map(_ => new BqlQuerySelectorParsed(new List<object>(), inst.Token, false), SkipWhitespaces);
+            }
 
             List<Parser<char, object>> argsParsers = new();
 
@@ -102,37 +108,64 @@ namespace Robust.Server.Bql
                 List<Parser<char, object>> choices = new();
                 if ((arg & QuerySelectorArgument.String) == QuerySelectorArgument.String)
                 {
-                    choices.Add(SubstitutableString);
+                    choices.Add(Try(SubstitutableString.Before(SkipWhitespaces).Labelled("string argument")));
                 }
                 if ((arg & QuerySelectorArgument.Component) == QuerySelectorArgument.Component)
                 {
-                    choices.Add(SubstitutableComponent);
+                    choices.Add(Try(SubstitutableComponent.Before(SkipWhitespaces).Labelled("component argument")));
                 }
                 if ((arg & QuerySelectorArgument.EntityId) == QuerySelectorArgument.EntityId)
                 {
-                    choices.Add(SubstitutableEntityId);
+                    choices.Add(Try(SubstitutableEntityId.Before(SkipWhitespaces).Labelled("entity ID argument")));
                 }
                 if ((arg & QuerySelectorArgument.Integer) == QuerySelectorArgument.Integer)
                 {
-                    choices.Add(SubstitutableInteger);
+                    choices.Add(Try(SubstitutableInteger.Before(SkipWhitespaces).Labelled("integer argument")));
                 }
                 if ((arg & QuerySelectorArgument.Percentage) == QuerySelectorArgument.Percentage)
                 {
-                    choices.Add(SubstitutablePercentage);
+                    choices.Add(Try(SubstitutablePercentage.Before(SkipWhitespaces).Labelled("percentage argument")));
                 }
                 if ((arg & QuerySelectorArgument.Float) == QuerySelectorArgument.Float)
                 {
-                    choices.Add(SubstitutableFloat);
+                    choices.Add(Try(SubstitutableFloat.Before(SkipWhitespaces).Labelled("float argument")));
                 }
-                argsParsers.Add(OneOf(choices).Labelled("argument "+idx));
+
+                argsParsers.Add(OneOf(choices));
             }
 
-            Parser<char, List<object>>? finalParser = argsParsers[0].Map(x => new List<object> { x });
+            Parser<char, List<object>> finalParser = argsParsers[0].Map(x => new List<object> { x });
 
-            foreach (var parser in )
+            for (var i = 1; i < argsParsers.Count; i++)
             {
-
+                finalParser = finalParser.Then(argsParsers[i], (list, o) =>
+                {
+                    list.Add(o);
+                    return list;
+                }).Labelled("arguments");
             }
+
+            return Parser.Map(args => new BqlQuerySelectorParsed(args, inst.Token, false), finalParser);
+        }
+
+        private void DoParserSetup()
+        {
+            foreach (var inst in _instances)
+            {
+                _parsers.Add(inst.GetType(), BuildBqlQueryParser(inst));
+            }
+
+            _allQuerySelectors = OneOf(_instances.Select(x => Parser.Map((a, b) => (a, b),
+                Try(String("not").Before(Char(' '))).Optional(),
+                Try(String(x.Token).Before(Char(' ')))))).Then(tok =>
+                _parsers[_queriesByToken[tok.b].GetType()].Map(a =>
+                {
+                    a.Inverted = tok.a.HasValue;
+                    return a;
+                })
+            );
+
+
         }
     }
 }

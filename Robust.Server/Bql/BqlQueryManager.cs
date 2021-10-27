@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Bql
 {
-    public partial class BqlQueryManager
+    public partial class BqlQueryManager : IBqlQueryManager
     {
         private static IReflectionManager _reflectionManager = default!;
         private static IComponentFactory _componentFactory = default!;
@@ -16,7 +16,6 @@ namespace Robust.Server.Bql
         private readonly List<BqlQuerySelector> _instances = new();
         private readonly Dictionary<string, BqlQuerySelector> _queriesByToken = new();
         private readonly Dictionary<Type, BqlQuerySelector> _queriesByType = new();
-
 
         public BqlQueryManager()
         {
@@ -48,11 +47,6 @@ namespace Robust.Server.Bql
             _instances.Add(inst);
             _queriesByToken.Add(inst.Token, inst);
             _queriesByType.Add(bqlQuerySelector, inst);
-        }
-
-        public void DoParserSetup()
-        {
-            throw new NotImplementedException();
         }
     }
 }

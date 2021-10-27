@@ -12,14 +12,13 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Player;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : EntitySystem, IAudioSystem
+    public class AudioSystem : SharedAudioSystem, IAudioSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -65,7 +64,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.AudioParams);
+            var stream = (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
             if (stream != null)
             {
                 stream.NetIdentifier = ev.Identifier;
@@ -84,8 +83,8 @@ namespace Robust.Client.GameObjects
         private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
         {
             var stream = EntityManager.TryGetEntity(ev.EntityUid, out var entity) ?
-                (PlayingStream?) Play(ev.FileName, entity, ev.AudioParams)
-                : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.AudioParams);
+                (PlayingStream?) Play(ev.FileName, entity, ev.FallbackCoordinates, ev.AudioParams)
+                : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
 
             if (stream != null)
             {
@@ -134,6 +133,10 @@ namespace Robust.Client.GameObjects
 
                         mapPos = stream.TrackingEntity.Transform.MapPosition;
                     }
+
+                    // TODO Remove when coordinates can't be NaN
+                    if (mapPos == null || !float.IsFinite(mapPos.Value.X) || !float.IsFinite(mapPos.Value.Y))
+                        mapPos = stream.TrackingFallbackCoordinates?.ToMap(_entityManager);
 
                     if (mapPos != null)
                     {
@@ -212,7 +215,6 @@ namespace Robust.Client.GameObjects
                         {
                             stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
                         }
-
                     }
                 }
             }
@@ -277,12 +279,14 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
         /// <param name="audioParams"></param>
-        private IPlayingAudioStream? Play(string filename, IEntity entity, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(string filename, IEntity entity, EntityCoordinates fallbackCoordinates,
+            AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
-                return Play(audio, entity, audioParams);
+                return Play(audio, entity, fallbackCoordinates, audioParams);
             }
 
             Logger.Error($"Server tried to play audio file {filename} which does not exist.");
@@ -294,15 +298,15 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
+        /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
         /// <param name="audioParams"></param>
-        private IPlayingAudioStream? Play(AudioStream stream, IEntity entity, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(AudioStream stream, IEntity entity, EntityCoordinates fallbackCoordinates,
+            AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
             if (!source.SetPosition(entity.Transform.WorldPosition))
             {
-                source.Dispose();
-                Logger.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
-                return null;
+                return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
             }
 
             ApplyAudioParams(audioParams, source);
@@ -312,6 +316,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingEntity = entity,
+                TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null,
                 Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
                 MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
                 ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
@@ -327,12 +332,14 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
         /// <param name="audioParams"></param>
-        private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates, EntityCoordinates fallbackCoordinates,
+            AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
-                return Play(audio, coordinates, audioParams);
+                return Play(audio, coordinates, fallbackCoordinates, audioParams);
             }
 
             Logger.Error($"Server tried to play audio file {filename} which does not exist.");
@@ -344,16 +351,22 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
+        /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
         /// <param name="audioParams"></param>
         private IPlayingAudioStream? Play(AudioStream stream, EntityCoordinates coordinates,
-            AudioParams? audioParams = null)
+            EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            if (!source.SetPosition(coordinates.ToMapPos(EntityManager)))
+            if (!source.SetPosition(fallbackCoordinates.Position))
             {
                 source.Dispose();
                 Logger.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
                 return null;
+            }
+
+            if (!coordinates.IsValid(_entityManager))
+            {
+                coordinates = fallbackCoordinates;
             }
 
             ApplyAudioParams(audioParams, source);
@@ -363,6 +376,7 @@ namespace Robust.Client.GameObjects
             {
                 Source = source,
                 TrackingCoordinates = coordinates,
+                TrackingFallbackCoordinates = fallbackCoordinates != EntityCoordinates.Invalid ? fallbackCoordinates : null,
                 Attenuation = audioParams?.Attenuation ?? Attenuation.Default,
                 MaxDistance = audioParams?.MaxDistance ?? float.MaxValue,
                 ReferenceDistance = audioParams?.ReferenceDistance ?? 1f,
@@ -395,6 +409,7 @@ namespace Robust.Client.GameObjects
             public IClydeAudioSource Source = default!;
             public IEntity TrackingEntity = default!;
             public EntityCoordinates? TrackingCoordinates;
+            public EntityCoordinates? TrackingFallbackCoordinates;
             public bool Done;
             public float Volume;
 
@@ -440,19 +455,19 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            return Play(filename, entity, audioParams);
+            return Play(filename, entity, GetFallbackCoordinates(entity.Transform.MapPosition), audioParams);
         }
 
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             return EntityManager.TryGetEntity(uid, out var entity)
-                ? Play(filename, entity, audioParams) : null;
+                ? Play(filename, entity, GetFallbackCoordinates(entity.Transform.MapPosition), audioParams) : null;
         }
 
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
-            return Play(filename, coordinates, audioParams);
+            return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(_entityManager)), audioParams);
         }
     }
 }

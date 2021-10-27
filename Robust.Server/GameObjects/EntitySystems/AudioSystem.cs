@@ -3,6 +3,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.Audio;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Player;
 using Robust.Shared.Players;
@@ -10,8 +11,10 @@ using Robust.Shared.Players;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : EntitySystem, IAudioSystem
+    public class AudioSystem : SharedAudioSystem, IAudioSystem
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         private const int AudioDistanceRange = 25;
 
         private uint _streamIndex;
@@ -101,10 +104,13 @@ namespace Robust.Server.GameObjects
 
             var id = CacheIdentifier();
 
+            var fallbackCoordinates = GetFallbackCoordinates(transform.MapPosition);
+
             var msg = new PlayAudioEntityMessage
             {
                 FileName = filename,
                 Coordinates = transform.Coordinates,
+                FallbackCoordinates = fallbackCoordinates,
                 EntityUid = uid,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id,
@@ -126,10 +132,14 @@ namespace Robust.Server.GameObjects
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
 
             var id = CacheIdentifier();
+
+            var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(_entityManager));
+
             var msg = new PlayAudioPositionalMessage
             {
                 FileName = filename,
                 Coordinates = coordinates,
+                FallbackCoordinates = fallbackCoordinates,
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };

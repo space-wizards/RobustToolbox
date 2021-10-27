@@ -809,13 +809,13 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    return new PEReader(File.OpenRead(path));
+                    return ReaderFromStream(File.OpenRead(path));
                 }
 
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
                 if (extraStream != null)
                 {
-                    return new PEReader(extraStream);
+                    return ReaderFromStream(extraStream);
                 }
 
                 foreach (var resLoadPath in _resLoadPaths)
@@ -823,7 +823,7 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         var path = resLoadPath / dllName;
-                        return new PEReader(_parent._res.ContentFileRead(path));
+                        return ReaderFromStream(_parent._res.ContentFileRead(path));
                     }
                     catch (FileNotFoundException)
                     {
@@ -831,6 +831,23 @@ namespace Robust.Shared.ContentPack
                 }
 
                 return null;
+            }
+
+            private static PEReader ReaderFromStream(Stream stream)
+            {
+                if (OperatingSystem.IsLinux() && stream is FileStream)
+                {
+                    // PEReader is bugged on Linux and not properly thread safe when doing memory mapping.
+                    // As such, we never pass it a file stream so it uses a different, non-bugged code path.
+                    // See https://github.com/dotnet/runtime/issues/60545
+                    var ms = new MemoryStream();
+                    stream.CopyTo(ms);
+                    ms.Seek(0, SeekOrigin.Begin);
+                    stream.Dispose();
+                    stream = ms;
+                }
+
+                return new PEReader(stream);
             }
 
             public PEReader? Resolve(string simpleName)

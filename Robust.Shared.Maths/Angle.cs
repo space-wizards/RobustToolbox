@@ -87,7 +87,7 @@ namespace Robust.Shared.Maths
             var ang = Theta % (2 * Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+                ang += 2 * Math.PI;
 
             return (Direction) (Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2 % 8);
         }

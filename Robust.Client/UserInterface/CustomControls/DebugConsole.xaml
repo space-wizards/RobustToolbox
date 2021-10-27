@@ -8,6 +8,6 @@
                                   ContentMarginBottomOverride="3" ContentMarginTopOverride="3" />
             </OutputPanel.StyleBoxOverride>
         </OutputPanel>
-        <HistoryLineEdit Name="CommandBar" PlaceHolder="{Loc 'console-line-edit-placeholder'}" />
+        <HistoryLineEdit Name="CommandBar" Access="Public" PlaceHolder="{Loc 'console-line-edit-placeholder'}" />
     </BoxContainer>
 </Control>

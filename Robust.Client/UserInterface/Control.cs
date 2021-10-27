@@ -40,6 +40,9 @@ namespace Robust.Client.UserInterface
         [ViewVariables]
         public string? Name { get; set; }
 
+        // ReSharper disable once ValueParameterNotUsed
+        public AccessLevel? Access { set { } }
+
         /// <summary>
         ///     If true, this control will always be rendered, even if other UI rendering is disabled.
         /// </summary>

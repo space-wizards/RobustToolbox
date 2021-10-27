@@ -380,7 +380,7 @@ namespace Robust.Shared.Configuration
                 if (_configVars.TryGetValue(key, out var cfgVar))
                 {
                     cfgVar.OverrideValue = value;
-                    _overrides.Add(key, value);
+                    _overrides[key] = value;
 
                     if (cfgVar.Registered)
                     {

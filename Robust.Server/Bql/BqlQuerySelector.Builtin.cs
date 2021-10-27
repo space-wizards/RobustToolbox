@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 
 namespace Robust.Server.Bql
 {
@@ -56,7 +57,7 @@ namespace Robust.Server.Bql
         public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
         {
             var uid = (EntityUid) arguments[0];
-            return input.Where(e => e.Transform.ParentUid == uid ^ isInverted);
+            return input.Where(e => (e.Transform.ParentUid == uid) ^ isInverted);
         }
     }
 
@@ -75,7 +76,7 @@ namespace Robust.Server.Bql
                 var cur = e;
                 while (cur.Transform.Parent is not null)
                 {
-                    if (cur.Transform.ParentUid == uid ^ isInverted)
+                    if ((cur.Transform.ParentUid == uid) ^ isInverted)
                         return true;
                     cur = cur.Transform.Parent.Owner;
                 }
@@ -94,8 +95,9 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
         {
+            Logger.Debug((string) arguments[0]);
             var name = (string) arguments[0];
-            return input.Where(e => e.Prototype?.Name == name ^ isInverted);
+            return input.Where(e => (e.Prototype?.Name == name) ^ isInverted);
         }
     }
 
@@ -111,10 +113,10 @@ namespace Robust.Server.Bql
             var name = (string) arguments[0];
             return input.Where(e =>
             {
-                if (e.Prototype?.Name == name ^ isInverted)
+                if ((e.Prototype?.Name == name) ^ isInverted)
                     return true;
 
-                return e.Prototype?.Parent == name ^ isInverted; // Damn, can't actually do recursive check here.
+                return (e.Prototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.
             });
         }
     }

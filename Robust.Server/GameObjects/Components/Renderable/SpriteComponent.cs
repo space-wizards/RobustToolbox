@@ -39,9 +39,6 @@ namespace Robust.Server.GameObjects
         [DataField("color")]
         private Color _color = Color.White;
 
-        [DataField("directional")]
-        private bool _directional = true;
-
         [DataField("sprite")]
         private string? _baseRSIPath;
 
@@ -115,17 +112,6 @@ namespace Robust.Server.GameObjects
             set
             {
                 _color = value;
-                Dirty();
-            }
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public bool Directional
-        {
-            get => _directional;
-            set
-            {
-                _directional = value;
                 Dirty();
             }
         }

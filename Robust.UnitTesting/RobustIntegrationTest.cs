@@ -117,31 +117,14 @@ namespace Robust.UnitTesting
             return instance;
         }
 
-        protected virtual async Task OnInstanceReturn(IntegrationInstance instance)
+        protected virtual Task OnClientReturn(ClientIntegrationInstance client)
         {
-            await instance.WaitIdleAsync();
-
-            var configs = instance.ResolveDependency<IConfigurationManagerInternal>();
-
-            await instance.WaitPost(() =>
-            {
-                configs.ResetOverrides();
-
-                if (instance.Options != null)
-                {
-                    configs.OverrideConVars(instance.Options.CVarOverrides.Select(pair => (pair.Key, pair.Value)));
-                }
-            });
+            return Task.CompletedTask;
         }
 
-        protected virtual async Task OnClientReturn(ClientIntegrationInstance client)
+        protected virtual Task OnServerReturn(ServerIntegrationInstance server)
         {
-            await OnInstanceReturn(client);
-        }
-
-        protected virtual async Task OnServerReturn(ServerIntegrationInstance server)
-        {
-            await OnInstanceReturn(server);
+            return Task.CompletedTask;
         }
 
         [OneTimeTearDown]

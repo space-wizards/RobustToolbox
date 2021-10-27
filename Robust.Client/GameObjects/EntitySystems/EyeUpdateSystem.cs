@@ -28,7 +28,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private bool _isLerping = false;
         private ITransformComponent? _lastParent;
 
         private float _accumulator;

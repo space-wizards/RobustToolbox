@@ -117,14 +117,28 @@ namespace Robust.UnitTesting
             return instance;
         }
 
+        protected virtual async Task OnInstanceReturn(IntegrationInstance instance)
+        {
+            await instance.WaitPost(() =>
+            {
+                var config = IoCManager.Resolve<IConfigurationManagerInternal>();
+                var overrides = new[]
+                {
+                    (RTCVars.FailureLogLevel.Name, (instance.Options?.FailureLogLevel ?? RTCVars.FailureLogLevel.DefaultValue).ToString())
+                };
+
+                config.OverrideConVars(overrides);
+            });
+        }
+
         protected virtual Task OnClientReturn(ClientIntegrationInstance client)
         {
-            return Task.CompletedTask;
+            return OnInstanceReturn(client);
         }
 
         protected virtual Task OnServerReturn(ServerIntegrationInstance server)
         {
-            return Task.CompletedTask;
+            return OnInstanceReturn(server);
         }
 
         [OneTimeTearDown]

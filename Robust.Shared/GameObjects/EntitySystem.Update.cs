@@ -5,17 +5,18 @@ namespace Robust.Shared.GameObjects
 {
     public abstract partial class EntitySystem
     {
-        private Dictionary<Action, (float required, float accumulated)> _updateRegistrations = new();
+        private Dictionary<Action, (Func<float> required, float accumulated)> _updateRegistrations = new();
 
         /// <inheritdoc />
         public IEnumerable<Action> GetDueUpdates(float frameTime)
         {
             foreach (var (method, (required, accumulated)) in _updateRegistrations)
             {
+                var requiredValue = required();
                 var delta = accumulated + frameTime;
-                while (delta > required)
+                while (delta > requiredValue)
                 {
-                    delta -= required;
+                    delta -= requiredValue;
                     yield return method;
                 }
 
@@ -25,10 +26,15 @@ namespace Robust.Shared.GameObjects
 
         protected void RegisterUpdate(float requiredFrametime, Action method)
         {
+            RegisterUpdate(() => requiredFrametime, method);
+        }
+
+        protected void RegisterUpdate(Func<float> requiredFrameTimeProvider, Action method)
+        {
             if (_updateRegistrations.ContainsKey(method))
                 throw new ArgumentException($"Method {method} has already been registered.");
 
-            _updateRegistrations[method] = (requiredFrametime, 0f);
+            _updateRegistrations[method] = (requiredFrameTimeProvider, 0f);
         }
 
         protected void UnregisterUpdate(Action method)

@@ -214,7 +214,7 @@ namespace Robust.Server.Placement
             foreach (var entity in EntitySystem.Get<QuerySystem>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (entManager.HasComponent<IMapGridComponent>(entity) || entManager.HasComponent<ActorComponent>(entity))
+                if (entManager.HasComponent<IMapGridComponent>(entity.Uid) || entManager.HasComponent<ActorComponent>(entity.Uid))
                     continue;
 
                 entManager.QueueDeleteEntity(entity);

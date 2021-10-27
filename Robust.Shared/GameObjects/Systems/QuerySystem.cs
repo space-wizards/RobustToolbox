@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -24,7 +25,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
 
-        private const QueryFlags DefaultFlags = QueryFlags.Anchored | QueryFlags.EntityLookup;
+        public const QueryFlags DefaultFlags = QueryFlags.Anchored | QueryFlags.EntityLookup;
 
         /*
          * The reason there's duplicate code between the EntityCoordinates / MapCoordinates / QueryPoint methods
@@ -73,198 +74,16 @@ namespace Robust.Shared.GameObjects
 
         #endregion
 
-        #region FastIntersecting
-
-        /// <summary>
-        /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
-        /// </summary>
-        public void FastEntitiesIntersecting(EntityUid entityUid, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
-        {
-            var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
-            var bounds = GetBounds(entityUid);
-            FastEntitiesIntersecting(xform.MapID, bounds, callback, flags);
-        }
-
-        /// <summary>
-        /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
-        /// </summary>
-        public void FastEntitiesIntersecting(MapId mapId, Box2 worldAABB, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
-        {
-            if (mapId == MapId.Nullspace) return;
-
-            if ((flags & QueryFlags.Anchored) != 0x0)
-            {
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
-                {
-                    foreach (var uid in grid.GetAnchoredEntities(worldAABB))
-                    {
-                        callback(uid);
-                    }
-                }
-            }
-
-            if ((flags & QueryFlags.EntityLookup) != 0x0)
-            {
-                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
-
-                while (enumerator.MoveNext(out var lookup))
-                {
-                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
-
-                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
-                    {
-                        callback(data.Uid);
-                    });
-                }
-            }
-
-            if ((flags & QueryFlags.Physics) != 0x0)
-            {
-                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
-                {
-                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
-
-                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
-                    {
-                        callback(proxy.Fixture.Body.Owner.Uid);
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
-        /// </summary>
-        public void FastEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
-        {
-            if (mapId == MapId.Nullspace) return;
-
-            var worldAABB = worldBounds.CalcBoundingBox();
-            FastEntitiesIntersecting(mapId, worldAABB, callback, flags);
-        }
-
-        /// <summary>
-        /// Faster query than the Get version. Does not check if entity is deleted or a duplicate.
-        /// </summary>
-        public void FastEntitiesIntersecting(MapCoordinates coordinates, EntityUidQueryCallback callback, QueryFlags flags = DefaultFlags)
-        {
-            if (coordinates.MapId == MapId.Nullspace) return;
-
-            if ((flags & QueryFlags.Anchored) != 0x0)
-            {
-                if (_mapManager.TryFindGridAt(coordinates, out var grid))
-                {
-                    foreach (var uid in grid.GetAnchoredEntities(coordinates))
-                    {
-                        callback(uid);
-                    }
-                }
-            }
-
-            var mapId = coordinates.MapId;
-
-            if ((flags & QueryFlags.EntityLookup) != 0x0)
-            {
-                var enumerator = _lookup.GetLookupsIntersecting(mapId, coordinates.Position);
-
-                while (enumerator.MoveNext(out var lookup))
-                {
-                    var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(coordinates.Position);
-                    var localAABB = new Box2(localPos - float.Epsilon, localPos + float.Epsilon);
-
-                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
-                    {
-                        callback(data.Uid);
-                    });
-                }
-            }
-
-            if ((flags & QueryFlags.Physics) != 0x0)
-            {
-                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, coordinates.Position))
-                {
-                    var localPos = broadphase.Owner.Transform.InvWorldMatrix.Transform(coordinates.Position);
-                    var localAABB = new Box2(localPos - float.Epsilon, localPos + float.Epsilon);
-
-                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
-                    {
-                        callback(proxy.Fixture.Body.Owner.Uid);
-                    }
-                }
-            }
-        }
-
-        #endregion
-
         #region GetIntersecting
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entityUid, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(EntityUid entityUid, QueryFlags flags = DefaultFlags)
         {
             var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
-            var bounds = GetBounds(entityUid);
-            return GetEntitiesIntersecting(xform.MapID, bounds, flags);
-        }
+            var mapId = xform.MapID;
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, QueryFlags flags = DefaultFlags)
-        {
             if (mapId == MapId.Nullspace) yield break;
 
-            var ents = new HashSet<EntityUid>();
-
-            if ((flags & QueryFlags.Anchored) != 0x0)
-            {
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
-                {
-                    foreach (var uid in grid.GetAnchoredEntities(worldAABB))
-                    {
-                        if (!EntityManager.EntityExists(uid)) continue;
-                        ents.Add(uid);
-                    }
-                }
-            }
-
-            if ((flags & QueryFlags.EntityLookup) != 0x0)
-            {
-                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
-
-                while (enumerator.MoveNext(out var lookup))
-                {
-                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
-
-                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
-                    {
-                        if (data.Deleted) return;
-                        ents.Add(data.Uid);
-                    });
-                }
-            }
-
-            if ((flags & QueryFlags.Physics) != 0x0)
-            {
-                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
-                {
-                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
-
-                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
-                    {
-                        var uid = proxy.Fixture.Body.Owner.Uid;
-                        if (!EntityManager.EntityExists(uid)) continue;
-
-                        ents.Add(uid);
-                    }
-                }
-            }
-
-            foreach (var uid in ents)
-            {
-                yield return uid;
-            }
-        }
-
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, QueryFlags flags = DefaultFlags)
-        {
-            if (mapId == MapId.Nullspace) yield break;
-
+            var worldBounds = GetBounds(entityUid);
             var worldAABB = worldBounds.CalcBoundingBox();
             var ents = new HashSet<EntityUid>();
 
@@ -286,7 +105,7 @@ namespace Robust.Shared.GameObjects
 
                 while (enumerator.MoveNext(out var lookup))
                 {
-                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                    var localAABB = GetLocalAABB(entityUid, lookup);
 
                     lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
@@ -314,17 +133,130 @@ namespace Robust.Shared.GameObjects
 
             foreach (var uid in ents)
             {
-                yield return uid;
+                yield return EntityManager.GetEntity(uid);
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, QueryFlags flags = DefaultFlags)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            var ents = new HashSet<EntityUid>();
+
+            if ((flags & QueryFlags.Anchored) != 0x0)
+            {
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+                {
+                    foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+                    {
+                        if (!EntityManager.EntityExists(uid)) continue;
+                        ents.Add(uid);
+                    }
+                }
+            }
+
+            if ((flags & QueryFlags.EntityLookup) != 0x0)
+            {
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
+
+                while (enumerator.MoveNext(out var lookup))
+                {
+                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                    {
+                        if (data.Deleted) return;
+                        ents.Add(data.Uid);
+                    });
+                }
+            }
+
+            if ((flags & QueryFlags.Physics) != 0x0)
+            {
+                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+                {
+                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+
+                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
+                    {
+                        var uid = proxy.Fixture.Body.Owner.Uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
+
+                        ents.Add(uid);
+                    }
+                }
+            }
+
+            foreach (var uid in ents)
+            {
+                yield return EntityManager.GetEntity(uid);
+            }
+        }
+
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, QueryFlags flags = DefaultFlags)
+        {
+            if (mapId == MapId.Nullspace) yield break;
+
+            var worldAABB = worldBounds.CalcBoundingBox();
+            var ents = new HashSet<EntityUid>();
+
+            if ((flags & QueryFlags.Anchored) != 0x0)
+            {
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+                {
+                    foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+                    {
+                        if (!EntityManager.EntityExists(uid)) continue;
+                        ents.Add(uid);
+                    }
+                }
+            }
+
+            if ((flags & QueryFlags.EntityLookup) != 0x0)
+            {
+                var enumerator = _lookup.GetLookupsIntersecting(mapId, worldAABB);
+
+                while (enumerator.MoveNext(out var lookup))
+                {
+                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                    lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
+                    {
+                        if (data.Deleted) return;
+                        ents.Add(data.Uid);
+                    });
+                }
+            }
+
+            if ((flags & QueryFlags.Physics) != 0x0)
+            {
+                foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+                {
+                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                    foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
+                    {
+                        var uid = proxy.Fixture.Body.Owner.Uid;
+                        if (!EntityManager.EntityExists(uid)) continue;
+
+                        ents.Add(uid);
+                    }
+                }
+            }
+
+            foreach (var uid in ents)
+            {
+                yield return EntityManager.GetEntity(uid);
+            }
+        }
+
+        public IEnumerable<IEntity> GetEntitiesIntersecting(EntityCoordinates coordinates, QueryFlags flags = DefaultFlags)
         {
             var mapCoordinates = coordinates.ToMap(EntityManager);
             return GetEntitiesIntersecting(mapCoordinates, flags);
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates coordinates, QueryFlags flags = DefaultFlags)
         {
             if (coordinates.MapId == MapId.Nullspace) yield break;
 
@@ -378,16 +310,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var uid in ents)
             {
-                yield return uid;
+                yield return EntityManager.GetEntity(uid);
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(TileRef tileRef, QueryFlags flags = DefaultFlags)
         {
             return GetEntitiesIntersecting(tileRef.GridIndex, tileRef.GridIndices, flags);
         }
 
-        public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, QueryFlags flags = DefaultFlags)
         {
             // With tiles we can short-circuit and use the lookup directly without needing to enumerate.
             if (gridId == GridId.Invalid ||
@@ -428,9 +360,9 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            foreach (var ent in ents)
+            foreach (var uid in ents)
             {
-                yield return ent;
+                yield return EntityManager.GetEntity(uid);
             }
         }
 
@@ -438,31 +370,31 @@ namespace Robust.Shared.GameObjects
 
         #region GetInRange
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(EntityUid entityUid, float range, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesInRange(EntityUid entityUid, float range, QueryFlags flags = DefaultFlags)
         {
             var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
-            foreach (var uid in GetEntitiesInRange(xform.MapPosition, range, flags))
+            foreach (var entity in GetEntitiesInRange(xform.MapPosition, range, flags))
             {
-                if (uid == entityUid) continue;
-                yield return uid;
+                if (entity.Uid == entityUid) continue;
+                yield return entity;
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates coordinates, float range, QueryFlags flags = DefaultFlags)
         {
             var mapCoordinates = coordinates.ToMap(EntityManager);
             return GetEntitiesInRange(mapCoordinates, range, flags);
         }
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(MapCoordinates coordinates, float range, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
+            QueryFlags flags = DefaultFlags)
         {
             // TODO: Technically we should consider the edges of things but we need CollisionManager to be implemented
             // and even then it would rely heavily upon physics.
 
-            if (coordinates.MapId == MapId.Nullspace) yield break;
+            if (mapId == MapId.Nullspace) yield break;
 
-            var mapId = coordinates.MapId;
-            var worldAABB = new Box2(coordinates.Position - range, coordinates.Position + range);
+            var worldAABB = new Box2(worldPos - range, worldPos + range);
             var ents = new HashSet<EntityUid>();
 
             if ((flags & QueryFlags.Anchored) != 0x0)
@@ -483,7 +415,8 @@ namespace Robust.Shared.GameObjects
 
                 while (enumerator.MoveNext(out var lookup))
                 {
-                    var localAABB = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                    var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(worldPos);
+                    var localAABB = new Box2(localPos - range, localPos + range);
 
                     lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) =>
                     {
@@ -497,7 +430,8 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
                 {
-                    var localAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                    var localPos = broadphase.Owner.Transform.InvWorldMatrix.Transform(worldPos);
+                    var localAABB = new Box2(localPos - range, localPos + range);
 
                     foreach (var proxy in broadphase.Tree.QueryAabb(localAABB))
                     {
@@ -511,11 +445,16 @@ namespace Robust.Shared.GameObjects
 
             foreach (var uid in ents)
             {
-                yield return uid;
+                yield return EntityManager.GetEntity(uid);
             }
         }
 
-        public IEnumerable<EntityUid> GetEntitiesInRange(TileRef tileRef, float range, QueryFlags flags = DefaultFlags)
+        public IEnumerable<IEntity> GetEntitiesInRange(MapCoordinates coordinates, float range, QueryFlags flags = DefaultFlags)
+        {
+            return GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, flags);
+        }
+
+        public IEnumerable<IEntity> GetEntitiesInRange(TileRef tileRef, float range, QueryFlags flags = DefaultFlags)
         {
             var coordinates = _mapManager.GetGrid(tileRef.GridIndex).InvWorldMatrix
                 .Transform((Vector2) tileRef.GridIndices + 0.5f);
@@ -572,7 +511,46 @@ namespace Robust.Shared.GameObjects
                 }
             }
 
-            return new Box2(worldPos, worldPos);
+            return new Box2(worldPos - float.Epsilon, worldPos + float.Epsilon);
+        }
+
+        private Box2 GetLocalAABB(EntityUid uid, EntityLookupComponent lookup)
+        {
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
+            Vector2 localPos;
+
+            if (xform.ParentUid == lookup.Owner.Uid)
+            {
+                localPos = xform.LocalPosition;
+            }
+            else
+            {
+                localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(xform.WorldPosition);
+            }
+
+            var localRot = xform.WorldRotation - lookup.Owner.Transform.WorldRotation;
+
+            if (EntityManager.TryGetComponent<PhysicsComponent>(uid, out var body))
+            {
+                var transform = new Transform(localPos, localRot);
+                Box2? aabb = null;
+
+                foreach (var fixture in body.Fixtures)
+                {
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        // if no aabb -> set it, otherwise union it.
+                        aabb = aabb?.Union(fixture.Shape.ComputeAABB(transform, i)) ?? fixture.Shape.ComputeAABB(transform, i);
+                    }
+                }
+
+                if (aabb != null)
+                {
+                    return aabb.Value;
+                }
+            }
+
+            return new Box2(localPos - float.Epsilon, localPos + float.Epsilon);
         }
 
         /// <summary>

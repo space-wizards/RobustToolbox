@@ -30,6 +30,10 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
+        public EntityUid OwnerUid => Owner.Uid;
+
+        /// <inheritdoc />
+        [ViewVariables]
         public bool Paused => Owner.Paused;
 
         /// <inheritdoc />

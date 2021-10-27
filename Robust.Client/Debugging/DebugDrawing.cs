@@ -12,7 +12,6 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IEntityManager _entManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
 
         private bool _debugPositions;
 
@@ -44,15 +43,15 @@ namespace Robust.Client.Debugging
 
         private sealed class EntityPositionOverlay : Overlay
         {
-            private readonly QuerySystem _lookup;
+            private readonly QuerySystem _query;
             private readonly IEntityManager _entManager;
             private readonly IEyeManager _eyeManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(QuerySystem lookup, IEntityManager entManager, IEyeManager eyeManager)
+            public EntityPositionOverlay(QuerySystem query, IEntityManager entManager, IEyeManager eyeManager)
             {
-                _lookup = lookup;
+                _query = query;
                 _entManager = entManager;
                 _eyeManager = eyeManager;
             }
@@ -64,9 +63,9 @@ namespace Robust.Client.Debugging
                 var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
                 var viewport = _eyeManager.GetWorldViewport();
 
-                foreach (var entity in _lookup.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
+                foreach (var entity in _query.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
                 {
-                    var transform = _entManager.GetComponent<TransformComponent>(entity);
+                    var transform = _entManager.GetComponent<TransformComponent>(entity.Uid);
 
                     var center = transform.WorldPosition;
                     var worldRotation = transform.WorldRotation;

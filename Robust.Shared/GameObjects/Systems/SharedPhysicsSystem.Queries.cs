@@ -192,18 +192,6 @@ namespace Robust.Shared.GameObjects
             return bodies;
         }
 
-        // TODO: This will get every body but we don't need to do that
-        /// <summary>
-        ///     Checks whether a body is colliding
-        /// </summary>
-        /// <param name="body"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public bool IsColliding(PhysicsComponent body, Vector2 offset, bool approximate)
-        {
-            return GetCollidingEntities(body, offset, approximate).Any();
-        }
-
         #region RayCast
         /// <summary>
         ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)

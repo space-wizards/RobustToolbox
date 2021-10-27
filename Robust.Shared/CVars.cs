@@ -240,17 +240,6 @@ namespace Robust.Shared
             CVarDef.Create("light.max_radius", 32.1f, CVar.CLIENTONLY);
 
         /*
-         * Lookup
-         */
-
-        /// <summary>
-        /// Like MaxLightRadius this is how far we enlarge lookups to find intersecting components.
-        /// This should be set to your maximum entity size.
-        /// </summary>
-        public static readonly CVarDef<float> LookupEnlargementRange =
-            CVarDef.Create("lookup.enlargement_range", 10.0f, CVar.ARCHIVE | CVar.REPLICATED | CVar.CHEAT);
-
-        /*
          * LOKI
          */
 

@@ -97,7 +97,7 @@ namespace Robust.Server.Bql
         {
             Logger.Debug((string) arguments[0]);
             var name = (string) arguments[0];
-            return input.Where(e => (e.Prototype?.Name == name) ^ isInverted);
+            return input.Where(e => (e.Prototype?.ID == name) ^ isInverted);
         }
     }
 
@@ -113,7 +113,7 @@ namespace Robust.Server.Bql
             var name = (string) arguments[0];
             return input.Where(e =>
             {
-                if ((e.Prototype?.Name == name) ^ isInverted)
+                if ((e.Prototype?.ID == name) ^ isInverted)
                     return true;
 
                 return (e.Prototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.

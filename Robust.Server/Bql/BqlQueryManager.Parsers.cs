@@ -155,17 +155,14 @@ namespace Robust.Server.Bql
                 _parsers.Add(inst.GetType(), BuildBqlQueryParser(inst));
             }
 
-            _allQuerySelectors = OneOf(_instances.Select(x => Parser.Map((a, b) => (a, b),
-                Try(String("not").Before(Char(' '))).Optional(),
-                Try(String(x.Token).Before(Char(' ')))))).Then(tok =>
-                _parsers[_queriesByToken[tok.b].GetType()].Map(a =>
-                {
-                    a.Inverted = tok.a.HasValue;
-                    return a;
-                })
-            );
-
-
+            _allQuerySelectors = Parser.Map((a,b) => (a,b), Try(String("not").Before(Char(' '))).Optional(), OneOf(_instances.Select(x =>
+                Try(String(x.Token).Before(Char(' '))))).Then(tok =>
+                _parsers[_queriesByToken[tok].GetType()])
+            ).Map(pair =>
+            {
+                pair.b.Inverted = pair.a.HasValue;
+                return pair.b;
+            });
         }
     }
 }

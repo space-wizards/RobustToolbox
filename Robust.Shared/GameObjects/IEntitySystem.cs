@@ -32,5 +32,12 @@ namespace Robust.Shared.GameObjects
         /// <param name="frameTime">Delta time since Update() was last called.</param>
         void Update(float frameTime);
         void FrameUpdate(float frameTime);
+
+        /// <summary>
+        /// Returns all methods for which the required frametime has been reached.
+        /// </summary>
+        /// <param name="frameTime">frametime since last call</param>
+        /// <returns></returns>
+        IEnumerable<Action> GetDueUpdates(float frameTime);
     }
 }

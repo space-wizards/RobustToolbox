@@ -230,6 +230,10 @@ namespace Robust.Shared.GameObjects
                 {
 #endif
                     updReg.System.Update(frameTime);
+                    foreach (var updateMethod in updReg.System.GetDueUpdates(frameTime))
+                    {
+                        updateMethod();
+                    }
 #if EXCEPTION_TOLERANCE
                 }
                 catch (Exception e)

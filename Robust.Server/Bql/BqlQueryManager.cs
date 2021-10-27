@@ -24,7 +24,7 @@ namespace Robust.Server.Bql
         }
 
         /// <summary>
-        /// Automatically registers all quer
+        /// Automatically registers all query selectors with the parser/executor.
         /// </summary>
         public void DoAutoRegistrations()
         {

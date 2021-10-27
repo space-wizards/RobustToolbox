@@ -998,14 +998,4 @@ namespace Robust.Client.UserInterface
         public readonly int OldIndex;
         public readonly int NewIndex;
     }
-
-    public enum AccessLevel
-    {
-        Public,
-        Protected,
-        Internal,
-        ProtectedInternal,
-        Private,
-        PrivateProtected,
-    }
 }

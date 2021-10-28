@@ -47,7 +47,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
-        public GameTick LastModifiedTick { get; private set; } = new(1);
+        public GameTick LastModifiedTick { get; set; } = new(1);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -300,23 +300,6 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion Components
-
-        #region GameState
-
-        /// <summary>
-        ///     Marks this entity as dirty so that the networking will sync it with clients.
-        /// </summary>
-        public void Dirty()
-        {
-            // TODO: Move this to EntityManager.
-
-            LastModifiedTick = EntityManager.CurrentTick;
-
-            if (LifeStage >= EntityLifeStage.Initialized && Transform.Anchored && Transform.ParentUid.IsValid())
-                EntityManager.GetComponent<IMapGridComponent>(Transform.ParentUid).AnchoredEntityDirty(Transform);
-        }
-
-        #endregion GameState
 
         /// <inheritdoc />
         public override string ToString()

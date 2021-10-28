@@ -86,6 +86,8 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         IEnumerable<IEntity> GetEntities();
 
+        public void DirtyEntity(EntityUid uid);
+
         public void QueueDeleteEntity(IEntity entity);
 
         public void QueueDeleteEntity(EntityUid uid);

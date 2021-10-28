@@ -460,6 +460,7 @@ namespace Robust.Server.GameStates
                 // PVS leave message
                 //TODO: Remove NaN as the signal to leave PVS
                 var oldState = (TransformComponent.TransformComponentState) xform.GetComponentState(session);
+                var mapEnt = _mapManager.GetMapEntityId(xform.MapID);
 
                 entityStates.Add(new EntityState(entityUid,
                     new[]
@@ -467,7 +468,7 @@ namespace Robust.Server.GameStates
                         ComponentChange.Changed(_transformNetId,
                             new TransformComponent.TransformComponentState(Vector2NaN,
                                 oldState.Rotation,
-                                oldState.ParentID,
+                                mapEnt,
                                 oldState.NoLocalRotation,
                                 oldState.Anchored)),
                     }));

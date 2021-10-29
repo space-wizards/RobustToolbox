@@ -1,10 +1,5 @@
 using System.Collections.Immutable;
-using System.IO;
 using Lidgren.Network;
-using Microsoft.CodeAnalysis.Completion;
-using Robust.Shared.IoC;
-using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
@@ -48,7 +43,7 @@ namespace Robust.Shared.Network.Messages
             public ImmutableArray<string> Tags;
             public ImmutableDictionary<string, string> Properties;
 
-            private LiteResult(
+            public LiteResult(
                 string displayText,
                 string displayTextPrefix,
                 string displayTextSuffix,
@@ -106,15 +101,6 @@ namespace Robust.Shared.Network.Messages
                     buffer.Write(e.Value);
                 }
             }
-
-            public static explicit operator LiteResult(CompletionItem ci) => new(
-                displayText: ci.DisplayText,
-                displayTextPrefix: ci.DisplayTextPrefix,
-                displayTextSuffix: ci.DisplayTextSuffix,
-                inlineDescription: ci.InlineDescription,
-                tags: ci.Tags,
-                properties: ci.Properties
-            );
         }
     }
 }

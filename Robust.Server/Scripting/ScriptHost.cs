@@ -23,6 +23,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
+using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 #nullable enable
 
@@ -293,14 +294,21 @@ namespace Robust.Server.Scripting
 
             if (results is not null)
             {
-                var ires = ImmutableArray.CreateBuilder<MsgScriptCompletionResponse.LiteResult>();
+                var ires = ImmutableArray.CreateBuilder<LiteResult>();
                 foreach  (var r in results.Items)
-                    ires.Add((MsgScriptCompletionResponse.LiteResult) r);
+                    ires.Add(new LiteResult(
+                                displayText: r.DisplayText,
+                                displayTextPrefix: r.DisplayTextPrefix,
+                                displayTextSuffix: r.DisplayTextSuffix,
+                                inlineDescription: r.InlineDescription,
+                                tags: r.Tags,
+                                properties: r.Properties
+                    ));
 
                 replyMessage.Results = ires.ToImmutable();
             }
             else
-                replyMessage.Results = ImmutableArray<MsgScriptCompletionResponse.LiteResult>.Empty;
+                replyMessage.Results = ImmutableArray<LiteResult>.Empty;
 
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }

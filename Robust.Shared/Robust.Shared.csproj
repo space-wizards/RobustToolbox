@@ -19,9 +19,6 @@
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="YamlDotNet" Version="9.1.4" />
     <PackageReference Include="System.Management" Version="5.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.8.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="3.8.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />

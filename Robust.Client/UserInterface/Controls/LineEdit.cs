@@ -48,6 +48,7 @@ namespace Robust.Client.UserInterface.Controls
         public event Action<LineEditEventArgs>? OnTextEntered;
         public event Action<LineEditEventArgs>? OnFocusEnter;
         public event Action<LineEditEventArgs>? OnFocusExit;
+        public event Action<LineEditEventArgs>? OnTabComplete;
 
         /// <summary>
         ///     Determines whether the LineEdit text gets changed by the input text.
@@ -522,6 +523,15 @@ namespace Robust.Client.UserInterface.Controls
                     ReleaseKeyboardFocus();
                     args.Handle();
                     return;
+                }
+                else if (args.Function == EngineKeyFunctions.TextTabComplete)
+                {
+                    if (Editable)
+                    {
+                        OnTabComplete?.Invoke(new LineEditEventArgs(this, _text));
+                    }
+
+                    args.Handle();
                 }
             }
             else

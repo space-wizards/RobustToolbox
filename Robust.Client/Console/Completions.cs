@@ -37,10 +37,15 @@ namespace Robust.Client.Console
             ContentsContainer.AddChild(_suggestPanel);
         }
 
+        private bool _firstopen = true;
         public void OpenAt(Vector2 position, Vector2 size)
         {
-            SetSize = size;
-            LayoutContainer.SetPosition(this, position);
+            if (_firstopen)
+            {
+                SetSize = size;
+                LayoutContainer.SetPosition(this, position);
+                _firstopen = false;
+            }
             Open();
         }
 

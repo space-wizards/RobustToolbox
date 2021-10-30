@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
+using Robust.Shared.Map;
 
 namespace Robust.Server.Bql
 {
@@ -87,6 +87,91 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
+    public class ChildrenQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "children";
+
+        public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        {
+            return input.SelectMany(x => x.Transform.Children.Select(y => y.Owner));
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    public class ParentQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "parent";
+
+        public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        {
+            return input.Where(x => x.Transform.Parent is not null).Select(x => x.Transform.Parent!.Owner).Distinct();
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    public class AboveQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "above";
+
+        public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.String };
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        {
+            var tileDefinitionManager = IoCManager.Resolve<ITileDefinitionManager>();
+            var tileTy = tileDefinitionManager[(string) arguments[0]];
+            var entity = IoCManager.Resolve<IEntityManager>();
+            var map = IoCManager.Resolve<IMapManager>();
+            if (tileTy.TileId == 0)
+            {
+                return input.Where(x => (x.Transform.Coordinates.GetGridId(entity) != GridId.Invalid) ^ isInverted);
+            }
+            else
+            {
+                return input.Where(x => x.Transform.Coordinates.GetGridId(entity) != GridId.Invalid).Where(x =>
+                {
+                    var gridId = x.Transform.Coordinates.GetGridId(entity);
+                    var grid = map.GetGrid(gridId);
+                    return (grid.GetTileRef(x.Transform.Coordinates).Tile.TypeId == tileTy.TileId) ^ isInverted;
+                });
+            }
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    // ReSharper disable once InconsistentNaming the name is correct shut up
+    public class OnGridQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "ongrid";
+
+        public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.Integer };
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        {
+            var grid = new GridId((int) arguments[0]);
+            return input.Where(x => (x.Transform.GridID == grid) ^ isInverted);
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    // ReSharper disable once InconsistentNaming the name is correct shut up
+    public class OnMapQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "onmap";
+
+        public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.Integer };
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        {
+            var map = new MapId((int) arguments[0]);
+            return input.Where(x => (x.Transform.MapID == map) ^ isInverted);
+        }
+    }
+
+    [RegisterBqlQuerySelector]
     public class PrototypedQuerySelector : BqlQuerySelector
     {
         public override string Token => "prototyped";
@@ -95,7 +180,6 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
         {
-            Logger.Debug((string) arguments[0]);
             var name = (string) arguments[0];
             return input.Where(e => (e.Prototype?.ID == name) ^ isInverted);
         }

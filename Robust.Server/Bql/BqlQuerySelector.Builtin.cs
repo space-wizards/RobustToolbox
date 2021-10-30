@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Server.Bql
 {
@@ -100,6 +101,33 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
+    public class RecursiveChildrenQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "rchildren";
+
+        public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments,
+            bool isInverted)
+        {
+            IEnumerable<IEntity> toSearch = input;
+            List<IEnumerable<IEntity>> children = new List<IEnumerable<IEntity>>();
+
+            while (true)
+            {
+                var doing = toSearch.ToArray();
+                var search = doing.SelectMany(x => x.Transform.Children.Select(y => y.Owner));
+                if (!search.Any())
+                    break;
+                toSearch = doing.SelectMany(x => x.Transform.Children.Select(y => y.Owner));
+                children.Add(doing.SelectMany(x => x.Transform.Children.Select(y => y.Owner)));
+            }
+
+            return children.SelectMany(x => x);
+        }
+    }
+
+    [RegisterBqlQuerySelector]
     public class ParentQuerySelector : BqlQuerySelector
     {
         public override string Token => "parent";
@@ -127,7 +155,7 @@ namespace Robust.Server.Bql
             var map = IoCManager.Resolve<IMapManager>();
             if (tileTy.TileId == 0)
             {
-                return input.Where(x => (x.Transform.Coordinates.GetGridId(entity) != GridId.Invalid) ^ isInverted);
+                return input.Where(x => (x.Transform.Coordinates.GetGridId(entity) == GridId.Invalid) ^ isInverted);
             }
             else
             {
@@ -216,12 +244,37 @@ namespace Robust.Server.Bql
         {
             if (arguments[0] is int)
             {
-                return input.OrderBy(a => Guid.NewGuid()).Take((int) arguments[0]);
+                var inp = input.OrderBy(a => Guid.NewGuid()).ToArray();
+                var taken = (int) arguments[0];
+
+                if (isInverted)
+                    taken = Math.Max(0, inp.Length - taken);
+
+                return inp.Take(taken);
             }
 
             var enumerable = input.OrderBy(a => Guid.NewGuid()).ToArray();
-            var amount = (int)Math.Floor(enumerable.Length * (double)arguments[0]);
+            var amount = isInverted
+                ? (int) Math.Floor(enumerable.Length * Math.Clamp(1 - (double) arguments[0], 0, 1))
+                : (int) Math.Floor(enumerable.Length * Math.Clamp((double) arguments[0], 0, 1));
             return enumerable.Take(amount);
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    public class NearQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "near";
+
+        public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.Float };
+
+        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        {
+            var radius = (float)(double)arguments[0];
+            var entityLookup = IoCManager.Resolve<IEntityLookup>();
+
+            //BUG: GetEntitiesInRange effectively uses manhattan distance. This is not intended, near is supposed to be circular.
+            return input.SelectMany(x => entityLookup.GetEntitiesInRange(x, radius));
         }
     }
 }

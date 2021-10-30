@@ -319,7 +319,7 @@ namespace Robust.Server.Bql
     {
         public override string Token => "anchored";
 
-        public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.Integer };
+        public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
 
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {

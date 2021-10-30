@@ -9,7 +9,7 @@ namespace Robust.Server.Bql
 {
     public partial class BqlQueryManager
     {
-        public (IEnumerable<IEntity>, string) SimpleParseAndExecute(string query)
+        public (IEnumerable<EntityUid>, string) SimpleParseAndExecute(string query)
         {
             var parsed = _simpleQuery.Parse(query);
             if (parsed.Success)
@@ -18,15 +18,15 @@ namespace Robust.Server.Bql
                 var selectors = parsed.Value.Item1.ToArray();
                 if (selectors.Length == 0)
                 {
-                    return (entityManager.GetEntities(), parsed.Value.Item2);
+                    return (entityManager.GetEntityUids(), parsed.Value.Item2);
                 }
 
                 var entities = _queriesByToken[selectors[0].Token]
-                    .DoInitialSelection(selectors[0].Arguments, selectors[0].Inverted);
+                    .DoInitialSelection(selectors[0].Arguments, selectors[0].Inverted, entityManager);
 
                 foreach (var sel in selectors[1..])
                 {
-                    entities = _queriesByToken[sel.Token].DoSelection(entities, sel.Arguments, sel.Inverted);
+                    entities = _queriesByToken[sel.Token].DoSelection(entities, sel.Arguments, sel.Inverted, entityManager);
                 }
 
                 return (entities, parsed.Value.Item2);

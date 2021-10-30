@@ -5,7 +5,7 @@ namespace Robust.Server.Bql
 {
     public interface IBqlQueryManager
     {
-        public (IEnumerable<IEntity>, string) SimpleParseAndExecute(string query);
+        public (IEnumerable<EntityUid>, string) SimpleParseAndExecute(string query);
         void DoAutoRegistrations();
     }
 }

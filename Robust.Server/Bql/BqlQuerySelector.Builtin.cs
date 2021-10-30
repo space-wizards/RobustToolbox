@@ -5,7 +5,6 @@ using System.Text.RegularExpressions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 
 namespace Robust.Server.Bql
 {
@@ -16,21 +15,21 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.Component };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var comp = (Type) arguments[0];
-            return input.Where(x => x.HasComponent(comp) ^ isInverted);
+            return input.Where(x => entityManager.HasComponent(x, comp) ^ isInverted);
         }
 
-        public override IEnumerable<IEntity> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             if (isInverted)
             {
-                return base.DoInitialSelection(arguments, isInverted);
+                return base.DoInitialSelection(arguments, isInverted, entityManager);
             }
 
-            return IoCManager.Resolve<IEntityManager>().GetAllComponents((Type) arguments[0])
-                .Select(x => x.Owner);
+            return entityManager.GetAllComponents((Type) arguments[0])
+                .Select(x => x.OwnerUid);
         }
     }
 
@@ -41,10 +40,15 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.String };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var r = new Regex("^" + (string) arguments[0] + "$");
-            return input.Where(e => r.IsMatch(e.Name) ^ isInverted);
+            return input.Where(e =>
+            {
+                if (entityManager.TryGetComponent<MetaDataComponent>(e, out var metaDataComponent))
+                    return r.IsMatch(metaDataComponent.EntityName) ^ isInverted;
+                return isInverted;
+            });
         }
     }
 
@@ -55,10 +59,11 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.EntityId };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var uid = (EntityUid) arguments[0];
-            return input.Where(e => (e.Transform.ParentUid == uid) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) &&
+                                     transform.Parent?.OwnerUid == uid) ^ isInverted);
         }
     }
 
@@ -69,17 +74,21 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.EntityId };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var uid = (EntityUid) arguments[0];
             return input.Where(e =>
             {
-                var cur = e;
-                while (cur.Transform.Parent is not null)
+                if (!entityManager.TryGetComponent<ITransformComponent>(e, out var transform))
+                    return isInverted;
+                var cur = transform;
+                while (cur.ParentUid != EntityUid.Invalid)
                 {
-                    if ((cur.Transform.ParentUid == uid) ^ isInverted)
+                    if ((cur.ParentUid == uid) ^ isInverted)
                         return true;
-                    cur = cur.Transform.Parent.Owner;
+                    if (cur.Parent is null)
+                        return false;
+                    cur = cur.Parent;
                 }
 
                 return false;
@@ -94,9 +103,14 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return input.SelectMany(x => x.Transform.Children.Select(y => y.Owner));
+            return input.SelectMany(e =>
+            {
+                return entityManager.TryGetComponent<ITransformComponent>(e, out var transform)
+                    ? transform.Children.Select(y => y.OwnerUid)
+                    : new List<EntityUid>();
+            });
         }
     }
 
@@ -107,20 +121,20 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments,
-            bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments,
+            bool isInverted, IEntityManager entityManager)
         {
-            IEnumerable<IEntity> toSearch = input;
-            List<IEnumerable<IEntity>> children = new List<IEnumerable<IEntity>>();
+            IEnumerable<EntityUid> toSearch = input;
+            List<IEnumerable<EntityUid>> children = new List<IEnumerable<EntityUid>>();
 
             while (true)
             {
-                var doing = toSearch.ToArray();
-                var search = doing.SelectMany(x => x.Transform.Children.Select(y => y.Owner));
+                var doing = toSearch.Where(entityManager.HasComponent<ITransformComponent>).Select(entityManager.GetComponent<ITransformComponent>).ToArray();
+                var search = doing.SelectMany(x => x.Children.Select(y => y.Owner));
                 if (!search.Any())
                     break;
-                toSearch = doing.SelectMany(x => x.Transform.Children.Select(y => y.Owner));
-                children.Add(doing.SelectMany(x => x.Transform.Children.Select(y => y.Owner)));
+                toSearch = doing.SelectMany(x => x.Children.Select(y => y.OwnerUid)).Where(x => x != EntityUid.Invalid);
+                children.Add(doing.SelectMany(x => x.Children.Select(y => y.OwnerUid)).Where(x => x != EntityUid.Invalid));
             }
 
             return children.SelectMany(x => x);
@@ -134,9 +148,17 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => Array.Empty<QuerySelectorArgument>();
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return input.Where(x => x.Transform.Parent is not null).Select(x => x.Transform.Parent!.Owner).Distinct();
+            return input.Where(entityManager.HasComponent<ITransformComponent>)
+                .Select(e => entityManager.GetComponent<ITransformComponent>(e).OwnerUid)
+                .Distinct();
+        }
+
+        public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
+        {
+            return base.DoSelection(entityManager.EntityQuery<ITransformComponent>().Select(x => x.OwnerUid), arguments,
+                isInverted, entityManager);
         }
     }
 
@@ -147,7 +169,7 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.String };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var tileDefinitionManager = IoCManager.Resolve<ITileDefinitionManager>();
             var tileTy = tileDefinitionManager[(string) arguments[0]];
@@ -155,15 +177,21 @@ namespace Robust.Server.Bql
             var map = IoCManager.Resolve<IMapManager>();
             if (tileTy.TileId == 0)
             {
-                return input.Where(x => (x.Transform.Coordinates.GetGridId(entity) == GridId.Invalid) ^ isInverted);
+                return input.Where(e => entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && (transform.Coordinates.GetGridId(entity) == GridId.Invalid) ^ isInverted);
             }
             else
             {
-                return input.Where(x => x.Transform.Coordinates.GetGridId(entity) != GridId.Invalid).Where(x =>
+                return input.Where(e =>
                 {
-                    var gridId = x.Transform.Coordinates.GetGridId(entity);
+                    if (!entityManager.TryGetComponent<ITransformComponent>(e, out var transform)) return isInverted;
+
+                    var gridId = transform.Coordinates.GetGridId(entity);
+                    if (gridId == GridId.Invalid)
+                        return isInverted;
+
                     var grid = map.GetGrid(gridId);
-                    return (grid.GetTileRef(x.Transform.Coordinates).Tile.TypeId == tileTy.TileId) ^ isInverted;
+                    return (grid.GetTileRef(transform.Coordinates).Tile.TypeId == tileTy.TileId) ^ isInverted;
+
                 });
             }
         }
@@ -177,10 +205,10 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.Integer };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var grid = new GridId((int) arguments[0]);
-            return input.Where(x => (x.Transform.GridID == grid) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && transform.GridID == grid) ^ isInverted);
         }
     }
 
@@ -192,10 +220,10 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.Integer };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var map = new MapId((int) arguments[0]);
-            return input.Where(x => (x.Transform.MapID == map) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && transform.MapID == map) ^ isInverted);
         }
     }
 
@@ -206,10 +234,10 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.String };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var name = (string) arguments[0];
-            return input.Where(e => (e.Prototype?.ID == name) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<MetaDataComponent>(e, out var metaData) && metaData.EntityPrototype?.ID == name) ^ isInverted);
         }
     }
 
@@ -220,15 +248,17 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.String };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var name = (string) arguments[0];
             return input.Where(e =>
             {
-                if ((e.Prototype?.ID == name) ^ isInverted)
+                if (!entityManager.TryGetComponent<MetaDataComponent>(e, out var metaData))
+                    return isInverted;
+                if ((metaData.EntityPrototype?.ID == name) ^ isInverted)
                     return true;
 
-                return (e.Prototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.
+                return (metaData.EntityPrototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.
             });
         }
     }
@@ -240,11 +270,11 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.Integer | QuerySelectorArgument.Percentage };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             if (arguments[0] is int)
             {
-                var inp = input.OrderBy(a => Guid.NewGuid()).ToArray();
+                var inp = input.OrderBy(_ => Guid.NewGuid()).ToArray();
                 var taken = (int) arguments[0];
 
                 if (isInverted)
@@ -253,7 +283,7 @@ namespace Robust.Server.Bql
                 return inp.Take(taken);
             }
 
-            var enumerable = input.OrderBy(a => Guid.NewGuid()).ToArray();
+            var enumerable = input.OrderBy(_ => Guid.NewGuid()).ToArray();
             var amount = isInverted
                 ? (int) Math.Floor(enumerable.Length * Math.Clamp(1 - (double) arguments[0], 0, 1))
                 : (int) Math.Floor(enumerable.Length * Math.Clamp((double) arguments[0], 0, 1));
@@ -268,13 +298,32 @@ namespace Robust.Server.Bql
 
         public override QuerySelectorArgument[] Arguments => new []{ QuerySelectorArgument.Float };
 
-        public override IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var radius = (float)(double)arguments[0];
             var entityLookup = IoCManager.Resolve<IEntityLookup>();
 
             //BUG: GetEntitiesInRange effectively uses manhattan distance. This is not intended, near is supposed to be circular.
-            return input.SelectMany(x => entityLookup.GetEntitiesInRange(x, radius));
+            return input.Where(entityManager.HasComponent<ITransformComponent>)
+                .SelectMany(e =>
+                    entityLookup.GetEntitiesInRange(entityManager.GetComponent<ITransformComponent>(e).Coordinates,
+                        radius))
+                .Select(x => x.Uid) // Sloth's fault.
+                .Distinct();
+        }
+    }
+
+    [RegisterBqlQuerySelector]
+    // ReSharper disable once InconsistentNaming the name is correct shut up
+    public class anchoredQuerySelector : BqlQuerySelector
+    {
+        public override string Token => "anchored";
+
+        public override QuerySelectorArgument[] Arguments => new [] { QuerySelectorArgument.Integer };
+
+        public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
+        {
+            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && transform.Anchored) ^ isInverted);
         }
     }
 }

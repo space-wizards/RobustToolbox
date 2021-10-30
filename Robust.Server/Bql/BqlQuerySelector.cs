@@ -32,7 +32,7 @@ namespace Robust.Server.Bql
         /// </summary>
         public virtual QuerySelectorArgument[] Arguments => throw new NotImplementedException();
 
-        public virtual IEnumerable<IEntity> DoSelection(IEnumerable<IEntity> input, IReadOnlyList<object> arguments, bool isInverted)
+        public virtual IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             throw new NotImplementedException();
         }
@@ -43,11 +43,11 @@ namespace Robust.Server.Bql
         /// </summary>
         /// <param name="arguments"></param>
         /// <param name="isInverted"></param>
+        /// <param name="entityManager"></param>
         /// <returns></returns>
-        public virtual IEnumerable<IEntity> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted)
+        public virtual IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            return DoSelection(entityManager.GetEntities(), arguments, isInverted);
+            return DoSelection(entityManager.GetEntityUids(), arguments, isInverted, entityManager);
         }
 
         [UsedImplicitly]

@@ -22,11 +22,12 @@ namespace Robust.Server.Bql
             }
 
             var queryManager = IoCManager.Resolve<IBqlQueryManager>();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
             var (entities, rest) = queryManager.SimpleParseAndExecute(argStr[6..]);
 
             foreach (var ent in entities.ToList())
             {
-                var cmds = SubstituteEntityDetails(shell, ent, rest).Split(";");
+                var cmds = SubstituteEntityDetails(shell, entityManager.GetEntity(ent), rest).Split(";");
                 foreach (var cmd in cmds)
                 {
                     shell.ExecuteCommand(cmd);

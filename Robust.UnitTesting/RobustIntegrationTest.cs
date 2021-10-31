@@ -37,10 +37,10 @@ namespace Robust.UnitTesting
     /// </remarks>
     public abstract partial class RobustIntegrationTest
     {
-        public static readonly ConcurrentQueue<ClientIntegrationInstance> ClientsReady = new();
-        public static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
+        internal static readonly ConcurrentQueue<ClientIntegrationInstance> ClientsReady = new();
+        internal static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
 
-        private readonly List<IntegrationInstance> _integrationInstances = new();
+        private readonly List<IntegrationInstance> _notPooledInstances = new();
 
         private readonly ConcurrentDictionary<ClientIntegrationInstance, byte> _clientsRunning = new();
         private readonly ConcurrentDictionary<ServerIntegrationInstance, byte> _serversRunning = new();
@@ -73,7 +73,7 @@ namespace Robust.UnitTesting
             else
             {
                 instance = new ServerIntegrationInstance(options);
-                _integrationInstances.Add(instance);
+                _notPooledInstances.Add(instance);
             }
 
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
@@ -109,7 +109,7 @@ namespace Robust.UnitTesting
             else
             {
                 instance = new ClientIntegrationInstance(options);
-                _integrationInstances.Add(instance);
+                _notPooledInstances.Add(instance);
             }
 
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
@@ -183,9 +183,9 @@ namespace Robust.UnitTesting
 
             _serversRunning.Clear();
 
-            _integrationInstances.ForEach(p => p.Stop());
-            await Task.WhenAll(_integrationInstances.Select(p => p.WaitIdleAsync()));
-            _integrationInstances.Clear();
+            _notPooledInstances.ForEach(p => p.Stop());
+            await Task.WhenAll(_notPooledInstances.Select(p => p.WaitIdleAsync()));
+            _notPooledInstances.Clear();
         }
 
         /// <summary>

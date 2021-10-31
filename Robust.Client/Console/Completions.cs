@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Immutable;
-using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Input;
 using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
-using Robust.Shared.Scripting;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
@@ -107,7 +105,7 @@ namespace Robust.Client.Console
                 else if (Result.Tags.Contains("Field"))
                     basen = "field name";
 
-                Color basec = ScriptInstanceShared.ColorScheme[basen];
+                Color basec = ScriptingColorScheme.ColorScheme[basen];
                 compl.PushColor(basec * dim);
                 compl.AddText(Result.DisplayTextPrefix);
                 compl.PushColor(basec);

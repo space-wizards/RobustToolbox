@@ -101,24 +101,6 @@ namespace Robust.Shared.Scripting
             return _getDiagnosticArguments(diag);
         }
 
-        public static readonly Dictionary<string, Color> ColorScheme = new()
-        {
-            {ClassificationTypeNames.ClassName, Color.FromHex("#4EC9B0")},
-            {ClassificationTypeNames.Comment, Color.FromHex("#57A64A")},
-            {ClassificationTypeNames.EnumName, Color.FromHex("#B8D7A3")},
-            {ClassificationTypeNames.FieldName, Color.FromHex("#C86E11")},
-            {ClassificationTypeNames.InterfaceName, Color.FromHex("#B8D7A3")},
-            {ClassificationTypeNames.Keyword, Color.FromHex("#569CD6")},
-            {ClassificationTypeNames.MethodName, Color.FromHex("#11A3C8")},
-            {ClassificationTypeNames.NamespaceName, Color.FromHex("#C8A611")},
-            {ClassificationTypeNames.NumericLiteral, Color.FromHex("#b5cea8")},
-            {ClassificationTypeNames.PropertyName, Color.FromHex("#11C89D")},
-            {ClassificationTypeNames.StaticSymbol, Color.FromHex("#4EC9B0")},
-            {ClassificationTypeNames.StringLiteral, Color.FromHex("#D69D85")},
-            {ClassificationTypeNames.StructName, Color.FromHex("#4EC9B0")},
-            {"default", Color.FromHex("#D4D4D4")},
-        };
-
         public static void AddWithSyntaxHighlighting(Script script, FormattedMessage msg, string code,
             Workspace workspace)
         {
@@ -144,8 +126,8 @@ namespace Robust.Shared.Scripting
                 // TODO: there are probably issues with multiple classifications overlapping the same text here.
                 // Too lazy to fix.
                 var src = code[span.TextSpan.Start..span.TextSpan.End];
-                if (!ColorScheme.TryGetValue(span.ClassificationType, out var color))
-                        color = ColorScheme["default"];
+                if (!ScriptingColorScheme.ColorScheme.TryGetValue(span.ClassificationType, out var color))
+                        color = ScriptingColorScheme.ColorScheme[ScriptingColorScheme.Default];
 
                 msg.PushColor(color);
                 msg.AddText(src);

@@ -13,11 +13,9 @@ namespace Robust.Server.Bql
     {
         private readonly Dictionary<Type, Parser<char, BqlQuerySelectorParsed>> _parsers = new();
         private Parser<char, BqlQuerySelectorParsed> _allQuerySelectors = default!;
-        private Parser<char, (IEnumerable<BqlQuerySelectorParsed>, string)> _simpleQuery => Parser.Map((en, _, rest) => (en, rest), SkipWhitespaces.Then(_allQuerySelectors).Many(), String("do").Then(SkipWhitespaces), Any.ManyString());
+        private Parser<char, (IEnumerable<BqlQuerySelectorParsed>, string)> SimpleQuery => Parser.Map((en, _, rest) => (en, rest), SkipWhitespaces.Then(_allQuerySelectors).Many(), String("do").Then(SkipWhitespaces), Any.ManyString());
 
-        private static Parser<char, string> Word =>
-            from chars in OneOf(LetterOrDigit, Char('_')).ManyString()
-            select chars;
+        private static Parser<char, string> Word => OneOf(LetterOrDigit, Char('_')).ManyString();
 
         private static Parser<char, object> Objectify<T>(Parser<char, T> inp)
         {
@@ -35,10 +33,8 @@ namespace Robust.Server.Bql
         }
 
         private static Parser<char, SubstitutionData> Substitution =>
-            Try(Char('$').Then(
-                from chars in OneOf(Uppercase, Char('_')).ManyString()
-                select chars
-            )).MapWithInput((x, _) => new SubstitutionData(x.ToString()));
+            Try(Char('$').Then(OneOf(Uppercase, Char('_')).ManyString()))
+                .MapWithInput((x, _) => new SubstitutionData(x.ToString()));
 
         private static Parser<char, int> Integer =>
             Try(Int(10));
@@ -64,10 +60,10 @@ namespace Robust.Server.Bql
         private static Parser<char, object> SubstitutableEntityId =>
             Objectify(EntityId).Or(Objectify(Try(Substitution)));
 
-        private static Parser<char, Type> Component =>
+        private Parser<char, Type> Component =>
             Try(Parser.Map(t => _componentFactory.GetRegistration(t).Type, Word));
 
-        private static Parser<char, object> SubstitutableComponent =>
+        private Parser<char, object> SubstitutableComponent =>
             Objectify(Component).Or(Objectify(Try(Substitution)));
 
         private static Parser<char, string> QuotedString =>
@@ -81,7 +77,7 @@ namespace Robust.Server.Bql
 
         // thing to make sure it all compiles.
         [UsedImplicitly]
-        private static Parser<char, object> TypeSystemCheck =>
+        private Parser<char, object> TypeSystemCheck =>
             OneOf(new[]
             {
                 Objectify(Integer),
@@ -94,8 +90,6 @@ namespace Robust.Server.Bql
 
         private Parser<char, BqlQuerySelectorParsed> BuildBqlQueryParser(BqlQuerySelector inst)
         {
-            var leadToken = String(inst.Token);
-
             if (inst.Arguments.Length == 0)
             {
                 return Parser.Map(_ => new BqlQuerySelectorParsed(new List<object>(), inst.Token, false), SkipWhitespaces);
@@ -103,7 +97,7 @@ namespace Robust.Server.Bql
 
             List<Parser<char, object>> argsParsers = new();
 
-            foreach (var (arg, idx) in inst.Arguments.Select((x, i) => (x, i)))
+            foreach (var (arg, _) in inst.Arguments.Select((x, i) => (x, i)))
             {
                 List<Parser<char, object>> choices = new();
                 if ((arg & QuerySelectorArgument.String) == QuerySelectorArgument.String)

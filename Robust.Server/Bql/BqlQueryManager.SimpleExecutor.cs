@@ -11,7 +11,7 @@ namespace Robust.Server.Bql
     {
         public (IEnumerable<EntityUid>, string) SimpleParseAndExecute(string query)
         {
-            var parsed = _simpleQuery.Parse(query);
+            var parsed = SimpleQuery.Parse(query);
             if (parsed.Success)
             {
                 var entityManager = IoCManager.Resolve<IEntityManager>();

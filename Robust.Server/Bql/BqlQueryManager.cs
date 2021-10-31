@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -10,12 +9,11 @@ namespace Robust.Server.Bql
 {
     public partial class BqlQueryManager : IBqlQueryManager
     {
-        private static IReflectionManager _reflectionManager = default!;
-        private static IComponentFactory _componentFactory = default!;
+        private readonly IReflectionManager _reflectionManager;
+        private readonly IComponentFactory _componentFactory;
 
         private readonly List<BqlQuerySelector> _instances = new();
         private readonly Dictionary<string, BqlQuerySelector> _queriesByToken = new();
-        private readonly Dictionary<Type, BqlQuerySelector> _queriesByType = new();
 
         public BqlQueryManager()
         {
@@ -46,7 +44,6 @@ namespace Robust.Server.Bql
             var inst = (BqlQuerySelector)Activator.CreateInstance(bqlQuerySelector)!;
             _instances.Add(inst);
             _queriesByToken.Add(inst.Token, inst);
-            _queriesByType.Add(bqlQuerySelector, inst);
         }
     }
 }

@@ -6,7 +6,6 @@ namespace Robust.Shared.Configuration
     internal interface IConfigurationManagerInternal : IConfigurationManager
     {
         void OverrideConVars(IEnumerable<(string key, string value)> cVars);
-        void ResetOverrides();
         void LoadCVarsFromAssembly(Assembly assembly);
 
         void Initialize(bool isServer);

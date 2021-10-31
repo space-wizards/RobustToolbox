@@ -158,7 +158,9 @@ namespace Robust.Shared.GameObjects
                 angularVelocityDiff += angular;
             }
 
-            if (entity.Transform.Parent!.Owner.TryGetComponent(out PhysicsComponent? newBody))
+            var newParent = entity.Transform.Parent?.Owner;
+
+            if (newParent != null && newParent.TryGetComponent(out PhysicsComponent? newBody))
             {
                 var (linear, angular) = newBody.MapVelocities;
 

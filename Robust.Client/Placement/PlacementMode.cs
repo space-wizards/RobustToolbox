@@ -114,13 +114,19 @@ namespace Robust.Client.Placement
             var size = TexturesToDraw[0].Size;
             foreach (var coordinate in locationcollection)
             {
+                if (!coordinate.IsValid(pManager.EntityManager))
+                    return; // Just some paranoia just in case
+                var entity = coordinate.GetEntity(pManager.EntityManager);
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var pos = worldPos - (size/(float)EyeManager.PixelsPerMeter) / 2f;
+                var worldRot = entity.Transform.WorldRotation;
+                // Need to calculate a Box2Rotated to properly apply WorldRotation
+                var posBase = Box2.UnitCentered.Scale(size / (float) EyeManager.PixelsPerMeter).Translated(worldPos);
+                var pos = new Box2Rotated(posBase, worldRot, worldPos);
                 var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
 
                 foreach (var texture in TexturesToDraw)
                 {
-                    handle.DrawTexture(texture, pos, color);
+                    handle.DrawTextureRect(texture, in pos, color);
                 }
             }
         }

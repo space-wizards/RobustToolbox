@@ -157,7 +157,7 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return base.DoSelection(entityManager.EntityQuery<ITransformComponent>().Select(x => x.OwnerUid), arguments,
+            return DoSelection(entityManager.EntityQuery<ITransformComponent>().Select(x => x.OwnerUid), arguments,
                 isInverted, entityManager);
         }
     }

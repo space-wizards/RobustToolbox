@@ -42,10 +42,8 @@ namespace Robust.Server.Bql
         /// <param name="entityManager">The entity manager.</param>
         /// <returns>New list of entities</returns>
         /// <exception cref="NotImplementedException">someone is a moron if this happens.</exception>
-        public virtual IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
-        {
-            throw new NotImplementedException();
-        }
+        public abstract IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input,
+            IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager);
 
         /// <summary>
         /// Performs selection as the first selector in the query. Allows for optimizing when you can be more efficient

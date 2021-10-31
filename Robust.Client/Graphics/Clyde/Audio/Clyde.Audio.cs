@@ -156,6 +156,8 @@ namespace Robust.Client.Graphics.Clyde
             var eye = _eyeManager.CurrentEye;
             var (x, y) = eye.Position.Position;
             AL.Listener(ALListener3f.Position, x, y, -5);
+            var rot2d = eye.Rotation.ToVec();
+            AL.Listener(ALListenerfv.Orientation, new []{0, 0, -1, rot2d.X, rot2d.Y, 0});
 
             // Default orientation: at: (0, 0, -1)  up: (0, 1, 0)
             var (rotX, rotY) = eye.Rotation.ToVec();

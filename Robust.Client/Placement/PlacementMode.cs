@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Client.Graphics;
+using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -85,14 +86,10 @@ namespace Robust.Client.Placement
 
         public virtual void Render(DrawingHandleWorld handle)
         {
-            if (TexturesToDraw == null)
-            {
-                SetSprite();
-                DebugTools.AssertNotNull(TexturesToDraw);
-            }
-
-            if (TexturesToDraw == null || TexturesToDraw.Count == 0)
+            var sce = pManager.CurrentPlacementOverlayEntity;
+            if (sce == null || sce.Deleted)
                 return;
+            var sc = sce.GetComponent<SpriteComponent>();
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -111,23 +108,17 @@ namespace Robust.Client.Placement
                     break;
             }
 
-            var size = TexturesToDraw[0].Size;
+            var dirAng = pManager.Direction.ToAngle();
             foreach (var coordinate in locationcollection)
             {
                 if (!coordinate.IsValid(pManager.EntityManager))
                     return; // Just some paranoia just in case
                 var entity = coordinate.GetEntity(pManager.EntityManager);
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var worldRot = entity.Transform.WorldRotation;
-                // Need to calculate a Box2Rotated to properly apply WorldRotation
-                var posBase = Box2.UnitCentered.Scale(size / (float) EyeManager.PixelsPerMeter).Translated(worldPos);
-                var pos = new Box2Rotated(posBase, worldRot, worldPos);
-                var color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
+                var worldRot = entity.Transform.WorldRotation + dirAng;
 
-                foreach (var texture in TexturesToDraw)
-                {
-                    handle.DrawTextureRect(texture, in pos, color);
-                }
+                sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
+                sc.Render(handle, pManager.eyeManager.CurrentEye.Rotation, worldRot, worldPos);
             }
         }
 
@@ -197,14 +188,6 @@ namespace Robust.Client.Placement
         public bool TryGetSprite(string key, [NotNullWhen(true)] out TextureResource? sprite)
         {
             return pManager.ResourceCache.TryGetResource(new ResourcePath(@"/Textures/") / key, out sprite);
-        }
-
-        public void SetSprite()
-        {
-            if (pManager.CurrentTextures == null)
-                return;
-
-            TexturesToDraw = pManager.CurrentTextures.Select(o => o.TextureFor(pManager.Direction)).ToList();
         }
 
         /// <summary>

@@ -32,6 +32,16 @@ namespace Robust.Server.Bql
         /// </summary>
         public virtual QuerySelectorArgument[] Arguments => throw new NotImplementedException();
 
+        /// <summary>
+        /// Performs a transform over it's input entity list, whether that be filtering (selecting) or expanding the
+        /// input on some criteria like what entities are nearby.
+        /// </summary>
+        /// <param name="input">Input entity list.</param>
+        /// <param name="arguments">Parsed selector arguments.</param>
+        /// <param name="isInverted">Whether the query is inverted.</param>
+        /// <param name="entityManager">The entity manager.</param>
+        /// <returns>New list of entities</returns>
+        /// <exception cref="NotImplementedException">someone is a moron if this happens.</exception>
         public virtual IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             throw new NotImplementedException();

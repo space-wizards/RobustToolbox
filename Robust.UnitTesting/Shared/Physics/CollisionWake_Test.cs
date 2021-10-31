@@ -26,7 +26,7 @@ namespace Robust.UnitTesting.Shared.Physics
         [Test]
         public async Task TestCollisionWakeGrid()
         {
-            var options = new ServerIntegrationOptions {ExtraPrototypes = Prototype, Pool = false};
+            var options = new ServerIntegrationOptions {ExtraPrototypes = Prototype};
             options.CVarOverrides["physics.timetosleep"] = "0.0";
             var server = StartServer(options);
             await server.WaitIdleAsync();

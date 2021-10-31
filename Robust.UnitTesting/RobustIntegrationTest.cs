@@ -52,7 +52,7 @@ namespace Robust.UnitTesting
         {
             ServerIntegrationInstance instance;
 
-            if (options?.Pool ?? false)
+            if (ShouldPool(options))
             {
                 if (ServersReady.TryDequeue(out var server))
                 {
@@ -88,7 +88,7 @@ namespace Robust.UnitTesting
         {
             ClientIntegrationInstance instance;
 
-            if (options?.Pool ?? false)
+            if (ShouldPool(options))
             {
                 if (ClientsReady.TryDequeue(out var client))
                 {
@@ -115,6 +115,17 @@ namespace Robust.UnitTesting
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
             Console.WriteLine($"Tests ran: {string.Join('\n', instance.TestsRan)}");
             return instance;
+        }
+
+        private bool ShouldPool(IntegrationOptions? options)
+        {
+            if (Assembly.GetExecutingAssembly() == typeof(RobustIntegrationTest).Assembly)
+            {
+                // When you code it
+                return false;
+            }
+
+            return options?.Pool ?? false;
         }
 
         protected virtual async Task OnInstanceReturn(IntegrationInstance instance)

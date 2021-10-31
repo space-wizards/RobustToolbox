@@ -32,17 +32,10 @@ namespace Robust.Server.Bql
         /// </summary>
         public virtual QuerySelectorArgument[] Arguments => throw new NotImplementedException();
 
-        /// <summary>
-        /// Selects entities from the input to pass on, functioning as a sort of filter. Can also add NEW entities as
-        /// well, for behaviors like "getting every entity near the inputs"
-        /// </summary>
-        /// <param name="input"></param>
-        /// <param name="arguments"></param>
-        /// <param name="isInverted"></param>
-        /// <param name="entityManager"></param>
-        /// <returns></returns>
-        public abstract IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input,
-            IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager);
+        public virtual IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Performs selection as the first selector in the query. Allows for optimizing when you can be more efficient

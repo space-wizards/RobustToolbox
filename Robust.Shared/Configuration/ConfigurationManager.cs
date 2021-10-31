@@ -412,6 +412,11 @@ namespace Robust.Shared.Configuration
                 return float.Parse(value);
             }
 
+            if (type?.IsEnum ?? false)
+            {
+                return Enum.Parse(type, value);
+            }
+
             // Must be a string.
             return value;
         }

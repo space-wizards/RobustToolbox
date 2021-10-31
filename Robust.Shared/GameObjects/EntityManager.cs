@@ -224,6 +224,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities() => Entities.Values;
 
+        public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
+
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>

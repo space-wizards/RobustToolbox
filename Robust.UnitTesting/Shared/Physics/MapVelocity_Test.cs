@@ -23,7 +23,7 @@ namespace Robust.UnitTesting.Shared.Physics
         [Test]
         public async Task Test()
         {
-            var server = StartServer(new ServerIntegrationOptions {ExtraPrototypes = Prototypes});
+            var server = StartServer(new ServerIntegrationOptions {ExtraPrototypes = Prototypes, Pool = false});
 
             await server.WaitIdleAsync();
             var entityManager = server.ResolveDependency<IEntityManager>();

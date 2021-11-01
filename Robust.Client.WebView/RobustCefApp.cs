@@ -3,7 +3,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     internal class RobustCefApp : CefApp
     {

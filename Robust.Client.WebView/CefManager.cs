@@ -1,36 +1,37 @@
 using System;
 using System.IO;
-using JetBrains.Annotations;
+using Robust.Client.WebView;
+using Robust.Client.WebViewHook;
 using Robust.Shared.ContentPack;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
-// The library we're using right now. TODO CEF: Do we want to use something else? We will need to ship it ourselves if so.
+// The library we're using right now.
+// TODO CEF: Do we want to use something else? We will need to ship it ourselves if so.
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+[assembly: WebViewManagerImpl(typeof(CefManager))]
+
+namespace Robust.Client.WebView
 {
-    // Register this with IoC.
-    // TODO CEF: think if making this inherit CefApp is a good idea...
-    // TODO CEF: A way to handle external window browsers...
-    [UsedImplicitly]
-    public partial class CefManager
+    internal partial class CefManager : IWebViewManagerHook, IWebViewManager
     {
         private CefApp _app = default!;
         private bool _initialized = false;
 
-        /// <summary>
-        ///     Call this to initialize CEF.
-        /// </summary>
         public void Initialize()
         {
+            IoCManager.RegisterInstance<IWebViewManager>(this);
+            IoCManager.RegisterInstance<CefManager>(this);
+
             DebugTools.Assert(!_initialized);
 
             string subProcessName;
             if (OperatingSystem.IsWindows())
-                subProcessName = "Robust.Client.CEF.exe";
+                subProcessName = "Robust.Client.WebView.exe";
             else if (OperatingSystem.IsLinux())
-                subProcessName = "Robust.Client.CEF";
+                subProcessName = "Robust.Client.WebView";
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
 
@@ -77,9 +78,6 @@ namespace Robust.Client.CEF
                 throw new InvalidOperationException("CefManager has not been initialized!");
         }
 
-        /// <summary>
-        ///     Needs to be called regularly for CEF to keep working.
-        /// </summary>
         public void Update()
         {
             DebugTools.Assert(_initialized);
@@ -88,9 +86,6 @@ namespace Robust.Client.CEF
             CefRuntime.DoMessageLoopWork();
         }
 
-        /// <summary>
-        ///     Call before program shutdown.
-        /// </summary>
         public void Shutdown()
         {
             DebugTools.Assert(_initialized);

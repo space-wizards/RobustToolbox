@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
-    public interface IBrowserControl
+    public interface IWebViewControl
     {
         /// <summary>
         ///     Current URL of the browser. Set to load a new page.

@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     public sealed class RequestHandlerContext
     {

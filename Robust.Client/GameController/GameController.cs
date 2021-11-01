@@ -17,6 +17,7 @@ using Robust.Client.State;
 using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
+using Robust.Client.WebViewHook;
 using Robust.LoaderApi;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
@@ -32,6 +33,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
+using YamlDotNet.RepresentationModel;
 
 namespace Robust.Client
 {
@@ -67,6 +69,8 @@ namespace Robust.Client
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
 
+        private IWebViewManagerHook? _webViewHook;
+
         private CommandLineArgs? _commandLineArgs;
 
         // Arguments for loader-load. Not used otherwise.
@@ -87,7 +91,7 @@ namespace Robust.Client
             _clyde.SetWindowTitle(Options.DefaultWindowTitle);
 
             _taskManager.Initialize();
-            _fontManager.SetFontDpi((uint) _configurationManager.GetCVar(CVars.DisplayFontDpi));
+            _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
@@ -106,6 +110,9 @@ namespace Robust.Client
             }
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
+
+            // Load optional Robust modules.
+            LoadOptionalRobustModules();
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -196,6 +203,39 @@ namespace Robust.Client
             return true;
         }
 
+        private ResourceManifestData LoadResourceManifest()
+        {
+            // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
+            if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
+                return new ResourceManifestData(Array.Empty<string>());
+
+            var yamlStream = new YamlStream();
+            using (stream)
+            {
+                using var streamReader = new StreamReader(stream, EncodingHelpers.UTF8);
+                yamlStream.Load(streamReader);
+            }
+
+            if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
+            {
+                throw new InvalidOperationException(
+                    "Expected a single YAML document with root mapping for /manifest.yml");
+            }
+
+            var modules = Array.Empty<string>();
+            if (mapping.TryGetNode("modules", out var modulesMap))
+            {
+                var sequence = (YamlSequenceNode)modulesMap;
+                modules = new string[sequence.Children.Count];
+                for (var i = 0; i < modules.Length; i++)
+                {
+                    modules[i] = sequence[i].AsString();
+                }
+            }
+
+            return new ResourceManifestData(modules);
+        }
+
         internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
         {
             Options = options;
@@ -217,8 +257,10 @@ namespace Robust.Client
                             System.Console.WriteLine($"LogLevel {level} does not exist!");
                             continue;
                         }
+
                         logLevel = result;
                     }
+
                     _logManager.GetSawmill(sawmill).Level = logLevel;
                 }
             }
@@ -259,7 +301,7 @@ namespace Robust.Client
 
             {
                 // Handle GameControllerOptions implicit CVar overrides.
-                _configurationManager.OverrideConVars(new []
+                _configurationManager.OverrideConVars(new[]
                 {
                     (CVars.DisplayWindowIconSet.Name, options.WindowIconSet.ToString()),
                     (CVars.DisplaySplashLogo.Name, options.SplashLogo.ToString())
@@ -271,9 +313,11 @@ namespace Robust.Client
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 
             var mountOptions = _commandLineArgs != null
-                ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions) : Options.MountOptions;
+                ? MountOptions.Merge(_commandLineArgs.MountOptions, Options.MountOptions)
+                : Options.MountOptions;
 
-            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory, Options.AssemblyDirectory,
+            ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
+                Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
             if (_loaderArgs != null)
@@ -394,6 +438,7 @@ namespace Robust.Client
 
         private void Update(FrameEventArgs frameEventArgs)
         {
+            _webViewHook?.Update();
             _clyde.FrameProcess(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
             _stateManager.FrameUpdate(frameEventArgs);
@@ -442,7 +487,7 @@ namespace Robust.Client
             var uh = logManager.GetSawmill("unhandled");
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
-                var message = ((Exception) args.ExceptionObject).ToString();
+                var message = ((Exception)args.ExceptionObject).ToString();
                 uh.Log(args.IsTerminating ? LogLevel.Fatal : LogLevel.Error, message);
             };
 
@@ -485,11 +530,15 @@ namespace Robust.Client
         {
             _modLoader.Shutdown();
 
+            _webViewHook?.Shutdown();
+
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
             IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
         }
+
+        private sealed record ResourceManifestData(string[] Modules);
     }
 }

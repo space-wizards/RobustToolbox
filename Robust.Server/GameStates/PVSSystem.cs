@@ -473,10 +473,10 @@ namespace Robust.Server.GameStates
 
                 //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
                 // deleted list. This seems to happen with the map entity on round restart.
-                if (!_entMan.EntityExists(entityUid))
+                if (!EntityManager.EntityExists(entityUid))
                     continue;
 
-                var xform = _entMan.GetComponent<TransformComponent>(entityUid);
+                var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
 
                 // Anchored entities don't ever leave
                 if (xform.Anchored) continue;
@@ -501,14 +501,14 @@ namespace Robust.Server.GameStates
             {
 
                 // skip sending anchored entities (walls)
-                DebugTools.Assert(!_entMan.GetComponent<TransformComponent>(entityUid).Anchored);
+                DebugTools.Assert(!EntityManager.GetComponent<TransformComponent>(entityUid).Anchored);
 
                 if (previousSet.Contains(entityUid))
                 {
                     //Still Visible
 
                     // Nothing new to send
-                    if(_entMan.GetEntity(entityUid).LastModifiedTick < fromTick)
+                    if (EntityManager.GetEntity(entityUid).LastModifiedTick < fromTick)
                         continue;
 
                     // only send new changes
@@ -561,13 +561,13 @@ namespace Robust.Server.GameStates
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_entMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
+            if (EntityManager.TryGetComponent<VisibilityComponent>(uid, out var visComp))
             {
                 if ((visMask & visComp.Layer) == 0)
                     return false;
             }
 
-            var xform = _entMan.GetComponent<TransformComponent>(uid);
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
 
             var parentUid = xform.ParentUid;
 
@@ -630,7 +630,7 @@ namespace Robust.Server.GameStates
         // Read Safe
         private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid)
         {
-            var xform = _entMan.GetComponent<ITransformComponent>(euid);
+            var xform = _entMan.GetComponent<TransformComponent>(euid);
 
             var view = Box2.UnitCentered.Scale(ViewSize).Translated(xform.WorldPosition);
             var map = xform.MapID;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Robust.Client.Console.Commands;
 using Robust.Client.Log;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;

@@ -13,7 +13,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -30,10 +29,9 @@ namespace Robust.Server.GameStates
         private readonly Dictionary<long, GameTick> _ackedStates = new();
         private GameTick _lastOldestAck = GameTick.Zero;
 
-        private EntityViewCulling _entityView = null!;
+        private PVSSystem _pvs = default!;
 
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -58,13 +56,12 @@ namespace Robust.Server.GameStates
 
         public void SetTransformNetId(ushort netId)
         {
-            _entityView.SetTransformNetId(netId);
+            _pvs.SetTransformNetId(netId);
         }
 
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");
-            _entityView = new EntityViewCulling(_entityManager, _mapManager, _lookup);
         }
 
         /// <inheritdoc />
@@ -76,49 +73,7 @@ namespace Robust.Server.GameStates
             _networkManager.Connected += HandleClientConnected;
             _networkManager.Disconnect += HandleClientDisconnect;
 
-            _playerManager.PlayerStatusChanged += HandlePlayerStatusChanged;
-
-            _entityManager.EntityDeleted += HandleEntityDeleted;
-
-            _mapManager.OnGridRemoved += HandleGridRemove;
-
-            // If you want to make this modifiable at runtime you need to subscribe to tickrate updates and streaming updates
-            // plus invalidate any chunks currently being streamed as well.
-            _entityView.StreamingTilesPerTick = (int) (_configurationManager.GetCVar(CVars.StreamedTilesPerSecond) / _gameTiming.TickRate);
-            _configurationManager.OnValueChanged(CVars.StreamedTileRange, value => _entityView.StreamRange = value, true);
-        }
-
-        private void HandleGridRemove(MapId mapid, GridId gridid)
-        {
-            // Remove any sort of tracking for when a chunk was sent.
-            foreach (var (_, chunks) in _entityView.PlayerChunks)
-            {
-                foreach (var (chunk, _) in chunks.ToArray())
-                {
-                    if (chunk is not MapChunk mapChunk ||
-                        mapChunk.GridId == gridid)
-                    {
-                        chunks.Remove(chunk);
-                    }
-                }
-            }
-        }
-
-        private void HandleEntityDeleted(object? sender, EntityUid e)
-        {
-            _entityView.EntityDeleted(e);
-        }
-
-        private void HandlePlayerStatusChanged(object? sender, SessionStatusEventArgs e)
-        {
-            if (e.NewStatus == SessionStatus.InGame)
-            {
-                _entityView.AddPlayer(e.Session);
-            }
-            else if(e.OldStatus == SessionStatus.InGame)
-            {
-                _entityView.RemovePlayer(e.Session);
-            }
+            _pvs = EntitySystem.Get<PVSSystem>();
         }
 
         private void HandleClientConnected(object? sender, NetChannelArgs e)
@@ -166,14 +121,14 @@ namespace Robust.Server.GameStates
         {
             DebugTools.Assert(_networkManager.IsServer);
 
-            _entityView.ViewSize = PvsRange * 2;
-            _entityView.CullingEnabled = PvsEnabled;
+            _pvs.ViewSize = PvsRange * 2;
+            _pvs.CullingEnabled = PvsEnabled;
 
             if (!_networkManager.IsConnected)
             {
                 // Prevent deletions piling up if we have no clients.
                 _entityManager.CullDeletionHistory(GameTick.MaxValue);
-                _entityView.CullDeletionHistory(GameTick.MaxValue);
+                _pvs.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
                 return;
             }
@@ -202,7 +157,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _entityView.CalculateEntityStates(session, lastAck, _gameTiming.CurTick);
+                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 
@@ -254,7 +209,7 @@ namespace Robust.Server.GameStates
             {
                 _lastOldestAck = oldestAck;
                 _entityManager.CullDeletionHistory(oldestAck);
-                _entityView.CullDeletionHistory(oldestAck);
+                _pvs.CullDeletionHistory(oldestAck);
                 _mapManager.CullDeletionHistory(oldestAck);
             }
         }

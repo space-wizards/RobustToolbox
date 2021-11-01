@@ -19,7 +19,7 @@ namespace Robust.Client.WebView
     /// <summary>
     /// An UI control that presents web content.
     /// </summary>
-    public sealed class WebView : Control, IWebViewControl, IRawInputControl
+    public sealed class WebViewControl : Control, IWebViewControl, IRawInputControl
     {
         private const int ScrollSpeed = 50;
 
@@ -148,7 +148,7 @@ namespace Robust.Client.WebView
             [Key.Pause] = VKEY_PAUSE,
         };
 
-        public WebView()
+        public WebViewControl()
         {
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;

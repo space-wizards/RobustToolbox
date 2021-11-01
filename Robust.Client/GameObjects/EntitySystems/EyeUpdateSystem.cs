@@ -21,17 +21,23 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     internal class EyeUpdateSystem : EntitySystem
     {
-        // How fast the camera rotates in radians
-        private const float CameraRotateSpeed = MathF.PI;
-
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private bool _isLerping = false;
         private ITransformComponent? _lastParent;
-
+        private ITransformComponent? _lerpTo;
+        private Angle LerpStartRotation;
         private float _accumulator;
+
+        public bool IsLerping = false;
+
+        // How fast the camera rotates in radians / s
+        private const float CameraRotateSpeed = MathF.PI;
+        // PER THIS AMOUNT OF TIME MILLISECONDS
+        private const float CameraRotateTimeUnit = 1.2f;
+        // Safety override
+        private const float _lerpTimeMax = CameraRotateTimeUnit + 0.4f;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -74,26 +80,45 @@ namespace Robust.Client.GameObjects
                 gridEnt.Transform
                 : _mapManager.GetMapEntity(playerTransform.MapID).Transform;
 
-            if (parent != _lastParent)
+            if (_lastParent is null)
+                _lastParent = parent;
+
+            var parentRotation = -parent.WorldRotation;
+            if (parent.GridID == GridId.Invalid)
             {
+                parentRotation = currentEye.Rotation;
+            }
+
+            if (_lastParent != parent)
+            {
+                IsLerping = true;
+                if (parent != _lerpTo) {
+                    LerpStartRotation = currentEye.Rotation;
+                    _lerpTo = parent;
+                }
+
                 _accumulator += frameTime;
 
-                if (_accumulator >= 0.3f)
+                var changeNeeded = (float) (LerpStartRotation - parentRotation).Theta;
+
+                var changeLerp = _accumulator / (Math.Abs(changeNeeded % MathF.PI) / CameraRotateSpeed * CameraRotateTimeUnit);
+
+                System.Console.Out.WriteLine($"+{frameTime} ({_accumulator}): {changeLerp}, {-currentEye.Rotation} {-parentRotation} ");
+
+                currentEye.Rotation = Angle.Lerp(LerpStartRotation, parentRotation, changeLerp);
+
+                if (changeLerp > 1.0f || _accumulator >= _lerpTimeMax)
                 {
-                    _accumulator = 0f;
                     _lastParent = parent;
+                    _accumulator = 0f;
                 }
-            }
-            else
-            {
-                _lastParent = parent;
             }
 
             if (_lastParent == parent)
             {
-                // TODO: Detect parent change and start lerping
-                var parentRotation = parent.WorldRotation;
-                currentEye.Rotation = -parentRotation;
+                IsLerping = false;
+                currentEye.Rotation = parentRotation;
+                LerpStartRotation = parentRotation;
             }
 
             foreach (var eyeComponent in EntityManager.EntityQuery<EyeComponent>(true))

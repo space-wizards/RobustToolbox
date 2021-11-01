@@ -279,6 +279,9 @@ namespace Robust.Shared.Maths
         public static Angle operator -(Angle a, Angle b)
             => new(a.Theta - b.Theta);
 
+        public static Angle operator -(Angle orig)
+            => new(-orig.Theta);
+
         public override string ToString()
         {
             return $"{Theta} rad";

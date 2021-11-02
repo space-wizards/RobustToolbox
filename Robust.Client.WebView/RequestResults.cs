@@ -88,6 +88,13 @@ namespace Robust.Client.WebView
             protected override void Cancel()
             {
             }
+
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+
+                _stream.Dispose();
+            }
         }
     }
 }

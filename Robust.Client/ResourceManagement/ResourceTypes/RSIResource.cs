@@ -125,7 +125,7 @@ namespace Robust.Client.ResourceManagement
                 reg.Indices = foldedIndices;
                 reg.Offsets = callbackOffset;
 
-                var state = new RSI.State(frameSize, stateObject.StateId, stateObject.DirType, foldedDelays,
+                var state = new RSI.State(frameSize, rsi, stateObject.StateId, stateObject.DirType, foldedDelays,
                     textures);
                 rsi.AddState(state);
 

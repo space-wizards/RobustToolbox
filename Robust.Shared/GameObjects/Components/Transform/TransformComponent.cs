@@ -768,8 +768,8 @@ namespace Robust.Shared.GameObjects
                                 throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
 #else
                                 Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
-#endif
                                 Owner.QueueDelete();
+#endif
                                 return;
                             }
 

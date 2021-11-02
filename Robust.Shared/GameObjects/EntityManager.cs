@@ -227,6 +227,25 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
 
         /// <summary>
+        /// Marks this entity as dirty so that it will be updated over the network.
+        /// </summary>
+        /// <remarks>
+        /// Calling Dirty on a component will call this directly.
+        /// </remarks>
+        public void DirtyEntity(EntityUid uid)
+        {
+            var currentTick = CurrentTick;
+            var entity = GetEntity(uid);
+
+            if (entity.LastModifiedTick == currentTick) return;
+
+            entity.LastModifiedTick = currentTick;
+
+            var dirtyEvent = new EntityDirtyEvent {Uid = uid};
+            EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
+        }
+
+        /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
         /// <param name="e">Entity to remove</param>

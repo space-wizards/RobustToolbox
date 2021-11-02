@@ -236,8 +236,9 @@ namespace Robust.Shared.GameObjects
             if(Owner is null)
                 return;
 
-            Owner.Dirty();
-            LastModifiedTick = Owner.EntityManager.CurrentTick;
+            var entManager = Owner.EntityManager;
+            entManager.DirtyEntity(Owner.Uid);
+            LastModifiedTick = entManager.CurrentTick;
         }
 
         /// <summary>

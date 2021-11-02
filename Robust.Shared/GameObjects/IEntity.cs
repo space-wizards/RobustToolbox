@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     [CopyByRef]
     public interface IEntity
     {
-        GameTick LastModifiedTick { get; }
+        GameTick LastModifiedTick { get; internal set; }
 
         /// <summary>
         /// The Entity Manager that controls this entity.
@@ -200,10 +200,5 @@ namespace Robust.Shared.GameObjects
         /// <param name="message">Message to send.</param>
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null);
-
-        /// <summary>
-        /// Marks this entity as dirty so that it will be updated over the network.
-        /// </summary>
-        void Dirty();
     }
 }

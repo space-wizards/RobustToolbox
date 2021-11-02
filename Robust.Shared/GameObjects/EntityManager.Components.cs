@@ -369,7 +369,7 @@ namespace Robust.Shared.GameObjects
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                component.Owner.Dirty();
+                DirtyEntity(entityUid);
             }
 
             _entCompIndex.Remove(entityUid, component);

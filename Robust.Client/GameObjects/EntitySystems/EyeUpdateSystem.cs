@@ -30,7 +30,7 @@ namespace Robust.Client.GameObjects
         private Angle LerpStartRotation;
         private float _accumulator;
 
-        public bool IsLerping = false;
+        public bool IsLerping { get => _lerpTo != null; }
 
         // How fast the camera rotates in radians / s
         private const float CameraRotateSpeed = MathF.PI;
@@ -80,21 +80,28 @@ namespace Robust.Client.GameObjects
                 gridEnt.Transform
                 : _mapManager.GetMapEntity(playerTransform.MapID).Transform;
 
+            // Make sure that we don't fire the vomit carousel when we spawn in
             if (_lastParent is null)
                 _lastParent = parent;
 
+            // Set a default for target rotation
             var parentRotation = -parent.WorldRotation;
+            // Reuse current rotation when stepping into space
             if (parent.GridID == GridId.Invalid)
-            {
                 parentRotation = currentEye.Rotation;
-            }
 
+            // Handle grid change in general
             if (_lastParent != parent)
+                _lerpTo = parent;
+
+            // And we are up and running!
+            if (_lerpTo is not null)
             {
-                IsLerping = true;
+                // Handle a case where we have beeing spinning around, but suddenly got off onto a different grid
                 if (parent != _lerpTo) {
                     LerpStartRotation = currentEye.Rotation;
                     _lerpTo = parent;
+                    _accumulator = 0f;
                 }
 
                 _accumulator += frameTime;
@@ -103,23 +110,24 @@ namespace Robust.Client.GameObjects
 
                 var changeLerp = _accumulator / (Math.Abs(changeNeeded % MathF.PI) / CameraRotateSpeed * CameraRotateTimeUnit);
 
-                System.Console.Out.WriteLine($"+{frameTime} ({_accumulator}): {changeLerp}, {-currentEye.Rotation} {-parentRotation} ");
-
                 currentEye.Rotation = Angle.Lerp(LerpStartRotation, parentRotation, changeLerp);
 
+                // Either we have overshot, or we have taken way too long on this, emergency reset time
                 if (changeLerp > 1.0f || _accumulator >= _lerpTimeMax)
                 {
                     _lastParent = parent;
+                    _lerpTo = null;
                     _accumulator = 0f;
                 }
             }
 
-            if (_lastParent == parent)
+            // We are just fine, or we finished a lerp (and probably overshot)
+            if (_lerpTo is null)
             {
-                IsLerping = false;
                 currentEye.Rotation = parentRotation;
                 LerpStartRotation = parentRotation;
             }
+
 
             foreach (var eyeComponent in EntityManager.EntityQuery<EyeComponent>(true))
             {

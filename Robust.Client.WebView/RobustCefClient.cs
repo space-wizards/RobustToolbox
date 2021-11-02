@@ -1,6 +1,6 @@
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     // Simple CEF client.
     internal class RobustCefClient : CefClient

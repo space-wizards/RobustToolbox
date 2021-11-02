@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     internal interface IRequestResult
     {
@@ -87,6 +87,13 @@ namespace Robust.Client.CEF
 
             protected override void Cancel()
             {
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+
+                _stream.Dispose();
             }
         }
     }

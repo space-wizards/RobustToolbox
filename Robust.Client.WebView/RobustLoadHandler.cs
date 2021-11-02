@@ -1,6 +1,6 @@
 ﻿using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     public sealed class RobustLoadHandler : CefLoadHandler
     {

@@ -1,7 +1,7 @@
 using System;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     public static class Program
     {

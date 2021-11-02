@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Robust.Shared.Log;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
     internal sealed class RobustRequestHandler : CefRequestHandler
     {

@@ -6,17 +6,17 @@ using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
-    public partial class CefManager
+    internal partial class CefManager
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
 
-        private readonly List<BrowserWindowImpl> _browserWindows = new();
+        private readonly List<WebViewWindowImpl> _browserWindows = new();
 
-        public IEnumerable<IBrowserWindow> AllBrowserWindows => _browserWindows;
+        public IEnumerable<IWebViewWindow> AllBrowserWindows => _browserWindows;
 
-        public IBrowserWindow CreateBrowserWindow(BrowserWindowCreateParameters createParams)
+        public IWebViewWindow CreateBrowserWindow(BrowserWindowCreateParameters createParams)
         {
             var mainHWnd = (_clyde.MainWindow as IClydeWindowInternal)?.WindowsHWnd ?? 0;
 
@@ -25,7 +25,7 @@ namespace Robust.Client.CEF
             info.Height = createParams.Height;
             info.SetAsPopup(mainHWnd, "ss14cef");
 
-            var impl = new BrowserWindowImpl(this);
+            var impl = new WebViewWindowImpl(this);
 
             var lifeSpanHandler = new WindowLifeSpanHandler(impl);
             var reqHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
@@ -40,7 +40,7 @@ namespace Robust.Client.CEF
             return impl;
         }
 
-        private sealed class BrowserWindowImpl : IBrowserWindow
+        private sealed class WebViewWindowImpl : IWebViewWindow
         {
             private readonly CefManager _manager;
             internal CefBrowser Browser = default!;
@@ -73,7 +73,7 @@ namespace Robust.Client.CEF
                 }
             }
 
-            public BrowserWindowImpl(CefManager manager)
+            public WebViewWindowImpl(CefManager manager)
             {
                 _manager = manager;
             }
@@ -168,9 +168,9 @@ namespace Robust.Client.CEF
 
         private sealed class WindowLifeSpanHandler : CefLifeSpanHandler
         {
-            private readonly BrowserWindowImpl _windowImpl;
+            private readonly WebViewWindowImpl _windowImpl;
 
-            public WindowLifeSpanHandler(BrowserWindowImpl windowImpl)
+            public WindowLifeSpanHandler(WebViewWindowImpl windowImpl)
             {
                 _windowImpl = windowImpl;
             }

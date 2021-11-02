@@ -224,6 +224,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities() => Entities.Values;
 
+        public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
+
         /// <summary>
         /// Marks this entity as dirty so that it will be updated over the network.
         /// </summary>

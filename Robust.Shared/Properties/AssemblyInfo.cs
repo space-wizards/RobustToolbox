@@ -11,7 +11,7 @@
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // Gives access to Castle(Moq)
 [assembly: InternalsVisibleTo("Content.Benchmarks")]
 [assembly: InternalsVisibleTo("Robust.Benchmarks")]
-[assembly: InternalsVisibleTo("Robust.Client.CEF")]
+[assembly: InternalsVisibleTo("Robust.Client.WebView")]
 
 #if NET5_0_OR_GREATER
 [module: SkipLocalsInit]

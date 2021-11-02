@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -27,6 +27,10 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public IEntity Owner { get; set; } = default!;
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public EntityUid OwnerUid => Owner.Uid;
 
         /// <inheritdoc />
         [ViewVariables]

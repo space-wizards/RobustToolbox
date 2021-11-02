@@ -10,14 +10,16 @@ using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
-using static Robust.Client.CEF.CefKeyCodes;
-using static Robust.Client.CEF.CefKeyCodes.ChromiumKeyboardCode;
+using static Robust.Client.WebView.CefKeyCodes;
+using static Robust.Client.WebView.CefKeyCodes.ChromiumKeyboardCode;
 using static Robust.Client.Input.Keyboard;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
-    // Funny browser control to integrate in UI.
-    public class BrowserControl : Control, IBrowserControl, IRawInputControl
+    /// <summary>
+    /// An UI control that presents web content.
+    /// </summary>
+    public sealed class WebViewControl : Control, IWebViewControl, IRawInputControl
     {
         private const int ScrollSpeed = 50;
 
@@ -146,7 +148,7 @@ namespace Robust.Client.CEF
             [Key.Pause] = VKEY_PAUSE,
         };
 
-        public BrowserControl()
+        public WebViewControl()
         {
             CanKeyboardFocus = true;
             KeyboardFocusOnClick = true;

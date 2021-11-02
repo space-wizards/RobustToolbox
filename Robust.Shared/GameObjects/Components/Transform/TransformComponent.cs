@@ -764,11 +764,10 @@ namespace Robust.Shared.GameObjects
                         {
                             if (!Owner.EntityManager.TryGetEntity(newParentId, out var newParent))
                             {
-                                var msg = $"Unable to find new parent {newParentId}! Deleting {Owner}";
 #if !EXCEPTION_TOLERANCE
-                                throw new InvalidOperationException(msg);
+                                throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
 #else
-                                Logger.ErrorS("transform", msg);
+                                Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
 #endif
                                 Owner.QueueDelete();
                                 return;

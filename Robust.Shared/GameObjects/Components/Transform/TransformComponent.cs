@@ -765,6 +765,7 @@ namespace Robust.Shared.GameObjects
                             if (!Owner.EntityManager.TryGetEntity(newParentId, out var newParent))
                             {
                                 Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
+                                DebugTools.Assert(false);
                                 Owner.QueueDelete();
                                 return;
                             }

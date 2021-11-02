@@ -538,6 +538,12 @@ namespace Robust.Shared.Network
                 netConfig.SetMessageTypeEnabled(NetIncomingMessageType.ConnectionApproval, true);
                 netConfig.MaximumConnections = _config.GetCVar(CVars.GameMaxPlayers);
             }
+            else
+            {
+                netConfig.ConnectionTimeout = _config.GetCVar(CVars.ConnectionTimeout);
+                netConfig.ResendHandshakeInterval = _config.GetCVar(CVars.ResendHandshakeInterval);
+                netConfig.MaximumHandshakeAttempts = _config.GetCVar(CVars.MaximumHandshakeAttempts);
+            }
 
 
 #if DEBUG

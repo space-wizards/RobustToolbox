@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net;
 using Robust.Client.WebView;
 using Robust.Client.WebViewHook;
 using Robust.Shared.ContentPack;
@@ -17,6 +18,8 @@ namespace Robust.Client.WebView
 {
     internal partial class CefManager : IWebViewManagerHook, IWebViewManager
     {
+        [Dependency] private readonly IResourceManager _resourceManager = default!;
+
         private CefApp _app = default!;
         private bool _initialized = false;
 
@@ -45,7 +48,9 @@ namespace Robust.Client.WebView
                 BrowserSubprocessPath = subProcessPath,
                 LocalesDirPath = Path.Combine(PathHelpers.GetExecutableDirectory(), "locales"),
                 ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
-                RemoteDebuggingPort = 9222
+                RemoteDebuggingPort = 9222,
+                CookieableSchemesList = "usr,res"
+
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
@@ -69,7 +74,43 @@ namespace Robust.Client.WebView
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
             // And nothing seemed to work. Odd.
 
+            CefRuntime.RegisterSchemeHandlerFactory("res", "", new ResourceSchemeFactoryHandler(_resourceManager));
+
             _initialized = true;
+        }
+
+        private sealed class ResourceSchemeFactoryHandler : CefSchemeHandlerFactory
+        {
+            private readonly IResourceManager _resourceManager;
+
+            public ResourceSchemeFactoryHandler(IResourceManager resourceManager)
+            {
+                _resourceManager = resourceManager;
+            }
+
+            protected override CefResourceHandler Create(CefBrowser browser, CefFrame frame, string schemeName, CefRequest request)
+            {
+                var uri = new Uri(request.Url);
+
+                // _sawmill.Debug($"HANDLING: {obj.Url}, {uri.AbsolutePath}");
+
+                if (_resourceManager.TryContentFileRead(uri.AbsolutePath, out var stream))
+                {
+                    var mime = "text/plain";
+                    if (uri.AbsolutePath.EndsWith(".png"))
+                        mime = "image/png";
+                    else if (uri.AbsolutePath.EndsWith(".html"))
+                        mime = "text/html";
+
+                    return new RequestResultStream(stream, mime, HttpStatusCode.OK).MakeHandler();
+                }
+                else
+                {
+                    return new RequestResultStream(_resourceManager.ContentFileRead("/404.txt"), "text/plain", HttpStatusCode.NotFound).MakeHandler();
+                    // obj.DoRespondStream(_res.ContentFileRead("/404.txt"), "text/plain");
+                }
+
+            }
         }
 
         public void CheckInitialized()

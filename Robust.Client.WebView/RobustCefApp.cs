@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using Robust.Client.Utility;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Xilium.CefGlue;
@@ -20,10 +22,21 @@ namespace Robust.Client.WebView
             return _renderProcessHandler;
         }
 
+        protected override unsafe void OnRegisterCustomSchemes(CefSchemeRegistrar registrar)
+        {
+            base.OnRegisterCustomSchemes(registrar);
+
+            // Win32.MessageBoxW(null, "A", $"{Process.GetCurrentProcess().Id}", 0);
+            registrar.AddCustomScheme("usr", CefSchemeOptions.None);
+            registrar.AddCustomScheme("src", CefSchemeOptions.None);
+
+        }
+
         protected override void OnBeforeCommandLineProcessing(string processType, CefCommandLine commandLine)
         {
             // Disable zygote on Linux.
             commandLine.AppendSwitch("--no-zygote");
+            // commandLine.AppendSwitch("--single-process");
 
             //commandLine.AppendSwitch("--disable-gpu");
             //commandLine.AppendSwitch("--disable-gpu-compositing");

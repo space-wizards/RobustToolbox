@@ -60,6 +60,7 @@ namespace Robust.Client.WebView
             lock (_resourceRequestHandlers)
             {
                 _sawmill.Debug($"HANDLING REQUEST: {request.Url}");
+                return null;
 
                 var context = new RequestHandlerContext(isNavigation, isDownload, requestInitiator, request);
 
@@ -122,6 +123,19 @@ namespace Robust.Client.WebView
                 CefRequest request)
             {
                 return _handler;
+            }
+        }
+
+        private sealed class CookieHandler : CefCookieAccessFilter
+        {
+            protected override bool CanSendCookie(CefBrowser browser, CefFrame frame, CefRequest request, CefCookie cookie)
+            {
+                return true;
+            }
+
+            protected override bool CanSaveCookie(CefBrowser browser, CefFrame frame, CefRequest request, CefResponse response, CefCookie cookie)
+            {
+                return true;
             }
         }
     }

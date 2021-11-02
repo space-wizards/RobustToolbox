@@ -769,8 +769,8 @@ namespace Robust.Shared.GameObjects
 #else
                                 Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
                                 Owner.QueueDelete();
-#endif
                                 return;
+#endif
                             }
 
                             AttachParent(newParent.Transform);

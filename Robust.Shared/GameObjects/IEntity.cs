@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
     [CopyByRef]
     public interface IEntity
     {
-        GameTick LastModifiedTick { get; set; }
+        GameTick LastModifiedTick { get; internal set; }
 
         /// <summary>
         /// The Entity Manager that controls this entity.

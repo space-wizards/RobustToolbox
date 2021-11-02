@@ -2117,7 +2117,7 @@ namespace Robust.Client.GameObjects
         #region DummyIconEntity
         private class DummyIconEntity : IEntity
         {
-            public GameTick LastModifiedTick { get; set; } = GameTick.Zero;
+            GameTick IEntity.LastModifiedTick { get; set; } = GameTick.Zero;
             public IEntityManager EntityManager { get; } = null!;
             public string Name { get; set; } = string.Empty;
             public EntityUid Uid { get; } = EntityUid.Invalid;

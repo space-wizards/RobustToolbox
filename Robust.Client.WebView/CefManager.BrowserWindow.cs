@@ -21,8 +21,7 @@ namespace Robust.Client.WebView
             var mainHWnd = (_clyde.MainWindow as IClydeWindowInternal)?.WindowsHWnd ?? 0;
 
             var info = CefWindowInfo.Create();
-            info.Width = createParams.Width;
-            info.Height = createParams.Height;
+            info.Bounds = new CefRectangle(0, 0, createParams.Width, createParams.Height);
             info.SetAsPopup(mainHWnd, "ss14cef");
 
             var impl = new WebViewWindowImpl(this);

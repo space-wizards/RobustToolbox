@@ -52,7 +52,7 @@ namespace Robust.Client.WebView
 
             // --------------------------- README --------------------------------------------------
             // By the way! You're gonna need the CEF binaries in your client's bin folder.
-            // More specifically, version cef_binary_94.4.1+g4b61a8c+chromium-94.0.4606.54
+            // More specifically, version cef_binary_95.7.14+g9f72f35+chromium-95.0.4638.69
             // Windows: https://cef-builds.spotifycdn.com/cef_binary_94.4.1%2Bg4b61a8c%2Bchromium-94.0.4606.54_windows64_minimal.tar.bz2
             // Linux: https://cef-builds.spotifycdn.com/cef_binary_94.4.1%2Bg4b61a8c%2Bchromium-94.0.4606.54_linux64_minimal.tar.bz2
             // Here's how to get it to work:

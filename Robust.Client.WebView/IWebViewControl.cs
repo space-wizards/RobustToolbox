@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Client.WebView.Cef;
 
 namespace Robust.Client.WebView
 {
@@ -42,7 +43,7 @@ namespace Robust.Client.WebView
         /// <param name="code">JavaScript code.</param>
         void ExecuteJavaScript(string code);
 
-        void AddResourceRequestHandler(Action<RequestHandlerContext> handler);
-        void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler);
+        void AddResourceRequestHandler(Action<IRequestHandlerContext> handler);
+        void RemoveResourceRequestHandler(Action<IRequestHandlerContext> handler);
     }
 }

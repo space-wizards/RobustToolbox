@@ -371,7 +371,7 @@ namespace Robust.Shared.Physics
 
             if (broadphase == null) return;
 
-            foreach (var fixture in body._fixtures)
+            foreach (var fixture in body.Fixtures)
             {
                 DestroyProxies(broadphase, fixture);
             }
@@ -493,7 +493,7 @@ namespace Robust.Shared.Physics
         public void CreateFixture(PhysicsComponent body, Fixture fixture)
         {
             fixture.ID = body.GetFixtureName(fixture);
-            body._fixtures.Add(fixture);
+            body.Fixtures.Add(fixture);
             body.FixtureCount += 1;
             fixture.Body = body;
 
@@ -533,11 +533,13 @@ namespace Robust.Shared.Physics
 
         public void DestroyFixture(PhysicsComponent body, Fixture fixture)
         {
+            // TODO: Move this to fixturemanagersystem instead
+
             // TODO: Assert world locked
             DebugTools.Assert(fixture.Body == body);
             DebugTools.Assert(body.FixtureCount > 0);
 
-            if (!body._fixtures.Remove(fixture))
+            if (!body.Fixtures.Remove(fixture))
             {
                 Logger.ErrorS("physics", $"Tried to remove fixture from {body.Owner} that was already removed.");
                 return;
@@ -566,7 +568,6 @@ namespace Robust.Shared.Physics
                 DestroyProxies(broadphase, fixture);
             }
 
-            body.FixtureCount -= 1;
             body.ResetMassData();
             body.Dirty();
         }

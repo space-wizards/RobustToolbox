@@ -54,8 +54,6 @@ namespace Robust.Shared.Physics
         /// </summary>
         void DestroyContacts();
 
-        IReadOnlyList<Fixture> Fixtures { get; }
-
         /// <summary>
         /// The type of the body, which determines how collisions effect this object.
         /// </summary>

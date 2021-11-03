@@ -1,5 +1,6 @@
 ﻿using Robust.Client.WebView;
 using Robust.Client.WebView.Cef;
+using Robust.Client.WebView.Headless;
 using Robust.Client.WebViewHook;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
@@ -12,14 +13,18 @@ namespace Robust.Client.WebView
     {
         private IWebViewManagerImpl? _impl;
 
-        public void Initialize()
+        public void Initialize(GameController.DisplayMode mode)
         {
             DebugTools.Assert(_impl == null, "WebViewManager has already been initialized!");
 
             IoCManager.RegisterInstance<IWebViewManager>(this);
             IoCManager.RegisterInstance<IWebViewManagerInternal>(this);
 
-            _impl = new WebViewManagerCef();
+            if (mode == GameController.DisplayMode.Headless)
+                _impl = new WebViewManagerHeadless();
+            else
+                _impl = new WebViewManagerCef();
+
             _impl.Initialize();
         }
 

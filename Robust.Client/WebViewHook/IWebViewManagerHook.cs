@@ -18,7 +18,7 @@ namespace Robust.Client.WebViewHook
 
     internal interface IWebViewManagerHook
     {
-        void Initialize();
+        void Initialize(GameController.DisplayMode mode);
         void Update();
         void Shutdown();
     }

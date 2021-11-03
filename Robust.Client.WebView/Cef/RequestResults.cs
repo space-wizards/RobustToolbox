@@ -3,7 +3,7 @@ using System.IO;
 using System.Net;
 using Xilium.CefGlue;
 
-namespace Robust.Client.WebView
+namespace Robust.Client.WebView.Cef
 {
     internal interface IRequestResult
     {

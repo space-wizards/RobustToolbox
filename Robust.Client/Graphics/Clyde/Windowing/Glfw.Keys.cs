@@ -21,7 +21,6 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: to avoid having to ask the windowing thread, key names are cached.
             // This means they don't update correctly if the user switches keyboard mode. RIP.
 
-            [Dependency] private readonly IConfigurationManager _cfgg = default!;
             private readonly Dictionary<Key, string> _printableKeyNameMap = new();
 
             private void InitKeyMap()
@@ -46,9 +45,9 @@ namespace Robust.Client.Graphics.Clyde
                     if (rKey == Key.Unknown)
                         return;
 
-                    string name = "";
+                    string name;
 
-                    if (!_cfgg.GetCVar(CVars.DisplayEnglishHotkeys))
+                    if (!_clyde._cfg.GetCVar(CVars.DisplayUSQWERTYHotkeys))
                     {
                         name = GLFW.GetKeyName(key, 0);
                     }

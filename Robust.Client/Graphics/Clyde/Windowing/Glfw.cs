@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 using OpenToolkit.GraphicsLibraryFramework;
 using Robust.Shared;
@@ -39,7 +39,7 @@ namespace Robust.Client.Graphics.Clyde
 #if DEBUG
                 _cfg.OnValueChanged(CVars.DisplayWin32Experience, b => _win32Experience = b, true);
 #endif
-                _cfg.OnValueChanged(CVars.DisplayEnglishHotkeys, x => InitKeyMap(), false);
+                _cfg.OnValueChanged(CVars.DisplayUSQWERTYHotkeys, x => InitKeyMap(), false);
 
                 InitChannels();
 
@@ -61,6 +61,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (_glfwInitialized)
                 {
                     _sawmill.Debug("Terminating GLFW.");
+                    _cfg.UnsubValueChanged(CVars.DisplayUSQWERTYHotkeys, x => InitKeyMap());
                     GLFW.Terminate();
                 }
             }

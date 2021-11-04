@@ -431,10 +431,10 @@ namespace Robust.Shared
             CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
 
         /// <summary>
-        /// Use english hotkeys.
+        /// Use US QWERTY hotkeys.
         /// </summary>
-        public static readonly CVarDef<bool> DisplayEnglishHotkeys =
-            CVarDef.Create("display.use_english_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
+        public static readonly CVarDef<bool> DisplayUSQWERTYHotkeys =
+            CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * AUDIO

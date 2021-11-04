@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.UserInterface;
@@ -111,9 +111,6 @@ namespace Robust.Client.Input
 
         event Action<IKeyBinding> OnKeyBindingAdded;
         event Action<IKeyBinding> OnKeyBindingRemoved;
-        event Action OnKeyUpdated;
-
-        void UpdateKeys();
 
         /// <summary>
         ///     Gets all the keybinds bound to a specific function.

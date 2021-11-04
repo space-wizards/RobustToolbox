@@ -98,7 +98,6 @@ namespace Robust.Client.Input
         public event KeyEventAction? FirstChanceOnKeyEvent;
         public event Action<IKeyBinding>? OnKeyBindingAdded;
         public event Action<IKeyBinding>? OnKeyBindingRemoved;
-        public event Action? OnKeyUpdated;
 
         /// <inheritdoc />
         public void Initialize()
@@ -675,11 +674,6 @@ namespace Robust.Client.Input
             {
                 _commands[function] = cmdHandler;
             }
-        }
-
-        public void UpdateKeys()
-        {
-            OnKeyUpdated?.Invoke();
         }
 
         [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]

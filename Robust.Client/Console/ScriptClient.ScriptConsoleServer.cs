@@ -46,6 +46,16 @@ namespace Robust.Client.Console
 
             }
 
+            protected override void Complete()
+            {
+                var msg = _client._netManager.CreateNetMessage<MsgScriptCompletion>();
+                msg.ScriptSession = _session;
+                msg.Code = InputBar.Text;
+                msg.Cursor = InputBar.CursorPosition;
+
+                _client._netManager.ClientSendMessage(msg);
+            }
+
             public override void Close()
             {
                 base.Close();
@@ -94,6 +104,12 @@ namespace Robust.Client.Console
                 OutputPanel.AddMessage(response.Response);
 
                 OutputPanel.AddText(">");
+            }
+
+            public void ReceiveCompletionResponse(MsgScriptCompletionResponse response)
+            {
+                Suggestions.SetSuggestions(response);
+                Suggestions.OpenAt((Position.X + Size.X, Position.Y), (Size.X / 2, Size.Y));
             }
         }
     }

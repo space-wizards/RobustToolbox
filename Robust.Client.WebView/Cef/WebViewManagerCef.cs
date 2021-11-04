@@ -1,36 +1,27 @@
 using System;
 using System.IO;
-using JetBrains.Annotations;
 using Robust.Shared.ContentPack;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Utility;
-
-// The library we're using right now. TODO CEF: Do we want to use something else? We will need to ship it ourselves if so.
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView.Cef
 {
-    // Register this with IoC.
-    // TODO CEF: think if making this inherit CefApp is a good idea...
-    // TODO CEF: A way to handle external window browsers...
-    [UsedImplicitly]
-    public partial class CefManager
+    internal partial class WebViewManagerCef : IWebViewManagerImpl
     {
         private CefApp _app = default!;
-        private bool _initialized = false;
 
-        /// <summary>
-        ///     Call this to initialize CEF.
-        /// </summary>
+        [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+
         public void Initialize()
         {
-            DebugTools.Assert(!_initialized);
+            IoCManager.Instance!.InjectDependencies(this, oneOff: true);
 
             string subProcessName;
             if (OperatingSystem.IsWindows())
-                subProcessName = "Robust.Client.CEF.exe";
+                subProcessName = "Robust.Client.WebView.exe";
             else if (OperatingSystem.IsLinux())
-                subProcessName = "Robust.Client.CEF";
+                subProcessName = "Robust.Client.WebView";
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
 
@@ -67,34 +58,16 @@ namespace Robust.Client.CEF
             // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
             // And nothing seemed to work. Odd.
-
-            _initialized = true;
         }
 
-        public void CheckInitialized()
-        {
-            if (!_initialized)
-                throw new InvalidOperationException("CefManager has not been initialized!");
-        }
-
-        /// <summary>
-        ///     Needs to be called regularly for CEF to keep working.
-        /// </summary>
         public void Update()
         {
-            DebugTools.Assert(_initialized);
-
             // Calling this makes CEF do its work, without using its own update loop.
             CefRuntime.DoMessageLoopWork();
         }
 
-        /// <summary>
-        ///     Call before program shutdown.
-        /// </summary>
         public void Shutdown()
         {
-            DebugTools.Assert(_initialized);
-
             CefRuntime.Shutdown();
         }
     }

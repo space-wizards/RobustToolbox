@@ -5,6 +5,7 @@ using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -761,7 +762,17 @@ namespace Robust.Shared.GameObjects
                         }
                         else
                         {
-                            var newParent = Owner.EntityManager.GetEntity(newParentId);
+                            if (!Owner.EntityManager.TryGetEntity(newParentId, out var newParent))
+                            {
+#if !EXCEPTION_TOLERANCE
+                                throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
+#else
+                                Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
+                                Owner.QueueDelete();
+                                return;
+#endif
+                            }
+
                             AttachParent(newParent.Transform);
                         }
                     }

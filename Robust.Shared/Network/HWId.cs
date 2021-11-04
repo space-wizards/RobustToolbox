@@ -1,31 +1,48 @@
 ﻿using System;
-using System.Linq;
-using System.Management;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text;
+using Microsoft.Win32;
+using Robust.Shared.Console;
 
 namespace Robust.Shared.Network
 {
     internal static class HWId
     {
+        public const int LengthHwid = 32;
+
         public static byte[] Calc()
         {
             if (OperatingSystem.IsWindows())
             {
-                var a = new ManagementObjectSearcher("SELECT SerialNumber FROM Win32_BaseBoard");
-                var obj = a.Get().Cast<ManagementObject>().First();
-                var prop = obj.Properties["SerialNumber"];
-                return Hash((string) prop.Value);
+                var regKey = Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\Space Wizards\Robust", "Hwid", null);
+                if (regKey is byte[] { Length: LengthHwid } bytes)
+                    return bytes;
+
+                var newId = new byte[LengthHwid];
+                RandomNumberGenerator.Fill(newId);
+                Registry.SetValue(
+                    @"HKEY_CURRENT_USER\SOFTWARE\Space Wizards\Robust",
+                    "Hwid",
+                    newId,
+                    RegistryValueKind.Binary);
+
+                return newId;
             }
 
             return Array.Empty<byte>();
         }
+    }
 
-        private static byte[] Hash(string str)
+#if DEBUG
+    internal sealed class HwidCommand : IConsoleCommand
+    {
+        public string Command => "hwid";
+        public string Description => "Returns the current HWID.";
+        public string Help => "Returns the current HWID.";
+
+        public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            using var hasher = SHA256.Create();
-            return hasher.ComputeHash(Encoding.UTF8.GetBytes(str));
+            shell.WriteLine(Convert.ToBase64String(HWId.Calc(), Base64FormattingOptions.None));
         }
     }
+#endif
 }

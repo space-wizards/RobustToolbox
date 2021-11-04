@@ -1,8 +1,9 @@
 ﻿using System;
+using Robust.Client.WebView.Cef;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView
 {
-    public interface IBrowserControl
+    public interface IWebViewControl
     {
         /// <summary>
         ///     Current URL of the browser. Set to load a new page.
@@ -42,7 +43,7 @@ namespace Robust.Client.CEF
         /// <param name="code">JavaScript code.</param>
         void ExecuteJavaScript(string code);
 
-        void AddResourceRequestHandler(Action<RequestHandlerContext> handler);
-        void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler);
+        void AddResourceRequestHandler(Action<IRequestHandlerContext> handler);
+        void RemoveResourceRequestHandler(Action<IRequestHandlerContext> handler);
     }
 }

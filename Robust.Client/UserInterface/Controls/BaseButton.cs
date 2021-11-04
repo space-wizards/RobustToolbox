@@ -199,7 +199,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindDown(args);
 
-            if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
+            if (Disabled || args.Function == EngineKeyFunctions.Use || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
             }
@@ -242,7 +242,7 @@ namespace Robust.Client.UserInterface.Controls
         {
             base.KeyBindUp(args);
 
-            if (Disabled || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
+            if (Disabled || args.Function == EngineKeyFunctions.Use || (!_enableAllKeybinds && args.Function != EngineKeyFunctions.UIClick))
             {
                 return;
             }

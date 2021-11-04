@@ -53,6 +53,9 @@ namespace Robust.Client.Console
             OutputPanel.AddText(">");
         }
 
+        // No-op for now.
+        protected override void Complete() { }
+
         protected override async void Run()
         {
             var code = InputBar.Text;

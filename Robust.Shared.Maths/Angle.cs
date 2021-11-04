@@ -87,7 +87,7 @@ namespace Robust.Shared.Maths
             var ang = Theta % (2 * Math.PI);
 
             if (ang < 0.0f) // convert -PI > PI to 0 > 2PI
-                ang += 2 * (float) Math.PI;
+                ang += 2 * Math.PI;
 
             return (Direction) (Math.Floor((ang + CardinalOffset) / CardinalSegment) * 2 % 8);
         }
@@ -278,6 +278,9 @@ namespace Robust.Shared.Maths
 
         public static Angle operator -(Angle a, Angle b)
             => new(a.Theta - b.Theta);
+
+        public static Angle operator -(Angle orig)
+            => new(-orig.Theta);
 
         public override string ToString()
         {

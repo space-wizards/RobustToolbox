@@ -306,9 +306,7 @@ namespace Robust.Client.GameObjects
             var source = _clyde.CreateAudioSource(stream);
             if (!source.SetPosition(entity.Transform.WorldPosition))
             {
-                source.Dispose();
-                Logger.Warning($"Can't play positional audio \"{stream.Name}\", can't set position.");
-                return null;
+                return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
             }
 
             ApplyAudioParams(audioParams, source);

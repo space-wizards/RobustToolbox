@@ -1,9 +1,8 @@
-using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView.Cef
 {
     internal class RobustCefApp : CefApp
     {
@@ -24,6 +23,7 @@ namespace Robust.Client.CEF
         {
             // Disable zygote on Linux.
             commandLine.AppendSwitch("--no-zygote");
+            // commandLine.AppendSwitch("--single-process");
 
             //commandLine.AppendSwitch("--disable-gpu");
             //commandLine.AppendSwitch("--disable-gpu-compositing");

@@ -13,5 +13,6 @@
     <Compile Link="XamlX\filename" Include="../XamlX/src/XamlX/**/*.cs" />
     <Compile Remove="../XamlX/src/XamlX/**/SreTypeSystem.cs" />
     <Compile Remove="../XamlX/src/XamlX/obj/**" />
+    <Compile Include="..\Robust.Client\UserInterface\ControlPropertyAccess.cs" />
   </ItemGroup>
 </Project>

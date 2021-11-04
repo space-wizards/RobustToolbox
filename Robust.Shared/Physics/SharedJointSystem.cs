@@ -280,6 +280,8 @@ namespace Robust.Shared.Physics
                 FilterContactsForJoint(joint);
             }
 
+            bodyA.WakeBody();
+            bodyB.WakeBody();
             bodyA.Dirty();
             bodyB.Dirty();
             jointComponentA.Dirty();

@@ -60,6 +60,7 @@ namespace Robust.Client.Input
             common.AddFunction(EngineKeyFunctions.TextReleaseFocus);
             common.AddFunction(EngineKeyFunctions.TextScrollToBottom);
             common.AddFunction(EngineKeyFunctions.TextDelete);
+            common.AddFunction(EngineKeyFunctions.TextTabComplete);
 
             var editor = contexts.New("editor", common);
             editor.AddFunction(EngineKeyFunctions.EditorLinePlace);

@@ -3,9 +3,9 @@ using System.IO;
 using System.Net;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView.Cef
 {
-    public sealed class RequestHandlerContext
+    internal sealed class CefRequestHandlerContext : IRequestHandlerContext
     {
         internal readonly CefRequest CefRequest;
 
@@ -22,7 +22,7 @@ namespace Robust.Client.CEF
 
         internal IRequestResult? Result { get; private set; }
 
-        internal RequestHandlerContext(
+        internal CefRequestHandlerContext(
             bool isNavigation,
             bool isDownload,
             string requestInitiator,

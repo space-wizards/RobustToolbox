@@ -114,23 +114,6 @@ namespace Robust.Client.GameObjects
             set => color = value;
         }
 
-        /// <summary>
-        ///     Controls whether we use RSI directions to rotate, or just get angular rotation applied.
-        ///     If true, all rotation to this sprite component is negated (that is rotation from say the owner being rotated).
-        ///     Rotation transformations on individual layers still apply.
-        ///     If false, all layers get locked to south and rotation is a transformation.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use NoRotation and/or DirectionOverride")]
-        public bool Directional
-        {
-            get => _directional;
-            set => _directional = value;
-        }
-
-        [DataField("directional")]
-        private bool _directional = true;
-
         [ViewVariables]
         internal RenderingTreeComponent? RenderTree { get; set; } = null;
 
@@ -402,7 +385,6 @@ namespace Robust.Client.GameObjects
         {
             //deep copying things to avoid entanglement
             _baseRsi = other._baseRsi;
-            _directional = other._directional;
             _visible = other._visible;
             _layerMapShared = other._layerMapShared;
             color = other.color;
@@ -1270,6 +1252,12 @@ namespace Robust.Client.GameObjects
 
         private void RenderInternal(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Vector2 worldPosition, Direction? overrideDirection)
         {
+            // Reduce the angles to fix math shenanigans
+            worldRotation = worldRotation.Reduced();
+
+            if (worldRotation.Theta < 0)
+                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
+
             var localMatrix = GetLocalMatrix();
 
             foreach (var layer in Layers)
@@ -1280,12 +1268,13 @@ namespace Robust.Client.GameObjects
                 }
 
                 var numDirs = GetLayerDirectionCount(layer);
+                var layerRotation = worldRotation + layer.Rotation;
 
-                CalcModelMatrix(numDirs, eyeRotation, worldRotation, worldPosition, out var modelMatrix);
+                CalcModelMatrix(numDirs, eyeRotation, layerRotation, worldPosition, out var modelMatrix);
                 Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
-                RenderLayer(drawingHandle, layer, eyeRotation, worldRotation, overrideDirection);
+                RenderLayer(drawingHandle, layer, eyeRotation, layerRotation, overrideDirection);
             }
         }
 
@@ -1321,7 +1310,7 @@ namespace Robust.Client.GameObjects
         public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
         {
             var theta = worldAngle.Theta;
-            var segSize = (MathF.PI * 2) / (numDirections * 2);
+            var segSize = (Math.PI * 2) / (numDirections * 2);
             var segments = (int)(theta / segSize);
             var odd = segments % 2;
             var result = theta - (segments * segSize) - (odd * segSize);
@@ -2061,17 +2050,24 @@ namespace Robust.Client.GameObjects
 
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
+            return GetPrototypeTextures(prototype, resourceCache, out var _);
+        }
+
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
+        {
+            var results = new List<IDirectionalTextureProvider>();
+            noRot = false;
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             if (icon != null)
             {
-                yield return icon;
-                yield break;
+                results.Add(icon);
+                return results;
             }
 
             if (!prototype.Components.TryGetValue("Sprite", out _))
             {
-                yield return resourceCache.GetFallback<TextureResource>().Texture;
-                yield break;
+                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+                return results;
             }
 
             var dummy = new DummyIconEntity { Prototype = prototype };
@@ -2090,7 +2086,8 @@ namespace Robust.Client.GameObjects
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
             {
-                if (layer.Texture != null) yield return layer.Texture;
+                if (layer.Texture != null)
+                    results.Add(layer.Texture);
                 if (!layer.RsiState.IsValid || !layer.Visible) continue;
 
                 var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
@@ -2098,14 +2095,17 @@ namespace Robust.Client.GameObjects
                     !rsi.TryGetState(layer.RsiState, out var state))
                     continue;
 
-                yield return state;
+                results.Add(state);
                 anyTexture = true;
             }
+
+            noRot = spriteComponent.NoRotation;
 
             dummy.Delete();
 
             if (!anyTexture)
-                yield return resourceCache.GetFallback<TextureResource>().Texture;
+                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+            return results;
         }
 
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
@@ -2128,7 +2128,7 @@ namespace Robust.Client.GameObjects
         #region DummyIconEntity
         private class DummyIconEntity : IEntity
         {
-            public GameTick LastModifiedTick { get; } = GameTick.Zero;
+            GameTick IEntity.LastModifiedTick { get; set; } = GameTick.Zero;
             public IEntityManager EntityManager { get; } = null!;
             public string Name { get; set; } = string.Empty;
             public EntityUid Uid { get; } = EntityUid.Invalid;

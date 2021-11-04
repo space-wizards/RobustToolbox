@@ -43,7 +43,9 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = LookupFlags.IncludeAnchored);
 
-        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored);
+        IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldAABB, LookupFlags flags = LookupFlags.IncludeAnchored);
+
+        IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, float enlarged = 0f, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<IEntity> GetEntitiesIntersecting(MapCoordinates position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
@@ -325,6 +327,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        private IEnumerable<IEntity> GetAnchored(MapId mapId, Box2Rotated worldBounds, LookupFlags flags)
+        {
+            if ((flags & LookupFlags.IncludeAnchored) == 0x0) yield break;
+            foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+            {
+                foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+                {
+                    if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
+                    yield return ent;
+                }
+            }
+        }
+
         /// <inheritdoc />
         public bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
@@ -411,6 +426,37 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = LookupFlags.IncludeAnchored)
+        {
+            if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
+
+            var list = new List<IEntity>();
+            var worldAABB = worldBounds.CalcBoundingBox();
+            var enumerator = GetLookupsIntersecting(mapId, worldAABB);
+
+            while (enumerator.MoveNext(out var lookup))
+            {
+                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+
+                lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.Deleted)
+                    {
+                        list.Add(ent);
+                    }
+                    return true;
+                }, offsetBox, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            foreach (var ent in GetAnchored(mapId, worldBounds, flags))
+            {
+                list.Add(ent);
+            }
+
+            return list;
+        }
+
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<IEntity>();
@@ -463,10 +509,66 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, LookupFlags flags = LookupFlags.IncludeAnchored)
+        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, float enlarged = 0f, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var worldAABB = GetWorldAabbFromEntity(entity);
-            return GetEntitiesIntersecting(entity.Transform.MapID, worldAABB, flags);
+            var xform = _entityManager.GetComponent<ITransformComponent>(entity.Uid);
+            var worldPos = xform.WorldPosition;
+            var worldRot = xform.WorldRotation;
+
+            var enumerator = GetLookupsIntersecting(xform.MapID, worldAABB);
+            var list = new List<IEntity>();
+
+            while (enumerator.MoveNext(out var lookup))
+            {
+                // To get the tightest bounds possible we'll re-calculate it for each lookup.
+                var localBounds = GetLookupBounds(entity.Uid, lookup, worldPos, worldRot, enlarged);
+
+                lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
+                {
+                    if (!ent.Deleted)
+                    {
+                        list.Add(ent);
+                    }
+                    return true;
+                }, localBounds, (flags & LookupFlags.Approximate) != 0x0);
+            }
+
+            foreach (var ent in GetAnchored(xform.MapID, worldAABB, flags))
+            {
+                list.Add(ent);
+            }
+
+            return list;
+        }
+
+        private Box2 GetLookupBounds(EntityUid uid, EntityLookupComponent lookup, Vector2 worldPos, Angle worldRot, float enlarged)
+        {
+            var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(worldPos);
+            var localRot = worldRot - lookup.Owner.Transform.WorldRotation;
+
+            if (_entityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            {
+                var transform = new Transform(localPos, localRot);
+                Box2? aabb = null;
+
+                foreach (var fixture in body.Fixtures)
+                {
+                    if (!fixture.Hard) continue;
+                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    {
+                        aabb = aabb?.Union(fixture.Shape.ComputeAABB(transform, i)) ?? fixture.Shape.ComputeAABB(transform, i);
+                    }
+                }
+
+                if (aabb != null)
+                {
+                    return aabb.Value.Enlarged(enlarged);
+                }
+            }
+
+            // So IsEmpty checks don't get triggered
+            return new Box2(localPos - float.Epsilon, localPos + float.Epsilon);
         }
 
         /// <inheritdoc />

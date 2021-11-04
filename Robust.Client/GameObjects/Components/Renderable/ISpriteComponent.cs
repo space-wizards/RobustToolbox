@@ -44,15 +44,6 @@ namespace Robust.Client.GameObjects
         Color Color { get; set; }
 
         /// <summary>
-        ///     Controls whether we use RSI directions to rotate, or just get angular rotation applied.
-        ///     If true, all rotation to this sprite component is negated (that is rotation from say the owner being rotated).
-        ///     Rotation transformations on individual layers still apply.
-        ///     If false, all layers get locked to south and rotation is a transformation.
-        /// </summary>
-        [Obsolete("Use NoRotation and/or DirectionOverride")]
-        bool Directional { get; set; }
-
-        /// <summary>
         /// All sprite rotation is locked, and will always be drawn upright on
         /// the screen, regardless of world or view orientation.
         /// </summary>

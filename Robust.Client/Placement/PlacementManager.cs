@@ -95,9 +95,21 @@ namespace Robust.Client.Placement
         private ShaderInstance? _drawingShader { get; set; }
 
         /// <summary>
-        /// The texture we use to show from our placement manager to represent the entity to place
+        /// The entity for placement overlay.
+        /// Colour of this gets swapped around in PlacementMode.
+        /// This entity needs to stay in nullspace.
         /// </summary>
-        public List<IDirectionalTextureProvider>? CurrentTextures { get; set; }
+        public IEntity? CurrentPlacementOverlayEntity { get; set; }
+
+        /// <summary>
+        /// A BAD way to explicitly control the icons used!!!
+        /// Need to fix Content for this
+        /// </summary>
+        public List<IDirectionalTextureProvider>? CurrentTextures {
+            set {
+                PreparePlacementTexList(value, value != null);
+            }
+        }
 
         /// <summary>
         /// Which of the placement orientations we are trying to place with
@@ -143,10 +155,21 @@ namespace Robust.Client.Placement
             set => _colliderAABB = value;
         }
 
-        /// <summary>
-        /// The directional to spawn the entity in
-        /// </summary>
-        public Direction Direction { get; set; } = Direction.South;
+        private Direction _direction = Direction.South;
+
+        /// <inheritdoc />
+        public Direction Direction
+        {
+            get => _direction;
+            set
+            {
+                _direction = value;
+                DirectionChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        /// <inheritdoc />
+        public event EventHandler? DirectionChanged;
 
         private PlacementOverlay _drawOverlay = default!;
         private bool _isActive;
@@ -319,7 +342,7 @@ namespace Robust.Client.Placement
         {
             PlacementChanged?.Invoke(this, EventArgs.Empty);
             Hijack = null;
-            CurrentTextures = null;
+            EnsureNoPlacementOverlayEntity();
             CurrentPrototype = null;
             CurrentPermission = null;
             CurrentMode = null;
@@ -351,8 +374,6 @@ namespace Robust.Client.Placement
                     Direction = Direction.North;
                     break;
             }
-
-            CurrentMode?.SetSprite();
         }
 
         public void HandlePlacement()
@@ -636,21 +657,64 @@ namespace Robust.Client.Placement
             BeginPlacing(CurrentPermission);
         }
 
+        private void EnsureNoPlacementOverlayEntity()
+        {
+            if (CurrentPlacementOverlayEntity != null)
+            {
+                if (!CurrentPlacementOverlayEntity.Deleted)
+                    CurrentPlacementOverlayEntity.Delete();
+                CurrentPlacementOverlayEntity = null;
+            }
+        }
+
+        private SpriteComponent SetupPlacementOverlayEntity()
+        {
+            EnsureNoPlacementOverlayEntity();
+            CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
+            return CurrentPlacementOverlayEntity.EnsureComponent<SpriteComponent>();
+        }
+
         private void PreparePlacement(string templateName)
         {
             var prototype = _prototypeManager.Index<EntityPrototype>(templateName);
-
-            CurrentTextures = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache).ToList();
             CurrentPrototype = prototype;
-
             IsActive = true;
+
+            var lst = SpriteComponent.GetPrototypeTextures(prototype, ResourceCache, out var noRot).ToList();
+            PreparePlacementTexList(lst, noRot);
+        }
+
+        public void PreparePlacementTexList(List<IDirectionalTextureProvider>? texs, bool noRot)
+        {
+            var sc = SetupPlacementOverlayEntity();
+            if (texs != null)
+            {
+                // This one covers most cases (including Construction)
+                foreach (var v in texs)
+                {
+                    if (v is RSI.State)
+                    {
+                        var st = (RSI.State) v;
+                        sc.AddLayer(st.StateId, st.RSI);
+                    }
+                    else
+                    {
+                        // Fallback
+                        sc.AddLayer(v.Default);
+                    }
+                }
+            }
+            else
+            {
+                sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
+            }
+            sc.NoRotation = noRot;
         }
 
         private void PreparePlacementTile()
         {
-            CurrentTextures = new List<IDirectionalTextureProvider>
-            {ResourceCache
-                .GetResource<TextureResource>(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png")).Texture};
+            var sc = SetupPlacementOverlayEntity();
+            sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
 
             IsActive = true;
         }

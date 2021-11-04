@@ -98,6 +98,15 @@ namespace Robust.Shared
         public static readonly CVarDef<int> NetTickrate =
             CVarDef.Create("net.tickrate", 60, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        public static readonly CVarDef<float> ConnectionTimeout =
+            CVarDef.Create("net.connection_timeout", 25.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        public static readonly CVarDef<float> ResendHandshakeInterval =
+            CVarDef.Create("net.handshake_interval", 3.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
+            
+        public static readonly CVarDef<int> MaximumHandshakeAttempts =
+            CVarDef.Create("net.handshake_attempts", 5, CVar.ARCHIVE | CVar.CLIENTONLY);
+
         /**
          * SUS
          */

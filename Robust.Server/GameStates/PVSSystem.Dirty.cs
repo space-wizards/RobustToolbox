@@ -4,6 +4,7 @@ using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates
 {
@@ -32,6 +33,7 @@ namespace Robust.Server.GameStates
 
         private void OnEntityAdd(object? sender, EntityUid e)
         {
+            DebugTools.Assert(_currentIndex == _gameTiming.CurTick.Value % DirtyBufferSize);
             _addEntities[_currentIndex].Add(e);
         }
 
@@ -45,7 +47,8 @@ namespace Robust.Server.GameStates
 
         private void CleanupDirty(IEnumerable<IPlayerSession> sessions)
         {
-            _currentIndex = (_currentIndex + 1) % DirtyBufferSize;
+            // Just in case we desync somehow
+            _currentIndex = ((int) _gameTiming.CurTick.Value + 1) % DirtyBufferSize;
             _addEntities[_currentIndex].Clear();
             _dirtyEntities[_currentIndex].Clear();
 

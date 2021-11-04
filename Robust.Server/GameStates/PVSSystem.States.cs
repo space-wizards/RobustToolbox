@@ -69,33 +69,48 @@ namespace Robust.Server.GameStates
         {
             List<EntityState> stateEntities;
 
-            if (_oldPlayers.Contains(player) && TryGetTick(fromTick, out var add, out var dirty))
+            if (_oldPlayers.Contains(player))
             {
-                stateEntities = new List<EntityState>(add.Count + dirty.Count);
+                stateEntities = new List<EntityState>();
+                var seenEnts = new HashSet<EntityUid>();
+                var slowPath = false;
 
-                foreach (var uid in add)
+                for (var i = fromTick.Value; i <= toTick.Value; i++)
                 {
-                    if (!_entMan.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
+                    var tick = new GameTick(i);
+                    if (!TryGetTick(tick, out var add, out var dirty))
+                    {
+                        slowPath = true;
+                        break;
+                    }
 
-                    DebugTools.Assert(entity.Initialized);
+                    foreach (var uid in add)
+                    {
+                        if (!seenEnts.Add(uid) || !_entMan.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
 
-                    if (entity.LastModifiedTick >= fromTick)
-                        stateEntities.Add(GetEntityState(player, entity.Uid, GameTick.Zero));
+                        DebugTools.Assert(entity.Initialized);
+
+                        if (entity.LastModifiedTick >= fromTick)
+                            stateEntities.Add(GetEntityState(player, entity.Uid, GameTick.Zero));
+                    }
+
+                    foreach (var uid in dirty)
+                    {
+                        DebugTools.Assert(!add.Contains(uid));
+
+                        if (!seenEnts.Add(uid) || !_entMan.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
+
+                        DebugTools.Assert(entity.Initialized);
+
+                        if (entity.LastModifiedTick >= fromTick)
+                            stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
+                    }
                 }
 
-                foreach (var uid in dirty)
+                if (!slowPath)
                 {
-                    DebugTools.Assert(!add.Contains(uid));
-
-                    if (!_entMan.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
-
-                    DebugTools.Assert(entity.Initialized);
-
-                    if (entity.LastModifiedTick >= fromTick)
-                        stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
+                    return stateEntities.Count == 0 ? default : stateEntities;
                 }
-
-                return stateEntities.Count == 0 ? default : stateEntities;
             }
 
             stateEntities = new List<EntityState>(EntityManager.EntityCount);

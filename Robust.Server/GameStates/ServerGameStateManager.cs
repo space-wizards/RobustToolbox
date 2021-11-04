@@ -124,6 +124,7 @@ namespace Robust.Server.GameStates
                 _entityManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
+                _pvs.Cleanup(_playerManager.GetAllPlayers());
                 return;
             }
 

@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
 namespace Robust.Server.GameStates
@@ -20,7 +19,7 @@ namespace Robust.Server.GameStates
         /// </summary>
         private HashSet<EntityUid>[] _addEntities = new HashSet<EntityUid>[DirtyBufferSize];
         private HashSet<EntityUid>[] _dirtyEntities = new HashSet<EntityUid>[DirtyBufferSize];
-        private int _currentIndex = 0;
+        private int _currentIndex = 1;
 
         private void InitializeDirty()
         {
@@ -31,7 +30,7 @@ namespace Robust.Server.GameStates
             }
         }
 
-        private void OnEntityInit(object? sender, EntityUid e)
+        private void OnEntityAdd(object? sender, EntityUid e)
         {
             _addEntities[_currentIndex].Add(e);
         }

@@ -133,7 +133,6 @@ namespace Robust.Server.GameStates
 
             var mainThread = Thread.CurrentThread;
             var parentDeps = IoCManager.Instance!;
-            var players = _playerManager.GetAllPlayers().Where(o => o.Status == SessionStatus.InGame).ToList();
 
             void SendStateUpdate(IPlayerSession session)
             {
@@ -185,7 +184,7 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            Parallel.ForEach(players, session =>
+            Parallel.ForEach(_playerManager.GetAllPlayers(), session =>
             {
                 try
                 {
@@ -197,7 +196,7 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            _pvs.Cleanup(players);
+            _pvs.Cleanup(_playerManager.GetAllPlayers());
             var oldestAck = new GameTick(oldestAckValue);
 
             // keep the deletion history buffers clean

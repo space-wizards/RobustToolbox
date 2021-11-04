@@ -112,6 +112,7 @@ namespace Robust.Server.GameStates
         {
             base.Initialize();
             EntityManager.EntityDeleted += OnEntityDelete;
+            EntityManager.EntityAdded += OnEntityAdd;
             _playerManager.PlayerStatusChanged += OnPlayerStatusChange;
             _mapManager.OnGridRemoved += OnGridRemoved;
 
@@ -121,7 +122,6 @@ namespace Robust.Server.GameStates
             _configManager.OnValueChanged(CVars.StreamedTileRange, SetStreamRange, true);
             _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
 
-            EntityManager.EntityInitialized += OnEntityInit;
             SubscribeLocalEvent<EntityDirtyEvent>(OnDirty);
 
             InitializeDirty();
@@ -151,6 +151,7 @@ namespace Robust.Server.GameStates
         {
             base.Shutdown();
             EntityManager.EntityDeleted -= OnEntityDelete;
+            EntityManager.EntityAdded -= OnEntityAdd;
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChange;
             _mapManager.OnGridRemoved -= OnGridRemoved;
             _configManager.UnsubValueChanged(CVars.StreamedTileRange, SetStreamRange);
@@ -242,7 +243,7 @@ namespace Robust.Server.GameStates
             List<EntityUid>? deletions;
             if (!CullingEnabled)
             {
-                var allStates = GetAllEntityStates(session, fromTick);
+                var allStates = GetAllEntityStates(session, fromTick, toTick);
                 deletions = GetDeletedEntities(fromTick);
                 _playerLastFullMap.AddOrUpdate(session, toTick, (_, _) => toTick);
                 return (allStates, deletions);

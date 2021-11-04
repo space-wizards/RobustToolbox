@@ -65,7 +65,7 @@ namespace Robust.Server.GameStates
         /// <summary>
         ///     Gets all entity states that have been modified after and including the provided tick.
         /// </summary>
-        private List<EntityState>? GetAllEntityStates(ICommonSession player, GameTick fromTick)
+        private List<EntityState>? GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
         {
             List<EntityState> stateEntities;
 

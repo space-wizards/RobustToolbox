@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -524,6 +525,13 @@ namespace Robust.Shared.Physics
             // TODO: Make it take in density instead
             var fixture = new Fixture(body, shape) {Mass = mass};
             CreateFixture(body, fixture);
+        }
+
+        public void DestroyFixture(PhysicsComponent body, string id)
+        {
+            var fixture = body.GetFixture(id);
+            if (fixture == null) return;
+            DestroyFixture(body, fixture);
         }
 
         public void DestroyFixture(Fixture fixture)

@@ -51,7 +51,7 @@ namespace Robust.Client.UserInterface.Controls
             Initialize();
         }
 
-        protected override void Draw(DrawingHandleScreen handle)
+        protected internal override void Draw(DrawingHandleScreen handle)
         {
             if (!_initialized) Initialize();
 
@@ -157,7 +157,7 @@ namespace Robust.Client.UserInterface.Controls
             this.AddChild(new Label { Text = title });
         }
 
-        protected override void Draw(DrawingHandleScreen handle)
+        protected internal override void Draw(DrawingHandleScreen handle)
         {
             if (!_initialized) Initialize();
 

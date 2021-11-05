@@ -371,6 +371,7 @@ namespace Robust.Client.GameObjects
 
             if (layerDatums.Count != 0)
             {
+                LayerMap.Clear();
                 LayerDatums = layerDatums;
             }
         }

@@ -94,7 +94,7 @@ namespace Robust.UnitTesting
             }
 
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
-            Console.WriteLine($"Tests ran: {string.Join('\n', instance.TestsRan)}");
+            Console.WriteLine($"Tests ran ({instance.TestsRan.Count}): {string.Join('\n', instance.TestsRan)}");
             return instance;
         }
 
@@ -137,7 +137,7 @@ namespace Robust.UnitTesting
             }
 
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
-            Console.WriteLine($"Tests ran: {string.Join('\n', instance.TestsRan)}");
+            Console.WriteLine($"Tests ran ({instance.TestsRan.Count}): {string.Join('\n', instance.TestsRan)}");
             return instance;
         }
 

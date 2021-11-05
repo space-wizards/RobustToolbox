@@ -40,13 +40,13 @@ namespace Robust.UnitTesting
         internal static readonly ConcurrentQueue<ClientIntegrationInstance> ClientsReady = new();
         internal static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
 
-        internal static ConcurrentQueue<string> ClientsCreated = new();
-        internal static ConcurrentQueue<string> ClientsPooled = new();
-        internal static ConcurrentQueue<string> ClientsNotPooled = new();
+        internal static readonly ConcurrentQueue<string> ClientsCreated = new();
+        internal static readonly ConcurrentQueue<string> ClientsPooled = new();
+        internal static readonly ConcurrentQueue<string> ClientsNotPooled = new();
 
-        internal static ConcurrentQueue<string> ServersCreated = new();
-        internal static ConcurrentQueue<string> ServersPooled = new();
-        internal static ConcurrentQueue<string> ServersNotPooled = new();
+        internal static readonly ConcurrentQueue<string> ServersCreated = new();
+        internal static readonly ConcurrentQueue<string> ServersPooled = new();
+        internal static readonly ConcurrentQueue<string> ServersNotPooled = new();
 
         private readonly List<IntegrationInstance> _notPooledInstances = new();
 

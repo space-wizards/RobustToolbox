@@ -29,11 +29,18 @@ public class RobustIntegrationTestSetup
             return $"({queue.Count}):\n{string.Join("\n", queue)}\n\n";
         }
 
-        TestContext.Out.WriteLine($"Clients created {QueueToString(ClientsCreated)}");
+        string QueueToCreateString(ConcurrentQueue<string> queue, int total)
+        {
+            return $"({queue.Count}/{total}):\n{string.Join("\n", queue)}\n\n";
+        }
+
+        var totalClients = ClientsPooled.Count + ClientsNotPooled.Count;
+        TestContext.Out.WriteLine($"Clients created {QueueToCreateString(ClientsCreated, totalClients)}");
         TestContext.Out.WriteLine($"Clients pooled {QueueToString(ClientsPooled)}");
         TestContext.Out.WriteLine($"Clients not pooled {QueueToString(ClientsNotPooled)}");
 
-        TestContext.Out.WriteLine($"Servers created {QueueToString(ServersCreated)}");
+        var totalServers = ServersPooled.Count + ServersNotPooled.Count;
+        TestContext.Out.WriteLine($"Servers created {QueueToCreateString(ServersCreated, totalServers)}");
         TestContext.Out.WriteLine($"Servers pooled {QueueToString(ServersPooled)}");
         TestContext.Out.WriteLine($"Servers not pooled {QueueToString(ServersNotPooled)}");
     }

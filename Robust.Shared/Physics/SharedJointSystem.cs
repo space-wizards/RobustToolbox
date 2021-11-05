@@ -163,6 +163,16 @@ namespace Robust.Shared.Physics
             return joint;
         }
 
+        public WeldJoint CreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            var joint = new WeldJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
         #endregion
 
         public static void LinearStiffness(

@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface;
-using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Maths;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
 
-namespace Content.Client.Atmos.Monitor.UI.Widgets
+namespace Robust.Client.UserInterface.Controls
 {
     public class Collapsible : BoxContainer
     {

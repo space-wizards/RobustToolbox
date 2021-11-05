@@ -40,10 +40,20 @@ namespace Robust.UnitTesting
         internal static readonly ConcurrentQueue<ClientIntegrationInstance> ClientsReady = new();
         internal static readonly ConcurrentQueue<ServerIntegrationInstance> ServersReady = new();
 
+        internal static ConcurrentQueue<string> ClientsCreated = new();
+        internal static ConcurrentQueue<string> ClientsPooled = new();
+        internal static ConcurrentQueue<string> ClientsNotPooled = new();
+
+        internal static ConcurrentQueue<string> ServersCreated = new();
+        internal static ConcurrentQueue<string> ServersPooled = new();
+        internal static ConcurrentQueue<string> ServersNotPooled = new();
+
         private readonly List<IntegrationInstance> _notPooledInstances = new();
 
         private readonly ConcurrentDictionary<ClientIntegrationInstance, byte> _clientsRunning = new();
         private readonly ConcurrentDictionary<ServerIntegrationInstance, byte> _serversRunning = new();
+
+        private string TestId => TestContext.CurrentContext.Test.FullName;
 
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
@@ -68,12 +78,19 @@ namespace Robust.UnitTesting
                 {
                     instance = new ServerIntegrationInstance(options);
                     _serversRunning[instance] = 0;
+
+                    ServersCreated.Enqueue(TestId);
                 }
+
+                ServersPooled.Enqueue(TestId);
             }
             else
             {
                 instance = new ServerIntegrationInstance(options);
                 _notPooledInstances.Add(instance);
+
+                ServersCreated.Enqueue(TestId);
+                ServersNotPooled.Enqueue(TestId);
             }
 
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
@@ -104,12 +121,19 @@ namespace Robust.UnitTesting
                 {
                     instance = new ClientIntegrationInstance(options);
                     _clientsRunning[instance] = 0;
+
+                    ClientsCreated.Enqueue(TestId);
                 }
+
+                ClientsPooled.Enqueue(TestId);
             }
             else
             {
                 instance = new ClientIntegrationInstance(options);
                 _notPooledInstances.Add(instance);
+
+                ClientsCreated.Enqueue(TestId);
+                ClientsNotPooled.Enqueue(TestId);
             }
 
             instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
@@ -119,12 +143,6 @@ namespace Robust.UnitTesting
 
         private bool ShouldPool(IntegrationOptions? options)
         {
-            if (Assembly.GetExecutingAssembly() == typeof(RobustIntegrationTest).Assembly)
-            {
-                // When you code it
-                return false;
-            }
-
             return options?.Pool ?? false;
         }
 

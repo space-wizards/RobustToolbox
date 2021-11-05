@@ -27,7 +27,6 @@ namespace Robust.Client.GameObjects
         private bool _setDrawFovOnInitialize = true;
         [DataField("zoom")]
         private Vector2 _setZoomOnInitialize = Vector2.One;
-        private Vector2 _offset = Vector2.Zero;
 
         public IEye? Eye => _eye;
 
@@ -85,14 +84,11 @@ namespace Robust.Client.GameObjects
 
         public override Vector2 Offset
         {
-            get => _offset;
+            get => _eye?.Offset ?? default;
             set
             {
-                if(_offset.EqualsApprox(value))
-                    return;
-
-                _offset = value;
-                UpdateEyePosition();
+                if (_eye != null)
+                    _eye.Offset = value;
             }
         }
 
@@ -171,7 +167,7 @@ namespace Robust.Client.GameObjects
         {
             if (_eye == null) return;
             var mapPos = Owner.Transform.MapPosition;
-            _eye.Position = new MapCoordinates(mapPos.Position + _offset, mapPos.MapId);
+            _eye.Position = new MapCoordinates(mapPos.Position, mapPos.MapId);
         }
     }
 }

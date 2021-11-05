@@ -1,22 +1,14 @@
 ﻿using System;
-using Robust.Client.UserInterface;
 using Robust.Client.Utility;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView.Cef
 {
     internal sealed class ImageBuffer
     {
-        private readonly Control _control;
-
-        public ImageBuffer(Control control)
-        {
-            _control = control;
-        }
-
         public Image<Bgra32> Buffer { get; private set; } = new(1, 1);
 
         public unsafe void UpdateBuffer(int width, int height, IntPtr buffer, CefRectangle dirtyRect)

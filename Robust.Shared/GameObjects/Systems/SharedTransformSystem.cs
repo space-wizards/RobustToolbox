@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects
 {
-    internal class SharedTransformSystem : EntitySystem
+    internal abstract class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -18,6 +18,17 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             _mapManager.TileChanged += MapManagerOnTileChanged;
+            SubscribeLocalEvent<TransformComponent, EntityDirtyEvent>(OnTransformDirty);
+        }
+
+        private void OnTransformDirty(EntityUid uid, TransformComponent component, ref EntityDirtyEvent args)
+        {
+            if (!component.Anchored ||
+                !component.ParentUid.IsValid() ||
+                EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Initialized)
+                return;
+
+            EntityManager.GetComponent<IMapGridComponent>(component.ParentUid).AnchoredEntityDirty(component);
         }
 
         public override void Shutdown()

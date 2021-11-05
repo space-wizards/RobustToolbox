@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using Robust.Shared.Log;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView.Cef
 {
     internal sealed class RobustRequestHandler : CefRequestHandler
     {
         private readonly ISawmill _sawmill;
-        private readonly List<Action<RequestHandlerContext>> _resourceRequestHandlers = new();
-        private readonly List<Action<BeforeBrowseContext>> _beforeBrowseHandlers = new();
+        private readonly List<Action<IRequestHandlerContext>> _resourceRequestHandlers = new();
+        private readonly List<Action<IBeforeBrowseContext>> _beforeBrowseHandlers = new();
 
         public RobustRequestHandler(ISawmill sawmill)
         {
             _sawmill = sawmill;
         }
 
-        public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
+        public void AddResourceRequestHandler(Action<IRequestHandlerContext> handler)
         {
             lock (_resourceRequestHandlers)
             {
@@ -24,7 +24,7 @@ namespace Robust.Client.CEF
             }
         }
 
-        public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
+        public void RemoveResourceRequestHandler(Action<IRequestHandlerContext> handler)
         {
             lock (_resourceRequestHandlers)
             {
@@ -32,7 +32,7 @@ namespace Robust.Client.CEF
             }
         }
 
-        public void AddBeforeBrowseHandler(Action<BeforeBrowseContext> handler)
+        public void AddBeforeBrowseHandler(Action<IBeforeBrowseContext> handler)
         {
             lock (_beforeBrowseHandlers)
             {
@@ -40,7 +40,7 @@ namespace Robust.Client.CEF
             }
         }
 
-        public void RemoveBeforeBrowseHandler(Action<BeforeBrowseContext> handler)
+        public void RemoveBeforeBrowseHandler(Action<IBeforeBrowseContext> handler)
         {
             lock (_beforeBrowseHandlers)
             {
@@ -61,7 +61,7 @@ namespace Robust.Client.CEF
             {
                 _sawmill.Debug($"HANDLING REQUEST: {request.Url}");
 
-                var context = new RequestHandlerContext(isNavigation, isDownload, requestInitiator, request);
+                var context = new CefRequestHandlerContext(isNavigation, isDownload, requestInitiator, request);
 
                 foreach (var handler in _resourceRequestHandlers)
                 {
@@ -85,7 +85,7 @@ namespace Robust.Client.CEF
         {
             lock (_beforeBrowseHandlers)
             {
-                var context = new BeforeBrowseContext(isRedirect, userGesture, request);
+                var context = new CefBeforeBrowseContext(isRedirect, userGesture, request);
 
                 foreach (var handler in _beforeBrowseHandlers)
                 {

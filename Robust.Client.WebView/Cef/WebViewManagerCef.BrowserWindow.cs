@@ -6,26 +6,25 @@ using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 using Xilium.CefGlue;
 
-namespace Robust.Client.CEF
+namespace Robust.Client.WebView.Cef
 {
-    public partial class CefManager
+    internal partial class WebViewManagerCef
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
 
-        private readonly List<BrowserWindowImpl> _browserWindows = new();
+        private readonly List<WebViewWindowImpl> _browserWindows = new();
 
-        public IEnumerable<IBrowserWindow> AllBrowserWindows => _browserWindows;
+        public IEnumerable<IWebViewWindow> AllBrowserWindows => _browserWindows;
 
-        public IBrowserWindow CreateBrowserWindow(BrowserWindowCreateParameters createParams)
+        public IWebViewWindow CreateBrowserWindow(BrowserWindowCreateParameters createParams)
         {
             var mainHWnd = (_clyde.MainWindow as IClydeWindowInternal)?.WindowsHWnd ?? 0;
 
             var info = CefWindowInfo.Create();
-            info.Width = createParams.Width;
-            info.Height = createParams.Height;
+            info.Bounds = new CefRectangle(0, 0, createParams.Width, createParams.Height);
             info.SetAsPopup(mainHWnd, "ss14cef");
 
-            var impl = new BrowserWindowImpl(this);
+            var impl = new WebViewWindowImpl(this);
 
             var lifeSpanHandler = new WindowLifeSpanHandler(impl);
             var reqHandler = new RobustRequestHandler(Logger.GetSawmill("root"));
@@ -40,13 +39,13 @@ namespace Robust.Client.CEF
             return impl;
         }
 
-        private sealed class BrowserWindowImpl : IBrowserWindow
+        private sealed class WebViewWindowImpl : IWebViewWindow
         {
-            private readonly CefManager _manager;
+            private readonly WebViewManagerCef _manager;
             internal CefBrowser Browser = default!;
             internal RobustRequestHandler RequestHandler = default!;
 
-            public Action<RequestHandlerContext>? OnResourceRequest { get; set; }
+            public Action<CefRequestHandlerContext>? OnResourceRequest { get; set; }
 
             [ViewVariables(VVAccess.ReadWrite)]
             public string Url
@@ -73,7 +72,7 @@ namespace Robust.Client.CEF
                 }
             }
 
-            public BrowserWindowImpl(CefManager manager)
+            public WebViewWindowImpl(WebViewManagerCef manager)
             {
                 _manager = manager;
             }
@@ -116,12 +115,12 @@ namespace Robust.Client.CEF
                 Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
             }
 
-            public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
+            public void AddResourceRequestHandler(Action<IRequestHandlerContext> handler)
             {
                 RequestHandler.AddResourceRequestHandler(handler);
             }
 
-            public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
+            public void RemoveResourceRequestHandler(Action<IRequestHandlerContext> handler)
             {
                 RequestHandler.RemoveResourceRequestHandler(handler);
             }
@@ -168,9 +167,9 @@ namespace Robust.Client.CEF
 
         private sealed class WindowLifeSpanHandler : CefLifeSpanHandler
         {
-            private readonly BrowserWindowImpl _windowImpl;
+            private readonly WebViewWindowImpl _windowImpl;
 
-            public WindowLifeSpanHandler(BrowserWindowImpl windowImpl)
+            public WindowLifeSpanHandler(WebViewWindowImpl windowImpl)
             {
                 _windowImpl = windowImpl;
             }

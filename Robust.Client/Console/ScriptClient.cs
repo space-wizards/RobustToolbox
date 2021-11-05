@@ -20,6 +20,8 @@ namespace Robust.Client.Console
             _netManager.RegisterNetMessage<MsgScriptStop>();
             _netManager.RegisterNetMessage<MsgScriptEval>();
             _netManager.RegisterNetMessage<MsgScriptStart>();
+            _netManager.RegisterNetMessage<MsgScriptCompletion>();
+            _netManager.RegisterNetMessage<MsgScriptCompletionResponse>(ReceiveScriptCompletionResponse);
             _netManager.RegisterNetMessage<MsgScriptResponse>(ReceiveScriptResponse);
             _netManager.RegisterNetMessage<MsgScriptStartAck>(ReceiveScriptStartAckResponse);
         }
@@ -42,6 +44,16 @@ namespace Robust.Client.Console
             }
 
             console.ReceiveResponse(message);
+        }
+
+        private void ReceiveScriptCompletionResponse(MsgScriptCompletionResponse message)
+        {
+            if (!_activeConsoles.TryGetValue(message.ScriptSession, out var console))
+            {
+                return;
+            }
+
+            console.ReceiveCompletionResponse(message);
         }
 
         public bool CanScript => _conGroupController.CanScript();

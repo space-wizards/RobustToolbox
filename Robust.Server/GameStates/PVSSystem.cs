@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Composition;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -15,7 +18,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates
 {
-    internal sealed class EntityViewCulling
+    internal sealed class PVSSystem : EntitySystem
     {
         private const int ViewSetCapacity = 256; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
@@ -23,12 +26,15 @@ namespace Robust.Server.GameStates
 
         private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
-        private readonly IServerEntityManager _entMan;
-        private readonly IMapManager _mapManager;
-        private readonly IEntityLookup _lookup;
+        [Shared.IoC.Dependency] private readonly IServerEntityManager _entMan = default!;
+        [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [Shared.IoC.Dependency] private readonly IEntityLookup _lookup = default!;
+        [Shared.IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
 
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
-        internal readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> PlayerChunks = new(PlayerSetSize);
+        private readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> _playerChunks = new(PlayerSetSize);
 
         private readonly Dictionary<ICommonSession, ChunkStreamingData>
             _streamingChunks = new();
@@ -81,23 +87,9 @@ namespace Robust.Server.GameStates
             }
         }
 
-        public EntityViewCulling(IServerEntityManager entMan, IMapManager mapManager, IEntityLookup lookup)
-        {
-            _entMan = entMan;
-            _mapManager = mapManager;
-            _lookup = lookup;
-        }
-
         public void SetTransformNetId(ushort value)
         {
             _transformNetId = value;
-        }
-
-        // Not thread safe
-        public void EntityDeleted(EntityUid e)
-        {
-            // Not aware of prediction
-            _deletionHistory.Add((_entMan.CurrentTick, e));
         }
 
         // Not thread safe
@@ -117,54 +109,86 @@ namespace Robust.Server.GameStates
             return list;
         }
 
-        // Not thread safe
+        public override void Initialize()
+        {
+            base.Initialize();
+            EntityManager.EntityDeleted += OnEntityDelete;
+            _playerManager.PlayerStatusChanged += OnPlayerStatusChange;
+            _mapManager.OnGridRemoved += OnGridRemoved;
+
+            // If you want to make this modifiable at runtime you need to subscribe to tickrate updates and streaming updates
+            // plus invalidate any chunks currently being streamed as well.
+            StreamingTilesPerTick = (int) (_configManager.GetCVar(CVars.StreamedTilesPerSecond) / _gameTiming.TickRate);
+            _configManager.OnValueChanged(CVars.StreamedTileRange, SetStreamRange, true);
+        }
+
+        private void SetStreamRange(float value)
+        {
+            StreamRange = value;
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            EntityManager.EntityDeleted -= OnEntityDelete;
+            _playerManager.PlayerStatusChanged -= OnPlayerStatusChange;
+            _mapManager.OnGridRemoved -= OnGridRemoved;
+            _configManager.UnsubValueChanged(CVars.StreamedTileRange, SetStreamRange);
+        }
+
+        private void OnGridRemoved(MapId mapid, GridId gridid)
+        {
+            // Remove any sort of tracking for when a chunk was sent.
+            foreach (var (_, chunks) in _playerChunks)
+            {
+                foreach (var (chunk, _) in chunks.ToArray())
+                {
+                    if (chunk is not MapChunk mapChunk ||
+                        mapChunk.GridId == gridid)
+                    {
+                        chunks.Remove(chunk);
+                    }
+                }
+            }
+        }
+
+        #region Player Status
+
+        private void OnPlayerStatusChange(object? sender, SessionStatusEventArgs e)
+        {
+            if (e.NewStatus == SessionStatus.InGame)
+            {
+                AddPlayer(e.Session);
+            }
+            else if (e.OldStatus == SessionStatus.InGame)
+            {
+                RemovePlayer(e.Session);
+            }
+        }
+
         public void AddPlayer(ICommonSession session)
         {
             var visSet = _visSetPool.Get();
 
             _playerVisibleSets.Add(session, visSet);
-            PlayerChunks.Add(session, new Dictionary<IMapChunkInternal, GameTick>(32));
+            _playerChunks.Add(session, new Dictionary<IMapChunkInternal, GameTick>(32));
             _streamingChunks.Add(session, new ChunkStreamingData());
         }
 
-        // Not thread safe
         public void RemovePlayer(ICommonSession session)
         {
             _playerVisibleSets.Remove(session);
-            PlayerChunks.Remove(session);
+            _playerChunks.Remove(session);
             _playerLastFullMap.Remove(session, out _);
             _streamingChunks.Remove(session);
         }
 
-        // thread safe
-        public bool IsPointVisible(ICommonSession session, in MapCoordinates position)
+        #endregion
+
+        private void OnEntityDelete(object? sender, EntityUid e)
         {
-            var viewables = GetSessionViewers(session);
-
-            bool CheckInView(MapCoordinates mapCoordinates, HashSet<EntityUid> entityUids)
-            {
-                foreach (var euid in entityUids)
-                {
-                    var (viewBox, mapId) = CalcViewBounds(in euid);
-
-                    if (mapId != mapCoordinates.MapId)
-                        continue;
-
-                    if (!CullingEnabled)
-                        return true;
-
-                    if (viewBox.Contains(mapCoordinates.Position))
-                        return true;
-                }
-
-                return false;
-            }
-
-            bool result = CheckInView(position, viewables);
-
-            viewables.Clear();
-            _viewerEntsPool.Return(viewables);
-            return result;
+            // Not aware of prediction
+            _deletionHistory.Add((EntityManager.CurrentTick, e));
         }
 
         private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
@@ -214,7 +238,7 @@ namespace Robust.Server.GameStates
             if (session.AttachedEntityUid is not null)
             {
                 var viewers = GetSessionViewers(session);
-                var chunksSeen = PlayerChunks[session];
+                var chunksSeen = _playerChunks[session];
 
                 foreach (var eyeEuid in viewers)
                 {
@@ -449,10 +473,10 @@ namespace Robust.Server.GameStates
 
                 //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
                 // deleted list. This seems to happen with the map entity on round restart.
-                if (!_entMan.EntityExists(entityUid))
+                if (!EntityManager.EntityExists(entityUid))
                     continue;
 
-                var xform = _entMan.GetComponent<ITransformComponent>(entityUid);
+                var xform = EntityManager.GetComponent<TransformComponent>(entityUid);
 
                 // Anchored entities don't ever leave
                 if (xform.Anchored) continue;
@@ -477,14 +501,14 @@ namespace Robust.Server.GameStates
             {
 
                 // skip sending anchored entities (walls)
-                DebugTools.Assert(!_entMan.GetComponent<ITransformComponent>(entityUid).Anchored);
+                DebugTools.Assert(!EntityManager.GetComponent<TransformComponent>(entityUid).Anchored);
 
                 if (previousSet.Contains(entityUid))
                 {
                     //Still Visible
 
                     // Nothing new to send
-                    if(_entMan.GetEntity(entityUid).LastModifiedTick < fromTick)
+                    if (EntityManager.GetEntity(entityUid).LastModifiedTick < fromTick)
                         continue;
 
                     // only send new changes
@@ -537,13 +561,13 @@ namespace Robust.Server.GameStates
                 return true;
 
             // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-            if (_entMan.TryGetComponent<VisibilityComponent>(uid, out var visComp))
+            if (EntityManager.TryGetComponent<VisibilityComponent>(uid, out var visComp))
             {
                 if ((visMask & visComp.Layer) == 0)
                     return false;
             }
 
-            var xform = _entMan.GetComponent<TransformComponent>(uid);
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
 
             var parentUid = xform.ParentUid;
 
@@ -606,7 +630,7 @@ namespace Robust.Server.GameStates
         // Read Safe
         private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid)
         {
-            var xform = _entMan.GetComponent<ITransformComponent>(euid);
+            var xform = _entMan.GetComponent<TransformComponent>(euid);
 
             var view = Box2.UnitCentered.Scale(ViewSize).Translated(xform.WorldPosition);
             var map = xform.MapID;

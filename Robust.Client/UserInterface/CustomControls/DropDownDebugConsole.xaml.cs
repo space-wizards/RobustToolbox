@@ -15,16 +15,24 @@ namespace Robust.Client.UserInterface.CustomControls
     public sealed partial class DropDownDebugConsole : Control
     {
         private bool _targetVisible;
+        private float _curAnchorOffset = -ScreenRatio;
+
+        public const float ScreenRatio = 0.35f;
 
         public DropDownDebugConsole()
         {
             RobustXamlLoader.Load(this);
 
             LayoutContainer.SetAnchorPreset(MainControl, LayoutContainer.LayoutPreset.TopWide);
-            LayoutContainer.SetAnchorBottom(MainControl, 0.35f);
 
             MainControl.CommandBar.OnKeyBindDown += CommandBarPubOnOnKeyBindDown;
 
+        }
+
+        private void UpdateAnchorOffset()
+        {
+            LayoutContainer.SetAnchorBottom(MainControl, _curAnchorOffset+ScreenRatio);
+            LayoutContainer.SetAnchorTop(MainControl, _curAnchorOffset);
         }
 
         private void CommandBarPubOnOnKeyBindDown(GUIBoundKeyEventArgs args)
@@ -50,24 +58,23 @@ namespace Robust.Client.UserInterface.CustomControls
                 return;
             }
 
-            var targetLocation = _targetVisible ? 0 : -MainControl.Height;
-            var (posX, posY) = MainControl.Position;
+            var targetOffset = _targetVisible ? 0 : -ScreenRatio;
 
-            if (Math.Abs(targetLocation - posY) <= 1)
+            if (MathHelper.CloseTo(targetOffset, _curAnchorOffset))
             {
                 if (!_targetVisible)
                 {
                     Visible = false;
                 }
 
-                posY = targetLocation;
+                _curAnchorOffset = targetOffset;
             }
             else
             {
-                posY = MathHelper.Lerp(posY, targetLocation, args.DeltaSeconds * 20);
+                _curAnchorOffset = MathHelper.Lerp(_curAnchorOffset, targetOffset, args.DeltaSeconds * 20);
             }
 
-            LayoutContainer.SetPosition(MainControl, (posX, posY));
+            UpdateAnchorOffset();
         }
 
         public void Toggle()

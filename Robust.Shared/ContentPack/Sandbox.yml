@@ -200,6 +200,7 @@ Types:
       - "int get_Height()"
       - "int get_Width()"
       - "SixLabors.ImageSharp.Formats.PixelTypeInfo get_PixelType()"
+      - "SixLabors.ImageSharp.Image`1<!!0> Load<>(System.IO.Stream)"
       - "void Dispose()"
     Image`1:
       Methods:

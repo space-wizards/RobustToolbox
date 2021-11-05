@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.2" />
+    <PackageReference Include="Robust.Natives.Cef" Version="95.7.14" />
   </ItemGroup>
 
   <ItemGroup>

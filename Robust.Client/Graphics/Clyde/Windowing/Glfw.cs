@@ -39,7 +39,7 @@ namespace Robust.Client.Graphics.Clyde
 #if DEBUG
                 _cfg.OnValueChanged(CVars.DisplayWin32Experience, b => _win32Experience = b, true);
 #endif
-                _cfg.OnValueChanged(CVars.DisplayUSQWERTYHotkeys, x => InitKeyMap(), false);
+                _cfg.OnValueChanged(CVars.DisplayUSQWERTYHotkeys, InitKeyMap, false);
 
                 InitChannels();
 
@@ -61,7 +61,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (_glfwInitialized)
                 {
                     _sawmill.Debug("Terminating GLFW.");
-                    _cfg.UnsubValueChanged(CVars.DisplayUSQWERTYHotkeys, x => InitKeyMap());
+                    _cfg.UnsubValueChanged(CVars.DisplayUSQWERTYHotkeys, InitKeyMap);
                     GLFW.Terminate();
                 }
             }
@@ -70,6 +70,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Not currently used
             }
+
+            private void InitKeyMap(bool onValueChanged) => InitKeyMap();
 
             private bool InitGlfw()
             {

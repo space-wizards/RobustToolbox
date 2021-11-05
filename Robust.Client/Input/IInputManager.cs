@@ -111,6 +111,7 @@ namespace Robust.Client.Input
 
         event Action<IKeyBinding> OnKeyBindingAdded;
         event Action<IKeyBinding> OnKeyBindingRemoved;
+        event Action OnInputModeChanged;
 
         /// <summary>
         ///     Gets all the keybinds bound to a specific function.

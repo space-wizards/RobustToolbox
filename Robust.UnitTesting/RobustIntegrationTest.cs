@@ -101,7 +101,7 @@ namespace Robust.UnitTesting
             }
 
             var currentTest = TestContext.CurrentContext.Test.FullName;
-            Console.WriteLine(GetTestsRanString(instance, currentTest));
+            TestContext.Out.WriteLine(GetTestsRanString(instance, currentTest));
             instance.TestsRan.Add(currentTest);
 
             return instance;
@@ -146,7 +146,7 @@ namespace Robust.UnitTesting
             }
 
             var currentTest = TestContext.CurrentContext.Test.FullName;
-            Console.WriteLine(GetTestsRanString(instance, currentTest));
+            TestContext.Out.WriteLine(GetTestsRanString(instance, currentTest));
             instance.TestsRan.Add(currentTest);
 
             return instance;

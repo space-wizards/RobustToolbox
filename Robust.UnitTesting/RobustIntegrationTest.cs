@@ -55,6 +55,13 @@ namespace Robust.UnitTesting
 
         private string TestId => TestContext.CurrentContext.Test.FullName;
 
+        private string GetTestsRanString(IntegrationInstance instance, string running)
+        {
+            return $"Tests ran ({instance.TestsRan.Count}):\n" +
+                   $"{string.Join('\n', instance.TestsRan)}\n" +
+                   $"Currently running: {running}";
+        }
+
         /// <summary>
         ///     Start an instance of the server and return an object that can be used to control it.
         /// </summary>
@@ -93,8 +100,10 @@ namespace Robust.UnitTesting
                 ServersNotPooled.Enqueue(TestId);
             }
 
-            instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
-            Console.WriteLine($"Tests ran ({instance.TestsRan.Count}): {string.Join('\n', instance.TestsRan)}");
+            var currentTest = TestContext.CurrentContext.Test.FullName;
+            Console.WriteLine(GetTestsRanString(instance, currentTest));
+            instance.TestsRan.Add(currentTest);
+
             return instance;
         }
 
@@ -136,8 +145,10 @@ namespace Robust.UnitTesting
                 ClientsNotPooled.Enqueue(TestId);
             }
 
-            instance.TestsRan.Add(TestContext.CurrentContext.Test.FullName);
-            Console.WriteLine($"Tests ran ({instance.TestsRan.Count}): {string.Join('\n', instance.TestsRan)}");
+            var currentTest = TestContext.CurrentContext.Test.FullName;
+            Console.WriteLine(GetTestsRanString(instance, currentTest));
+            instance.TestsRan.Add(currentTest);
+
             return instance;
         }
 

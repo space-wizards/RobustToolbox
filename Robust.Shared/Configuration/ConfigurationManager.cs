@@ -1,10 +1,10 @@
-using Nett;
-using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Nett;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
@@ -410,6 +410,11 @@ namespace Robust.Shared.Configuration
             if (type == typeof(float))
             {
                 return float.Parse(value);
+            }
+
+            if (type?.IsEnum ?? false)
+            {
+                return Enum.Parse(type, value);
             }
 
             // Must be a string.

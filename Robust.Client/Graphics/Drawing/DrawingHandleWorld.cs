@@ -76,6 +76,24 @@ namespace Robust.Client.Graphics
         /// to set the model matrix if needed.
         /// </summary>
         /// <param name="texture">Texture to draw.</param>
+        /// <param name="position">The coordinates of the quad in object space (or world if the transform is identity.).</param>
+        /// <param name="modulate">A color to multiply the texture by when shading.</param>
+        /// <remarks>
+        /// The sprite will have it's local dimensions calculated so that it has <see cref="EyeManager.PixelsPerMeter"/> texels per meter in the world.
+        /// </remarks>
+        public void DrawTexture(Texture texture, Vector2 position, Angle rotation, Color? modulate = null)
+        {
+            CheckDisposed();
+
+            DrawTextureRect(texture, new Box2Rotated(Box2.FromDimensions(position, texture.Size / (float) Ppm), rotation), modulate);
+        }
+
+        /// <summary>
+        /// Draws a full texture sprite to the world. The coordinate system is right handed.
+        /// Make sure to set <see cref="DrawingHandleBase.SetTransform"/>
+        /// to set the model matrix if needed.
+        /// </summary>
+        /// <param name="texture">Texture to draw.</param>
         /// <param name="quad">The four vertices of the quad in object space (or world if the transform is identity.).</param>
         /// <param name="modulate">A color to multiply the texture by when shading.</param>
         public void DrawTextureRect(Texture texture, Box2 quad, Color? modulate = null)

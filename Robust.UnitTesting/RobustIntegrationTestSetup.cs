@@ -37,8 +37,8 @@ public class RobustIntegrationTestSetup
 
         var totalServers = ServersPooled.Count + ServersNotPooled.Count;
         TestContext.Out.WriteLine($"Servers created {QueueToString(ServersCreated, totalServers)}");
-        TestContext.Out.WriteLine($"Servers pooled {QueueToString(ServersPooled, totalClients)}");
-        TestContext.Out.WriteLine($"Servers not pooled {QueueToString(ServersNotPooled, totalClients)}");
+        TestContext.Out.WriteLine($"Servers pooled {QueueToString(ServersPooled, totalServers)}");
+        TestContext.Out.WriteLine($"Servers not pooled {QueueToString(ServersNotPooled, totalServers)}");
     }
 
     [OneTimeTearDown]

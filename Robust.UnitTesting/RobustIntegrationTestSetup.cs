@@ -3,6 +3,7 @@ using NUnit.Framework;
 using static Robust.UnitTesting.RobustIntegrationTest;
 
 [SetUpFixture]
+// ReSharper disable once CheckNamespace
 public class RobustIntegrationTestSetup
 {
     public void Shutdown()

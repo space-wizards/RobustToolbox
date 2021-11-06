@@ -57,7 +57,9 @@ namespace Robust.UnitTesting
 
         private string GetTestsRanString(IntegrationInstance instance, string running)
         {
-            return $"Tests ran ({instance.TestsRan.Count}):\n" +
+            var type = instance is ServerIntegrationInstance ? "Server " : "Client ";
+
+            return $"{type} tests ran ({instance.TestsRan.Count}):\n" +
                    $"{string.Join('\n', instance.TestsRan)}\n" +
                    $"Currently running: {running}";
         }

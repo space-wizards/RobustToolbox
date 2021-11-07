@@ -989,7 +989,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal Transform GetTransform()
+        public Transform GetTransform()
         {
             return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
         }

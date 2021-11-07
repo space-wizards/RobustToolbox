@@ -200,7 +200,7 @@ namespace Robust.Shared.Physics
                 var uid = fixture.Body.Owner.Uid;
 
                 //  || prediction && !fixture.Body.Predict
-                if (!_broadphases.Contains(uid)) continue;
+                if (!_broadphaseInvMatrices.TryGetValue(uid, out var invMatrix)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 DebugTools.Assert(broadphase.Owner.Transform.MapPosition.Position.Equals(Vector2.Zero));
@@ -216,7 +216,7 @@ namespace Robust.Shared.Physics
                     if (other.Fixture.Body == body || moveBuffer.ContainsKey(other)) continue;
 
                     // To avoid updating during iteration.
-                    _gridMoveBuffer[other] = other.AABB;
+                    _gridMoveBuffer[other] = invMatrix.TransformBox(other.AABB);
                 }
 
                 _queryBuffer.Clear();

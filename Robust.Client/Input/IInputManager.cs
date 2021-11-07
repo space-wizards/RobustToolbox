@@ -132,5 +132,7 @@ namespace Robust.Client.Input
         bool IsKeyFunctionModified(BoundKeyFunction function);
 
         bool IsKeyDown(Keyboard.Key key);
+
+        void InputModeChanged();
     }
 }

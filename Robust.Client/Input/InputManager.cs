@@ -112,7 +112,6 @@ namespace Robust.Client.Input
             EngineContexts.SetupContexts(Contexts);
 
             Contexts.ContextChanged += OnContextChanged;
-            _cfg.OnValueChanged(CVars.DisplayUSQWERTYHotkeys, InputModeChanged);
 
             var path = new ResourcePath(KeybindsPath);
             if (_resourceMan.UserData.Exists(path))
@@ -574,7 +573,7 @@ namespace Robust.Client.Input
             OnKeyBindingRemoved?.Invoke(binding);
         }
 
-        private void InputModeChanged(bool onValueChanged) => OnInputModeChanged?.Invoke();
+        public void InputModeChanged() => OnInputModeChanged?.Invoke();
 
         private void RegisterBinding(KeyBinding binding, bool markModified = true)
         {

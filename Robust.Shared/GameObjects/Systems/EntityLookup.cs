@@ -398,7 +398,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
         public void FastEntitiesIntersecting(EntityLookupComponent lookup, ref Box2 localAABB, EntityQueryCallback callback)
         {
             lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) => callback(data));

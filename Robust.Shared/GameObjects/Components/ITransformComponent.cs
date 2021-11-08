@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
@@ -9,7 +10,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Stores the position and orientation of the entity.
     /// </summary>
-    [PublicAPI]
+    [PublicAPI, Obsolete("Use TransformComponent directly instead.")]
     public interface ITransformComponent : IComponent
     {
         /// <summary>
@@ -81,7 +82,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
-        ITransformComponent? Parent { get; }
+        TransformComponent? Parent { get; }
 
         /// <summary>
         /// The UID of the parent entity that this entity is attached to.
@@ -93,12 +94,12 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Finds the transform located on the map or in nullspace
         /// </summary>
-        ITransformComponent GetMapTransform();
+        TransformComponent GetMapTransform();
 
         /// <summary>
         ///     Returns whether the entity of this transform contains the entity argument
         /// </summary>
-        bool ContainsEntity(ITransformComponent entityTransform);
+        bool ContainsEntity(TransformComponent entityTransform);
 
         /// <summary>
         ///     Returns the index of the map which this object is on
@@ -111,10 +112,10 @@ namespace Robust.Shared.GameObjects
         GridId GridID { get; }
 
         void AttachToGridOrMap();
-        void AttachParent(ITransformComponent parent);
+        void AttachParent(TransformComponent parent);
         void AttachParent(IEntity parent);
 
-        IEnumerable<ITransformComponent> Children { get; }
+        IEnumerable<TransformComponent> Children { get; }
         int ChildCount { get; }
         IEnumerable<EntityUid> ChildEntityUids { get; }
 

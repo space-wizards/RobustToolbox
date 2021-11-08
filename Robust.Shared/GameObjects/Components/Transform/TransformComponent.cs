@@ -158,7 +158,7 @@ namespace Robust.Shared.GameObjects
         ///     Current parent entity of this entity.
         /// </summary>
         [ViewVariables]
-        public ITransformComponent? Parent
+        public TransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
             internal set
@@ -291,7 +291,7 @@ namespace Robust.Shared.GameObjects
                     var newParent = newParentEnt.Transform;
 
                     DebugTools.Assert(newParent != this,
-                        $"Can't parent a {nameof(ITransformComponent)} to itself.");
+                        $"Can't parent a {nameof(TransformComponent)} to itself.");
 
                     // That's already our parent, don't bother attaching again.
 
@@ -417,7 +417,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables]
-        public IEnumerable<ITransformComponent> Children =>
+        public IEnumerable<TransformComponent> Children =>
             _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
@@ -645,7 +645,7 @@ namespace Robust.Shared.GameObjects
         /// Sets another entity as the parent entity, maintaining world position.
         /// </summary>
         /// <param name="newParent"></param>
-        public void AttachParent(ITransformComponent newParent)
+        public void AttachParent(TransformComponent newParent)
         {
             //NOTE: This function must be callable from before initialize
 
@@ -654,7 +654,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             DebugTools.Assert(newParent != this,
-                $"Can't parent a {nameof(ITransformComponent)} to itself.");
+                $"Can't parent a {nameof(TransformComponent)} to itself.");
 
             // offset position from world to parent, and set
             Coordinates = new EntityCoordinates(newParent.Owner.Uid, newParent.InvWorldMatrix.Transform(WorldPosition));
@@ -703,7 +703,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Finds the transform of the entity located on the map itself
         /// </summary>
-        public ITransformComponent GetMapTransform()
+        public TransformComponent GetMapTransform()
         {
             if (Parent != null) //If we are not the final transform, query up the chain of parents
             {
@@ -717,7 +717,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Does this entity contain the entity in the argument
         /// </summary>
-        public bool ContainsEntity(ITransformComponent entityTransform)
+        public bool ContainsEntity(TransformComponent entityTransform)
         {
             if (entityTransform.Parent == null) //Is the entity the scene root
             {

@@ -872,7 +872,7 @@ namespace Robust.Server.Maps
 
                 // Don't serialize things parented to un savable things.
                 // For example clothes inside a person.
-                ITransformComponent current = entity.Transform;
+                var current = entity.Transform;
                 while (current.Parent != null)
                 {
                     if (current.Parent.Owner.Prototype?.MapSavable == false)

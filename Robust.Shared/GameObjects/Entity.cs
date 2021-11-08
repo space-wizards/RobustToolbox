@@ -69,11 +69,11 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
-        private ITransformComponent? _transform;
+        private TransformComponent? _transform;
 
         /// <inheritdoc />
         [ViewVariables]
-        public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
+        public TransformComponent Transform => _transform ??= GetComponent<TransformComponent>();
 
         private MetaDataComponent? _metaData;
 

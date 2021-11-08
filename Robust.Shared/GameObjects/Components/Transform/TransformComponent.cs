@@ -17,8 +17,8 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(ITransformComponent))]
-    [NetworkedComponent()]
-    internal class TransformComponent : Component, ITransformComponent, IComponentDebug
+    [NetworkedComponent]
+    public sealed class TransformComponent : Component, ITransformComponent, IComponentDebug
     {
         [DataField("parent")]
         private EntityUid _parent;

@@ -16,9 +16,11 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [ComponentReference(typeof(ITransformComponent))]
+    /// <summary>
+    ///     Stores the position and orientation of the entity.
+    /// </summary>
     [NetworkedComponent]
-    public sealed class TransformComponent : Component, ITransformComponent, IComponentDebug
+    public sealed class TransformComponent : Component, IComponentDebug
     {
         [DataField("parent")]
         private EntityUid _parent;
@@ -44,6 +46,9 @@ namespace Robust.Shared.GameObjects
         private EntityCoordinates? _oldCoords;
         private Angle? _oldLocalRotation;
 
+        /// <summary>
+        ///     While updating did we actually defer anything?
+        /// </summary>
         public bool UpdatesDeferred => _oldCoords != null || _oldLocalRotation != null;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -53,18 +58,24 @@ namespace Robust.Shared.GameObjects
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        /// <inheritdoc />
         public override string Name => "Transform";
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns the index of the map which this object is on
+        /// </summary>
         [ViewVariables]
         public MapId MapID { get; private set; }
 
         private bool _mapIdInitialized;
 
+        /// <summary>
+        ///     Defer updates to the EntityTree and MoveEvent calls if toggled.
+        /// </summary>
         public bool DeferUpdates { get; set; }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns the index of the grid which this object is on
+        /// </summary>
         [ViewVariables]
         public GridId GridID
         {
@@ -84,7 +95,9 @@ namespace Robust.Shared.GameObjects
 
         private GridId _gridId = GridId.Invalid;
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Disables or enables to ability to locally rotate the entity. When set it removes any local rotation.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public bool NoLocalRotation
         {
@@ -99,7 +112,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Current rotation offset of the entity.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
         public Angle LocalRotation
@@ -133,7 +148,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Current world rotation of the entity.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public Angle WorldRotation
         {
@@ -155,7 +172,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Current parent entity of this entity.
+        ///     Reference to the transform of the container of this object if it exists, can be nested several times.
         /// </summary>
         [ViewVariables]
         public TransformComponent? Parent
@@ -179,6 +196,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        /// The UID of the parent entity that this entity is attached to.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public EntityUid ParentUid
         {
@@ -186,7 +206,9 @@ namespace Robust.Shared.GameObjects
             set => Parent = Owner.EntityManager.GetEntity(value).Transform;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Matrix for transforming points from local to world space.
+        /// </summary>
         public Matrix3 WorldMatrix
         {
             get
@@ -203,7 +225,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Matrix for transforming points from world to local space.
+        /// </summary>
         public Matrix3 InvWorldMatrix
         {
             get
@@ -220,9 +244,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
-        [ViewVariables(VVAccess.ReadWrite)]
+        /// <summary>
+        ///     Current position offset of the entity relative to the world.
+        ///     Can de-parent from its parent if the parent is a grid.
+        /// </summary>
         [Animatable]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 WorldPosition
         {
             get
@@ -256,6 +283,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Position offset of this entity relative to its parent.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public EntityCoordinates Coordinates
         {
@@ -339,11 +369,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        /// <summary>
+        ///     Current position offset of the entity relative to the world.
+        ///     This is effectively a more complete version of <see cref="WorldPosition"/>
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public MapCoordinates MapPosition => new(WorldPosition, MapID);
 
-        [ViewVariables(VVAccess.ReadWrite)]
+        /// <summary>
+        ///     Local offset of this entity relative to its parent
+        ///     (<see cref="Parent"/> if it's not null, to <see cref="GridID"/> otherwise).
+        /// </summary>
         [Animatable]
+        [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LocalPosition
         {
             get => _localPosition;
@@ -375,7 +413,9 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Is this transform anchored to a grid tile?
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public bool Anchored
         {
@@ -424,7 +464,6 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public int ChildCount => _children.Count;
 
-        /// <inheritdoc />
         [ViewVariables]
         public Vector2? LerpDestination
         {
@@ -452,7 +491,6 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; private set; }
 
-        /// <inheritdoc />
         protected override void Initialize()
         {
             base.Initialize();
@@ -528,7 +566,6 @@ namespace Robust.Shared.GameObjects
             return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
         }
 
-        /// <inheritdoc />
         protected override void Startup()
         {
             // Re-Anchor the entity if needed.
@@ -542,6 +579,9 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
+        /// <summary>
+        ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
+        /// </summary>
         public void RunDeferred(Box2 worldAABB)
         {
             // if we resolved to (close enough) to the OG position then no update.
@@ -614,7 +654,6 @@ namespace Robust.Shared.GameObjects
             Dirty();
         }
 
-        /// <inheritdoc />
         public void DetachParentToNull()
         {
             var oldParent = Parent;
@@ -715,7 +754,7 @@ namespace Robust.Shared.GameObjects
 
 
         /// <summary>
-        ///     Does this entity contain the entity in the argument
+        ///     Returns whether the entity of this transform contains the entity argument
         /// </summary>
         public bool ContainsEntity(TransformComponent entityTransform)
         {
@@ -736,14 +775,11 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <param name="player"></param>
-        /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession player)
         {
             return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation, _anchored);
         }
 
-        /// <inheritdoc />
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             if (curState != null)
@@ -888,7 +924,7 @@ namespace Robust.Shared.GameObjects
         ///     Serialized state of a TransformComponent.
         /// </summary>
         [Serializable, NetSerializable]
-        protected internal class TransformComponentState : ComponentState
+        internal class TransformComponentState : ComponentState
         {
             /// <summary>
             ///     Current parent entity of this entity.

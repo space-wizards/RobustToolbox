@@ -47,7 +47,7 @@ namespace Robust.Shared.GameObjects
         public bool UpdatesDeferred => _oldCoords != null || _oldLocalRotation != null;
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool ActivelyLerping { get; set; }
+        internal bool ActivelyLerping { get; set; }
 
         [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
 
@@ -161,7 +161,7 @@ namespace Robust.Shared.GameObjects
         public ITransformComponent? Parent
         {
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
-            set
+            internal set
             {
                 if (_anchored && value?.Owner.Uid != _parent)
                 {
@@ -429,7 +429,7 @@ namespace Robust.Shared.GameObjects
         public Vector2? LerpDestination
         {
             get => _nextPosition;
-            set
+            internal set
             {
                 _nextPosition = value;
                 ActivelyLerping = true;
@@ -437,7 +437,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables]
-        public Angle? LerpAngle
+        internal Angle? LerpAngle
         {
             get => _nextRotation;
             set
@@ -447,10 +447,10 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [ViewVariables] public Vector2 LerpSource => _prevPosition;
-        [ViewVariables] public Angle LerpSourceAngle => _prevRotation;
+        [ViewVariables] internal Vector2 LerpSource => _prevPosition;
+        [ViewVariables] internal Angle LerpSourceAngle => _prevRotation;
 
-        [ViewVariables] public EntityUid LerpParent { get; private set; }
+        [ViewVariables] internal EntityUid LerpParent { get; private set; }
 
         /// <inheritdoc />
         protected override void Initialize()
@@ -645,7 +645,7 @@ namespace Robust.Shared.GameObjects
         /// Sets another entity as the parent entity, maintaining world position.
         /// </summary>
         /// <param name="newParent"></param>
-        public virtual void AttachParent(ITransformComponent newParent)
+        public void AttachParent(ITransformComponent newParent)
         {
             //NOTE: This function must be callable from before initialize
 
@@ -932,7 +932,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public void SetAnchored(bool value)
+        internal void SetAnchored(bool value)
         {
             _anchored = value;
             Dirty();

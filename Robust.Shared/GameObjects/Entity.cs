@@ -29,15 +29,7 @@ namespace Robust.Shared.GameObjects
         public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
 
         [ViewVariables]
-        GameTick IEntity.LastModifiedTick
-        {
-            get => _metaData?.EntityLastModifiedTick ?? GameTick.First;
-            set
-            {
-                if(_metaData != null)
-                    _metaData.EntityLastModifiedTick = value;
-            }
-        }
+        GameTick IEntity.LastModifiedTick { get => MetaData.EntityLastModifiedTick; set => MetaData.EntityLastModifiedTick = value; }
 
 
         /// <inheritdoc />

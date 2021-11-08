@@ -148,28 +148,35 @@ namespace Robust.Shared.GameObjects
 
             var oldParent = args.OldParent;
             var linearVelocityDiff = Vector2.Zero;
-            var angularVelocityDiff = 0f;
 
             if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
-                linearVelocityDiff += linear;
-                angularVelocityDiff += angular;
+                // Our rotation system is backwards; invert the angular velocity
+                var o = -angular;
+
+                // Get the vector between the parent and the entity leaving
+                var r = oldParent.Transform.WorldPosition - entity.Transform.WorldPosition;
+
+                // Get the tangent of r by rotating it π/2 rad (90°)
+                var v = new Angle(MathHelper.PiOver2).RotateVec(r);
+
+                // Scale the new vector by the angular velocity
+                v *= o;
+
+                linearVelocityDiff += linear + v;
             }
 
             var newParent = entity.Transform.Parent?.Owner;
 
             if (newParent != null && newParent.TryGetComponent(out PhysicsComponent? newBody))
             {
-                var (linear, angular) = newBody.MapVelocities;
-
-                linearVelocityDiff -= linear;
-                angularVelocityDiff -= angular;
+                // TODO: Apply child's linear as angular on the parent?
+                linearVelocityDiff -= newBody.MapLinearVelocity;
             }
 
             body.LinearVelocity += linearVelocityDiff;
-            body.AngularVelocity += angularVelocityDiff;
         }
 
         private void HandleGridInit(GridInitializeEvent ev)

@@ -277,8 +277,8 @@ namespace Robust.Shared.Map
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
                     mapComp.WorldMap = actualID;
-                    newEnt.InitializeComponents();
-                    newEnt.StartAllComponents();
+                    _entityManager.InitializeComponents(newEnt.Uid);
+                    _entityManager.StartComponents(newEnt.Uid);
                     Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
                 }
             }
@@ -303,8 +303,8 @@ namespace Robust.Shared.Map
             var newEntity = (Entity) _entityManager.CreateEntityUninitialized(null);
             SetMapEntity(mapId, newEntity);
 
-            newEntity.InitializeComponents();
-            newEntity.StartAllComponents();
+            _entityManager.InitializeComponents(newEntity.Uid);
+            _entityManager.StartComponents(newEntity.Uid);
 
             return newEntity;
         }
@@ -479,8 +479,8 @@ namespace Robust.Shared.Map
                     //use in transform states anytime before the state parent is properly set.
                     gridEnt.Transform.AttachParent(GetMapEntity(currentMapID));
 
-                    gridEnt.InitializeComponents();
-                    gridEnt.StartAllComponents();
+                    _entityManager.InitializeComponents(gridEnt.Uid);
+                    _entityManager.StartComponents(gridEnt.Uid);
                 }
             }
             else

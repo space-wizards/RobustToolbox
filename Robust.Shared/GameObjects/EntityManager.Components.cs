@@ -88,6 +88,69 @@ namespace Robust.Shared.GameObjects
 
         #region Component Management
 
+        public void InitializeComponents(EntityUid uid)
+        {
+            var metadata = GetComponent<MetaDataComponent>(uid);
+            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
+            metadata.EntityLifeStage = EntityLifeStage.Initializing;
+
+            // Initialize() can modify the collection of components.
+            var components = GetComponents(uid)
+                .OrderBy(x => x switch
+                {
+                    TransformComponent _ => 0,
+                    IPhysBody _ => 1,
+                    _ => int.MaxValue
+                });
+
+            foreach (var component in components)
+            {
+                var comp = (Component) component;
+                if (comp.Initialized)
+                    continue;
+
+                comp.LifeInitialize();
+            }
+
+#if DEBUG
+            // Second integrity check in case of.
+            foreach (var t in GetComponents(uid))
+            {
+                if (!t.Initialized)
+                {
+                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                }
+            }
+
+#endif
+            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
+            metadata.EntityLifeStage = EntityLifeStage.Initialized;
+            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(GetEntity(uid)));
+        }
+
+        public void StartComponents(EntityUid uid)
+        {
+            // TODO: Move this to EntityManager.
+            // Startup() can modify _components
+            // This code can only handle additions to the list. Is there a better way? Probably not.
+            var comps = GetComponents(uid)
+                .OrderBy(x => x switch
+                {
+                    TransformComponent _ => 0,
+                    IPhysBody _ => 1,
+                    _ => int.MaxValue
+                });
+
+            foreach (var component in comps)
+            {
+                var comp = (Component) component;
+                if (comp.LifeStage == ComponentLifeStage.Initialized)
+                {
+                    comp.LifeStartup();
+                }
+            }
+        }
+
         public T AddComponent<T>(IEntity entity) where T : Component, new()
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));

@@ -6,7 +6,6 @@ using Prometheus;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -446,13 +445,13 @@ namespace Robust.Shared.GameObjects
 
         protected void InitializeEntity(Entity entity)
         {
-            entity.InitializeComponents();
+            InitializeComponents(entity.Uid);
             EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)
         {
-            entity.StartAllComponents();
+            StartComponents(entity.Uid);
             EntityStarted?.Invoke(this, entity.Uid);
         }
 

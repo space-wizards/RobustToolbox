@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.Map;

@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
                         $"Component reference type {type} already occupied by {duplicate}");
 
                 // these two components are required on all entities and cannot be overwritten.
-                if (duplicate is ITransformComponent || duplicate is MetaDataComponent)
+                if (duplicate is TransformComponent || duplicate is MetaDataComponent)
                     throw new InvalidOperationException("Tried to overwrite a protected component.");
 
                 RemoveComponentImmediate(duplicate, uid, false);
@@ -228,7 +228,7 @@ namespace Robust.Shared.GameObjects
                 => x switch
                 {
                     MetaDataComponent _ => 0,
-                    ITransformComponent _ => 1,
+                    TransformComponent _ => 1,
                     IPhysBody _ => 2,
                     _ => int.MaxValue
                 };
@@ -271,7 +271,7 @@ namespace Robust.Shared.GameObjects
             {
 #endif
             // these two components are required on all entities and cannot be removed normally.
-            if (!removeProtected && component is ITransformComponent or MetaDataComponent)
+            if (!removeProtected && component is TransformComponent or MetaDataComponent)
             {
                 DebugTools.Assert("Tried to remove a protected component.");
                 return;
@@ -311,7 +311,7 @@ namespace Robust.Shared.GameObjects
             if (!component.Deleted)
             {
                 // these two components are required on all entities and cannot be removed.
-                if (!removeProtected && component is ITransformComponent or MetaDataComponent)
+                if (!removeProtected && component is TransformComponent or MetaDataComponent)
                 {
                     DebugTools.Assert("Tried to remove a protected component.");
                     return;

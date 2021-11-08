@@ -20,9 +20,9 @@ namespace Robust.Shared.GameObjects
         IMapGrid Grid { get; }
         void ClearGridId();
 
-        bool AnchorEntity(ITransformComponent transform);
-        void UnanchorEntity(ITransformComponent transform);
-        void AnchoredEntityDirty(ITransformComponent transform);
+        bool AnchorEntity(TransformComponent transform);
+        void UnanchorEntity(TransformComponent transform);
+        void AnchoredEntityDirty(TransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -68,7 +68,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool AnchorEntity(ITransformComponent transform)
+        public bool AnchorEntity(TransformComponent transform)
         {
             var xform = (TransformComponent) transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
@@ -93,7 +93,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void UnanchorEntity(ITransformComponent transform)
+        public void UnanchorEntity(TransformComponent transform)
         {
             //HACK: Client grid pivot causes this.
             //TODO: make grid components the actual grid
@@ -111,7 +111,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void AnchoredEntityDirty(ITransformComponent transform)
+        public void AnchoredEntityDirty(TransformComponent transform)
         {
             if (!transform.Anchored)
                 return;

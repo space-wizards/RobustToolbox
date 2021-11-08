@@ -72,7 +72,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<(ITransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
+        private List<(TransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.

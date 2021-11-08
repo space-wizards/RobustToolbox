@@ -115,7 +115,7 @@ namespace Robust.Shared.GameObjects
             var components = EntityManager.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {
-                    ITransformComponent _ => 0,
+                    TransformComponent _ => 0,
                     IPhysBody _ => 1,
                     _ => int.MaxValue
                 });
@@ -156,7 +156,7 @@ namespace Robust.Shared.GameObjects
             var comps = EntityManager.GetComponents(Uid)
                 .OrderBy(x => x switch
                 {
-                    ITransformComponent _ => 0,
+                    TransformComponent _ => 0,
                     IPhysBody _ => 1,
                     _ => int.MaxValue
                 });

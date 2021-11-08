@@ -42,7 +42,7 @@ namespace Robust.Shared.Player
         public Filter AddPlayersByPvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
         {
             entityManager ??= IoCManager.Resolve<IEntityManager>();
-            var transform = entityManager.GetComponent<ITransformComponent>(origin);
+            var transform = entityManager.GetComponent<TransformComponent>(origin);
             return AddPlayersByPvs(transform.MapPosition, rangeMultiplier);
         }
 
@@ -59,7 +59,7 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(ITransformComponent origin, float rangeMultiplier = 2f)
+        public Filter AddPlayersByPvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
             return AddPlayersByPvs(origin.MapPosition, rangeMultiplier);
         }
@@ -346,7 +346,7 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     A filter with every player who's PVS overlaps this point.
         /// </summary>
-        public static Filter Pvs(ITransformComponent origin, float rangeMultiplier = 2f)
+        public static Filter Pvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier);
         }

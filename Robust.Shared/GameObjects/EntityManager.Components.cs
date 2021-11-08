@@ -355,11 +355,6 @@ namespace Robust.Shared.GameObjects
 
             var entityUid = component.Owner.Uid;
 
-            foreach (var refType in reg.References)
-            {
-                _entTraitDict[refType].Remove(entityUid);
-            }
-
             // ReSharper disable once InvertIf
             if (reg.NetID != null)
             {
@@ -370,6 +365,11 @@ namespace Robust.Shared.GameObjects
                     netSet.Remove(reg.NetID.Value);
 
                 DirtyEntity(entityUid);
+            }
+
+            foreach (var refType in reg.References)
+            {
+                _entTraitDict[refType].Remove(entityUid);
             }
 
             _entCompIndex.Remove(entityUid, component);

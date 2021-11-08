@@ -28,6 +28,18 @@ namespace Robust.Shared.GameObjects
 
         public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
 
+        [ViewVariables]
+        GameTick IEntity.LastModifiedTick
+        {
+            get => _metaData?.EntityLastModifiedTick ?? GameTick.First;
+            set
+            {
+                if(_metaData != null)
+                    _metaData.EntityLastModifiedTick = value;
+            }
+        }
+
+
         /// <inheritdoc />
         [ViewVariables]
         public EntityPrototype? Prototype
@@ -43,11 +55,6 @@ namespace Robust.Shared.GameObjects
             get => MetaData.EntityDescription;
             set => MetaData.EntityDescription = value;
         }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
-        GameTick IEntity.LastModifiedTick { get; set; } = new(1);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]

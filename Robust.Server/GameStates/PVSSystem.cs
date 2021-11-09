@@ -350,9 +350,9 @@ namespace Robust.Server.GameStates
 
                     chunk.FastGetAllAnchoredEnts(uid =>
                     {
-                        var ent = _entMan.GetEntity(uid);
+                        var ent = _entMan.GetComponent<MetaDataComponent>(uid);
 
-                        if (ent.LastModifiedTick < lastSeenChunk)
+                        if (ent.EntityLastModifiedTick < lastSeenChunk)
                             return;
 
                         var newState = ServerGameStateManager.GetEntityState(_entMan, session, uid, lastSeenChunk);
@@ -508,7 +508,7 @@ namespace Robust.Server.GameStates
                     //Still Visible
 
                     // Nothing new to send
-                    if (EntityManager.GetEntity(entityUid).LastModifiedTick < fromTick)
+                    if (EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick)
                         continue;
 
                     // only send new changes

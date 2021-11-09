@@ -9,7 +9,7 @@ namespace Robust.Shared.Physics
         {
             Vector2 result = new Vector2();
 
-            for (ITransformComponent transform = entity.Transform; transform.Parent != null; transform = transform.Parent)
+            for (TransformComponent transform = entity.Transform; transform.Parent != null; transform = transform.Parent)
             {
                 if (transform.Owner.TryGetComponent(out PhysicsComponent? physicsComponent))
                 {

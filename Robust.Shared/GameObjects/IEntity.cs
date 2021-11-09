@@ -70,7 +70,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     The entity's transform component.
         /// </summary>
-        ITransformComponent Transform { get; }
+        TransformComponent Transform { get; }
 
         /// <summary>
         ///     The MetaData Component of this entity.

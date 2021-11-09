@@ -24,10 +24,12 @@ namespace Robust.Client.Player
         public event Action<EntityDetachedEventArgs>? EntityDetached;
 
         /// <summary>
-        ///     Game entity that the local player is controlling. If this is null, the player
-        ///     is in free/spectator cam.
+        ///     Game entity that the local player is controlling. If this is null, the player is not attached to any
+        ///     entity at all.
         /// </summary>
         [ViewVariables] public IEntity? ControlledEntity { get; private set; }
+
+        [ViewVariables] public EntityUid? ControlledEntityUid => ControlledEntity?.Uid;
 
 
         [ViewVariables] public NetUserId UserId { get; set; }

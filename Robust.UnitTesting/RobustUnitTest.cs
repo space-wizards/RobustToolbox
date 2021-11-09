@@ -71,6 +71,8 @@ namespace Robust.UnitTesting
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
+            configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
+
             // Required systems
             var systems = IoCManager.Resolve<IEntitySystemManager>();
             systems.Initialize();

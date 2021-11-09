@@ -537,7 +537,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private static Box2 GetAABB(IEye eye, Viewport viewport)
         {
-            return Box2.CenteredAround(eye.Position.Position,
+            return Box2.CenteredAround(eye.Position.Position + eye.Offset,
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
         }
 

@@ -164,8 +164,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             _indexA = BodyA.IslandIndex[data.IslandIndex];
 	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = Vector2.Zero; //BodyA->m_sweep.localCenter;
-            _localCenterB = Vector2.Zero; //BodyB->m_sweep.localCenter;
+            _localCenterA = BodyA.LocalCenter;
+            _localCenterB = BodyB.LocalCenter;
 	        _invMassA = BodyA.InvMass;
 	        _invMassB = BodyB.InvMass;
 	        _invIA = BodyA.InvI;

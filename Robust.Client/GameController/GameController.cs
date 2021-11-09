@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Runtime;
@@ -11,7 +10,6 @@ using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Placement;
-using Robust.Client.Player;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface;
@@ -112,7 +110,7 @@ namespace Robust.Client
             IoCManager.Resolve<ISerializationManager>().Initialize();
 
             // Load optional Robust modules.
-            LoadOptionalRobustModules();
+            LoadOptionalRobustModules(displayMode);
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);

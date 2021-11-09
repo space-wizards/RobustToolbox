@@ -372,6 +372,7 @@ namespace Robust.Client.GameObjects
 
             if (layerDatums.Count != 0)
             {
+                LayerMap.Clear();
                 LayerDatums = layerDatums;
             }
         }
@@ -2070,18 +2071,9 @@ namespace Robust.Client.GameObjects
                 return results;
             }
 
-            var dummy = new DummyIconEntity { Prototype = prototype };
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-
-            if (prototype.Components.TryGetValue("Appearance", out _))
-            {
-                var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
-                foreach (var layer in appearanceComponent.Visualizers)
-                {
-                    layer.InitializeEntity(dummy);
-                    layer.OnChangeData(appearanceComponent);
-                }
-            }
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
 
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
@@ -2101,7 +2093,7 @@ namespace Robust.Client.GameObjects
 
             noRot = spriteComponent.NoRotation;
 
-            dummy.Delete();
+            entityManager.DeleteEntity(dummy);
 
             if (!anyTexture)
                 results.Add(resourceCache.GetFallback<TextureResource>().Texture);
@@ -2118,144 +2110,14 @@ namespace Robust.Client.GameObjects
                 return GetFallbackState(resourceCache);
             }
 
-            var dummy = new DummyIconEntity { Prototype = prototype };
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-            dummy.Delete();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
+            var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            entityManager.DeleteEntity(dummy);
 
-            return spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            return result;
         }
-
-        #region DummyIconEntity
-        private class DummyIconEntity : IEntity
-        {
-            GameTick IEntity.LastModifiedTick { get; set; } = GameTick.Zero;
-            public IEntityManager EntityManager { get; } = null!;
-            public string Name { get; set; } = string.Empty;
-            public EntityUid Uid { get; } = EntityUid.Invalid;
-            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
-            public bool Initialized { get; } = false;
-            public bool Initializing { get; } = false;
-            public bool Deleted { get; } = true;
-            public bool Paused { get; set; }
-            public EntityPrototype? Prototype { get; set; }
-
-            public string Description { get; set; } = string.Empty;
-            public bool IsValid()
-            {
-                return false;
-            }
-
-            public ITransformComponent Transform { get; } = null!;
-            public MetaDataComponent MetaData { get; } = null!;
-
-            private Dictionary<Type, IComponent> _components = new();
-            private EntityLifeStage _lifeStage;
-
-            public T AddComponent<T>() where T : Component, new()
-            {
-                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serializationManager = IoCManager.Resolve<ISerializationManager>();
-                var comp = (T)typeFactory.CreateInstanceUnchecked(typeof(T));
-                _components[typeof(T)] = comp;
-                comp.Owner = this;
-
-                if (typeof(ISpriteComponent).IsAssignableFrom(typeof(T)))
-                {
-                    _components[typeof(ISpriteComponent)] = comp;
-                }
-
-                if (Prototype != null && Prototype.TryGetComponent<T>(comp.Name, out var node))
-                {
-                    comp = serializationManager.Copy(node, comp)!;
-                }
-
-                return comp;
-            }
-
-            public void RemoveComponent<T>()
-            {
-                _components.Remove(typeof(T));
-            }
-
-            public bool HasComponent<T>()
-            {
-                return _components.ContainsKey(typeof(T));
-            }
-
-            public bool HasComponent(Type type)
-            {
-                return _components.ContainsKey(type);
-            }
-
-            public T GetComponent<T>()
-            {
-                return (T)_components[typeof(T)];
-            }
-
-            public IComponent GetComponent(Type type)
-            {
-                return null!;
-            }
-
-            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
-            {
-                component = null;
-                if (!_components.TryGetValue(typeof(T), out var value)) return false;
-                component = (T)value;
-                return true;
-            }
-
-            public T? GetComponentOrNull<T>() where T : class
-            {
-                return null;
-            }
-
-            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
-            {
-                component = null;
-                if (!_components.TryGetValue(type, out var value)) return false;
-                component = value;
-                return true;
-            }
-
-            public IComponent? GetComponentOrNull(Type type)
-            {
-                return null;
-            }
-
-            public void QueueDelete()
-            {
-            }
-
-            public void Delete()
-            {
-            }
-
-            public IEnumerable<IComponent> GetAllComponents()
-            {
-                return Enumerable.Empty<IComponent>();
-            }
-
-            public IEnumerable<T> GetAllComponents<T>()
-            {
-                return Enumerable.Empty<T>();
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendMessage(IComponent? owner, ComponentMessage message)
-            {
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
-            {
-            }
-
-            public void Dirty()
-            {
-            }
-        }
-        #endregion
     }
 
     internal sealed class SpriteUpdateEvent : EntityEventArgs

@@ -1,8 +1,8 @@
 ﻿using Xilium.CefGlue;
 
-namespace Robust.Client.WebView
+namespace Robust.Client.WebView.Cef
 {
-    public sealed class BeforeBrowseContext
+    internal sealed class CefBeforeBrowseContext : IBeforeBrowseContext
     {
         internal readonly CefRequest CefRequest;
 
@@ -14,7 +14,7 @@ namespace Robust.Client.WebView
 
         public bool IsCancelled { get; private set; }
 
-        internal BeforeBrowseContext(
+        internal CefBeforeBrowseContext(
             bool isRedirect,
             bool userGesture,
             CefRequest cefRequest)

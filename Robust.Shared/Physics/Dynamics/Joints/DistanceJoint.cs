@@ -28,10 +28,8 @@ using System;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
-using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
@@ -296,8 +294,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             _indexA = BodyA.IslandIndex[data.IslandIndex];
 	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = Vector2.Zero; //BodyA->m_sweep.localCenter;
-            _localCenterB = Vector2.Zero; //BodyB->m_sweep.localCenter;
+            _localCenterA = BodyA.LocalCenter;
+            _localCenterB = BodyB.LocalCenter;
 	        _invMassA = BodyA.InvMass;
 	        _invMassB = BodyB.InvMass;
 	        _invIA = BodyA.InvI;

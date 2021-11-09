@@ -333,7 +333,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 // Didn't use the old variable names because they're hard to read
                 var transform = _physicsManager.EnsureTransform(body);
-                var position = transform.Position;
+                var position = Transform.Mul(transform, body.LocalCenter);
                 // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
                 var angle = transform.Quaternion2D.Angle;
 
@@ -479,7 +479,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
+        internal void UpdateBodies(List<(TransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
         {
             foreach (var (joint, error) in _brokenJoints)
             {
@@ -510,6 +510,9 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // Temporary NaN guards until PVS is fixed.
                 if (!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y))
                 {
+                    var q = new Quaternion2D(angle);
+
+                    bodyPos -= Transform.Mul(q, body.LocalCenter);
                     // body.Sweep.Center = bodyPos;
                     // body.Sweep.Angle = angle;
 

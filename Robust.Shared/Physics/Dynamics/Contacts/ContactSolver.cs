@@ -161,9 +161,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 positionConstraint.IndexA = bodyA.IslandIndex[data.IslandIndex];
                 positionConstraint.IndexB = bodyB.IslandIndex[data.IslandIndex];
                 (positionConstraint.InvMassA, positionConstraint.InvMassB) = (invMassA, invMassB);
-                // TODO: Dis
-                // positionConstraint.LocalCenterA = bodyA._sweep.LocalCenter;
-                // positionConstraint.LocalCenterB = bodyB._sweep.LocalCenter;
                 positionConstraint.LocalCenterA = bodyA.LocalCenter;
                 positionConstraint.LocalCenterB = bodyB.LocalCenter;
 

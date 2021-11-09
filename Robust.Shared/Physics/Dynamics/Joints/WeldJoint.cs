@@ -55,6 +55,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private Matrix33 _mass;
 
         // Settable
+        /// <summary>
+        /// The bodyB angle minus bodyA angle in the reference state (radians).
+        /// </summary>
         public float ReferenceAngle;
 
         public WeldJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner.Uid, bodyB.Owner.Uid)

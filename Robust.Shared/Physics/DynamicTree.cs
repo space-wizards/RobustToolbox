@@ -49,7 +49,7 @@ namespace Robust.Shared.Physics
 
         // box2d grows by *2, here we're being somewhat more linear
         private static int DefaultGrowthFunc(int x)
-            => x + 256;
+            => x * 2;
 
     }
 

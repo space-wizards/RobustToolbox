@@ -126,10 +126,28 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
     }
 
+    /// <summary>
+    /// Prismatic joint definition. This requires defining a line of
+    /// motion using an axis and an anchor point. The definition uses local
+    /// anchor points and a local axis so that the initial configuration
+    /// can violate the constraint slightly. The joint translation is zero
+    /// when the local anchor points coincide in world space.
+    /// </summary>
     public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
     {
         /// The local translation unit axis in bodyA.
-        public Vector2 LocalAxisA;
+        public Vector2 LocalAxisA
+        {
+            get => _localAxisA;
+            set
+            {
+                _localAxisA = value;
+                _localXAxisA = value.Normalized;
+                _localYAxisA = Vector2.Cross(1f, _localXAxisA);
+            }
+        }
+
+        private Vector2 _localAxisA;
 
         /// The constrained angle between the bodies: bodyB_angle - bodyA_angle.
         public float ReferenceAngle;
@@ -152,21 +170,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// The desired motor speed in radians per second.
         public float MotorSpeed;
 
-        public Vector2 LocalXAxisA
-        {
-            get => _localXAxisA;
-            set
-            {
-
-                var normalised = value == Vector2.Zero ? Vector2.Zero : value.Normalized;
-
-                _localXAxisA = normalised;
-                _localYAxisA = Vector2.Cross(1f, _localXAxisA);
-            }
-        }
-
-        private Vector2 _localXAxisA;
-
+        internal Vector2 _localXAxisA;
         internal Vector2 _localYAxisA;
 
         private Vector2 _impulse;
@@ -190,7 +194,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _translation;
         private float _axialMass;
 
-        public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
+        public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid)
+        {
+            LocalAxisA = new Vector2(1f, 0f);
+        }
 
         public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid, Vector2 anchor, Vector2 axis, IEntityManager entityManager) : base(bodyAUid, bodyBUid)
         {
@@ -260,7 +267,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
 	        // Compute motor Jacobian and effective mass.
 	        {
-		        _axis = Transform.Mul(qA, LocalXAxisA);
+		        _axis = Transform.Mul(qA, _localXAxisA);
 		        _a1 = Vector2.Cross(d + rA, _axis);
 		        _a2 = Vector2.Cross(rB, _axis);
 
@@ -454,7 +461,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 	        Vector2 rB = Transform.Mul(qB, LocalAnchorB - _localCenterB);
 	        Vector2 d = cB + rB - cA - rA;
 
-	        Vector2 axis = Transform.Mul(qA, LocalXAxisA);
+	        Vector2 axis = Transform.Mul(qA, _localXAxisA);
 	        float a1 = Vector2.Cross(d + rA, axis);
 	        float a2 = Vector2.Cross(rB, axis);
 	        Vector2 perp = Transform.Mul(qA, _localYAxisA);

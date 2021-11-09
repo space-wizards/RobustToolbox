@@ -428,7 +428,7 @@ namespace Robust.Client.Debugging
                     var pA = Transform.Mul(xfa, joint.LocalAnchorA);
                     var pB = Transform.Mul(xfb, joint.LocalAnchorB);
 
-                    var axis = Transform.Mul(xfa.Quaternion2D, prisma.LocalXAxisA);
+                    var axis = Transform.Mul(xfa.Quaternion2D, prisma._localXAxisA);
 
                     Color c1 = new(0.7f, 0.7f, 0.7f);
                     Color c2 = new(0.3f, 0.9f, 0.3f);

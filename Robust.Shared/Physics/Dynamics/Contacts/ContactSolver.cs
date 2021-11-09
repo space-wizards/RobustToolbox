@@ -35,7 +35,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private bool _warmStarting;
         private float _velocityThreshold;
         private float _baumgarte;
-        private float _linearSlop;
         private float _maxLinearCorrection;
         private float _maxAngularCorrection;
 
@@ -61,7 +60,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             _warmStarting = cfg.WarmStarting;
             _velocityThreshold = cfg.VelocityThreshold;
             _baumgarte = cfg.Baumgarte;
-            _linearSlop = cfg.LinearSlop;
             _maxLinearCorrection = cfg.MaxLinearCorrection;
             _maxAngularCorrection = cfg.MaxAngularCorrection;
             _positionConstraintsPerThread = cfg.PositionConstraintsPerThread;
@@ -782,7 +780,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     minSeparation = Math.Min(minSeparation, separation);
 
                     // Prevent large corrections and allow slop.
-                    float C = Math.Clamp(_baumgarte * (separation + _linearSlop), -_maxLinearCorrection, 0.0f);
+                    float C = Math.Clamp(_baumgarte * (separation + PhysicsConstants.LinearSlop), -_maxLinearCorrection, 0.0f);
 
                     // Compute the effective mass.
                     float rnA = Vector2.Cross(rA, normal);
@@ -810,7 +808,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
             // We can't expect minSpeparation >= -b2_linearSlop because we don't
             // push the separation above -b2_linearSlop.
-            return minSeparation >= -3.0f * _linearSlop;
+            return minSeparation >= -3.0f * PhysicsConstants.LinearSlop;
         }
 
         /// <summary>

@@ -954,6 +954,11 @@ namespace Robust.Shared.GameObjects
             return Transform.Mul(GetTransform(), localPoint);
         }
 
+        public Vector2 GetLocalVector2(Vector2 worldVector)
+        {
+            return Transform.MulT(new Quaternion2D((float) Owner.EntityManager.GetComponent<ITransformComponent>(OwnerUid).WorldRotation.Theta), worldVector);
+        }
+
         public void FixtureChanged(Fixture fixture)
         {
             // TODO: Optimise this a LOT

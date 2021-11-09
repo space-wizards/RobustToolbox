@@ -90,6 +90,10 @@ namespace Robust.Server.Console.Commands
                     SetupPlayer(mapId, shell, player, mapManager);
                     CreateCircleStack(mapId);
                     break;
+                case "prismatic":
+                    SetupPlayer(mapId, shell, player, mapManager);
+                    CreatePrismatic(mapId);
+                    break;
                 case "pyramid":
                     SetupPlayer(mapId, shell, player, mapManager);
                     CreatePyramid(mapId);
@@ -240,6 +244,34 @@ namespace Robust.Server.Console.Commands
                     broadphase.CreateFixture(box, fixture);
                 }
             }
+        }
+
+        private void CreatePrismatic(MapId mapId)
+        {
+            var entManager = IoCManager.Resolve<IEntityManager>();
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
+
+            var groundEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+            var ground = entManager.AddComponent<PhysicsComponent>(groundEnt.Uid);
+
+            var shape = new EdgeShape(new Vector2(-40f, 0f), new Vector2(40f, 0f));
+            broadphase.CreateFixture(ground, shape);
+
+            var poly = new PolygonShape();
+            poly.SetAsBox(1f, 1f);
+
+            var bodyEnt = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(0f, 10f), mapId));
+            var body = entManager.AddComponent<PhysicsComponent>(bodyEnt.Uid);
+            bodyEnt.Transform.WorldRotation = 0.5f * MathF.PI;
+            body.SleepingAllowed = false;
+            broadphase.CreateFixture(body, poly, 5f);
+
+            var prismatic = EntitySystem.Get<SharedJointSystem>().CreatePrismaticJoint(groundEnt.Uid, bodyEnt.Uid, body.Owner.Transform.WorldPosition, new Vector2(1f, 0f), "prisma");
+
+            prismatic.MaxMotorForce = 10000f;
+            prismatic.LowerTranslation = -10f;
+            prismatic.UpperTranslation = 10f;
+            prismatic.MotorSpeed = 20f;
         }
 
         private void CreatePyramid(MapId mapId)

@@ -382,8 +382,8 @@ namespace Robust.Client.Debugging
 
                     if (edge.OneSided)
                     {
-                        worldHandle.DrawCircle(v1, 0.5f, color);
-                        worldHandle.DrawCircle(v2, 0.5f, color);
+                        worldHandle.DrawCircle(v1, 0.1f, color);
+                        worldHandle.DrawCircle(v2, 0.1f, color);
                     }
 
                     break;
@@ -416,10 +416,44 @@ namespace Robust.Client.Debugging
             var p1 = matrix1.Transform(joint.LocalAnchorA);
             var p2 = matrix2.Transform(joint.LocalAnchorB);
 
+            var xfa = new Transform(xf1, xform1.WorldRotation);
+            var xfb = new Transform(xf2, xform2.WorldRotation);
+
             switch (joint)
             {
                 case DistanceJoint:
                     worldHandle.DrawLine(xf1, xf2, JointColor);
+                    break;
+                case PrismaticJoint prisma:
+                    var pA = Transform.Mul(xfa, joint.LocalAnchorA);
+                    var pB = Transform.Mul(xfb, joint.LocalAnchorB);
+
+                    var axis = Transform.Mul(xfa.Quaternion2D, prisma.LocalXAxisA);
+
+                    Color c1 = new(0.7f, 0.7f, 0.7f);
+                    Color c2 = new(0.3f, 0.9f, 0.3f);
+                    Color c3 = new(0.9f, 0.3f, 0.3f);
+                    Color c4 = new(0.3f, 0.3f, 0.9f);
+                    Color c5 = new(0.4f, 0.4f, 0.4f);
+
+                    worldHandle.DrawLine(pA, pB, c5);
+
+                    if (prisma.EnableLimit)
+                    {
+                        var lower = pA + axis * prisma.LowerTranslation;
+                        var upper = pA + axis * prisma.UpperTranslation;
+                        var perp = Transform.Mul(xfa.Quaternion2D, prisma._localYAxisA);
+                        worldHandle.DrawLine(lower, upper, c1);
+                        worldHandle.DrawLine(lower - perp * 0.5f, lower + perp * 0.5f, c2);
+                        worldHandle.DrawLine(upper - perp * 0.5f, upper + perp * 0.5f, c3);
+                    }
+                    else
+                    {
+                        worldHandle.DrawLine(pA - axis * 1.0f, pA + axis * 1.0f, c1);
+                    }
+
+                    worldHandle.DrawCircle(pA, 0.5f, c1);
+                    worldHandle.DrawCircle(pB, 0.5f, c4);
                     break;
                 default:
                     worldHandle.DrawLine(xf1, p1, JointColor);

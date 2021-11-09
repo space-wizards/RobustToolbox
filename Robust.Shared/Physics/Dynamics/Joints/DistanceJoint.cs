@@ -140,7 +140,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 anchorB = anchor;
             }
 
-            Length = MathF.Max(LinearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            Length = MathF.Max(float.Epsilon, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             _minLength = _length;
             _maxLength = _length;
             LocalAnchorA = anchorA;
@@ -160,7 +160,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 if (MathHelper.CloseTo(value, _length)) return;
 
                 _impulse = 0.0f;
-                _length = MathF.Max(value, LinearSlop);
+                _length = MathF.Max(value, float.Epsilon);
                 Dirty();
             }
         }
@@ -198,13 +198,16 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 if (MathHelper.CloseTo(value, _minLength)) return;
 
                 _lowerImpulse = 0.0f;
-                _minLength = Math.Clamp(value, LinearSlop, MaxLength);
+                _minLength = Math.Clamp(value, float.Epsilon, MaxLength);
                 Dirty();
             }
         }
 
         private float _minLength;
 
+        /// <summary>
+        /// The linear stiffness in N/m.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float Stiffness
         {
@@ -220,6 +223,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         private float _stiffness;
 
+        /// <summary>
+        /// The linear damping in N*s/m.
+        /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         public float Damping
         {
@@ -315,7 +321,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             // Handle singularity.
 	        _currentLength = _u.Length;
-	        if (_currentLength > LinearSlop)
+	        if (_currentLength > data.LinearSlop)
 	        {
 		        _u *= 1.0f / _currentLength;
 	        }

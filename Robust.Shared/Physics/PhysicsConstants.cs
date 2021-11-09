@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Physics
+﻿using System;
+
+namespace Robust.Shared.Physics
 {
     internal static class PhysicsConstants
     {
@@ -10,6 +12,16 @@
         /// <remarks>
         ///     Default is set to be 2 x linearslop. TODO Should we listen to linearslop changes?
         /// </remarks>
-        public const float PolygonRadius = 2 * 0.005f;
+        public const float PolygonRadius = 2 * LinearSlop;
+
+        /// <summary>
+        /// Minimum buffer distance for positions.
+        /// </summary>
+        public const float LinearSlop = 0.005f;
+
+        /// <summary>
+        /// Minimum buffer distance for angles.
+        /// </summary>
+        public const float AngularSlop = 2.0f / 180.0f * MathF.PI;
     }
 }

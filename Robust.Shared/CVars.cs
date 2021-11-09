@@ -111,7 +111,7 @@ namespace Robust.Shared
         /// If true, encrypt connections when possible.
         /// </summary>
         public static readonly CVarDef<bool> NetEncrypt =
-            CVarDef.Create("net.encrypt", false, CVar.CLIENTONLY);
+            CVarDef.Create("net.encrypt", true, CVar.CLIENTONLY);
 
         /**
          * SUS

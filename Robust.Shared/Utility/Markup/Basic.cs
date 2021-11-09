@@ -1,13 +1,22 @@
+using System;
 using System.Collections.Generic;
 using Pidgin;
 using Robust.Shared.Maths;
+using static Robust.Shared.Utility.FormattedMessage;
 using static Pidgin.Parser;
 using static Pidgin.Parser<char>;
 
-namespace Robust.Shared.Utility
+namespace Robust.Shared.Utility.Markup
 {
-    public partial class FormattedMessage
+    public class Basic
     {
+        internal record tag;
+        internal record tagText(string text) : tag;
+        internal record tagColor(Color color) : tag;
+        internal record tagPop() : tag;
+
+        private List<tag> _tags = new();
+
         // wtf I love parser combinators now.
         private const char TagBegin = '[';
         private const char TagEnd = ']';
@@ -18,46 +27,45 @@ namespace Robust.Shared.Utility
                 Char(TagBegin),
                 Char(TagEnd)));
 
-        private static readonly Parser<char, TagText> ParseTagText =
+        private static readonly Parser<char, tagText> ParseTagText =
             ParseEscapeSequence.Or(Token(c => c != TagBegin && c != '\\'))
                 .AtLeastOnceString()
-                .Select(s => new TagText(s));
+                .Select(s => new tagText(s));
 
-        private static readonly Parser<char, TagColor> ParseTagColor =
+        private static readonly Parser<char, tagColor> ParseTagColor =
             String("color")
                 .Then(Char('='))
                 .Then(Token(ValidColorNameContents).AtLeastOnceString()
                     .Select(s =>
                     {
                         if (Color.TryFromName(s, out var color))
-                        {
-                            return new TagColor(color);
-                        }
-                        return new TagColor(Color.FromHex(s));
+                            return new tagColor(color);
+
+                        return new tagColor(Color.FromHex(s));
                     }));
 
-        private static readonly Parser<char, TagPop> ParseTagPop =
+        private static readonly Parser<char, tagPop> ParseTagPop =
             Char('/')
             .Then(String("color"))
-            .ThenReturn(TagPop.Instance);
+            .ThenReturn(new tagPop());
 
-        private static readonly Parser<char, Tag> ParseTagContents =
-            ParseTagColor.Cast<Tag>().Or(ParseTagPop.Cast<Tag>());
+        private static readonly Parser<char, tag> ParseTagContents =
+            ParseTagColor.Cast<tag>().Or(ParseTagPop.Cast<tag>());
 
-        private static readonly Parser<char, Tag> ParseEnclosedTag =
+        private static readonly Parser<char, tag> ParseEnclosedTag =
             ParseTagContents.Between(Char(TagBegin), Char(TagEnd));
 
-        private static readonly Parser<char, Tag> ParseTagOrFallBack =
+        private static readonly Parser<char, tag> ParseTagOrFallBack =
             Try(ParseEnclosedTag)
                 // If we couldn't parse a tag then parse the [ of the start of the tag
                 // so the rest is recognized as text.
-                .Or(Char(TagBegin).ThenReturn<Tag>(new TagText("[")));
+                .Or(Char(TagBegin).ThenReturn<tag>(new tagText("[")));
 
-        private static readonly Parser<char, IEnumerable<Tag>> Parse =
-            ParseTagText.Cast<Tag>().Or(ParseEnclosedTag).Many();
+        private static readonly Parser<char, IEnumerable<tag>> Parse =
+            ParseTagText.Cast<tag>().Or(ParseEnclosedTag).Many();
 
-        private static readonly Parser<char, IEnumerable<Tag>> ParsePermissive =
-            ParseTagText.Cast<Tag>().Or(ParseTagOrFallBack).Many();
+        private static readonly Parser<char, IEnumerable<tag>> ParsePermissive =
+            ParseTagText.Cast<tag>().Or(ParseTagOrFallBack).Many();
 
         public static bool ValidMarkup(string markup)
         {
@@ -101,6 +109,24 @@ namespace Robust.Shared.Utility
             }
 
             return false;
+        }
+
+
+        public FormattedMessage Render()
+        {
+            var b = new FormattedMessage.Builder();
+
+            foreach (var t in _tags)
+            {
+                switch (t)
+                {
+                    case tagText txt:   b.AddText(txt.text); break;
+                    case tagColor col:  b.PushColor(col.color); break;
+                    case tagPop:        b.Pop(); break;
+                }
+            }
+
+            return b.Build();
         }
     }
 }

@@ -108,7 +108,7 @@ namespace Robust.Shared.Map
                 if (GridExists(gridIndex))
                 {
                     Logger.DebugS("map",
-                        $"Entity {comp.Owner.Uid} removed grid component, removing bound grid {gridIndex}");
+                        $"Entity {comp.OwnerUid} removed grid component, removing bound grid {gridIndex}");
                     DeleteGrid(gridIndex);
                 }
             }
@@ -267,8 +267,8 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    _mapEntities.Add(actualID, result.Owner.Uid);
-                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.Owner.Uid}");
+                    _mapEntities.Add(actualID, result.OwnerUid);
+                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.OwnerUid}");
                 }
                 else
                 {
@@ -459,7 +459,7 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    grid.GridEntityId = result.Owner.Uid;
+                    grid.GridEntityId = result.OwnerUid;
                     Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntityId}");
                 }
                 else

@@ -237,7 +237,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var entManager = Owner.EntityManager;
-            entManager.DirtyEntity(Owner.Uid);
+            entManager.DirtyEntity(OwnerUid);
             LastModifiedTick = entManager.CurrentTick;
         }
 

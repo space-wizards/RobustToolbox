@@ -72,7 +72,7 @@ namespace Robust.Shared.GameObjects
         {
             var xform = (TransformComponent) transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner.Uid);
+            var result = Grid.AddToSnapGridCell(tileIndices, transform.OwnerUid);
 
             if (result)
             {
@@ -102,7 +102,7 @@ namespace Robust.Shared.GameObjects
 
             var xform = (TransformComponent)transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner.Uid);
+            Grid.RemoveFromSnapGridCell(tileIndices, transform.OwnerUid);
             xform.SetAnchored(false);
             if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
             {

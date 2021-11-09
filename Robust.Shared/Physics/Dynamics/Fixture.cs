@@ -432,7 +432,7 @@ namespace Robust.Shared.Physics.Dynamics
                    Shape.Equals(other.Shape) &&
                    Body == other.Body &&
                    ID.Equals(other.ID) &&
-                    MathHelper.CloseTo(Mass, other.Mass);
+                    MathHelper.CloseTo(_mass, other._mass);
         }
     }
 

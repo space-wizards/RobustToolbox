@@ -97,7 +97,20 @@ namespace Robust.Shared.Serialization
                 {
                     Primitives.ReadPrimitive(hasherStream, out uint lu);
                     var l = (int) lu;
-                    var y = hasherStream.Read(buf, 0, l);
+                    var y = 0;
+
+                    while (y < l)
+                    {
+                        var read = hasherStream.Read(buf, 0, l - y);
+
+                        if (read == 0)
+                        {
+                            break;
+                        }
+
+                        y += read;
+                    }
+
                     if (y != l)
                     {
                         throw new InvalidDataException($"Could not read the full length of string #{i}.");

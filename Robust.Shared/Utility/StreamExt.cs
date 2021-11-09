@@ -52,21 +52,9 @@ namespace Robust.Shared.Utility
             {
                 var cRead = stream.Read(buffer);
                 if (cRead == 0)
-                {
                     throw new EndOfStreamException();
-                }
 
-                // read += cRead;
                 buffer = buffer[cRead..];
-
-                if (buffer.Length > 0)
-                {
-
-                }
-                else
-                {
-
-                }
             }
         }
 

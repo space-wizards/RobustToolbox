@@ -114,7 +114,8 @@ namespace Robust.Shared.Network
                         return;
                     }
 
-                    encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+                    if (msgLogin.Encrypt)
+                        encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
 
                     var authHashBytes = MakeAuthHash(sharedSecret, RsaPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);

@@ -32,6 +32,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(UserData.UserId);
             buffer.Write(UserData.PatronTier);
             buffer.Write((byte) Type);
+            buffer.Write(new byte[100]);
         }
     }
 }

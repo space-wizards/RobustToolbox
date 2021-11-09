@@ -103,9 +103,15 @@ namespace Robust.Shared
 
         public static readonly CVarDef<float> ResendHandshakeInterval =
             CVarDef.Create("net.handshake_interval", 3.0f, CVar.ARCHIVE | CVar.CLIENTONLY);
-            
+
         public static readonly CVarDef<int> MaximumHandshakeAttempts =
             CVarDef.Create("net.handshake_attempts", 5, CVar.ARCHIVE | CVar.CLIENTONLY);
+
+        /// <summary>
+        /// If true, encrypt connections when possible.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncrypt =
+            CVarDef.Create("net.encrypt", false, CVar.CLIENTONLY);
 
         /**
          * SUS

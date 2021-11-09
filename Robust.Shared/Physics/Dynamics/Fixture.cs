@@ -273,6 +273,7 @@ namespace Robust.Shared.Physics.Dynamics
             fixture._hard = _hard;
             fixture._collisionLayer = _collisionLayer;
             fixture._collisionMask = _collisionMask;
+            fixture._mass = _mass;
         }
 
         // Moved from Shape because no MassData on Shape anymore (due to serv3 and physics ease-of-use etc etc.)
@@ -430,7 +431,8 @@ namespace Robust.Shared.Physics.Dynamics
                    _collisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&
                    Body == other.Body &&
-                   ID.Equals(other.ID);
+                   ID.Equals(other.ID) &&
+                    MathHelper.CloseTo(Mass, other.Mass);
         }
     }
 

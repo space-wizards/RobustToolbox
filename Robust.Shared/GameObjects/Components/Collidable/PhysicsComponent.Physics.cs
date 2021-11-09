@@ -144,6 +144,8 @@ namespace Robust.Shared.GameObjects
 
         internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
 
+        internal Sweep Sweep = new();
+
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType
@@ -589,7 +591,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter);
+            get => _inertia + _mass * Vector2.Dot(_localCenter, _localCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
@@ -600,7 +602,7 @@ namespace Robust.Shared.GameObjects
 
                 if (value > 0.0f && !_fixedRotation)
                 {
-                    _inertia = value - Mass * Vector2.Dot(LocalCenter, LocalCenter);
+                    _inertia = value - Mass * Vector2.Dot(_localCenter, _localCenter);
                     DebugTools.Assert(_inertia > 0.0f);
                     InvI = 1.0f / _inertia;
                     Dirty();
@@ -654,13 +656,16 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         public Vector2 LocalCenter
         {
-            get => _localCenter;
+            get => Sweep.LocalCenter;
             set
             {
                 if (_bodyType != BodyType.Dynamic) return;
-                if (value.EqualsApprox(_localCenter)) return;
 
-                _localCenter = value;
+                var localCenter = Sweep.LocalCenter;
+
+                if (value.EqualsApprox(localCenter)) return;
+
+                Sweep.LocalCenter = value;
             }
         }
 
@@ -991,7 +996,13 @@ namespace Robust.Shared.GameObjects
 
         internal Transform GetTransform()
         {
-            return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
+            var position = Owner.Transform.WorldPosition;
+            var angle = (float) Owner.Transform.WorldRotation.Theta;
+
+            var xf = new Transform(position, angle);
+            // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
+
+            return xf;
         }
 
         /// <summary>
@@ -1116,7 +1127,7 @@ namespace Robust.Shared.GameObjects
             _inertia = 0.0f;
             InvI = 0.0f;
             LocalCenter = Vector2.Zero;
-            // Sweep
+            Sweep.LocalCenter = Vector2.Zero;
 
             if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
             {
@@ -1124,33 +1135,18 @@ namespace Robust.Shared.GameObjects
             }
 
             var localCenter = Vector2.Zero;
+            var shapeManager = IoCManager.Resolve<IShapeManager>();
 
             foreach (var fixture in _fixtures)
             {
                 if (fixture.Mass <= 0.0f) continue;
 
-                var fixMass = fixture.Mass;
+                var data = new MassData {Mass = fixture.Mass};
+                shapeManager.GetMassData(fixture.Shape, ref data);
 
-                _mass += fixMass;
-
-                var center = Vector2.Zero;
-
-                // TODO: God this is garbage
-                switch (fixture.Shape)
-                {
-                    case PhysShapeAabb aabb:
-                        center = aabb.Centroid;
-                        break;
-                    case PolygonShape poly:
-                        center = poly.Centroid;
-                        break;
-                    case PhysShapeCircle circle:
-                        center = circle.Position;
-                        break;
-                }
-
-                localCenter += center * fixMass;
-                _inertia += fixture.Inertia;
+                _mass += data.Mass;
+                localCenter += data.Center * data.Mass;
+                _inertia += data.I;
             }
 
             if (BodyType == BodyType.Static)
@@ -1173,7 +1169,7 @@ namespace Robust.Shared.GameObjects
             if (_inertia > 0.0f && !_fixedRotation)
             {
                 // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(Vector2.Zero, Vector2.Zero);
+                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
 
                 DebugTools.Assert(_inertia > 0.0f);
                 InvI = 1.0f / _inertia;
@@ -1184,16 +1180,17 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            LocalCenter = Vector2.Zero;
-            /*
-            var oldCenter = _sweep.Center;
-            _sweep.LocalCenter = localCenter;
-            _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);
+            LocalCenter = localCenter;
+
+            // TODO: Calculate Sweep
+
+            var oldCenter = Sweep.Center;
+            Sweep.LocalCenter = localCenter;
+            Sweep.Center0 = Sweep.Center = Transform.Mul(GetTransform(), Sweep.LocalCenter);
 
             // Update center of mass velocity.
-            var a = _sweep.Center - oldCenter;
-            _linVelocity += new Vector2(-_angVelocity * a.y, _angVelocity * a.x);
-            */
+            _linVelocity += Vector2.Cross(_angVelocity, Sweep.Center - oldCenter);
+
         }
 
         /// <summary>

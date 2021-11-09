@@ -2,7 +2,7 @@
     <!-- Engine-specific properties. Content should not use this file. -->
     <PropertyGroup>
         <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>9</LangVersion>
+        <LangVersion>10</LangVersion>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
     </PropertyGroup>

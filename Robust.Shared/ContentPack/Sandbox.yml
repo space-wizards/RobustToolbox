@@ -455,6 +455,7 @@ Types:
     AsyncVoidMethodBuilder: { All: True }
     CompilationRelaxationsAttribute: { All: True }
     CompilerGeneratedAttribute: { All: True }
+    DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }

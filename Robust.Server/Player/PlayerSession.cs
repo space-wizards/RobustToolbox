@@ -143,7 +143,7 @@ namespace Robust.Server.Player
                 return;
 
 #if EXCEPTION_TOLERANCE
-            if (AttachedEntity.Deleted)
+            if (AttachedEntity!.Deleted)
             {
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.

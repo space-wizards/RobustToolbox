@@ -121,6 +121,12 @@ namespace Robust.Shared.Utility
             private StringBuilder _sb = new();
             private List<Section> _work = new();
 
+            public static Builder FromFormattedText(FormattedMessage orig) => new ()
+            {
+                _idx = orig.Sections.Length - 1,
+                _work = new List<Section>(orig.Sections),
+            };
+
             public void Clear()
             {
                 _idx = 0;

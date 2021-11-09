@@ -62,10 +62,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 LocalAnchorB = LocalAnchorB
             };
 
-            var configManager = IoCManager.Resolve<IConfigurationManager>();
-            joint.LinearSlop = configManager.GetCVar(CVars.LinearSlop);
-            joint.WarmStarting = configManager.GetCVar(CVars.WarmStarting);
-
             return joint;
         }
 
@@ -119,9 +115,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _currentLength;
         private float _softMass;
 
-        internal float LinearSlop;
-        internal bool WarmStarting;
-
         public override JointType JointType => JointType.Distance;
 
         /// <summary>
@@ -139,9 +132,19 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public DistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB)
             : base(bodyA, bodyB)
         {
+            // In case the bodies were swapped around
+            if (bodyA != BodyAUid)
+            {
+                var anchor = anchorA;
+                anchorA = anchorB;
+                anchorB = anchor;
+            }
+
             Length = MathF.Max(LinearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             _minLength = _length;
             _maxLength = _length;
+            LocalAnchorA = anchorA;
+            LocalAnchorB = anchorB;
         }
 
         /// <summary>
@@ -358,7 +361,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 		        _softMass = _mass;
 	        }
 
-	        if (WarmStarting)
+	        if (data.WarmStarting)
 	        {
 		        // Scale the impulse to support a variable time step.
 		        _impulse *= data.DtRatio;
@@ -523,7 +526,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             data.Positions[_indexB] = cB;
             data.Angles[_indexB] = aB;
 
-            return MathF.Abs(C) < LinearSlop;
+            return MathF.Abs(C) < data.LinearSlop;
         }
 
         public bool Equals(DistanceJoint? other)

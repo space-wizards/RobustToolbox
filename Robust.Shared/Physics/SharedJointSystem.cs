@@ -178,13 +178,10 @@ namespace Robust.Shared.Physics
         public static void LinearStiffness(
             float frequencyHertz,
             float dampingRatio,
-            PhysicsComponent bodyA,
-            PhysicsComponent bodyB,
+            float massA,
+            float massB,
             out float stiffness, out float damping)
         {
-            var massA = bodyA.Mass;
-            var massB = bodyB.Mass;
-
             float mass;
             if (massA > 0.0f && massB > 0.0f)
             {

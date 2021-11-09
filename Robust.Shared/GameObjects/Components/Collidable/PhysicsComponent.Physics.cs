@@ -144,8 +144,6 @@ namespace Robust.Shared.GameObjects
 
         internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
 
-        internal Sweep Sweep = new();
-
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public BodyType BodyType
@@ -646,7 +644,6 @@ namespace Robust.Shared.GameObjects
         [DataField("fixedRotation")]
         private bool _fixedRotation = true;
 
-        // TODO: Will be used someday
         /// <summary>
         ///     Get this body's center of mass offset to world position.
         /// </summary>
@@ -656,16 +653,14 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         public Vector2 LocalCenter
         {
-            get => Sweep.LocalCenter;
+            get => _localCenter;
             set
             {
                 if (_bodyType != BodyType.Dynamic) return;
 
-                var localCenter = Sweep.LocalCenter;
+                if (value.EqualsApprox(_localCenter)) return;
 
-                if (value.EqualsApprox(localCenter)) return;
-
-                Sweep.LocalCenter = value;
+                _localCenter = value;
             }
         }
 
@@ -1126,8 +1121,7 @@ namespace Robust.Shared.GameObjects
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
-            LocalCenter = Vector2.Zero;
-            Sweep.LocalCenter = Vector2.Zero;
+            _localCenter = Vector2.Zero;
 
             if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
             {
@@ -1180,16 +1174,18 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            LocalCenter = localCenter;
+            _localCenter = localCenter;
 
             // TODO: Calculate Sweep
 
+            /*
             var oldCenter = Sweep.Center;
             Sweep.LocalCenter = localCenter;
             Sweep.Center0 = Sweep.Center = Transform.Mul(GetTransform(), Sweep.LocalCenter);
+            */
 
             // Update center of mass velocity.
-            _linVelocity += Vector2.Cross(_angVelocity, Sweep.Center - oldCenter);
+            // _linVelocity += Vector2.Cross(_angVelocity, Worl - oldCenter);
 
         }
 

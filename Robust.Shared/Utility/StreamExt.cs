@@ -48,8 +48,7 @@ namespace Robust.Shared.Utility
         /// </exception>
         public static void ReadExact(this Stream stream, Span<byte> buffer)
         {
-            var read = 0;
-            while (read < buffer.Length)
+            while (buffer.Length > 0)
             {
                 var cRead = stream.Read(buffer);
                 if (cRead == 0)
@@ -57,7 +56,17 @@ namespace Robust.Shared.Utility
                     throw new EndOfStreamException();
                 }
 
-                read += cRead;
+                // read += cRead;
+                buffer = buffer[cRead..];
+
+                if (buffer.Length > 0)
+                {
+
+                }
+                else
+                {
+
+                }
             }
         }
 

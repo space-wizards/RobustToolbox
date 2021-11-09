@@ -5,6 +5,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -58,6 +59,10 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "MetaData";
+
+        // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
+        [ViewVariables]
+        public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
 
         /// <summary>
         ///     The in-game name of this entity.

@@ -159,7 +159,7 @@ namespace Robust.Server.ServerStatus
             }
 
             var buildInfo = File.ReadAllText(path);
-            var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo);
+            var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo)!;
 
             // Don't replace cvars with contents of build.json if overriden by --cvar or such.
             SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);

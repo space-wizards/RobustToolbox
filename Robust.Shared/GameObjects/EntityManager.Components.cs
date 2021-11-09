@@ -88,6 +88,69 @@ namespace Robust.Shared.GameObjects
 
         #region Component Management
 
+        public void InitializeComponents(EntityUid uid)
+        {
+            var metadata = GetComponent<MetaDataComponent>(uid);
+            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
+            metadata.EntityLifeStage = EntityLifeStage.Initializing;
+
+            // Initialize() can modify the collection of components.
+            var components = GetComponents(uid)
+                .OrderBy(x => x switch
+                {
+                    TransformComponent _ => 0,
+                    IPhysBody _ => 1,
+                    _ => int.MaxValue
+                });
+
+            foreach (var component in components)
+            {
+                var comp = (Component) component;
+                if (comp.Initialized)
+                    continue;
+
+                comp.LifeInitialize();
+            }
+
+#if DEBUG
+            // Second integrity check in case of.
+            foreach (var t in GetComponents(uid))
+            {
+                if (!t.Initialized)
+                {
+                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                }
+            }
+
+#endif
+            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
+            metadata.EntityLifeStage = EntityLifeStage.Initialized;
+            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(GetEntity(uid)));
+        }
+
+        public void StartComponents(EntityUid uid)
+        {
+            // TODO: Move this to EntityManager.
+            // Startup() can modify _components
+            // This code can only handle additions to the list. Is there a better way? Probably not.
+            var comps = GetComponents(uid)
+                .OrderBy(x => x switch
+                {
+                    TransformComponent _ => 0,
+                    IPhysBody _ => 1,
+                    _ => int.MaxValue
+                });
+
+            foreach (var component in comps)
+            {
+                var comp = (Component) component;
+                if (comp.LifeStage == ComponentLifeStage.Initialized)
+                {
+                    comp.LifeStartup();
+                }
+            }
+        }
+
         public T AddComponent<T>(IEntity entity) where T : Component, new()
         {
             if (entity == null) throw new ArgumentNullException(nameof(entity));
@@ -120,7 +183,7 @@ namespace Robust.Shared.GameObjects
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner.Uid != uid) throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.OwnerUid != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
             AddComponentInternal(uid, component, overwrite);
         }
@@ -142,7 +205,7 @@ namespace Robust.Shared.GameObjects
                         $"Component reference type {type} already occupied by {duplicate}");
 
                 // these two components are required on all entities and cannot be overwritten.
-                if (duplicate is ITransformComponent || duplicate is MetaDataComponent)
+                if (duplicate is TransformComponent || duplicate is MetaDataComponent)
                     throw new InvalidOperationException("Tried to overwrite a protected component.");
 
                 RemoveComponentImmediate(duplicate, uid, false);
@@ -216,7 +279,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.Owner.Uid != uid)
+            if (component.Owner == null || component.OwnerUid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             RemoveComponentImmediate((Component)component, uid, false);
@@ -228,7 +291,7 @@ namespace Robust.Shared.GameObjects
                 => x switch
                 {
                     MetaDataComponent _ => 0,
-                    ITransformComponent _ => 1,
+                    TransformComponent _ => 1,
                     IPhysBody _ => 2,
                     _ => int.MaxValue
                 };
@@ -271,7 +334,7 @@ namespace Robust.Shared.GameObjects
             {
 #endif
             // these two components are required on all entities and cannot be removed normally.
-            if (!removeProtected && component is ITransformComponent or MetaDataComponent)
+            if (!removeProtected && component is TransformComponent or MetaDataComponent)
             {
                 DebugTools.Assert("Tried to remove a protected component.");
                 return;
@@ -311,7 +374,7 @@ namespace Robust.Shared.GameObjects
             if (!component.Deleted)
             {
                 // these two components are required on all entities and cannot be removed.
-                if (!removeProtected && component is ITransformComponent or MetaDataComponent)
+                if (!removeProtected && component is TransformComponent or MetaDataComponent)
                 {
                     DebugTools.Assert("Tried to remove a protected component.");
                     return;
@@ -353,12 +416,7 @@ namespace Robust.Shared.GameObjects
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
-            var entityUid = component.Owner.Uid;
-
-            foreach (var refType in reg.References)
-            {
-                _entTraitDict[refType].Remove(entityUid);
-            }
+            var entityUid = component.OwnerUid;
 
             // ReSharper disable once InvertIf
             if (reg.NetID != null)
@@ -370,6 +428,11 @@ namespace Robust.Shared.GameObjects
                     netSet.Remove(reg.NetID.Value);
 
                 DirtyEntity(entityUid);
+            }
+
+            foreach (var refType in reg.References)
+            {
+                _entTraitDict[refType].Remove(entityUid);
             }
 
             _entCompIndex.Remove(entityUid, component);

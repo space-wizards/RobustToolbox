@@ -25,8 +25,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private ITransformComponent? _lastParent;
-        private ITransformComponent? _lerpTo;
+        private TransformComponent? _lastParent;
+        private TransformComponent? _lerpTo;
         private Angle LerpStartRotation;
         private float _accumulator;
 

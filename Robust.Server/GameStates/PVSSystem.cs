@@ -235,10 +235,10 @@ namespace Robust.Server.GameStates
             IncludeMapCriticalEntities(visibleEnts);
 
             // if you don't have an attached entity, you don't see the world.
+            var chunksSeen = _playerChunks[session];
             if (session.AttachedEntityUid is not null)
             {
                 var viewers = GetSessionViewers(session);
-                var chunksSeen = _playerChunks[session];
 
                 foreach (var eyeEuid in viewers)
                 {
@@ -280,6 +280,35 @@ namespace Robust.Server.GameStates
 
                 viewers.Clear();
                 _viewerEntsPool.Return(viewers);
+            }
+
+            var expandEvent = new ExpandPvsEvent(new List<EntityUid>());
+            RaiseLocalEvent(ref expandEvent);
+
+            if (expandEvent.Entities.Count > 0)
+            {
+                var includedChunks = _includedChunksPool.Get();
+
+                const uint visMask = uint.MaxValue;
+                foreach (var expanded in expandEvent.Entities)
+                {
+                    RecursiveAdd(expanded, visibleEnts, includedChunks, chunksSeen, visMask);
+                }
+
+                GetAnchoredEntityStates(includedChunks, visibleEnts, visMask, chunksSeen, session, entityStates, fromTick);
+
+                /*// To fix pop-in we'll go through nearby chunks and send them little-by-little
+                StreamChunks(newChunkCount, session, chunksSeen, entityStates, viewBox, fromTick, mapId);
+                */
+
+                foreach (var (_, chunks) in includedChunks)
+                {
+                    chunks.Clear();
+                    _chunkPool.Return(chunks);
+                }
+
+                includedChunks.Clear();
+                _includedChunksPool.Return(includedChunks);
             }
 
             deletions = GetDeletedEntities(fromTick);
@@ -652,6 +681,16 @@ namespace Robust.Server.GameStates
             /// </summary>
             public int Iterations { get; set; }
 
+        }
+    }
+
+    public readonly struct ExpandPvsEvent
+    {
+        public readonly List<EntityUid> Entities;
+
+        public ExpandPvsEvent(List<EntityUid> entities)
+        {
+            Entities = entities;
         }
     }
 }

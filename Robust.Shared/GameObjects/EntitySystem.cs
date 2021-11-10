@@ -57,6 +57,11 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
         }
 
+        protected void RaiseLocalEvent<T>(ref T message) where T : notnull
+        {
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, ref message);
+        }
+
         protected void RaiseLocalEvent(object message)
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);

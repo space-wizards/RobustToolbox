@@ -183,7 +183,7 @@ namespace Robust.Shared.GameObjects
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner.Uid != uid) throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.OwnerUid != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
             AddComponentInternal(uid, component, overwrite);
         }
@@ -279,7 +279,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.Owner.Uid != uid)
+            if (component.Owner == null || component.OwnerUid != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             RemoveComponentImmediate((Component)component, uid, false);
@@ -416,7 +416,7 @@ namespace Robust.Shared.GameObjects
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
-            var entityUid = component.Owner.Uid;
+            var entityUid = component.OwnerUid;
 
             // ReSharper disable once InvertIf
             if (reg.NetID != null)

@@ -122,6 +122,7 @@ namespace Robust.Shared.Network
         private async Task CCDoHandshake(NetPeerData peer, NetConnection connection, string userNameRequest,
             CancellationToken cancel)
         {
+            var encrypt = _config.GetCVar(CVars.NetEncrypt);
             var authToken = _authManager.Token;
             var pubKey = _authManager.PubKey;
             var authServer = _authManager.Server;
@@ -136,7 +137,8 @@ namespace Robust.Shared.Network
                 UserName = userNameRequest,
                 CanAuth = authenticate,
                 NeedPubKey = !hasPubKey,
-                HWId = hwId
+                HWId = hwId,
+                Encrypt = encrypt
             };
 
             var outLoginMsg = peer.Peer.CreateMessage();
@@ -156,7 +158,8 @@ namespace Robust.Shared.Network
                 var sharedSecret = new byte[AesKeyLength];
                 RandomNumberGenerator.Fill(sharedSecret);
 
-                encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+                if (encrypt)
+                    encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
 
                 byte[] keyBytes;
                 if (hasPubKey)
@@ -201,7 +204,7 @@ namespace Robust.Shared.Network
 
                 // Expect login success here.
                 response = await AwaitData(connection, cancel);
-                encryption.Decrypt(response);
+                encryption?.Decrypt(response);
             }
 
             var msgSuc = new MsgLoginSuccess();

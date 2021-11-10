@@ -20,11 +20,8 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public void AddViewSubscriber(EntityUid uid, IPlayerSession session)
         {
-            // This will throw if you pass in an invalid uid.
-            var entity = EntityManager.GetEntity(uid);
-
             // If the entity doesn't have the component, it will be added.
-            var viewSubscriber = entity.EnsureComponent<ViewSubscriberComponent>();
+            var viewSubscriber = EntityManager.EnsureComponent<ViewSubscriberComponent>(uid);
 
             if (viewSubscriber.SubscribedSessions.Contains(session))
                 return; // Already subscribed, do nothing else.
@@ -32,7 +29,7 @@ namespace Robust.Server.GameObjects
             viewSubscriber.SubscribedSessions.Add(session);
             session.AddViewSubscription(uid);
 
-            RaiseLocalEvent(uid, new ViewSubscriberAddedEvent(entity, session));
+            RaiseLocalEvent(uid, new ViewSubscriberAddedEvent(uid, session));
         }
 
         /// <summary>
@@ -47,7 +44,7 @@ namespace Robust.Server.GameObjects
                 return; // Session wasn't subscribed, do nothing.
 
             session.RemoveViewSubscription(uid);
-            RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(EntityManager.GetEntity(uid), session));
+            RaiseLocalEvent(uid, new ViewSubscriberRemovedEvent(uid, session));
         }
 
         private void OnViewSubscriberShutdown(EntityUid uid, ViewSubscriberComponent component, ComponentShutdown _)
@@ -64,10 +61,10 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public class ViewSubscriberAddedEvent : EntityEventArgs
     {
-        public IEntity View { get; }
+        public EntityUid View { get; }
         public IPlayerSession Subscriber { get; }
 
-        public ViewSubscriberAddedEvent(IEntity view, IPlayerSession subscriber)
+        public ViewSubscriberAddedEvent(EntityUid view, IPlayerSession subscriber)
         {
             View = view;
             Subscriber = subscriber;
@@ -80,10 +77,10 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public class ViewSubscriberRemovedEvent : EntityEventArgs
     {
-        public IEntity View { get; }
+        public EntityUid View { get; }
         public IPlayerSession Subscriber { get; }
 
-        public ViewSubscriberRemovedEvent(IEntity view, IPlayerSession subscriber)
+        public ViewSubscriberRemovedEvent(EntityUid view, IPlayerSession subscriber)
         {
             View = view;
             Subscriber = subscriber;

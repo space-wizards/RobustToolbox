@@ -107,6 +107,12 @@ namespace Robust.Shared
         public static readonly CVarDef<int> MaximumHandshakeAttempts =
             CVarDef.Create("net.handshake_attempts", 5, CVar.ARCHIVE | CVar.CLIENTONLY);
 
+        /// <summary>
+        /// If true, encrypt connections when possible.
+        /// </summary>
+        public static readonly CVarDef<bool> NetEncrypt =
+            CVarDef.Create("net.encrypt", true, CVar.CLIENTONLY);
+
         /**
          * SUS
          */
@@ -438,6 +444,12 @@ namespace Robust.Shared
         /// </remarks>
         public static readonly CVarDef<string> DisplaySplashLogo =
             CVarDef.Create("display.splash_logo", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Use US QWERTY hotkeys.
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayUSQWERTYHotkeys =
+            CVarDef.Create("display.use_US_QWERTY_hotkeys", false, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * AUDIO

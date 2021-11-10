@@ -139,7 +139,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref rotateEvent);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref rotateEvent);
                 }
                 else
                 {
@@ -180,7 +180,7 @@ namespace Robust.Shared.GameObjects
             get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
             internal set
             {
-                if (_anchored && value?.Owner.Uid != _parent)
+                if (_anchored && value?.OwnerUid != _parent)
                 {
                     Anchored = false;
                 }
@@ -292,7 +292,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var valid = _parent.IsValid();
-                return new EntityCoordinates(valid ? _parent : Owner.Uid, valid ? LocalPosition : Vector2.Zero);
+                return new EntityCoordinates(valid ? _parent : OwnerUid, valid ? LocalPosition : Vector2.Zero);
             }
             // NOTE: This setter must be callable from before initialize (inheriting from AttachParent's note)
             set
@@ -327,7 +327,7 @@ namespace Robust.Shared.GameObjects
 
                     var oldParent = Parent;
                     var oldConcrete = (TransformComponent?) oldParent;
-                    var uid = Owner.Uid;
+                    var uid = OwnerUid;
                     oldConcrete?._children.Remove(uid);
                     var newConcrete = (TransformComponent) newParent;
                     newConcrete._children.Add(uid);
@@ -340,7 +340,7 @@ namespace Robust.Shared.GameObjects
                     GridID = GetGridIndex();
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref entParentChangedMessage);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref entParentChangedMessage);
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -358,7 +358,7 @@ namespace Robust.Shared.GameObjects
                         if(!oldPosition.Position.Equals(Coordinates.Position))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates);
-                            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
+                            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                         }
                     }
                 }
@@ -404,7 +404,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates);
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                 }
                 else
                 {
@@ -540,7 +540,7 @@ namespace Robust.Shared.GameObjects
             {
                 // Note that _children is a SortedSet<EntityUid>,
                 // so duplicate additions (which will happen) don't matter.
-                ((TransformComponent) Parent!)._children.Add(Owner.Uid);
+                ((TransformComponent) Parent!)._children.Add(OwnerUid);
             }
 
             GridID = GetGridIndex();
@@ -596,14 +596,14 @@ namespace Robust.Shared.GameObjects
             if (_oldCoords != null)
             {
                 var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB);
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref moveEvent);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
                 var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref rotateEvent);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref rotateEvent);
                 _oldLocalRotation = null;
             }
         }
@@ -665,12 +665,12 @@ namespace Robust.Shared.GameObjects
             Anchored = false;
 
             var oldConcrete = (TransformComponent) oldParent;
-            var uid = Owner.Uid;
+            var uid = OwnerUid;
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
             var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref entParentChangedMessage);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref entParentChangedMessage);
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
 
@@ -689,14 +689,14 @@ namespace Robust.Shared.GameObjects
             //NOTE: This function must be callable from before initialize
 
             // don't attach to something we're already attached to
-            if (ParentUid == newParent.Owner.Uid)
+            if (ParentUid == newParent.OwnerUid)
                 return;
 
             DebugTools.Assert(newParent != this,
                 $"Can't parent a {nameof(TransformComponent)} to itself.");
 
             // offset position from world to parent, and set
-            Coordinates = new EntityCoordinates(newParent.Owner.Uid, newParent.InvWorldMatrix.Transform(WorldPosition));
+            Coordinates = new EntityCoordinates(newParent.OwnerUid, newParent.InvWorldMatrix.Transform(WorldPosition));
         }
 
         internal void ChangeMapId(MapId newMapId)
@@ -730,7 +730,7 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntMapIdChangedMessage(Owner, oldId));
+            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -788,7 +788,7 @@ namespace Robust.Shared.GameObjects
 
                 var newParentId = newState.ParentID;
                 var rebuildMatrices = false;
-                if (Parent?.Owner.Uid != newParentId)
+                if (Parent?.OwnerUid != newParentId)
                 {
                     if (newParentId != _parent)
                     {
@@ -917,7 +917,7 @@ namespace Robust.Shared.GameObjects
             }
 
             ActivelyLerping = true;
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new TransformStartLerpMessage(this));
+            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new TransformStartLerpMessage(this));
         }
 
         /// <summary>
@@ -974,7 +974,7 @@ namespace Robust.Shared.GameObjects
             Dirty();
 
             var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref anchorStateChangedEvent);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref anchorStateChangedEvent);
         }
     }
 

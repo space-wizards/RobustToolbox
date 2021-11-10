@@ -198,6 +198,8 @@ namespace Robust.Client
                 _client.ConnectToServer(LaunchState.ConnectEndpoint);
             }
 
+            ProgramShared.RunExecCommands(_console, _commandLineArgs?.ExecCommands);
+
             return true;
         }
 

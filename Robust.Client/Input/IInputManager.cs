@@ -111,6 +111,7 @@ namespace Robust.Client.Input
 
         event Action<IKeyBinding> OnKeyBindingAdded;
         event Action<IKeyBinding> OnKeyBindingRemoved;
+        event Action OnInputModeChanged;
 
         /// <summary>
         ///     Gets all the keybinds bound to a specific function.
@@ -131,5 +132,7 @@ namespace Robust.Client.Input
         bool IsKeyFunctionModified(BoundKeyFunction function);
 
         bool IsKeyDown(Keyboard.Key key);
+
+        void InputModeChanged();
     }
 }

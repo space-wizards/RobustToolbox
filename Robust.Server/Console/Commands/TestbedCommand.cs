@@ -331,11 +331,11 @@ namespace Robust.Server.Console.Commands
             var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            var groundEnt = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            var ground = entityManager.AddComponent<PhysicsComponent>(groundEnt);
+            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId)).Uid;
+            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var bodyEnt = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
-            var body = entityManager.AddComponent<PhysicsComponent>(bodyEnt);
+            var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId)).Uid;
+            var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);
 
             body.BodyType = BodyType.Dynamic;
             body.SleepingAllowed = false;
@@ -363,7 +363,7 @@ namespace Robust.Server.Console.Commands
                 fixture.CollisionLayer = 2;
             }
 
-            var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(ground.Owner.Uid, body.Owner.Uid);
+            var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
             revolute.LocalAnchorB = new Vector2(0f, 0f);
             revolute.ReferenceAngle = 0f;
@@ -382,7 +382,7 @@ namespace Robust.Server.Console.Commands
                 Timer.Spawn(i * 20, () =>
                 {
                     if (!mapManager.MapExists(mapId)) return;
-                    var ent = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+                    var ent = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId)).Uid;
                     var box = entityManager.AddComponent<PhysicsComponent>(ent);
                     box.BodyType = BodyType.Dynamic;
                     box.FixedRotation = false;

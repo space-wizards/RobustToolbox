@@ -1216,20 +1216,14 @@ namespace Robust.Shared.GameObjects
                 var aUid = jointComponentA.Owner.Uid;
                 var bUid = jointComponentB.Owner.Uid;
 
-                ValueTuple<EntityUid, EntityUid> uids;
-
-                uids = aUid.CompareTo(bUid) < 0 ?
-                    new ValueTuple<EntityUid, EntityUid>(aUid, bUid) :
-                    new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
-
                 foreach (var (_, joint) in jointComponentA.Joints)
                 {
                     // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                    if (joint.CollideConnected ||
-                        uids.Item1 != joint.BodyAUid ||
-                        uids.Item2 != joint.BodyBUid) continue;
-
-                    return false;
+                    if (!joint.CollideConnected &&
+                        (aUid == joint.BodyAUid &&
+                         bUid == joint.BodyBUid) ||
+                        (bUid == joint.BodyAUid ||
+                         aUid == joint.BodyBUid)) return false;
                 }
             }
 

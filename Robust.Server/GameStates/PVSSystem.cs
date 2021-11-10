@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Composition;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
@@ -18,7 +17,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates
 {
-    internal sealed class PVSSystem : EntitySystem
+    internal sealed partial class PVSSystem : EntitySystem
     {
         private const int ViewSetCapacity = 256; // starting number of entities that are in view
         private const int PlayerSetSize = 64; // Starting number of players
@@ -113,6 +112,7 @@ namespace Robust.Server.GameStates
         {
             base.Initialize();
             EntityManager.EntityDeleted += OnEntityDelete;
+            EntityManager.EntityAdded += OnEntityAdd;
             _playerManager.PlayerStatusChanged += OnPlayerStatusChange;
             _mapManager.OnGridRemoved += OnGridRemoved;
 
@@ -120,6 +120,16 @@ namespace Robust.Server.GameStates
             // plus invalidate any chunks currently being streamed as well.
             StreamingTilesPerTick = (int) (_configManager.GetCVar(CVars.StreamedTilesPerSecond) / _gameTiming.TickRate);
             _configManager.OnValueChanged(CVars.StreamedTileRange, SetStreamRange, true);
+            _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
+
+            SubscribeLocalEvent<EntityDirtyEvent>(OnDirty);
+
+            InitializeDirty();
+        }
+
+        public void Cleanup(IEnumerable<IPlayerSession> sessions)
+        {
+            CleanupDirty(sessions);
         }
 
         private void SetStreamRange(float value)
@@ -127,13 +137,25 @@ namespace Robust.Server.GameStates
             StreamRange = value;
         }
 
+        private void SetPvs(bool value)
+        {
+            CullingEnabled = value;
+
+            if (CullingEnabled)
+            {
+                _oldPlayers.Clear();
+            }
+        }
+
         public override void Shutdown()
         {
             base.Shutdown();
             EntityManager.EntityDeleted -= OnEntityDelete;
+            EntityManager.EntityAdded -= OnEntityAdd;
             _playerManager.PlayerStatusChanged -= OnPlayerStatusChange;
             _mapManager.OnGridRemoved -= OnGridRemoved;
             _configManager.UnsubValueChanged(CVars.StreamedTileRange, SetStreamRange);
+            _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         }
 
         private void OnGridRemoved(MapId mapid, GridId gridid)
@@ -181,6 +203,7 @@ namespace Robust.Server.GameStates
             _playerChunks.Remove(session);
             _playerLastFullMap.Remove(session, out _);
             _streamingChunks.Remove(session);
+            _oldPlayers.Remove(session);
         }
 
         #endregion
@@ -220,7 +243,7 @@ namespace Robust.Server.GameStates
             List<EntityUid>? deletions;
             if (!CullingEnabled)
             {
-                var allStates = ServerGameStateManager.GetAllEntityStates(_entMan, session, fromTick);
+                var allStates = GetAllEntityStates(session, fromTick, toTick);
                 deletions = GetDeletedEntities(fromTick);
                 _playerLastFullMap.AddOrUpdate(session, toTick, (_, _) => toTick);
                 return (allStates, deletions);
@@ -355,7 +378,7 @@ namespace Robust.Server.GameStates
                         if (ent.EntityLastModifiedTick < lastSeenChunk)
                             return;
 
-                        var newState = ServerGameStateManager.GetEntityState(_entMan, session, uid, lastSeenChunk);
+                        var newState = GetEntityState(session, uid, lastSeenChunk);
                         entityStates.Add(newState);
                     });
 
@@ -390,7 +413,7 @@ namespace Robust.Server.GameStates
 
                         foreach (var anchoredEnt in chunk.GetSnapGridCell(x, y))
                         {
-                            var newState = ServerGameStateManager.GetEntityState(_entMan, session, anchoredEnt, GameTick.Zero);
+                            var newState = GetEntityState(session, anchoredEnt, GameTick.Zero);
                             entityStates.Add(newState);
                         }
                     }
@@ -512,7 +535,7 @@ namespace Robust.Server.GameStates
                         continue;
 
                     // only send new changes
-                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, entityUid, fromTick);
+                    var newState = GetEntityState(session, entityUid, fromTick);
 
                     if (!newState.Empty)
                         entityStates.Add(newState);
@@ -522,7 +545,7 @@ namespace Robust.Server.GameStates
                     // PVS enter message
 
                     // don't assume the client knows anything about us
-                    var newState = ServerGameStateManager.GetEntityState(_entMan, session, entityUid, GameTick.Zero);
+                    var newState = GetEntityState(session, entityUid, GameTick.Zero);
                     entityStates.Add(newState);
                 }
             }

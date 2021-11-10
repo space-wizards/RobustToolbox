@@ -26,6 +26,7 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveHandler(EntityUid uid, MapGridComponent component, ComponentRemove args)
         {
+            EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex));
             MapManager.OnComponentRemoved(component);
         }
 
@@ -42,6 +43,18 @@ namespace Robust.Shared.GameObjects
         public GridId GridId { get; }
 
         public GridStartupEvent(EntityUid uid, GridId gridId)
+        {
+            EntityUid = uid;
+            GridId = gridId;
+        }
+    }
+
+    public sealed class GridRemovalEvent : EntityEventArgs
+    {
+        public EntityUid EntityUid { get; }
+        public GridId GridId { get; }
+
+        public GridRemovalEvent(EntityUid uid, GridId gridId)
         {
             EntityUid = uid;
             GridId = gridId;

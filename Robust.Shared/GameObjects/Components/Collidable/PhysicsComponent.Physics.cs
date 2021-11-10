@@ -176,7 +176,7 @@ namespace Robust.Shared.GameObjects
 
                 EntitySystem.Get<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
             }
         }
 
@@ -219,11 +219,11 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsWakeMessage(this));
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsWakeMessage(this));
             }
             else
             {
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsSleepMessage(this));
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsSleepMessage(this));
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -494,7 +494,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _canCollide = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, OwnerUid, _canCollide));
                 Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
@@ -1095,8 +1095,8 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PhysicsUpdateMessage(this));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsUpdateMessage(this));
                 }
             }
             else

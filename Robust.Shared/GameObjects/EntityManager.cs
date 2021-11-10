@@ -221,6 +221,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public int EntityCount => Entities.Count;
+
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities() => Entities.Values;
 
         public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;

@@ -81,6 +81,11 @@ namespace Robust.Shared.GameObjects
         bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity);
 
         /// <summary>
+        /// How many entities are currently active.
+        /// </summary>
+        int EntityCount { get; }
+
+        /// <summary>
         /// Returns all entities
         /// </summary>
         /// <returns></returns>
@@ -91,7 +96,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <returns></returns>
         IEnumerable<EntityUid> GetEntityUids();
-        
+
         public void DirtyEntity(EntityUid uid);
 
         public void QueueDeleteEntity(IEntity entity);

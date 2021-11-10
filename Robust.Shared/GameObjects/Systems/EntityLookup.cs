@@ -194,7 +194,7 @@ namespace Robust.Shared.GameObjects
             component.Tree = new DynamicTree<IEntity>(
                 GetRelativeAABBFromEntity,
                 capacity: capacity,
-                growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x + GrowthRate
+                growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x * 2
             );
         }
 

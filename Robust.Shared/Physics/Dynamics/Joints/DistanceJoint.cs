@@ -130,15 +130,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public DistanceJoint(EntityUid bodyA, EntityUid bodyB, Vector2 anchorA, Vector2 anchorB)
             : base(bodyA, bodyB)
         {
-            // In case the bodies were swapped around
-            if (bodyA != BodyAUid)
-            {
-                var anchor = anchorA;
-                anchorA = anchorB;
-                anchorB = anchor;
-            }
-
-            Length = MathF.Max(float.Epsilon, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
+            Length = MathF.Max(PhysicsConstants.LinearSlop, (BodyB.GetWorldPoint(anchorB) - BodyA.GetWorldPoint(anchorA)).Length);
             _minLength = _length;
             _maxLength = _length;
             LocalAnchorA = anchorA;
@@ -158,7 +150,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 if (MathHelper.CloseTo(value, _length)) return;
 
                 _impulse = 0.0f;
-                _length = MathF.Max(value, float.Epsilon);
+                _length = MathF.Max(value, PhysicsConstants.LinearSlop);
                 Dirty();
             }
         }

@@ -54,6 +54,8 @@ namespace Robust.Shared.GameObjects
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         void FastEntitiesIntersecting(in MapId mapId, ref Box2 worldAABB, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored);
+        
+        void FastEntitiesIntersecting(EntityLookupComponent lookup, ref Box2 localAABB, EntityQueryCallback callback);
 
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
@@ -393,6 +395,12 @@ namespace Robust.Shared.GameObjects
                     }
                 }
             }
+        }
+
+        /// <inheritdoc />
+        public void FastEntitiesIntersecting(EntityLookupComponent lookup, ref Box2 localAABB, EntityQueryCallback callback)
+        {
+            lookup.Tree._b2Tree.FastQuery(ref localAABB, (ref IEntity data) => callback(data));
         }
 
         /// <inheritdoc />

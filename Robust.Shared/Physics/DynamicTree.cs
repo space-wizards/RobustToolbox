@@ -47,10 +47,7 @@ namespace Robust.Shared.Physics
             GrowthFunc = growthFunc ?? DefaultGrowthFunc;
         }
 
-        // box2d grows by *2, here we're being somewhat more linear
-        private static int DefaultGrowthFunc(int x)
-            => x * 2;
-
+        private static int DefaultGrowthFunc(int x) => x * 2;
     }
 
     [PublicAPI]

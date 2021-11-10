@@ -69,20 +69,28 @@ namespace Robust.Server.GameObjects
 
             if (!string.IsNullOrWhiteSpace(prototypeName))
             {
-                var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
-
-                // At this point in time, all data configure on the entity *should* be purely from the prototype.
-                // As such, we can reset the modified ticks to Zero,
-                // which indicates "not different from client's own deserialization".
-                // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var (netId, component) in GetNetComponents(entity.Uid))
+                if (PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out var prototype))
                 {
-                    // Make sure to ONLY get components that are defined in the prototype.
-                    // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
-                    // And those aren't guaranteed to exist on the client, so don't clear them.
-                    if (prototype.Components.ContainsKey(component.Name)) ((Component) component).ClearTicks();
+
+                    // At this point in time, all data configure on the entity *should* be purely from the prototype.
+                    // As such, we can reset the modified ticks to Zero,
+                    // which indicates "not different from client's own deserialization".
+                    // So the initial data for the component or even the creation doesn't have to be sent over the wire.
+                    foreach (var (netId, component) in GetNetComponents(entity.Uid))
+                    {
+                        // Make sure to ONLY get components that are defined in the prototype.
+                        // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
+                        // And those aren't guaranteed to exist on the client, so don't clear them.
+                        if (prototype.Components.ContainsKey(component.Name)) ((Component) component).ClearTicks();
+                    }
+                }
+                else
+                {
+                    Logger.Error($"Invalid prototypeId '{prototypeName}' passed to {nameof(CreateEntity)}.");
                 }
             }
+
+
 
             return entity;
         }

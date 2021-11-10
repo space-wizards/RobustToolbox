@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -350,9 +349,10 @@ namespace Robust.Shared.GameObjects
         private protected Entity AllocEntity(string? prototypeName, EntityUid? uid = null)
         {
             EntityPrototype? prototype = null;
-            if(!string.IsNullOrWhiteSpace(prototypeName) && !PrototypeManager.TryIndex<EntityPrototype>(prototypeName, out prototype))
+            if (!string.IsNullOrWhiteSpace(prototypeName))
             {
-                Logger.Error($"Invalid prototypeId '{prototypeName}' passed to {nameof(AllocEntity)}.");
+                // If the prototype doesn't exist then we throw BEFORE we allocate the entity.
+                prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
             }
 
             var entity = AllocEntity(uid);
@@ -405,7 +405,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private protected virtual Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
-            if (!string.IsNullOrWhiteSpace(prototypeName))
+            if (prototypeName == null)
                 return AllocEntity(uid);
 
             var entity = AllocEntity(prototypeName, uid);

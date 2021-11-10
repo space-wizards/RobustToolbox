@@ -35,6 +35,10 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 {
                     f.LoadString(Prototypes);
                 })
+                .RegisterDependencies(f =>
+                {
+                    f.Register<IShapeManager, ShapeManager>();
+                })
                 .InitializeInstance();
 
             var mapManager = sim.Resolve<IMapManager>();

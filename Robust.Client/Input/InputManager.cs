@@ -8,6 +8,8 @@ using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
@@ -43,6 +45,7 @@ namespace Robust.Client.Input
         [Dependency] private readonly IResourceManager _resourceMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
 
         private bool _currentlyFindingViewport;
 
@@ -98,6 +101,7 @@ namespace Robust.Client.Input
         public event KeyEventAction? FirstChanceOnKeyEvent;
         public event Action<IKeyBinding>? OnKeyBindingAdded;
         public event Action<IKeyBinding>? OnKeyBindingRemoved;
+        public event Action? OnInputModeChanged;
 
         /// <inheritdoc />
         public void Initialize()
@@ -568,6 +572,8 @@ namespace Robust.Client.Input
             _bindings.Remove(cast);
             OnKeyBindingRemoved?.Invoke(binding);
         }
+
+        public void InputModeChanged() => OnInputModeChanged?.Invoke();
 
         private void RegisterBinding(KeyBinding binding, bool markModified = true)
         {

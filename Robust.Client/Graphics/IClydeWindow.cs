@@ -35,6 +35,12 @@ namespace Robust.Client.Graphics
         /// This means the window must not be used anymore (it is disposed).
         /// </summary>
         event Action<WindowDestroyedEventArgs> Destroyed;
+
+        /// <summary>
+        /// Raised when the window has been definitively closed.
+        /// This means the window must not be used anymore (it is disposed).
+        /// </summary>
+        event Action<WindowResizedEventArgs> Resized;
     }
 
     public interface IClydeWindowInternal : IClydeWindow

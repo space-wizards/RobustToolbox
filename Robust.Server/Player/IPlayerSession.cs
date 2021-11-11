@@ -26,6 +26,14 @@ namespace Robust.Server.Player
         void AttachToEntity(IEntity? entity);
 
         /// <summary>
+        ///     Attaches this player to an entity.
+        ///     NOTE: The content pack almost certainly has an alternative for this.
+        ///     Do not call this directly for most content code.
+        /// </summary>
+        /// <param name="uid">The entity to attach to.</param>
+        void AttachToEntity(EntityUid uid);
+
+        /// <summary>
         ///     Detaches this player from an entity.
         ///     NOTE: The content pack almost certainly has an alternative for this.
         ///     Do not call this directly for most content code.

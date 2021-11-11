@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using Robust.Client.UserInterface;
-using Robust.Shared.IoC;
 using Robust.Client.UserInterface.Controls;
+using Robust.Shared.IoC;
 
 namespace Robust.UnitTesting.Client.UserInterface
 {
@@ -116,7 +116,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 
             baseControl.ForceRunStyleUpdate();
 
-            Assert.That(baseControl.TryGetStyleProperty("foo", out object _), Is.False);
+            Assert.That(baseControl.TryGetStyleProperty("foo", out object? _), Is.False);
 
             uiMgr.RootControl.Stylesheet = sheetA;
             childA.Stylesheet = sheetB;

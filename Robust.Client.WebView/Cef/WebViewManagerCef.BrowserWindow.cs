@@ -6,9 +6,9 @@ using Robust.Shared.Log;
 using Robust.Shared.ViewVariables;
 using Xilium.CefGlue;
 
-namespace Robust.Client.WebView
+namespace Robust.Client.WebView.Cef
 {
-    internal partial class CefManager
+    internal partial class WebViewManagerCef
     {
         [Dependency] private readonly IClydeInternal _clyde = default!;
 
@@ -21,8 +21,7 @@ namespace Robust.Client.WebView
             var mainHWnd = (_clyde.MainWindow as IClydeWindowInternal)?.WindowsHWnd ?? 0;
 
             var info = CefWindowInfo.Create();
-            info.Width = createParams.Width;
-            info.Height = createParams.Height;
+            info.Bounds = new CefRectangle(0, 0, createParams.Width, createParams.Height);
             info.SetAsPopup(mainHWnd, "ss14cef");
 
             var impl = new WebViewWindowImpl(this);
@@ -42,11 +41,11 @@ namespace Robust.Client.WebView
 
         private sealed class WebViewWindowImpl : IWebViewWindow
         {
-            private readonly CefManager _manager;
+            private readonly WebViewManagerCef _manager;
             internal CefBrowser Browser = default!;
             internal RobustRequestHandler RequestHandler = default!;
 
-            public Action<RequestHandlerContext>? OnResourceRequest { get; set; }
+            public Action<CefRequestHandlerContext>? OnResourceRequest { get; set; }
 
             [ViewVariables(VVAccess.ReadWrite)]
             public string Url
@@ -73,7 +72,7 @@ namespace Robust.Client.WebView
                 }
             }
 
-            public WebViewWindowImpl(CefManager manager)
+            public WebViewWindowImpl(WebViewManagerCef manager)
             {
                 _manager = manager;
             }
@@ -116,12 +115,12 @@ namespace Robust.Client.WebView
                 Browser.GetMainFrame().ExecuteJavaScript(code, string.Empty, 1);
             }
 
-            public void AddResourceRequestHandler(Action<RequestHandlerContext> handler)
+            public void AddResourceRequestHandler(Action<IRequestHandlerContext> handler)
             {
                 RequestHandler.AddResourceRequestHandler(handler);
             }
 
-            public void RemoveResourceRequestHandler(Action<RequestHandlerContext> handler)
+            public void RemoveResourceRequestHandler(Action<IRequestHandlerContext> handler)
             {
                 RequestHandler.RemoveResourceRequestHandler(handler);
             }

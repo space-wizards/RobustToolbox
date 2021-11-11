@@ -6,7 +6,6 @@ using Prometheus;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -222,6 +221,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public int EntityCount => Entities.Count;
+
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities() => Entities.Values;
 
         public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
@@ -235,11 +237,16 @@ namespace Robust.Shared.GameObjects
         public void DirtyEntity(EntityUid uid)
         {
             var currentTick = CurrentTick;
-            var entity = GetEntity(uid);
 
-            if (entity.LastModifiedTick == currentTick) return;
+            // We want to retrieve MetaDataComponent even if its Deleted flag is set.
+            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+                throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
 
-            entity.LastModifiedTick = currentTick;
+            var metadata = (MetaDataComponent)component;
+
+            if (metadata.EntityLastModifiedTick == currentTick) return;
+
+            metadata.EntityLastModifiedTick = currentTick;
 
             var dirtyEvent = new EntityDirtyEvent {Uid = uid};
             EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
@@ -441,13 +448,13 @@ namespace Robust.Shared.GameObjects
 
         protected void InitializeEntity(Entity entity)
         {
-            entity.InitializeComponents();
+            InitializeComponents(entity.Uid);
             EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)
         {
-            entity.StartAllComponents();
+            StartComponents(entity.Uid);
             EntityStarted?.Invoke(this, entity.Uid);
         }
 

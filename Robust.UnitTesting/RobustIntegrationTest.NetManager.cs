@@ -310,6 +310,8 @@ namespace Robust.UnitTesting
             public void DisconnectChannel(INetChannel channel, string reason)
             {
                 channel.Disconnect(reason);
+                _channels.Remove(((IntegrationNetChannel) channel).RemoteUid);
+                Disconnect?.Invoke(this, new NetDisconnectedArgs(channel, string.Empty));
             }
 
             INetChannel? IClientNetManager.ServerChannel => ServerChannel;

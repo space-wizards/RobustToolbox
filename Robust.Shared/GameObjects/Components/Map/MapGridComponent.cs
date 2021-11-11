@@ -20,9 +20,9 @@ namespace Robust.Shared.GameObjects
         IMapGrid Grid { get; }
         void ClearGridId();
 
-        bool AnchorEntity(ITransformComponent transform);
-        void UnanchorEntity(ITransformComponent transform);
-        void AnchoredEntityDirty(ITransformComponent transform);
+        bool AnchorEntity(TransformComponent transform);
+        void UnanchorEntity(TransformComponent transform);
+        void AnchoredEntityDirty(TransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -68,11 +68,11 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool AnchorEntity(ITransformComponent transform)
+        public bool AnchorEntity(TransformComponent transform)
         {
             var xform = (TransformComponent) transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner.Uid);
+            var result = Grid.AddToSnapGridCell(tileIndices, transform.OwnerUid);
 
             if (result)
             {
@@ -93,7 +93,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void UnanchorEntity(ITransformComponent transform)
+        public void UnanchorEntity(TransformComponent transform)
         {
             //HACK: Client grid pivot causes this.
             //TODO: make grid components the actual grid
@@ -102,7 +102,7 @@ namespace Robust.Shared.GameObjects
 
             var xform = (TransformComponent)transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner.Uid);
+            Grid.RemoveFromSnapGridCell(tileIndices, transform.OwnerUid);
             xform.SetAnchored(false);
             if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
             {
@@ -111,7 +111,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void AnchoredEntityDirty(ITransformComponent transform)
+        public void AnchoredEntityDirty(TransformComponent transform)
         {
             if (!transform.Anchored)
                 return;

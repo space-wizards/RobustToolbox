@@ -83,6 +83,7 @@ namespace Robust.Server
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
         [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
+        [Dependency] private readonly IServerConsoleHost _consoleHost = default!;
 
         private readonly Stopwatch _uptimeStopwatch = new();
 
@@ -337,7 +338,7 @@ namespace Robust.Server
             prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             prototypeManager.Resync();
 
-            IoCManager.Resolve<IServerConsoleHost>().Initialize();
+            _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();
             IoCManager.Resolve<IEntityLookup>().Startup();
@@ -371,6 +372,8 @@ namespace Robust.Server
             }
 
             GC.Collect();
+
+            ProgramShared.RunExecCommands(_consoleHost, _commandLineArgs?.ExecCommands);
 
             return false;
         }

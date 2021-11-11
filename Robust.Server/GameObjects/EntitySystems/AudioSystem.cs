@@ -99,7 +99,7 @@ namespace Robust.Server.GameObjects
             //TODO: Calculate this from PAS
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
 
-            if(!EntityManager.TryGetComponent<ITransformComponent>(uid, out var transform))
+            if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
                 return null;
 
             var id = CacheIdentifier();

@@ -8,7 +8,7 @@ namespace Robust.Client
 {
     internal sealed partial class GameController
     {
-        private void LoadOptionalRobustModules()
+        private void LoadOptionalRobustModules(GameController.DisplayMode mode)
         {
             // In the future, this manifest should be loaded somewhere else and used for more parts of init.
             // For now, this is fine.
@@ -19,7 +19,7 @@ namespace Robust.Client
                 switch (module)
                 {
                     case "Robust.Client.WebView":
-                        LoadRobustWebView();
+                        LoadRobustWebView(mode);
                         break;
                     default:
                         Logger.Error($"Unknown Robust module: {module}");
@@ -28,7 +28,7 @@ namespace Robust.Client
             }
         }
 
-        private void LoadRobustWebView()
+        private void LoadRobustWebView(GameController.DisplayMode mode)
         {
             Logger.Debug("Loading Robust.Client.WebView");
 
@@ -38,7 +38,7 @@ namespace Robust.Client
 
             var managerType = attribute.ImplementationType;
             _webViewHook = (IWebViewManagerHook)Activator.CreateInstance(managerType)!;
-            _webViewHook.Initialize();
+            _webViewHook.Initialize(mode);
 
             Logger.Debug("Done initializing Robust.Client.WebView");
         }

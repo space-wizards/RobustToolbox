@@ -20,26 +20,78 @@
 * 3. This notice may not be removed or altered from any source distribution.
 */
 
+using System;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics
 {
+    /// This describes the motion of a body/shape for TOI computation.
+    /// Shapes are defined with respect to the body origin, which may
+    /// no coincide with the center of mass. However, to support dynamics
+    /// we must interpolate the center of mass position.
     internal struct Sweep
     {
+        /// <summary>
+        /// Local center of mass position
+        /// </summary>
+        public Vector2 LocalCenter;
+
+        // AKA A in box2d
         public float Angle;
 
+        // AKA A0 in box2d
+        /// <summary>
+        /// Fraction of the current time step in the range [0,1]
+        /// c0 and a0 are the positions at alpha0.
+        /// </summary>
         public float Angle0;
 
         public float Alpha0;
 
-        /// <summary>
-        ///     Generally reflects the body's worldposition but not always.
-        ///     Can be used to temporarily store it during CCD.
-        /// </summary>
+        // AKA C in box2d
         public Vector2 Center;
 
-        public float Center0;
+        // AKA C0 in box2d
+        public Vector2 Center0;
 
-        // I Didn't copy LocalCenter because it's also on the Body and it will normally be rarely set sooooo
+        /// <summary>
+        /// Get the interpolated transform at a specific time.
+        /// </summary>
+        /// <param name="beta">beta is a factor in [0,1], where 0 indicates alpha0.</param>
+        /// <returns>the output transform</returns>
+        public Transform GetTransform(float beta)
+        {
+            var xf = new Transform(Center0 * (1.0f - beta) + Center * beta, (1.0f - beta) * Angle0 + beta * Angle);
+
+            // Shift to origin
+            xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
+
+            return xf;
+        }
+
+        /// <summary>
+        /// Advance the sweep forward, yielding a new initial state.
+        /// </summary>
+        /// <param name="alpha">the new initial time.</param>
+        public void Advance(float alpha)
+        {
+            DebugTools.Assert(Alpha0 < 1.0f);
+            float beta = (alpha - Alpha0) / (1.0f - Alpha0);
+            Center0 += (Center - Center0) * beta;
+            Angle0 += beta * (Angle - Angle0);
+            Alpha0 = alpha;
+        }
+
+        /// <summary>
+        /// Normalize the angles.
+        /// </summary>
+        public void Normalize()
+        {
+            float twoPi = 2.0f * MathF.PI;
+            float d =  twoPi * MathF.Floor(Angle0 / twoPi);
+            Angle0 -= d;
+            Angle -= d;
+        }
     }
 }

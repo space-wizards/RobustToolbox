@@ -116,7 +116,7 @@ namespace Robust.Client.ViewVariables.Instances
                     };
                     top.HorizontalExpand = true;
                     hBox.AddChild(top);
-                    hBox.AddChild(new SpriteView {Sprite = sprite});
+                    hBox.AddChild(new SpriteView {Sprite = sprite, OverrideDirection = Direction.South});
                     vBoxContainer.AddChild(hBox);
                 }
                 else

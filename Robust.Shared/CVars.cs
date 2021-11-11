@@ -491,7 +491,7 @@ namespace Robust.Shared
 
         // - Sleep
         public static readonly CVarDef<float> AngularSleepTolerance =
-            CVarDef.Create("physics.angsleeptol", 0.25f / 180.0f * MathF.PI);
+            CVarDef.Create("physics.angsleeptol", 0.3f / 180.0f * MathF.PI);
 
         public static readonly CVarDef<float> LinearSleepTolerance =
             CVarDef.Create("physics.linsleeptol", 0.1f);
@@ -544,23 +544,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<float> Baumgarte =
             CVarDef.Create("physics.baumgarte", 0.2f);
-
-        /// <summary>
-        /// A small length used as a collision and constraint tolerance. Usually it is
-        /// chosen to be numerically significant, but visually insignificant.
-        /// </summary>
-        /// <remarks>
-        ///     Note that some joints may have this cached and not update on value change.
-        /// </remarks>
-        public static readonly CVarDef<float> LinearSlop =
-            CVarDef.Create("physics.linearslop", 0.005f);
-
-        /// <summary>
-        /// A small angle used as a collision and constraint tolerance. Usually it is
-        /// chosen to be numerically significant, but visually insignificant.
-        /// </summary>
-        public static readonly CVarDef<float> AngularSlop =
-            CVarDef.Create("physics.angularslop", 2.0f / 180.0f * MathF.PI);
 
         /// <summary>
         /// If true, it will run a GiftWrap convex hull on all polygon inputs.

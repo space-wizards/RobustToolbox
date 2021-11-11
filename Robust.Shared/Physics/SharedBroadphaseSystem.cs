@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -199,7 +200,7 @@ namespace Robust.Shared.Physics
                 var uid = fixture.Body.OwnerUid;
 
                 //  || prediction && !fixture.Body.Predict
-                if (!_broadphases.Contains(uid)) continue;
+                if (!_broadphaseInvMatrices.TryGetValue(uid, out var invMatrix)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 DebugTools.Assert(broadphase.Owner.Transform.MapPosition.Position.Equals(Vector2.Zero));
@@ -215,7 +216,7 @@ namespace Robust.Shared.Physics
                     if (other.Fixture.Body == body || moveBuffer.ContainsKey(other)) continue;
 
                     // To avoid updating during iteration.
-                    _gridMoveBuffer[other] = other.AABB;
+                    _gridMoveBuffer[other] = invMatrix.TransformBox(other.AABB);
                 }
 
                 _queryBuffer.Clear();
@@ -524,6 +525,13 @@ namespace Robust.Shared.Physics
             // TODO: Make it take in density instead
             var fixture = new Fixture(body, shape) {Mass = mass};
             CreateFixture(body, fixture);
+        }
+
+        public void DestroyFixture(PhysicsComponent body, string id)
+        {
+            var fixture = body.GetFixture(id);
+            if (fixture == null) return;
+            DestroyFixture(body, fixture);
         }
 
         public void DestroyFixture(Fixture fixture)

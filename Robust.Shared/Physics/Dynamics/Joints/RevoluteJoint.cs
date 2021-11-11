@@ -22,7 +22,6 @@
 
 using System;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -60,7 +59,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             return joint;
         }
-
     }
 
     public class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
@@ -86,11 +84,36 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         // Settable
         public bool EnableLimit;
+
+        /// <summary>
+        /// A flag to enable the joint motor.
+        /// </summary>
         public bool EnableMotor;
+
+        /// <summary>
+        /// The bodyB angle minus bodyA angle in the reference state (radians).
+        /// </summary>
         public float ReferenceAngle;
+
+        /// <summary>
+        /// The lower angle for the joint limit (radians).
+        /// </summary>
         public float LowerAngle;
+
+        /// <summary>
+        /// The upper angle for the joint limit (radians).
+        /// </summary>
         public float UpperAngle;
+
+        /// <summary>
+        /// The desired motor speed. Usually in radians per second.
+        /// </summary>
         public float MotorSpeed;
+
+        /// <summary>
+        /// The maximum motor torque used to achieve the desired motor speed.
+        /// Usually in N-m.
+        /// </summary>
         public float MaxMotorTorque;
 
         public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner.Uid, bodyB.Owner.Uid)

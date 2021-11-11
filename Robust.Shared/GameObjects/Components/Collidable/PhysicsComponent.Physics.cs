@@ -954,6 +954,11 @@ namespace Robust.Shared.GameObjects
             return Transform.Mul(GetTransform(), localPoint);
         }
 
+        public Vector2 GetLocalVector2(Vector2 worldVector)
+        {
+            return Transform.MulT(new Quaternion2D((float) Owner.EntityManager.GetComponent<TransformComponent>(OwnerUid).WorldRotation.Theta), worldVector);
+        }
+
         public void FixtureChanged(Fixture fixture)
         {
             // TODO: Optimise this a LOT
@@ -989,7 +994,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal Transform GetTransform()
+        public Transform GetTransform()
         {
             var position = Owner.Transform.WorldPosition;
             var angle = (float) Owner.Transform.WorldRotation.Theta;
@@ -1211,20 +1216,14 @@ namespace Robust.Shared.GameObjects
                 var aUid = jointComponentA.Owner.Uid;
                 var bUid = jointComponentB.Owner.Uid;
 
-                ValueTuple<EntityUid, EntityUid> uids;
-
-                uids = aUid.CompareTo(bUid) < 0 ?
-                    new ValueTuple<EntityUid, EntityUid>(aUid, bUid) :
-                    new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
-
                 foreach (var (_, joint) in jointComponentA.Joints)
                 {
                     // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                    if (joint.CollideConnected ||
-                        uids.Item1 != joint.BodyAUid ||
-                        uids.Item2 != joint.BodyBUid) continue;
-
-                    return false;
+                    if (!joint.CollideConnected &&
+                        (aUid == joint.BodyAUid &&
+                         bUid == joint.BodyBUid) ||
+                        (bUid == joint.BodyAUid ||
+                         aUid == joint.BodyBUid)) return false;
                 }
             }
 

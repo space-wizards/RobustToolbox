@@ -159,8 +159,6 @@ stored in a single array since multiple arrays lead to multiple misses.
         private float _maxAngularVelocity;
         private float _maxLinearCorrection;
         private float _maxAngularCorrection;
-        private float _linearSlop;
-        private float _angularSlop;
         private int _positionIterations;
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
@@ -234,8 +232,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             _positionIterations = cfg.PositionIterations;
             _sleepAllowed = cfg.SleepAllowed;
             _timeToSleep = cfg.TimeToSleep;
-            _linearSlop = cfg.LinearSlop;
-            _angularSlop = cfg.AngularSlop;
 
             _contactSolver.LoadConfig(cfg);
         }
@@ -373,8 +369,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             SolverData.InvDt = invDt;
             SolverData.IslandIndex = ID;
             SolverData.WarmStarting = _warmStarting;
-            SolverData.LinearSlop = _linearSlop;
-            SolverData.AngularSlop = _angularSlop;
             SolverData.MaxLinearCorrection = _maxLinearCorrection;
             SolverData.MaxAngularCorrection = _maxAngularCorrection;
 

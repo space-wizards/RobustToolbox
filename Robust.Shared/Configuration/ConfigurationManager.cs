@@ -31,6 +31,12 @@ namespace Robust.Shared.Configuration
             _isServer = isServer;
         }
 
+        public virtual void Shutdown()
+        {
+            _configVars.Clear();
+            _configFile = null;
+        }
+
         /// <inheritdoc />
         public void LoadFromFile(string configFile)
         {

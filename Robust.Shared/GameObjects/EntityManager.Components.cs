@@ -70,7 +70,6 @@ namespace Robust.Shared.GameObjects
             _componentFactory.ComponentAdded -= OnComponentAdded;
             _componentFactory.ComponentReferenceAdded -= OnComponentReferenceAdded;
             _netComponents.Clear();
-            _entTraitDict.Clear();
             _entCompIndex.Clear();
             _deleteSet.Clear();
             FillComponentDict();
@@ -709,6 +708,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillComponentDict()
         {
+            _entTraitDict.Clear();
             foreach (var refType in _componentFactory.GetAllRefTypes())
             {
                 _entTraitDict.Add(refType, new Dictionary<EntityUid, Component>());

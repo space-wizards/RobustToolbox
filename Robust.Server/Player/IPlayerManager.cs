@@ -28,6 +28,8 @@ namespace Robust.Server.Player
         /// <param name="maxPlayers">Maximum number of players that can connect to this server at one time.</param>
         void Initialize(int maxPlayers);
 
+        void Shutdown();
+
         bool TryGetSessionByUsername(string username, [NotNullWhen(true)] out IPlayerSession? session);
 
         /// <summary>

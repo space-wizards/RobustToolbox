@@ -22,6 +22,11 @@ namespace Robust.Shared.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
+
+        /// <summary>
+        ///     Drops every entity, component and entity system.
+        /// </summary>
+        void Cleanup();
         void TickUpdate(float frameTime, Histogram? histogram=null);
 
         /// <summary>

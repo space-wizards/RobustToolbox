@@ -98,6 +98,19 @@ namespace Robust.Shared.GameObjects
             Started = false;
         }
 
+        public void Cleanup()
+        {
+            QueuedDeletions.Clear();
+            QueuedDeletionsSet.Clear();
+            Entities.Clear();
+            _eventBus.Dispose();
+            _eventBus = null!;
+            ClearComponents();
+
+            Initialized = false;
+            Started = false;
+        }
+
         public virtual void TickUpdate(float frameTime, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())

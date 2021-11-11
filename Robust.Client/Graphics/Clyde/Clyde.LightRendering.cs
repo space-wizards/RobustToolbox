@@ -943,7 +943,7 @@ namespace Robust.Client.Graphics.Clyde
                         {
                             // get normal
                             var alongNormal = b - a;
-                            var normal = new Vector2(-alongNormal.Y, alongNormal.X).Normalized;
+                            var normal = alongNormal.Rotated90DegreesAnticlockwiseWorld.Normalized;
                             // determine which side of the plane the face is on
                             // the plane is at the origin of this coordinate system, which is also the eye
                             // the normal of the plane is that of the face

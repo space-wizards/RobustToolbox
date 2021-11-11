@@ -11,7 +11,8 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.3" />
+    <!--  -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.7" />
     <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="5.0.4" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />
     <PackageReference Include="Serilog.Sinks.Loki" Version="3.0.0" />

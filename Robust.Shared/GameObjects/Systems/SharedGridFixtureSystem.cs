@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly FixtureSystem _fixtures = default!;
 
         private bool _enabled;
 
@@ -123,7 +123,7 @@ namespace Robust.Shared.GameObjects
             foreach (var fixture in toRemove)
             {
                 chunk.Fixtures.Remove(fixture);
-                _broadphase.DestroyFixture(fixture);
+                _fixtures.DestroyFixture(fixture);
             }
 
             if (newFixtures.Count > 0 || toRemove.List?.Count > 0)
@@ -134,7 +134,7 @@ namespace Robust.Shared.GameObjects
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
             foreach (var fixture in newFixtures)
             {
-                var existingFixture = physicsComponent.GetFixture(fixture.ID);
+                var existingFixture = _fixtures.GetFixture(physicsComponent, fixture.ID);
                 // Check if it's the same (otherwise remove anyway).
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
@@ -144,7 +144,7 @@ namespace Robust.Shared.GameObjects
                 }
 
                 chunk.Fixtures.Add(fixture);
-                _broadphase.CreateFixture(physicsComponent, fixture);
+                _fixtures.CreateFixture(physicsComponent, fixture);
             }
 
             if (updated)

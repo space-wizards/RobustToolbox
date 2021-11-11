@@ -77,9 +77,11 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnoreCCD { get; set; }
 
-        internal IEnumerable<Fixture> Fixtures => Owner.GetComponent<FixtureManagerComponent>().Fixtures.Values;
+        // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
+        // on physics bodies for massive shuttle perf savings.
+        public IReadOnlyList<Fixture> Fixtures => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Values.ToList();
 
-        internal int FixtureCount => Owner.GetComponent<FixtureManagerComponent>().Fixtures.Count;
+        public int FixtureCount => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Count;
 
         [ViewVariables]
         public int ContactCount
@@ -798,34 +800,6 @@ namespace Robust.Shared.GameObjects
             // TODO: Optimise this a LOT
             Dirty();
             Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
-        }
-
-        public string GetFixtureName(Fixture fixture)
-        {
-            if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
-
-            var i = 0;
-
-            while (true)
-            {
-                var found = false;
-                ++i;
-                var name = $"fixture_{i}";
-
-                foreach (var existing in Fixtures)
-                {
-                    if (existing.ID.Equals(name))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    return name;
-                }
-            }
         }
 
         internal Transform GetTransform()

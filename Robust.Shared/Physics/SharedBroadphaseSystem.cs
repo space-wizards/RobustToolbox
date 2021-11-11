@@ -165,7 +165,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void UpdateBroadphaseCache(BroadphaseComponent broadphase)
+        internal void UpdateBroadphaseCache(BroadphaseComponent broadphase)
         {
             var uid = broadphase.OwnerUid;
 
@@ -620,7 +620,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Create the proxies for this fixture on the body's broadphase.
         /// </summary>
-        private void CreateProxies(Fixture fixture, Vector2 worldPos, bool useCache)
+        internal void CreateProxies(Fixture fixture, Vector2 worldPos, bool useCache)
         {
             // Ideally we would always just defer this until Update / FrameUpdate but that will have to wait for a future
             // PR for my own sanity.
@@ -684,7 +684,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Destroy the proxies for this fixture on the broadphase.
         /// </summary>
-        private void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture)
+        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture)
         {
             if (broadphase == null)
             {

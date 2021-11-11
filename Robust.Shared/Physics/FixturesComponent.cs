@@ -12,12 +12,14 @@ namespace Robust.Shared.Physics
 {
     [RegisterComponent]
     [NetworkedComponent]
-    [Friend(typeof(FixtureManagerSystem))]
-    public sealed class FixtureManagerComponent : Component, ISerializationHooks
+    [Friend(typeof(FixtureSystem))]
+    public sealed class FixturesComponent : Component, ISerializationHooks
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
+        // (e.g. grids)
+        // Content generally shouldn't care about its existence.
 
-        public override string Name => "FixtureManager";
+        public override string Name => "Fixtures";
 
         [ViewVariables]
         public int FixtureCount => Fixtures.Count;
@@ -41,8 +43,8 @@ namespace Robust.Shared.Physics
 
         void ISerializationHooks.AfterDeserialization()
         {
-            var fixtureSystem = EntitySystem.Get<FixtureManagerSystem>();
-            var physics = Owner.GetComponent<PhysicsComponent>();
+            var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+            var physics = Owner.EntityManager.GetComponent<PhysicsComponent>(OwnerUid);
 
             foreach (var fixture in _serializedFixtures)
             {

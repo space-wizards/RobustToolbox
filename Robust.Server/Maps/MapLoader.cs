@@ -440,6 +440,7 @@ namespace Robust.Server.Maps
             {
                 var entManager = IoCManager.Resolve<IEntityManager>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
+                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
                 var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
                 foreach (var grid in Grids)
@@ -476,7 +477,7 @@ namespace Robust.Server.Maps
 
                     foreach (var fixture in toRemove)
                     {
-                        broadphaseSystem.DestroyFixture(fixture);
+                        fixtureSystem.DestroyFixture(fixture);
                     }
                 }
             }

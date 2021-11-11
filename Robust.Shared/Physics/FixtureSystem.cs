@@ -4,6 +4,7 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
@@ -11,29 +12,31 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
-    public sealed class FixtureManagerSystem : EntitySystem
+    /// <summary>
+    /// Managers physics fixtures.
+    /// </summary>
+    public sealed class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
 
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<FixtureManagerComponent, ComponentGetState>(OnGetState);
-            SubscribeLocalEvent<FixtureManagerComponent, ComponentHandleState>(OnHandleState);
+            SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
+            SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
             SubscribeLocalEvent<PhysicsInitializedEvent>(OnPhysicsInit);
-            SubscribeLocalEvent<PhysicsShutdownEvent>(OnPhysicsShutdown);
-            // TODO: On physics init add comp
-            // TODO: On physics remove remove comp
+            SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 
         #region Public
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture)
         {
-            fixture.ID = body.GetFixtureName(fixture);
-            body.Fixtures.Add(fixture);
-            body.FixtureCount += 1;
+            var manager = EntityManager.GetComponent<FixturesComponent>(body.OwnerUid);
+
+            fixture.ID = GetFixtureName(manager, fixture);
+            manager.Fixtures.Add(fixture.ID, fixture);
             fixture.Body = body;
 
             // TODO: Assert world locked
@@ -41,13 +44,13 @@ namespace Robust.Shared.Physics
             // Should only happen for nullspace / initializing entities
             if (body.Broadphase != null)
             {
-                UpdateBroadphaseCache(body.Broadphase);
-                CreateProxies(fixture, body.Owner.Transform.WorldPosition, false);
+                _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
+                _broadphaseSystem.CreateProxies(fixture, body.Owner.Transform.WorldPosition, false);
             }
 
             // Supposed to be wrapped in density but eh
             body.ResetMassData();
-            body.Dirty();
+            manager.Dirty();
             // TODO: Set newcontacts to true.
         }
 
@@ -60,9 +63,15 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)
         {
-            // TODO: Make it take in density instead
+            // TODO: Make it take in density instead?
             var fixture = new Fixture(body, shape) {Mass = mass};
             CreateFixture(body, fixture);
+        }
+
+        public Fixture? GetFixture(PhysicsComponent body, string id)
+        {
+            var manager = EntityManager.GetComponent<FixturesComponent>(body.OwnerUid);
+            return manager.Fixtures.TryGetValue(id, out var fixture) ? fixture : null;
         }
 
         public void DestroyFixture(Fixture fixture)
@@ -72,15 +81,15 @@ namespace Robust.Shared.Physics
 
         public void DestroyFixture(PhysicsComponent body, Fixture fixture)
         {
-            // TODO: Move this to fixturemanagersystem instead
+            var manager = EntityManager.GetComponent<FixturesComponent>(body.OwnerUid);
 
             // TODO: Assert world locked
             DebugTools.Assert(fixture.Body == body);
             DebugTools.Assert(body.FixtureCount > 0);
 
-            if (!body.Fixtures.Remove(fixture))
+            if (!manager.Fixtures.Remove(fixture.ID))
             {
-                Logger.ErrorS("physics", $"Tried to remove fixture from {body.Owner} that was already removed.");
+                Logger.ErrorS("fixtures", $"Tried to remove fixture from {body.Owner} that was already removed.");
                 return;
             }
 
@@ -100,32 +109,32 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            var broadphase = GetBroadphase(fixture.Body);
+            var broadphase = _broadphaseSystem.GetBroadphase(fixture.Body);
 
             if (broadphase != null)
             {
-                DestroyProxies(broadphase, fixture);
+                _broadphaseSystem.DestroyProxies(broadphase, fixture);
             }
 
             body.ResetMassData();
-            body.Dirty();
+            manager.Dirty();
         }
 
         #endregion
 
-        private void OnPhysicsShutdown(PhysicsShutdownEvent ev)
+        private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
             // TODO: Remove physics on fixturemanager shutdown
-            if (EntityManager.GetEntity(ev.Uid).LifeStage > EntityLifeStage.MapInitialized) return;
-            EntityManager.RemoveComponent<FixtureManagerComponent>(ev.Uid);
+            if (EntityManager.GetEntity(uid).LifeStage > EntityLifeStage.MapInitialized) return;
+            EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
         private void OnPhysicsInit(PhysicsInitializedEvent ev)
         {
-            EntityManager.EnsureComponent<FixtureManagerComponent>(ev.Uid);
+            EntityManager.EnsureComponent<FixturesComponent>(ev.Uid);
         }
 
-        private void OnGetState(EntityUid uid, FixtureManagerComponent component, ref ComponentGetState args)
+        private void OnGetState(EntityUid uid, FixturesComponent component, ref ComponentGetState args)
         {
             args.State = new FixtureManagerComponentState
             {
@@ -133,7 +142,7 @@ namespace Robust.Shared.Physics
             };
         }
 
-        private void OnHandleState(EntityUid uid, FixtureManagerComponent component, ref ComponentHandleState args)
+        private void OnHandleState(EntityUid uid, FixturesComponent component, ref ComponentHandleState args)
         {
             if (args.Current is not FixtureManagerComponentState state) return;
 
@@ -201,20 +210,39 @@ namespace Robust.Shared.Physics
             foreach (var fixture in toRemoveFixtures)
             {
                 computeProperties = true;
-                _broadphaseSystem.DestroyFixture(physics, fixture);
+                DestroyFixture(physics, fixture);
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
             foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
-                _broadphaseSystem.CreateFixture(physics, fixture);
+                CreateFixture(physics, fixture);
                 fixture.Shape.ApplyState();
             }
 
             if (computeProperties)
             {
                 physics.ResetMassData();
+            }
+        }
+
+        private string GetFixtureName(FixturesComponent component, Fixture fixture)
+        {
+            if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
+
+            var i = 0;
+
+            while (true)
+            {
+                ++i;
+                var name = $"fixture_{i}";
+                var found = component.Fixtures.ContainsKey(name);
+
+                if (!found)
+                {
+                    return name;
+                }
             }
         }
 

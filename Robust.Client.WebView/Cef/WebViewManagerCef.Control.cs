@@ -533,8 +533,7 @@ namespace Robust.Client.WebView.Cef
                 if (_control.Owner.Disposed)
                     return false;
 
-                // TODO CEF: Get actual scale factor?
-                screenInfo.DeviceScaleFactor = 1.0f;
+                screenInfo.DeviceScaleFactor = _control.Owner.UIScale;
 
                 return true;
             }

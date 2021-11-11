@@ -627,6 +627,7 @@ namespace Robust.Client.Graphics.Clyde
             public bool DisposeOnClose { get; set; }
             public event Action<WindowRequestClosedEventArgs>? RequestClosed { add { } remove { } }
             public event Action<WindowDestroyedEventArgs>? Destroyed;
+            public event Action<WindowResizedEventArgs>? Resized { add { } remove { } }
 
             public void MaximizeOnMonitor(IClydeMonitor monitor)
             {

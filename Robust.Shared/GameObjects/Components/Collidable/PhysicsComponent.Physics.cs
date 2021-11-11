@@ -28,13 +28,9 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Players;
@@ -245,16 +241,6 @@ namespace Robust.Shared.GameObjects
             Awake = true;
         }
 
-        void ISerializationHooks.AfterDeserialization()
-        {
-            ResetMassData();
-
-            if (_mass > 0f && (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0)
-            {
-                _invMass = 1.0f / _mass;
-            }
-        }
-
         /// <inheritdoc />
         public override ComponentState GetComponentState(ICommonSession session)
         {
@@ -342,8 +328,6 @@ namespace Robust.Shared.GameObjects
         [DataField("canCollide")]
         private bool _canCollide = true;
 
-        // TODO: We can probably just cache the below, especially considering for shuttle collisions there's hundreds of fixtures.
-
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
         ///     while still raising collision events. Recommended you use the fixture hard values directly
@@ -352,57 +336,19 @@ namespace Robust.Shared.GameObjects
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Hard
-        {
-            get
-            {
-                foreach (var fixture in Fixtures)
-                {
-                    if (fixture.Hard) return true;
-                }
-
-                return false;
-            }
-            set
-            {
-                foreach (var fixture in Fixtures)
-                {
-                    fixture.Hard = value;
-                }
-            }
-        }
+        public bool Hard { get; internal set; }
 
         /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get
-            {
-                var layers = 0x0;
-
-                foreach (var fixture in Fixtures)
-                    layers |= fixture.CollisionLayer;
-                return layers;
-            }
-        }
+        [ViewVariables]
+        public int CollisionLayer { get; internal set; }
 
         /// <summary>
         ///     Bitmask of the layers this component collides with.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get
-            {
-                var mask = 0x0;
-
-                foreach (var fixture in Fixtures)
-                    mask |= fixture.CollisionMask;
-                return mask;
-            }
-        }
+        [ViewVariables]
+        public int CollisionMask { get; internal set; }
 
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
@@ -919,6 +865,8 @@ namespace Robust.Shared.GameObjects
 
             var startup = new PhysicsInitializedEvent(Owner.Uid);
             Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref startup);
+
+            ResetMassData();
         }
 
         protected override void OnRemove()

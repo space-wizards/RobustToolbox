@@ -81,7 +81,7 @@ namespace Robust.Shared.Physics
         /// <remarks>
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
-        bool Hard { get; set; }
+        bool Hard { get; }
 
         /// <summary>
         ///     Inverse mass of the entity in kilograms (1 / Mass).

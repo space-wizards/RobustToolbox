@@ -22,11 +22,18 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
+            SubscribeLocalEvent<FixturesComponent, ComponentInit>(OnInit);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
             SubscribeLocalEvent<PhysicsInitializedEvent>(OnPhysicsInit);
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
+        }
+
+        private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)
+        {
+            // Make sure all the right stuff is set on the body
+            FixtureUpdate(component);
         }
 
         #region Public
@@ -49,6 +56,7 @@ namespace Robust.Shared.Physics
             }
 
             // Supposed to be wrapped in density but eh
+            FixtureUpdate(manager, body);
             body.ResetMassData();
             manager.Dirty();
             // TODO: Set newcontacts to true.
@@ -68,9 +76,13 @@ namespace Robust.Shared.Physics
             CreateFixture(body, fixture);
         }
 
-        public Fixture? GetFixture(PhysicsComponent body, string id)
+        public Fixture? GetFixture(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
-            var manager = EntityManager.GetComponent<FixturesComponent>(body.OwnerUid);
+            if (!Resolve(body.OwnerUid, ref manager))
+            {
+                return null;
+            }
+
             return manager.Fixtures.TryGetValue(id, out var fixture) ? fixture : null;
         }
 
@@ -79,9 +91,12 @@ namespace Robust.Shared.Physics
             DestroyFixture(fixture.Body, fixture);
         }
 
-        public void DestroyFixture(PhysicsComponent body, Fixture fixture)
+        public void DestroyFixture(PhysicsComponent body, Fixture fixture, FixturesComponent? manager = null)
         {
-            var manager = EntityManager.GetComponent<FixturesComponent>(body.OwnerUid);
+            if (!Resolve(body.OwnerUid, ref manager))
+            {
+                return;
+            }
 
             // TODO: Assert world locked
             DebugTools.Assert(fixture.Body == body);
@@ -116,6 +131,7 @@ namespace Robust.Shared.Physics
                 _broadphaseSystem.DestroyProxies(broadphase, fixture);
             }
 
+            FixtureUpdate(manager, body);
             body.ResetMassData();
             manager.Dirty();
         }
@@ -214,6 +230,8 @@ namespace Robust.Shared.Physics
             }
 
             // TODO: We also still need event listeners for shapes (Probably need C# events)
+            // Or we could just make it so shapes can only be updated via fixturesystem which handles it
+            // automagically (friends or something?)
             foreach (var fixture in toAddFixtures)
             {
                 computeProperties = true;
@@ -227,7 +245,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private string GetFixtureName(FixturesComponent component, Fixture fixture)
+        internal string GetFixtureName(FixturesComponent component, Fixture fixture)
         {
             if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
 
@@ -246,20 +264,38 @@ namespace Robust.Shared.Physics
             }
         }
 
+        private void ShapeUpdate(Fixture fixture)
+        {
+            // TODO: Ideally we somehow subscribe to shapes so we know when vertices updates or the likes.
+        }
+
+        private void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
+        {
+            if (!Resolve(component.OwnerUid, ref body))
+            {
+                return;
+            }
+
+            var mask = 0;
+            var layer = 0;
+            var hard = false;
+
+            foreach (var (_, fixture) in component.Fixtures)
+            {
+                mask |= fixture.CollisionMask;
+                layer |= fixture.CollisionLayer;
+                hard |= fixture.Hard;
+            }
+
+            body.CollisionMask = mask;
+            body.CollisionLayer = layer;
+            body.Hard = hard;
+        }
+
         [Serializable, NetSerializable]
         private sealed class FixtureManagerComponentState : ComponentState
         {
             public List<Fixture> Fixtures = default!;
-        }
-
-        public string SetFixtureID(Fixture fixture)
-        {
-            if (string.IsNullOrEmpty(fixture.ID))
-            {
-
-            }
-
-            return fixture.ID;
         }
     }
 }

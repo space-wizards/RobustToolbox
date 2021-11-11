@@ -50,7 +50,7 @@ namespace Robust.Shared.Physics
             {
                 fixture.Body = physics;
                 fixture.ComputeProperties();
-                fixture.ID = fixtureSystem.SetFixtureID(fixture);
+                fixture.ID = fixtureSystem.GetFixtureName(this, fixture);
             }
 
             _serializedFixtures.Clear();

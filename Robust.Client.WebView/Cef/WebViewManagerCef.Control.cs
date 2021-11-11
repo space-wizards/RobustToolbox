@@ -18,7 +18,9 @@ namespace Robust.Client.WebView.Cef
     {
         public IWebViewControlImpl MakeControlImpl(WebViewControl owner)
         {
-            var impl =  new ControlImpl(owner);
+            var shader = _prototypeManager.Index<ShaderPrototype>("bgra");
+            var shaderInstance = shader.Instance();
+            var impl =  new ControlImpl(owner, shaderInstance);
             _dependencyCollection.InjectDependencies(impl);
             return impl;
         }
@@ -131,10 +133,12 @@ namespace Robust.Client.WebView.Cef
             [Dependency] private readonly IInputManager _inputMgr = default!;
 
             public readonly WebViewControl Owner;
+            private readonly ShaderInstance _shaderInstance;
 
-            public ControlImpl(WebViewControl owner)
+            public ControlImpl(WebViewControl owner, ShaderInstance shaderInstance)
             {
                 Owner = owner;
+                _shaderInstance = shaderInstance;
             }
 
             private const int ScrollSpeed = 50;
@@ -183,7 +187,7 @@ namespace Robust.Client.WebView.Cef
                 // Create the web browser! And by default, we go to about:blank.
                 var browser = CefBrowserHost.CreateBrowserSync(info, client, settings, _startUrl);
 
-                var texture = _clyde.CreateBlankTexture<Bgra32>(Vector2i.One);
+                var texture = _clyde.CreateBlankTexture<Rgba32>(Vector2i.One);
 
                 _data = new LiveData(texture, client, browser, renderer);
             }
@@ -386,7 +390,7 @@ namespace Robust.Client.WebView.Cef
                 _data.Browser.GetHost().NotifyMoveOrResizeStarted();
                 _data.Browser.GetHost().WasResized();
                 _data.Texture.Dispose();
-                _data.Texture = _clyde.CreateBlankTexture<Bgra32>((Owner.PixelWidth, Owner.PixelHeight));
+                _data.Texture = _clyde.CreateBlankTexture<Rgba32>((Owner.PixelWidth, Owner.PixelHeight));
             }
 
             public void Draw(DrawingHandleScreen handle)
@@ -404,6 +408,7 @@ namespace Robust.Client.WebView.Cef
                         Math.Min(Owner.PixelWidth, bufImg.Width),
                         Math.Min(Owner.PixelHeight, bufImg.Height)));
 
+                handle.UseShader(_shaderInstance);
                 handle.DrawTexture(_data.Texture, Vector2.Zero);
             }
 

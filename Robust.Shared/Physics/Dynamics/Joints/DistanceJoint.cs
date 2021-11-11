@@ -188,7 +188,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
                 if (MathHelper.CloseTo(value, _minLength)) return;
 
                 _lowerImpulse = 0.0f;
-                _minLength = Math.Clamp(value, float.Epsilon, MaxLength);
+                _minLength = Math.Clamp(value, PhysicsConstants.LinearSlop, MaxLength);
                 Dirty();
             }
         }

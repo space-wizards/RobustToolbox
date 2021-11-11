@@ -10,7 +10,7 @@ namespace Robust.Shared.Physics
         /// Making it larger may create artifacts for vertex collision.
         /// </summary>
         /// <remarks>
-        ///     Default is set to be 2 x linearslop. TODO Should we listen to linearslop changes?
+        ///     Default is set to be 2 x linearslop.
         /// </remarks>
         public const float PolygonRadius = 2 * LinearSlop;
 

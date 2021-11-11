@@ -80,6 +80,7 @@ namespace Robust.Server
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IRobustMappedStringSerializer _stringSerializer = default!;
         [Dependency] private readonly ILocalizationManagerInternal _loc = default!;
         [Dependency] private readonly INetConfigurationManager _netCfgMan = default!;
@@ -104,11 +105,12 @@ namespace Robust.Server
         /// <inheritdoc />
         public string ServerName => _config.GetCVar(CVars.GameHostName);
 
+        public bool ContentStart { get; set; }
+
         /// <inheritdoc />
         public void Restart()
         {
-            Logger.InfoS("srv", "Restarting Server...");
-
+            // FIXME: This explodes very violently.
             Cleanup();
             Start(Options, _logHandlerFactory);
         }
@@ -510,8 +512,6 @@ namespace Robust.Server
             FinishMainLoop();
         }
 
-        public bool ContentStart { get; set; }
-
         public void OverrideMainLoop(IGameLoop gameLoop)
         {
             _mainLoop = gameLoop;
@@ -541,17 +541,18 @@ namespace Robust.Server
         }
 
         // called right before main loop returns, do all saving/cleanup in here
-        private void Cleanup()
+        public void Cleanup()
         {
             _modLoader.Shutdown();
-            IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
+
+            _playerManager.Shutdown();
 
             // shut down networking, kicking all players.
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
             IoCManager.Resolve<IEntityLookup>().Shutdown();
-            _entityManager.Shutdown();
+            _entityManager.Cleanup();
 
             if (_config.GetCVar(CVars.LogRuntimeLog))
             {
@@ -572,6 +573,8 @@ namespace Robust.Server
             {
                 WindowsTickPeriod.TimeEndPeriod((uint) _config.GetCVar(CVars.SysWinTickPeriod));
             }
+
+            _config.Shutdown();
         }
 
         private void Input(FrameEventArgs args)

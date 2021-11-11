@@ -249,7 +249,7 @@ namespace Robust.Shared.Network
             _config.OnValueChanged(CVars.NetVerbose, NetVerboseChanged);
             if (isServer)
             {
-                _config.OnValueChanged(CVars.AuthMode, i => Auth = (AuthMode) i, invokeImmediately: true);
+                _config.OnValueChanged(CVars.AuthMode, OnAuthModeChanged, invokeImmediately: true);
             }
 #if DEBUG
             _config.OnValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
@@ -260,11 +260,7 @@ namespace Robust.Shared.Network
 
             _strings.Initialize(() => { Logger.InfoS("net", "Message string table loaded."); },
                 UpdateNetMessageFunctions);
-            _serializer.ClientHandshakeComplete += () =>
-            {
-                Logger.InfoS("net", "Client completed serializer handshake.");
-                OnConnected(ServerChannelImpl!);
-            };
+            _serializer.ClientHandshakeComplete += OnSerializerOnClientHandshakeComplete;
 
             _initialized = true;
 
@@ -272,6 +268,17 @@ namespace Robust.Shared.Network
             {
                 SAGenerateRsaKeys();
             }
+        }
+
+        private void OnAuthModeChanged(int mode)
+        {
+            Auth = (AuthMode)mode;
+        }
+
+        private void OnSerializerOnClientHandshakeComplete()
+        {
+            Logger.InfoS("net", "Client completed serializer handshake.");
+            OnConnected(ServerChannelImpl!);
         }
 
         private void SynchronizeNetTime()
@@ -383,12 +390,36 @@ namespace Robust.Shared.Network
 
             // Clear cached message functions.
             Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
+            _blankNetMsgFunctions.Clear();
             // Clear string table.
             // This has to be done AFTER clearing _netMsgFunctions so that it re-initializes NetMsg 0.
             _strings.Reset();
+            _messages.Clear();
+
+            _config.UnsubValueChanged(CVars.NetVerbose, NetVerboseChanged);
+            if (IsServer)
+            {
+                _config.UnsubValueChanged(CVars.AuthMode, OnAuthModeChanged);
+            }
+#if DEBUG
+            _config.UnsubValueChanged(CVars.NetFakeLoss, _fakeLossChanged);
+            _config.UnsubValueChanged(CVars.NetFakeLagMin, _fakeLagMinChanged);
+            _config.UnsubValueChanged(CVars.NetFakeLagRand, _fakeLagRandomChanged);
+            _config.UnsubValueChanged(CVars.NetFakeDuplicates, FakeDuplicatesChanged);
+#endif
+
+            _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
 
             _cancelConnectTokenSource?.Cancel();
             ClientConnectState = ClientConnectionState.NotConnecting;
+
+            ConnectFailed = null;
+            Connected = null;
+            Disconnect = null;
+            _connectingEvent.Clear();
+
+
+            _initialized = false;
         }
 
         public void ProcessPackets()

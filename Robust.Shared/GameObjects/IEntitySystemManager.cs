@@ -59,6 +59,8 @@ namespace Robust.Shared.GameObjects
         /// <seealso cref="IEntitySystem.Shutdown"/>
         void Shutdown();
 
+        void Clear();
+
         /// <summary>
         /// Update all systems.
         /// </summary>

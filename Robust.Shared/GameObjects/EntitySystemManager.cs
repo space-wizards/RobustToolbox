@@ -209,6 +209,11 @@ namespace Robust.Shared.GameObjects
                 _entityManager.EventBus.UnsubscribeEvents(system);
             }
 
+            Clear();
+        }
+
+        public void Clear()
+        {
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();

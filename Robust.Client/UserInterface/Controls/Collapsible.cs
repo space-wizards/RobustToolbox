@@ -80,13 +80,6 @@ namespace Robust.Client.UserInterface.Controls
 
             Heading.OnToggled += args => BodyVisible = args.Pressed;
 
-            // implies heading was created just now
-            if (Heading.Parent == null)
-            {
-                this.AddChild(Heading);
-                Heading.SetPositionFirst();
-            }
-
             _initialized = true;
         }
     }
@@ -103,7 +96,7 @@ namespace Robust.Client.UserInterface.Controls
             HorizontalAlignment = HAlignment.Center,
             VerticalAlignment = VAlignment.Center,
         };
-        private bool _chevronVisibility;
+        private bool _chevronVisibility = true;
         public bool ChevronVisible
         {
             get => _chevronVisibility;
@@ -136,13 +129,13 @@ namespace Robust.Client.UserInterface.Controls
         public CollapsibleHeading()
         {
             ToggleMode = true;
-            this.AddChild(_box);
+            AddChild(_box);
             _box.AddChild(_chevron);
         }
 
         public CollapsibleHeading(string title) : this()
         {
-            this.AddChild(new Label { Text = title });
+            AddChild(new Label { Text = title });
         }
 
         protected internal override void Draw(DrawingHandleScreen handle)

@@ -109,7 +109,7 @@ namespace Robust.Client.GameObjects
             AnythingMovedSubHandler(args.Sender.Transform);
         }
 
-        private void AnythingMovedSubHandler(ITransformComponent sender)
+        private void AnythingMovedSubHandler(TransformComponent sender)
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
             if (!_checkedChildren.Add(sender.Owner.Uid) ||
@@ -125,7 +125,7 @@ namespace Robust.Client.GameObjects
             if (sender.Owner.TryGetComponent(out PointLightComponent? light))
                 QueueLightUpdate(light);
 
-            foreach (ITransformComponent child in sender.Children)
+            foreach (TransformComponent child in sender.Children)
             {
                 AnythingMovedSubHandler(child);
             }

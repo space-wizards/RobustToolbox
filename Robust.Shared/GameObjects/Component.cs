@@ -233,11 +233,11 @@ namespace Robust.Shared.GameObjects
         {
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner is null)
+            if(Owner is null || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
             var entManager = Owner.EntityManager;
-            entManager.DirtyEntity(Owner.Uid);
+            entManager.DirtyEntity(OwnerUid);
             LastModifiedTick = entManager.CurrentTick;
         }
 

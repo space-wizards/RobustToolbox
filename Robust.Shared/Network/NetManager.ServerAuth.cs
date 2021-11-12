@@ -6,10 +6,10 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
 using Newtonsoft.Json;
+using Robust.Shared.AuthLib;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
-using UsernameHelpers = Robust.Shared.AuthLib.UsernameHelpers;
 
 namespace Robust.Shared.Network
 {
@@ -128,7 +128,7 @@ namespace Robust.Shared.Network
                     var resp = await joinedResp.Content.ReadAsStringAsync();
                     var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(resp);
 
-                    if (!joinedRespJson.IsValid)
+                    if (joinedRespJson is not {IsValid: true})
                     {
                         connection.Disconnect("Failed to validate login");
                         return;

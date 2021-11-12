@@ -105,7 +105,7 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, ITransformComponent? transform = null)
+        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, TransformComponent? transform = null)
         {
             container = null;
             if (!Resolve(uid, ref transform, false))
@@ -117,7 +117,7 @@ namespace Robust.Shared.Containers
             return TryGetContainingContainer(transform.ParentUid, uid, out container);
         }
 
-        public bool IsEntityInContainer(EntityUid uid, ITransformComponent? transform = null)
+        public bool IsEntityInContainer(EntityUid uid, TransformComponent? transform = null)
         {
             return TryGetContainingContainer(uid, out _, transform);
         }

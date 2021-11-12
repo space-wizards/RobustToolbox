@@ -512,7 +512,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity, float enlarged = 0f, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var worldAABB = GetWorldAabbFromEntity(entity);
-            var xform = _entityManager.GetComponent<ITransformComponent>(entity.Uid);
+            var xform = _entityManager.GetComponent<TransformComponent>(entity.Uid);
             var worldPos = xform.WorldPosition;
             var worldRot = xform.WorldRotation;
 

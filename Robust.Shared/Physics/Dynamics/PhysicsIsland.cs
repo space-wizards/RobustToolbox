@@ -485,7 +485,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(List<(ITransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
+        internal void UpdateBodies(List<(TransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
         {
             foreach (var (joint, error) in _brokenJoints)
             {

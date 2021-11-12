@@ -28,6 +28,10 @@ namespace Robust.Shared.GameObjects
 
         public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
 
+        [ViewVariables]
+        GameTick IEntity.LastModifiedTick { get => MetaData.EntityLastModifiedTick; set => MetaData.EntityLastModifiedTick = value; }
+
+
         /// <inheritdoc />
         [ViewVariables]
         public EntityPrototype? Prototype
@@ -43,11 +47,6 @@ namespace Robust.Shared.GameObjects
             get => MetaData.EntityDescription;
             set => MetaData.EntityDescription = value;
         }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
-        GameTick IEntity.LastModifiedTick { get; set; } = new(1);
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -69,11 +68,11 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
-        private ITransformComponent? _transform;
+        private TransformComponent? _transform;
 
         /// <inheritdoc />
         [ViewVariables]
-        public ITransformComponent Transform => _transform ??= GetComponent<ITransformComponent>();
+        public TransformComponent Transform => _transform ??= GetComponent<TransformComponent>();
 
         private MetaDataComponent? _metaData;
 
@@ -99,76 +98,6 @@ namespace Robust.Shared.GameObjects
         public bool IsValid()
         {
             return EntityManager.EntityExists(Uid);
-        }
-
-        /// <summary>
-        ///     Calls Initialize() on all registered components.
-        /// </summary>
-        public void InitializeComponents()
-        {
-            // TODO: Move this to EntityManager.
-
-            DebugTools.Assert(LifeStage == EntityLifeStage.PreInit);
-            LifeStage = EntityLifeStage.Initializing;
-
-            // Initialize() can modify the collection of components.
-            var components = EntityManager.GetComponents(Uid)
-                .OrderBy(x => x switch
-                {
-                    ITransformComponent _ => 0,
-                    IPhysBody _ => 1,
-                    _ => int.MaxValue
-                });
-
-            foreach (var component in components)
-            {
-                var comp = (Component) component;
-                if (comp.Initialized)
-                    continue;
-
-                comp.LifeInitialize();
-            }
-
-#if DEBUG
-            // Second integrity check in case of.
-            foreach (var t in EntityManager.GetComponents(Uid))
-            {
-                if (!t.Initialized)
-                {
-                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
-                }
-            }
-
-#endif
-            DebugTools.Assert(LifeStage == EntityLifeStage.Initializing);
-            LifeStage = EntityLifeStage.Initialized;
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(this));
-        }
-
-        /// <summary>
-        ///     Calls Startup() on all registered components.
-        /// </summary>
-        public void StartAllComponents()
-        {
-            // TODO: Move this to EntityManager.
-            // Startup() can modify _components
-            // This code can only handle additions to the list. Is there a better way? Probably not.
-            var comps = EntityManager.GetComponents(Uid)
-                .OrderBy(x => x switch
-                {
-                    ITransformComponent _ => 0,
-                    IPhysBody _ => 1,
-                    _ => int.MaxValue
-                });
-
-            foreach (var component in comps)
-            {
-                var comp = (Component) component;
-                if (comp.LifeStage == ComponentLifeStage.Initialized)
-                {
-                    comp.LifeStartup();
-                }
-            }
         }
 
         #endregion Initialization

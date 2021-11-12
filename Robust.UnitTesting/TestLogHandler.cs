@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
+using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Serilog.Events;
 
@@ -10,20 +11,19 @@ namespace Robust.UnitTesting
     public sealed class TestLogHandler : ILogHandler, IDisposable
     {
         private readonly string? _prefix;
-
         private readonly TextWriter _writer;
-
         private readonly Stopwatch _sw = Stopwatch.StartNew();
 
-        private readonly LogLevel? _failureLevel;
-
-        public TestLogHandler(string? prefix = null, LogLevel? failureLevel = null)
+        public TestLogHandler(IConfigurationManager cfg, string? prefix = null)
         {
+            cfg.OnValueChanged(RTCVars.FailureLogLevel, value => FailureLevel = value, true);
+
             _prefix = prefix;
-            _failureLevel = failureLevel;
             _writer = TestContext.Out;
             _writer.WriteLine($"{GetPrefix()}Started {DateTime.Now:o}");
         }
+
+        private LogLevel? FailureLevel { get; set; }
 
         public void Dispose()
         {
@@ -39,7 +39,7 @@ namespace Robust.UnitTesting
             var line = $"{GetPrefix()}{seconds:F3}s [{name}] {sawmillName}: {rendered}";
             _writer.WriteLine(line);
 
-            if (_failureLevel == null || level < _failureLevel)
+            if (FailureLevel == null || level < FailureLevel)
                 return;
 
             _writer.Flush();

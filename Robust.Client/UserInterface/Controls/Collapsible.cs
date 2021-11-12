@@ -14,8 +14,6 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool _initialized = false;
 
-        public string? Title { get; set; }
-
         private bool _bodyVisible;
         public bool BodyVisible
         {
@@ -45,7 +43,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public Collapsible(string title, CollapsibleBody body)
         {
-            Title = title;
+            AddChild(new CollapsibleHeading(Title));
             AddChild(body);
 
             Initialize();
@@ -63,20 +61,12 @@ namespace Robust.Client.UserInterface.Controls
             var enumerator = Children.GetEnumerator();
             enumerator.MoveNext();
 
-            if (Title == null)
-            {
-                // downcast
-                if (enumerator.Current is not BaseButton heading
-                    || !heading.ToggleMode)
-                    throw new ArgumentException("No toggle button defined in Collapsible, or title is missing");
+            // downcast
+            if (enumerator.Current is not BaseButton heading
+                || !heading.ToggleMode)
+                throw new ArgumentException("No toggle button defined in Collapsible, or title is missing");
 
-                Heading = heading;
-            }
-            else
-            {
-                Heading = new CollapsibleHeading(Title);
-
-            }
+            Heading = heading;
 
             if (!enumerator.MoveNext())
                 throw new ArgumentException("Not enough children in Collapsible");
@@ -98,8 +88,6 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             _initialized = true;
-
-
         }
     }
 

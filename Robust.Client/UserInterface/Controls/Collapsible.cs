@@ -43,7 +43,7 @@ namespace Robust.Client.UserInterface.Controls
 
         public Collapsible(string title, CollapsibleBody body)
         {
-            AddChild(new CollapsibleHeading(Title));
+            AddChild(new CollapsibleHeading(title));
             AddChild(body);
 
             Initialize();

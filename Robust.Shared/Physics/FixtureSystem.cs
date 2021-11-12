@@ -32,15 +32,39 @@ namespace Robust.Shared.Physics
 
         private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)
         {
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            {
+                if (component._serializedFixtures.Count > 0)
+                {
+                    DebugTools.Assert(false);
+                    Logger.ErrorS("fixtures", $"Tried to add a {nameof(FixturesComponent)} to something that doesn't have a {nameof(PhysicsComponent)}");
+                }
+
+                return;
+            }
+
+            // Can't resolve in serialization so here we are.
+            foreach (var fixture in component._serializedFixtures)
+            {
+                fixture.Body = body;
+                fixture.ID = GetFixtureName(component, fixture);
+            }
+
+            component._serializedFixtures.Clear();
+
             // Make sure all the right stuff is set on the body
             FixtureUpdate(component);
         }
 
         #region Public
 
-        public void CreateFixture(PhysicsComponent body, Fixture fixture)
+        public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
-            var manager = EntityManager.GetComponent<FixturesComponent>(body.OwnerUid);
+            if (!Resolve(body.OwnerUid, ref manager))
+            {
+                DebugTools.Assert(false);
+                return;
+            }
 
             fixture.ID = GetFixtureName(manager, fixture);
             manager.Fixtures.Add(fixture.ID, fixture);
@@ -56,9 +80,12 @@ namespace Robust.Shared.Physics
             }
 
             // Supposed to be wrapped in density but eh
-            FixtureUpdate(manager, body);
-            body.ResetMassData();
-            manager.Dirty();
+            if (updates)
+            {
+                FixtureUpdate(manager, body);
+                body.ResetMassData();
+                manager.Dirty();
+            }
             // TODO: Set newcontacts to true.
         }
 
@@ -86,12 +113,12 @@ namespace Robust.Shared.Physics
             return manager.Fixtures.TryGetValue(id, out var fixture) ? fixture : null;
         }
 
-        public void DestroyFixture(Fixture fixture)
+        public void DestroyFixture(Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
-            DestroyFixture(fixture.Body, fixture);
+            DestroyFixture(fixture.Body, fixture, updates, manager);
         }
 
-        public void DestroyFixture(PhysicsComponent body, Fixture fixture, FixturesComponent? manager = null)
+        public void DestroyFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
             if (!Resolve(body.OwnerUid, ref manager))
             {
@@ -131,9 +158,12 @@ namespace Robust.Shared.Physics
                 _broadphaseSystem.DestroyProxies(broadphase, fixture);
             }
 
-            FixtureUpdate(manager, body);
-            body.ResetMassData();
-            manager.Dirty();
+            if (updates)
+            {
+                FixtureUpdate(manager, body);
+                body.ResetMassData();
+                manager.Dirty();
+            }
         }
 
         #endregion
@@ -145,7 +175,7 @@ namespace Robust.Shared.Physics
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
-        private void OnPhysicsInit(PhysicsInitializedEvent ev)
+        private void OnPhysicsInit(ref PhysicsInitializedEvent ev)
         {
             EntityManager.EnsureComponent<FixturesComponent>(ev.Uid);
         }
@@ -269,7 +299,10 @@ namespace Robust.Shared.Physics
             // TODO: Ideally we somehow subscribe to shapes so we know when vertices updates or the likes.
         }
 
-        private void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
+        /// <summary>
+        /// Updates all of the cached physics information on the body derived from fixtures.
+        /// </summary>
+        public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
         {
             if (!Resolve(component.OwnerUid, ref body))
             {

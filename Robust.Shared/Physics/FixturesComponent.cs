@@ -29,7 +29,7 @@ namespace Robust.Shared.Physics
 
         [DataField("fixtures")]
         [NeverPushInheritance]
-        private List<Fixture> _serializedFixtures = new();
+        internal List<Fixture> _serializedFixtures = new();
 
         void ISerializationHooks.BeforeSerialization()
         {
@@ -39,21 +39,6 @@ namespace Robust.Shared.Physics
             {
                 _serializedFixtures.Add(fixture);
             }
-        }
-
-        void ISerializationHooks.AfterDeserialization()
-        {
-            var fixtureSystem = EntitySystem.Get<FixtureSystem>();
-            var physics = Owner.EntityManager.GetComponent<PhysicsComponent>(OwnerUid);
-
-            foreach (var fixture in _serializedFixtures)
-            {
-                fixture.Body = physics;
-                fixture.ComputeProperties();
-                fixture.ID = fixtureSystem.GetFixtureName(this, fixture);
-            }
-
-            _serializedFixtures.Clear();
         }
     }
 }

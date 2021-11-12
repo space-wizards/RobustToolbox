@@ -59,6 +59,12 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            if (!gridEnt.TryGetComponent(out FixturesComponent? fixturesComponent))
+            {
+                Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(fixturesComponent)}");
+                return;
+            }
+
             var origin = chunk.Indices * chunk.ChunkSize;
 
             // So we store a reference to the fixture on the chunk because it's easier to cross-reference it.
@@ -123,7 +129,7 @@ namespace Robust.Shared.GameObjects
             foreach (var fixture in toRemove)
             {
                 chunk.Fixtures.Remove(fixture);
-                _fixtures.DestroyFixture(fixture);
+                _fixtures.DestroyFixture(fixture, false, fixturesComponent);
             }
 
             if (newFixtures.Count > 0 || toRemove.List?.Count > 0)
@@ -144,11 +150,14 @@ namespace Robust.Shared.GameObjects
                 }
 
                 chunk.Fixtures.Add(fixture);
-                _fixtures.CreateFixture(physicsComponent, fixture);
+                _fixtures.CreateFixture(physicsComponent, fixture, false, fixturesComponent);
             }
 
             if (updated)
+            {
+                _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
                 EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+            }
         }
     }
 

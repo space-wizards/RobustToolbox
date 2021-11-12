@@ -741,13 +741,6 @@ namespace Robust.Shared.GameObjects
             return Transform.Mul(GetTransform(), localPoint);
         }
 
-        public void FixtureChanged(Fixture fixture)
-        {
-            // TODO: Optimise this a LOT
-            Dirty();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
-        }
-
         internal Transform GetTransform()
         {
             var position = Owner.Transform.WorldPosition;

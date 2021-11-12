@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization;
 
@@ -9,6 +10,7 @@ namespace Robust.Shared.GameObjects
     ///     This can be used by the EntityManager to reference an IEntity.
     /// </summary>
     [Serializable, NetSerializable]
+    [JsonConverter(typeof(EntityUidJsonSerializer))]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
     {
         /// <summary>

@@ -104,7 +104,7 @@ namespace Robust.Shared.Utility
             var builder = new StringBuilder();
             foreach (var tag in _tags)
             {
-                if (!(tag is TagText text))
+                if (tag is not TagText text)
                 {
                     continue;
                 }

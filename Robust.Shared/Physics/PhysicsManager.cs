@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
@@ -11,8 +10,6 @@ namespace Robust.Shared.Physics
         /// Clear all of the cached transforms.
         /// </summary>
         void ClearTransforms();
-
-        public bool CreateTransform(PhysicsComponent body);
 
         public Transform EnsureTransform(PhysicsComponent body);
 
@@ -46,19 +43,6 @@ namespace Robust.Shared.Physics
         public void ClearTransforms()
         {
             _transforms.Clear();
-        }
-
-        public bool CreateTransform(PhysicsComponent body)
-        {
-            return CreateTransform(body.OwnerUid);
-        }
-
-        public bool CreateTransform(EntityUid uid)
-        {
-            if (_transforms.ContainsKey(uid)) return false;
-
-            _transforms[uid] = GetPhysicsTransform(uid);
-            return true;
         }
 
         public Transform EnsureTransform(PhysicsComponent body)

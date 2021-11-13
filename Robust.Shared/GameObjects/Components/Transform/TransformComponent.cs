@@ -1,11 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -785,6 +783,37 @@ namespace Robust.Shared.GameObjects
             var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
 
             return (worldPosition, worldRot, worldMatrix);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix()
+        {
+            var parent = _parent;
+            var worldRot = _localRotation;
+            var invMatrix = GetLocalMatrixInv();
+            var worldMatrix = GetLocalMatrix();
+
+            // By doing these all at once we can elide multiple IsValid + GetComponent calls
+            while (parent.IsValid())
+            {
+                var xform = Owner.EntityManager.GetComponent<TransformComponent>(parent);
+                worldRot += xform.LocalRotation;
+                var parentMatrix = xform.GetLocalMatrix();
+                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                worldMatrix = result;
+
+                var parentInvMatrix = xform.GetLocalMatrixInv();
+                Matrix3.Multiply(ref invMatrix, ref parentInvMatrix, out var invResult);
+                invMatrix = invResult;
+
+                parent = xform.ParentUid;
+            }
+
+            var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
+
+            return (worldPosition, worldRot, invMatrix);
         }
 
         /// <summary>

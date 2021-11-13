@@ -1,12 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using Robust.Shared;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
-using Robust.Shared.Log;
 
 namespace Robust.Server.ServerStatus
 {
@@ -57,14 +58,13 @@ namespace Robust.Server.ServerStatus
                     var maybeData = PrepareACZInnards();
                     if (maybeData == null)
                     {
-                        Logger.WarningS("r.s.serverstatus.clientzip", "Unable to prepare hosted client-zip.");
                         return null;
                     }
                     data = maybeData;
                 }
                 catch (Exception e)
                 {
-                    _runtimeLog.LogException(e, "statushostacz");
+                    _httpSawmill.Error($"Exception in StatusHost PrepareACZ: {e}");
                     return null;
                 }
                 _aczData = data;
@@ -88,8 +88,43 @@ namespace Robust.Server.ServerStatus
 
         private byte[]? PrepareACZViaMagic()
         {
-            // NYI
-            return null;
+            var paths = new Dictionary<string, byte[]>();
+            bool AttemptPullFromDisk(string pathTo, string pathFrom)
+            {
+                // _httpSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
+                var res = PathHelpers.ExecutableRelativeFile(pathFrom);
+                if (!File.Exists(res)) return false;
+                paths[pathTo] = File.ReadAllBytes(res);
+                return true;
+            }
+            AttemptPullFromDisk("Assemblies/Content.Shared.dll", "../../bin/Content.Client/Content.Shared.dll");
+            AttemptPullFromDisk("Assemblies/Content.Shared.pdb", "../../bin/Content.Client/Content.Shared.pdb");
+            if (!AttemptPullFromDisk("Assemblies/Content.Client.dll", "../../bin/Content.Client/Content.Client.dll"))
+            {
+                _httpSawmill.Error($"StatusHost PrepareACZMagic couldn't get client assembly - not continuing");
+                return null;
+            }
+            AttemptPullFromDisk("Assemblies/Content.Client.pdb", "../../bin/Content.Client/Content.Client.pdb");
+
+            var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
+            foreach (var path in PathHelpers.GetFiles(prefix))
+            {
+                var relPath = Path.GetRelativePath(prefix, path);
+                AttemptPullFromDisk(relPath, path);
+            }
+
+            var outStream = new MemoryStream();
+            var archive = new ZipArchive(outStream, ZipArchiveMode.Create);
+            foreach (var kvp in paths)
+            {
+                var entry = archive.CreateEntry(kvp.Key);
+                using (var entryStream = entry.Open())
+                {
+                    entryStream.Write(kvp.Value);
+                }
+            }
+            archive.Dispose();
+            return outStream.ToArray();
         }
     }
 

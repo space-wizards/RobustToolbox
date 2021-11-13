@@ -35,7 +35,6 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
         private readonly List<StatusHostHandler> _handlers = new();

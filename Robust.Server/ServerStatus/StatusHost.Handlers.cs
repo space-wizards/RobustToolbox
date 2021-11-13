@@ -14,6 +14,7 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleTeapot);
             AddHandler(HandleStatus);
             AddHandler(HandleInfo);
+            AddHandler(HandleAutomaticClientZip);
         }
 
         private static bool HandleTeapot(IStatusHandlerContext context)
@@ -62,7 +63,7 @@ namespace Robust.Server.ServerStatus
 
             if (string.IsNullOrEmpty(downloadUrl))
             {
-                buildInfo = null;
+                buildInfo = PrepareACZBuildInfo();
             }
             else
             {
@@ -102,6 +103,36 @@ namespace Robust.Server.ServerStatus
             context.RespondJson(jObject);
 
             return true;
+        }
+
+        private JObject? PrepareACZBuildInfo()
+        {
+            if (PrepareACZ() == null)
+            {
+                return null;
+            }
+
+            // Automatic - pass to ACZ
+            // Unfortunately, we still can't divine engine version.
+            var engineVersion = _configurationManager.GetCVar(CVars.BuildEngineVersion);
+            // Fork ID is an interesting case, we don't want to cause too many redownloads but we also don't want to pollute disk.
+            // Call the fork "custom" if there's no explicit ID given.
+            var fork = _configurationManager.GetCVar(CVars.BuildForkId);
+            if (string.IsNullOrEmpty(fork))
+            {
+                fork = "custom";
+            }
+            // Download URL needs to be cheated because of the way status connect address is setup.
+            // Personally I'd say get rid of the "udp://" part.
+            var selfAddress = _configurationManager.GetCVar(CVars.StatusSelfAddress);
+            return new JObject
+            {
+                ["engine_version"] = engineVersion,
+                ["fork_id"] = fork,
+                ["version"] = _aczHash,
+                ["download_url"] = selfAddress + "acz.zip",
+                ["hash"] = _aczHash,
+            };
         }
     }
 

@@ -18,6 +18,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using Robust.Shared.Exceptions;
 using HttpListener = ManagedHttpListener.HttpListener;
 using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
 
@@ -34,6 +35,7 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
         private readonly List<StatusHostHandler> _handlers = new();
@@ -152,6 +154,15 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
+            // Infer selfaddress in case we need that
+            var selfAddressInfer = _configurationManager.GetCVar(CVars.StatusConnectAddress) + "/";
+            if (selfAddressInfer.StartsWith("udp"))
+            {
+                selfAddressInfer = "http" + selfAddressInfer.Substring(3);
+            }
+            SetCVarIfUnmodified(CVars.StatusSelfAddress, selfAddressInfer);
+
+            // build.json starts here (returns on failure to find it)
             var path = PathHelpers.ExecutableRelativeFile("build.json");
             if (!File.Exists(path))
             {
@@ -246,12 +257,33 @@ namespace Robust.Server.ServerStatus
 
                 if (RequestMethod == HttpMethod.Head)
                 {
+                    _context.Response.Close();
                     return;
                 }
 
                 using var writer = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
 
                 writer.Write(text);
+            }
+
+            public void Respond(byte[] data, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
+            {
+                Respond(data, (int) code, contentType);
+            }
+
+            public void Respond(byte[] data, int code = 200, string contentType = MediaTypeNames.Text.Plain)
+            {
+                _context.Response.StatusCode = code;
+                _context.Response.ContentType = contentType;
+                _context.Response.ContentLength64 = data.Length;
+
+                if (RequestMethod == HttpMethod.Head)
+                {
+                    _context.Response.Close();
+                    return;
+                }
+
+                _context.Response.Close(data, false);
             }
 
             public void RespondError(HttpStatusCode code)

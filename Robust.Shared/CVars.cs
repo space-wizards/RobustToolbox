@@ -170,18 +170,7 @@ namespace Robust.Shared
             CVarDef.Create("status.max_connections", 5, CVar.SERVERONLY);
 
         public static readonly CVarDef<string> StatusConnectAddress =
-            CVarDef.Create("status.connectaddress", "udp://localhost:1212", CVar.ARCHIVE | CVar.SERVERONLY);
-
-        /// <summary>
-        ///     HTTP address prefix of the status host itself, i.e:
-        ///     https://miros.spacestation14.io/server/
-        ///     Note the trailing slash!
-        ///     Also can be HTTPS, etc.
-        ///     If not provided, will be inferred from the connection address.
-        ///     Used only for Automatic Client Zip right now.
-        /// </summary>
-        public static readonly CVarDef<string> StatusSelfAddress =
-            CVarDef.Create("status.selfaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
+            CVarDef.Create("status.connectaddress", "", CVar.ARCHIVE | CVar.SERVERONLY);
 
         /*
          * BUILD

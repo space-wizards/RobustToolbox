@@ -24,7 +24,7 @@ namespace Robust.Server.ServerStatus
 
         private bool HandleAutomaticClientZip(IStatusHandlerContext context)
         {
-            if (!context.IsGetLike || context.Url!.AbsolutePath != "/acz.zip")
+            if (!context.IsGetLike || context.Url!.AbsolutePath != "/client.zip")
             {
                 return false;
             }

@@ -122,15 +122,13 @@ namespace Robust.Server.ServerStatus
             {
                 fork = "custom";
             }
-            // Download URL needs to be cheated because of the way status connect address is setup.
-            // Personally I'd say get rid of the "udp://" part.
-            var selfAddress = _configurationManager.GetCVar(CVars.StatusSelfAddress);
             return new JObject
             {
                 ["engine_version"] = engineVersion,
                 ["fork_id"] = fork,
                 ["version"] = _aczHash,
-                ["download_url"] = selfAddress + "acz.zip",
+                // Don't supply a download URL - like supplying an empty self-address
+                ["download_url"] = "",
                 ["hash"] = _aczHash,
             };
         }

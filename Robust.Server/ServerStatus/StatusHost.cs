@@ -153,14 +153,6 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            // Infer selfaddress in case we need that
-            var selfAddressInfer = _configurationManager.GetCVar(CVars.StatusConnectAddress) + "/";
-            if (selfAddressInfer.StartsWith("udp"))
-            {
-                selfAddressInfer = "http" + selfAddressInfer.Substring(3);
-            }
-            SetCVarIfUnmodified(CVars.StatusSelfAddress, selfAddressInfer);
-
             // build.json starts here (returns on failure to find it)
             var path = PathHelpers.ExecutableRelativeFile("build.json");
             if (!File.Exists(path))

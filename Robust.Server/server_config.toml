@@ -16,14 +16,8 @@ enabled = true
 bind = "*:1212"
 
 # This is the address of the SS14 server as the launcher uses it.
-connectaddress = "udp://localhost:1212"
-
-# HTTP/HTTPS URL of this server (including trailing slash).
-# This is only required if:
-# + The status server is hosting the client zip (see build.download_url)
-# + And you're proxying the status server in a way that makes inferring it from
-#   the connectaddress impossible
-# selfaddress = "http://localhost:1212/"
+# This is only needed if you're proxying the status HTTP server.
+# connectaddress = "udp://localhost:1212"
 
 [game]
 hostname = "MyServer"

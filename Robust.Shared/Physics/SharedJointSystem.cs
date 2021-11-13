@@ -44,8 +44,6 @@ namespace Robust.Shared.Physics
 
     public abstract class SharedJointSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
         private HashSet<JointComponent> _dirtyJoints = new();

@@ -170,16 +170,25 @@ namespace Robust.Shared.Physics
         {
             var uid = broadphase.OwnerUid;
 
-            var transform = _physicsManager.UpdateTransform(uid);
+            var xformComp = EntityManager.GetComponent<TransformComponent>(uid);
+
+            var matrix = xformComp.WorldMatrix;
+            var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
+            var transform = new Transform(worldPosition, xformComp.WorldRotation);
+
+            _physicsManager.SetTransform(uid, transform);
             _broadphases.Add(uid);
             _broadphaseTransforms[broadphase] = (transform.Position, transform.Quaternion2D.Angle);
+            _broadphaseInvMatrices[uid] = xformComp.InvWorldMatrix;
 
-            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? physicsComponent))
+            if (EntityManager.TryGetComponent(uid, out IMapGridComponent? mapGrid))
             {
-                _broadphaseBounding[uid] = physicsComponent.GetWorldAABB(transform.Position);
+                _broadphaseBounding[uid] = matrix.TransformBox(mapGrid.Grid.LocalBounds);
             }
-
-            _broadphaseInvMatrices[uid] = EntityManager.GetComponent<TransformComponent>(uid).InvWorldMatrix;
+            else
+            {
+                DebugTools.Assert(!EntityManager.HasComponent<PhysicsComponent>(uid));
+            }
         }
 
         /// <summary>

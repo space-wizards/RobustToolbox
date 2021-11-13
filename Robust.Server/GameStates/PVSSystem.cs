@@ -19,21 +19,6 @@ namespace Robust.Server.GameStates
 {
     internal sealed partial class PVSSystem : EntitySystem
     {
-        /// <summary>
-        /// Starting number of entities that are in view
-        /// </summary>
-        private const int ViewSetCapacity = 256;
-        /// <summary>
-        /// Starting number of players
-        /// </summary>
-        private const int PlayerSetSize = 64;
-        /// <summary>
-        /// Maximum number of pooled objects
-        /// </summary>
-        private const int MaxVisPoolSize = 1024;
-
-        private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
-
         [Shared.IoC.Dependency] private readonly IServerEntityManager _entMan = default!;
         [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [Shared.IoC.Dependency] private readonly IEntityLookup _lookup = default!;
@@ -42,23 +27,42 @@ namespace Robust.Server.GameStates
         [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
 
         /// <summary>
+        /// Starting number of entities that are in view
+        /// </summary>
+        private const int ViewSetCapacity = 256;
+
+        /// <summary>
+        /// Starting number of players
+        /// </summary>
+        private const int PlayerSetSize = 64;
+
+        /// <summary>
+        /// Maximum number of pooled objects
+        /// </summary>
+        private const int MaxVisPoolSize = 1024;
+
+        /// <summary>
         /// All <see cref="EntityUid"/>s a <see cref="ICommonSession"/> can see at the moment.
         /// </summary>
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
+
         /// <summary>
         /// At which <see cref="GameTick"/> has <see cref="ICommonSession"/> seen <see cref="IMapChunkInternal"/> last.
         /// </summary>
         private readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> _playerChunks = new(PlayerSetSize);
 
-        private readonly Dictionary<ICommonSession, ChunkStreamingData>
-            _streamingChunks = new();
+        /// <summary>
+        /// Datastructures for keeping track of which chunk we are currently streaming to a <see cref="ICommonSession"/>.
+        /// </summary>
+        private readonly Dictionary<ICommonSession, ChunkStreamingData> _streamingChunks = new();
+
+        /// <summary>
+        /// List of when at which <see cref="GameTick"/> a <see cref="EntityUid"/> got deleted.
+        /// </summary>
+        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
         internal int StreamingTilesPerTick;
         internal float StreamRange;
-
-        private readonly ConcurrentDictionary<ICommonSession, GameTick> _playerLastFullMap = new();
-
-        private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
         private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
@@ -216,7 +220,6 @@ namespace Robust.Server.GameStates
         {
             _playerVisibleSets.Remove(session);
             _playerChunks.Remove(session);
-            _playerLastFullMap.Remove(session, out _);
             _streamingChunks.Remove(session);
             _oldPlayers.Remove(session);
         }
@@ -260,7 +263,6 @@ namespace Robust.Server.GameStates
             {
                 var allStates = GetAllEntityStates(session, fromTick, toTick);
                 deletions = GetDeletedEntities(fromTick);
-                _playerLastFullMap.AddOrUpdate(session, toTick, (_, _) => toTick);
                 return (allStates, deletions);
             }
 

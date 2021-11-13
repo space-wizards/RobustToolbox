@@ -177,7 +177,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public TransformComponent? Parent
         {
-            get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
+            get => !_parent.IsValid() ? null : Owner.EntityManager.GetComponent<TransformComponent>(_parent);
             internal set
             {
                 if (_anchored && value?.OwnerUid != _parent)
@@ -752,6 +752,40 @@ namespace Robust.Shared.GameObjects
             return this;
         }
 
+        /// <summary>
+        /// Get the WorldPosition and WorldRotation of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
+        {
+            // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
+            var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix();
+            return (worldPos, worldRot);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix()
+        {
+            var parent = _parent;
+            var worldRot = _localRotation;
+            var worldMatrix = GetLocalMatrix();
+
+            // By doing these all at once we can elide multiple IsValid + GetComponent calls
+            while (parent.IsValid())
+            {
+                var xform = Owner.EntityManager.GetComponent<TransformComponent>(parent);
+                worldRot += xform.LocalRotation;
+                var parentMatrix = xform.GetLocalMatrix();
+                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                worldMatrix = result;
+                parent = xform.ParentUid;
+            }
+
+            var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
+
+            return (worldPosition, worldRot, worldMatrix);
+        }
 
         /// <summary>
         ///     Returns whether the entity of this transform contains the entity argument

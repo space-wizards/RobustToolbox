@@ -200,6 +200,7 @@ Types:
       - "int get_Height()"
       - "int get_Width()"
       - "SixLabors.ImageSharp.Formats.PixelTypeInfo get_PixelType()"
+      - "SixLabors.ImageSharp.Image`1<!!0> Load<>(System.IO.Stream)"
       - "void Dispose()"
     Image`1:
       Methods:
@@ -454,6 +455,7 @@ Types:
     AsyncVoidMethodBuilder: { All: True }
     CompilationRelaxationsAttribute: { All: True }
     CompilerGeneratedAttribute: { All: True }
+    DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
@@ -611,6 +613,7 @@ Types:
       - "System.Text.StringBuilder Append(System.Decimal)"
       - "System.Text.StringBuilder Append(System.ReadOnlyMemory`2<char>)"
       - "System.Text.StringBuilder Append(System.ReadOnlySpan`2<char>)"
+      - "System.Text.StringBuilder Append(ref System.Text.StringBuilder/AppendInterpolatedStringHandler)"
       - "System.Text.StringBuilder Append(System.Text.StringBuilder)"
       - "System.Text.StringBuilder Append(System.Text.StringBuilder, int, int)"
       - "System.Text.StringBuilder Append(uint)"
@@ -667,6 +670,7 @@ Types:
       - "void CopyTo(int, System.Span`1<char>, int)"
       NestedTypes:
         ChunkEnumerator: { All: True }
+        AppendInterpolatedStringHandler: { All: True }
     StringRuneEnumerator: { All: True }
   System.Threading.Tasks:
     Task: { All: True }

@@ -73,6 +73,16 @@ namespace Robust.Shared.Configuration
         public event EventHandler? ReceivedInitialNwVars;
         private bool _receivedInitialNwVars;
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            FlushMessages();
+            _replicatedCVars.Clear();
+            ReceivedInitialNwVars = null;
+            _receivedInitialNwVars = false;
+        }
+
         /// <inheritdoc />
         public void SetupNetworking()
         {

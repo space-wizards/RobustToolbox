@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
@@ -7,26 +6,13 @@ namespace Robust.Shared.Physics.Broadphase
 {
     public class DynamicTreeBroadPhase : IBroadPhase
     {
-        private B2DynamicTree<FixtureProxy> _tree = default!;
+        private readonly B2DynamicTree<FixtureProxy> _tree;
 
         private readonly DynamicTree<FixtureProxy>.ExtractAabbDelegate _extractAabb = ExtractAabbFunc;
-
-        private (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB)[] _pairBuffer;
-        private int _pairCapacity;
-        private int _pairCount;
-        private int _proxyCount;
-        private B2DynamicTree<FixtureProxy>.QueryCallback _queryCallback;
-        private DynamicTree.Proxy _queryProxyId;
 
         public DynamicTreeBroadPhase(int capacity)
         {
             _tree = new B2DynamicTree<FixtureProxy>(capacity: capacity);
-            _queryCallback = QueryCallback;
-            _proxyCount = 0;
-
-            _pairCapacity = 16;
-            _pairCount = 0;
-            _pairBuffer = new (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB)[_pairCapacity];
         }
 
         public DynamicTreeBroadPhase() : this(256) {}
@@ -36,35 +22,6 @@ namespace Robust.Shared.Physics.Broadphase
             return proxy.AABB;
         }
 
-        /// <summary>
-        /// This is called from DynamicTree.Query when we are gathering pairs.
-        /// </summary>
-        /// <param name="proxyId"></param>
-        /// <returns></returns>
-        private bool QueryCallback(DynamicTree.Proxy proxyId)
-        {
-            // A proxy cannot form a pair with itself.
-            if (proxyId == _queryProxyId)
-            {
-                return true;
-            }
-
-            // Grow the pair buffer as needed.
-            if (_pairCount == _pairCapacity)
-            {
-                (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB)[] oldBuffer = _pairBuffer;
-                _pairCapacity *= 2;
-                _pairBuffer = new (DynamicTree.Proxy ProxyA, DynamicTree.Proxy ProxyB)[_pairCapacity];
-                Array.Copy(oldBuffer, _pairBuffer, _pairCount);
-            }
-
-            _pairBuffer[_pairCount].ProxyA = new DynamicTree.Proxy(Math.Min(proxyId, _queryProxyId));
-            _pairBuffer[_pairCount].ProxyB = new DynamicTree.Proxy(Math.Max(proxyId, _queryProxyId));
-            _pairCount++;
-
-            return true;
-        }
-
         public Box2 GetFatAabb(DynamicTree.Proxy proxy)
         {
             return _tree.GetFatAabb(proxy);
@@ -72,9 +29,8 @@ namespace Robust.Shared.Physics.Broadphase
 
         public DynamicTree.Proxy AddProxy(ref FixtureProxy proxy)
         {
-            var proxyID = _tree.CreateProxy(proxy.AABB, proxy);
-            _proxyCount++;
-            return proxyID;
+            var proxyId = _tree.CreateProxy(proxy.AABB, proxy);
+            return proxyId;
         }
 
         public void MoveProxy(DynamicTree.Proxy proxy, in Box2 aabb, Vector2 displacement)
@@ -84,7 +40,6 @@ namespace Robust.Shared.Physics.Broadphase
 
         public void RemoveProxy(DynamicTree.Proxy proxy)
         {
-            _proxyCount--;
             _tree.DestroyProxy(proxy);
         }
 

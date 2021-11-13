@@ -28,7 +28,7 @@ namespace Robust.Shared.Scripting
         private static readonly Func<Script, bool> _hasReturnValue;
         private static readonly Func<Diagnostic, IReadOnlyList<object?>?> _getDiagnosticArguments;
 
-        private static readonly string[] _defaultImports =
+        public static readonly string[] DefaultImports =
         {
             "System",
             "System.Linq",
@@ -126,19 +126,8 @@ namespace Robust.Shared.Scripting
                 // TODO: there are probably issues with multiple classifications overlapping the same text here.
                 // Too lazy to fix.
                 var src = code[span.TextSpan.Start..span.TextSpan.End];
-                var color = span.ClassificationType switch
-                {
-                    ClassificationTypeNames.Comment => Color.FromHex("#57A64A"),
-                    ClassificationTypeNames.NumericLiteral => Color.FromHex("#b5cea8"),
-                    ClassificationTypeNames.StringLiteral => Color.FromHex("#D69D85"),
-                    ClassificationTypeNames.Keyword => Color.FromHex("#569CD6"),
-                    ClassificationTypeNames.StaticSymbol => Color.FromHex("#4EC9B0"),
-                    ClassificationTypeNames.ClassName => Color.FromHex("#4EC9B0"),
-                    ClassificationTypeNames.StructName => Color.FromHex("#4EC9B0"),
-                    ClassificationTypeNames.InterfaceName => Color.FromHex("#B8D7A3"),
-                    ClassificationTypeNames.EnumName => Color.FromHex("#B8D7A3"),
-                    _ => Color.FromHex("#D4D4D4")
-                };
+                if (!ScriptingColorScheme.ColorScheme.TryGetValue(span.ClassificationType, out var color))
+                        color = ScriptingColorScheme.ColorScheme[ScriptingColorScheme.Default];
 
                 msg.PushColor(color);
                 msg.AddText(src);
@@ -218,7 +207,7 @@ namespace Robust.Shared.Scripting
         public static ScriptOptions GetScriptOptions(IReflectionManager reflectionManager)
         {
             return ScriptOptions.Default
-                .AddImports(_defaultImports)
+                .AddImports(DefaultImports)
                 .AddReferences(GetDefaultReferences(reflectionManager));
         }
 

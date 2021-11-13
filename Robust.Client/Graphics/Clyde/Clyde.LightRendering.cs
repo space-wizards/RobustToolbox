@@ -335,7 +335,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
-            eye.GetViewMatrix(out var eyeTransform, eye.Scale);
+            eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
 
             UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
 

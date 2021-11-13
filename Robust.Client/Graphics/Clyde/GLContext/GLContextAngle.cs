@@ -98,7 +98,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (data.EglBackbuffer != null)
                 {
-                    eglMakeCurrent(_eglDisplay, null, null, null);
+                    if (data.Reg.IsMainWindow)
+                        eglMakeCurrent(_eglDisplay, null, null, null);
                     eglDestroySurface(_eglDisplay, data.EglBackbuffer);
 
                     data.EglBackbuffer = null;

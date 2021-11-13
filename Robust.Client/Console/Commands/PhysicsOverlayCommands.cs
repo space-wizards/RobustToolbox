@@ -24,6 +24,9 @@ namespace Robust.Client.Console.Commands
                 case "aabbs":
                     system.Flags ^= PhysicsDebugFlags.AABBs;
                     break;
+                case "com":
+                    system.Flags ^= PhysicsDebugFlags.COM;
+                    break;
                 case "contactnormals":
                     system.Flags ^= PhysicsDebugFlags.ContactNormals;
                     break;

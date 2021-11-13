@@ -7,3 +7,8 @@
 - type: shader
   id: shaded
   kind: canvas
+
+- type: shader
+  id: bgra
+  kind: source
+  path: "/Shaders/Internal/bgra.swsl"

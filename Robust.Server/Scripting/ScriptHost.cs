@@ -1,12 +1,16 @@
+using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.CSharp.Scripting.Hosting;
+using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.CodeAnalysis.Text;
 using Robust.Server.Console;
@@ -19,6 +23,7 @@ using Robust.Shared.Network.Messages;
 using Robust.Shared.Reflection;
 using Robust.Shared.Scripting;
 using Robust.Shared.Utility;
+using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 #nullable enable
 
@@ -39,6 +44,8 @@ namespace Robust.Server.Scripting
             _netManager.RegisterNetMessage<MsgScriptStop>(ReceiveScriptEnd);
             _netManager.RegisterNetMessage<MsgScriptEval>(ReceiveScriptEval);
             _netManager.RegisterNetMessage<MsgScriptStart>(ReceiveScriptStart);
+            _netManager.RegisterNetMessage<MsgScriptCompletion>(ReceiveScriptCompletion);
+            _netManager.RegisterNetMessage<MsgScriptCompletionResponse>();
             _netManager.RegisterNetMessage<MsgScriptResponse>();
             _netManager.RegisterNetMessage<MsgScriptStartAck>();
 
@@ -234,6 +241,75 @@ namespace Robust.Server.Scripting
             }
 
             replyMessage.Response = msg;
+            _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
+        }
+
+        private async void ReceiveScriptCompletion(MsgScriptCompletion message)
+        {
+            if (!_playerManager.TryGetSessionByChannel(message.MsgChannel, out var session))
+                return;
+
+            if (!_conGroupController.CanScript(session))
+            {
+                Logger.WarningS("script", "Client {0} tried to access Scripting without permissions.", session);
+                return;
+            }
+
+            if (!_instances.TryGetValue(session, out var instances) ||
+                !instances.TryGetValue(message.ScriptSession, out var instance))
+                    return;
+
+            var replyMessage = _netManager.CreateNetMessage<MsgScriptCompletionResponse>();
+            replyMessage.ScriptSession = message.ScriptSession;
+
+            // Everything below here cribbed from
+            // https://www.strathweb.com/2018/12/using-roslyn-c-completion-service-programmatically/
+            var workspace = new AdhocWorkspace(MefHostServices.Create(MefHostServices.DefaultAssemblies));
+
+            var scriptProject = workspace.AddProject(ProjectInfo.Create(
+                    ProjectId.CreateNewId(),
+                    VersionStamp.Create(),
+                    "Script", "Script",
+                    LanguageNames.CSharp,
+                    isSubmission: true
+                )
+                .WithMetadataReferences(
+                        _reflectionManager.Assemblies.Select(a => MetadataReference.CreateFromFile(a.Location))
+                )
+                .WithCompilationOptions(new CSharpCompilationOptions(
+                    OutputKind.DynamicallyLinkedLibrary,
+                    usings: ScriptInstanceShared.DefaultImports
+            )));
+
+            var document = workspace.AddDocument(DocumentInfo.Create(
+                DocumentId.CreateNewId(scriptProject.Id),
+                "Script",
+                sourceCodeKind: SourceCodeKind.Script,
+                loader: TextLoader.From(TextAndVersion.Create(SourceText.From(message.Code), VersionStamp.Create()))
+            ));
+
+            var results = await CompletionService
+                .GetService(document)
+                .GetCompletionsAsync(document, message.Cursor);
+
+            if (results is not null)
+            {
+                var ires = ImmutableArray.CreateBuilder<LiteResult>();
+                foreach  (var r in results.Items)
+                    ires.Add(new LiteResult(
+                                displayText: r.DisplayText,
+                                displayTextPrefix: r.DisplayTextPrefix,
+                                displayTextSuffix: r.DisplayTextSuffix,
+                                inlineDescription: r.InlineDescription,
+                                tags: r.Tags,
+                                properties: r.Properties
+                    ));
+
+                replyMessage.Results = ires.ToImmutable();
+            }
+            else
+                replyMessage.Results = ImmutableArray<LiteResult>.Empty;
+
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
 

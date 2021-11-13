@@ -47,7 +47,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
             }
         }
 
@@ -113,23 +113,6 @@ namespace Robust.Client.GameObjects
             get => color;
             set => color = value;
         }
-
-        /// <summary>
-        ///     Controls whether we use RSI directions to rotate, or just get angular rotation applied.
-        ///     If true, all rotation to this sprite component is negated (that is rotation from say the owner being rotated).
-        ///     Rotation transformations on individual layers still apply.
-        ///     If false, all layers get locked to south and rotation is a transformation.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [Obsolete("Use NoRotation and/or DirectionOverride")]
-        public bool Directional
-        {
-            get => _directional;
-            set => _directional = value;
-        }
-
-        [DataField("directional")]
-        private bool _directional = true;
 
         [ViewVariables]
         internal RenderingTreeComponent? RenderTree { get; set; } = null;
@@ -319,7 +302,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
             }
         }
 
@@ -389,6 +372,7 @@ namespace Robust.Client.GameObjects
 
             if (layerDatums.Count != 0)
             {
+                LayerMap.Clear();
                 LayerDatums = layerDatums;
             }
         }
@@ -402,7 +386,6 @@ namespace Robust.Client.GameObjects
         {
             //deep copying things to avoid entanglement
             _baseRsi = other._baseRsi;
-            _directional = other._directional;
             _visible = other._visible;
             _layerMapShared = other._layerMapShared;
             color = other.color;
@@ -1670,7 +1653,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
         }
 
         /// <summary>
@@ -2068,36 +2051,35 @@ namespace Robust.Client.GameObjects
 
         public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache)
         {
+            return GetPrototypeTextures(prototype, resourceCache, out var _);
+        }
+
+        public static IEnumerable<IDirectionalTextureProvider> GetPrototypeTextures(EntityPrototype prototype, IResourceCache resourceCache, out bool noRot)
+        {
+            var results = new List<IDirectionalTextureProvider>();
+            noRot = false;
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);
             if (icon != null)
             {
-                yield return icon;
-                yield break;
+                results.Add(icon);
+                return results;
             }
 
             if (!prototype.Components.TryGetValue("Sprite", out _))
             {
-                yield return resourceCache.GetFallback<TextureResource>().Texture;
-                yield break;
+                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+                return results;
             }
 
-            var dummy = new DummyIconEntity { Prototype = prototype };
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-
-            if (prototype.Components.TryGetValue("Appearance", out _))
-            {
-                var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
-                foreach (var layer in appearanceComponent.Visualizers)
-                {
-                    layer.InitializeEntity(dummy);
-                    layer.OnChangeData(appearanceComponent);
-                }
-            }
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
 
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
             {
-                if (layer.Texture != null) yield return layer.Texture;
+                if (layer.Texture != null)
+                    results.Add(layer.Texture);
                 if (!layer.RsiState.IsValid || !layer.Visible) continue;
 
                 var rsi = layer.Rsi ?? spriteComponent.BaseRSI;
@@ -2105,14 +2087,17 @@ namespace Robust.Client.GameObjects
                     !rsi.TryGetState(layer.RsiState, out var state))
                     continue;
 
-                yield return state;
+                results.Add(state);
                 anyTexture = true;
             }
 
-            dummy.Delete();
+            noRot = spriteComponent.NoRotation;
+
+            entityManager.DeleteEntity(dummy);
 
             if (!anyTexture)
-                yield return resourceCache.GetFallback<TextureResource>().Texture;
+                results.Add(resourceCache.GetFallback<TextureResource>().Texture);
+            return results;
         }
 
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
@@ -2125,144 +2110,14 @@ namespace Robust.Client.GameObjects
                 return GetFallbackState(resourceCache);
             }
 
-            var dummy = new DummyIconEntity { Prototype = prototype };
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-            dummy.Delete();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
+            var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            entityManager.DeleteEntity(dummy);
 
-            return spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            return result;
         }
-
-        #region DummyIconEntity
-        private class DummyIconEntity : IEntity
-        {
-            public GameTick LastModifiedTick { get; } = GameTick.Zero;
-            public IEntityManager EntityManager { get; } = null!;
-            public string Name { get; set; } = string.Empty;
-            public EntityUid Uid { get; } = EntityUid.Invalid;
-            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
-            public bool Initialized { get; } = false;
-            public bool Initializing { get; } = false;
-            public bool Deleted { get; } = true;
-            public bool Paused { get; set; }
-            public EntityPrototype? Prototype { get; set; }
-
-            public string Description { get; set; } = string.Empty;
-            public bool IsValid()
-            {
-                return false;
-            }
-
-            public ITransformComponent Transform { get; } = null!;
-            public MetaDataComponent MetaData { get; } = null!;
-
-            private Dictionary<Type, IComponent> _components = new();
-            private EntityLifeStage _lifeStage;
-
-            public T AddComponent<T>() where T : Component, new()
-            {
-                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serializationManager = IoCManager.Resolve<ISerializationManager>();
-                var comp = (T)typeFactory.CreateInstanceUnchecked(typeof(T));
-                _components[typeof(T)] = comp;
-                comp.Owner = this;
-
-                if (typeof(ISpriteComponent).IsAssignableFrom(typeof(T)))
-                {
-                    _components[typeof(ISpriteComponent)] = comp;
-                }
-
-                if (Prototype != null && Prototype.TryGetComponent<T>(comp.Name, out var node))
-                {
-                    comp = serializationManager.Copy(node, comp)!;
-                }
-
-                return comp;
-            }
-
-            public void RemoveComponent<T>()
-            {
-                _components.Remove(typeof(T));
-            }
-
-            public bool HasComponent<T>()
-            {
-                return _components.ContainsKey(typeof(T));
-            }
-
-            public bool HasComponent(Type type)
-            {
-                return _components.ContainsKey(type);
-            }
-
-            public T GetComponent<T>()
-            {
-                return (T)_components[typeof(T)];
-            }
-
-            public IComponent GetComponent(Type type)
-            {
-                return null!;
-            }
-
-            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
-            {
-                component = null;
-                if (!_components.TryGetValue(typeof(T), out var value)) return false;
-                component = (T)value;
-                return true;
-            }
-
-            public T? GetComponentOrNull<T>() where T : class
-            {
-                return null;
-            }
-
-            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
-            {
-                component = null;
-                if (!_components.TryGetValue(type, out var value)) return false;
-                component = value;
-                return true;
-            }
-
-            public IComponent? GetComponentOrNull(Type type)
-            {
-                return null;
-            }
-
-            public void QueueDelete()
-            {
-            }
-
-            public void Delete()
-            {
-            }
-
-            public IEnumerable<IComponent> GetAllComponents()
-            {
-                return Enumerable.Empty<IComponent>();
-            }
-
-            public IEnumerable<T> GetAllComponents<T>()
-            {
-                return Enumerable.Empty<T>();
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendMessage(IComponent? owner, ComponentMessage message)
-            {
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
-            {
-            }
-
-            public void Dirty()
-            {
-            }
-        }
-        #endregion
     }
 
     internal sealed class SpriteUpdateEvent : EntityEventArgs

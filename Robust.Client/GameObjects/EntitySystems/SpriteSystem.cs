@@ -17,6 +17,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
 
         private readonly Queue<SpriteComponent> _inertUpdateQueue = new();
+        private HashSet<ISpriteComponent> _manualUpdate = new();
 
         public override void Initialize()
         {
@@ -38,6 +39,12 @@ namespace Robust.Client.GameObjects
                 sprite.DoUpdateIsInert();
             }
 
+            foreach (var sprite in _manualUpdate)
+            {
+                if (!sprite.Deleted && !sprite.IsInert)
+                    sprite.FrameUpdate(frameTime);
+            }
+
             var pvsBounds = _eyeManager.GetWorldViewbounds();
 
             var currentMap = _eyeManager.CurrentMap;
@@ -57,10 +64,21 @@ namespace Robust.Client.GameObjects
                         return true;
                     }
 
-                    value.FrameUpdate(state);
+                    if (!_manualUpdate.Contains(value))
+                        value.FrameUpdate(state);
                     return true;
                 }, bounds, true);
             }
+
+            _manualUpdate.Clear();
+        }
+
+        /// <summary>
+        ///     Force update of the sprite component next frame
+        /// </summary>
+        public void ForceUpdate(ISpriteComponent sprite)
+        {
+            _manualUpdate.Add(sprite);
         }
     }
 }

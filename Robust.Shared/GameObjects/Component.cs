@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -233,11 +233,12 @@ namespace Robust.Shared.GameObjects
         {
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner is null)
+            if(Owner is null || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
-            Owner.Dirty();
-            LastModifiedTick = Owner.EntityManager.CurrentTick;
+            var entManager = Owner.EntityManager;
+            entManager.DirtyEntity(OwnerUid);
+            LastModifiedTick = entManager.CurrentTick;
         }
 
         /// <summary>

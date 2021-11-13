@@ -74,7 +74,8 @@ namespace Robust.Client.Graphics.Clyde
                 case DEventWindowFocus(var args):
                     OnWindowFocused?.Invoke(args);
                     break;
-                case DEventWindowResized(var args):
+                case DEventWindowResized(var reg, var args):
+                    reg.Resized?.Invoke(args);
                     OnWindowResized?.Invoke(args);
                     break;
             }
@@ -112,7 +113,7 @@ namespace Robust.Client.Graphics.Clyde
                 reg.FramebufferSize,
                 reg.Handle);
 
-            _eventDispatchQueue.Enqueue(new DEventWindowResized(eventArgs));
+            _eventDispatchQueue.Enqueue(new DEventWindowResized(reg, eventArgs));
         }
 
         private void SendWindowContentScaleChanged(WindowContentScaleEventArgs ev)
@@ -151,7 +152,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private sealed record DEventWindowClosed(WindowReg Reg, WindowRequestClosedEventArgs Args) : DEventBase;
 
-        private sealed record DEventWindowResized(WindowResizedEventArgs Args) : DEventBase;
+        private sealed record DEventWindowResized(WindowReg Reg, WindowResizedEventArgs Args) : DEventBase;
 
         private sealed record DEventWindowContentScaleChanged(WindowContentScaleEventArgs Args) : DEventBase;
 

@@ -26,7 +26,6 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server
@@ -214,15 +213,16 @@ namespace Robust.UnitTesting.Server
             _diFactory?.Invoke(container);
             container.BuildGraph();
 
-            var logMan = container.Resolve<ILogManager>();
-            logMan.RootSawmill.AddHandler(new TestLogHandler("SIM"));
-
             // Because of CVarDef, we have to load every one through reflection
             // just in case a system needs one of them.
             var configMan = container.Resolve<IConfigurationManagerInternal>();
             configMan.Initialize(true);
             configMan.LoadCVarsFromAssembly(typeof(Program).Assembly); // Server
             configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
+            configMan.LoadCVarsFromAssembly(typeof(RobustServerSimulation).Assembly); // Tests
+
+            var logMan = container.Resolve<ILogManager>();
+            logMan.RootSawmill.AddHandler(new TestLogHandler(configMan, "SIM"));
 
             var compFactory = container.Resolve<IComponentFactory>();
 
@@ -251,7 +251,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
-            entitySystemMan.LoadExtraSystemType<SharedTransformSystem>();
+            entitySystemMan.LoadExtraSystemType<TransformSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 

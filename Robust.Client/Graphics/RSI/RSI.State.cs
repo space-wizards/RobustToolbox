@@ -24,13 +24,14 @@ namespace Robust.Client.Graphics
             // 2D array for the texture to use for each animation frame at each direction.
             public readonly Texture[][] Icons;
 
-            internal State(Vector2i size, StateId stateId, DirectionType direction, float[] delays, Texture[][] icons)
+            internal State(Vector2i size, RSI rsi, StateId stateId, DirectionType direction, float[] delays, Texture[][] icons)
             {
                 DebugTools.Assert(size.X > 0);
                 DebugTools.Assert(size.Y > 0);
                 DebugTools.Assert(stateId.IsValid);
 
                 Size = size;
+                RSI = rsi;
                 StateId = stateId;
                 Directions = direction;
                 Delays = delays;
@@ -46,6 +47,11 @@ namespace Robust.Client.Graphics
             ///     The size of each individual frame in this state.
             /// </summary>
             public Vector2i Size { get; }
+
+            /// <summary>
+            ///     The source RSI of this state.
+            /// </summary>
+            public RSI RSI { get; }
 
             /// <summary>
             ///     The identifier for this state inside an RSI.

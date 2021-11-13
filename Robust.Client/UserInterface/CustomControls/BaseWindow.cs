@@ -130,22 +130,29 @@ namespace Robust.Client.UserInterface.CustomControls
                 var (left, top) = Position;
                 var (right, bottom) = Position + SetSize;
 
+                if (float.IsNaN(SetSize.X)) {
+                    right = Position.X + Size.X;
+                }
+                if (float.IsNaN(SetSize.Y)) {
+                    bottom = Position.Y + Size.Y;
+                }
+
                 if ((CurrentDrag & DragMode.Top) == DragMode.Top)
                 {
-                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, bottom);
+                    top = Math.Min(args.GlobalPosition.Y - DragOffsetTopLeft.Y, Math.Min(bottom, bottom - MinSize.Y));
                 }
                 else if ((CurrentDrag & DragMode.Bottom) == DragMode.Bottom)
                 {
-                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, top);
+                    bottom = Math.Max(args.GlobalPosition.Y + DragOffsetBottomRight.Y, Math.Max(top, top + MinSize.Y));
                 }
 
                 if ((CurrentDrag & DragMode.Left) == DragMode.Left)
                 {
-                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, right);
+                    left = Math.Min(args.GlobalPosition.X - DragOffsetTopLeft.X, Math.Min(right, right - MinSize.X));
                 }
                 else if ((CurrentDrag & DragMode.Right) == DragMode.Right)
                 {
-                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, left);
+                    right = Math.Max(args.GlobalPosition.X + DragOffsetBottomRight.X, Math.Max(left, left + MinSize.X));
                 }
 
                 var rect = new UIBox2(left, top, right, bottom);

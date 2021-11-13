@@ -22,6 +22,11 @@ namespace Robust.Shared.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
+
+        /// <summary>
+        ///     Drops every entity, component and entity system.
+        /// </summary>
+        void Cleanup();
         void TickUpdate(float frameTime, Histogram? histogram=null);
 
         /// <summary>
@@ -81,10 +86,23 @@ namespace Robust.Shared.GameObjects
         bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity);
 
         /// <summary>
+        /// How many entities are currently active.
+        /// </summary>
+        int EntityCount { get; }
+
+        /// <summary>
         /// Returns all entities
         /// </summary>
         /// <returns></returns>
         IEnumerable<IEntity> GetEntities();
+
+        /// <summary>
+        /// Returns all entities by uid
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<EntityUid> GetEntityUids();
+
+        public void DirtyEntity(EntityUid uid);
 
         public void QueueDeleteEntity(IEntity entity);
 

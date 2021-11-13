@@ -18,6 +18,7 @@ namespace Robust.Shared.Network.Messages.Handshake
         public ImmutableArray<byte> HWId;
         public bool CanAuth;
         public bool NeedPubKey;
+        public bool Encrypt;
 
         public override void ReadFromBuffer(NetIncomingMessage buffer)
         {
@@ -26,6 +27,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             HWId = ImmutableArray.Create(buffer.ReadBytes(length));
             CanAuth = buffer.ReadBoolean();
             NeedPubKey = buffer.ReadBoolean();
+            Encrypt = buffer.ReadBoolean();
         }
 
         public override void WriteToBuffer(NetOutgoingMessage buffer)
@@ -35,6 +37,7 @@ namespace Robust.Shared.Network.Messages.Handshake
             buffer.Write(HWId.AsSpan());
             buffer.Write(CanAuth);
             buffer.Write(NeedPubKey);
+            buffer.Write(Encrypt);
         }
     }
 }

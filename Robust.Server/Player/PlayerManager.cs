@@ -115,6 +115,15 @@ namespace Robust.Server.Player
             _network.Disconnect += EndSession;
         }
 
+        public void Shutdown()
+        {
+            KeyMap = default!;
+
+            _network.Connecting -= OnConnecting;
+            _network.Connected -= NewSession;
+            _network.Disconnect -= EndSession;
+        }
+
         public bool TryGetSessionByUsername(string username, [NotNullWhen(true)] out IPlayerSession? session)
         {
             if (!_userIdMap.TryGetValue(username, out var userId))

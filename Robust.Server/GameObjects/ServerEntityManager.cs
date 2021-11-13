@@ -67,7 +67,7 @@ namespace Robust.Server.GameObjects
         {
             var entity = base.CreateEntity(prototypeName, uid);
 
-            if (prototypeName != null)
+            if (!string.IsNullOrWhiteSpace(prototypeName))
             {
                 var prototype = PrototypeManager.Index<EntityPrototype>(prototypeName);
 

@@ -6,7 +6,6 @@ using Prometheus;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -95,6 +94,19 @@ namespace Robust.Shared.GameObjects
             _eventBus.ClearEventTables();
             EntitySystemManager.Shutdown();
             ClearComponents();
+            Initialized = false;
+            Started = false;
+        }
+
+        public void Cleanup()
+        {
+            QueuedDeletions.Clear();
+            QueuedDeletionsSet.Clear();
+            Entities.Clear();
+            _eventBus.Dispose();
+            _eventBus = null!;
+            ClearComponents();
+
             Initialized = false;
             Started = false;
         }
@@ -222,7 +234,36 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public int EntityCount => Entities.Count;
+
+        /// <inheritdoc />
         public IEnumerable<IEntity> GetEntities() => Entities.Values;
+
+        public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
+
+        /// <summary>
+        /// Marks this entity as dirty so that it will be updated over the network.
+        /// </summary>
+        /// <remarks>
+        /// Calling Dirty on a component will call this directly.
+        /// </remarks>
+        public void DirtyEntity(EntityUid uid)
+        {
+            var currentTick = CurrentTick;
+
+            // We want to retrieve MetaDataComponent even if its Deleted flag is set.
+            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+                throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
+
+            var metadata = (MetaDataComponent)component;
+
+            if (metadata.EntityLastModifiedTick == currentTick) return;
+
+            metadata.EntityLastModifiedTick = currentTick;
+
+            var dirtyEvent = new EntityDirtyEvent {Uid = uid};
+            EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
+        }
 
         /// <summary>
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
@@ -420,13 +461,13 @@ namespace Robust.Shared.GameObjects
 
         protected void InitializeEntity(Entity entity)
         {
-            entity.InitializeComponents();
+            InitializeComponents(entity.Uid);
             EntityInitialized?.Invoke(this, entity.Uid);
         }
 
         protected void StartEntity(Entity entity)
         {
-            entity.StartAllComponents();
+            StartComponents(entity.Uid);
             EntityStarted?.Invoke(this, entity.Uid);
         }
 

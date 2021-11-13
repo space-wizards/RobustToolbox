@@ -25,6 +25,16 @@ namespace Robust.Shared.GameObjects
         event EventHandler<ComponentEventArgs>? ComponentDeleted;
 
         /// <summary>
+        ///     Calls Initialize() on all registered components of the entity.
+        /// </summary>
+        void InitializeComponents(EntityUid uid);
+
+        /// <summary>
+        ///     Calls Startup() on all registered components of the entity.
+        /// </summary>
+        void StartComponents(EntityUid uid);
+
+        /// <summary>
         ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>

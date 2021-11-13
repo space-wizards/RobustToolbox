@@ -98,7 +98,7 @@ namespace Robust.Client.Graphics.Clyde
             SwapAllBuffers();
         }
 
-        private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox)
+        private void RenderOverlays(Viewport vp, OverlaySpace space, in Box2 worldBox, in Box2Rotated worldBounds)
         {
             using (DebugGroup($"Overlays: {space}"))
             {
@@ -116,7 +116,7 @@ namespace Robust.Client.Graphics.Clyde
                         ClearFramebuffer(default);
                     }
 
-                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox);
+                    overlay.ClydeRender(_renderHandle, space, null, vp, new UIBox2i((0, 0), vp.Size), worldBox, worldBounds);
                 }
 
                 FlushRenderQueue();
@@ -132,8 +132,9 @@ namespace Robust.Client.Graphics.Clyde
         {
             var list = GetOverlaysForSpace(space);
 
-            var worldBounds = CalcWorldAABB(vp);
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldBounds);
+            var worldAABB = CalcWorldAABB(vp);
+            var worldBounds = CalcWorldBounds(vp);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldAABB, worldBounds);
 
             foreach (var overlay in list)
             {
@@ -211,7 +212,7 @@ namespace Robust.Client.Graphics.Clyde
                 return;
             }
 
-            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB);
+            RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowEntities, worldAABB, worldBounds);
 
             var screenSize = viewport.Size;
             eye.GetViewMatrix(out var eyeMatrix, eye.Scale);
@@ -264,7 +265,8 @@ namespace Robust.Client.Graphics.Clyde
                             null,
                             viewport,
                             new UIBox2i((0, 0), viewport.Size),
-                            worldAABB);
+                            worldAABB,
+                            worldBounds);
                         overlayIndex = j;
                         continue;
                     }
@@ -471,7 +473,7 @@ namespace Robust.Client.Graphics.Clyde
                         DrawLightsAndFov(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowWorld, worldAABB, worldBounds);
 
                     using (DebugGroup("Grids"))
                     {
@@ -484,7 +486,7 @@ namespace Robust.Client.Graphics.Clyde
                         DrawEntities(viewport, worldBounds, worldAABB, eye);
                     }
 
-                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB);
+                    RenderOverlays(viewport, OverlaySpace.WorldSpaceBelowFOV, worldAABB, worldBounds);
 
                     if (_lightManager.Enabled && _lightManager.DrawHardFov && eye.DrawFov)
                     {
@@ -517,7 +519,7 @@ namespace Robust.Client.Graphics.Clyde
                         UIBox2.FromDimensions(Vector2.Zero, viewport.Size), new Color(1, 1, 1, 0.5f));
                 }
 
-                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB);
+                RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
 
                 _currentViewport = oldVp;
             });
@@ -529,12 +531,13 @@ namespace Robust.Client.Graphics.Clyde
             if (eye == null)
                 return default;
 
-            return GetAABB(eye, viewport);
+            // Will be larger than the actual viewport due to rotation.
+            return CalcWorldBounds(viewport).CalcBoundingBox();
         }
 
         private static Box2 GetAABB(IEye eye, Viewport viewport)
         {
-            return Box2.CenteredAround(eye.Position.Position,
+            return Box2.CenteredAround(eye.Position.Position + eye.Offset,
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
         }
 

@@ -55,42 +55,6 @@ namespace Robust.Shared.Physics
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
             SubscribeLocalEvent<JointComponent, ComponentShutdown>(HandleShutdown);
-
-            _configManager.OnValueChanged(CVars.WarmStarting, SetWarmStarting);
-            _configManager.OnValueChanged(CVars.LinearSlop, SetLinearSlop);
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _configManager.UnsubValueChanged(CVars.WarmStarting, SetWarmStarting);
-            _configManager.UnsubValueChanged(CVars.LinearSlop, SetLinearSlop);
-        }
-
-        private void SetWarmStarting(bool value)
-        {
-            foreach (var joint in GetAllJoints())
-            {
-                switch (joint)
-                {
-                    case DistanceJoint distance:
-                        distance.WarmStarting = value;
-                        break;
-                }
-            }
-        }
-
-        private void SetLinearSlop(float value)
-        {
-            foreach (var joint in GetAllJoints())
-            {
-                switch (joint)
-                {
-                    case DistanceJoint distance:
-                        distance.LinearSlop = value;
-                        break;
-                }
-            }
         }
 
         private IEnumerable<Joint> GetAllJoints()
@@ -141,11 +105,27 @@ namespace Robust.Shared.Physics
             anchorA ??= Vector2.Zero;
             anchorB ??= Vector2.Zero;
 
-            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value)
-            {
-                WarmStarting = _configManager.GetCVar(CVars.WarmStarting),
-                LinearSlop = _configManager.GetCVar(CVars.LinearSlop)
-            };
+            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
+        public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            var joint = new PrismaticJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
+        public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, Vector2 worldAnchor, Vector2 worldAxis, string? id = null)
+        {
+            var joint = new PrismaticJoint(bodyA, bodyB, worldAnchor, worldAxis, EntityManager);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
@@ -163,18 +143,25 @@ namespace Robust.Shared.Physics
             return joint;
         }
 
+        public WeldJoint CreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            var joint = new WeldJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
         #endregion
 
         public static void LinearStiffness(
             float frequencyHertz,
             float dampingRatio,
-            PhysicsComponent bodyA,
-            PhysicsComponent bodyB,
+            float massA,
+            float massB,
             out float stiffness, out float damping)
         {
-            var massA = bodyA.Mass;
-            var massB = bodyB.Mass;
-
             float mass;
             if (massA > 0.0f && massB > 0.0f)
             {

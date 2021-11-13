@@ -122,20 +122,28 @@ namespace Robust.Server.Player
             if (entity == null)
                 return;
 
-            if (!EntitySystem.Get<ActorSystem>().Attach(entity, this))
+            AttachToEntity(entity.Uid);
+        }
+
+        /// <inheritdoc />
+        public void AttachToEntity(EntityUid uid)
+        {
+            DetachFromEntity();
+
+            if (!EntitySystem.Get<ActorSystem>().Attach(uid, this))
             {
-                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{entity}\"! Did it have a player already attached to it?");
+                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{uid}\"! Did it have a player already attached to it?");
             }
         }
 
         /// <inheritdoc />
         public void DetachFromEntity()
         {
-            if (AttachedEntity == null)
+            if (AttachedEntityUid == null)
                 return;
 
 #if EXCEPTION_TOLERANCE
-            if (AttachedEntity.Deleted)
+            if (AttachedEntity!.Deleted)
             {
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.
@@ -146,7 +154,7 @@ namespace Robust.Server.Player
             }
 #endif
 
-            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity))
+            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntityUid.Value))
             {
                 Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
@@ -195,6 +203,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         void IPlayerSession.SetAttachedEntity(IEntity? entity)
         {
+            // TODO: Use EntityUid for this.
             AttachedEntity = entity;
             UpdatePlayerState();
         }

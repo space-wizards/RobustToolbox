@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
@@ -61,9 +62,6 @@ namespace Robust.Server.GameStates
         /// </summary>
         private readonly List<(GameTick tick, EntityUid uid)> _deletionHistory = new();
 
-        internal int StreamingTilesPerTick;
-        internal float StreamRange;
-
         private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
             = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
 
@@ -77,6 +75,8 @@ namespace Robust.Server.GameStates
             new DefaultObjectPool<HashSet<IMapChunkInternal>>(
                 new DefaultPooledObjectPolicy<HashSet<IMapChunkInternal>>(), MaxVisPoolSize);
 
+        internal int StreamingTilesPerTick;
+        internal float StreamRange;
         private ushort _transformNetId = 0;
 
         /// <summary>
@@ -88,22 +88,6 @@ namespace Robust.Server.GameStates
         /// Size of the side of the view bounds square.
         /// </summary>
         public float ViewSize { get; set; }
-
-        private sealed class VisSetPolicy : PooledObjectPolicy<HashSet<EntityUid>>
-        {
-            public override HashSet<EntityUid> Create()
-            {
-                return new(ViewSetCapacity);
-            }
-
-            public override bool Return(HashSet<EntityUid> obj)
-            {
-                // TODO: This clear can be pretty expensive so maybe make a custom datatype given we're swapping
-                // 70 - 300 entities a tick? Or do we even need to clear given it's just value types?
-                obj.Clear();
-                return true;
-            }
-        }
 
         public void SetTransformNetId(ushort value)
         {
@@ -692,6 +676,22 @@ namespace Robust.Server.GameStates
             /// </summary>
             public int Iterations { get; set; }
 
+        }
+
+        private sealed class VisSetPolicy : PooledObjectPolicy<HashSet<EntityUid>>
+        {
+            public override HashSet<EntityUid> Create()
+            {
+                return new(ViewSetCapacity);
+            }
+
+            public override bool Return(HashSet<EntityUid> obj)
+            {
+                // TODO: This clear can be pretty expensive so maybe make a custom datatype given we're swapping
+                // 70 - 300 entities a tick? Or do we even need to clear given it's just value types?
+                obj.Clear();
+                return true;
+            }
         }
     }
 }

@@ -446,15 +446,15 @@ namespace Robust.Server.Maps
                 {
                     var gridInternal = (IMapGridInternal) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
+                    body.Broadphase = _mapManager.GetMapEntity(grid.ParentMapId).GetComponent<BroadphaseComponent>();
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
-
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)
                     var toRemove = new RemQueue<Fixture>();
 
-                    foreach (var fixture in body.Fixtures)
+                    foreach (var (_, fixture) in fixtures.Fixtures)
                     {
                         var found = false;
 

@@ -32,6 +32,7 @@ namespace Robust.Shared.Physics
 
         private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)
         {
+            // TODO: Need to make it OnAdd because this needs to be done before entities initialise.
             if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
                 if (component._serializedFixtures.Count > 0)
@@ -43,11 +44,20 @@ namespace Robust.Shared.Physics
                 return;
             }
 
+            var worldpos = body.Owner.Transform.WorldPosition;
+
+            if (body.Broadphase != null)
+                _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
+
             // Can't resolve in serialization so here we are.
             foreach (var fixture in component._serializedFixtures)
             {
                 fixture.Body = body;
                 fixture.ID = GetFixtureName(component, fixture);
+                if (body.Broadphase != null)
+                {
+                    _broadphaseSystem.CreateProxies(fixture, worldpos, false);
+                }
             }
 
             component._serializedFixtures.Clear();

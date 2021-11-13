@@ -19,9 +19,18 @@ namespace Robust.Server.GameStates
 {
     internal sealed partial class PVSSystem : EntitySystem
     {
-        private const int ViewSetCapacity = 256; // starting number of entities that are in view
-        private const int PlayerSetSize = 64; // Starting number of players
-        private const int MaxVisPoolSize = 1024; // Maximum number of pooled objects
+        /// <summary>
+        /// Starting number of entities that are in view
+        /// </summary>
+        private const int ViewSetCapacity = 256;
+        /// <summary>
+        /// Starting number of players
+        /// </summary>
+        private const int PlayerSetSize = 64;
+        /// <summary>
+        /// Maximum number of pooled objects
+        /// </summary>
+        private const int MaxVisPoolSize = 1024;
 
         private static readonly Vector2 Vector2NaN = new(float.NaN, float.NaN);
 
@@ -32,7 +41,13 @@ namespace Robust.Server.GameStates
         [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
         [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
 
+        /// <summary>
+        /// All <see cref="EntityUid"/>s a <see cref="ICommonSession"/> can see at the moment.
+        /// </summary>
         private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new(PlayerSetSize);
+        /// <summary>
+        /// At which <see cref="GameTick"/> has <see cref="ICommonSession"/> seen <see cref="IMapChunkInternal"/> last.
+        /// </summary>
         private readonly Dictionary<ICommonSession, Dictionary<IMapChunkInternal, GameTick>> _playerChunks = new(PlayerSetSize);
 
         private readonly Dictionary<ICommonSession, ChunkStreamingData>

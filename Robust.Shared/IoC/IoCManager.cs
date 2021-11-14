@@ -1,10 +1,13 @@
 using Robust.Shared.IoC.Exceptions;
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -188,6 +191,51 @@ namespace Robust.Shared.IoC
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
             return _container.Value!.Resolve<T>();
+        }
+
+        /// <inheritdoc cref="Resolve{T}()"/>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T>([NotNull] ref T? instance)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance);
+        }
+
+        /// <inheritdoc cref="Resolve{T}(ref T?)"/>
+        /// <summary>
+        /// Resolve two dependencies manually.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance1, ref instance2);
+        }
+
+        /// <inheritdoc cref="Resolve{T1, T2}(ref T1?, ref T2?)"/>
+        /// <summary>
+        /// Resolve three dependencies manually.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance1, ref instance2, ref instance3);
+        }
+
+        /// <inheritdoc cref="Resolve{T1, T2, T3}(ref T1?, ref T2?, ref T3?)"/>
+        /// <summary>
+        /// Resolve four dependencies manually.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public static void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
+        {
+            DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
+
+            _container.Value!.Resolve(ref instance1, ref instance2, ref instance3, ref instance4);
         }
 
         /// <summary>

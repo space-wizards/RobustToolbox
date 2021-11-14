@@ -18,6 +18,9 @@ namespace Robust.Client.UserInterface.CustomControls
         public const string StyleClassWindowHeader = "windowHeader";
         public const string StyleClassWindowCloseButton = "windowCloseButton";
 
+        private string? _headerClass;
+        private string? _titleClass;
+
         public SS14Window()
         {
             RobustXamlLoader.Load(this);
@@ -29,6 +32,42 @@ namespace Robust.Client.UserInterface.CustomControls
 
             CloseButton.OnPressed += CloseButtonPressed;
             XamlChildren = new SS14ContentCollection(this);
+        }
+
+        public string? HeaderClass
+        {
+            get => _headerClass;
+            set
+            {
+                if (_headerClass == value)
+                    return;
+
+                if (_headerClass != null)
+                    WindowHeader.RemoveStyleClass(_headerClass);
+
+                if (value != null)
+                    WindowHeader.AddStyleClass(value);
+
+                _headerClass = value;
+            }
+        }
+
+        public string? TitleClass
+        {
+            get => _titleClass;
+            set
+            {
+                if (_titleClass == value)
+                    return;
+
+                if (_titleClass != null)
+                    TitleLabel.RemoveStyleClass(_titleClass);
+
+                if (value != null)
+                    TitleLabel.AddStyleClass(value);
+
+                _titleClass = value;
+            }
         }
 
         public Control Contents { get; private set; }

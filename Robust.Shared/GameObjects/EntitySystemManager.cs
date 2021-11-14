@@ -11,6 +11,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Dependency = Robust.Shared.IoC.DependencyAttribute;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -20,8 +21,8 @@ namespace Robust.Shared.GameObjects
 {
     public class EntitySystemManager : IEntitySystemManager
     {
-        [IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
-        [IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;

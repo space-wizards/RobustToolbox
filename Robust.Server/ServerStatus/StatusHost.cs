@@ -153,28 +153,34 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
-            // build.json starts here (returns on failure to find it)
+            // Check build.json
             var path = PathHelpers.ExecutableRelativeFile("build.json");
-            if (!File.Exists(path))
+            if (File.Exists(path))
             {
-                return;
+                var buildInfo = File.ReadAllText(path);
+                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo)!;
+
+                // Don't replace cvars with contents of build.json if overriden by --cvar or such.
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
+                SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
+                SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
+                SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
+                SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
             }
 
-            var buildInfo = File.ReadAllText(path);
-            var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo)!;
-
-            // Don't replace cvars with contents of build.json if overriden by --cvar or such.
-            SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
-            SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
-            SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
-            SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
-            SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
+            // Automatically determine engine version if no other source has provided a result
+            var asmVer = typeof(StatusHost).Assembly.GetName().Version;
+            if (asmVer != null)
+            {
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(3));
+            }
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {
                 if (_configurationManager.GetCVar(cvar) == "")
                     _configurationManager.SetCVar(cvar, val);
             }
+
         }
 
         public void Dispose()

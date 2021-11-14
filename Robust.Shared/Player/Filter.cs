@@ -41,7 +41,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddPlayersByPvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
         {
-            entityManager ??= IoCManager.Resolve<IEntityManager>();
+            IoCManager.Resolve(ref entityManager);
             var transform = entityManager.GetComponent<TransformComponent>(origin);
             return AddPlayersByPvs(transform.MapPosition, rangeMultiplier);
         }
@@ -70,7 +70,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
-            entityMan ??= IoCManager.Resolve<IEntityManager>();
+            IoCManager.Resolve(ref entityMan, ref playerMan);
             return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier, playerMan);
         }
 
@@ -78,9 +78,9 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null)
+        public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null, IConfigurationManager? cfgMan = null)
         {
-            var cfgMan = IoCManager.Resolve<IConfigurationManager>();
+            IoCManager.Resolve(ref playerMan, ref cfgMan);
 
             // If PVS is disabled, we simply return all players.
             if (!cfgMan.GetCVar(CVars.NetPVS))
@@ -107,9 +107,9 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Adds all players to the filter.
         /// </summary>
-        public Filter AddAllPlayers()
+        public Filter AddAllPlayers(ISharedPlayerManager? playerMan = null)
         {
-            var playerMan = IoCManager.Resolve<ISharedPlayerManager>();
+            IoCManager.Resolve(ref playerMan);
 
             _recipients = new HashSet<ICommonSession>(playerMan.NetworkedSessions);
 
@@ -121,7 +121,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddWhere(Predicate<ICommonSession> predicate, ISharedPlayerManager? playerMan = null)
         {
-            playerMan ??= IoCManager.Resolve<ISharedPlayerManager>();
+            IoCManager.Resolve(ref playerMan);
             foreach (var player in playerMan.NetworkedSessions)
             {
                 if (predicate(player))

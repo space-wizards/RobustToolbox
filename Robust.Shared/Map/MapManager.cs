@@ -690,21 +690,23 @@ namespace Robust.Shared.Map
 
             var mapId = grid.ParentMapId;
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
-            {
-                // Because deleting a grid also removes its MapGridComponent which also deletes its grid again we'll check for that here.
-                if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
-                    return;
-
-                if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
-                    gridEnt.Delete();
-            }
+            var entityId = grid.GridEntityId;
 
             grid.Dispose();
             _grids.Remove(grid.Index);
 
             Logger.DebugS("map", $"Deleted grid {gridID}");
             OnGridRemoved?.Invoke(mapId, gridID);
+
+            if (_entityManager.TryGetEntity(entityId, out var gridEnt))
+            {
+                // DeleteGrid may be triggered by the entity being deleted,
+                // so make sure that's not the case.
+                // Note: the grid is removed from _grids before we delete the entity,
+                // so there's no chance of recursion (check at top of method).
+                if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
+                    gridEnt.Delete();
+            }
         }
 
         public MapId NextMapId()

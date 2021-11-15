@@ -142,10 +142,6 @@ namespace Robust.Server
         public bool Start(ServerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
             Options = options;
-            var profilePath = Path.Join(Environment.CurrentDirectory, "AAAAAAAA");
-            ProfileOptimization.SetProfileRoot(profilePath);
-            ProfileOptimization.StartProfile("AAAAAAAAAA");
-
             _config.Initialize(true);
 
             if (Options.LoadConfigAndUserData)

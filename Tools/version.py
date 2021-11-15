@@ -40,13 +40,14 @@ def write_version():
     file.write("</Project>\n")
     file.close()
 
-    # Commit
-    subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + result.version, "MSBuild/Robust.Engine.Version.props"]).check_returncode()
-
-    # Tag
     if not result.file_only:
+        # Commit
+        subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + result.version, "MSBuild/Robust.Engine.Version.props"]).check_returncode()
+
+        # Tag
         subprocess.run(["git", "tag", "v" + result.version]).check_returncode()
-    print("Tagged as v" + result.version)
+        print("Tagged as v" + result.version)
+    print("Did not tag " + result.version)
 
 def undo_version():
     # Might want to work out some magic here to auto-identify the version from the commit

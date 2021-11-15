@@ -52,9 +52,16 @@ loginlocal = true
 # This is where the launcher will download the client ZIP from.
 # If this isn't supplied, the server will check for a file called "Content.Client.zip",
 #  and will host it on the status server.
+# If that isn't available, the server will attempt to find and use "../../Resources" and
+#  "../../bin/Content.Client" to automatically construct a client zip.
+# It will then host this on the status server.
+# Note that these paths do not work on "FULL_RELEASE" servers.
+# FULL_RELEASE servers expect to be used with a specific "packaged" layout.
+# As such, whatever script you're using to package them is expected to create the ZIP.
 # download_url = "http://example.com/compass.zip"
 
 # Build hash - this is a *capitalized* SHA256 hash of the client ZIP.
+# Optional in any case and automatically set if hosting a client ZIP.
 # build = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
 
 [auth]

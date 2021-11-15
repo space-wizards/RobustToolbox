@@ -17,7 +17,7 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
         // Lock used while working on the ACZ.
-        private readonly object _aczLock = new();
+        private readonly SemaphoreSlim _aczLock = new(1, 1);
         // If an attempt has been made to prepare the ACZ.
         private bool _aczPrepareAttempted = false;
         // Automatic Client Zip
@@ -49,44 +49,48 @@ namespace Robust.Server.ServerStatus
 
         private async Task<AutomaticClientZipInfo?> PrepareACZ()
         {
-            // Fast-path: Attempt to acquire lock on the calling thread.
-            var lockTaken = false;
-            Monitor.TryEnter(_aczLock, ref lockTaken);
-            if (lockTaken)
+            // Fast-path: Attempt to acquire lock on the calling thread, grab fields, release and return synchronously
+            if (_aczLock.Wait(0))
             {
                 var p = _aczPrepareAttempted;
                 var d = _aczPrepared;
-                Monitor.Exit(_aczLock);
+                _aczLock.Release();
                 if (p) return d;
             }
-            // Slow-path: Start a task to run ACZ (prevents stalling the HTTP server during packaging)
-            return await Task.Run(PrepareACZTask);
+            // Slow-path: Take the ACZ lock asynchronously, then let PrepareACZTask do everything (synchronously, but it's everything-bound)
+            await _aczLock.WaitAsync();
+            try
+            {
+                return await Task.Run(PrepareACZTask);
+            }
+            finally
+            {
+                _aczLock.Release();
+            }
         }
 
+        // This method assumes _aczLock is held!
         private AutomaticClientZipInfo? PrepareACZTask()
         {
-            lock (_aczLock)
+            if (_aczPrepareAttempted) return _aczPrepared;
+            _aczPrepareAttempted = true;
+            byte[] data;
+            try
             {
-                if (_aczPrepareAttempted) return _aczPrepared;
-                _aczPrepareAttempted = true;
-                byte[] data;
-                try
+                var maybeData = PrepareACZInnards();
+                if (maybeData == null)
                 {
-                    var maybeData = PrepareACZInnards();
-                    if (maybeData == null)
-                    {
-                        return null;
-                    }
-                    data = maybeData;
-                }
-                catch (Exception e)
-                {
-                    _httpSawmill.Error($"Exception in StatusHost PrepareACZ: {e}");
                     return null;
                 }
-                _aczPrepared = new AutomaticClientZipInfo(data);
-                return _aczPrepared;
+                data = maybeData;
             }
+            catch (Exception e)
+            {
+                _httpSawmill.Error($"Exception in StatusHost PrepareACZ: {e}");
+                return null;
+            }
+            _aczPrepared = new AutomaticClientZipInfo(data);
+            return _aczPrepared;
         }
 
         private byte[]? PrepareACZInnards()

@@ -254,7 +254,6 @@ namespace Robust.Server.ServerStatus
 
                 if (RequestMethod == HttpMethod.Head)
                 {
-                    _context.Response.Close();
                     return;
                 }
 
@@ -280,7 +279,13 @@ namespace Robust.Server.ServerStatus
                     return;
                 }
 
-                _context.Response.Close(data, false);
+                // Passing 'true' to this is CRITICAL.
+                // There's a bug in the ManagedHttpListener submodule.
+                // See:
+                // HttpListenerResponse.Managed.cs Close(byte[], bool),
+                // "thisRef.OutputStream.EndWrite"
+                // Yes, this will block, yes, you have to deal with it...
+                _context.Response.Close(data, true);
             }
 
             public void RespondError(HttpStatusCode code)

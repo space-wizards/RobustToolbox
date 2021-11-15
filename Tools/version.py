@@ -47,7 +47,8 @@ def write_version():
         # Tag
         subprocess.run(["git", "tag", "v" + result.version]).check_returncode()
         print("Tagged as v" + result.version)
-    print("Did not tag " + result.version)
+    else:
+        print("Did not tag " + result.version)
 
 def undo_version():
     # Might want to work out some magic here to auto-identify the version from the commit

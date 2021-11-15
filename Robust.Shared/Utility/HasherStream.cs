@@ -46,7 +46,6 @@ namespace Robust.Shared.Utility
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            return Read(buffer.AsSpan(offset, count));
             var read = _wrapping.Read(buffer, offset, count);
 
             if (read > 0)

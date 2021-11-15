@@ -44,7 +44,6 @@ namespace Robust.Client.Input
         [Dependency] private readonly IResourceManager _resourceMan = default!;
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IUserInterfaceManagerInternal _uiMgr = default!;
-        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IConsoleHost _console = default!;
 
         private bool _currentlyFindingViewport;

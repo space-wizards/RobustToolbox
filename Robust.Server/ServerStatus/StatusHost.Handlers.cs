@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Net;
 using Newtonsoft.Json.Linq;
 using Robust.Shared;
@@ -50,7 +51,7 @@ namespace Robust.Server.ServerStatus
             return true;
         }
 
-        private bool HandleInfo(IStatusHandlerContext context)
+        private async Task<bool> HandleInfo(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/info")
             {
@@ -63,7 +64,7 @@ namespace Robust.Server.ServerStatus
 
             if (string.IsNullOrEmpty(downloadUrl))
             {
-                buildInfo = PrepareACZBuildInfo();
+                buildInfo = await PrepareACZBuildInfo();
             }
             else
             {
@@ -105,12 +106,10 @@ namespace Robust.Server.ServerStatus
             return true;
         }
 
-        private JObject? PrepareACZBuildInfo()
+        private async Task<JObject?> PrepareACZBuildInfo()
         {
-            if (PrepareACZ() == null)
-            {
-                return null;
-            }
+            var acz = await PrepareACZ();
+            if (acz == null) return null;
 
             // Automatic - pass to ACZ
             // Unfortunately, we still can't divine engine version.
@@ -126,10 +125,10 @@ namespace Robust.Server.ServerStatus
             {
                 ["engine_version"] = engineVersion,
                 ["fork_id"] = fork,
-                ["version"] = _aczHash,
+                ["version"] = acz.Value.Hash,
                 // Don't supply a download URL - like supplying an empty self-address
                 ["download_url"] = "",
-                ["hash"] = _aczHash,
+                ["hash"] = acz.Value.Hash,
             };
         }
     }

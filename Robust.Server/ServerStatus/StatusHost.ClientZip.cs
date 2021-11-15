@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -19,10 +21,9 @@ namespace Robust.Server.ServerStatus
         // If an attempt has been made to prepare the ACZ.
         private bool _aczPrepareAttempted = false;
         // Automatic Client Zip
-        private byte[]? _aczData;
-        private string _aczHash = "";
+        private AutomaticClientZipInfo? _aczPrepared;
 
-        private bool HandleAutomaticClientZip(IStatusHandlerContext context)
+        private async Task<bool> HandleAutomaticClientZip(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/client.zip")
             {
@@ -35,22 +36,38 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var result = PrepareACZ();
+            var result = await PrepareACZ();
             if (result == null)
             {
                 context.Respond("Automatic Client Zip was not preparable.", HttpStatusCode.InternalServerError);
                 return true;
             }
 
-            context.Respond(result, HttpStatusCode.OK, "application/zip");
+            context.Respond(result.Value.Data, HttpStatusCode.OK, "application/zip");
             return true;
         }
 
-        private byte[]? PrepareACZ()
+        private async Task<AutomaticClientZipInfo?> PrepareACZ()
+        {
+            // Fast-path: Attempt to acquire lock on the calling thread.
+            var lockTaken = false;
+            Monitor.TryEnter(_aczLock, ref lockTaken);
+            if (lockTaken)
+            {
+                var p = _aczPrepareAttempted;
+                var d = _aczPrepared;
+                Monitor.Exit(_aczLock);
+                if (p) return d;
+            }
+            // Slow-path: Start a task to run ACZ (prevents stalling the HTTP server during packaging)
+            return await Task.Run(PrepareACZTask);
+        }
+
+        private AutomaticClientZipInfo? PrepareACZTask()
         {
             lock (_aczLock)
             {
-                if (_aczPrepareAttempted) return _aczData;
+                if (_aczPrepareAttempted) return _aczPrepared;
                 _aczPrepareAttempted = true;
                 byte[] data;
                 try
@@ -67,10 +84,8 @@ namespace Robust.Server.ServerStatus
                     _httpSawmill.Error($"Exception in StatusHost PrepareACZ: {e}");
                     return null;
                 }
-                _aczData = data;
-                using var sha = SHA256.Create();
-                _aczHash = Convert.ToHexString(sha.ComputeHash(data));
-                return data;
+                _aczPrepared = new AutomaticClientZipInfo(data);
+                return _aczPrepared;
             }
         }
 
@@ -128,4 +143,16 @@ namespace Robust.Server.ServerStatus
         }
     }
 
+    internal struct AutomaticClientZipInfo
+    {
+        public readonly byte[] Data;
+        public readonly string Hash;
+
+        public AutomaticClientZipInfo(byte[] data)
+        {
+            Data = data;
+            using var sha = SHA256.Create();
+            Hash = Convert.ToHexString(sha.ComputeHash(data));
+        }
+    }
 }

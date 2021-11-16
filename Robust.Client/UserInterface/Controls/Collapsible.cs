@@ -1,9 +1,6 @@
 using System;
-using System.Collections.Generic;
 using Robust.Client.Graphics;
-using Robust.Client.UserInterface;
 using Robust.Shared.Maths;
-using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
@@ -86,82 +83,48 @@ namespace Robust.Client.UserInterface.Controls
 
     public class CollapsibleHeading : ContainerButton
     {
-        private const string StyleClassOptionTriangle = "optionTriangle";
-
         private bool _initialized;
 
         private TextureRect _chevron = new TextureRect
         {
-            StyleClasses = { StyleClassOptionTriangle },
+            StyleClasses = { OptionButton.StyleClassOptionTriangle },
+            Margin = new Thickness(2, 0),
             HorizontalAlignment = HAlignment.Center,
             VerticalAlignment = VAlignment.Center,
         };
-        private bool _chevronVisibility = true;
+
         public bool ChevronVisible
         {
-            get => _chevronVisibility;
-            set
-            {
-                _chevronVisibility = value;
-                _chevron.Visible = _chevronVisibility;
-            }
+            get => _chevron.Visible;
+            set => _chevron.Visible = value;
         }
 
-        private Thickness _chevronMargin;
         public Thickness ChevronMargin
         {
-            get => _chevronMargin;
-            set
-            {
-                _chevronMargin = value;
-                _chevron.Margin = _chevronMargin;
-            }
+            get => _chevron.Margin;
+            set => _chevron.Margin = value;
         }
 
-        private BoxContainer _box = new();
-
-        public LayoutOrientation Orientation
+        private Label _title = new();
+        public string? Title
         {
-            get => _box.Orientation;
-            set => _box.Orientation = value;
+            get => _title.Text;
+            set => _title.Text = value;
         }
 
         public CollapsibleHeading()
         {
             ToggleMode = true;
-            AddChild(_box);
-            _box.AddChild(_chevron);
+            var box = new BoxContainer();
+            AddChild(box);
+            box.AddChild(_chevron);
+            _title = new Label();
+            box.AddChild(_title);
         }
 
         public CollapsibleHeading(string title) : this()
         {
-            AddChild(new Label { Text = title });
-        }
-
-        protected internal override void Draw(DrawingHandleScreen handle)
-        {
-            if (!_initialized) Initialize();
-
-            base.Draw(handle);
-        }
-
-        private void Initialize()
-        {
-            var current = new List<Control>(Children);
-
-            foreach (var control in current)
-            {
-                if (control == _box) continue;
-                ReparentToBox(control);
-            }
-
-            _initialized = true;
-        }
-
-        private void ReparentToBox<T>(T control) where T : Control
-        {
-            control.Orphan();
-            _box.AddChild(control);
+            Title = title;
         }
     }
 

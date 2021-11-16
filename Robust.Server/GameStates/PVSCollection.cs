@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -10,6 +11,10 @@ namespace Robust.Server.GameStates;
 
 public interface IPVSCollection
 {
+    /// <summary>
+    /// Processes all previous additions, removals and updates of indices.
+    /// </summary>
+    public void Process();
     public void AddPlayer(ICommonSession session);
     public void AddGrid(GridId gridId);
     public void AddMap(MapId mapId);
@@ -29,7 +34,15 @@ public interface IPVSCollection
 
 public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
-    [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly IEntityManager _entityManager = default!;
+
+    public const float ChunkSize = 16;
+
+    public static Vector2i GetChunkIndices(Vector2 coordinates)
+    {
+        coordinates /= ChunkSize;
+        return new Vector2i((int)Math.Floor(coordinates.X), (int)Math.Floor(coordinates.Y));
+    }
 
     /// <summary>
     /// Index of which <see cref="TIndex"/> are contained in which mapchunk, indexed by <see cref="Vector2i"/>.
@@ -64,6 +77,145 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// An index containing the <see cref="IndexLocation"/>s of all <see cref="TIndex"/>.
     /// </summary>
     private readonly Dictionary<TIndex, IndexLocation> _indexLocations = new();
+
+    /// <summary>
+    /// Buffer of all indexadditions since the last process call
+    /// </summary>
+    private readonly Dictionary<TIndex, IndexLocation> _additionBuffer = new();
+    /// <summary>
+    /// Buffer of all locationchanges since the last process call
+    /// </summary>
+    private readonly Dictionary<TIndex, IndexLocation> _locationChangeBuffer = new();
+    /// <summary>
+    /// Buffer of all indexremovals since the last process call
+    /// </summary>
+    private readonly Dictionary<TIndex, GameTick> _removalBuffer = new();
+
+    public PVSCollection()
+    {
+        IoCManager.InjectDependencies(this);
+    }
+
+    public void Process()
+    {
+        var removedIndices = new HashSet<TIndex>(_removalBuffer.Keys);
+        var addedIndices = new HashSet<TIndex>(_additionBuffer.Keys);
+        var changedIndices = new HashSet<TIndex>(_locationChangeBuffer.Keys);
+        // cut removed indices out of changed & add buffer, since we dont need to update them anyways.
+        addedIndices.ExceptWith(removedIndices);
+        changedIndices.ExceptWith(removedIndices);
+        // cut indices that were added & removed without a process call in between them from the removeIndices since we dont even need to client to know about them
+        removedIndices.ExceptWith(_additionBuffer.Keys);
+
+        // automatically merge locationchanges to newly added indices into the additionBuffer & cut them out of the changedIndices set
+        var updatedAdditions = new HashSet<TIndex>(addedIndices);
+        updatedAdditions.IntersectWith(changedIndices);
+        changedIndices.ExceptWith(updatedAdditions);
+
+        foreach (var index in updatedAdditions)
+        {
+            _additionBuffer[index] = _locationChangeBuffer[index];
+        }
+
+        foreach (var index in addedIndices)
+        {
+            AddIndexInternal(index, _additionBuffer[index]);
+        }
+
+        foreach (var index in changedIndices)
+        {
+            RemoveIndexInternal(index);
+
+            AddIndexInternal(index, _locationChangeBuffer[index]);
+        }
+
+        var changedChunkLocations = new HashSet<IndexLocation>();
+        foreach (var (index, tick) in _removalBuffer)
+        {
+            var location = RemoveIndexInternal(index);
+            if(location is GridChunkLocation or MapChunkLocation)
+                changedChunkLocations.Add(location);
+            _deletionHistory.Add((tick, index));
+        }
+
+        // remove empty chunk-subsets
+        foreach (var chunkLocation in changedChunkLocations)
+        {
+            switch (chunkLocation)
+            {
+                case GridChunkLocation gridChunkLocation:
+                    if (_gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Count == 0)
+                        _gridChunkContents[gridChunkLocation.GridId].Remove(gridChunkLocation.ChunkIndices);
+                    break;
+                case MapChunkLocation mapChunkLocation:
+                    if (_mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Count == 0)
+                        _mapChunkContents[mapChunkLocation.MapId].Remove(mapChunkLocation.ChunkIndices);
+                    break;
+            }
+        }
+
+        _additionBuffer.Clear();
+        _locationChangeBuffer.Clear();
+        _removalBuffer.Clear();
+    }
+
+    private void AddIndexInternal(TIndex index, IndexLocation location)
+    {
+        switch (location)
+        {
+            case GlobalOverride _:
+                _globalOverrides.Add(index);
+                break;
+            case GridChunkLocation gridChunkLocation:
+                // might be gone due to grid-deletions
+                if(!_gridChunkContents.ContainsKey(gridChunkLocation.GridId)) return;
+                if(!_gridChunkContents[gridChunkLocation.GridId].ContainsKey(gridChunkLocation.ChunkIndices))
+                    _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices] = new();
+                _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Add(index);
+                break;
+            case LocalOverride localOverride:
+                // might be gone due to disconnects
+                if(!_localOverrides.ContainsKey(localOverride.Session)) return;
+                _localOverrides[localOverride.Session].Add(index);
+                break;
+            case MapChunkLocation mapChunkLocation:
+                // might be gone due to map-deletions
+                if(!_mapChunkContents.ContainsKey(mapChunkLocation.MapId)) return;
+                if(!_mapChunkContents[mapChunkLocation.MapId].ContainsKey(mapChunkLocation.ChunkIndices))
+                    _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices] = new();
+                _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Add(index);
+                break;
+        }
+
+        // we want this to throw if there is already an entry because if that happens we fucked up somewhere
+        _indexLocations.Add(index, location);
+    }
+
+    private IndexLocation? RemoveIndexInternal(TIndex index)
+    {
+        // the index might be gone due to disconnects/grid-/map-deletions
+        if (_indexLocations.TryGetValue(index, out var location))
+            return null;
+        // since we can find the index, we can assume the dicts will be there too & dont need to do any checks. gaming.
+        switch (location)
+        {
+            case GlobalOverride _:
+                _globalOverrides.Remove(index);
+                break;
+            case GridChunkLocation gridChunkLocation:
+                _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Remove(index);
+                break;
+            case LocalOverride localOverride:
+                _localOverrides[localOverride.Session].Remove(index);
+                break;
+            case MapChunkLocation mapChunkLocation:
+                _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Remove(index);
+                break;
+        }
+
+        _indexLocations.Remove(index);
+        return location;
+    }
 
     #region Init Functions
 
@@ -132,8 +284,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="index">The <see cref="TIndex"/> of the removed object.</param>
     public void RemoveIndex(GameTick tick, TIndex index)
     {
-        _deletionHistory.Add((tick, index));
-        RemoveIndex(index);
+        _removalBuffer[index] = tick;
     }
 
     /// <inheritdoc />
@@ -149,7 +300,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="index">The <see cref="TIndex"/> to add.</param>
     public void AddIndex(TIndex index)
     {
-
+        _additionBuffer[index] = new GlobalOverride();
     }
 
     /// <summary>
@@ -159,7 +310,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="session">The <see cref="ICommonSession"/> receiving the object.</param>
     public void AddIndex(TIndex index, ICommonSession session)
     {
-
+        _additionBuffer[index] = new LocalOverride(session);
     }
 
     /// <summary>
@@ -169,7 +320,22 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
     public void AddIndex(TIndex index, EntityCoordinates coordinates)
     {
+        var gridId = coordinates.GetGridId(_entityManager);
+        var indices = GetChunkIndices(coordinates.Position);
+        if (gridId != GridId.Invalid)
+        {
+            AddIndex(index, gridId, indices);
+            return;
+        }
 
+        var mapId = coordinates.GetMapId(_entityManager);
+        if (mapId != MapId.Nullspace)
+        {
+            AddIndex(index, mapId, indices);
+        }
+
+        throw new ArgumentException(
+            $"Tried adding {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex>)}.");
     }
 
     /// <summary>
@@ -180,7 +346,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="chunkIndices">The indices of the chunk.</param>
     public void AddIndex(TIndex index, GridId gridId, Vector2i chunkIndices)
     {
-
+        _additionBuffer[index] = new GridChunkLocation(gridId, chunkIndices);
     }
 
     /// <summary>
@@ -191,7 +357,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="chunkIndices">The indices of the mapchunk.</param>
     public void AddIndex(TIndex index, MapId mapId, Vector2i chunkIndices)
     {
-
+        _additionBuffer[index] = new MapChunkLocation(mapId, chunkIndices);
     }
 
     #endregion
@@ -204,7 +370,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
     public void UpdateIndex(TIndex index)
     {
-
+        _locationChangeBuffer[index] = new GlobalOverride();
     }
 
     /// <summary>
@@ -214,7 +380,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="session">The <see cref="ICommonSession"/> receiving the object.</param>
     public void UpdateIndex(TIndex index, ICommonSession session)
     {
-
+        _locationChangeBuffer[index] = new LocalOverride(session);
     }
 
     /// <summary>
@@ -224,7 +390,22 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
     public void UpdateIndex(TIndex index, EntityCoordinates coordinates)
     {
+        var gridId = coordinates.GetGridId(_entityManager);
+        var indices = GetChunkIndices(coordinates.Position);
+        if (gridId != GridId.Invalid)
+        {
+            UpdateIndex(index, gridId, indices);
+            return;
+        }
 
+        var mapId = coordinates.GetMapId(_entityManager);
+        if (mapId != MapId.Nullspace)
+        {
+            UpdateIndex(index, mapId, indices);
+        }
+
+        throw new ArgumentException(
+            $"Tried updating {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex>)}.");
     }
 
     /// <summary>
@@ -235,7 +416,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="chunkIndices">The indices of the chunk.</param>
     public void UpdateIndex(TIndex index, GridId gridId, Vector2i chunkIndices)
     {
-
+        _locationChangeBuffer[index] = new GridChunkLocation(gridId, chunkIndices);
     }
 
     /// <summary>
@@ -246,35 +427,12 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <param name="chunkIndices">The indices of the mapchunk.</param>
     public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices)
     {
-
+        _locationChangeBuffer[index] = new MapChunkLocation(mapId, chunkIndices);
     }
 
     #endregion
 
     #region IndexLocations
-
-    private void RemoveIndex(TIndex index)
-    {
-        switch (_indexLocations[index])
-        {
-            case GlobalOverride globalOverride:
-                _globalOverrides.Remove(index);
-                break;
-            case GridChunkLocation gridChunkLocation:
-                _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Remove(index);
-                break;
-            case LocalOverride localOverride:
-                _localOverrides[localOverride.Session].Remove(index);
-                break;
-            case MapChunkLocation mapChunkLocation:
-                _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Remove(index);
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
-        }
-
-        _indexLocations.Remove(index);
-    }
 
     private abstract record IndexLocation;
     private record MapChunkLocation(MapId MapId, Vector2i ChunkIndices) : IndexLocation;

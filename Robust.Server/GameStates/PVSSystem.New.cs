@@ -13,17 +13,50 @@ internal class PVSSystem_New : EntitySystem
     [Dependency] private readonly IMapManager _mapManager = default!;
     [Dependency] private readonly IPlayerManager _playerManager = default!;
 
+    private PVSCollection<EntityUid> _entityPvsCollection = default!;
     private readonly List<IPVSCollection> _pvsCollections = new();
 
     public override void Initialize()
     {
         base.Initialize();
 
+        _entityPvsCollection = RegisterPVSCollection<EntityUid>();
         _mapManager.MapCreated += OnMapCreated;
         _mapManager.MapDestroyed += OnMapDestroyed;
         _mapManager.OnGridCreated += OnGridCreated;
         _mapManager.OnGridRemoved += OnGridRemoved;
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
+        SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        SubscribeLocalEvent<TransformComponent, ComponentInit>(OnTransformInit);
+        EntityManager.EntityDeleted += OnEntityDeleted;
+    }
+
+    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    {
+        _entityPvsCollection.AddIndex(uid, component.Coordinates);
+    }
+
+    public override void Shutdown()
+    {
+        base.Shutdown();
+
+        _mapManager.MapCreated -= OnMapCreated;
+        _mapManager.MapDestroyed -= OnMapDestroyed;
+        _mapManager.OnGridCreated -= OnGridCreated;
+        _mapManager.OnGridRemoved -= OnGridRemoved;
+        _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
+        EntityManager.EntityDeleted -= OnEntityDeleted;
+
+    }
+
+    private void OnEntityDeleted(object? sender, EntityUid e)
+    {
+        _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, e);
+    }
+
+    private void OnEntityMove(MoveEvent ev)
+    {
+        _entityPvsCollection.UpdateIndex(ev.Sender.Uid, ev.NewPosition);
     }
 
     public PVSCollection<T> RegisterPVSCollection<T>() where T : IComparable<T>, IEquatable<T>
@@ -84,5 +117,11 @@ internal class PVSSystem_New : EntitySystem
         {
             pvsCollection.AddMap(e.Map);
         }
+    }
+
+    public override void Update(float frameTime)
+    {
+        base.Update(frameTime);
+        _entityPvsCollection.Process();
     }
 }

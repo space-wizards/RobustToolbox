@@ -1,4 +1,7 @@
-﻿
+# Welcome to the example configuration file!
+# Remember that if this is in bin/Content.Server or such, it may be overwritten on build.
+# Consider copying it and using the --config-file and --data-dir options.
+
 [log]
 path = "logs"
 format = "log_%(date)s-%(time)s.txt"
@@ -9,19 +12,27 @@ enabled = false
 tickrate = 60
 port = 1212
 bindto = "::,0.0.0.0"
+# Automatic port forwarding is enabled by default for release builds and disabled for debug builds.
+# This is because debug environments generally shouldn't port forward
+# upnp = true
 
-# The status server is the TCP side, used by the launcher to determine engine version, etc.
 [status]
+# The status server is the TCP side, used by the launcher to determine engine version, etc.
+# To be clear: Disabling it makes the launcher unable to connect!
 enabled = true
-bind = "*:1212"
+
+# This is the address and port the status server binds to.
+# The port is by default set based on net.port so it will follow what you set there.
+# bind = "*:1212"
 
 # This is the address of the SS14 server as the launcher uses it.
-# This is only needed if you're proxying the status HTTP server.
+# This is only needed if you're proxying the status HTTP server -
+#  by default the launcher will assume the address and port match that of the status server.
 # connectaddress = "udp://localhost:1212"
 
 [game]
 hostname = "MyServer"
-# map = "maps/saltern.yml"
+# map = "Maps/saltern.yml"
 maxplayers = 64
 type = 1
 welcomemsg = "Welcome to the server!"
@@ -62,6 +73,7 @@ loginlocal = true
 
 # Build hash - this is a *capitalized* SHA256 hash of the client ZIP.
 # Optional in any case and automatically set if hosting a client ZIP.
+# This hash is an example only.
 # build = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855"
 
 [auth]

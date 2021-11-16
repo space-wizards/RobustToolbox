@@ -8,7 +8,26 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.GameStates;
 
-public class PVSCollection<TIndex> where TIndex : IComparable<TIndex>, IEquatable<TIndex>
+public interface IPVSCollection
+{
+    public void AddPlayer(ICommonSession session);
+    public void AddGrid(GridId gridId);
+    public void AddMap(MapId mapId);
+
+    public void RemovePlayer(ICommonSession session);
+
+    public void RemoveGrid(GridId gridId);
+
+    public void RemoveMap(MapId mapId);
+
+    /// <summary>
+    /// Remove all deletions up to a <see cref="GameTick"/>.
+    /// </summary>
+    /// <param name="tick">The <see cref="GameTick"/> before which all deletions should be removed.</param>
+    public void CullDeletionHistoryUntil(GameTick tick);
+}
+
+public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     [Dependency] private readonly IGameTiming _gameTiming = default!;
 
@@ -16,6 +35,7 @@ public class PVSCollection<TIndex> where TIndex : IComparable<TIndex>, IEquatabl
     /// Index of which <see cref="TIndex"/> are contained in which mapchunk, indexed by <see cref="Vector2i"/>.
     /// </summary>
     private readonly Dictionary<MapId, Dictionary<Vector2i, HashSet<TIndex>>> _mapChunkContents = new();
+
     /// <summary>
     /// Index of which <see cref="TIndex"/> are contained in which gridchunk, indexed by <see cref="Vector2i"/>.
     /// </summary>
@@ -47,20 +67,24 @@ public class PVSCollection<TIndex> where TIndex : IComparable<TIndex>, IEquatabl
 
     #region Init Functions
 
+    /// <inheritdoc />
     public void AddPlayer(ICommonSession session)
     {
         _localOverrides[session] = new();
         _lastSeen[session] = new();
     }
 
+    /// <inheritdoc />
     public void AddGrid(GridId gridId) => _gridChunkContents[gridId] = new();
 
+    /// <inheritdoc />
     public void AddMap(MapId mapId) => _mapChunkContents[mapId] = new();
 
     #endregion
 
     #region ShutdownFunctions
 
+    /// <inheritdoc />
     public void RemovePlayer(ICommonSession session)
     {
         foreach (var index in _localOverrides[session])
@@ -71,6 +95,7 @@ public class PVSCollection<TIndex> where TIndex : IComparable<TIndex>, IEquatabl
         _lastSeen.Remove(session);
     }
 
+    /// <inheritdoc />
     public void RemoveGrid(GridId gridId)
     {
         foreach (var (_, indices) in _gridChunkContents[gridId])
@@ -83,6 +108,7 @@ public class PVSCollection<TIndex> where TIndex : IComparable<TIndex>, IEquatabl
         _gridChunkContents.Remove(gridId);
     }
 
+    /// <inheritdoc />
     public void RemoveMap(MapId mapId)
     {
         foreach (var (_, indices) in _mapChunkContents[mapId])
@@ -110,10 +136,7 @@ public class PVSCollection<TIndex> where TIndex : IComparable<TIndex>, IEquatabl
         RemoveIndex(index);
     }
 
-    /// <summary>
-    /// Remove all deletions up to a <see cref="GameTick"/>.
-    /// </summary>
-    /// <param name="tick">The <see cref="GameTick"/> before which all deletions should be removed.</param>
+    /// <inheritdoc />
     public void CullDeletionHistoryUntil(GameTick tick) => _deletionHistory.RemoveAll(hist => hist.tick < tick);
 
     #endregion

@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -15,14 +17,13 @@ namespace Robust.Server.ServerStatus
     internal sealed partial class StatusHost
     {
         // Lock used while working on the ACZ.
-        private readonly object _aczLock = new();
+        private readonly SemaphoreSlim _aczLock = new(1, 1);
         // If an attempt has been made to prepare the ACZ.
         private bool _aczPrepareAttempted = false;
         // Automatic Client Zip
-        private byte[]? _aczData;
-        private string _aczHash = "";
+        private AutomaticClientZipInfo? _aczPrepared;
 
-        private bool HandleAutomaticClientZip(IStatusHandlerContext context)
+        private async Task<bool> HandleAutomaticClientZip(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/client.zip")
             {
@@ -35,47 +36,59 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            var result = PrepareACZ();
+            var result = await PrepareACZ();
             if (result == null)
             {
                 context.Respond("Automatic Client Zip was not preparable.", HttpStatusCode.InternalServerError);
                 return true;
             }
 
-            context.Respond(result, HttpStatusCode.OK, "application/zip");
+            context.Respond(result.Value.Data, HttpStatusCode.OK, "application/zip");
             return true;
         }
 
-        private byte[]? PrepareACZ()
+        // Only call this if the download URL is not available!
+        private async Task<AutomaticClientZipInfo?> PrepareACZ()
         {
-            lock (_aczLock)
+            // Take the ACZ lock asynchronously
+            await _aczLock.WaitAsync();
+            try
             {
-                if (_aczPrepareAttempted) return _aczData;
+                // Setting this now ensures that it won't fail repeatedly on exceptions/etc.
+                if (_aczPrepareAttempted) return _aczPrepared;
                 _aczPrepareAttempted = true;
+                // ACZ hasn't been prepared, prepare it
                 byte[] data;
                 try
                 {
-                    var maybeData = PrepareACZInnards();
+                    // Run actual ACZ generation via Task.Run because it's synchronous
+                    var maybeData = await Task.Run(PrepareACZInnards);
                     if (maybeData == null)
                     {
+                        _httpSawmill.Error("StatusHost PrepareACZ failed (server will not be usable from launcher!)");
                         return null;
                     }
                     data = maybeData;
                 }
                 catch (Exception e)
                 {
-                    _httpSawmill.Error($"Exception in StatusHost PrepareACZ: {e}");
+                    _httpSawmill.Error($"Exception in StatusHost PrepareACZ (server will not be usable from launcher!): {e}");
                     return null;
                 }
-                _aczData = data;
-                using var sha = SHA256.Create();
-                _aczHash = Convert.ToHexString(sha.ComputeHash(data));
-                return data;
+                _aczPrepared = new AutomaticClientZipInfo(data);
+                return _aczPrepared;
+            }
+            finally
+            {
+                _aczLock.Release();
             }
         }
 
+        // -- All methods from this point forward do not access the ACZ global state --
+
         private byte[]? PrepareACZInnards()
         {
+            // All of these should Info on success and Error on null-return failure
             return PrepareACZViaFile() ?? PrepareACZViaMagic();
         }
 
@@ -83,6 +96,7 @@ namespace Robust.Server.ServerStatus
         {
             var path = PathHelpers.ExecutableRelativeFile("Content.Client.zip");
             if (!File.Exists(path)) return null;
+            _httpSawmill.Info($"StatusHost found client zip: {path}");
             return File.ReadAllBytes(path);
         }
 
@@ -124,8 +138,21 @@ namespace Robust.Server.ServerStatus
                 }
             }
             archive.Dispose();
+            _httpSawmill.Info($"StatusHost synthesized client zip!");
             return outStream.ToArray();
         }
     }
 
+    internal struct AutomaticClientZipInfo
+    {
+        public readonly byte[] Data;
+        public readonly string Hash;
+
+        public AutomaticClientZipInfo(byte[] data)
+        {
+            Data = data;
+            using var sha = SHA256.Create();
+            Hash = Convert.ToHexString(sha.ComputeHash(data));
+        }
+    }
 }

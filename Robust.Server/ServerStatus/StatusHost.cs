@@ -37,14 +37,14 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
-        private readonly List<StatusHostHandler> _handlers = new();
+        private readonly List<StatusHostHandlerAsync> _handlers = new();
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
 
         private string? _serverNameCache;
 
-        public Task ProcessRequestAsync(HttpListenerContext context)
+        public async Task ProcessRequestAsync(HttpListenerContext context)
         {
             var apiContext = (IStatusHandlerContext) new ContextImpl(context);
 
@@ -55,9 +55,9 @@ namespace Robust.Server.ServerStatus
             {
                 foreach (var handler in _handlers)
                 {
-                    if (handler(apiContext))
+                    if (await handler(apiContext))
                     {
-                        return Task.CompletedTask;
+                        return;
                     }
                 }
 
@@ -75,8 +75,6 @@ namespace Robust.Server.ServerStatus
             _httpSawmill.Debug(Sawmill, $"{method} {context.Request.Url!.PathAndQuery} {context.Response.StatusCode} " +
                                          $"{(HttpStatusCode) context.Response.StatusCode} to {context.Request.RemoteEndPoint}");
                                          */
-
-            return Task.CompletedTask;
         }
 
         public event Action<JObject>? OnStatusRequest;
@@ -84,6 +82,11 @@ namespace Robust.Server.ServerStatus
         public event Action<JObject>? OnInfoRequest;
 
         public void AddHandler(StatusHostHandler handler)
+        {
+            _handlers.Add((ctx) => Task.FromResult(handler(ctx)));
+        }
+
+        public void AddHandler(StatusHostHandlerAsync handler)
         {
             _handlers.Add(handler);
         }

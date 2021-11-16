@@ -83,8 +83,6 @@ namespace Robust.Client.UserInterface.Controls
 
     public class CollapsibleHeading : ContainerButton
     {
-        private bool _initialized;
-
         private TextureRect _chevron = new TextureRect
         {
             StyleClasses = { OptionButton.StyleClassOptionTriangle },

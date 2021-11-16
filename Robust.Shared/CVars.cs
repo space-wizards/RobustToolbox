@@ -117,11 +117,7 @@ namespace Robust.Shared
         /// If true, use UPnP to automatically forward ports on startup if possible.
         /// </summary>
         public static readonly CVarDef<bool> NetUPnP =
-#if DEBUG
             CVarDef.Create("net.upnp", false, CVar.SERVERONLY);
-#else
-            CVarDef.Create("net.upnp", true, CVar.SERVERONLY);
-#endif
 
         /**
          * SUS

@@ -12,8 +12,8 @@ enabled = false
 tickrate = 60
 port = 1212
 bindto = "::,0.0.0.0"
-# Automatic port forwarding is enabled by default for release builds and disabled for debug builds.
-# This is because debug environments generally shouldn't port forward
+# Automatic port forwarding!
+# Disabled by default because you may not want to do this.
 # upnp = true
 
 [status]

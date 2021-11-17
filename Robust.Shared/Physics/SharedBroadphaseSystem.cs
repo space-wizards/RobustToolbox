@@ -866,6 +866,8 @@ namespace Robust.Shared.Physics
             base.Shutdown();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
+            _mapManager.MapCreated -= OnMapCreated;
+            _mapManager.MapDestroyed -= OnMapDestroyed;
         }
 
         private void HandleGridInit(GridInitializeEvent ev)

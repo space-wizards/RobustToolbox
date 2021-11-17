@@ -566,10 +566,7 @@ namespace Robust.Shared.Physics
             DebugTools.Assert(body.FixtureCount > 0);
 
             if (!body._fixtures.Remove(fixture))
-            {
-                Logger.ErrorS("physics", $"Tried to remove fixture from {body.Owner} that was already removed.");
                 return;
-            }
 
             var edge = body.ContactEdges;
 

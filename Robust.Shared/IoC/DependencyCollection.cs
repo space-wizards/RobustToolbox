@@ -137,7 +137,7 @@ namespace Robust.Shared.IoC
 
             object DefaultFactory()
             {
-                var constructors = implementation.GetConstructors();
+                var constructors = implementation.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{implementation.FullName}' requires exactly one constructor.");

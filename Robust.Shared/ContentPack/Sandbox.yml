@@ -473,6 +473,9 @@ Types:
   System.Runtime.ExceptionServices:
     ExceptionDispatchInfo: { All: True }
   System.Runtime.InteropServices:
+    CollectionsMarshal:
+      Methods:
+        - "System.Span`1<!!0> AsSpan<>(System.Collections.Generic.List`1<!!0>)"
     InAttribute: { All: True }
     UnmanagedType: { } # `unmanaged` constraint in C# modreqs with this.
   System.Runtime.Versioning:

@@ -37,6 +37,56 @@ namespace Robust.Shared.Maths
     {
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
 
+        public static Direction AsDir(this DirectionFlag directionFlag)
+        {
+            switch (directionFlag)
+            {
+                case DirectionFlag.South:
+                    return Direction.South;
+                case DirectionFlag.SouthEast:
+                    return Direction.SouthEast;
+                case DirectionFlag.East:
+                    return Direction.East;
+                case DirectionFlag.NorthEast:
+                    return Direction.NorthEast;
+                case DirectionFlag.North:
+                    return Direction.North;
+                case DirectionFlag.NorthWest:
+                    return Direction.NorthWest;
+                case DirectionFlag.West:
+                    return Direction.West;
+                case DirectionFlag.SouthWest:
+                    return Direction.SouthWest;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public static DirectionFlag AsFlag(this Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.South:
+                    return DirectionFlag.South;
+                case Direction.SouthEast:
+                    return DirectionFlag.SouthEast;
+                case Direction.East:
+                    return DirectionFlag.East;
+                case Direction.NorthEast:
+                    return DirectionFlag.NorthEast;
+                case Direction.North:
+                    return DirectionFlag.North;
+                case Direction.NorthWest:
+                    return DirectionFlag.NorthWest;
+                case Direction.West:
+                    return DirectionFlag.West;
+                case Direction.SouthWest:
+                    return DirectionFlag.SouthWest;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
         /// <summary>
         /// Converts a direction vector to the closest Direction enum.
         /// </summary>

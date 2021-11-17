@@ -475,6 +475,13 @@ namespace Robust.Shared
          * PHYSICS
          */
 
+        /// <summary>
+        /// How much to expand broadphase checking for. This is useful for cross-grid collisions.
+        /// Performance impact if additional broadphases are being checked.
+        /// </summary>
+        public static readonly CVarDef<float> BroadphaseExpand =
+            CVarDef.Create("physics.broadphase_Expand", 2f);
+
         // Grid fixtures
         /// <summary>
         /// I'ma be real with you: the only reason this exists is to get tests working.

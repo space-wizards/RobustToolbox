@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -57,6 +58,13 @@ namespace Robust.Shared.Physics
         // Caching for Synchronize
         private Dictionary<BroadphaseComponent, (Vector2 Position, float Rotation)> _broadphaseTransforms = new();
 
+        /// <summary>
+        /// How much to expand bounds by to check cross-broadphase collisions.
+        /// Ideally you want to set this to your largest body size.
+        /// This only has a noticeable performance impact where multiple broadphases are in close proximity.
+        /// </summary>
+        private float _broadphaseExpand;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -76,7 +84,11 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<PhysicsComponent, RotateEvent>(HandleRotate);
 
             _mapManager.MapCreated += HandleMapCreated;
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
         }
+
+        private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;
 
         public override void Update(float frameTime)
         {
@@ -194,6 +206,7 @@ namespace Robust.Shared.Physics
             // Rather than doing a HasComponent up front when adding to the moveBuffer we'll just do it here
             // This way we can reduce the amount of HasComponent<BroadphaseComponent> calls being done
 
+            // TODO: Use the LocalBounds of the grid instead as it'll be significantly faster
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
                 var fixture = proxy.Fixture;
@@ -206,9 +219,11 @@ namespace Robust.Shared.Physics
                 DebugTools.Assert(broadphase.Owner.Transform.MapPosition.Position.Equals(Vector2.Zero));
                 var body = fixture.Body;
 
+                var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
+
                 // TODO: Use the callback for this you ape.
                 // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
-                foreach (var other in broadphase!.Tree.QueryAabb(_queryBuffer, worldAABB))
+                foreach (var other in broadphase!.Tree.QueryAabb(_queryBuffer, enlargedAABB))
                 {
                     // 99% of the time it's just going to be the broadphase (for now the grid) itself.
                     // hence this body check makes this run significantly better.
@@ -257,15 +272,17 @@ namespace Robust.Shared.Physics
                 // if (prediction && !proxyBody.Predict) continue;
 
                 // Get every broadphase we may be intersecting.
-                foreach (var (broadphase, broadphaseXForm) in _broadphaseTransforms)
+                foreach (var (broadphase, _) in _broadphaseTransforms)
                 {
                     // Broadphase can't intersect with entities on itself so skip.
                     if (proxyBody.OwnerUid == broadphase.OwnerUid ||
                         broadphase.Owner.Transform.MapID != proxyBody.Owner.Transform.MapID) continue;
 
+                    var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
+
                     // If we're a map / our BB intersects then we'll do the work
                     if (_broadphaseBounding.TryGetValue(broadphase.OwnerUid, out var broadphaseAABB) &&
-                        !broadphaseAABB.Intersects(worldAABB)) continue;
+                        !broadphaseAABB.Intersects(enlargedAABB)) continue;
 
                     // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
                     Box2 aabb;
@@ -278,7 +295,7 @@ namespace Robust.Shared.Physics
                     }
                     else
                     {
-                        aabb = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                        aabb = _broadphaseInvMatrices[broadphase.OwnerUid].TransformBox(worldAABB);
                     }
 
                     foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
@@ -823,6 +840,8 @@ namespace Robust.Shared.Physics
         {
             base.Shutdown();
             _mapManager.MapCreated -= HandleMapCreated;
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+            configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
             // TODO: Destroy buffers here
         }
 

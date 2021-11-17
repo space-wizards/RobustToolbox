@@ -2,7 +2,6 @@
 
 namespace Robust.Shared.Maths
 {
-    [Flags]
     public enum Direction : sbyte
     {
         Invalid = -1,
@@ -14,6 +13,21 @@ namespace Robust.Shared.Maths
         NorthWest = 5,
         West = 6,
         SouthWest = 7,
+    }
+
+    [Flags]
+    public enum DirectionFlag : sbyte
+    {
+        None = 0,
+        South = 1 << 0,
+        East = 1 << 1,
+        North = 1 << 2,
+        West = 1 << 3,
+
+        SouthEast = South | East,
+        NorthEast = North | East,
+        NorthWest = North | West,
+        SouthWest = South | West,
     }
 
     /// <summary>
@@ -94,7 +108,7 @@ namespace Robust.Shared.Maths
             new (-1, 0),
             new Vector2(-1, -1).Normalized
         };
-        
+
         private static readonly Vector2i[] IntDirectionVectors = {
             new (0, -1),
             new (1, -1),
@@ -105,7 +119,7 @@ namespace Robust.Shared.Maths
             new (-1, 0),
             new (-1, -1)
         };
-        
+
         /// <summary>
         /// Converts a Direction to a normalized Direction vector.
         /// </summary>

@@ -82,11 +82,12 @@ namespace Robust.Shared.IoC
             Register<TInterface, TImplementation>(() =>
             {
                 var objectType  = typeof(TImplementation);
-                var constructors = objectType.GetConstructors();
+                var constructors = objectType.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' requires exactly one constructor.");
 
+                var chosenConstructor = constructors[0];
                 var constructorParams = constructors[0].GetParameters();
                 var parameters = new object[constructorParams.Length];
 
@@ -109,7 +110,7 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return (TImplementation) Activator.CreateInstance(objectType, parameters)!;
+                return (TImplementation) chosenConstructor.Invoke(parameters);
             }, overwrite);
         }
 
@@ -142,7 +143,8 @@ namespace Robust.Shared.IoC
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{implementation.FullName}' requires exactly one constructor.");
 
-                var constructorParams = constructors[0].GetParameters();
+                var chosenConstructor = constructors[0];
+                var constructorParams = chosenConstructor.GetParameters();
                 var parameters = new object[constructorParams.Length];
 
                 for (var index = 0; index < constructorParams.Length; index++)
@@ -164,7 +166,7 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return Activator.CreateInstance(implementation, parameters)!;
+                return chosenConstructor.Invoke(parameters);
             }
 
             _resolveTypes[interfaceType] = implementation;

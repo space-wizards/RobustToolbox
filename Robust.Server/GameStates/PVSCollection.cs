@@ -32,7 +32,7 @@ public interface IPVSCollection
     public void CullDeletionHistoryUntil(GameTick tick);
 }
 
-public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
+public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     [Dependency] private readonly IEntityManager _entityManager = default!;
 
@@ -43,6 +43,11 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
         coordinates /= ChunkSize;
         return new Vector2i((int)Math.Floor(coordinates.X), (int)Math.Floor(coordinates.Y));
     }
+
+    /// <summary>
+    /// A delegate to retrieve elements
+    /// </summary>
+    private readonly Func<TIndex, TElement> _getElementDelegate;
 
     /// <summary>
     /// Index of which <see cref="TIndex"/> are contained in which mapchunk, indexed by <see cref="Vector2i"/>.
@@ -91,8 +96,9 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// </summary>
     private readonly Dictionary<TIndex, GameTick> _removalBuffer = new();
 
-    public PVSCollection()
+    public PVSCollection(Func<TIndex, TElement> getElementDelegate)
     {
+        _getElementDelegate = getElementDelegate;
         IoCManager.InjectDependencies(this);
     }
 
@@ -335,7 +341,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
         }
 
         throw new ArgumentException(
-            $"Tried adding {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex>)}.");
+            $"Tried adding {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex, TElement>)}.");
     }
 
     /// <summary>
@@ -405,7 +411,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
         }
 
         throw new ArgumentException(
-            $"Tried updating {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex>)}.");
+            $"Tried updating {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex, TElement>)}.");
     }
 
     /// <summary>

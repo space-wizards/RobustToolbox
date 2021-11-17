@@ -480,7 +480,7 @@ namespace Robust.Shared
         /// Performance impact if additional broadphases are being checked.
         /// </summary>
         public static readonly CVarDef<float> BroadphaseExpand =
-            CVarDef.Create("physics.broadphase_Expand", 2f);
+            CVarDef.Create("physics.broadphase_Expand", 2f, CVar.ARCHIVE | CVar.REPLICATED);
 
         // Grid fixtures
         /// <summary>

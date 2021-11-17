@@ -94,8 +94,8 @@ namespace Robust.Client
                     IoCManager.Register<IClyde, Clyde>();
                     IoCManager.Register<IClipboardManager, Clyde>();
                     IoCManager.Register<IClydeInternal, Clyde>();
-                    IoCManager.Register<IClydeAudio, ClydeAudio>();
-                    IoCManager.Register<IClydeAudioInternal, ClydeAudio>();
+                    IoCManager.Register<IClydeAudio, FallbackProxyClydeAudio>();
+                    IoCManager.Register<IClydeAudioInternal, FallbackProxyClydeAudio>();
                     IoCManager.Register<IInputManager, ClydeInputManager>();
                     IoCManager.Register<IFileDialogManager, FileDialogManager>();
                     IoCManager.Register<IUriOpener, UriOpener>();

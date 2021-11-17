@@ -29,8 +29,7 @@ namespace Robust.Client.Graphics.Audio
         public bool InitializePostWindowing()
         {
             _gameThread = Thread.CurrentThread;
-            _initializeAudio();
-            return true;
+            return _initializeAudio();
         }
 
         public void FrameProcess(FrameEventArgs eventArgs)

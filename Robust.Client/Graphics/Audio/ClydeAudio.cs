@@ -44,11 +44,12 @@ namespace Robust.Client.Graphics.Audio
 
         private ISawmill _openALSawmill = default!;
 
-        private void _initializeAudio()
+        private bool _initializeAudio()
         {
             _openALSawmill = Logger.GetSawmill("clyde.oal");
 
-            _audioOpenDevice();
+            if (!_audioOpenDevice())
+                return false;
 
             // Create OpenAL context.
             _audioCreateContext();
@@ -57,6 +58,7 @@ namespace Robust.Client.Graphics.Audio
 
             _cfg.OnValueChanged(CVars.AudioMasterVolume, SetMasterVolume, true);
             _cfg.OnValueChanged(CVars.AudioAttenuation, SetAudioAttenuation, true);
+            return true;
         }
 
         private void _audioCreateContext()
@@ -82,7 +84,7 @@ namespace Robust.Client.Graphics.Audio
             _openALSawmill.Debug("OpenAL Version: {0}", AL.Get(ALGetString.Version));
         }
 
-        private void _audioOpenDevice()
+        private bool _audioOpenDevice()
         {
             var preferredDevice = _cfg.GetCVar(CVars.AudioDevice);
 
@@ -107,7 +109,8 @@ namespace Robust.Client.Graphics.Audio
 
             if (_openALDevice == IntPtr.Zero)
             {
-                throw new InvalidOperationException($"Unable to open OpenAL device! {ALC.GetError(ALDevice.Null)}");
+                _openALSawmill.Error("Unable to open OpenAL device! {1}", ALC.GetError(ALDevice.Null));
+                return false;
             }
 
             // Load up ALC extensions.
@@ -116,6 +119,7 @@ namespace Robust.Client.Graphics.Audio
             {
                 _alcDeviceExtensions.Add(extension);
             }
+            return true;
         }
 
         private void _shutdownAudio()

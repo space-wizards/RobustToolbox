@@ -6,4 +6,5 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>nullable</WarningsAsErrors>
     </PropertyGroup>
+    <Import Project="Robust.Engine.Version.props" />
 </Project>

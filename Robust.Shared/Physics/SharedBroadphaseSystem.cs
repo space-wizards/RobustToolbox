@@ -51,6 +51,7 @@ namespace Robust.Shared.Physics
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
         private Dictionary<EntityUid, Box2> _broadphaseBounding = new(8);
         private Dictionary<EntityUid, Matrix3> _broadphaseInvMatrices = new(8);
+        private Dictionary<EntityUid, Matrix3> _broadphaseMatrices = new(8);
         private HashSet<EntityUid> _broadphases = new(8);
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
@@ -83,9 +84,10 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(HandleMove);
             SubscribeLocalEvent<PhysicsComponent, RotateEvent>(HandleRotate);
 
-            _mapManager.MapCreated += HandleMapCreated;
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
+            _mapManager.MapCreated += OnMapCreated;
+            _mapManager.MapDestroyed += OnMapDestroyed;
         }
 
         private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;
@@ -182,16 +184,26 @@ namespace Robust.Shared.Physics
         {
             var uid = broadphase.OwnerUid;
 
-            var transform = _physicsManager.UpdateTransform(uid);
+            var xformComp = EntityManager.GetComponent<TransformComponent>(uid);
+
+            var matrix = xformComp.WorldMatrix;
+            var worldPosition = new Vector2(matrix.R0C2, matrix.R1C2);
+            var transform = new Transform(worldPosition, xformComp.WorldRotation);
+
+            _physicsManager.SetTransform(uid, transform);
             _broadphases.Add(uid);
             _broadphaseTransforms[broadphase] = (transform.Position, transform.Quaternion2D.Angle);
+            _broadphaseInvMatrices[uid] = xformComp.InvWorldMatrix;
+            _broadphaseMatrices[uid] = matrix;
 
-            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? physicsComponent))
+            if (EntityManager.TryGetComponent(uid, out IMapGridComponent? mapGrid))
             {
-                _broadphaseBounding[uid] = physicsComponent.GetWorldAABB(transform.Position);
+                _broadphaseBounding[uid] = matrix.TransformBox(mapGrid.Grid.LocalBounds);
             }
-
-            _broadphaseInvMatrices[uid] = EntityManager.GetComponent<TransformComponent>(uid).InvWorldMatrix;
+            else
+            {
+                DebugTools.Assert(!EntityManager.HasComponent<PhysicsComponent>(uid));
+            }
         }
 
         /// <summary>
@@ -213,7 +225,7 @@ namespace Robust.Shared.Physics
                 var uid = fixture.Body.OwnerUid;
 
                 //  || prediction && !fixture.Body.Predict
-                if (!_broadphaseInvMatrices.TryGetValue(uid, out var invMatrix)) continue;
+                if (!_broadphaseMatrices.TryGetValue(uid, out var matrix)) continue;
 
                 var broadphase = fixture.Body.Broadphase!;
                 DebugTools.Assert(broadphase.Owner.Transform.MapPosition.Position.Equals(Vector2.Zero));
@@ -231,7 +243,7 @@ namespace Robust.Shared.Physics
                     if (other.Fixture.Body == body || moveBuffer.ContainsKey(other)) continue;
 
                     // To avoid updating during iteration.
-                    _gridMoveBuffer[other] = invMatrix.TransformBox(other.AABB);
+                    _gridMoveBuffer[other] = matrix.TransformBox(other.AABB);
                 }
 
                 _queryBuffer.Clear();
@@ -355,6 +367,14 @@ namespace Robust.Shared.Physics
             _pairBuffer.Clear();
             _moveBuffer[mapId].Clear();
             _gridMoveBuffer.Clear();
+        }
+
+        internal void Cleanup()
+        {
+            _broadphaseBounding.Clear();
+            _broadphaseMatrices.Clear();
+            _broadphaseTransforms.Clear();
+            _broadphaseInvMatrices.Clear();
         }
 
         private void HandleParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
@@ -827,7 +847,7 @@ namespace Robust.Shared.Physics
             physicsComponent.Awake = true;
         }
 
-        private void HandleMapCreated(object? sender, MapEventArgs e)
+        private void OnMapCreated(object? sender, MapEventArgs e)
         {
             if (e.Map == MapId.Nullspace) return;
 
@@ -836,13 +856,16 @@ namespace Robust.Shared.Physics
             _moveBuffer[e.Map] = new Dictionary<FixtureProxy, Box2>(64);
         }
 
+        private void OnMapDestroyed(object? sender, MapEventArgs e)
+        {
+            _moveBuffer.Remove(e.Map);
+        }
+
         public override void Shutdown()
         {
             base.Shutdown();
-            _mapManager.MapCreated -= HandleMapCreated;
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
-            // TODO: Destroy buffers here
         }
 
         private void HandleGridInit(GridInitializeEvent ev)

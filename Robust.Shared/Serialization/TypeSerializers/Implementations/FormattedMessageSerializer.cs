@@ -34,7 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new ValueDataNode(value.ToString());
+            return new ValueDataNode(value.ToMarkup());
         }
 
         [MustUseReturnValue]

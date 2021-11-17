@@ -53,8 +53,7 @@ namespace Robust.Client.UserInterface
         float DefaultUIScale { get; }
 
         /// <summary>
-        ///     The "root" control to which all other controls are parented,
-        ///     potentially indirectly.
+        ///     The root control for the main game window.
         /// </summary>
         WindowRoot RootControl { get; }
 

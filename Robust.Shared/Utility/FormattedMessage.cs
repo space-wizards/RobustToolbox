@@ -98,17 +98,30 @@ namespace Robust.Shared.Utility
             _tags.Clear();
         }
 
+        /// <returns>The string without markup tags.</returns>
         public override string ToString()
         {
             var builder = new StringBuilder();
             foreach (var tag in _tags)
             {
-                if (!(tag is TagText text))
+                if (tag is not TagText text)
                 {
                     continue;
                 }
 
                 builder.Append(text.Text);
+            }
+
+            return builder.ToString();
+        }
+
+        /// <returns>The string without filtering out markup tags.</returns>
+        public string ToMarkup()
+        {
+            var builder = new StringBuilder();
+            foreach (var tag in _tags)
+            {
+                builder.Append(tag);
             }
 
             return builder.ToString();
@@ -122,17 +135,30 @@ namespace Robust.Shared.Utility
         [Serializable, NetSerializable]
         public sealed record TagText(string Text) : Tag
         {
+            public override string ToString()
+            {
+                return Text;
+            }
         }
 
         [Serializable, NetSerializable]
         public sealed record TagColor(Color Color) : Tag
         {
+            public override string ToString()
+            {
+                return $"[color={Color.ToHex()}]";
+            }
         }
 
         [Serializable, NetSerializable]
         public sealed record TagPop : Tag
         {
             public static readonly TagPop Instance = new();
+
+            public override string ToString()
+            {
+                return $"[/color]";
+            }
         }
 
         public readonly struct TagList : IReadOnlyList<Tag>

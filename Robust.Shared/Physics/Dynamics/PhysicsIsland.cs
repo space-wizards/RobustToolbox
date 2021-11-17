@@ -540,9 +540,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                     body.LinearVelocity = linVelocity;
                 }
 
-                if (!float.IsNaN(_angularVelocities[i]))
+                var angVelocity = _angularVelocities[i];
+
+                if (!float.IsNaN(angVelocity))
                 {
-                    body.AngularVelocity = _angularVelocities[i];
+                    body.AngularVelocity = angVelocity;
                 }
             }
         }

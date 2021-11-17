@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Prometheus;
 using Robust.Shared.IoC;
+using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Dependency = Robust.Shared.IoC.DependencyAttribute;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -53,11 +56,45 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public event EventHandler<SystemChangedArgs>? SystemUnloaded;
 
-        /// <exception cref="InvalidEntitySystemException">Thrown if the provided type is not registered.</exception>
+        /// <exception cref="UnregisteredTypeException">Thrown if the provided type is not registered.</exception>
         public T GetEntitySystem<T>()
             where T : IEntitySystem
         {
             return _systemDependencyCollection.Resolve<T>();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T>([NotNull] ref T? instance)
+            where T : IEntitySystem
+        {
+            _systemDependencyCollection.Resolve(ref instance);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
+            where T1 : IEntitySystem
+            where T2 : IEntitySystem
+        {
+            _systemDependencyCollection.Resolve(ref instance1, ref instance2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
+            where T1 : IEntitySystem
+            where T2 : IEntitySystem
+            where T3 : IEntitySystem
+        {
+            _systemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
+            where T1 : IEntitySystem
+            where T2 : IEntitySystem
+            where T3 : IEntitySystem
+            where T4 : IEntitySystem
+        {
+            _systemDependencyCollection.Resolve(ref instance1, ref instance2, ref instance3, ref instance4);
         }
 
         /// <inheritdoc />

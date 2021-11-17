@@ -43,6 +43,8 @@ namespace Robust.Shared.Map
         private readonly IMapManagerInternal _mapManager;
         private readonly IEntityManager _entityManager;
 
+        public bool Deleting;
+
         /// <summary>
         ///     Initializes a new instance of the <see cref="MapGrid"/> class.
         /// </summary>

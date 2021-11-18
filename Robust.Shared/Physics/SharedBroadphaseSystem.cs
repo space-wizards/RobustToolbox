@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -945,26 +946,6 @@ namespace Robust.Shared.Physics
                 if (chunkEnumerator.MoveNext(out _))
                 {
                     yield return broadphase;
-                }
-            }
-        }
-
-                var transform = physicsComponent.GetTransform();
-                var found = false;
-
-                // TODO: Need CollisionManager for accurate checks
-                foreach (var fixture in physicsComponent.Fixtures)
-                {
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                    {
-                        if (!fixture.Shape.ComputeAABB(transform, i).Intersects(aabb)) continue;
-                        yield return broadphase;
-                        found = true;
-                        break;
-                    }
-
-                    if (found)
-                        break;
                 }
             }
         }

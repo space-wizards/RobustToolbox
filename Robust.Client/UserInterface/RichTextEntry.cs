@@ -15,9 +15,6 @@ namespace Robust.Client.UserInterface
     /// </summary>
     internal struct RichTextEntry
     {
-        private static readonly FormattedMessage.TagColor TagBaseColor
-            = new(new Color(200, 200, 200));
-
         public readonly FormattedMessage Message;
 
         /// <summary>
@@ -51,6 +48,7 @@ namespace Robust.Client.UserInterface
         /// <param name="uiScale"></param>
         public void Update(Font font, float maxSizeX, float uiScale)
         {
+            #if false
             // This method is gonna suck due to complexity.
             // Bear with me here.
             // I am so deeply sorry for the person adding stuff to this in the future.
@@ -206,6 +204,7 @@ namespace Robust.Client.UserInterface
             }
 
             Width = (int) maxUsedWidth;
+            #endif
         }
 
         public void Draw(
@@ -213,11 +212,9 @@ namespace Robust.Client.UserInterface
             Font font,
             UIBox2 drawBox,
             float verticalOffset,
-            // A stack for format tags.
-            // This stack contains the format tag to RETURN TO when popped off.
-            // So when a new color tag gets hit this stack gets the previous color pushed on.
-            Stack<FormattedMessage.Tag> formatStack, float uiScale)
+            float uiScale)
         {
+            #if false
             // The tag currently doing color.
             var currentColorTag = TagBaseColor;
 
@@ -267,6 +264,7 @@ namespace Robust.Client.UserInterface
                     }
                 }
             }
+            #endif
         }
 
         [Pure]

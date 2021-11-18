@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -927,41 +928,24 @@ namespace Robust.Shared.Physics
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var (broadphase, xform) in EntityManager.EntityQuery<BroadphaseComponent, TransformComponent>(true))
             {
-                if (broadphase.Owner.Transform.MapID != mapId) continue;
+                if (xform.MapID != mapId) continue;
 
-                // Always return map... for now
-                if (broadphase.Owner.HasComponent<MapComponent>())
+                if (!EntityManager.TryGetComponent(broadphase.OwnerUid, out IMapGridComponent? mapGrid))
                 {
                     yield return broadphase;
                     continue;
                 }
 
-                if (!broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
+                var grid = (IMapGridInternal) _mapManager.GetGrid(mapGrid.GridIndex);
 
-                if (broadphase.Owner.TryGetComponent(out IMapGridComponent? mapGrid) &&
-                    !_mapManager.GetGrid(mapGrid.GridIndex).WorldBounds.Intersects(aabb))
+                // Won't worry about accurate bounds checks as it's probably slower in most use cases.
+                grid.GetMapChunks(aabb, out var chunkEnumerator);
+
+                if (chunkEnumerator.MoveNext(out _))
                 {
-                    continue;
-                }
-
-                var transform = physicsComponent.GetTransform();
-                var found = false;
-
-                // TODO: Need CollisionManager for accurate checks
-                foreach (var fixture in physicsComponent.Fixtures)
-                {
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                    {
-                        if (!fixture.Shape.ComputeAABB(transform, i).Intersects(aabb)) continue;
-                        yield return broadphase;
-                        found = true;
-                        break;
-                    }
-
-                    if (found)
-                        break;
+                    yield return broadphase;
                 }
             }
         }

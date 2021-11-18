@@ -72,6 +72,8 @@ namespace Robust.Shared.GameObjects
             public Vector2 Scale = Vector2.One;
             [DataField("rotation")]
             public Angle Rotation = Angle.Zero;
+            [DataField("offset")]
+            public Vector2 Offset = Vector2.Zero;
             [DataField("visible")]
             public bool Visible = true;
             [DataField("color")]

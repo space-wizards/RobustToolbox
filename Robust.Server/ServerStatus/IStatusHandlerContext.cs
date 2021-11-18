@@ -28,6 +28,16 @@ namespace Robust.Server.ServerStatus
             int code = 200,
             string contentType = "text/plain");
 
+        void Respond(
+            byte[] data,
+            HttpStatusCode code = HttpStatusCode.OK,
+            string contentType = "text/plain");
+
+        void Respond(
+            byte[] data,
+            int code = 200,
+            string contentType = "text/plain");
+
         void RespondError(HttpStatusCode code);
 
         void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK);

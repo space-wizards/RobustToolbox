@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : IClydeInternal, IClydeAudio, IPostInjectInit
+    internal sealed partial class Clyde : IClydeInternal, IPostInjectInit
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -97,7 +97,6 @@ namespace Robust.Client.Graphics.Clyde
             if (!InitMainWindowAndRenderer())
                 return false;
 
-            _initializeAudio();
             return true;
         }
 
@@ -115,8 +114,6 @@ namespace Robust.Client.Graphics.Clyde
 
         public void FrameProcess(FrameEventArgs eventArgs)
         {
-            _updateAudio();
-
             _windowing?.FlushDispose();
             FlushShaderInstanceDispose();
             FlushRenderTargetDispose();
@@ -509,7 +506,6 @@ namespace Robust.Client.Graphics.Clyde
         {
             _glContext?.Shutdown();
             ShutdownWindowing();
-            _shutdownAudio();
         }
 
         private bool IsMainThread()

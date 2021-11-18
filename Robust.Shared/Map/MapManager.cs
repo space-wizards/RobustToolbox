@@ -685,17 +685,19 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardRunning);
 #endif
             // Possible the grid was already deleted / is invalid
-            if (!_grids.TryGetValue(gridID, out var grid))
+            if (!_grids.TryGetValue(gridID, out var grid) || grid.Deleting)
                 return;
+
+            grid.Deleting = true;
 
             var mapId = grid.ParentMapId;
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
-            {
-                // Because deleting a grid also removes its MapGridComponent which also deletes its grid again we'll check for that here.
-                if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
-                    return;
+            var entityId = grid.GridEntityId;
 
+            if (_entityManager.TryGetEntity(entityId, out var gridEnt))
+            {
+                // DeleteGrid may be triggered by the entity being deleted,
+                // so make sure that's not the case.
                 if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
                     gridEnt.Delete();
             }

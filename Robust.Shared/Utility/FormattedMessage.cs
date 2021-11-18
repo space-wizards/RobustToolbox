@@ -101,6 +101,12 @@ namespace Robust.Shared.Utility
         Justify     = 0x30,
     }
 
+    public static partial class Extensions
+    {
+        public static TextAlign Vertical (this TextAlign value) => (TextAlign)((byte) value & 0x0F);
+        public static TextAlign Horizontal (this TextAlign value) => (TextAlign)((byte) value & 0xF0);
+    }
+
     [PublicAPI]
     [Serializable, NetSerializable]
     public sealed record FormattedMessage(Section[] Sections)
@@ -114,6 +120,8 @@ namespace Robust.Shared.Utility
             return sb.ToString();
         }
 
+        // are you a construction worker?
+        // cuz you buildin
         public class Builder
         {
             private bool _dirty = false;

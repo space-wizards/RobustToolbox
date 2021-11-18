@@ -927,24 +927,27 @@ namespace Robust.Shared.Physics
 
             if (mapId == MapId.Nullspace) yield break;
 
-            foreach (var broadphase in EntityManager.EntityQuery<BroadphaseComponent>(true))
+            foreach (var (broadphase, xform) in EntityManager.EntityQuery<BroadphaseComponent, TransformComponent>(true))
             {
-                if (broadphase.Owner.Transform.MapID != mapId) continue;
+                if (xform.MapID != mapId) continue;
 
-                // Always return map... for now
-                if (broadphase.Owner.HasComponent<MapComponent>())
+                if (!EntityManager.TryGetComponent(broadphase.OwnerUid, out IMapGridComponent? mapGrid))
                 {
                     yield return broadphase;
                     continue;
                 }
 
-                if (!broadphase.Owner.TryGetComponent(out PhysicsComponent? physicsComponent)) continue;
+                var grid = (IMapGridInternal) _mapManager.GetGrid(mapGrid.GridIndex);
 
-                if (broadphase.Owner.TryGetComponent(out IMapGridComponent? mapGrid) &&
-                    !_mapManager.GetGrid(mapGrid.GridIndex).WorldBounds.Intersects(aabb))
+                // Won't worry about accurate bounds checks as it's probably slower in most use cases.
+                grid.GetMapChunks(aabb, out var chunkEnumerator);
+
+                if (chunkEnumerator.MoveNext(out _))
                 {
-                    continue;
+                    yield return broadphase;
                 }
+            }
+        }
 
                 var transform = physicsComponent.GetTransform();
                 var found = false;

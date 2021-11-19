@@ -153,6 +153,9 @@ namespace Robust.Client.UserInterface.CustomControls
             this.placementManager.PlacementChanged += OnPlacementCanceled;
             this.placementManager.DirectionChanged += OnDirectionChanged;
             UpdateDirectionLabel();
+
+            OnClose += OnWindowClosed;
+
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -171,6 +174,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
         {
+            SelectedButton = null;
+            SelectedPrototype = null;
+            placementManager.Clear();
             BuildEntityList(args.Text);
             ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
         }
@@ -196,6 +202,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
+            SelectedButton = null;
+            SelectedPrototype = null;
+            placementManager.Clear();
             SearchBar.Clear();
             BuildEntityList("");
         }
@@ -503,6 +512,13 @@ namespace Robust.Client.UserInterface.CustomControls
                     }
                 });
             }
+        }
+
+        private void OnWindowClosed()
+        {
+            SelectedButton = null;
+            SelectedPrototype = null;
+            placementManager.Clear();
         }
 
         private void OnPlacementCanceled(object? sender, EventArgs e)

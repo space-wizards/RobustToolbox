@@ -3,9 +3,9 @@ using System.IO;
 using JetBrains.Annotations;
 using Robust.Shared.Utility;
 
-namespace Robust.Client.Graphics.Clyde
+namespace Robust.Client.Graphics.Audio
 {
-    internal partial class Clyde
+    internal partial class ClydeAudio
     {
         /// <summary>
         ///     Load up a WAVE file.

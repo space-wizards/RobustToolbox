@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Reflection;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -133,6 +134,27 @@ namespace Robust.Shared.IoC
         /// </exception>
         [System.Diagnostics.Contracts.Pure]
         T Resolve<T>();
+
+        /// <inheritdoc cref="Resolve{T}()"/>
+        void Resolve<T>([NotNull] ref T? instance);
+
+        /// <inheritdoc cref="Resolve{T}(ref T?)"/>
+        /// <summary>
+        /// Resolve two dependencies manually.
+        /// </summary>
+        void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2);
+
+        /// <inheritdoc cref="Resolve{T1, T2}(ref T1?, ref T2?)"/>
+        /// <summary>
+        /// Resolve three dependencies manually.
+        /// </summary>
+        void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3);
+
+        /// <inheritdoc cref="Resolve{T1, T2, T3}(ref T1?, ref T2?, ref T3?)"/>
+        /// <summary>
+        /// Resolve four dependencies manually.
+        /// </summary>
+        void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4);
 
         /// <summary>
         /// Resolve a dependency manually.

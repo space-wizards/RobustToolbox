@@ -13,10 +13,10 @@ namespace Robust.Server.Log
     {
         private readonly SLogger _sLogger;
 
-        public LokiLogHandler(string serverName, LokiCredentials credentials)
+        public LokiLogHandler(LokiSinkConfiguration configuration)
         {
             _sLogger = new LoggerConfiguration()
-                .WriteTo.LokiHttp(credentials, new LogLabelProvider(serverName))
+                .WriteTo.LokiHttp(() => configuration)
                 .MinimumLevel.Debug()
                 .CreateLogger();
         }
@@ -37,24 +37,28 @@ namespace Robust.Server.Log
         {
             _sLogger.Dispose();
         }
+    }
 
-        private sealed class LogLabelProvider : ILogLabelProvider
+    public sealed class LogLabelProvider : ILogLabelProvider
+    {
+        private readonly string _serverName;
+
+        public LogLabelProvider(string serverName)
         {
-            private readonly string _serverName;
-
-            public LogLabelProvider(string serverName)
-            {
-                _serverName = serverName;
-            }
-
-            public IList<LokiLabel> GetLabels()
-            {
-                return new[]
-                {
-                    new LokiLabel("App", "Robust.Server"),
-                    new LokiLabel("Server", _serverName),
-                };
-            }
+            _serverName = serverName;
         }
+
+        public IList<LokiLabel> GetLabels()
+        {
+            return new[]
+            {
+                new LokiLabel("App", "Robust.Server"),
+                new LokiLabel("Server", _serverName),
+            };
+        }
+
+        public IList<string> PropertiesAsLabels => Array.Empty<string>();
+        public IList<string> PropertiesToAppend => Array.Empty<string>();
+        public LokiFormatterStrategy FormatterStrategy => LokiFormatterStrategy.SpecificPropertiesAsLabelsAndRestAppended;
     }
 }

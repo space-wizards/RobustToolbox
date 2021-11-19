@@ -59,6 +59,7 @@ namespace Robust.Client
         [Dependency] private readonly IViewVariablesManagerInternal _viewVariablesManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
+        [Dependency] private readonly IClydeAudioInternal _clydeAudio = default!;
         [Dependency] private readonly IFontManagerInternal _fontManager = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IScriptClient _scriptClient = default!;
@@ -86,6 +87,7 @@ namespace Robust.Client
         internal bool StartupContinue(DisplayMode displayMode)
         {
             _clyde.InitializePostWindowing();
+            _clydeAudio.InitializePostWindowing();
             _clyde.SetWindowTitle(Options.DefaultWindowTitle);
 
             _taskManager.Initialize();
@@ -439,6 +441,7 @@ namespace Robust.Client
         private void Update(FrameEventArgs frameEventArgs)
         {
             _webViewHook?.Update();
+            _clydeAudio.FrameProcess(frameEventArgs);
             _clyde.FrameProcess(frameEventArgs);
             _modLoader.BroadcastUpdate(ModUpdateLevel.FramePreEngine, frameEventArgs);
             _stateManager.FrameUpdate(frameEventArgs);
@@ -537,6 +540,7 @@ namespace Robust.Client
             IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
+            _clydeAudio.Shutdown();
         }
 
         private sealed record ResourceManifestData(string[] Modules);

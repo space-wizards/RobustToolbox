@@ -142,10 +142,6 @@ namespace Robust.Server
         public bool Start(ServerOptions options, Func<ILogHandler>? logHandlerFactory = null)
         {
             Options = options;
-            var profilePath = Path.Join(Environment.CurrentDirectory, "AAAAAAAA");
-            ProfileOptimization.SetProfileRoot(profilePath);
-            ProfileOptimization.StartProfile("AAAAAAAAAA");
-
             _config.Initialize(true);
 
             if (Options.LoadConfigAndUserData)
@@ -426,12 +422,12 @@ namespace Robust.Server
                 return false;
             }
 
-            LokiCredentials credentials;
-            if (string.IsNullOrWhiteSpace(username))
+            LokiSinkConfiguration cfg = new()
             {
-                credentials = new NoAuthCredentials(address);
-            }
-            else
+                LokiUrl = address
+            };
+
+            if (!string.IsNullOrWhiteSpace(username))
             {
                 if (string.IsNullOrWhiteSpace(password))
                 {
@@ -439,13 +435,16 @@ namespace Robust.Server
                     return false;
                 }
 
-                credentials = new BasicAuthCredentials(address, username, password);
+                cfg.LokiUsername = username;
+                cfg.LokiPassword = password;
             }
+
+            cfg.LogLabelProvider = new LogLabelProvider(serverName);
 
             Logger.DebugS("loki", "Loki enabled for server {ServerName} loki address {LokiAddress}.", serverName,
                 address);
 
-            var handler = new LokiLogHandler(serverName, credentials);
+            var handler = new LokiLogHandler(cfg);
             _log.RootSawmill.AddHandler(handler);
             return true;
         }

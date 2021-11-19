@@ -165,7 +165,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (!disposing) return;
 
-            if(EraseButton.Pressed)
+            if (EraseButton.Pressed)
                 placementManager.Clear();
 
             placementManager.PlacementChanged -= OnPlacementCanceled;
@@ -207,7 +207,10 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
+            placementManager.Clear();
             placementManager.ToggleEraser();
+            // clearing will toggle the erase button off...
+            args.Button.Pressed = args.Pressed;
             OverrideMenu.Disabled = args.Pressed;
         }
 

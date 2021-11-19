@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Linq;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -19,7 +20,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         /// Priority queue sorted by how soon the effect will die, we remove messages from the front of the queue during update until caught up
         /// </summary>
-        private readonly PriorityQueue<EffectSystemMessage> _CurrentEffects = new(new EffectMessageComparer());
+        private readonly PriorityQueue<EffectSystemMessage> _currentEffects = new(new EffectMessageComparer());
 
         /// <summary>
         ///     Creates a particle effect and sends it to clients.
@@ -28,11 +29,11 @@ namespace Robust.Server.GameObjects
         /// <param name="excludedSession">Session to be excluded for prediction</param>
         public void CreateParticle(EffectSystemMessage effect, IPlayerSession? excludedSession = null)
         {
-            _CurrentEffects.Add(effect);
+            _currentEffects.Add(effect);
 
             //For now we will use this which sends to ALL clients
             //TODO: Client bubbling
-            foreach (var player in _playerManager.GetAllPlayers())
+            foreach (var player in _playerManager.ServerSessions)
             {
                 if (player.Status != SessionStatus.InGame || player == excludedSession)
                     continue;
@@ -44,9 +45,9 @@ namespace Robust.Server.GameObjects
         public override void Update(float frameTime)
         {
             //Take elements from front of priority queue until they are old
-            while (_CurrentEffects.Count != 0 && _CurrentEffects.Peek().DeathTime < _timing.CurTime)
+            while (_currentEffects.Count != 0 && _currentEffects.Peek().DeathTime < _timing.CurTime)
             {
-                _CurrentEffects.Take();
+                _currentEffects.Take();
             }
         }
 

@@ -49,11 +49,6 @@ namespace Robust.Server.GameStates
             set => _configurationManager.SetCVar(CVars.NetMaxUpdateRange, value);
         }
 
-        public void SetTransformNetId(ushort netId)
-        {
-            _pvs.SetTransformNetId(netId);
-        }
-
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");

@@ -351,8 +351,6 @@ namespace Robust.Server
                 var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
                 if (!reg.NetID.HasValue)
                     throw new InvalidOperationException("TransformComponent does not have a NetId.");
-
-                _stateManager.SetTransformNetId(reg.NetID.Value);
             }
 
             _scriptHost.Initialize();

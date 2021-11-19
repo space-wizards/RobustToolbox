@@ -165,6 +165,18 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         _removalBuffer.Clear();
     }
 
+    public HashSet<TIndex> GetElementsInViewport(Box2 viewportInMapspace, MapId mapId, Func<TIndex, bool>? validDelegate = null)
+    {
+        var set = new HashSet<TIndex>();
+        GetElementsInViewport(viewportInMapspace, mapId, set, validDelegate);
+        return set;
+    }
+
+    public void GetElementsInViewport(Box2 viewportInMapspace, MapId mapId, HashSet<TIndex> elementSet, Func<TIndex, bool>? validDelegate = null)
+    {
+
+    }
+
     private void AddIndexInternal(TIndex index, IndexLocation location)
     {
         switch (location)
@@ -295,6 +307,17 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
 
     /// <inheritdoc />
     public void CullDeletionHistoryUntil(GameTick tick) => _deletionHistory.RemoveAll(hist => hist.tick < tick);
+
+    public List<TIndex> GetDeletedIndices(GameTick fromTick)
+    {
+        var list = new List<TIndex>();
+        foreach (var (tick, id) in _deletionHistory)
+        {
+            if (tick >= fromTick) list.Add(id);
+        }
+
+        return list;
+    }
 
     #endregion
 

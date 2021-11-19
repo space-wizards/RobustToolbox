@@ -512,8 +512,11 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnWindowClosed()
         {
-            SelectedButton = null;
-            SelectedPrototype = null;
+            if (SelectedButton != null)
+            {
+                SelectedButton.ActualButton.Pressed = false;
+                SelectedButton = null;
+            }
             placementManager.Clear();
         }
 

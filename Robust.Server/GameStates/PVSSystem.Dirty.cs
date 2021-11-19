@@ -34,7 +34,11 @@ namespace Robust.Server.GameStates
             }
             EntityManager.EntityAdded += OnEntityAdd;
             SubscribeLocalEvent<EntityDirtyEvent>(OnDirty);
+        }
 
+        private void ShutdownDirty()
+        {
+            EntityManager.EntityAdded -= OnEntityAdd;
         }
 
         private void OnEntityAdd(object? sender, EntityUid e)

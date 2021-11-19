@@ -18,6 +18,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -428,14 +429,17 @@ namespace Robust.Client.GameStates
             var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
             var toInitialize = new List<Entity>();
             var created = new List<EntityUid>();
+            var toHide = new List<EntityUid>();
 
             foreach (var es in curEntStates)
             {
+                EntityUid uid;
                 //Known entities
                 if (_entities.TryGetEntity(es.Uid, out var entity))
                 {
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] MOD {es.Uid}");
                     toApply.Add(entity, (es, null));
+                    uid = es.Uid;
                 }
                 else //Unknown entities
                 {
@@ -449,7 +453,10 @@ namespace Robust.Client.GameStates
                     toApply.Add(newEntity, (es, null));
                     toInitialize.Add(newEntity);
                     created.Add(newEntity.Uid);
+                    uid = newEntity.Uid;
                 }
+                if(es.Hide)
+                    toHide.Add(uid);
             }
 
             foreach (var es in nextEntStates)
@@ -536,6 +543,11 @@ namespace Robust.Client.GameStates
                 entity.Delete();
             }
 #endif
+
+            foreach (var entityUid in toHide)
+            {
+                _entityManager.GetComponent<TransformComponent>(entityUid).ChangeMapId(MapId.Nullspace);
+            }
 
             return created;
         }

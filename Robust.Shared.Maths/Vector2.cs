@@ -98,6 +98,12 @@ namespace Robust.Shared.Maths
             return new(MathF.Round(X), MathF.Round(Y));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector2i Floored()
+        {
+            return new((int) MathF.Floor(X), (int) MathF.Floor(Y));
+        }
+
         /// <summary>
         ///     Subtracts a vector from another, returning a new vector.
         /// </summary>

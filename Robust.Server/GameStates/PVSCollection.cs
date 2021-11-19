@@ -165,16 +165,56 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         _removalBuffer.Clear();
     }
 
-    public HashSet<TIndex> GetElementsInViewport(Box2 viewportInMapspace, MapId mapId, Func<TIndex, bool>? validDelegate = null)
+    public HashSet<TIndex> GetElementsInViewport(IMapManager mapManager, Box2 viewportInMapspace, MapId mapId, Func<TIndex, bool>? validDelegate = null)
     {
         var set = new HashSet<TIndex>();
-        GetElementsInViewport(viewportInMapspace, mapId, set, validDelegate);
+        GetElementsInViewport(mapManager, viewportInMapspace, mapId, set, validDelegate);
         return set;
     }
 
-    public void GetElementsInViewport(Box2 viewportInMapspace, MapId mapId, HashSet<TIndex> elementSet, Func<TIndex, bool>? validDelegate = null)
+    public void GetElementsInViewport(IMapManager mapManager, Box2 viewportInMapspace, MapId mapId, HashSet<TIndex> elementSet, Func<TIndex, bool>? validDelegate = null)
     {
+        var topLeft = (viewportInMapspace.TopLeft / ChunkSize).Floored();
+        var bottomRight = (viewportInMapspace.BottomRight / ChunkSize).Floored();
 
+        void Add(TIndex index)
+        {
+            if (validDelegate == null || validDelegate(index))
+                elementSet.Add(index);
+        }
+
+        for (int x = topLeft.X; x < bottomRight.X; x++)
+        {
+            for (int y = topLeft.Y; y < bottomRight.Y; y++)
+            {
+                if (_mapChunkContents[mapId].TryGetValue(new Vector2i(x, y), out var chunk))
+                {
+                    foreach (var index in chunk)
+                    {
+                        Add(index);
+                    }
+                }
+            }
+        }
+
+        mapManager.FindGridsIntersectingEnumerator(mapId, viewportInMapspace, out var gridEnumerator, true);
+        while (gridEnumerator.MoveNext(out var mapGrid))
+        {
+            if(_gridChunkContents[mapGrid.Index].Count == 0) continue;
+
+            ((IMapGridInternal)mapGrid).GetMapChunks(viewportInMapspace, out var gridChunkEnumerator);
+
+            while (gridChunkEnumerator.MoveNext(out var gridChunk))
+            {
+                if (_gridChunkContents[mapGrid.Index].TryGetValue(gridChunk.Indices, out var chunk))
+                {
+                    foreach (var index in chunk)
+                    {
+                        Add(index);
+                    }
+                }
+            }
+        }
     }
 
     private void AddIndexInternal(TIndex index, IndexLocation location)
@@ -212,7 +252,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     private IndexLocation? RemoveIndexInternal(TIndex index)
     {
         // the index might be gone due to disconnects/grid-/map-deletions
-        if (_indexLocations.TryGetValue(index, out var location))
+        if (!_indexLocations.TryGetValue(index, out var location))
             return null;
         // since we can find the index, we can assume the dicts will be there too & dont need to do any checks. gaming.
         switch (location)
@@ -358,13 +398,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         }
 
         var mapId = coordinates.GetMapId(_entityManager);
-        if (mapId != MapId.Nullspace)
-        {
-            AddIndex(index, mapId, indices);
-        }
-
-        throw new ArgumentException(
-            $"Tried adding {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex, TElement>)}.");
+        AddIndex(index, mapId, indices);
     }
 
     /// <summary>
@@ -428,13 +462,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         }
 
         var mapId = coordinates.GetMapId(_entityManager);
-        if (mapId != MapId.Nullspace)
-        {
-            UpdateIndex(index, mapId, indices);
-        }
-
-        throw new ArgumentException(
-            $"Tried updating {nameof(TIndex)} ({index}) with invalid coordinates ({coordinates}) to {nameof(PVSCollection<TIndex, TElement>)}.");
+        UpdateIndex(index, mapId, indices);
     }
 
     /// <summary>

@@ -14,7 +14,5 @@ namespace Robust.Server.GameStates
         /// Create and dispatch game states to all connected sessions.
         /// </summary>
         void SendGameStateUpdate();
-
-        float PvsRange { get; set; }
     }
 }

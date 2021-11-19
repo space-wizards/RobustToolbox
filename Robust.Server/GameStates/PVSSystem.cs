@@ -5,6 +5,8 @@ using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -19,6 +21,7 @@ internal partial class PVSSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
+    [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
 
     /// <summary>
     /// Maximum number of pooled objects
@@ -67,19 +70,10 @@ internal partial class PVSSystem : EntitySystem
         SubscribeLocalEvent<TransformComponent, ComponentInit>(OnTransformInit);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
+        _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
+        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+
         InitializeDirty();
-    }
-
-    //todo paul investigate
-    public void Cleanup(IEnumerable<IPlayerSession> sessions)
-    {
-        CleanupDirty(sessions);
-    }
-
-
-    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
-    {
-        _entityPvsCollection.AddIndex(uid, component.Coordinates);
     }
 
     public override void Shutdown()
@@ -92,6 +86,33 @@ internal partial class PVSSystem : EntitySystem
         _mapManager.OnGridRemoved -= OnGridRemoved;
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         EntityManager.EntityDeleted -= OnEntityDeleted;
+
+        _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
+        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+
+        ShutdownDirty();
+    }
+
+    private void OnViewsizeChanged(float obj)
+    {
+        ViewSize = obj * 2;
+    }
+
+    private void SetPvs(bool value)
+    {
+        CullingEnabled = value;
+    }
+
+    //todo paul investigate
+    public void Cleanup(IEnumerable<IPlayerSession> sessions)
+    {
+        CleanupDirty(sessions);
+    }
+
+
+    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    {
+        _entityPvsCollection.AddIndex(uid, component.Coordinates);
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -122,7 +143,7 @@ internal partial class PVSSystem : EntitySystem
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, e);
     }
 
-    private void OnEntityMove(MoveEvent ev)
+    private void OnEntityMove(ref MoveEvent ev)
     {
         _entityPvsCollection.UpdateIndex(ev.Sender.Uid, ev.NewPosition);
     }
@@ -224,7 +245,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             var newUids = new HashSet<EntityUid>();
-            _entityPvsCollection.GetElementsInViewport(viewBox, mapId, newUids);
+            _entityPvsCollection.GetElementsInViewport(_mapManager, viewBox, mapId, newUids);
 
             foreach (var entityUid in newUids)
             {

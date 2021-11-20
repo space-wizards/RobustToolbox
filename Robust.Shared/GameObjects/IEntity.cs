@@ -49,7 +49,16 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         bool Deleted { get; }
 
-        bool Paused { get; set; }
+        /// <summary>
+        ///     If this is true, this entity will not be processed by EntitySystems.
+        /// </summary>
+        bool Paused
+        {
+            get;
+
+            [Obsolete("This does nothing. Use IPauseManager to pause the map for editing.")]
+            set;
+        }
 
         /// <summary>
         ///     The prototype that was used to create this entity.
@@ -76,6 +85,11 @@ namespace Robust.Shared.GameObjects
         ///     The MetaData Component of this entity.
         /// </summary>
         MetaDataComponent MetaData { get; }
+
+        /// <summary>
+        /// If set to true, this entity will not be paused when the map is paused.
+        /// </summary>
+        bool IgnorePaused { get; set; }
 
         /// <summary>
         ///     Public method to add a component to an entity.

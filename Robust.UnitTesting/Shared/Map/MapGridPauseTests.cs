@@ -46,6 +46,7 @@ namespace Robust.UnitTesting.Shared.Map
          Add a way to poll paused state on ComponentManager, maybe a way to get the MetaComponent struct?
 
          ## Details
+         pausing a map is a concept outside of the simulation, the state of being paused does not have to be serialized
          pausing is on a per-map basis
          GameTime still passes while entities are Paused, this has nothing to do with server pausing.
          so we want to have a collab of admins setting up a pre-init map while another map has the game running
@@ -53,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Map
          we can agree pausing on a per-grid or per-entity basis isn't actually a requirement
 
          ## Implementation
-         components can check their entity for paused state (Entity.Paused -> MetaDataComponent.Paused)
+         components can check their entity for paused state (Entity.Paused -> Map.Paused)
          components have a helper property to check their owner's paused state (Component.Paused -> Entity.Paused)
          Systems can check paused state through the components
 
@@ -67,6 +68,11 @@ namespace Robust.UnitTesting.Shared.Map
          then pausing an entity would set the Paused flag for all of the components
          because changing paused state happens a lot less than getting components in EntityQueries 
          there is 0 reason to deref the component object if it is paused or deleted
+         this gives the ability for anything accessing a component (EventBus, EntityQuery) to early exit without the Component deref
+         the downside is that it increases the size of the _entTraitDict entries, leading to more memory access
+         this can be mitigated by using a modern CPU that understands array enumeration
+         and lets face it, whatever the ECS system is doing is going to eclipse the speed savings
+         it is critical that the struct stays <= 16 bytes, also check out the new C# 10/.net 6 dict improvements for accessing structs
 
          the paused/deleted could be turned into bitflags if there are other things to check
          like we could pack the mapid into the value if that was useful

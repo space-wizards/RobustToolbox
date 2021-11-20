@@ -35,7 +35,8 @@ namespace Robust.Shared.Timing
 
                 foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
                 {
-                    entity.Paused = true;
+                    if(!entity.IgnorePaused)
+                        entity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityPausedEvent(entity.Uid, true));
                 }
             }
             else
@@ -44,7 +45,7 @@ namespace Robust.Shared.Timing
 
                 foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
                 {
-                    entity.Paused = false;
+                    entity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new EntityPausedEvent(entity.Uid, false));
                 }
             }
         }
@@ -56,11 +57,7 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
-            {
-                entity.RunMapInit();
-                entity.Paused = false;
-            }
+            SetMapPaused(mapId, false);
         }
 
         public void DoGridMapInitialize(IMapGrid grid)
@@ -78,7 +75,6 @@ namespace Robust.Shared.Timing
                     continue;
 
                 entity.RunMapInit();
-                entity.Paused = false;
             }
         }
 

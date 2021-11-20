@@ -31,16 +31,22 @@ namespace Robust.Shared.GameObjects
         public string? PrototypeId { get; }
 
         /// <summary>
+        /// If set to true, this entity will not be paused when the map is paused.
+        /// </summary>
+        public bool IgnorePaused { get; }
+
+        /// <summary>
         ///     Constructs a new instance of <see cref="MetaDataComponentState"/>.
         /// </summary>
         /// <param name="name">The in-game name of this entity.</param>
         /// <param name="description">The in-game description of this entity.</param>
         /// <param name="prototypeId">The prototype this entity was created from, if any.</param>
-        public MetaDataComponentState(string? name, string? description, string? prototypeId)
+        public MetaDataComponentState(string? name, string? description, string? prototypeId, bool ignorePaused)
         {
             Name = name;
             Description = description;
             PrototypeId = prototypeId;
+            IgnorePaused = ignorePaused;
         }
     }
 
@@ -55,7 +61,8 @@ namespace Robust.Shared.GameObjects
         [DataField("desc")]
         private string? _entityDescription;
         private EntityPrototype? _entityPrototype;
-        private bool _entityPaused;
+        [DataField("ignorePause")]
+        private bool _ignorePaused;
 
         /// <inheritdoc />
         public override string Name => "MetaData";
@@ -137,17 +144,20 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
+        /// <summary>
+        /// If set to true, this entity will not be paused when the map is paused.
+        /// </summary>
         [ViewVariables]
-        public bool EntityPaused
+        public bool IgnorePaused
         {
-            get => _entityPaused;
-            set
+            get => _ignorePaused;
+            internal set
             {
-                if (_entityPaused == value || value && Owner.HasComponent<IgnorePauseComponent>())
+                if (_ignorePaused == value)
                     return;
 
-                _entityPaused = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntityPausedEvent(Owner.Uid, value));
+                _ignorePaused = value;
+                Dirty();
             }
         }
 
@@ -155,21 +165,21 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
-
         public override ComponentState GetComponentState(ICommonSession player)
         {
-            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
+            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID, IgnorePaused);
         }
 
         public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
         {
             base.HandleComponentState(curState, nextState);
 
-            if (!(curState is MetaDataComponentState state))
+            if (curState is not MetaDataComponentState state)
                 return;
 
             _entityName = state.Name;
             _entityDescription = state.Description;
+            _ignorePaused = state.IgnorePaused;
 
             if(state.PrototypeId != null)
                 _entityPrototype = IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(state.PrototypeId);

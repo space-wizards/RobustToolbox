@@ -1,8 +1,8 @@
-using Robust.Shared.IoC;
-using Robust.Shared.Timing;
+using System;
 
 namespace Robust.Shared.GameObjects
 {
+    [Obsolete("Set Entity.MetaData.IgnorePaused")]
     [RegisterComponent]
     public class IgnorePauseComponent : Component
     {
@@ -11,16 +11,14 @@ namespace Robust.Shared.GameObjects
         protected override void OnAdd()
         {
             base.OnAdd();
-            Owner.Paused = false;
+
+            Owner.MetaData.IgnorePaused = true;
         }
 
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(Owner.Transform.MapID))
-            {
-                Owner.Paused = true;
-            }
+            Owner.MetaData.IgnorePaused = false;
         }
     }
 }

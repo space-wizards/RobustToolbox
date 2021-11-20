@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -65,8 +64,23 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
+        /// <inheritdoc />
         [ViewVariables]
-        public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
+        public bool Paused
+        {
+            get => !IgnorePaused && IoCManager.Resolve<IPauseManager>().IsMapPaused(Transform.MapID);
+
+            [Obsolete("This does nothing. Use IPauseManager to pause the map for editing.")]
+            set { }
+        }
+
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool IgnorePaused
+        {
+            get => MetaData.IgnorePaused;
+            set => MetaData.IgnorePaused = value;
+        }
 
         private TransformComponent? _transform;
 

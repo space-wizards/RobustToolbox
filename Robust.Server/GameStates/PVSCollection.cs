@@ -157,9 +157,9 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         var topLeft = (viewportInMapspace.TopLeft / ChunkSize).Floored();
         var bottomRight = (viewportInMapspace.BottomRight / ChunkSize).Floored();
 
-        for (int x = topLeft.X; x < bottomRight.X; x++)
+        for (int x = topLeft.X; x <= bottomRight.X; x++)
         {
-            for (int y = topLeft.Y; y < bottomRight.Y; y++)
+            for (int y = bottomRight.Y; y <= topLeft.Y; y++)
             {
                 if (_mapChunkContents[mapId].TryGetValue(new Vector2i(x, y), out var chunk))
                 {

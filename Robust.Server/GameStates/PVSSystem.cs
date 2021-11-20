@@ -37,12 +37,12 @@ internal partial class PVSSystem : EntitySystem
     /// <summary>
     /// Is view culling enabled, or will we send the whole map?
     /// </summary>
-    public bool CullingEnabled { get; set; }
+    private bool _cullingEnabled;
 
     /// <summary>
     /// Size of the side of the view bounds square.
     /// </summary>
-    public float ViewSize { get; set; }
+    private float _viewSize;
 
     /// <summary>
     /// All <see cref="EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
@@ -97,12 +97,12 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnViewsizeChanged(float obj)
     {
-        ViewSize = obj * 2;
+        _viewSize = obj * 2;
     }
 
     private void SetPvs(bool value)
     {
-        CullingEnabled = value;
+        _cullingEnabled = value;
     }
 
     //todo paul investigate
@@ -218,7 +218,7 @@ internal partial class PVSSystem : EntitySystem
         _entityPvsCollection.Process();
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        if (!CullingEnabled)
+        if (!_cullingEnabled)
         {
             var allStates = GetAllEntityStates(session, fromTick, toTick);
             return (allStates, deletions);
@@ -483,7 +483,7 @@ internal partial class PVSSystem : EntitySystem
     {
         var xform = EntityManager.GetComponent<TransformComponent>(euid);
 
-        var view = Box2.UnitCentered.Scale(ViewSize).Translated(xform.WorldPosition);
+        var view = Box2.UnitCentered.Scale(_viewSize).Translated(xform.WorldPosition);
         var map = xform.MapID;
 
         return (view, map);

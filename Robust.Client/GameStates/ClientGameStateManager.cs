@@ -40,6 +40,8 @@ namespace Robust.Client.GameStates
             _pendingSystemMessages
                 = new();
 
+        private readonly Dictionary<EntityUid, MapId> _hiddenEntities = new();
+
         private uint _metaCompNetId;
 
         [Dependency] private readonly IComponentFactory _compFactory = default!;
@@ -430,6 +432,7 @@ namespace Robust.Client.GameStates
             var toInitialize = new List<Entity>();
             var created = new List<EntityUid>();
             var toHide = new List<EntityUid>();
+            var toShow = new List<EntityUid>();
 
             foreach (var es in curEntStates)
             {
@@ -439,6 +442,8 @@ namespace Robust.Client.GameStates
                 {
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] MOD {es.Uid}");
                     toApply.Add(entity, (es, null));
+                    if(_hiddenEntities.ContainsKey(es.Uid))
+                        toShow.Add(es.Uid);
                     uid = es.Uid;
                 }
                 else //Unknown entities
@@ -546,7 +551,15 @@ namespace Robust.Client.GameStates
 
             foreach (var entityUid in toHide)
             {
-                _entityManager.GetComponent<TransformComponent>(entityUid).ChangeMapId(MapId.Nullspace);
+                var xform = _entityManager.GetComponent<TransformComponent>(entityUid);
+                _hiddenEntities.Add(entityUid, xform.MapID);
+                xform.ChangeMapId(MapId.Nullspace);
+            }
+
+            foreach (var entityUid in toShow)
+            {
+                _entityManager.GetComponent<TransformComponent>(entityUid).ChangeMapId(_hiddenEntities[entityUid]);
+                _hiddenEntities.Remove(entityUid);
             }
 
             return created;

@@ -35,6 +35,7 @@ public interface IPVSCollection
 public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     [Dependency] private readonly IEntityManager _entityManager = default!;
+    [Dependency] private readonly IMapManager _mapManager = default!;
 
     public const float ChunkSize = 16;
 
@@ -388,15 +389,16 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     public void AddIndex(TIndex index, EntityCoordinates coordinates)
     {
         var gridId = coordinates.GetGridId(_entityManager);
-        var indices = GetChunkIndices(coordinates.Position);
         if (gridId != GridId.Invalid)
         {
-            AddIndex(index, gridId, indices);
+            var gridIndices = GetChunkIndices(_mapManager.GetGrid(gridId).LocalToGrid(coordinates));
+            AddIndex(index, gridId, gridIndices);
             return;
         }
 
         var mapId = coordinates.GetMapId(_entityManager);
-        AddIndex(index, mapId, indices);
+        var mapIndices = GetChunkIndices(coordinates.ToMapPos(_entityManager));
+        AddIndex(index, mapId, mapIndices);
     }
 
     /// <summary>
@@ -452,15 +454,16 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     public void UpdateIndex(TIndex index, EntityCoordinates coordinates)
     {
         var gridId = coordinates.GetGridId(_entityManager);
-        var indices = GetChunkIndices(coordinates.Position);
         if (gridId != GridId.Invalid)
         {
-            UpdateIndex(index, gridId, indices);
+            var gridIndices = GetChunkIndices(_mapManager.GetGrid(gridId).LocalToGrid(coordinates));
+            UpdateIndex(index, gridId, gridIndices);
             return;
         }
 
         var mapId = coordinates.GetMapId(_entityManager);
-        UpdateIndex(index, mapId, indices);
+        var mapIndices = GetChunkIndices(coordinates.ToMapPos(_entityManager));
+        UpdateIndex(index, mapId, mapIndices);
     }
 
     /// <summary>

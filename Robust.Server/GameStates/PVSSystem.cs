@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
 using Robust.Server.GameObjects;
@@ -210,7 +211,6 @@ internal partial class PVSSystem : EntitySystem
         _entityPvsCollection.Process();
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        if (deletions.Count == 0) deletions = default;
         if (!CullingEnabled)
         {
             var allStates = GetAllEntityStates(session, fromTick, toTick);
@@ -256,26 +256,44 @@ internal partial class PVSSystem : EntitySystem
         viewers.Clear();
         _viewerEntsPool.Return(viewers);
 
-        List<EntityState>? entityStates = new List<EntityState>();
-        if (visibleEnts.Count != 0)
+        var playerVisibleSet = _playerVisibleSets[session];
+        var entityStates = new List<EntityState>();
+        foreach (var entityUid in visibleEnts)
         {
-            foreach (var entityUid in visibleEnts)
-            {
-                entityStates.Add(GetEntityState(session, entityUid, fromTick));
-            }
+            //remove entities we can see rn from the playerVisibleSet so that only the culled ones remain
+            //use tick zero for new entities, fromTick for entities that were already in our view
+            var notNew = playerVisibleSet.Remove(entityUid);
+            var tick = notNew ? fromTick : GameTick.Zero;
+
+            if(notNew && EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick) continue;
+
+            var state = GetEntityState(session, entityUid, tick);
+
+            if(state.Empty) continue;
+
+            entityStates.Add(state);
         }
 
-        var culledEnts = _playerVisibleSets[session];
-        culledEnts.ExceptWith(visibleEnts);
-        foreach (var entityUid in culledEnts)
+
+        foreach (var entityUid in playerVisibleSet)
         {
+            // it was deleted, so we dont need to exit pvs
+            if(deletions.Contains(entityUid)) continue;
+
+            //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
+            // deleted list. This seems to happen with the map entity on round restart.
+            if (!EntityManager.EntityExists(entityUid))
+                continue;
+
             //create a state indicating it should be hidden
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(), true));
         }
 
         _playerVisibleSets[session] = visibleEnts;
-        _visSetPool.Return(culledEnts);
+        _visSetPool.Return(playerVisibleSet);
 
+        if (deletions.Count == 0) deletions = default;
+        if (entityStates.Count == 0) entityStates = default;
         return (entityStates, deletions);
     }
 

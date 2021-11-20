@@ -104,40 +104,18 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
 
     public void Process()
     {
-        var removedIndices = new HashSet<TIndex>(_removalBuffer.Keys);
         var addedIndices = new HashSet<TIndex>(_additionBuffer.Keys);
         var changedIndices = new HashSet<TIndex>(_locationChangeBuffer.Keys);
-        // cut removed indices out of changed & add buffer, since we dont need to update them anyways.
-        addedIndices.ExceptWith(removedIndices);
-        changedIndices.ExceptWith(removedIndices);
-        // cut indices that were added & removed without a process call in between them from the removeIndices since we dont even need to client to know about them
-        removedIndices.ExceptWith(_additionBuffer.Keys);
-
-        // automatically merge locationchanges to newly added indices into the additionBuffer & cut them out of the changedIndices set
-        var updatedAdditions = new HashSet<TIndex>(addedIndices);
-        updatedAdditions.IntersectWith(changedIndices);
-        changedIndices.ExceptWith(updatedAdditions);
-
-        foreach (var index in updatedAdditions)
-        {
-            _additionBuffer[index] = _locationChangeBuffer[index];
-        }
-
-        foreach (var index in addedIndices)
-        {
-            AddIndexInternal(index, _additionBuffer[index]);
-        }
-
-        foreach (var index in changedIndices)
-        {
-            RemoveIndexInternal(index);
-
-            AddIndexInternal(index, _locationChangeBuffer[index]);
-        }
 
         var changedChunkLocations = new HashSet<IndexLocation>();
         foreach (var (index, tick) in _removalBuffer)
         {
+            // if the index was just added, we can just remove it from the added buffer & forget about the removal
+            if(addedIndices.Remove(index)) continue;
+
+            //changes dont need to be computed if we are removing it anyways
+            changedIndices.Remove(index);
+
             var location = RemoveIndexInternal(index);
             if(location is GridChunkLocation or MapChunkLocation)
                 changedChunkLocations.Add(location);
@@ -158,6 +136,26 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
                         _mapChunkContents[mapChunkLocation.MapId].Remove(mapChunkLocation.ChunkIndices);
                     break;
             }
+        }
+
+        foreach (var index in changedIndices)
+        {
+            // if the index was just added, we can just override the add entry with this latest locationchange
+            if (addedIndices.Contains(index))
+            {
+                addedIndices.Add(index);
+                _additionBuffer[index] = _locationChangeBuffer[index];
+                continue;
+            }
+
+            RemoveIndexInternal(index);
+
+            AddIndexInternal(index, _locationChangeBuffer[index]);
+        }
+
+        foreach (var index in addedIndices)
+        {
+            AddIndexInternal(index, _additionBuffer[index]);
         }
 
         _additionBuffer.Clear();

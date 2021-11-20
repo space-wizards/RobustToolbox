@@ -81,6 +81,7 @@ internal partial class PVSSystem : EntitySystem
     {
         base.Shutdown();
 
+        UnregisterPVSCollection(_entityPvsCollection);
         _mapManager.MapCreated -= OnMapCreated;
         _mapManager.MapDestroyed -= OnMapDestroyed;
         _mapManager.OnGridCreated -= OnGridCreated;
@@ -110,10 +111,9 @@ internal partial class PVSSystem : EntitySystem
         CleanupDirty(sessions);
     }
 
-
     private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
     {
-        _entityPvsCollection.AddIndex(uid, component.Coordinates);
+        _entityPvsCollection.UpdateIndex(uid, component.Coordinates);
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -170,20 +170,23 @@ internal partial class PVSSystem : EntitySystem
         }
     }
 
-    private void OnGridRemoved(MapId mapid, GridId gridid)
+    private void OnGridRemoved(MapId mapId, GridId gridId)
     {
         foreach (var (_, pvsCollection) in _pvsCollections)
         {
-            pvsCollection.RemoveGrid(gridid);
+            pvsCollection.RemoveGrid(gridId);
         }
     }
 
-    private void OnGridCreated(MapId mapid, GridId gridid)
+    private void OnGridCreated(MapId mapId, GridId gridId)
     {
         foreach (var (_, pvsCollection) in _pvsCollections)
         {
-            pvsCollection.AddGrid(gridid);
+            pvsCollection.AddGrid(gridId);
         }
+
+        var uid = _mapManager.GetGrid(gridId).GridEntityId;
+        _entityPvsCollection.UpdateIndex(uid);
     }
 
     private void OnMapDestroyed(object? sender, MapEventArgs e)
@@ -200,6 +203,10 @@ internal partial class PVSSystem : EntitySystem
         {
             pvsCollection.AddMap(e.Map);
         }
+
+        if(e.Map == MapId.Nullspace) return;
+        var uid = _mapManager.GetMapEntityId(e.Map);
+        _entityPvsCollection.UpdateIndex(uid);
     }
 
     #endregion
@@ -218,21 +225,12 @@ internal partial class PVSSystem : EntitySystem
         }
 
         var visibleEnts = _visSetPool.Get();
-        foreach (var mapId in _mapManager.GetAllMapIds())
-        {
-            if (_mapManager.HasMapEntity(mapId))
-            {
-                visibleEnts.Add(_mapManager.GetMapEntityId(mapId));
-            }
-        }
 
-        foreach (var grid in _mapManager.GetAllGrids())
+        foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
         {
-            if (grid.GridEntityId != EntityUid.Invalid)
-            {
-                visibleEnts.Add(grid.GridEntityId);
-            }
+            visibleEnts.Add(entityUid);
         }
+        _entityPvsCollection.GetElementsForSession(session, visibleEnts);
 
         var viewers = GetSessionViewers(session);
 
@@ -246,7 +244,7 @@ internal partial class PVSSystem : EntitySystem
 
             var newUids = new HashSet<EntityUid>();
             newUids.Add(eyeEuid);
-            _entityPvsCollection.GetElementsInViewport(_mapManager, viewBox, mapId, newUids);
+            _entityPvsCollection.GetElementsInViewport(viewBox, mapId, newUids);
 
             foreach (var entityUid in newUids)
             {
@@ -261,6 +259,9 @@ internal partial class PVSSystem : EntitySystem
         var entityStates = new List<EntityState>();
         foreach (var entityUid in visibleEnts)
         {
+            //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
+            if(!entityUid.IsValid()) continue;
+
             //remove entities we can see rn from the playerVisibleSet so that only the culled ones remain
             //use tick zero for new entities, fromTick for entities that were already in our view
             var notNew = playerVisibleSet.Remove(entityUid);

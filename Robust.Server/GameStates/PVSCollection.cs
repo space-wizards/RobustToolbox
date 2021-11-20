@@ -64,6 +64,12 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// List of <see cref="TIndex"/> that should always get sent.
     /// </summary>
     private readonly HashSet<TIndex> _globalOverrides = new();
+
+    /// <summary>
+    /// List of <see cref="TIndex"/> that should always get sent.
+    /// </summary>
+    public IReadOnlySet<TIndex> GlobalOverrides => _globalOverrides;
+
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent to a certain <see cref="ICommonSession"/>.
     /// </summary>
@@ -85,10 +91,6 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     private readonly Dictionary<TIndex, IndexLocation> _indexLocations = new();
 
     /// <summary>
-    /// Buffer of all indexadditions since the last process call
-    /// </summary>
-    private readonly Dictionary<TIndex, IndexLocation> _additionBuffer = new();
-    /// <summary>
     /// Buffer of all locationchanges since the last process call
     /// </summary>
     private readonly Dictionary<TIndex, IndexLocation> _locationChangeBuffer = new();
@@ -105,17 +107,17 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
 
     public void Process()
     {
-        var addedIndices = new HashSet<TIndex>(_additionBuffer.Keys);
         var changedIndices = new HashSet<TIndex>(_locationChangeBuffer.Keys);
 
         var changedChunkLocations = new HashSet<IndexLocation>();
         foreach (var (index, tick) in _removalBuffer)
         {
-            // if the index was just added, we can just remove it from the added buffer & forget about the removal
-            if(addedIndices.Remove(index)) continue;
-
-            //changes dont need to be computed if we are removing it anyways
-            changedIndices.Remove(index);
+            //changes dont need to be computed if we are removing the index anyways
+            if (changedIndices.Remove(index) && !_indexLocations.ContainsKey(index))
+            {
+                //this index wasnt added yet, so we can safely just skip the deletion
+                continue;
+            }
 
             var location = RemoveIndexInternal(index);
             if(location is GridChunkLocation or MapChunkLocation)
@@ -141,46 +143,19 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
 
         foreach (var index in changedIndices)
         {
-            // if the index was just added, we can just override the add entry with this latest locationchange
-            if (addedIndices.Contains(index))
-            {
-                addedIndices.Add(index);
-                _additionBuffer[index] = _locationChangeBuffer[index];
-                continue;
-            }
-
             RemoveIndexInternal(index);
 
             AddIndexInternal(index, _locationChangeBuffer[index]);
         }
 
-        foreach (var index in addedIndices)
-        {
-            AddIndexInternal(index, _additionBuffer[index]);
-        }
-
-        _additionBuffer.Clear();
         _locationChangeBuffer.Clear();
         _removalBuffer.Clear();
     }
 
-    public HashSet<TIndex> GetElementsInViewport(IMapManager mapManager, Box2 viewportInMapspace, MapId mapId, Func<TIndex, bool>? validDelegate = null)
-    {
-        var set = new HashSet<TIndex>();
-        GetElementsInViewport(mapManager, viewportInMapspace, mapId, set, validDelegate);
-        return set;
-    }
-
-    public void GetElementsInViewport(IMapManager mapManager, Box2 viewportInMapspace, MapId mapId, HashSet<TIndex> elementSet, Func<TIndex, bool>? validDelegate = null)
+    public void GetElementsInViewport(Box2 viewportInMapspace, MapId mapId, HashSet<TIndex> elementSet)
     {
         var topLeft = (viewportInMapspace.TopLeft / ChunkSize).Floored();
         var bottomRight = (viewportInMapspace.BottomRight / ChunkSize).Floored();
-
-        void Add(TIndex index)
-        {
-            if (validDelegate == null || validDelegate(index))
-                elementSet.Add(index);
-        }
 
         for (int x = topLeft.X; x < bottomRight.X; x++)
         {
@@ -190,13 +165,13 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
                 {
                     foreach (var index in chunk)
                     {
-                        Add(index);
+                        elementSet.Add(index);
                     }
                 }
             }
         }
 
-        mapManager.FindGridsIntersectingEnumerator(mapId, viewportInMapspace, out var gridEnumerator, true);
+        _mapManager.FindGridsIntersectingEnumerator(mapId, viewportInMapspace, out var gridEnumerator, true);
         while (gridEnumerator.MoveNext(out var mapGrid))
         {
             if(_gridChunkContents[mapGrid.Index].Count == 0) continue;
@@ -209,10 +184,18 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
                 {
                     foreach (var index in chunk)
                     {
-                        Add(index);
+                        elementSet.Add(index);
                     }
                 }
             }
+        }
+    }
+
+    public void GetElementsForSession(ICommonSession session, HashSet<TIndex> elementSet)
+    {
+        foreach (var index in _localOverrides[session])
+        {
+            elementSet.Add(index);
         }
     }
 
@@ -360,79 +343,18 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
 
     #endregion
 
-    #region AddIndex
-
-    /// <summary>
-    /// Adds an <see cref="TIndex"/> to be sent to all players at all times.
-    /// </summary>
-    /// <param name="index">The <see cref="TIndex"/> to add.</param>
-    public void AddIndex(TIndex index)
-    {
-        _additionBuffer[index] = new GlobalOverride();
-    }
-
-    /// <summary>
-    /// Adds an <see cref="TIndex"/> to be sent to a specific <see cref="ICommonSession"/> at all times.
-    /// </summary>
-    /// <param name="index">The <see cref="TIndex"/> to add.</param>
-    /// <param name="session">The <see cref="ICommonSession"/> receiving the object.</param>
-    public void AddIndex(TIndex index, ICommonSession session)
-    {
-        _additionBuffer[index] = new LocalOverride(session);
-    }
-
-    /// <summary>
-    /// Adds an <see cref="TIndex"/> to the internal cache based on the provided <see cref="EntityCoordinates"/>.
-    /// </summary>
-    /// <param name="index">The <see cref="TIndex"/> to add.</param>
-    /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
-    public void AddIndex(TIndex index, EntityCoordinates coordinates)
-    {
-        var gridId = coordinates.GetGridId(_entityManager);
-        if (gridId != GridId.Invalid)
-        {
-            var gridIndices = GetChunkIndices(_mapManager.GetGrid(gridId).LocalToGrid(coordinates));
-            AddIndex(index, gridId, gridIndices);
-            return;
-        }
-
-        var mapId = coordinates.GetMapId(_entityManager);
-        var mapIndices = GetChunkIndices(coordinates.ToMapPos(_entityManager));
-        AddIndex(index, mapId, mapIndices);
-    }
-
-    /// <summary>
-    /// Adds an <see cref="TIndex"/> to the internal grid-chunk cache using the provided <see cref="gridId"/> and <see cref="chunkIndices"/>.
-    /// </summary>
-    /// <param name="index">The <see cref="TIndex"/> to add.</param>
-    /// <param name="gridId">The id of the grid.</param>
-    /// <param name="chunkIndices">The indices of the chunk.</param>
-    public void AddIndex(TIndex index, GridId gridId, Vector2i chunkIndices)
-    {
-        _additionBuffer[index] = new GridChunkLocation(gridId, chunkIndices);
-    }
-
-    /// <summary>
-    /// Adds an <see cref="TIndex"/> to the internal map-chunk cache using the provided <see cref="mapId"/> and <see cref="chunkIndices"/>.
-    /// </summary>
-    /// <param name="index">The <see cref="TIndex"/> to add.</param>
-    /// <param name="mapId">The id of the map.</param>
-    /// <param name="chunkIndices">The indices of the mapchunk.</param>
-    public void AddIndex(TIndex index, MapId mapId, Vector2i chunkIndices)
-    {
-        _additionBuffer[index] = new MapChunkLocation(mapId, chunkIndices);
-    }
-
-    #endregion
-
     #region UpdateIndex
 
     /// <summary>
     /// Updates an <see cref="TIndex"/> to be sent to all players at all times.
     /// </summary>
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
-    public void UpdateIndex(TIndex index)
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, bool removeFromOverride = false)
     {
+        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+            return;
+
         _locationChangeBuffer[index] = new GlobalOverride();
     }
 
@@ -441,8 +363,12 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// </summary>
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
     /// <param name="session">The <see cref="ICommonSession"/> receiving the object.</param>
-    public void UpdateIndex(TIndex index, ICommonSession session)
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, ICommonSession session, bool removeFromOverride = false)
     {
+        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+            return;
+
         _locationChangeBuffer[index] = new LocalOverride(session);
     }
 
@@ -451,8 +377,12 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// </summary>
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
     /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
-    public void UpdateIndex(TIndex index, EntityCoordinates coordinates)
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, EntityCoordinates coordinates, bool removeFromOverride = false)
     {
+        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+            return;
+
         var gridId = coordinates.GetGridId(_entityManager);
         if (gridId != GridId.Invalid)
         {
@@ -472,8 +402,12 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
     /// <param name="gridId">The id of the grid.</param>
     /// <param name="chunkIndices">The indices of the chunk.</param>
-    public void UpdateIndex(TIndex index, GridId gridId, Vector2i chunkIndices)
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, GridId gridId, Vector2i chunkIndices, bool removeFromOverride = false)
     {
+        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+            return;
+
         _locationChangeBuffer[index] = new GridChunkLocation(gridId, chunkIndices);
     }
 
@@ -483,8 +417,12 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
     /// <param name="mapId">The id of the map.</param>
     /// <param name="chunkIndices">The indices of the mapchunk.</param>
-    public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices)
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false)
     {
+        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+            return;
+
         _locationChangeBuffer[index] = new MapChunkLocation(mapId, chunkIndices);
     }
 

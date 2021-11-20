@@ -551,6 +551,8 @@ namespace Robust.Client.GameStates
 
             foreach (var entityUid in toHide)
             {
+                if(_entityManager.HasComponent<MapGridComponent>(entityUid)) continue;
+
                 var xform = _entityManager.GetComponent<TransformComponent>(entityUid);
                 _hiddenEntities.Add(entityUid, xform.MapID);
                 xform.ChangeMapId(MapId.Nullspace);

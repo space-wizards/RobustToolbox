@@ -3,30 +3,37 @@ using System.Collections.Generic;
 using System.Globalization;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Timing
 {
-    internal sealed class PauseManager : IPauseManager, IPostInjectInit
+    internal sealed class PauseManager : IPauseManager
     {
-        [Dependency] private readonly IConsoleHost _conhost = default!;
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        private readonly IConsoleHost _conHost;
+        private readonly IMapManager _mapManager;
+        private readonly IEntityLookup _lookupSystem;
 
         [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new();
         [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new();
 
+        public PauseManager(IConsoleHost conHost, IMapManager mapManager, IEntityLookup lookupSystem)
+        {
+            _conHost = conHost;
+            _mapManager = mapManager;
+            _lookupSystem = lookupSystem;
+
+            PostInject();
+        }
+
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            var lookupSystem = IoCManager.Resolve<IEntityLookup>();
-
             if (paused)
             {
                 _pausedMaps.Add(mapId);
 
-                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
+                foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
                 {
                     entity.Paused = true;
                 }
@@ -35,7 +42,7 @@ namespace Robust.Shared.Timing
             {
                 _pausedMaps.Remove(mapId);
 
-                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
+                foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
                 {
                     entity.Paused = false;
                 }
@@ -49,7 +56,7 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
             {
                 entity.RunMapInit();
                 entity.Paused = false;
@@ -65,7 +72,7 @@ namespace Robust.Shared.Timing
         {
             var mapId = _mapManager.GetGrid(gridId).ParentMapId;
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            foreach (var entity in _lookupSystem.GetEntitiesInMap(mapId))
             {
                 if (entity.Transform.GridID != gridId)
                     continue;
@@ -106,8 +113,7 @@ namespace Robust.Shared.Timing
             return !_unInitializedMaps.Contains(mapId);
         }
 
-        /// <inheritdoc />
-        public void PostInject()
+        private void PostInject()
         {
             _mapManager.MapDestroyed += (_, args) =>
             {
@@ -115,7 +121,7 @@ namespace Robust.Shared.Timing
                 _unInitializedMaps.Add(args.Map);
             };
 
-            _conhost.RegisterCommand("pausemap",
+            _conHost.RegisterCommand("pausemap",
                 "Pauses a map, pausing all simulation processing on it.",
                 "pausemap <map ID>",
                 (shell, _, args) =>
@@ -126,7 +132,7 @@ namespace Robust.Shared.Timing
                         return;
                     }
 
-                    string? arg = args[0];
+                    string arg = args[0];
                     var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
                     if (!_mapManager.MapExists(mapId))
@@ -138,12 +144,12 @@ namespace Robust.Shared.Timing
                     SetMapPaused(mapId, true);
                 });
 
-            _conhost.RegisterCommand("querymappaused",
+            _conHost.RegisterCommand("querymappaused",
                 "Check whether a map is paused or not.",
                 "querymappaused <map ID>",
                 (shell, _, args) =>
                 {
-                    string? arg = args[0];
+                    string arg = args[0];
                     var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
                     if (!_mapManager.MapExists(mapId))
@@ -155,7 +161,7 @@ namespace Robust.Shared.Timing
                     shell.WriteLine(IsMapPaused(mapId).ToString());
                 });
 
-            _conhost.RegisterCommand("unpausemap",
+            _conHost.RegisterCommand("unpausemap",
                 "unpauses a map, resuming all simulation processing on it.",
                 "Usage: unpausemap <map ID>",
                 (shell, _, args) =>
@@ -166,7 +172,7 @@ namespace Robust.Shared.Timing
                         return;
                     }
 
-                    string? arg = args[0];
+                    string arg = args[0];
                     var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
 
                     if (!_mapManager.MapExists(mapId))

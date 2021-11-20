@@ -245,6 +245,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             var newUids = new HashSet<EntityUid>();
+            newUids.Add(eyeEuid);
             _entityPvsCollection.GetElementsInViewport(_mapManager, viewBox, mapId, newUids);
 
             foreach (var entityUid in newUids)

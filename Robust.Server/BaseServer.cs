@@ -342,13 +342,6 @@ namespace Robust.Server
             IoCManager.Resolve<IEntityLookup>().Startup();
             _stateManager.Initialize();
 
-            // sometime after content init
-            {
-                var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
-                if (!reg.NetID.HasValue)
-                    throw new InvalidOperationException("TransformComponent does not have a NetId.");
-            }
-
             _scriptHost.Initialize();
 
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.ObjectPool;
@@ -10,6 +11,7 @@ using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -42,6 +44,11 @@ internal partial class PVSSystem : EntitySystem
     private bool _cullingEnabled;
 
     /// <summary>
+    /// How many new entities we can send per tick (dont wanna nuke the clients mailbox).
+    /// </summary>
+    private int _newEntityBudget;
+
+    /// <summary>
     /// Size of the side of the view bounds square.
     /// </summary>
     private float _viewSize;
@@ -58,6 +65,7 @@ internal partial class PVSSystem : EntitySystem
         = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
+    private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _queuedNewEntities = new();
 
     public override void Initialize()
     {
@@ -75,6 +83,7 @@ internal partial class PVSSystem : EntitySystem
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetPVSEntityBudget, OnEntityBudgetChanged, true);
 
         InitializeDirty();
     }
@@ -105,6 +114,11 @@ internal partial class PVSSystem : EntitySystem
     private void SetPvs(bool value)
     {
         _cullingEnabled = value;
+    }
+
+    private void OnEntityBudgetChanged(int obj)
+    {
+        _newEntityBudget = obj;
     }
 
     //todo paul investigate
@@ -156,6 +170,7 @@ internal partial class PVSSystem : EntitySystem
         if (e.NewStatus == SessionStatus.InGame)
         {
             _playerVisibleSets.Add(e.Session, _visSetPool.Get());
+            _queuedNewEntities.Add(e.Session, new());
             foreach (var (_, pvsCollection) in _pvsCollections)
             {
                 pvsCollection.AddPlayer(e.Session);
@@ -164,6 +179,7 @@ internal partial class PVSSystem : EntitySystem
         else if (e.NewStatus == SessionStatus.Disconnected)
         {
             _visSetPool.Return(_playerVisibleSets[e.Session]);
+            _queuedNewEntities.Remove(e.Session);
             _playerVisibleSets.Remove(e.Session);
             foreach (var (_, pvsCollection) in _pvsCollections)
             {
@@ -213,11 +229,14 @@ internal partial class PVSSystem : EntitySystem
 
     #endregion
 
+    //todo make this actually use toTick in non-all-sending
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(ICommonSession session,
         GameTick fromTick, GameTick toTick)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         _entityPvsCollection.Process();
+        var newEntitiesSent = 0;
+        Logger.Debug($"Tick {fromTick}");
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
         if (!_cullingEnabled)
@@ -284,6 +303,30 @@ internal partial class PVSSystem : EntitySystem
 
         var playerVisibleSet = _playerVisibleSets[session];
         var entityStates = new List<EntityState>();
+
+        //send new entities that we couldn't send last time
+        var sentNewEntities = new HashSet<EntityUid>();
+        foreach (var entityUid in _queuedNewEntities[session])
+        {
+            if(newEntitiesSent >= _newEntityBudget)
+                break;
+
+            newEntitiesSent++;
+
+            visibleEnts.Remove(entityUid);
+
+            var state = GetEntityState(session, entityUid, GameTick.Zero);
+            entityStates.Add(state);
+            sentNewEntities.Add(entityUid);
+            Logger.Debug($"[Queue] {entityUid} - ZERO");
+        }
+
+        //remove the sent entities from the queue
+        foreach (var entityUid in sentNewEntities)
+        {
+            _queuedNewEntities[session].Remove(entityUid);
+        }
+
         foreach (var entityUid in visibleEnts)
         {
             //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -291,15 +334,31 @@ internal partial class PVSSystem : EntitySystem
 
             //remove entities we can see rn from the playerVisibleSet so that only the culled ones remain
             //use tick zero for new entities, fromTick for entities that were already in our view
-            var notNew = playerVisibleSet.Remove(entityUid);
-            var tick = notNew ? fromTick : GameTick.Zero;
+            var @new = !playerVisibleSet.Remove(entityUid);
+            var tick = @new ? GameTick.Zero : fromTick;
 
-            if(notNew && EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick) continue;
+            if (@new)
+            {
+                if(newEntitiesSent >= _newEntityBudget)
+                {
+                    _queuedNewEntities[session].Add(entityUid);
+                    Logger.Debug($"added {entityUid} to queue");
+                    continue;
+                }
+
+                newEntitiesSent++;
+            }
+            else if (EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick)
+            {
+                //entity has been sent and hasnt been updated
+                continue;
+            }
 
             var state = GetEntityState(session, entityUid, tick);
 
-            if(state.Empty) continue;
+            if(!@new && state.Empty) continue;
 
+            Logger.Debug($"[Normal(new:{@new})] {entityUid} - {tick}");
             entityStates.Add(state);
         }
 

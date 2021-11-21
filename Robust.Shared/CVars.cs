@@ -86,6 +86,9 @@ namespace Robust.Shared
         public static readonly CVarDef<float> NetMaxUpdateRange =
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
+        public static readonly CVarDef<int> NetPVSEntityBudget =
+            CVarDef.Create("net.pvsbudget", 50, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
 

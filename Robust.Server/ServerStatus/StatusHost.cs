@@ -156,6 +156,9 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
+            // Set status host binding to match network manager by default
+            SetCVarIfUnmodified(CVars.StatusBind, $"*:{_netManager.Port}");
+
             // Check build.json
             var path = PathHelpers.ExecutableRelativeFile("build.json");
             if (File.Exists(path))

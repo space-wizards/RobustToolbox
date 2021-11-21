@@ -305,24 +305,10 @@ internal partial class PVSSystem : EntitySystem
         var entityStates = new List<EntityState>();
 
         //send new entities that we couldn't send last time
-        var sentNewEntities = new HashSet<EntityUid>();
-        foreach (var entityUid in _queuedNewEntities[session])
-        {
-            if(newEntitiesSent >= _newEntityBudget)
-                break;
-
-            newEntitiesSent++;
-
-            var state = GetEntityState(session, entityUid, GameTick.Zero);
-            entityStates.Add(state);
-            sentNewEntities.Add(entityUid);
-            Logger.Debug($"[Queue] {entityUid} - ZERO");
-        }
+        var skippedNewEntities = new HashSet<EntityUid>();
 
         foreach (var entityUid in visibleEnts)
         {
-            if(_queuedNewEntities[session].Contains(entityUid)) continue;
-
             //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
             if(!entityUid.IsValid()) continue;
 
@@ -335,8 +321,7 @@ internal partial class PVSSystem : EntitySystem
             {
                 if(newEntitiesSent >= _newEntityBudget)
                 {
-                    _queuedNewEntities[session].Add(entityUid);
-                    Logger.Debug($"added {entityUid} to queue");
+                    skippedNewEntities.Add(entityUid);
                     continue;
                 }
 
@@ -352,14 +337,13 @@ internal partial class PVSSystem : EntitySystem
 
             if(!@new && state.Empty) continue;
 
-            Logger.Debug($"[Normal(new:{@new})] {entityUid} - {tick}");
             entityStates.Add(state);
         }
 
         //remove the sent entities from the queue
-        foreach (var entityUid in sentNewEntities)
+        foreach (var entityUid in skippedNewEntities)
         {
-            _queuedNewEntities[session].Remove(entityUid);
+            visibleEnts.Remove(entityUid);
         }
 
         foreach (var entityUid in playerVisibleSet)

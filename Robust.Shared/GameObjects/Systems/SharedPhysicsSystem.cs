@@ -157,7 +157,7 @@ namespace Robust.Shared.GameObjects
                 var o = -angular;
 
                 // Get the vector between the parent and the entity leaving
-                var r = oldParent.Transform.WorldPosition - entity.Transform.WorldPosition;
+                var r = (oldParent.Transform.WorldPosition + oldBody.LocalCenter) - entity.Transform.WorldPosition;
 
                 // Get the tangent of r by rotating it π/2 rad (90°)
                 var v = new Angle(MathHelper.PiOver2).RotateVec(r);

@@ -9,7 +9,6 @@ using Robust.Server.Debugging;
 using Robust.Server.GameObjects;
 using Robust.Server.GameStates;
 using Robust.Server.Log;
-using Robust.Server.Network;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Scripting;
@@ -267,11 +266,6 @@ namespace Robust.Server
                     "Unable to setup networking manager. Check port {0} is not already in use and that all binding addresses are correct!\n{1}",
                     port, e);
                 return true;
-            }
-            // Start UPnP handling
-            if (_config.GetCVar(CVars.NetUPnP))
-            {
-                UPnP.Start(netMan.Port, Logger.GetSawmill("upnp"));
             }
 
             var dataDir = Options.LoadConfigAndUserData

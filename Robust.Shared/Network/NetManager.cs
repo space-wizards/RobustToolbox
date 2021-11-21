@@ -349,6 +349,9 @@ namespace Robust.Shared.Network
                     config.DualStack = true;
                 }
 
+                if (UpnpCompatible(config))
+                    config.EnableUPnP = true;
+
                 var peer = IsServer ? (NetPeer) new NetServer(config) : new NetClient(config);
                 peer.Start();
                 _netPeers.Add(new NetPeerData(peer));
@@ -365,6 +368,9 @@ namespace Robust.Shared.Network
                 Logger.WarningS("net",
                     "IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
             }
+
+            if (_config.GetCVar(CVars.NetUPnP))
+                InitUpnp();
         }
 
         /// <inheritdoc />

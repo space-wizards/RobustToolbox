@@ -330,6 +330,7 @@ namespace Robust.Shared.Network
 
             var foundIpv6 = false;
 
+            var upnp = _config.GetCVar(CVars.NetUPnP);
             foreach (var bindAddress in binds)
             {
                 if (!IPAddress.TryParse(bindAddress.Trim(), out var address))
@@ -349,7 +350,7 @@ namespace Robust.Shared.Network
                     config.DualStack = true;
                 }
 
-                if (UpnpCompatible(config))
+                if (UpnpCompatible(config) && upnp)
                     config.EnableUPnP = true;
 
                 var peer = IsServer ? (NetPeer) new NetServer(config) : new NetClient(config);
@@ -369,7 +370,7 @@ namespace Robust.Shared.Network
                     "IPv6 Dual Stack is enabled but no IPv6 addresses have been bound to. This will not work.");
             }
 
-            if (_config.GetCVar(CVars.NetUPnP))
+            if (upnp)
                 InitUpnp();
         }
 

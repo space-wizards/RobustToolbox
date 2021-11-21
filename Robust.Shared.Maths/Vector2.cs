@@ -92,6 +92,32 @@ namespace Robust.Shared.Maths
             }
         }
 
+        /// <summary>
+        ///     Returns a new, rotated 90 degrees clockwise (in world Y-up orientation), vector.
+        /// </summary>
+        /// <returns></returns>
+        public readonly Vector2 Rotated90DegreesClockwiseWorld
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return new Vector2(Y, -X);
+            }
+        }
+
+        /// <summary>
+        ///     Returns a new, rotated 90 degrees anticlockwise (in world Y-up orientation), vector.
+        /// </summary>
+        /// <returns></returns>
+        public readonly Vector2 Rotated90DegreesAnticlockwiseWorld
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get
+            {
+                return new Vector2(-Y, X);
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Vector2 Rounded()
         {

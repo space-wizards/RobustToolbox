@@ -313,22 +313,16 @@ internal partial class PVSSystem : EntitySystem
 
             newEntitiesSent++;
 
-            visibleEnts.Remove(entityUid);
-
             var state = GetEntityState(session, entityUid, GameTick.Zero);
             entityStates.Add(state);
             sentNewEntities.Add(entityUid);
             Logger.Debug($"[Queue] {entityUid} - ZERO");
         }
 
-        //remove the sent entities from the queue
-        foreach (var entityUid in sentNewEntities)
-        {
-            _queuedNewEntities[session].Remove(entityUid);
-        }
-
         foreach (var entityUid in visibleEnts)
         {
+            if(_queuedNewEntities[session].Contains(entityUid)) continue;
+
             //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
             if(!entityUid.IsValid()) continue;
 
@@ -362,6 +356,11 @@ internal partial class PVSSystem : EntitySystem
             entityStates.Add(state);
         }
 
+        //remove the sent entities from the queue
+        foreach (var entityUid in sentNewEntities)
+        {
+            _queuedNewEntities[session].Remove(entityUid);
+        }
 
         foreach (var entityUid in playerVisibleSet)
         {

@@ -24,6 +24,8 @@ internal partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
 
+    public const float ChunkSize = 16;
+
     /// <summary>
     /// Maximum number of pooled objects
     /// </summary>
@@ -242,13 +244,38 @@ internal partial class PVSSystem : EntitySystem
             if (EntityManager.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                 visMask = eyeComp.VisibilityMask;
 
-            var newUids = new HashSet<EntityUid>();
-            newUids.Add(eyeEuid);
-            _entityPvsCollection.GetElementsInViewport(viewBox, mapId, newUids);
+            //todo at some point just register the viewerentities as localoverrides
+            RecursiveAdd(eyeEuid, visibleEnts, visMask);
 
-            foreach (var entityUid in newUids)
+            var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
+
+            while (mapChunkEnumerator.MoveNext(out var chunkIndices))
             {
-                RecursiveAdd(entityUid, visibleEnts, visMask);
+                if(_entityPvsCollection.TryGetChunk(mapId, chunkIndices.Value, out var chunk))
+                {
+                    foreach (var index in chunk)
+                    {
+                        RecursiveAdd(index, visibleEnts, visMask);
+                    }
+                }
+            }
+
+            _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
+            while (gridEnumerator.MoveNext(out var mapGrid))
+            {
+                var gridChunkEnumerator =
+                    new ChunkIndicesEnumerator(mapGrid.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
+
+                while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                {
+                    if (_entityPvsCollection.TryGetChunk(mapGrid.Index, gridChunkIndices.Value, out var chunk))
+                    {
+                        foreach (var index in chunk)
+                        {
+                            RecursiveAdd(index, visibleEnts, visMask);
+                        }
+                    }
+                }
             }
         }
 

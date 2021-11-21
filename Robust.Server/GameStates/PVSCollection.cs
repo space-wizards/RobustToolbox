@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -34,15 +36,13 @@ public interface IPVSCollection
 
 public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
-    [Dependency] private readonly IEntityManager _entityManager = default!;
-    [Dependency] private readonly IMapManager _mapManager = default!;
+    [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
+    [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
 
-    public const float ChunkSize = 16;
-
-    public static Vector2i GetChunkIndices(Vector2 coordinates)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector2i GetChunkIndices(Vector2 coordinates)
     {
-        coordinates /= ChunkSize;
-        return new Vector2i((int)Math.Floor(coordinates.X), (int)Math.Floor(coordinates.Y));
+        return (coordinates / PVSSystem.ChunkSize).Floored();
     }
 
     /// <summary>
@@ -152,44 +152,11 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         _removalBuffer.Clear();
     }
 
-    public void GetElementsInViewport(Box2 viewportInMapspace, MapId mapId, HashSet<TIndex> elementSet)
-    {
-        var topLeft = (viewportInMapspace.TopLeft / ChunkSize).Floored();
-        var bottomRight = (viewportInMapspace.BottomRight / ChunkSize).Floored();
+    public bool TryGetChunk(MapId mapId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
+        _mapChunkContents[mapId].TryGetValue(chunkIndices, out indices);
 
-        for (int x = topLeft.X; x <= bottomRight.X; x++)
-        {
-            for (int y = bottomRight.Y; y <= topLeft.Y; y++)
-            {
-                if (_mapChunkContents[mapId].TryGetValue(new Vector2i(x, y), out var chunk))
-                {
-                    foreach (var index in chunk)
-                    {
-                        elementSet.Add(index);
-                    }
-                }
-            }
-        }
-
-        _mapManager.FindGridsIntersectingEnumerator(mapId, viewportInMapspace, out var gridEnumerator, true);
-        while (gridEnumerator.MoveNext(out var mapGrid))
-        {
-            if(_gridChunkContents[mapGrid.Index].Count == 0) continue;
-
-            ((IMapGridInternal)mapGrid).GetMapChunks(viewportInMapspace, out var gridChunkEnumerator);
-
-            while (gridChunkEnumerator.MoveNext(out var gridChunk))
-            {
-                if (_gridChunkContents[mapGrid.Index].TryGetValue(gridChunk.Indices, out var chunk))
-                {
-                    foreach (var index in chunk)
-                    {
-                        elementSet.Add(index);
-                    }
-                }
-            }
-        }
-    }
+    public bool TryGetChunk(GridId gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
+        _gridChunkContents[gridId].TryGetValue(chunkIndices, out indices);
 
     public void GetElementsForSession(ICommonSession session, HashSet<TIndex> elementSet)
     {

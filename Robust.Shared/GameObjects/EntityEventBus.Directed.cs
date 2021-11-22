@@ -55,6 +55,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
         /// DO NOT EXPOSE THIS TO CONTENT.
+        /// This function includes paused components.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
@@ -68,6 +69,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// This has a very specific purpose, and has massive potential to be abused.
         /// DO NOT EXPOSE THIS TO CONTENT.
+        /// This function includes paused components.
         /// </remarks>
         /// <typeparam name="TEvent">Event to dispatch.</typeparam>
         /// <param name="component">Component receiving the event.</param>
@@ -150,6 +152,9 @@ namespace Robust.Shared.GameObjects
 
         private void RaiseLocalEventCore(EntityUid uid, ref Unit unitRef, Type type, bool broadcast, bool byRef)
         {
+            if(_entMan.IsEntityPaused(uid))
+                return;
+
             if (_orderedEvents.Contains(type))
             {
                 RaiseLocalOrdered(uid, type, ref unitRef, broadcast, byRef);

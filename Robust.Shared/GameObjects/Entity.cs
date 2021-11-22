@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -68,7 +67,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused
         {
-            get => !IgnorePaused && IoCManager.Resolve<IPauseManager>().IsMapPaused(Transform.MapID);
+            get => EntityManager.IsEntityPaused(this);
 
             [Obsolete("This does nothing. Use IPauseManager to pause the map for editing.")]
             set { }

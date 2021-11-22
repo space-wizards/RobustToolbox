@@ -1,10 +1,10 @@
 using System;
+using Castle.Core.Internal;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Timing;
 using Robust.UnitTesting.Server;
-using Is = Robust.UnitTesting.Is;
 
 namespace Robust.UnitTesting.Shared.Map;
 
@@ -87,10 +87,10 @@ internal class MapGridPauseTests
     */
 
     /// <summary>
-    /// All new maps are created paused.
+    /// All new maps are created paused. Content needs to manually unpause the map when the round stats.
     /// </summary>
     [Test]
-    [Ignore("Part 3")]
+    [Ignore("This is going to be annoying. Maybe in the future?")]
     public void NewMap_CreatedPaused()
     {
         var mapId = new MapId(42);
@@ -108,10 +108,20 @@ internal class MapGridPauseTests
     ///     When an entity is on a paused map, it does not get returned by an EntityQuery.
     /// </summary>
     [Test]
-    [Ignore("Part 2")]
     public void Paused_NotInQuery()
     {
-        throw new NotImplementedException();
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = sim.Resolve<IMapManager>();
+        var pauseMan = sim.Resolve<IPauseManager>();
+
+        mapMan.CreateMap(_mapId);
+        pauseMan.SetMapPaused(_mapId, true);
+
+        entMan.SpawnEntity(null, new MapCoordinates(0, 0, _mapId));
+
+        var results = entMan.EntityQuery<TransformComponent>();
+        Assert.That(results.IsNullOrEmpty());
     }
 
     /// <summary>
@@ -119,11 +129,26 @@ internal class MapGridPauseTests
     ///     components are not received by any subscribers.
     /// </summary>
     [Test]
-    [Ignore("Part 2")]
-    public void Paused_NotReceiveMessages()
+    public void Paused_NotReceiveDirectedMessages()
     {
-        throw new NotImplementedException();
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = sim.Resolve<IMapManager>();
+        var pauseMan = sim.Resolve<IPauseManager>();
+
+        entMan.EventBus.SubscribeLocalEvent<TransformComponent, DummyEventArgs>((uid, component, args) =>
+        {
+            Assert.Fail("Received message for a paused entity.");
+        });
+
+        mapMan.CreateMap(_mapId);
+        pauseMan.SetMapPaused(_mapId, true);
+
+        var node = entMan.SpawnEntity(null, new MapCoordinates(0, 0, _mapId));
+        entMan.EventBus.RaiseLocalEvent(node.Uid, new DummyEventArgs());
     }
+
+    private class DummyEventArgs : EntityEventArgs { }
 
     /// <summary>
     ///     A new child entity added to a paused map will be created paused.
@@ -198,9 +223,10 @@ internal class MapGridPauseTests
     ///     to an unpaused map, all of the entities in the tree are unpaused.
     /// </summary>
     [Test]
-    [Ignore("Can you still teleport ents between maps?")]
-    public void Paused_TeleportBetweenMaps_StillPaused()
+    public void Paused_TeleportBetweenMaps_Unpaused()
     {
+        var mapId2 = new MapId(64);
+
         var sim = SimulationFactory();
         var entMan = sim.Resolve<IEntityManager>();
         var mapMan = sim.Resolve<IMapManager>();
@@ -208,6 +234,18 @@ internal class MapGridPauseTests
 
         mapMan.CreateMap(_mapId);
         pauseMan.SetMapPaused(_mapId, true);
+
+        mapMan.CreateMap(mapId2);
+        pauseMan.SetMapPaused(mapId2, false);
+        var targetMapEnt = mapMan.GetMapEntityId(mapId2);
+        
+        var node1 = entMan.SpawnEntity(null, new MapCoordinates(0, 0, _mapId)).Transform;
+        var node2 = entMan.SpawnEntity(null, new EntityCoordinates(node1.OwnerUid, 0, 0)).Transform;
+
+        node1.ParentUid = targetMapEnt;
+
+        Assert.That(node1.Paused, Is.False);
+        Assert.That(node2.Paused, Is.False);
     }
 
     /// <summary>
@@ -215,10 +253,29 @@ internal class MapGridPauseTests
     ///     to a paused map, all of the entitites in the tree are paused.
     /// </summary>
     [Test]
-    [Ignore("Can you still teleport ents between maps?")]
-    public void Unpaused_TeleportEntities_IsPaused()
+    public void Unpaused_TeleportBetweenMaps_Paused()
     {
-        throw new NotImplementedException();
+        var mapId2 = new MapId(64);
+
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = sim.Resolve<IMapManager>();
+        var pauseMan = sim.Resolve<IPauseManager>();
+
+        mapMan.CreateMap(_mapId);
+        pauseMan.SetMapPaused(_mapId, false);
+
+        mapMan.CreateMap(mapId2);
+        pauseMan.SetMapPaused(mapId2, true);
+        var targetMapEnt = mapMan.GetMapEntityId(mapId2);
+
+        var node1 = entMan.SpawnEntity(null, new MapCoordinates(0, 0, _mapId)).Transform;
+        var node2 = entMan.SpawnEntity(null, new EntityCoordinates(node1.OwnerUid, 0, 0)).Transform;
+
+        node1.ParentUid = targetMapEnt;
+
+        Assert.That(node1.Paused, Is.True);
+        Assert.That(node2.Paused, Is.True);
     }
 
     /// <summary>

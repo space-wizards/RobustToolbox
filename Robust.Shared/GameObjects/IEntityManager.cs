@@ -104,6 +104,9 @@ namespace Robust.Shared.GameObjects
 
         public void DirtyEntity(EntityUid uid);
 
+        bool IsEntityPaused(IEntity entity);
+        bool IsEntityPaused(EntityUid euid);
+
         public void QueueDeleteEntity(IEntity entity);
 
         public void QueueDeleteEntity(EntityUid uid);

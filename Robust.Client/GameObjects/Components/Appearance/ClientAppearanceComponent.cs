@@ -5,8 +5,12 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.GameObjects;
 
-[ComponentReference(typeof(SharedAppearanceComponent))]
-public sealed class AppearanceComponent : SharedAppearanceComponent
+/// <summary>
+/// This is the client instance of <see cref="AppearanceComponent"/>.
+/// </summary>
+[RegisterComponent]
+[ComponentReference(typeof(AppearanceComponent))]
+public sealed class ClientAppearanceComponent : AppearanceComponent
 {
     [ViewVariables]
     private bool _appearanceDirty;

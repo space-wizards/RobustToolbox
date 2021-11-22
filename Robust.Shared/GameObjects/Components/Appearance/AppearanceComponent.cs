@@ -18,7 +18,7 @@ namespace Robust.Shared.GameObjects;
 /// </summary>
 [NetworkedComponent]
 [ComponentProtoName("Appearance")]
-public abstract class SharedAppearanceComponent : Component
+public abstract class AppearanceComponent : Component
 {
     [ViewVariables]
     private Dictionary<object, object> _appearanceData = new();

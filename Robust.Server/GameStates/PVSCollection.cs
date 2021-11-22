@@ -322,7 +322,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
             return;
 
-        _locationChangeBuffer[index] = new GlobalOverride();
+        RegisterUpdate(index, new GlobalOverride());
     }
 
     /// <summary>
@@ -336,7 +336,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
             return;
 
-        _locationChangeBuffer[index] = new LocalOverride(session);
+        RegisterUpdate(index, new LocalOverride(session));
     }
 
     /// <summary>
@@ -375,7 +375,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
             return;
 
-        _locationChangeBuffer[index] = new GridChunkLocation(gridId, chunkIndices);
+        RegisterUpdate(index, new GridChunkLocation(gridId, chunkIndices));
     }
 
     /// <summary>
@@ -390,7 +390,14 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
         if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
             return;
 
-        _locationChangeBuffer[index] = new MapChunkLocation(mapId, chunkIndices);
+        RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
+    }
+
+    private void RegisterUpdate(TIndex index, IndexLocation location)
+    {
+        if(_indexLocations.TryGetValue(index, out var oldLocation) && oldLocation == location) return;
+
+        _locationChangeBuffer[index] = location;
     }
 
     #endregion

@@ -236,7 +236,6 @@ internal partial class PVSSystem : EntitySystem
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         _entityPvsCollection.Process();
         var newEntitiesSent = 0;
-        Logger.Debug($"Tick {fromTick}");
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
         if (!_cullingEnabled)

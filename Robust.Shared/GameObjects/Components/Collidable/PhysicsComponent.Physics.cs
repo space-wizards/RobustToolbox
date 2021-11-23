@@ -135,6 +135,20 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        public IEnumerable<Contact> Contacts
+        {
+            get
+            {
+                var edge = ContactEdges;
+
+                while (edge != null)
+                {
+                    yield return edge.Contact!;
+                    edge = edge.Next;
+                }
+            }
+        }
+
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>

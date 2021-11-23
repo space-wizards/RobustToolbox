@@ -47,8 +47,6 @@ namespace Robust.Server.Player
 
         private SessionStatus _status = SessionStatus.Connecting;
 
-        /// <inheritdoc />
-
         [ViewVariables]
         internal string Name { get; set; }
 
@@ -99,7 +97,6 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public DateTime ConnectedTime { get; private set; }
 
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public int VisibilityMask { get; set; } = 1;
 

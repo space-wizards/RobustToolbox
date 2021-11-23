@@ -9,6 +9,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
@@ -66,6 +67,7 @@ internal partial class PVSSystem : EntitySystem
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
     private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _queuedNewEntities = new();
+    private readonly Dictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
 
     public override void Initialize()
     {
@@ -125,6 +127,7 @@ internal partial class PVSSystem : EntitySystem
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
+        _cachedStates.Clear();
     }
 
     private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
@@ -245,12 +248,32 @@ internal partial class PVSSystem : EntitySystem
         }
 
         var visibleEnts = _visSetPool.Get();
+        var containedEntitiesDict = new Dictionary<EntityUid, HashSet<EntityUid>>();
+
+        void AddContained(EntityUid entityUid, Dictionary<EntityUid, HashSet<EntityUid>> containedEnts)
+        {
+            if(!EntityManager.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComponent) || containerManagerComponent.Containers.Count == 0) return;
+
+            var containedEntitiesSet = new HashSet<EntityUid>();
+            foreach (var container in containerManagerComponent.GetAllContainers())
+            {
+                containedEntitiesSet.UnionWith(container.ContainedEntities.Select(x => x.Uid));
+            }
+            if(containedEntitiesSet.Count == 0) return;
+            containedEnts[entityUid] = containedEntitiesSet;
+        }
 
         foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
         {
             visibleEnts.Add(entityUid);
+            AddContained(entityUid, containedEntitiesDict);
         }
-        _entityPvsCollection.GetElementsForSession(session, visibleEnts);
+
+        foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
+        {
+            visibleEnts.Add(entityUid);
+            AddContained(entityUid, containedEntitiesDict);
+        }
 
         var viewers = GetSessionViewers(session);
 
@@ -264,6 +287,7 @@ internal partial class PVSSystem : EntitySystem
 
             //todo at some point just register the viewerentities as localoverrides
             RecursiveAdd(eyeEuid, visibleEnts, visMask);
+            AddContained(eyeEuid, containedEntitiesDict);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -274,6 +298,7 @@ internal partial class PVSSystem : EntitySystem
                     foreach (var index in chunk)
                     {
                         RecursiveAdd(index, visibleEnts, visMask);
+                        AddContained(index, containedEntitiesDict);
                     }
                 }
             }
@@ -291,6 +316,7 @@ internal partial class PVSSystem : EntitySystem
                         foreach (var index in chunk)
                         {
                             RecursiveAdd(index, visibleEnts, visMask);
+                            AddContained(index, containedEntitiesDict);
                         }
                     }
                 }
@@ -487,6 +513,7 @@ internal partial class PVSSystem : EntitySystem
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
+        if (_cachedStates.TryGetValue((entityUid, fromTick), out var cachedState)) return cachedState;
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
@@ -501,11 +528,14 @@ internal partial class PVSSystem : EntitySystem
 
             DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
 
+            if (!EntityManager.CanGetComponentState(bus, component, player))
+                continue;
+
             if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
             {
                 ComponentState? state = null;
                 if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
-                    state = EntityManager.GetComponentState(bus, component, player);
+                    state = EntityManager.GetComponentState(bus, component);
 
                 // Can't be null since it's returned by GetNetComponents
                 // ReSharper disable once PossibleInvalidOperationException
@@ -513,7 +543,7 @@ internal partial class PVSSystem : EntitySystem
             }
             else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
             {
-                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component, player)));
+                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
             }
         }
 
@@ -522,7 +552,7 @@ internal partial class PVSSystem : EntitySystem
             changed.Add(ComponentChange.Removed(netId));
         }
 
-        return new EntityState(entityUid, changed.ToArray());
+        return _cachedStates[(entityUid, fromTick)] = new EntityState(entityUid, changed.ToArray());
     }
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)

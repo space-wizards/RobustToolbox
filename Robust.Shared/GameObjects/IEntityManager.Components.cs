@@ -230,13 +230,22 @@ namespace Robust.Shared.GameObjects
         NetComponentEnumerable GetNetComponents(EntityUid uid);
 
         /// <summary>
-        ///     Gets a component state for a certain player.
+        ///     Gets a component state.
+        /// </summary>
+        /// <param name="eventBus">A reference to the event bus instance.</param>
+        /// <param name="component">Component to generate the state for.</param>
+        /// <returns>The component state of the component.</returns>
+        ///
+        ComponentState GetComponentState(IEventBus eventBus, IComponent component);
+
+        /// <summary>
+        ///     Checks if a certain player should get a component state.
         /// </summary>
         /// <param name="eventBus">A reference to the event bus instance.</param>
         /// <param name="component">Component to generate the state for.</param>
         /// <param name="player">The player to generate the state for.</param>
-        /// <returns>The component state of the component, for the player.</returns>
-        ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
+        /// <returns>True if the player should get the component state.</returns>
+        bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

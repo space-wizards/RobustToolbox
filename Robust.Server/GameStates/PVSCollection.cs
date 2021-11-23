@@ -158,13 +158,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     public bool TryGetChunk(GridId gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _gridChunkContents[gridId].TryGetValue(chunkIndices, out indices);
 
-    public void GetElementsForSession(ICommonSession session, HashSet<TIndex> elementSet)
-    {
-        foreach (var index in _localOverrides[session])
-        {
-            elementSet.Add(index);
-        }
-    }
+    public IReadOnlySet<TIndex> GetElementsForSession(ICommonSession session) => _localOverrides[session];
 
     private void AddIndexInternal(TIndex index, IndexLocation location)
     {

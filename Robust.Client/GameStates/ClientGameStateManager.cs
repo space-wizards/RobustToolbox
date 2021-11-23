@@ -382,7 +382,6 @@ namespace Robust.Client.GameStates
             var outputData = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
 
             Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
-            var player = _players.LocalPlayer.Session;
 
             var bus = _entityManager.EventBus;
 
@@ -393,7 +392,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    var state = _entityManager.GetComponentState(bus, component, player);
+                    var state = _entityManager.GetComponentState(bus, component);
 
                     if(state.GetType() == typeof(ComponentState))
                         continue;

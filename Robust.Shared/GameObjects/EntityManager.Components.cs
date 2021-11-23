@@ -707,7 +707,7 @@ namespace Robust.Shared.GameObjects
         {
             var attempt = new ComponentGetStateAttemptEvent(player);
             eventBus.RaiseComponentEvent(component, attempt);
-            return attempt.Cancelled;
+            return !attempt.Cancelled;
         }
 
         #endregion

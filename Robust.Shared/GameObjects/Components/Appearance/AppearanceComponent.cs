@@ -23,7 +23,7 @@ public abstract class AppearanceComponent : Component
     [ViewVariables]
     private Dictionary<object, object> _appearanceData = new();
 
-    public override ComponentState GetComponentState(ICommonSession player)
+    public override ComponentState GetComponentState()
     {
         return new AppearanceComponentState(_appearanceData);
     }

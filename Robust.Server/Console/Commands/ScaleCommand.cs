@@ -53,6 +53,7 @@ public sealed class ScaleCommand : IConsoleCommand
         {
             foreach (var fixture in body._fixtures)
             {
+                // TODO: May be worthwhile to swap to density like box2d? Either way mass is unchanged for now.
                 switch (fixture.Shape)
                 {
                     case EdgeShape edge:

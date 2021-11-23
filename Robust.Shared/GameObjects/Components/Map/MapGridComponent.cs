@@ -120,9 +120,8 @@ namespace Robust.Shared.GameObjects
             grid.AnchoredEntDirty(grid.TileIndicesFor(transform.Coordinates));
         }
 
-        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new MapGridComponentState(_gridIndex);
         }

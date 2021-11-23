@@ -775,7 +775,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new TransformComponentState(_localPosition, LocalRotation, _parent, _noLocalRotation, _anchored);
         }

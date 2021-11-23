@@ -156,7 +156,7 @@ namespace Robust.Shared.GameObjects
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
         }

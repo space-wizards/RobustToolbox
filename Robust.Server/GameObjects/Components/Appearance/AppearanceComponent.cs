@@ -63,7 +63,7 @@ namespace Robust.Server.GameObjects
             return false;
         }
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new AppearanceComponentState(data);
         }

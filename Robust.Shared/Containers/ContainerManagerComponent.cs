@@ -67,7 +67,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             // naive implementation that just sends the full state of the component
             List<ContainerManagerComponentState.ContainerData> containerSet = new(Containers.Count);

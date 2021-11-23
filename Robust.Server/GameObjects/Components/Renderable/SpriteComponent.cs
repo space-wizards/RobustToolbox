@@ -427,7 +427,7 @@ namespace Robust.Server.GameObjects
             Dirty();
         }
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new SpriteComponentState(Visible, DrawDepth, Scale, Rotation, Offset, Color,
                 BaseRSIPath, Layers, RenderOrder);

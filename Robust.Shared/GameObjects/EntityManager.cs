@@ -102,6 +102,7 @@ namespace Robust.Shared.GameObjects
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
+            EntitySystemManager.Clear();
             Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;

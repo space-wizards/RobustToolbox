@@ -6,6 +6,7 @@ import subprocess
 import sys
 import argparse
 import time
+from pathlib import Path
 
 parser = argparse.ArgumentParser(description = "Tool for versioning RobustToolbox: commits the version config update and sets your local tag.")
 parser.add_argument("version", help = "Version that will be written to tag")
@@ -32,8 +33,19 @@ def write_version():
     # Verify
     verify_version()
 
+    props = Path("MSBuild/Robust.Engine.Version.props")
+
+    # Find file
+    if not props.exists():
+        props = Path("../MSBuild/Robust.Engine.Version.props")
+        
+        if not props.exists():
+            print("Unable to locate MSBuild/Robust.Engine.Version.Props")
+            sys.exit(1)
+    
     # Update
-    file = open("MSBuild/Robust.Engine.Version.props", "w", newline="\n")
+    file = open(props, "w", newline="\n")
+
     file.write("<Project>\n")
     file.write("    <!-- This file automatically reset by Tools/version.py -->\n")
     file.write("    <PropertyGroup><Version>" + result.version + "</Version></PropertyGroup>\n")
@@ -42,7 +54,7 @@ def write_version():
 
     if not result.file_only:
         # Commit
-        subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + result.version, "MSBuild/Robust.Engine.Version.props"]).check_returncode()
+        subprocess.run(["git", "commit", "--allow-empty", "-m", "Version: " + result.version, props.absolute()]).check_returncode()
 
         # Tag
         subprocess.run(["git", "tag", "v" + result.version]).check_returncode()

@@ -332,25 +332,52 @@ internal partial class PVSSystem : EntitySystem
         //send new entities that we couldn't send last time
         var skippedNewEntities = new HashSet<EntityUid>();
 
+        var sentByContained = new HashSet<EntityUid>();
+
         foreach (var entityUid in visibleEnts)
         {
             //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
             if(!entityUid.IsValid()) continue;
+
+            // this entity was already sent using out contained-algo :tm:
+            if(sentByContained.Contains(entityUid)) continue;
 
             //remove entities we can see rn from the playerVisibleSet so that only the culled ones remain
             //use tick zero for new entities, fromTick for entities that were already in our view
             var @new = !playerVisibleSet.Remove(entityUid);
             var tick = @new ? GameTick.Zero : fromTick;
 
+            containedEntitiesDict.TryGetValue(entityUid, out var containedEntities);
+
             if (@new)
             {
-                if(newEntitiesSent >= _newEntityBudget)
+                var requiredBudget = 1;
+                if (containedEntities != null)
+                {
+                    requiredBudget += containedEntities.Count;
+                }
+
+                var newBudget = newEntitiesSent + requiredBudget;
+                if(newBudget > _newEntityBudget && requiredBudget < _newEntityBudget)
                 {
                     skippedNewEntities.Add(entityUid);
                     continue;
                 }
 
-                newEntitiesSent++;
+                newEntitiesSent = newBudget;
+
+                if(containedEntities != null)
+                {
+                    foreach (var containedEnt in containedEntities)
+                    {
+                        var containedState = GetEntityState(session, containedEnt, tick);
+
+                        if(containedState.Empty) continue;
+
+                        entityStates.Add(containedState);
+                        sentByContained.Add(containedEnt);
+                    }
+                }
             }
             else if (EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick)
             {

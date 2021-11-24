@@ -64,6 +64,7 @@ namespace Robust.Shared.Network
             _network.RegisterNetMessage<MsgStringTableEntries>(ReceiveEntries, NetMessageAccept.Client | NetMessageAccept.Handshake);
 
             Reset();
+            _initialized = true;
         }
 
         private void ReceiveEntries(MsgStringTableEntries message)

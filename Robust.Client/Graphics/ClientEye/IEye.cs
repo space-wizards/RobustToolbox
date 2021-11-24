@@ -22,6 +22,11 @@ namespace Robust.Client.Graphics
         MapCoordinates Position { get; }
 
         /// <summary>
+        /// Translation offset from <see cref="Position"/>. Does not influence the center of FOV.
+        /// </summary>
+        Vector2 Offset { get; set; }
+
+        /// <summary>
         /// Rotation of the camera around the Z axis.
         /// </summary>
         Angle Rotation { get; set; }
@@ -51,5 +56,7 @@ namespace Robust.Client.Graphics
         /// <param name="viewMatrixInv">Inverted view matrix for this camera.</param>
         /// <param name="renderScale"></param>
         void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale);
+
+        void GetViewMatrixNoOffset(out Matrix3 viewMatrix, Vector2 renderScale);
     }
 }

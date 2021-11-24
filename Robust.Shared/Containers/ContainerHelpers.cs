@@ -145,7 +145,7 @@ namespace Robust.Shared.Containers
             }
         }
 
-        public static void AttachParentToContainerOrGrid(this ITransformComponent transform)
+        public static void AttachParentToContainerOrGrid(this TransformComponent transform)
         {
             if (transform.Parent == null
                 || !TryGetContainer(transform.Parent.Owner, out var container)
@@ -153,7 +153,7 @@ namespace Robust.Shared.Containers
                 transform.AttachToGridOrMap();
         }
 
-        private static bool TryInsertIntoContainer(this ITransformComponent transform, IContainer container)
+        private static bool TryInsertIntoContainer(this TransformComponent transform, IContainer container)
         {
             if (container.Insert(transform.Owner)) return true;
 

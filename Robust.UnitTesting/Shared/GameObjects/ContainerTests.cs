@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 // Setup PVS
                 entity.AddComponent<Robust.Server.GameObjects.EyeComponent>();
-                var player = playerMan.GetAllPlayers().First();
+                var player = playerMan.ServerSessions.First();
                 player.AttachToEntity(entity);
                 player.JoinGame();
             });
@@ -114,7 +114,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 var entMan = IoCManager.Resolve<IEntityManager>();
 
                 // Move item into PVS so it gets sent to the client
-                entMan.GetComponent<ITransformComponent>(itemUid).LocalPosition = (0, 0);
+                entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (0, 0);
             });
 
             await server.WaitRunTicks(1);
@@ -185,7 +185,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 // Setup PVS
                 entity.AddComponent<Robust.Server.GameObjects.EyeComponent>();
-                var player = playerMan.GetAllPlayers().First();
+                var player = playerMan.ServerSessions.First();
                 player.AttachToEntity(entity);
                 player.JoinGame();
             });

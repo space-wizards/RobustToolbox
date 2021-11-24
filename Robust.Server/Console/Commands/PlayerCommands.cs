@@ -158,7 +158,7 @@ namespace Robust.Server.Console.Commands
 
             var sb = new StringBuilder();
 
-            var players = IoCManager.Resolve<IPlayerManager>().GetAllPlayers();
+            var players = IoCManager.Resolve<IPlayerManager>().ServerSessions;
             sb.AppendLine($"{"Player Name",20} {"Status",12} {"Playing Time",14} {"Ping",9} {"IP EndPoint",20}");
             sb.AppendLine("-------------------------------------------------------------------------------");
 
@@ -188,7 +188,7 @@ namespace Robust.Server.Console.Commands
             if (args.Length < 1)
             {
                 var player = shell.Player as IPlayerSession;
-                var toKickPlayer = player ?? players.GetAllPlayers().FirstOrDefault();
+                var toKickPlayer = player ?? players.ServerSessions.FirstOrDefault();
                 if (toKickPlayer == null)
                 {
                     shell.WriteLine("You need to provide a player to kick.");

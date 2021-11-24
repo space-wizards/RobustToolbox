@@ -4,9 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Utility;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -80,11 +82,12 @@ namespace Robust.Shared.IoC
             Register<TInterface, TImplementation>(() =>
             {
                 var objectType  = typeof(TImplementation);
-                var constructors = objectType.GetConstructors();
+                var constructors = objectType.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' requires exactly one constructor.");
 
+                var chosenConstructor = constructors[0];
                 var constructorParams = constructors[0].GetParameters();
                 var parameters = new object[constructorParams.Length];
 
@@ -107,7 +110,7 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return (TImplementation) Activator.CreateInstance(objectType, parameters)!;
+                return (TImplementation) chosenConstructor.Invoke(parameters);
             }, overwrite);
         }
 
@@ -135,12 +138,13 @@ namespace Robust.Shared.IoC
 
             object DefaultFactory()
             {
-                var constructors = implementation.GetConstructors();
+                var constructors = implementation.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{implementation.FullName}' requires exactly one constructor.");
 
-                var constructorParams = constructors[0].GetParameters();
+                var chosenConstructor = constructors[0];
+                var constructorParams = chosenConstructor.GetParameters();
                 var parameters = new object[constructorParams.Length];
 
                 for (var index = 0; index < constructorParams.Length; index++)
@@ -162,7 +166,7 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return Activator.CreateInstance(implementation, parameters)!;
+                return chosenConstructor.Invoke(parameters);
             }
 
             _resolveTypes[interfaceType] = implementation;
@@ -240,6 +244,34 @@ namespace Robust.Shared.IoC
         public T Resolve<T>()
         {
             return (T) ResolveType(typeof(T));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T>([NotNull] ref T? instance)
+        {
+            // Resolve<T>() will either throw or return a concrete instance, therefore we suppress the nullable warning.
+            instance ??= Resolve<T>()!;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
+        {
+            Resolve(ref instance1);
+            Resolve(ref instance2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
+        {
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
+        {
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3, ref instance4);
         }
 
         /// <inheritdoc />

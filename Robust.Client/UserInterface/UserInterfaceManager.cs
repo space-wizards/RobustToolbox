@@ -54,7 +54,19 @@ namespace Robust.Client.UserInterface
 
         [ViewVariables] public Control? KeyboardFocused { get; private set; }
 
-        [ViewVariables] public Control? ControlFocused { get; private set; }
+        private Control? _controlFocused;
+        [ViewVariables]
+        public Control? ControlFocused
+        {
+            get => _controlFocused;
+            set
+            {
+                if (_controlFocused == value)
+                    return;
+                _controlFocused?.ControlFocusExited();
+                _controlFocused = value;
+            }
+        }
 
         [ViewVariables] public ViewportContainer MainViewport { get; private set; } = default!;
         [ViewVariables] public LayoutContainer StateRoot { get; private set; } = default!;
@@ -348,7 +360,6 @@ namespace Robust.Client.UserInterface
                         RemoveModal(top);
                     else
                     {
-                        ControlFocused?.ControlFocusExited();
                         ControlFocused = top;
                         hitData = null;
                         return false; // prevent anything besides the top modal control from receiving input
@@ -370,7 +381,6 @@ namespace Robust.Client.UserInterface
 
             var (control, rel) = hit.Value;
 
-            ControlFocused?.ControlFocusExited();
             ControlFocused = control;
 
             if (ControlFocused.CanKeyboardFocus && ControlFocused.KeyboardFocusOnClick)
@@ -384,7 +394,6 @@ namespace Robust.Client.UserInterface
 
         public void HandleCanFocusUp()
         {
-            ControlFocused?.ControlFocusExited();
             ControlFocused = null;
         }
 
@@ -646,7 +655,6 @@ namespace Robust.Client.UserInterface
             }
 
             if (control != ControlFocused) return;
-            ControlFocused?.ControlFocusExited();
             ControlFocused = null;
         }
 

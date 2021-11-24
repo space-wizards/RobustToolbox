@@ -108,7 +108,7 @@ namespace Robust.Shared.Map
                 if (GridExists(gridIndex))
                 {
                     Logger.DebugS("map",
-                        $"Entity {comp.Owner.Uid} removed grid component, removing bound grid {gridIndex}");
+                        $"Entity {comp.OwnerUid} removed grid component, removing bound grid {gridIndex}");
                     DeleteGrid(gridIndex);
                 }
             }
@@ -267,8 +267,8 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    _mapEntities.Add(actualID, result.Owner.Uid);
-                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.Owner.Uid}");
+                    _mapEntities.Add(actualID, result.OwnerUid);
+                    Logger.DebugS("map", $"Rebinding map {actualID} to entity {result.OwnerUid}");
                 }
                 else
                 {
@@ -277,8 +277,8 @@ namespace Robust.Shared.Map
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
                     mapComp.WorldMap = actualID;
-                    newEnt.InitializeComponents();
-                    newEnt.StartAllComponents();
+                    _entityManager.InitializeComponents(newEnt.Uid);
+                    _entityManager.StartComponents(newEnt.Uid);
                     Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
                 }
             }
@@ -303,8 +303,8 @@ namespace Robust.Shared.Map
             var newEntity = (Entity) _entityManager.CreateEntityUninitialized(null);
             SetMapEntity(mapId, newEntity);
 
-            newEntity.InitializeComponents();
-            newEntity.StartAllComponents();
+            _entityManager.InitializeComponents(newEntity.Uid);
+            _entityManager.StartComponents(newEntity.Uid);
 
             return newEntity;
         }
@@ -459,7 +459,7 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    grid.GridEntityId = result.Owner.Uid;
+                    grid.GridEntityId = result.OwnerUid;
                     Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntityId}");
                 }
                 else
@@ -479,8 +479,8 @@ namespace Robust.Shared.Map
                     //use in transform states anytime before the state parent is properly set.
                     gridEnt.Transform.AttachParent(GetMapEntity(currentMapID));
 
-                    gridEnt.InitializeComponents();
-                    gridEnt.StartAllComponents();
+                    _entityManager.InitializeComponents(gridEnt.Uid);
+                    _entityManager.StartComponents(gridEnt.Uid);
                 }
             }
             else
@@ -685,17 +685,19 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardRunning);
 #endif
             // Possible the grid was already deleted / is invalid
-            if (!_grids.TryGetValue(gridID, out var grid))
+            if (!_grids.TryGetValue(gridID, out var grid) || grid.Deleting)
                 return;
+
+            grid.Deleting = true;
 
             var mapId = grid.ParentMapId;
 
-            if (_entityManager.TryGetEntity(grid.GridEntityId, out var gridEnt))
-            {
-                // Because deleting a grid also removes its MapGridComponent which also deletes its grid again we'll check for that here.
-                if (gridEnt.LifeStage >= EntityLifeStage.Terminating)
-                    return;
+            var entityId = grid.GridEntityId;
 
+            if (_entityManager.TryGetEntity(entityId, out var gridEnt))
+            {
+                // DeleteGrid may be triggered by the entity being deleted,
+                // so make sure that's not the case.
                 if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
                     gridEnt.Delete();
             }

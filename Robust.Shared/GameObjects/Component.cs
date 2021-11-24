@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -17,7 +17,17 @@ namespace Robust.Shared.GameObjects
     {
         /// <inheritdoc />
         [ViewVariables]
-        public abstract string Name { get; }
+        public virtual string Name
+        {
+            get
+            {
+                if (Attribute.GetCustomAttribute(GetType(), typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
+                    return attribute.PrototypeName;
+
+                // Legacy code requires all components have a name, even though this should not be required.
+                throw new InvalidOperationException($"{GetType().FullName} does not have a defined Data Name.");
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -233,11 +243,12 @@ namespace Robust.Shared.GameObjects
         {
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner is null)
+            if(Owner is null || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
-            Owner.Dirty();
-            LastModifiedTick = Owner.EntityManager.CurrentTick;
+            var entManager = Owner.EntityManager;
+            entManager.DirtyEntity(OwnerUid);
+            LastModifiedTick = entManager.CurrentTick;
         }
 
         /// <summary>

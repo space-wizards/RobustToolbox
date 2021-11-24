@@ -62,7 +62,7 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var uid = (EntityUid) arguments[0];
-            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) &&
+            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) &&
                                      transform.Parent?.OwnerUid == uid) ^ isInverted);
         }
     }
@@ -79,7 +79,7 @@ namespace Robust.Server.Bql
             var uid = (EntityUid) arguments[0];
             return input.Where(e =>
             {
-                if (!entityManager.TryGetComponent<ITransformComponent>(e, out var transform))
+                if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform))
                     return isInverted;
                 var cur = transform;
                 while (cur.ParentUid != EntityUid.Invalid)
@@ -107,7 +107,7 @@ namespace Robust.Server.Bql
         {
             return input.SelectMany(e =>
             {
-                return entityManager.TryGetComponent<ITransformComponent>(e, out var transform)
+                return entityManager.TryGetComponent<TransformComponent>(e, out var transform)
                     ? transform.Children.Select(y => y.OwnerUid)
                     : new List<EntityUid>();
             });
@@ -129,7 +129,7 @@ namespace Robust.Server.Bql
 
             while (true)
             {
-                var doing = toSearch.Where(entityManager.HasComponent<ITransformComponent>).Select(entityManager.GetComponent<ITransformComponent>).ToArray();
+                var doing = toSearch.Where(entityManager.HasComponent<TransformComponent>).Select(entityManager.GetComponent<TransformComponent>).ToArray();
                 var search = doing.SelectMany(x => x.Children.Select(y => y.Owner));
                 if (!search.Any())
                     break;
@@ -150,14 +150,14 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return input.Where(entityManager.HasComponent<ITransformComponent>)
-                .Select(e => entityManager.GetComponent<ITransformComponent>(e).OwnerUid)
+            return input.Where(entityManager.HasComponent<TransformComponent>)
+                .Select(e => entityManager.GetComponent<TransformComponent>(e).OwnerUid)
                 .Distinct();
         }
 
         public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return DoSelection(entityManager.EntityQuery<ITransformComponent>().Select(x => x.OwnerUid), arguments,
+            return DoSelection(entityManager.EntityQuery<TransformComponent>().Select(x => x.OwnerUid), arguments,
                 isInverted, entityManager);
         }
     }
@@ -177,13 +177,13 @@ namespace Robust.Server.Bql
             var map = IoCManager.Resolve<IMapManager>();
             if (tileTy.TileId == 0)
             {
-                return input.Where(e => entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && (transform.Coordinates.GetGridId(entity) == GridId.Invalid) ^ isInverted);
+                return input.Where(e => entityManager.TryGetComponent<TransformComponent>(e, out var transform) && (transform.Coordinates.GetGridId(entity) == GridId.Invalid) ^ isInverted);
             }
             else
             {
                 return input.Where(e =>
                 {
-                    if (!entityManager.TryGetComponent<ITransformComponent>(e, out var transform)) return isInverted;
+                    if (!entityManager.TryGetComponent<TransformComponent>(e, out var transform)) return isInverted;
 
                     var gridId = transform.Coordinates.GetGridId(entity);
                     if (gridId == GridId.Invalid)
@@ -208,7 +208,7 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var grid = new GridId((int) arguments[0]);
-            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && transform.GridID == grid) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.GridID == grid) ^ isInverted);
         }
     }
 
@@ -223,7 +223,7 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var map = new MapId((int) arguments[0]);
-            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && transform.MapID == map) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.MapID == map) ^ isInverted);
         }
     }
 
@@ -304,9 +304,9 @@ namespace Robust.Server.Bql
             var entityLookup = IoCManager.Resolve<IEntityLookup>();
 
             //BUG: GetEntitiesInRange effectively uses manhattan distance. This is not intended, near is supposed to be circular.
-            return input.Where(entityManager.HasComponent<ITransformComponent>)
+            return input.Where(entityManager.HasComponent<TransformComponent>)
                 .SelectMany(e =>
-                    entityLookup.GetEntitiesInRange(entityManager.GetComponent<ITransformComponent>(e).Coordinates,
+                    entityLookup.GetEntitiesInRange(entityManager.GetComponent<TransformComponent>(e).Coordinates,
                         radius))
                 .Select(x => x.Uid) // Sloth's fault.
                 .Distinct();
@@ -323,7 +323,7 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return input.Where(e => (entityManager.TryGetComponent<ITransformComponent>(e, out var transform) && transform.Anchored) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.Anchored) ^ isInverted);
         }
     }
 }

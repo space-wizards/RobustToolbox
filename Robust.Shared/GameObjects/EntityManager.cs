@@ -102,6 +102,7 @@ namespace Robust.Shared.GameObjects
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
+            EntitySystemManager.Clear();
             Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
@@ -469,6 +470,18 @@ namespace Robust.Shared.GameObjects
         {
             StartComponents(entity.Uid);
             EntityStarted?.Invoke(this, entity.Uid);
+        }
+
+        /// <inheritdoc />
+        public virtual string ToPrettyString(EntityUid uid)
+        {
+            // We want to retrieve the MetaData component even if it is deleted.
+            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+                return $"{uid}D";
+
+            var metaData = (MetaDataComponent) component;
+
+            return $"{metaData.EntityName} ({uid}, {metaData.EntityPrototype?.ID}){(metaData.EntityDeleted ? "D" : "")}";
         }
 
 #endregion Entity Management

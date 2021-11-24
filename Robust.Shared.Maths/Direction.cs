@@ -133,6 +133,22 @@ namespace Robust.Shared.Maths
             };
         }
 
+        public static Direction GetClockwise90Degrees(this Direction direction)
+        {
+            return direction switch
+            {
+                Direction.East => Direction.South,
+                Direction.West => Direction.North,
+                Direction.North => Direction.East,
+                Direction.South => Direction.West,
+                Direction.NorthEast => Direction.SouthEast,
+                Direction.SouthWest => Direction.NorthWest,
+                Direction.NorthWest => Direction.NorthEast,
+                Direction.SouthEast => Direction.SouthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
+        }
+
         /// <summary>
         /// Converts a direction to an angle, where angle is -PI to +PI.
         /// </summary>

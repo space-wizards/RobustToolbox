@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 // Setup PVS
                 entity.AddComponent<Robust.Server.GameObjects.EyeComponent>();
-                var player = playerMan.GetAllPlayers().First();
+                var player = playerMan.ServerSessions.First();
                 player.AttachToEntity(entity);
                 player.JoinGame();
             });
@@ -185,7 +185,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                 // Setup PVS
                 entity.AddComponent<Robust.Server.GameObjects.EyeComponent>();
-                var player = playerMan.GetAllPlayers().First();
+                var player = playerMan.ServerSessions.First();
                 player.AttachToEntity(entity);
                 player.JoinGame();
             });

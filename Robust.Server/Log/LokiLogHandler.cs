@@ -57,7 +57,7 @@ namespace Robust.Server.Log
             };
         }
 
-        public IList<string> PropertiesAsLabels => Array.Empty<string>();
+        public IList<string> PropertiesAsLabels => new[] {"level"};
         public IList<string> PropertiesToAppend => Array.Empty<string>();
         public LokiFormatterStrategy FormatterStrategy => LokiFormatterStrategy.SpecificPropertiesAsLabelsAndRestAppended;
     }

@@ -161,12 +161,7 @@ namespace Robust.Shared.Maths
         /// </summary>
         private Vector2 GetLocalPoint(Vector2 point)
         {
-            // Could make this more efficient but works for now I guess...
-            var boxCenter = Box.Center;
-
-            var result = point - boxCenter;
-            result = Origin + Rotation.RotateVec(result - Origin);
-            return result + boxCenter;
+            return Origin + (-Rotation).RotateVec(point - Origin);
         }
 
         #region Equality

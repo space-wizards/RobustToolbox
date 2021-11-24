@@ -501,7 +501,7 @@ namespace Robust.Client.Input
 
                 foreach (var reg in baseKeyRegs)
                 {
-                    if (!NetworkBindMap.FunctionExists(reg.Function.FunctionName))
+                    if (reg.Type != KeyBindingType.Command && !NetworkBindMap.FunctionExists(reg.Function.FunctionName))
                     {
                         Logger.ErrorS("input", "Key function in {0} does not exist: '{1}'", file,
                             reg.Function);

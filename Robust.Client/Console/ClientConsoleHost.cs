@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.Log;
+using Robust.Client.Player;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
@@ -106,7 +108,9 @@ namespace Robust.Client.Console
 
             if (AvailableCommands.ContainsKey(commandName))
             {
-                if (!_conGroup.CanCommand(commandName))
+                var playerManager = IoCManager.Resolve<IPlayerManager>();
+
+                if (!_conGroup.CanCommand(commandName) && playerManager.LocalPlayer?.Session.Status > SessionStatus.Connecting)
                 {
                     WriteError(null, $"Insufficient perms for command: {commandName}");
                     return;

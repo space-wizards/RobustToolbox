@@ -202,7 +202,7 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = Owner.EntityManager.GetEntity(value).Transform;
+            set => Parent = Owner.EntityManager.GetComponent<TransformComponent>(value);
         }
 
         /// <summary>
@@ -316,8 +316,7 @@ namespace Robust.Shared.GameObjects
                 if (!sameParent)
                 {
                     changedParent = true;
-                    var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
-                    var newParent = newParentEnt.Transform;
+                    var newParent = Owner.EntityManager.GetComponent<TransformComponent>(value.EntityId);
 
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
@@ -325,15 +324,13 @@ namespace Robust.Shared.GameObjects
                     // That's already our parent, don't bother attaching again.
 
                     var oldParent = Parent;
-                    var oldConcrete = (TransformComponent?) oldParent;
                     var uid = OwnerUid;
-                    oldConcrete?._children.Remove(uid);
-                    var newConcrete = (TransformComponent) newParent;
-                    newConcrete._children.Add(uid);
+                    oldParent?._children.Remove(uid);
+                    newParent._children.Add(uid);
 
                     // offset position from world to parent
-                    _parent = newParentEnt.Uid;
-                    ChangeMapId(newConcrete.MapID);
+                    _parent = value.EntityId;
+                    ChangeMapId(newParent.MapID);
 
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex();

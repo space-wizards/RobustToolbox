@@ -8,7 +8,7 @@ namespace Robust.Client.Graphics;
 /// <summary>
 /// Stores a single style (Bold, Italic, Monospace), or any combination thereof.
 /// </summary>
-record FontVariant (FontStyle Style, FontResource[] Resource)
+public record FontVariant (FontStyle Style, FontResource[] Resource)
 {
     public Font ToFont(byte size)
     {
@@ -23,11 +23,20 @@ record FontVariant (FontStyle Style, FontResource[] Resource)
     }
 };
 
+public record FontClass
+(
+    string Id,
+    FontStyle Style,
+    FontSize Size
+);
+
 /// <summary>
 /// Manages font-based bookkeeping across a single stylesheet.
 /// </summary>
-interface IFontLibrary
+public interface IFontLibrary
 {
+    FontClass Default { get; }
+
     /// <summary>Associates a name to a set of font resources.</summary>
     void AddFont(string name, params FontVariant[] variants);
 
@@ -42,19 +51,33 @@ interface IFontLibrary
     /// The handle keeps track of relative changes to <paramref name="fst"/> and <paramref name="fsz"/>.
     /// </summary>
     IFontLibrarian StartFont(string id, FontStyle fst, FontSize fsz);
+
+    IFontLibrarian StartFont(FontClass? fclass = default) =>
+        StartFont(
+                (fclass ?? Default).Id,
+                (fclass ?? Default).Style,
+                (fclass ?? Default).Size
+        );
 }
 
 /// <summary>
 /// Acts as a handle in to an <seealso cref="IFontLibrary"/>.
 /// </summary>
-interface IFontLibrarian
+public interface IFontLibrarian
 {
     Font Current { get; }
     Font Update(FontStyle fst, FontSize fsz);
 }
 
-class FontLibrary : IFontLibrary
+public class FontLibrary : IFontLibrary
 {
+    public FontClass Default { get; set; }
+
+    public FontLibrary(FontClass def)
+    {
+        Default = def;
+    }
+
     private Dictionary<string, FontVariant[]> _styles = new();
     private Dictionary<FontStyle, (string, FontStyle)> _standardSt = new();
     private Dictionary<FontSize, byte> _standardSz = new();

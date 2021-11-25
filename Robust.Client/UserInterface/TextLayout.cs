@@ -1,19 +1,13 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
-using System.Text.Unicode;
-using JetBrains.Annotations;
 using Robust.Client.Graphics;
-using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface
 {
-    using FontBundle = Dictionary<FontStyle, Font>;
-
     public static class TextLayout
     {
         /// <summary>
@@ -24,10 +18,11 @@ namespace Robust.Client.UserInterface
         /// Pseudocode for rendering:
         /// <code>
         ///     (int x, int y) topLeft = (10, 20);
-        ///     foreach (var r in Lines)
+        ///     var libn = style.FontLib.StartFont(defaultFontID, defaultFontStyle, defaultFontSize);
+        ///     foreach (var r in returnedWords)
         ///     {
         ///          var section = Message.Sections[section];
-        ///          var font = style.FontBundle[section.Style];
+        ///          var font = libn.Update(section.Style, section.Size);
         ///          font.DrawAt(
         ///              text=section.Content.Substring(charOffs, length),
         ///              x=topLeft.x + r.x,
@@ -68,14 +63,6 @@ namespace Robust.Client.UserInterface
             public int y;
         }
 
-        public class RichTextBlock
-        {
-            public Offset[][] Lines;
-            public int Height;
-            public int Width;
-            public FormattedMessage Message;
-        }
-
         public enum WordType : byte
         {
             Normal,
@@ -102,22 +89,30 @@ namespace Robust.Client.UserInterface
             public WordType wt;
         }
 
-        public static RichTextBlock Layout(
+        public interface ISectionable
+        {
+            Section this[int i] { get; }
+            int Length { get; }
+        }
+
+        public static ImmutableArray<ImmutableArray<Word>> Layout(
                 ISectionable text,
                 int w,
-                FontBundle fonts,
+                IFontLibrary fonts,
                 float scale = 1.0f,
                 int lineSpacing = 0,
                 int wordSpacing = 0,
                 int runeSpacing = 0,
+                FontClass? fclass = default,
                 LayoutOptions options = LayoutOptions.Default
         ) => Layout(
             text,
-            Split(text, fonts, scale, wordSpacing, runeSpacing, options),
+            Split(text, fonts, scale, wordSpacing, runeSpacing, fclass, options),
             w,
             fonts,
             scale,
             lineSpacing, wordSpacing,
+            fclass,
             options
         );
 
@@ -130,14 +125,15 @@ namespace Robust.Client.UserInterface
         // 4. Add up each gap's priority value (Σpri)
         // 5. Assign each gap a final priority (fp) of ((priMax - pri) / Σpri)
         // 6. That space has (fp*fs) pixels.
-        public static RichTextBlock Layout(
+        public static ImmutableArray<ImmutableArray<Word>> Layout(
                 ISectionable src,
                 ImmutableArray<Word> text,
                 int w,
-                FontBundle fonts,
+                IFontLibrary fonts,
                 float scale = 1.0f,
                 int lineSpacing = 0,
                 int wordSpacing = 0,
+                FontClass? fclass = default,
                 LayoutOptions options = LayoutOptions.Default
         )
         {
@@ -176,6 +172,7 @@ namespace Robust.Client.UserInterface
             }
             lw.Flush(true);
 
+            var flib = fonts.StartFont(fclass);
             int py=0;
             foreach ((var ln, var gaps, var lnrem, var sptot, var maxPri, var tPri) in lw.Done)
             {
@@ -183,15 +180,13 @@ namespace Robust.Client.UserInterface
                 int lh=0;
                 var spDist = new int[gaps.Count];
                 for (int i = 0; i < gaps.Count; i++)
-                {
                     spDist[i] = (int) (((float) gaps[i] / (float) tPri) * (float) sptot);
-                }
 
                 int prevasc=0, prevdesc=0;
                 for (int i = 0; i < ln.Count; i++)
                 {
                     var ss = src[ln[i].section];
-                    var sf = fonts[ss.Style, ];
+                    var sf = flib.Update(ss.Style, ss.Size);
                     var asc = sf.GetAscent(scale);
                     var desc = sf.GetDescent(scale);
                     px += spDist[i] + ln[i].w;
@@ -210,6 +205,8 @@ namespace Robust.Client.UserInterface
                 }
                 py += lineSpacing + lh;
             }
+
+            return lw.Done.Select(l => l.wds.ToImmutableArray()).ToImmutableArray();
         }
 
         private static (int gapPri, int adv) TransitionWeights (TextAlign l, TextAlign r)
@@ -264,21 +261,16 @@ namespace Robust.Client.UserInterface
             );
         }
 
-        public interface ISectionable
-        {
-            Section this[int i] { get; }
-            int Length { get; }
-        }
-
         // Split creates a list of words broken based on their boundaries.
         // Users are encouraged to reuse this for as long as it accurately reflects
         // the content they're trying to display.
         public static ImmutableArray<Word> Split(
                 ISectionable text,
-                FontBundle fonts,
+                IFontLibrary fonts,
                 float scale,
                 int wordSpacing,
                 int runeSpacing,
+                FontClass? fclass,
                 LayoutOptions options = LayoutOptions.Default
         )
         {
@@ -299,11 +291,12 @@ namespace Robust.Client.UserInterface
                     w => w.length > 0
             );
 
+            var flib = fonts.StartFont(fclass);
             for (s = 0; s < text.Length; s++)
             {
                 var sec = text[s];
                 sbo = 0;
-                var fnt = fonts[sec.Style, sec.Size];
+                var fnt = flib.Update(sec.Style, sec.Size);
 
                 foreach (var r in sec.Content.EnumerateRunes())
                 {

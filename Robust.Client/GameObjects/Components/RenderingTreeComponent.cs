@@ -14,8 +14,7 @@ namespace Robust.Client.GameObjects
 
         private static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
-            var worldPos = value.Owner.Transform.WorldPosition;
-            var worldRot = value.Owner.Transform.WorldRotation;
+            var (worldPos, worldRot) = value.Owner.Transform.GetWorldPositionRotation();
             var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
@@ -50,7 +49,6 @@ namespace Robust.Client.GameObjects
         internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)
         {
             // Lights are circles so don't need entity's rotation
-
             worldPos ??= value.Owner.Transform.WorldPosition;
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;

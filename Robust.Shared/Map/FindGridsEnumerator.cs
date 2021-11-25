@@ -57,7 +57,9 @@ namespace Robust.Shared.Map
 
                     if (!_approx)
                     {
-                        var transform = new Transform(xformComp.WorldPosition, xformComp.WorldRotation);
+                        var (worldPos, worldRot) = xformComp.GetWorldPositionRotation();
+
+                        var transform = new Transform(worldPos, worldRot);
 
                         while (!intersects && enumerator.MoveNext(out var chunk))
                         {

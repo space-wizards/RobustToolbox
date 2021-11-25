@@ -161,9 +161,9 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
             {
-                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
+                var (_, broadRot, broadInvMatrix) = broadphase.Owner.Transform.GetWorldPositionRotationInvMatrix();
 
-                var localTransform = new Transform(invMatrix.Transform(transform.Position), transform.Quaternion2D.Angle - broadphase.Owner.Transform.WorldRotation);
+                var localTransform = new Transform(broadInvMatrix.Transform(transform.Position), transform.Quaternion2D.Angle - broadRot);
 
                 foreach (var fixture in body._fixtures)
                 {

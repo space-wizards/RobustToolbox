@@ -26,7 +26,7 @@ namespace OpenToolkit.GraphicsLibraryFramework
 
                 string rName = null;
                 if (OperatingSystem.IsLinux()) rName = "libglfw.so.3";
-                if (OperatingSystem.IsMacOS()) rName = "libglfw.3.dylib";
+                else if (OperatingSystem.IsMacOS()) rName = "libglfw.3.dylib";
 
                 if ((rName != null) && NativeLibrary.TryLoad(rName, assembly, path, out var handle))
                     return handle;

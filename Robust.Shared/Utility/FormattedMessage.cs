@@ -120,6 +120,20 @@ namespace Robust.Shared.Utility
             return sb.ToString();
         }
 
+        // I don't wanna fix the serializer yet.
+        public string ToMarkup()
+        {
+            var sb = new StringBuilder();
+            foreach (var i in Sections)
+            {
+                sb.AppendFormat("[color=#{0:X}]", i.Color);
+                sb.Append(i.Content);
+                sb.Append("[/color]");
+            }
+
+            return sb.ToString();
+        }
+
         // are you a construction worker?
         // cuz you buildin
         public class Builder

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
@@ -59,14 +60,12 @@ internal partial class PVSSystem : EntitySystem
     /// </summary>
     private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new();
 
-
     private PVSCollection<EntityUid, IEntity> _entityPvsCollection = default!;
     private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
     private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _queuedNewEntities = new();
     private readonly Dictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
 
     public override void Initialize()
@@ -173,7 +172,6 @@ internal partial class PVSSystem : EntitySystem
         if (e.NewStatus == SessionStatus.InGame)
         {
             _playerVisibleSets.Add(e.Session, _visSetPool.Get());
-            _queuedNewEntities.Add(e.Session, new());
             foreach (var (_, pvsCollection) in _pvsCollections)
             {
                 pvsCollection.AddPlayer(e.Session);
@@ -182,7 +180,6 @@ internal partial class PVSSystem : EntitySystem
         else if (e.NewStatus == SessionStatus.Disconnected)
         {
             _visSetPool.Return(_playerVisibleSets[e.Session]);
-            _queuedNewEntities.Remove(e.Session);
             _playerVisibleSets.Remove(e.Session);
             foreach (var (_, pvsCollection) in _pvsCollections)
             {
@@ -248,31 +245,15 @@ internal partial class PVSSystem : EntitySystem
         }
 
         var visibleEnts = _visSetPool.Get();
-        var containedEntitiesDict = new Dictionary<EntityUid, HashSet<EntityUid>>();
-
-        void AddContained(EntityUid entityUid, Dictionary<EntityUid, HashSet<EntityUid>> containedEnts)
-        {
-            if(!EntityManager.TryGetComponent<ContainerManagerComponent>(entityUid, out var containerManagerComponent) || containerManagerComponent.Containers.Count == 0) return;
-
-            var containedEntitiesSet = new HashSet<EntityUid>();
-            foreach (var container in containerManagerComponent.GetAllContainers())
-            {
-                containedEntitiesSet.UnionWith(container.ContainedEntities.Select(x => x.Uid));
-            }
-            if(containedEntitiesSet.Count == 0) return;
-            containedEnts[entityUid] = containedEntitiesSet;
-        }
 
         foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
         {
             visibleEnts.Add(entityUid);
-            AddContained(entityUid, containedEntitiesDict);
         }
 
         foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
         {
             visibleEnts.Add(entityUid);
-            AddContained(entityUid, containedEntitiesDict);
         }
 
         var viewers = GetSessionViewers(session);
@@ -287,7 +268,6 @@ internal partial class PVSSystem : EntitySystem
 
             //todo at some point just register the viewerentities as localoverrides
             RecursiveAdd(eyeEuid, visibleEnts, visMask);
-            AddContained(eyeEuid, containedEntitiesDict);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -298,7 +278,6 @@ internal partial class PVSSystem : EntitySystem
                     foreach (var index in chunk)
                     {
                         RecursiveAdd(index, visibleEnts, visMask);
-                        AddContained(index, containedEntitiesDict);
                     }
                 }
             }
@@ -316,7 +295,6 @@ internal partial class PVSSystem : EntitySystem
                         foreach (var index in chunk)
                         {
                             RecursiveAdd(index, visibleEnts, visMask);
-                            AddContained(index, containedEntitiesDict);
                         }
                     }
                 }
@@ -332,62 +310,64 @@ internal partial class PVSSystem : EntitySystem
         //send new entities that we couldn't send last time
         var skippedNewEntities = new HashSet<EntityUid>();
 
-        var sentByContained = new HashSet<EntityUid>();
+        var processed = new HashSet<EntityUid>();
 
-        foreach (var entityUid in visibleEnts)
+        bool TryGenerateState(EntityUid entityUid, [NotNullWhen(true)] out EntityState? state, bool dontSkip = false)
         {
+            state = null;
+
             //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-            if(!entityUid.IsValid()) continue;
+            if(!entityUid.IsValid()) return false;
 
             // this entity was already sent using out contained-algo :tm:
-            if(sentByContained.Contains(entityUid)) continue;
+            if(processed.Contains(entityUid)) return false;
+            processed.Add(entityUid);
 
             //remove entities we can see rn from the playerVisibleSet so that only the culled ones remain
             //use tick zero for new entities, fromTick for entities that were already in our view
             var @new = !playerVisibleSet.Remove(entityUid);
             var tick = @new ? GameTick.Zero : fromTick;
 
-            containedEntitiesDict.TryGetValue(entityUid, out var containedEntities);
-
             if (@new)
             {
-                var requiredBudget = 1;
-                if (containedEntities != null)
-                {
-                    requiredBudget += containedEntities.Count;
-                }
-
-                var newBudget = newEntitiesSent + requiredBudget;
-                if(newBudget > _newEntityBudget && requiredBudget < _newEntityBudget)
+                if(newEntitiesSent > _newEntityBudget && !dontSkip)
                 {
                     skippedNewEntities.Add(entityUid);
-                    continue;
+                    return false;
                 }
 
-                newEntitiesSent = newBudget;
-
-                if(containedEntities != null)
-                {
-                    foreach (var containedEnt in containedEntities)
-                    {
-                        var containedState = GetEntityState(session, containedEnt, tick);
-
-                        if(containedState.Empty) continue;
-
-                        entityStates.Add(containedState);
-                        sentByContained.Add(containedEnt);
-                    }
-                }
+                newEntitiesSent++;
             }
             else if (EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick)
             {
-                //entity has been sent and hasnt been updated
-                continue;
+                //entity has been sent before and hasnt been updated since
+                return false;
             }
 
-            var state = GetEntityState(session, entityUid, tick);
+            state = GetEntityState(session, entityUid, tick);
 
-            if(!@new && state.Empty) continue;
+            return @new || !state.Empty;
+        }
+
+        foreach (var entityUid in visibleEnts)
+        {
+            if(!TryGenerateState(entityUid, out var state))
+                continue;
+
+            foreach (var change in state.ComponentChanges.Value)
+            {
+                if(change.State is not ContainerManagerComponent.ContainerManagerComponentState containerState)
+                    continue;
+
+                foreach (var containerData in containerState.ContainerSet)
+                {
+                    foreach (var containedEntity in containerData.ContainedEntities)
+                    {
+                        if(TryGenerateState(containedEntity, out var containedState, true))
+                            entityStates.Add(containedState);
+                    }
+                }
+            }
 
             entityStates.Add(state);
         }

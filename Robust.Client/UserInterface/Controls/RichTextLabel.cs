@@ -20,9 +20,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SetMessage(string message)
         {
-            var msg = new FormattedMessage();
+            var msg = new FormattedMessage.Builder();
             msg.AddText(message);
-            SetMessage(msg);
+            SetMessage(msg.Build());
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -47,7 +47,9 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
+#if false
             _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>(), UIScale);
+#endif
         }
 
         [Pure]

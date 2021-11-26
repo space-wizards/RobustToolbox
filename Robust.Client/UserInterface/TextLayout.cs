@@ -293,6 +293,11 @@ namespace Robust.Client.UserInterface
             for (s = 0; s < text.Length; s++)
             {
                 var sec = text[s];
+
+                #warning Meta.Localized not yet implemented
+                if (sec.Meta != default)
+                    throw new Exception("Text section with unknown or unimplemented Meta flag");
+
                 sbo = 0;
                 var fnt = flib.Update(sec.Style, sec.Size);
 

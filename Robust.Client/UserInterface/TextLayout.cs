@@ -327,6 +327,8 @@ namespace Robust.Client.UserInterface
                     {
                         if (nofb)
                             continue;
+                        else if (fnt is DummyFont)
+                            cm = new CharMetrics();
                         else
                             throw new Exception("unable to get character metrics");
                     }

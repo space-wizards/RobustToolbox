@@ -10,7 +10,7 @@ namespace Robust.Client.Graphics;
 /// </summary>
 public record FontVariant (FontStyle Style, FontResource[] Resource)
 {
-    public Font ToFont(byte size)
+    public virtual Font ToFont(byte size)
     {
         if (Resource.Length == 1)
             return new VectorFont(Resource[0], size);
@@ -21,6 +21,11 @@ public record FontVariant (FontStyle Style, FontResource[] Resource)
 
         return new StackedFont(fs);
     }
+};
+
+internal record DummyVariant(FontStyle fs) : FontVariant(fs, new FontResource[0])
+{
+    public override Font ToFont(byte size) => new DummyFont();
 };
 
 public record FontClass
@@ -106,7 +111,7 @@ public class FontLibrary : IFontLibrary
 
             // Since the "style" flags are a bitfield, we can just see which one has more bits.
             // More bits == closer to the desired font style. Free fallback!
-            if (BitOperations.PopCount((ulong) (vr.Style & fst)) > BitOperations.PopCount((ulong) (winfst & fst)))
+            if (BitOperations.PopCount((ulong) (vr.Style & fst)) >= BitOperations.PopCount((ulong) (winfst & fst)))
                 winner = vr;
         }
 

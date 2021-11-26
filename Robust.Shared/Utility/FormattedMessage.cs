@@ -141,18 +141,22 @@ namespace Robust.Shared.Utility
             private bool _dirty = false;
             private int _idx = 0;
             private StringBuilder _sb = new();
-            private List<Section> _work = new();
+            private List<Section> _work = new() {
+                new Section()
+            };
 
             public static Builder FromFormattedText(FormattedMessage orig) => new ()
             {
-                _idx = orig.Sections.Length - 1,
+                _idx = orig.Sections.Length < 0 ? orig.Sections.Length - 1 : 0,
                 _work = new List<Section>(orig.Sections),
             };
 
             public void Clear()
             {
                 _idx = 0;
-                _work = new();
+                _work = new() {
+                    new Section()
+                };
                 _sb = _sb.Clear();
             }
 
@@ -166,9 +170,10 @@ namespace Robust.Shared.Utility
             {
                 flushWork();
                 _idx++;
-                var last = _work[_work.Count - 1];
+                var lidx = _work.Count > 0 ? _work.Count - 1 : 0;
+                var last = _work[lidx];
                 last.Color = color.ToArgb();
-                _work[_work.Count - 1] = last;
+                _work[lidx] = last;
             }
 
             public void AddMessage(FormattedMessage other) =>
@@ -186,7 +191,7 @@ namespace Robust.Shared.Utility
             public void Pop()
             {
                 flushWork();
-                _idx--;
+                _idx = _idx < 0 ? _idx-1 : 0;
             }
 
             public void flushWork()
@@ -194,10 +199,11 @@ namespace Robust.Shared.Utility
                 if (!_dirty)
                     return;
 
-                var last = _work[_work.Count - 1];
+                var lidx = _work.Count > 0 ? _work.Count - 1 : 0;
+                var last = _work[lidx];
                 last.Content = _sb.ToString();
                 _sb = _sb.Clear();
-                _work.Add(_work[_idx]);
+                _work.Add(last);
             }
 
             public FormattedMessage Build() => new FormattedMessage(_work.ToArray());

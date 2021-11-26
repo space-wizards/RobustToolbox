@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using Pidgin;
 using Robust.Shared.Maths;
-using static Robust.Shared.Utility.FormattedMessage;
 using static Pidgin.Parser;
 using static Pidgin.Parser<char>;
 
@@ -112,7 +110,9 @@ namespace Robust.Shared.Utility.Markup
         }
 
 
-        public FormattedMessage Render()
+        public FormattedMessage Render() => Build().Build();
+
+        public FormattedMessage.Builder Build()
         {
             var b = new FormattedMessage.Builder();
 
@@ -126,7 +126,21 @@ namespace Robust.Shared.Utility.Markup
                 }
             }
 
-            return b.Build();
+            return b;
         }
+
+        public static FormattedMessage.Builder BuildMarkup(string text)
+        {
+            var nb = new Basic();
+            nb.AddMarkup(text);
+            return nb.Build();
+        }
+
+        public static FormattedMessage RenderMarkup(string text) => BuildMarkup(text).Build();
+    }
+
+    public static class FormattedMessageExtensions
+    {
+        public static void AddMarkup(this FormattedMessage.Builder bld, string text) => bld.AddMessage(Basic.BuildMarkup(text));
     }
 }

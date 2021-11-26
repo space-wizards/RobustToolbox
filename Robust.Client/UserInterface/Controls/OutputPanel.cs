@@ -62,7 +62,7 @@ namespace Robust.Client.UserInterface.Controls
             var entry = _entries[index];
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
-            var font = _getFont();
+            var font = _getFont().StartFont().Current;
             _totalContentHeight -= entry.Height + font.GetLineSeparation(UIScale);
             if (_entries.Count == 0)
             {
@@ -86,7 +86,7 @@ namespace Robust.Client.UserInterface.Controls
             entry.Update(_getFont(), _getContentBox().Width, UIScale);
 
             _entries.Add(entry);
-            var font = _getFont();
+            var font = _getFont().StartFont().Current;
             _totalContentHeight += entry.Height;
             if (_firstLine)
             {
@@ -115,17 +115,11 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = _getStyleBox();
-            var font = _getFont();
+            var font = _getFont().StartFont().Current;
             style?.Draw(handle, PixelSizeBox);
             var contentBox = _getContentBox();
 
             var entryOffset = -_scrollBar.Value;
-
-#if false
-            // A stack for format tags.
-            // This stack contains the format tag to RETURN TO when popped off.
-            // So when a new color tag gets hit this stack gets the previous color pushed on.
-            var formatStack = new Stack<FormattedMessage.Tag>(2);
 
             foreach (var entry in _entries)
             {
@@ -140,11 +134,10 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, formatStack, UIScale);
+                entry.Draw(handle, _getFont(), contentBox, entryOffset, UIScale);
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
-#endif
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)
@@ -184,7 +177,7 @@ namespace Robust.Client.UserInterface.Controls
                 var entry = _entries[i];
                 entry.Update(font, sizeX, UIScale);
                 _entries[i] = entry;
-                _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
+                _totalContentHeight += entry.Height;
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
@@ -195,14 +188,14 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        private Font _getFont()
+        private IFontLibrary _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty<IFontLibrary>("font", out var font))
             {
                 return font;
             }
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFont;
+            return UserInterfaceManager.ThemeDefaults.DefaultFontLibrary;
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -220,7 +213,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private int _getScrollSpeed()
         {
-            var font = _getFont();
+            var font = _getFont().StartFont().Current;
             return font.GetLineHeight(UIScale) * 2;
         }
 

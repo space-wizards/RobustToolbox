@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -32,8 +31,7 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            var font = _getFont();
-            _entry.Update(font, availableSize.X * UIScale, UIScale);
+            _entry.Update(_getFont(), availableSize.X * UIScale, UIScale);
 
             return (_entry.Width / UIScale, _entry.Height / UIScale);
         }
@@ -47,20 +45,18 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-#if false
-            _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>(), UIScale);
-#endif
+            _entry.Draw(handle, _getFont(), SizeBox, 0, UIScale);
         }
 
         [Pure]
-        private Font _getFont()
+        private IFontLibrary _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            if (TryGetStyleProperty<IFontLibrary>("font", out var font))
             {
                 return font;
             }
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFont;
+            return UserInterfaceManager.ThemeDefaults.DefaultFontLibrary;
         }
     }
 }

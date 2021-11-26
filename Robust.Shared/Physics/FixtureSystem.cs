@@ -240,7 +240,12 @@ namespace Robust.Shared.Physics
         {
             if (args.Current is not FixtureManagerComponentState state) return;
 
-            var physics = EntityManager.GetComponent<PhysicsComponent>(uid);
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? physics))
+            {
+                DebugTools.Assert(false);
+                Logger.ErrorS("physics", $"Tried to apply fixture state for {uid} which has name {nameof(PhysicsComponent)}");
+                return;
+            }
 
             var toAddFixtures = new List<Fixture>();
             var toRemoveFixtures = new List<Fixture>();

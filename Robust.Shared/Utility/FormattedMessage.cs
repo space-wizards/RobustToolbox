@@ -11,11 +11,11 @@ namespace Robust.Shared.Utility
     [Serializable, NetSerializable]
     public record struct Section
     {
-        public FontStyle Style;
-        public FontSize Size;
-        public TextAlign Alignment;
-        public int Color;
-        public MetaFlags Meta;
+        public FontStyle Style = default;
+        public FontSize Size = default;
+        public TextAlign Alignment = default;
+        public int Color = default;
+        public MetaFlags Meta = default;
         public string Content = string.Empty;
     }
 

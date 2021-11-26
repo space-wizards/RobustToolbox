@@ -10,6 +10,12 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
 {
+    /// <summary>
+    /// Storage for physics fixtures
+    /// </summary>
+    /// <remarks>
+    /// In its own component to decrease physics comp state size significantly.
+    /// </remarks>
     [RegisterComponent]
     [NetworkedComponent]
     [Friend(typeof(FixtureSystem))]
@@ -34,6 +40,7 @@ namespace Robust.Shared.Physics
         void ISerializationHooks.BeforeSerialization()
         {
             DebugTools.Assert(_serializedFixtures.Count == 0);
+            _serializedFixtures.Clear();
 
             foreach (var (_, fixture) in Fixtures)
             {

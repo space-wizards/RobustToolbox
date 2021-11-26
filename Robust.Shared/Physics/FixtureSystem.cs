@@ -32,35 +32,41 @@ namespace Robust.Shared.Physics
 
         private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)
         {
-            // TODO: Need to make it OnAdd because this needs to be done before entities initialise.
-            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
-            {
-                if (component._serializedFixtures.Count > 0)
-                {
-                    DebugTools.Assert(false);
-                    Logger.ErrorS("fixtures", $"Tried to add a {nameof(FixturesComponent)} to something that doesn't have a {nameof(PhysicsComponent)}");
-                }
-
-                return;
-            }
-
-            var worldpos = body.Owner.Transform.WorldPosition;
-
-            if (body.Broadphase != null)
-                _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
-
-            // Can't resolve in serialization so here we are.
             foreach (var fixture in component._serializedFixtures)
             {
-                fixture.Body = body;
                 fixture.ID = GetFixtureName(component, fixture);
-                if (body.Broadphase != null)
-                {
-                    _broadphaseSystem.CreateProxies(fixture, worldpos, false);
-                }
+
+                if (component.Fixtures.TryAdd(fixture.ID, fixture)) continue;
+
+                Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
             }
 
             component._serializedFixtures.Clear();
+
+            if (component.Fixtures.Count <= 0 ||
+                !EntityManager.TryGetComponent(uid, out PhysicsComponent? body) ||
+                !EntityManager.TryGetComponent(uid, out TransformComponent? xform)) return;
+
+            // Ordering issues man
+            var broadphase = _broadphaseSystem.GetBroadphase(body);
+            body.Broadphase = broadphase;
+
+            if (broadphase != null)
+            {
+                var worldPos = xform.WorldPosition;
+
+                // Can't resolve in serialization so here we are.
+                // TODO: Support for large body DYnamicTrees (i.e. 1 proxy for the entire body)
+                foreach (var (_, fixture) in component.Fixtures)
+                {
+                    // It's possible that fixtures were added at some stage so we'll just check if they're on the broadphase
+                    if (fixture.ProxyCount > 0) continue;
+
+                    fixture.Body = body;
+
+                    _broadphaseSystem.CreateProxies(fixture, worldPos, false);
+                }
+            }
 
             // Make sure all the right stuff is set on the body
             FixtureUpdate(component);
@@ -121,6 +127,15 @@ namespace Robust.Shared.Physics
             }
 
             return manager.Fixtures.TryGetValue(id, out var fixture) ? fixture : null;
+        }
+
+        public void DestroyFixture(PhysicsComponent body, string id, bool updates = true)
+        {
+            var fixture = GetFixture(body, id);
+
+            if (fixture == null) return;
+
+            DestroyFixture(body, fixture, updates);
         }
 
         public void DestroyFixture(Fixture fixture, bool updates = true, FixturesComponent? manager = null)
@@ -285,7 +300,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        internal string GetFixtureName(FixturesComponent component, Fixture fixture)
+        internal static string GetFixtureName(FixturesComponent component, Fixture fixture)
         {
             if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
 
@@ -333,6 +348,7 @@ namespace Robust.Shared.Physics
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
+            component.Dirty();
         }
 
         [Serializable, NetSerializable]

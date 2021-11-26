@@ -171,6 +171,12 @@ namespace Robust.Shared.Utility
                 _work[_work.Count - 1] = last;
             }
 
+            public void AddMessage(FormattedMessage other) =>
+                _work.AddRange(other.Sections);
+
+            public void AddMessage(FormattedMessage.Builder other) =>
+                _work.AddRange(other._work);
+
             public void PushNewline()
             {
                 _dirty = true;

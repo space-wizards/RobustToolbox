@@ -1,4 +1,4 @@
-﻿using Robust.Client.State;
+using Robust.Client.State;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -14,11 +14,20 @@ namespace Robust.Client.UserInterface
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();
-            var type = reflection.LooseGetType(args[0]);
+            var types = reflection.GetAllChildren(typeof(State.State));
 
-            var stateMan = IoCManager.Resolve<IStateManager>();
+            foreach (var tryType in types)
+            {
+                if (tryType.FullName!.EndsWith(args[0]))
+                {
+                    var stateMan = IoCManager.Resolve<IStateManager>();
+                    stateMan.RequestStateChange(tryType);
+                    shell.WriteLine($"Switching to scene {tryType.FullName}");
+                    return;
+                }
+            }
 
-            stateMan.RequestStateChange(type);
+            shell.WriteError($"No scene child class type ends with {args[0]}");
         }
     }
 }

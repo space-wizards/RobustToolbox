@@ -19,6 +19,7 @@ namespace Robust.Shared.Console
         [Dependency] protected readonly ILogManager LogManager = default!;
         [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
+        [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
 
         [ViewVariables]
         protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
@@ -48,7 +49,7 @@ namespace Robust.Shared.Console
             // search for all client commands in all assemblies, and register them
             foreach (var type in ReflectionManager.GetAllChildren<IConsoleCommand>())
             {
-                var instance = (IConsoleCommand) Activator.CreateInstance(type, null)!;
+                var instance = (IConsoleCommand) _typeFactory.CreateInstanceUnchecked(type, true);
                 if (RegisteredCommands.TryGetValue(instance.Command, out var duplicate))
                 {
                     throw new InvalidImplementationException(instance.GetType(), typeof(IConsoleCommand),

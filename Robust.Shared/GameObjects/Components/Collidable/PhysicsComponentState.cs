@@ -27,8 +27,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="sleepingAllowed"></param>
         /// <param name="fixedRotation"></param>
         /// <param name="status"></param>
-        /// <param name="fixtures"></param>
-        /// <param name="joints"></param>
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
         /// <param name="bodyType"></param>

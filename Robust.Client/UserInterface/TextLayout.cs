@@ -89,12 +89,6 @@ namespace Robust.Client.UserInterface
             public WordType wt;
         }
 
-        public interface ISectionable
-        {
-            Section this[int i] { get; }
-            int Length { get; }
-        }
-
         public static ImmutableArray<ImmutableArray<Word>> Layout(
                 ISectionable text,
                 int w,

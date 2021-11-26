@@ -8,6 +8,12 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
+    public interface ISectionable
+    {
+        Section this[int i] { get; }
+        int Length { get; }
+    }
+
     [Serializable, NetSerializable]
     public record struct Section
     {
@@ -109,7 +115,7 @@ namespace Robust.Shared.Utility
 
     [PublicAPI]
     [Serializable, NetSerializable]
-    public sealed record FormattedMessage(Section[] Sections)
+    public sealed record FormattedMessage(Section[] Sections) : ISectionable
     {
         public override string ToString()
         {
@@ -145,6 +151,10 @@ namespace Robust.Shared.Utility
 
             return sb.ToString();
         }
+
+        // Implements Robust.Client.UserInterface.TextLayout.ISectionable
+        public Section this[int i] { get => Sections[i]; }
+        public int Length { get => Sections.Length; }
 
         // are you a construction worker?
         // cuz you buildin

@@ -89,7 +89,7 @@ namespace Robust.Client.UserInterface
             public WordType wt;
         }
 
-        public static ImmutableArray<ImmutableArray<Word>> Layout(
+        public static ImmutableArray<Word> Layout(
                 ISectionable text,
                 int w,
                 IFontLibrary fonts,
@@ -119,7 +119,7 @@ namespace Robust.Client.UserInterface
         // 4. Add up each gap's priority value (Σpri)
         // 5. Assign each gap a final priority (fp) of ((priMax - pri) / Σpri)
         // 6. That space has (fp*fs) pixels.
-        public static ImmutableArray<ImmutableArray<Word>> Layout(
+        public static ImmutableArray<Word> Layout(
                 ISectionable src,
                 ImmutableArray<Word> text,
                 int w,
@@ -204,7 +204,7 @@ namespace Robust.Client.UserInterface
                 py += lineSpacing + lh;
             }
 
-            return lw.Done.Select(l => l.wds.ToImmutableArray()).ToImmutableArray();
+            return lw.Done.SelectMany(e => e.wds).ToImmutableArray();
         }
 
         private static (int gapPri, int adv) TransitionWeights (TextAlign l, TextAlign r)

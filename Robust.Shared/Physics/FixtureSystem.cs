@@ -33,6 +33,15 @@ namespace Robust.Shared.Physics
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
+            // TODO: Need a better solution to this because the only reason I don't throw is that allcomponents test
+            // Yes it is actively making the game buggier but I would essentially double the size of this PR trying to fix it
+            // my best solution rn is move the broadphase property onto FixturesComponent and then refactor
+            // SharedBroadphaseSystem a LOT.
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            {
+                return;
+            }
+
             // Can't just get physicscomp on shutdown as it may be touched completely independently.
             body.DestroyContacts();
             _broadphaseSystem.RemoveBody(body, component);

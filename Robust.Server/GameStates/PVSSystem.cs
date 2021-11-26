@@ -129,11 +129,6 @@ internal partial class PVSSystem : EntitySystem
         _cachedStates.Clear();
     }
 
-    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
-    {
-        _entityPvsCollection.UpdateIndex(uid, component.Coordinates);
-    }
-
     public void CullDeletionHistory(GameTick oldestAck)
     {
         _entityPvsCollection.CullDeletionHistoryUntil(oldestAck);
@@ -164,7 +159,27 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        _entityPvsCollection.UpdateIndex(ev.Sender.Uid, ev.NewPosition);
+        UpdateEntityRecursive(ev.Sender.Uid, ev.Component);
+    }
+
+    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    {
+        UpdateEntityRecursive(uid, component);
+    }
+
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent? transformComponent = null)
+    {
+        if(!Resolve(uid, ref transformComponent))
+            return;
+
+        _entityPvsCollection.UpdateIndex(uid, transformComponent.Coordinates);
+
+        if(_mapManager.IsGrid(uid)) return;
+
+        foreach (var componentChild in transformComponent.ChildEntityUids)
+        {
+            UpdateEntityRecursive(componentChild);
+        }
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)

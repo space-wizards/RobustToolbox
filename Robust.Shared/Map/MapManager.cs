@@ -502,6 +502,11 @@ namespace Robust.Shared.Map
             return _grids[gridID];
         }
 
+        public bool IsGrid(EntityUid uid)
+        {
+            return _grids.Any(x => x.Value.GridEntityId == uid);
+        }
+
         public bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid)
         {
             if (_grids.TryGetValue(gridId, out var gridinterface))

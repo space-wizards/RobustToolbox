@@ -357,7 +357,7 @@ namespace Robust.Shared.GameObjects
                     {
                         if(!oldPosition.Position.Equals(Coordinates.Position))
                         {
-                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates);
+                            var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
                             Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                         }
                     }
@@ -403,7 +403,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates);
+                    var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this);
                     Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                 }
                 else
@@ -595,7 +595,7 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, worldAABB);
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, worldAABB);
                 Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                 _oldCoords = null;
             }
@@ -827,7 +827,7 @@ namespace Robust.Shared.GameObjects
                     var oldPos = Coordinates;
                     _localPosition = newState.LocalPosition;
 
-                    var ev = new MoveEvent(Owner, oldPos, Coordinates);
+                    var ev = new MoveEvent(Owner, oldPos, Coordinates, this);
                     EntitySystem.Get<SharedTransformSystem>().DeferMoveEvent(ref ev);
 
                     rebuildMatrices = true;
@@ -984,17 +984,19 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public readonly struct MoveEvent
     {
-        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, Box2? worldAABB = null)
+        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
+            Component = component;
             WorldAABB = worldAABB;
         }
 
         public readonly IEntity Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
+        public readonly TransformComponent Component;
 
         /// <summary>
         ///     New AABB of the entity.

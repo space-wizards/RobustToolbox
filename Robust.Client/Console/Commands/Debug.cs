@@ -560,12 +560,12 @@ namespace Robust.Client.Console.Commands
             vBox.AddChild(tree);
 
             var rich = new RichTextLabel();
-            var message = new FormattedMessage();
+            var message = new FormattedMessage.Builder();
             message.AddText("Foo\n");
             message.PushColor(Color.Red);
             message.AddText("Bar");
             message.Pop();
-            rich.SetMessage(message);
+            rich.SetMessage(message.Build());
             vBox.AddChild(rich);
 
             var itemList = new ItemList();

@@ -75,6 +75,7 @@ namespace Robust.Shared.GameObjects
 
         // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
         // on physics bodies for massive shuttle perf savings.
+        [Obsolete("Use FixturesComponent instead.")]
         public IReadOnlyList<Fixture> Fixtures => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Values.ToList();
 
         public int FixtureCount => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Count;

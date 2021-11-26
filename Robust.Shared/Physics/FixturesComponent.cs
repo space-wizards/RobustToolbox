@@ -31,20 +31,20 @@ namespace Robust.Shared.Physics
         public int FixtureCount => Fixtures.Count;
 
         [ViewVariables]
-        public Dictionary<string, Fixture> Fixtures = new();
+        public readonly Dictionary<string, Fixture> Fixtures = new();
 
         [DataField("fixtures")]
         [NeverPushInheritance]
-        internal List<Fixture> _serializedFixtures = new();
+        internal List<Fixture> SerializedFixtures = new();
 
         void ISerializationHooks.BeforeSerialization()
         {
-            DebugTools.Assert(_serializedFixtures.Count == 0);
-            _serializedFixtures.Clear();
+            DebugTools.Assert(SerializedFixtures.Count == 0);
+            SerializedFixtures.Clear();
 
             foreach (var (_, fixture) in Fixtures)
             {
-                _serializedFixtures.Add(fixture);
+                SerializedFixtures.Add(fixture);
             }
         }
     }

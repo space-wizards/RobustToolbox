@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Physics
 {
     /// <summary>
-    /// Managers physics fixtures.
+    /// Manages physics fixtures.
     /// </summary>
     public sealed class FixtureSystem : EntitySystem
     {
@@ -23,6 +23,7 @@ namespace Robust.Shared.Physics
         {
             base.Initialize();
             SubscribeLocalEvent<FixturesComponent, ComponentInit>(OnInit);
+            SubscribeLocalEvent<FixturesComponent, ComponentShutdown>(OnShutdown);
             SubscribeLocalEvent<FixturesComponent, ComponentGetState>(OnGetState);
             SubscribeLocalEvent<FixturesComponent, ComponentHandleState>(OnHandleState);
 
@@ -30,9 +31,23 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<PhysicsComponent, ComponentShutdown>(OnPhysicsShutdown);
         }
 
+        private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
+        {
+            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            {
+                DebugTools.Assert(false);
+                Logger.ErrorS("physics", $"Trying to shutdown {nameof(FixturesComponent)} that doesn't have a {nameof(PhysicsComponent)} on {uid}");
+                return;
+            }
+
+            _broadphaseSystem.RemoveBody(body, component);
+        }
+
         private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)
         {
-            foreach (var fixture in component._serializedFixtures)
+            // Convert the serialized list to the dictionary format as it may not necessarily have an ID in YAML
+            // (probably change this someday for perf reasons?)
+            foreach (var fixture in component.SerializedFixtures)
             {
                 fixture.ID = GetFixtureName(component, fixture);
 
@@ -41,7 +56,7 @@ namespace Robust.Shared.Physics
                 Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
             }
 
-            component._serializedFixtures.Clear();
+            component.SerializedFixtures.Clear();
 
             if (component.Fixtures.Count <= 0 ||
                 !EntityManager.TryGetComponent(uid, out PhysicsComponent? body) ||
@@ -54,17 +69,18 @@ namespace Robust.Shared.Physics
             if (broadphase != null)
             {
                 var worldPos = xform.WorldPosition;
+                var worldRot = xform.WorldRotation;
 
                 // Can't resolve in serialization so here we are.
-                // TODO: Support for large body DYnamicTrees (i.e. 1 proxy for the entire body)
+                // TODO: Support for large body DynamicTrees (i.e. 1 proxy for the entire body)
                 foreach (var (_, fixture) in component.Fixtures)
                 {
-                    // It's possible that fixtures were added at some stage so we'll just check if they're on the broadphase
+                    // It's possible that fixtures were added at some stage prior to this so we'll just check if they're on the broadphase
                     if (fixture.ProxyCount > 0) continue;
 
                     fixture.Body = body;
 
-                    _broadphaseSystem.CreateProxies(fixture, worldPos, false);
+                    _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot, false);
                 }
             }
 
@@ -74,9 +90,9 @@ namespace Robust.Shared.Physics
 
         #region Public
 
-        public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
+        public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.OwnerUid, ref manager, ref xform))
             {
                 DebugTools.Assert(false);
                 return;
@@ -91,8 +107,11 @@ namespace Robust.Shared.Physics
             // Should only happen for nullspace / initializing entities
             if (body.Broadphase != null)
             {
+                var worldPos = xform.WorldPosition;
+                var worldRot = xform.WorldRotation;
+
                 _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
-                _broadphaseSystem.CreateProxies(fixture, body.Owner.Transform.WorldPosition, false);
+                _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot, false);
             }
 
             // Supposed to be wrapped in density but eh
@@ -152,7 +171,7 @@ namespace Robust.Shared.Physics
 
             // TODO: Assert world locked
             DebugTools.Assert(fixture.Body == body);
-            DebugTools.Assert(body.FixtureCount > 0);
+            DebugTools.Assert(manager.FixtureCount > 0);
 
             if (!manager.Fixtures.Remove(fixture.ID))
             {
@@ -176,6 +195,7 @@ namespace Robust.Shared.Physics
                 }
             }
 
+            // TODO: wtf why is this different to body broadphase? How much ordering bullshit due to transform events is going on that I forgot about?
             var broadphase = _broadphaseSystem.GetBroadphase(fixture.Body);
 
             if (broadphase != null)
@@ -300,7 +320,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        internal static string GetFixtureName(FixturesComponent component, Fixture fixture)
+        private string GetFixtureName(FixturesComponent component, Fixture fixture)
         {
             if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
 
@@ -345,6 +365,7 @@ namespace Robust.Shared.Physics
                 hard |= fixture.Hard;
             }
 
+            // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;

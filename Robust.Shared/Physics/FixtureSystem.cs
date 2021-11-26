@@ -33,13 +33,7 @@ namespace Robust.Shared.Physics
 
         private void OnShutdown(EntityUid uid, FixturesComponent component, ComponentShutdown args)
         {
-            if (!EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
-            {
-                DebugTools.Assert(false);
-                Logger.ErrorS("physics", $"Trying to shutdown {nameof(FixturesComponent)} that doesn't have a {nameof(PhysicsComponent)} on {uid}");
-                return;
-            }
-
+            // Can't just get physicscomp on shutdown as it may be touched completely independently.
             body.DestroyContacts();
             _broadphaseSystem.RemoveBody(body, component);
             body.CanCollide = false;
@@ -197,8 +191,7 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            // TODO: wtf why is this different to body broadphase? How much ordering bullshit due to transform events is going on that I forgot about?
-            var broadphase = _broadphaseSystem.GetBroadphase(fixture.Body);
+            var broadphase = body.Broadphase;
 
             if (broadphase != null)
             {
@@ -217,8 +210,7 @@ namespace Robust.Shared.Physics
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
-            // TODO: Remove physics on fixturemanager shutdown
-            if (EntityManager.GetEntity(uid).LifeStage > EntityLifeStage.MapInitialized) return;
+            if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 

@@ -19,6 +19,7 @@ namespace Robust.Shared.Physics
     [RegisterComponent]
     [NetworkedComponent]
     [Friend(typeof(FixtureSystem))]
+    [ComponentProtoName("Fixtures")]
     public sealed class FixturesComponent : Component, ISerializationHooks
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
@@ -39,8 +40,8 @@ namespace Robust.Shared.Physics
 
         void ISerializationHooks.BeforeSerialization()
         {
-            DebugTools.Assert(SerializedFixtures.Count == 0);
-            SerializedFixtures.Clear();
+            // Can't assert the count is 0 because it's possible it gets re-serialized before init!
+            if (SerializedFixtures.Count > 0) return;
 
             foreach (var (_, fixture) in Fixtures)
             {

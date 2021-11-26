@@ -138,7 +138,11 @@ namespace Robust.Client.UserInterface
                     int sptot,
                     int maxPri,
                     int tPri
-            )>();
+            )>(postcreate: i => i with
+            {
+                wds = new List<Word>(),
+                gaps = new List<int>()
+            });
 
             var lastAlign = TextAlign.Left;
 
@@ -355,10 +359,12 @@ namespace Robust.Client.UserInterface
         {
             // _blank creates a new T if _refresh says it needs to.
             private Func<TIn> _blank = () => new TIn();
+            private Func<TIn, TIn>? _postcr;
 
             private Func<TIn, bool> _check = _ => true;
 
             private Func<TIn, TOut> _conv;
+
 
             public List<TOut> Done = new();
             public TIn Work;
@@ -366,7 +372,8 @@ namespace Robust.Client.UserInterface
             public WorkQueue(
                     Func<TIn, TOut> conv,
                     Func<TIn>? blank = default,
-                    Func<TIn, bool>? check = default
+                    Func<TIn, bool>? check = default,
+                    Func<TIn, TIn>? postcreate = default
             )
             {
                 _conv = conv;
@@ -377,7 +384,13 @@ namespace Robust.Client.UserInterface
                 if (check is not null)
                     _check = check;
 
+                if (postcreate is not null)
+                    _postcr = postcreate;
+
                 Work = _blank.Invoke();
+
+                if (_postcr is not null)
+                    Work = _postcr.Invoke(Work);
             }
 
             public void Flush(bool force = false)
@@ -386,6 +399,8 @@ namespace Robust.Client.UserInterface
                 {
                     Done.Add(_conv(Work));
                     Work = _blank.Invoke();
+                    if (_postcr is not null)
+                        Work = _postcr.Invoke(Work);
                 }
             }
         }
@@ -397,8 +412,9 @@ namespace Robust.Client.UserInterface
             public WorkQueue(
                     Func<T, T>? conv = default,
                     Func<T>? blank = default,
-                    Func<T, bool>? check = default
-            ) : base(conv ?? __conv, blank, check)
+                    Func<T, bool>? check = default,
+                    Func<T, T>? postcreate = default
+            ) : base(conv ?? __conv, blank, check, postcreate)
             {
             }
         }

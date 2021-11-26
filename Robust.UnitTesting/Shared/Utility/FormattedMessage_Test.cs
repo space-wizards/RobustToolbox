@@ -16,19 +16,12 @@ namespace Robust.UnitTesting.Shared.Utility
             var msg = new Basic();
             msg.AddMarkup("foo[color=#aabbcc]bar[/color]baz");
 
-            Assert.That(msg.Render(), NUnit.Framework.Is.EquivalentTo(new FormattedMessage(new[]
+            Assert.That(msg.Render().Sections, NUnit.Framework.Is.EquivalentTo(new[]
             {
-                new Section {
-                    Content="foo"
-                },
-                new Section {
-                    Content="bar",
-                    Color=0xAABBCC,
-                },
-                new Section {
-                    Content="baz"
-                }
-            }).Sections));
+                new Section { Content="foo" },
+                new Section { Content="bar", Color=unchecked ((int) 0xFFAABBCC) },
+                new Section { Content="baz" }
+            }));
         }
 
         [Test]
@@ -37,19 +30,12 @@ namespace Robust.UnitTesting.Shared.Utility
             var msg = new Basic();
             msg.AddMarkup("foo[color=orange]bar[/color]baz");
 
-            Assert.That(msg.Render(), NUnit.Framework.Is.EquivalentTo(new FormattedMessage(new[]
+            Assert.That(msg.Render().Sections, NUnit.Framework.Is.EquivalentTo(new[]
             {
-                new Section {
-                    Content="foo"
-                },
-                new Section {
-                    Content="bar",
-                    Color=Color.Orange.ToArgb(),
-                },
-                new Section {
-                    Content="baz"
-                }
-            }).Sections));
+                new Section { Content="foo" },
+                new Section { Content="bar", Color=Color.Orange.ToArgb() },
+                new Section { Content="baz" }
+            }));
         }
 
         [Test]

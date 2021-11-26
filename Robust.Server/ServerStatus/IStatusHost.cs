@@ -8,6 +8,7 @@ namespace Robust.Server.ServerStatus
         void Start();
 
         void AddHandler(StatusHostHandler handler);
+        void AddHandler(StatusHostHandlerAsync handler);
 
         /// <summary>
         ///     Invoked when a client queries a status request from the server.

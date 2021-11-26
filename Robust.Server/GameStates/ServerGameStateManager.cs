@@ -16,7 +16,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Players;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -124,7 +123,7 @@ namespace Robust.Server.GameStates
                 _entityManager.CullDeletionHistory(GameTick.MaxValue);
                 _pvs.CullDeletionHistory(GameTick.MaxValue);
                 _mapManager.CullDeletionHistory(GameTick.MaxValue);
-                _pvs.Cleanup(_playerManager.GetAllPlayers());
+                _pvs.Cleanup(_playerManager.ServerSessions);
                 return;
             }
 
@@ -185,7 +184,7 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            Parallel.ForEach(_playerManager.GetAllPlayers(), session =>
+            Parallel.ForEach(_playerManager.ServerSessions, session =>
             {
                 try
                 {
@@ -197,7 +196,7 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            _pvs.Cleanup(_playerManager.GetAllPlayers());
+            _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 
             // keep the deletion history buffers clean

@@ -208,19 +208,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         protected Joint(EntityUid bodyAUid, EntityUid bodyBUid)
         {
-            var uidA = bodyAUid;
-            var uidB = bodyBUid;
-
-            if (uidA.CompareTo(uidB) >= 0)
-            {
-                BodyAUid = uidB;
-                BodyBUid = uidA;
-            }
-            else
-            {
-                BodyAUid = uidA;
-                BodyBUid = uidB;
-            }
+            BodyAUid = bodyAUid;
+            BodyBUid = bodyBUid;
 
             //Can't connect a joint to the same body twice.
             Debug.Assert(BodyAUid != BodyBUid);

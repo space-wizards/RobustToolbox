@@ -61,5 +61,15 @@ namespace Robust.UnitTesting.Shared.Utility
         {
             return FormattedMessage.RemoveMarkup(test);
         }
+
+        [Test]
+        [TestCase("Foo")]
+        [TestCase("[color=#FF000000]Foo[/color]")]
+        [TestCase("[color=#00FF00FF]Foo[/color]bar")]
+        public static void TestToMarkup(string text)
+        {
+            var message = FormattedMessage.FromMarkup(text);
+            Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo(text));
+        }
     }
 }

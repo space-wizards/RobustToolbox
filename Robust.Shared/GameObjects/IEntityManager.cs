@@ -22,6 +22,11 @@ namespace Robust.Shared.GameObjects
         void Initialize();
         void Startup();
         void Shutdown();
+
+        /// <summary>
+        ///     Drops every entity, component and entity system.
+        /// </summary>
+        void Cleanup();
         void TickUpdate(float frameTime, Histogram? histogram=null);
 
         /// <summary>
@@ -119,6 +124,11 @@ namespace Robust.Shared.GameObjects
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists(EntityUid uid);
+
+        /// <summary>
+        /// Returns a string with various information regarding an entity.
+        /// </summary>
+        string ToPrettyString(EntityUid uid);
 
         #endregion Entity Management
     }

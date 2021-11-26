@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 
-namespace Robust.Client.Graphics.Clyde
+namespace Robust.Client.Graphics.Audio
 {
-    internal partial class Clyde
+    internal partial class ClydeAudio
     {
         private OggVorbisData _readOggVorbis(Stream stream)
         {

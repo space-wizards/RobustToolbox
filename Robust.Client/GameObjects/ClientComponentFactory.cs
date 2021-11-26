@@ -27,7 +27,6 @@ namespace Robust.Client.GameObjects
             RegisterClass<ClientOccluderComponent>();
             RegisterClass<OccluderTreeComponent>();
             RegisterClass<EyeComponent>();
-            RegisterClass<AppearanceComponent>();
             RegisterClass<AnimationPlayerComponent>();
             RegisterClass<TimerComponent>();
 

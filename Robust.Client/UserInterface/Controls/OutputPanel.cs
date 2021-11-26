@@ -74,9 +74,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public void AddText(string text)
         {
-            var msg = new FormattedMessage();
+            var msg = new FormattedMessage.Builder();
             msg.AddText(text);
-            AddMessage(msg);
+            AddMessage(msg.Build());
         }
 
         public void AddMessage(FormattedMessage message)
@@ -121,6 +121,7 @@ namespace Robust.Client.UserInterface.Controls
 
             var entryOffset = -_scrollBar.Value;
 
+#if false
             // A stack for format tags.
             // This stack contains the format tag to RETURN TO when popped off.
             // So when a new color tag gets hit this stack gets the previous color pushed on.
@@ -143,6 +144,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
+#endif
         }
 
         protected internal override void MouseWheel(GUIMouseWheelEventArgs args)

@@ -443,7 +443,8 @@ namespace Robust.Shared.Physics
 
         internal void RemoveBody(PhysicsComponent body, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            // TODO: Would reaaalllyy like for this to not be false in future
+            if (!Resolve(body.OwnerUid, ref manager, false))
             {
                 return;
             }

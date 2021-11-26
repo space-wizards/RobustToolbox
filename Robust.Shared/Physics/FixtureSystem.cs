@@ -40,7 +40,9 @@ namespace Robust.Shared.Physics
                 return;
             }
 
+            body.DestroyContacts();
             _broadphaseSystem.RemoveBody(body, component);
+            body.CanCollide = false;
         }
 
         private void OnInit(EntityUid uid, FixturesComponent component, ComponentInit args)

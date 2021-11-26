@@ -882,16 +882,6 @@ namespace Robust.Shared.GameObjects
             ResetMassData();
         }
 
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-            // Need to do these immediately in case collision behaviors deleted the body
-            // TODO: Could be more optimal as currently broadphase will call this ANYWAY
-            DestroyContacts();
-            EntitySystem.Get<SharedBroadphaseSystem>().RemoveBody(this);
-            CanCollide = false;
-        }
-
         public void ResetMassData()
         {
             _mass = 0.0f;

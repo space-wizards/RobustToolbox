@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
@@ -177,7 +176,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public TransformComponent? Parent
         {
-            get => !_parent.IsValid() ? null : Owner.EntityManager.GetEntity(_parent).Transform;
+            get => !_parent.IsValid() ? null : Owner.EntityManager.GetComponent<TransformComponent>(_parent);
             internal set
             {
                 if (_anchored && value?.OwnerUid != _parent)
@@ -203,7 +202,7 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = Owner.EntityManager.GetEntity(value).Transform;
+            set => Parent = Owner.EntityManager.GetComponent<TransformComponent>(value);
         }
 
         /// <summary>
@@ -317,8 +316,7 @@ namespace Robust.Shared.GameObjects
                 if (!sameParent)
                 {
                     changedParent = true;
-                    var newParentEnt = Owner.EntityManager.GetEntity(value.EntityId);
-                    var newParent = newParentEnt.Transform;
+                    var newParent = Owner.EntityManager.GetComponent<TransformComponent>(value.EntityId);
 
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
@@ -326,15 +324,13 @@ namespace Robust.Shared.GameObjects
                     // That's already our parent, don't bother attaching again.
 
                     var oldParent = Parent;
-                    var oldConcrete = (TransformComponent?) oldParent;
                     var uid = OwnerUid;
-                    oldConcrete?._children.Remove(uid);
-                    var newConcrete = (TransformComponent) newParent;
-                    newConcrete._children.Add(uid);
+                    oldParent?._children.Remove(uid);
+                    newParent._children.Add(uid);
 
                     // offset position from world to parent
-                    _parent = newParentEnt.Uid;
-                    ChangeMapId(newConcrete.MapID);
+                    _parent = value.EntityId;
+                    ChangeMapId(newParent.MapID);
 
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex();
@@ -752,6 +748,71 @@ namespace Robust.Shared.GameObjects
             return this;
         }
 
+        /// <summary>
+        /// Get the WorldPosition and WorldRotation of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation()
+        {
+            // Worldmatrix needs calculating anyway for worldpos so we'll just drop it.
+            var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix();
+            return (worldPos, worldRot);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix()
+        {
+            var parent = _parent;
+            var worldRot = _localRotation;
+            var worldMatrix = GetLocalMatrix();
+
+            // By doing these all at once we can elide multiple IsValid + GetComponent calls
+            while (parent.IsValid())
+            {
+                var xform = Owner.EntityManager.GetComponent<TransformComponent>(parent);
+                worldRot += xform.LocalRotation;
+                var parentMatrix = xform.GetLocalMatrix();
+                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                worldMatrix = result;
+                parent = xform.ParentUid;
+            }
+
+            var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
+
+            return (worldPosition, worldRot, worldMatrix);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix()
+        {
+            var parent = _parent;
+            var worldRot = _localRotation;
+            var invMatrix = GetLocalMatrixInv();
+            var worldMatrix = GetLocalMatrix();
+
+            // By doing these all at once we can elide multiple IsValid + GetComponent calls
+            while (parent.IsValid())
+            {
+                var xform = Owner.EntityManager.GetComponent<TransformComponent>(parent);
+                worldRot += xform.LocalRotation;
+                var parentMatrix = xform.GetLocalMatrix();
+                Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
+                worldMatrix = result;
+
+                var parentInvMatrix = xform.GetLocalMatrixInv();
+                Matrix3.Multiply(ref invMatrix, ref parentInvMatrix, out var invResult);
+                invMatrix = invResult;
+
+                parent = xform.ParentUid;
+            }
+
+            var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
+
+            return (worldPosition, worldRot, invMatrix);
+        }
 
         /// <summary>
         ///     Returns whether the entity of this transform contains the entity argument

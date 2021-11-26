@@ -28,7 +28,7 @@ internal partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
 
-    public const float ChunkSize = 16;
+    public const float ChunkSize = 8;
 
     /// <summary>
     /// Maximum number of pooled objects

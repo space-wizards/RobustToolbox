@@ -216,6 +216,7 @@ namespace Robust.Shared.Utility
                 flushWork();
 
                 var last = _work[_idx];
+                last.Content = string.Empty;
                 last.Color = color.ToArgb();
                 _work.Add(last);
                 _idx = _work.Count - 1;
@@ -227,12 +228,20 @@ namespace Robust.Shared.Utility
             // actually set, and what parts are just default values.
 
             // TODO: move _idx?
-            public void AddMessage(FormattedMessage other) =>
+            public void AddMessage(FormattedMessage other)
+            {
+                flushWork();
                 _work.AddRange(other.Sections);
+                _idx = _work.Count-1;
+            }
 
             // TODO: See above
-            public void AddMessage(FormattedMessage.Builder other) =>
-                _work.AddRange(other._work);
+            public void AddMessage(FormattedMessage.Builder other)
+            {
+                flushWork();
+                AddMessage(other.Build());
+                other.Clear();
+            }
 
             // I wish I understood why this was needed...
             // Did people not know you could AddText("\n")?

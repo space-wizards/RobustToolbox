@@ -122,7 +122,7 @@ public class FontLibrary : IFontLibrary
         }
 
         if (winner is null)
-            throw new Exception("no matching font style");
+            throw new Exception($"no matching font style ({id}, {fst})");
 
         return winner;
     }

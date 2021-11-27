@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
             foreach (var fixture in newFixtures)
             {
-                var existingFixture = _fixtures.GetFixture(physicsComponent, fixture.ID);
+                var existingFixture = _fixtures.GetFixtureOrNull(physicsComponent, fixture.ID);
                 // Check if it's the same (otherwise remove anyway).
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))

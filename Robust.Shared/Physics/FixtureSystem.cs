@@ -129,6 +129,9 @@ namespace Robust.Shared.Physics
             // TODO: Set newcontacts to true.
         }
 
+        /// <summary>
+        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/>
+        /// </summary>
         public Fixture CreateFixture(PhysicsComponent body, IPhysShape shape)
         {
             var fixture = new Fixture(body, shape);
@@ -136,6 +139,9 @@ namespace Robust.Shared.Physics
             return fixture;
         }
 
+        /// <summary>
+        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
+        /// </summary>
         public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)
         {
             // TODO: Make it take in density instead?
@@ -143,7 +149,10 @@ namespace Robust.Shared.Physics
             CreateFixture(body, fixture);
         }
 
-        public Fixture? GetFixture(PhysicsComponent body, string id, FixturesComponent? manager = null)
+        /// <summary>
+        /// Attempts to get the <see cref="Fixture"/> with the specified ID for this body.
+        /// </summary>
+        public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
             if (!Resolve(body.OwnerUid, ref manager))
             {
@@ -153,20 +162,35 @@ namespace Robust.Shared.Physics
             return manager.Fixtures.TryGetValue(id, out var fixture) ? fixture : null;
         }
 
+        /// <summary>
+        /// Destroys the specified <see cref="Fixture"/> attached to the body.
+        /// </summary>
+        /// <param name="body">The specified body</param>
+        /// <param name="id">The fixture ID</param>
+        /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
         public void DestroyFixture(PhysicsComponent body, string id, bool updates = true)
         {
-            var fixture = GetFixture(body, id);
+            var fixture = GetFixtureOrNull(body, id);
 
             if (fixture == null) return;
 
             DestroyFixture(body, fixture, updates);
         }
 
+        /// <summary>
+        /// Destroys the specified <see cref="Fixture"/>
+        /// </summary>
+        /// <param name="fixture">The specified fixture</param>
+        /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
         public void DestroyFixture(Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
             DestroyFixture(fixture.Body, fixture, updates, manager);
         }
 
+        /// <summary>
+        /// Destroys the specified <see cref="Fixture"/>
+        /// </summary>
+        /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
         public void DestroyFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
             if (!Resolve(body.OwnerUid, ref manager))

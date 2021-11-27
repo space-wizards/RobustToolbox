@@ -381,26 +381,18 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var mass = 0f;
             var mask = 0;
             var layer = 0;
             var hard = false;
 
             foreach (var (_, fixture) in component.Fixtures)
             {
-                mass += fixture.Mass;
                 mask |= fixture.CollisionMask;
                 layer |= fixture.CollisionLayer;
                 hard |= fixture.Hard;
             }
 
-            // These updates can be a bit more expensive so we'll just check if we need to do it.
-            // TODO: Should probably check body type but that's more of a problem that the property does it when it should
-            // just cache it.
-            if (!MathHelper.CloseTo(body.Mass, mass))
-            {
-                body.ResetMassData();
-            }
+            body.ResetMassData();
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;

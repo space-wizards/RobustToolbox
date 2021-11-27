@@ -152,7 +152,8 @@ namespace Robust.Shared.Utility
             return sb.ToString();
         }
 
-        // Implements Robust.Client.UserInterface.TextLayout.ISectionable
+        public static readonly FormattedMessage Empty = new FormattedMessage(Array.Empty<Section>());
+
         public Section this[int i] { get => Sections[i]; }
         public int Length { get => Sections.Length; }
 

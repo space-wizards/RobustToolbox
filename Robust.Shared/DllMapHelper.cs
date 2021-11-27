@@ -26,22 +26,18 @@ namespace Robust.Shared
             NativeLibrary.SetDllImportResolver(assembly, (name, assembly, path) =>
             {
                 // Please keep in sync with what GLFWNative does.
-                // This particular API is only really used by the MIDI instruments stuff in SS14 right now,
-                //  which means when it breaks people don't notice or report.
+                // This particular API isn't used by anything at all, but I really wish it was.
                 if (name != baseName)
                 {
                     return IntPtr.Zero;
                 }
 
-                if (OperatingSystem.IsLinux())
-                {
-                    return NativeLibrary.Load(linuxName, assembly, path);
-                }
+                string? rName = null;
+                if (OperatingSystem.IsLinux()) rName = linuxName;
+                if (OperatingSystem.IsMacOS()) rName = macName;
 
-                if (OperatingSystem.IsMacOS())
-                {
-                    return NativeLibrary.Load(macName, assembly, path);
-                }
+                if ((rName != null) && NativeLibrary.TryLoad(rName, assembly, path, out var handle))
+                    return handle;
 
                 return IntPtr.Zero;
             });

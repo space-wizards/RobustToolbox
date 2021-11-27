@@ -18,20 +18,18 @@ namespace OpenToolkit.GraphicsLibraryFramework
             NativeLibrary.SetDllImportResolver(typeof(GLFWNative).Assembly, (name, assembly, path) =>
             {
                 // Please keep in sync with what Robust.Shared/DllMapHelper.cs does.
+
                 if (name != "glfw3.dll")
                 {
                     return IntPtr.Zero;
                 }
 
-                if (OperatingSystem.IsLinux())
-                {
-                    return NativeLibrary.Load("libglfw.so.3", assembly, path);
-                }
+                string rName = null;
+                if (OperatingSystem.IsLinux()) rName = "libglfw.so.3";
+                else if (OperatingSystem.IsMacOS()) rName = "libglfw.3.dylib";
 
-                if (OperatingSystem.IsMacOS())
-                {
-                    return NativeLibrary.Load("libglfw.3.dylib", assembly, path);
-                }
+                if ((rName != null) && NativeLibrary.TryLoad(rName, assembly, path, out var handle))
+                    return handle;
 
                 return IntPtr.Zero;
             });

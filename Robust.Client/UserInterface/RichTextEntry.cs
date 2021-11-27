@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface
         // Last maxSizeX, used to detect resizing.
         private int _lmsx = 0;
         // Layout data, which needs to be refreshed when resized.
-        private ImmutableArray<TextLayout.Word> _ld = default;
+        private ImmutableArray<TextLayout.Offset> _ld = default;
 
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.

@@ -41,26 +41,21 @@ namespace Robust.Client.UserInterface
         /// <param name="length">The number of bytes after <paramref name="charOffs"/> to render.</param>
         /// <param name="x">The offset from the base position's x coordinate to render this chunk of text.</param>
         /// <param name="y">The offset from the base position's y coordinate to render this chunk of text.</param>
-        public class Offset
+        /// <param name="w">The width the word (i.e. the sum of all its <c>Advance</c>'s).</param>
+        /// <param name="h">The height of the tallest character's <c>BearingY</c>.</param>
+        /// <param name="spw">The width allocated to this word.</param>
+        /// <param name="wt">The detected word type.</param>
+        public record struct Offset
         {
-            public Offset()
-            {
-            }
-
-            public Offset(Offset o)
-            {
-                section = o.section;
-                charOffs = o.charOffs;
-                length = o.length;
-                x = o.x;
-                y = o.y;
-            }
-
             public int section;
             public int charOffs;
             public int length;
             public int x;
             public int y;
+            public int h;
+            public int w;
+            public int spw;
+            public WordType wt;
         }
 
         public enum WordType : byte
@@ -70,26 +65,7 @@ namespace Robust.Client.UserInterface
             LineBreak,
         }
 
-        public sealed class Word : Offset
-        {
-            public Word()
-            {
-            }
-
-            public Word(Word o) : base(o)
-            {
-                h = o.h;
-                w = o.w;
-                spw = o.spw;
-                wt = o.wt;
-            }
-            public int h;
-            public int w;
-            public int spw;
-            public WordType wt;
-        }
-
-        public static ImmutableArray<Word> Layout(
+        public static ImmutableArray<Offset> Layout(
                 ISectionable text,
                 int w,
                 IFontLibrary fonts,
@@ -119,9 +95,9 @@ namespace Robust.Client.UserInterface
         // 4. Add up each gap's priority value (Σpri)
         // 5. Assign each gap a final priority (fp) of ((priMax - pri) / Σpri)
         // 6. That space has (fp*fs) pixels.
-        public static ImmutableArray<Word> Layout(
+        public static ImmutableArray<Offset> Layout(
                 ISectionable src,
-                ImmutableArray<Word> text,
+                ImmutableArray<Offset> text,
                 int w,
                 IFontLibrary fonts,
                 float scale = 1.0f,
@@ -132,7 +108,7 @@ namespace Robust.Client.UserInterface
         )
         {
             var lw = new WorkQueue<(
-                    List<Word> wds,
+                    List<Offset> wds,
                     List<int> gaps,
                     int lnrem,
                     int sptot,
@@ -140,7 +116,7 @@ namespace Robust.Client.UserInterface
                     int tPri
             )>(postcreate: i => i with
             {
-                wds = new List<Word>(),
+                wds = new List<Offset>(),
                 gaps = new List<int>()
             });
 
@@ -262,7 +238,7 @@ namespace Robust.Client.UserInterface
         // Split creates a list of words broken based on their boundaries.
         // Users are encouraged to reuse this for as long as it accurately reflects
         // the content they're trying to display.
-        public static ImmutableArray<Word> Split(
+        public static ImmutableArray<Offset> Split(
                 ISectionable text,
                 IFontLibrary fonts,
                 float scale,
@@ -277,7 +253,7 @@ namespace Robust.Client.UserInterface
             var s=0;
             var lsbo=0;
             var sbo=0;
-            var wq = new WorkQueue<Word>(
+            var wq = new WorkQueue<Offset>(
                     w =>
                     {
                         var len = lsbo-sbo;

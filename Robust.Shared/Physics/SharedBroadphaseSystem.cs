@@ -809,8 +809,12 @@ namespace Robust.Shared.Physics
             }
             else
             {
-                broadphaseInvMatrix = xform.InvWorldMatrix;
-                broadphaseTransform = (xform.WorldPosition, (float) xform.WorldRotation.Theta);
+                Vector2 wp;
+                Angle wr;
+
+                (wp, wr, broadphaseInvMatrix) = xform.GetWorldPositionRotationInvMatrix();
+
+                broadphaseTransform = (wp, (float) wr.Theta);
             }
 
             var worldRot = fixture.Body.Owner.Transform.WorldRotation;

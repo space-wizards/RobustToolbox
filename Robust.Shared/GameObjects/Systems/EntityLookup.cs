@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
         IEnumerable<IEntity> GetEntitiesIntersecting(MapId mapId, Vector2 position, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         void FastEntitiesIntersecting(in MapId mapId, ref Box2 worldAABB, EntityQueryCallback callback, LookupFlags flags = LookupFlags.IncludeAnchored);
-        
+
         void FastEntitiesIntersecting(EntityLookupComponent lookup, ref Box2 localAABB, EntityQueryCallback callback);
 
         IEnumerable<IEntity> GetEntitiesInRange(EntityCoordinates position, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
@@ -521,8 +521,8 @@ namespace Robust.Shared.GameObjects
         {
             var worldAABB = GetWorldAabbFromEntity(entity);
             var xform = _entityManager.GetComponent<TransformComponent>(entity.Uid);
-            var worldPos = xform.WorldPosition;
-            var worldRot = xform.WorldRotation;
+
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
             var enumerator = GetLookupsIntersecting(xform.MapID, worldAABB);
             var list = new List<IEntity>();

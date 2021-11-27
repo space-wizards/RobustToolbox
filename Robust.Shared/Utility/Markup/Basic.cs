@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Pidgin;
 using Robust.Shared.Maths;
@@ -137,10 +138,24 @@ namespace Robust.Shared.Utility.Markup
         }
 
         public static FormattedMessage RenderMarkup(string text) => BuildMarkup(text).Build();
+
+        /// <summary>
+        ///     Escape a string of text to be able to be formatted into markup.
+        /// </summary>
+        public static string EscapeText(string text)
+        {
+            return text.Replace("\\", "\\\\").Replace("[", "\\[");
+        }
     }
 
     public static class FormattedMessageExtensions
     {
         public static void AddMarkup(this FormattedMessage.Builder bld, string text) => bld.AddMessage(Basic.BuildMarkup(text));
+
+        [Obsolete("Use Basic.EscapeText instead.")]
+        public static void EscapeText(this FormattedMessage _, string text) => Basic.EscapeText(text);
+
+        [Obsolete("Use Basic.EscapeText instead.")]
+        public static void EscapeText(this FormattedMessage.Builder _, string text) => Basic.EscapeText(text);
     }
 }

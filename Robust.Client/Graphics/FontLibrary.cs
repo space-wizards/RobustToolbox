@@ -111,7 +111,13 @@ public class FontLibrary : IFontLibrary
 
             // Since the "style" flags are a bitfield, we can just see which one has more bits.
             // More bits == closer to the desired font style. Free fallback!
-            if (BitOperations.PopCount((ulong) (vr.Style & fst)) >= BitOperations.PopCount((ulong) (winfst & fst)))
+
+            // Variant's bit count
+            var vc = BitOperations.PopCount((ulong) (vr.Style & fst));
+            // Winner's bit count
+            var wc = BitOperations.PopCount((ulong) (winfst & fst));
+
+            if (winner is null || vc > wc)
                 winner = vr;
         }
 

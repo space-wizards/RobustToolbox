@@ -47,6 +47,7 @@
     <Compile Update="Serialization\RobustMappedStringSerializer.MappedStringDict.cs">
       <DependentUpon>RobustMappedStringSerializer.cs</DependentUpon>
     </Compile>
+    <Compile Remove="Physics\ShapeManager.cs" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
 </Project>

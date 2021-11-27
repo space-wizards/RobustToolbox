@@ -896,7 +896,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var localCenter = Vector2.Zero;
-            var shapeManager = IoCManager.Resolve<IShapeManager>();
+            var shapeManager = EntitySystem.Get<FixtureSystem>();
 
             foreach (var fixture in Fixtures)
             {

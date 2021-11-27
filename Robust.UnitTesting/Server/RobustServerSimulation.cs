@@ -209,7 +209,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IMapManagerInternal, MapManager>();
             container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
             container.Register<IPhysicsManager, PhysicsManager>();
-            container.Register<IShapeManager, ShapeManager>();
 
             _diFactory?.Invoke(container);
             container.BuildGraph();

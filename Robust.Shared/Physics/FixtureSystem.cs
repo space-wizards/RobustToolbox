@@ -15,7 +15,7 @@ namespace Robust.Shared.Physics
     /// <summary>
     /// Manages physics fixtures.
     /// </summary>
-    public sealed class FixtureSystem : EntitySystem
+    public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
 
@@ -319,7 +319,6 @@ namespace Robust.Shared.Physics
             {
                 computeProperties = true;
                 CreateFixture(physics, fixture);
-                fixture.Shape.ApplyState();
             }
 
             if (computeProperties)
@@ -345,11 +344,6 @@ namespace Robust.Shared.Physics
                     return name;
                 }
             }
-        }
-
-        private void ShapeUpdate(Fixture fixture)
-        {
-            // TODO: Ideally we somehow subscribe to shapes so we know when vertices updates or the likes.
         }
 
         /// <summary>

@@ -51,8 +51,9 @@ namespace Robust.Client.UserInterface
                 foreach (var w in _ld)
                 {
                     if (w.x + w.w > Width) Width = w.x + w.w;
-                    if (w.y + w.h > Height) Height = w.y + w.h;
+                    if (w.y + w.h > Height) Height = w.y;
                 }
+                _lmsx = (int) maxSizeX;
             }
         }
 
@@ -67,24 +68,27 @@ namespace Robust.Client.UserInterface
             foreach (var wd in _ld)
             {
                 var s = Message.Sections[wd.section];
-                var baseLine = drawBox.TopLeft + new Vector2((float) wd.x, (float) wd.y);
+                var baseLine = drawBox.TopLeft + new Vector2((float) wd.x, verticalOffset + (float) wd.y);
+
                 foreach (var rune in s
                         .Content[wd.charOffs..(wd.charOffs+wd.length)]
                         .EnumerateRunes())
                 {
+                    // TODO: Skip drawing when out of the drawBox
                     baseLine.X += flib.Current.DrawChar(
                             handle,
                             rune,
                             baseLine,
                             uiScale,
                             new Color { // Why Color.FromArgb isn't a thing is beyond me.
-                                A=(float) ((s.Color & 0xFF_00_00_00) >> 24),
-                                R=(float) ((s.Color & 0x00_FF_00_00) >> 16),
-                                G=(float) ((s.Color & 0x00_00_FF_00) >> 8),
-                                B=(float) (s.Color & 0x00_00_00_FF)
+                                A=(float) ((s.Color & 0xFF_00_00_00) >> 24) / 255f,
+                                R=(float) ((s.Color & 0x00_FF_00_00) >> 16) / 255f,
+                                G=(float) ((s.Color & 0x00_00_FF_00) >> 8) / 255f,
+                                B=(float) (s.Color & 0x00_00_00_FF) / 255f
                             }
                     );
                 }
+
             }
         }
     }

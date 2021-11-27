@@ -62,7 +62,8 @@ namespace Robust.Client.UserInterface
             IFontLibrary font,
             UIBox2 drawBox,
             float verticalOffset,
-            float uiScale)
+            float uiScale,
+            Color defColor)
         {
             var flib = font.StartFont();
             foreach (var wd in _ld)
@@ -80,6 +81,7 @@ namespace Robust.Client.UserInterface
                             rune,
                             baseLine,
                             uiScale,
+                            s.Color == default ? defColor :
                             new Color { // Why Color.FromArgb isn't a thing is beyond me.
                                 A=(float) ((s.Color & 0xFF_00_00_00) >> 24) / 255f,
                                 R=(float) ((s.Color & 0x00_FF_00_00) >> 16) / 255f,

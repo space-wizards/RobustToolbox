@@ -235,12 +235,17 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                if (TryGetStyleProperty<Font>("font", out var font))
+                TryGetStyleProperty<FontClass>("font", out var font);
+                if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
                 {
-                    return font;
+                    return flib.StartFont(font).Current;
                 }
 
-                return UserInterfaceManager.ThemeDefaults.DefaultFont;
+                return UserInterfaceManager
+                    .ThemeDefaults
+                    .DefaultFontLibrary
+                    .StartFont(font)
+                    .Current;
             }
         }
 

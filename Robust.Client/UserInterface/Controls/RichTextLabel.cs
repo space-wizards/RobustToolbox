@@ -45,18 +45,32 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _entry.Draw(handle, _getFont(), SizeBox, 0, UIScale);
+            _entry.Draw(handle, _getFont(), SizeBox, 0, UIScale, _getFontColor());
         }
 
         [Pure]
         private IFontLibrary _getFont()
         {
-            if (TryGetStyleProperty<IFontLibrary>("font", out var font))
+            TryGetStyleProperty<FontClass>("font", out var font);
+            if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
             {
-                return font;
+                return flib;
             }
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFontLibrary;
+            return UserInterfaceManager
+                .ThemeDefaults
+                .DefaultFontLibrary;
+        }
+
+        [Pure]
+        private Color _getFontColor()
+        {
+            if (TryGetStyleProperty<Color>("font-color", out var fc))
+                return fc;
+
+            // From Robust.Client/UserInterface/RichTextEntry.cs#L19
+            // at 33008a2bce0cc4755b18b12edfaf5b6f1f87fdd9
+            return new Color(200, 200, 200);
         }
     }
 }

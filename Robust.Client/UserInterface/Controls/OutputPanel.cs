@@ -62,7 +62,7 @@ namespace Robust.Client.UserInterface.Controls
             var entry = _entries[index];
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
-            var font = _getFont().StartFont().Current;
+            var font = _getFont();
             _totalContentHeight -= entry.Height + font.GetLineSeparation(UIScale);
             if (_entries.Count == 0)
             {
@@ -83,10 +83,10 @@ namespace Robust.Client.UserInterface.Controls
         {
             var entry = new RichTextEntry(message);
 
-            entry.Update(_getFont(), _getContentBox().Width, UIScale);
+            entry.Update(_getFontLib(), _getContentBox().Width, UIScale);
 
             _entries.Add(entry);
-            var font = _getFont().StartFont().Current;
+            var font = _getFont();
             _totalContentHeight += entry.Height;
             if (_firstLine)
             {
@@ -115,7 +115,8 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = _getStyleBox();
-            var font = _getFont().StartFont().Current;
+            var flib = _getFontLib();
+            var font = _getFont();
             style?.Draw(handle, PixelSizeBox);
             var contentBox = _getContentBox();
 
@@ -134,7 +135,7 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, _getFont(), contentBox, entryOffset, UIScale);
+                entry.Draw(handle, flib, contentBox, entryOffset, UIScale, _getFontColor());
 
                 entryOffset += entry.Height + font.GetLineSeparation(UIScale);
             }
@@ -170,7 +171,7 @@ namespace Robust.Client.UserInterface.Controls
         private void _invalidateEntries()
         {
             _totalContentHeight = 0;
-            var font = _getFont();
+            var font = _getFontLib();
             var sizeX = _getContentBox().Width;
             for (var i = 0; i < _entries.Count; i++)
             {
@@ -188,14 +189,32 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
-        private IFontLibrary _getFont()
+        private IFontLibrary _getFontLib()
         {
-            if (TryGetStyleProperty<IFontLibrary>("font", out var font))
-            {
-                return font;
-            }
+            if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
+                return flib;
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFontLibrary;
+            return UserInterfaceManager
+                .ThemeDefaults
+                .DefaultFontLibrary;
+        }
+
+        [System.Diagnostics.Contracts.Pure]
+        private Font _getFont()
+        {
+            TryGetStyleProperty<FontClass>("font", out var fclass);
+            return _getFontLib().StartFont(fclass).Current;
+        }
+
+        [System.Diagnostics.Contracts.Pure]
+        private Color _getFontColor()
+        {
+            if (TryGetStyleProperty<Color>("font-color", out var fc))
+                return fc;
+
+            // From Robust.Client/UserInterface/RichTextEntry.cs#L19
+            // at 33008a2bce0cc4755b18b12edfaf5b6f1f87fdd9
+            return new Color(200, 200, 200);
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -213,8 +232,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private int _getScrollSpeed()
         {
-            var font = _getFont().StartFont().Current;
-            return font.GetLineHeight(UIScale) * 2;
+            return _getFont().GetLineHeight(UIScale) * 2;
         }
 
         [System.Diagnostics.Contracts.Pure]

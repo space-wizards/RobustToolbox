@@ -113,7 +113,8 @@ namespace Robust.Client.UserInterface
                     int lnrem,
                     int sptot,
                     int maxPri,
-                    int tPri
+                    int tPri,
+                    int lnh
             )>(postcreate: i => i with
             {
                 wds = new List<Offset>(),
@@ -132,8 +133,9 @@ namespace Robust.Client.UserInterface
                 lw.Work.gaps.Add(gW+lw.Work.maxPri);
                 lw.Work.tPri += gW+lw.Work.maxPri;
                 lw.Work.maxPri += adv;
+                lw.Work.lnh = Math.Max(lw.Work.lnh, wd.h);
 
-                if (lw.Work.lnrem < wd.w)
+                if (lw.Work.lnrem < wd.w || wd.wt == WordType.LineBreak)
                 {
                     lw.Flush();
                     lw.Work.lnrem = w;
@@ -147,37 +149,50 @@ namespace Robust.Client.UserInterface
             lw.Flush(true);
 
             var flib = fonts.StartFont(fclass);
-            int py=0;
-            foreach ((var ln, var gaps, var lnrem, var sptot, var maxPri, var tPri) in lw.Done)
+            int py = flib.Current.GetAscent(scale);
+            foreach ((var ln, var gaps, var lnrem, var sptot, var maxPri, var tPri, var lnh) in lw.Done)
             {
-                int px=0;
-                int lh=0;
+                int px=0, maxlh=0;
+
                 var spDist = new int[gaps.Count];
                 for (int i = 0; i < gaps.Count; i++)
                     spDist[i] = (int) (((float) gaps[i] / (float) tPri) * (float) sptot);
 
-                int prevasc=0, prevdesc=0;
+                int prevAsc=0, prevDesc=0;
                 for (int i = 0; i < ln.Count; i++)
                 {
                     var ss = src[ln[i].section];
                     var sf = flib.Update(ss.Style, ss.Size);
                     var asc = sf.GetAscent(scale);
                     var desc = sf.GetDescent(scale);
-                    px += spDist[i] + ln[i].w;
-                    ln[i].x = px;
-                    lh = Math.Max(lh, ln[i].h);
-                    ln[i].y = src[ln[i].section].Alignment.Vertical() switch {
-                        TextAlign.Baseline => 0,
-                        TextAlign.Bottom => -(desc - prevdesc), // Scoot it up by the descent
-                        TextAlign.Top => (asc - prevasc),
-                        TextAlign.Subscript => -ln[i].h / 8,  // Technically these should be derived from the font data,
-                        TextAlign.Superscript => ln[i].h / 4, // but I'm not gonna bother figuring out how to pull it from them.
-                        _ => 0,
+                    maxlh = Math.Max(maxlh, sf.GetAscent(scale));
+
+                    if (i - 1 > 0 && i - 1 < spDist.Length)
+                    {
+                        px += spDist[i - 1] / 2;
+                    }
+
+                    ln[i] = ln[i] with {
+                        x = px,
+                        y = py + ss.Alignment.Vertical() switch {
+                            TextAlign.Baseline => 0,
+                            TextAlign.Bottom => -(desc - prevDesc), // Scoot it up by the descent
+                            TextAlign.Top => (asc - prevAsc),
+                            TextAlign.Subscript => -ln[i].h / 8,  // Technically these should be derived from the font data,
+                            TextAlign.Superscript => ln[i].h / 4, // but I'm not gonna bother figuring out how to pull it from them.
+                            _ => 0,
+                        }
                     };
-                    prevasc = asc;
-                    prevdesc = desc;
+
+                    if (i < spDist.Length)
+                    {
+                        px += spDist[i] / 2 + ln[i].w;
+                    }
+
+                    prevAsc = asc;
+                    prevDesc = desc;
                 }
-                py += lineSpacing + lh;
+                py += options.HasFlag(LayoutOptions.UseRenderTop) ? lnh : (lineSpacing + maxlh);
             }
 
             return lw.Done.SelectMany(e => e.wds).ToImmutableArray();
@@ -256,13 +271,13 @@ namespace Robust.Client.UserInterface
             var wq = new WorkQueue<Offset>(
                     w =>
                     {
-                        var len = lsbo-sbo;
+                        var len = sbo-lsbo;
                         lsbo = sbo;
-                        sbo = 0;
-                        return new(w) { length=len };
+                        return w with { length=len };
                     },
-                    () => new Word() { section=s, charOffs=sbo },
-                    w => w.length > 0
+                    default,
+                    default,
+                    w => w with { section=s, charOffs=sbo }
             );
 
             var flib = fonts.StartFont(fclass);
@@ -274,8 +289,10 @@ namespace Robust.Client.UserInterface
                 if (sec.Meta != default)
                     throw new Exception("Text section with unknown or unimplemented Meta flag");
 
+                lsbo = 0;
                 sbo = 0;
                 var fnt = flib.Update(sec.Style, sec.Size);
+                wq.Reset();
 
                 foreach (var r in sec.Content.EnumerateRunes())
                 {
@@ -315,9 +332,9 @@ namespace Robust.Client.UserInterface
                     if (wq.Work.wt == WordType.Normal)
                         wq.Work.spw = runeSpacing;
                 }
+                wq.Flush(true);
             }
 
-            wq.Flush(true);
 
             return wq.Done.ToImmutableArray();
         }
@@ -348,7 +365,6 @@ namespace Robust.Client.UserInterface
 
             private Func<TIn, TOut> _conv;
 
-
             public List<TOut> Done = new();
             public TIn Work;
 
@@ -372,6 +388,13 @@ namespace Robust.Client.UserInterface
 
                 Work = _blank.Invoke();
 
+                if (_postcr is not null)
+                    Work = _postcr.Invoke(Work);
+            }
+
+            public void Reset()
+            {
+                Work = _blank.Invoke();
                 if (_postcr is not null)
                     Work = _postcr.Invoke(Work);
             }

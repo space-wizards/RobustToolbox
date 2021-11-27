@@ -266,22 +266,20 @@ namespace Robust.Shared.GameObjects
             EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
         }
 
-        public bool IsEntityPaused(IEntity entity)
-        {
-            // This can be called before entity init, where metadata and transform don't even exist yet
-            // therefore it was decided that any entity in pre-init is always paused.
-            if (!entity.Initialized)
-                return true;
-
-            return !entity.MetaData.IgnorePaused && _pauseManager.IsMapPaused(entity.Transform.MapID);
-        }
-
         public bool IsEntityPaused(EntityUid euid)
         {
-            var ent = Entities.GetValueOrDefault(euid);
-            if (ent is null)
-                throw new KeyNotFoundException($"Entity {euid} does not exist.");
-            return IsEntityPaused(ent);
+            var metaData = GetComponent<MetaDataComponent>(euid);
+
+            // This can be called before entity init, where metadata and transform don't even exist yet
+            // therefore it was decided that any entity in pre-init is always paused.
+            if (metaData.EntityLifeStage < EntityLifeStage.Initialized)
+                return true;
+
+            if (metaData.IgnorePaused)
+                return false;
+
+            var xform = GetComponent<TransformComponent>(euid);
+            return _pauseManager.IsMapPaused(xform.MapID);
         }
 
         /// <summary>

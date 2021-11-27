@@ -152,9 +152,6 @@ namespace Robust.Shared.GameObjects
 
         private void RaiseLocalEventCore(EntityUid uid, ref Unit unitRef, Type type, bool broadcast, bool byRef)
         {
-            if(_entMan.IsEntityPaused(uid))
-                return;
-
             if (_orderedEvents.Contains(type))
             {
                 RaiseLocalOrdered(uid, type, ref unitRef, broadcast, byRef);

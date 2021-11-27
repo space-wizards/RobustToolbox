@@ -129,6 +129,7 @@ internal class MapGridPauseTests
     ///     components are not received by any subscribers.
     /// </summary>
     [Test]
+    [Ignore("This currently breaks a ton of init, like GridInitialize event.")]
     public void Paused_NotReceiveDirectedMessages()
     {
         var sim = SimulationFactory();

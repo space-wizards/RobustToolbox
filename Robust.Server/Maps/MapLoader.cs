@@ -128,6 +128,7 @@ namespace Robust.Server.Maps
                 {
                     foreach (var entity in context.Entities)
                     {
+                        DebugTools.Assert(entity.LifeStage == EntityLifeStage.Initialized);
                         entity.RunMapInit();
                     }
                 }

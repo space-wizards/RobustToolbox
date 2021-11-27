@@ -51,6 +51,7 @@ namespace Robust.Client
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
+            IoCManager.Register<IPauseManager, PauseManager>();
             IoCManager.Register<IComponentFactory, ClientComponentFactory>();
             IoCManager.Register<ITileDefinitionManager, ClydeTileDefinitionManager>();
             IoCManager.Register<IClydeTileDefinitionManager, ClydeTileDefinitionManager>();

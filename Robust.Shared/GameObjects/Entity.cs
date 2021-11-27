@@ -67,7 +67,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused
         {
-            get => EntityManager.IsEntityPaused(this);
+            get => EntityManager.IsEntityPaused(Uid);
 
             [Obsolete("This does nothing. Use IPauseManager to pause the map for editing.")]
             set { }

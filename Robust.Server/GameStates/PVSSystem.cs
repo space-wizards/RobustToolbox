@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -66,7 +67,7 @@ internal partial class PVSSystem : EntitySystem
         = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly Dictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
+    private readonly ConcurrentDictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
 
     public override void Initialize()
     {
@@ -120,6 +121,14 @@ internal partial class PVSSystem : EntitySystem
     private void OnEntityBudgetChanged(int obj)
     {
         _newEntityBudget = obj;
+    }
+
+    public void ProcessCollections()
+    {
+        foreach (var (_, collection) in _pvsCollections)
+        {
+            collection.Process();
+        }
     }
 
     //todo paul investigate
@@ -250,7 +259,6 @@ internal partial class PVSSystem : EntitySystem
         GameTick fromTick, GameTick toTick)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
-        _entityPvsCollection.Process();
         var newEntitiesSent = 0;
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);

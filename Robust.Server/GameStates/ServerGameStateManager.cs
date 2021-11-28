@@ -171,6 +171,8 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
+            _pvs.ProcessCollections();
+
             Parallel.ForEach(_playerManager.ServerSessions, session =>
             {
                 try

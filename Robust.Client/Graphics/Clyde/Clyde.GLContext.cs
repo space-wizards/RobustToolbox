@@ -16,7 +16,6 @@ namespace Robust.Client.Graphics.Clyde
             // Advanced GL contexts currently disabled due to lack of testing etc.
             if (OperatingSystem.IsWindows() && _cfg.GetCVar(CVars.DisplayAngle))
             {
-                /*
                 if (_cfg.GetCVar(CVars.DisplayAngleCustomSwapChain))
                 {
                     _sawmillOgl.Debug("Trying custom swap chain ANGLE.");
@@ -31,7 +30,6 @@ namespace Robust.Client.Graphics.Clyde
                         return;
                     }
                 }
-                */
 
                 /*
                 if (_cfg.GetCVar(CVars.DisplayEgl))

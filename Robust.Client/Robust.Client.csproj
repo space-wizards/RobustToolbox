@@ -22,7 +22,7 @@
     <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />
     <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
     <PackageReference Include="Robust.Natives" Version="0.1.0" />
-    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-beta1" />
+    <PackageReference Include="TerraFX.Interop.Windows" Version="10.0.20348-rc2" />
   </ItemGroup>
   <ItemGroup Condition="'$(EnableClientScripting)' == 'True'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="3.8.0" />

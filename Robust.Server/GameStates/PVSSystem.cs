@@ -59,12 +59,14 @@ internal partial class PVSSystem : EntitySystem
     /// <summary>
     /// All <see cref="EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
-    private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerVisibleSets = new();
+    private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 
     private PVSCollection<EntityUid, IEntity> _entityPvsCollection = default!;
     private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
-    private readonly ObjectPool<HashSet<EntityUid>> _visSetPool
-        = new DefaultObjectPool<HashSet<EntityUid>>(new VisSetPolicy(), MaxVisPoolSize);
+
+    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
+        new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
+            new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
     private readonly ConcurrentDictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
@@ -270,16 +272,16 @@ internal partial class PVSSystem : EntitySystem
 
         var playerVisibleSet = _playerVisibleSets[session];
         var visibleEnts = _visSetPool.Get();
-        var toSend = new Dictionary<EntityUid, PVSEntityVisiblity>();
+        visibleEnts.Clear();
 
         foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
         {
-            TryAddToVisibleEnts(entityUid, playerVisibleSet, toSend, fromTick, ref newEntitiesSent);
+            TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
         }
 
         foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
         {
-            TryAddToVisibleEnts(entityUid, playerVisibleSet, toSend, fromTick, ref newEntitiesSent);
+            TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
         }
 
         var viewers = GetSessionViewers(session);
@@ -293,7 +295,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             //todo at some point just register the viewerentities as localoverrides
-            TryAddToVisibleEnts(eyeEuid, playerVisibleSet, toSend, fromTick, ref newEntitiesSent, visMask);
+            TryAddToVisibleEnts(eyeEuid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, visMask);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -303,7 +305,7 @@ internal partial class PVSSystem : EntitySystem
                 {
                     foreach (var index in chunk)
                     {
-                        TryAddToVisibleEnts(index, playerVisibleSet, toSend, fromTick, ref newEntitiesSent, visMask);
+                        TryAddToVisibleEnts(index, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, visMask);
                     }
                 }
             }
@@ -320,7 +322,7 @@ internal partial class PVSSystem : EntitySystem
                     {
                         foreach (var index in chunk)
                         {
-                            TryAddToVisibleEnts(index, playerVisibleSet, toSend, fromTick, ref newEntitiesSent, visMask);
+                            TryAddToVisibleEnts(index, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, visMask);
                         }
                     }
                 }
@@ -332,7 +334,7 @@ internal partial class PVSSystem : EntitySystem
 
         var entityStates = new List<EntityState>();
 
-        foreach (var (entityUid, visiblity) in toSend)
+        foreach (var (entityUid, visiblity) in visibleEnts)
         {
             if (visiblity == PVSEntityVisiblity.StayedUnchanged)
                 continue;
@@ -347,7 +349,7 @@ internal partial class PVSSystem : EntitySystem
             entityStates.Add(state);
         }
 
-        foreach (var entityUid in playerVisibleSet)
+        foreach (var (entityUid, _) in playerVisibleSet)
         {
             // it was deleted, so we dont need to exit pvs
             if(deletions.Contains(entityUid)) continue;
@@ -361,7 +363,6 @@ internal partial class PVSSystem : EntitySystem
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(), true));
         }
 
-        visibleEnts.UnionWith(toSend.Keys);
         _playerVisibleSets[session] = visibleEnts;
         _visSetPool.Return(playerVisibleSet);
 
@@ -371,7 +372,7 @@ internal partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool TryAddToVisibleEnts(EntityUid uid, HashSet<EntityUid> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
+    private bool TryAddToVisibleEnts(EntityUid uid, Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
     {
         //are we valid yet?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -584,21 +585,5 @@ internal partial class PVSSystem : EntitySystem
         var map = xform.MapID;
 
         return (view, map);
-    }
-
-    private sealed class VisSetPolicy : PooledObjectPolicy<HashSet<EntityUid>>
-    {
-        public override HashSet<EntityUid> Create()
-        {
-            return new(ViewSetCapacity);
-        }
-
-        public override bool Return(HashSet<EntityUid> obj)
-        {
-            // TODO: This clear can be pretty expensive so maybe make a custom datatype given we're swapping
-            // 70 - 300 entities a tick? Or do we even need to clear given it's just value types?
-            obj.Clear();
-            return true;
-        }
     }
 }

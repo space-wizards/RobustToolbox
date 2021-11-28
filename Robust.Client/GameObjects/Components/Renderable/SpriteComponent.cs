@@ -213,6 +213,7 @@ namespace Robust.Client.GameObjects
 
                     layer.Color = layerDatum.Color;
                     layer.Rotation = layerDatum.Rotation;
+                    layer._offset = layerDatum.Offset;
                     // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
                     layer.Visible = anyTextureAttempted && layerDatum.Visible;
                     layer.Scale = layerDatum.Scale;
@@ -1259,7 +1260,7 @@ namespace Robust.Client.GameObjects
             if (worldRotation.Theta < 0)
                 worldRotation = new Angle(worldRotation.Theta + Math.Tau);
 
-            var localMatrix = GetLocalMatrix();
+            var spriteMatrix = GetLocalMatrix();
 
             foreach (var layer in Layers)
             {
@@ -1270,9 +1271,10 @@ namespace Robust.Client.GameObjects
 
                 var numDirs = GetLayerDirectionCount(layer);
                 var layerRotation = worldRotation + layer.Rotation;
+                var layerPosition = worldPosition + layerRotation.RotateVec(layer._offset);
 
-                CalcModelMatrix(numDirs, eyeRotation, layerRotation, worldPosition, out var modelMatrix);
-                Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
+                CalcModelMatrix(numDirs, eyeRotation, layerRotation, layerPosition, out var modelMatrix);
+                Matrix3.Multiply(ref spriteMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
                 RenderLayer(drawingHandle, layer, eyeRotation, layerRotation, overrideDirection);
@@ -1290,7 +1292,7 @@ namespace Robust.Client.GameObjects
 
             var layerColor = color * layer.Color;
 
-            var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
+            var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter);
             var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
 
@@ -1723,7 +1725,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            private Vector2 _offset;
+            internal Vector2 _offset;
 
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }

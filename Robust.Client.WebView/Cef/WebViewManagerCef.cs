@@ -3,6 +3,7 @@ using System.IO;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
@@ -12,6 +13,7 @@ namespace Robust.Client.WebView.Cef
         private CefApp _app = default!;
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public void Initialize()
         {

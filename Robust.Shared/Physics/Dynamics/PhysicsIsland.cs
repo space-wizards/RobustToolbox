@@ -159,8 +159,6 @@ stored in a single array since multiple arrays lead to multiple misses.
         private float _maxAngularVelocity;
         private float _maxLinearCorrection;
         private float _maxAngularCorrection;
-        private float _linearSlop;
-        private float _angularSlop;
         private int _positionIterations;
         private bool _sleepAllowed;  // BONAFIDE MONAFIED
         private float _timeToSleep;
@@ -234,8 +232,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             _positionIterations = cfg.PositionIterations;
             _sleepAllowed = cfg.SleepAllowed;
             _timeToSleep = cfg.TimeToSleep;
-            _linearSlop = cfg.LinearSlop;
-            _angularSlop = cfg.AngularSlop;
 
             _contactSolver.LoadConfig(cfg);
         }
@@ -337,7 +333,7 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 // Didn't use the old variable names because they're hard to read
                 var transform = _physicsManager.EnsureTransform(body);
-                var position = transform.Position;
+                var position = Transform.Mul(transform, body.LocalCenter);
                 // DebugTools.Assert(!float.IsNaN(position.X) && !float.IsNaN(position.Y));
                 var angle = transform.Quaternion2D.Angle;
 
@@ -373,8 +369,6 @@ stored in a single array since multiple arrays lead to multiple misses.
             SolverData.InvDt = invDt;
             SolverData.IslandIndex = ID;
             SolverData.WarmStarting = _warmStarting;
-            SolverData.LinearSlop = _linearSlop;
-            SolverData.AngularSlop = _angularSlop;
             SolverData.MaxLinearCorrection = _maxLinearCorrection;
             SolverData.MaxAngularCorrection = _maxAngularCorrection;
 
@@ -516,6 +510,9 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // Temporary NaN guards until PVS is fixed.
                 if (!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y))
                 {
+                    var q = new Quaternion2D(angle);
+
+                    bodyPos -= Transform.Mul(q, body.LocalCenter);
                     // body.Sweep.Center = bodyPos;
                     // body.Sweep.Angle = angle;
 
@@ -543,9 +540,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                     body.LinearVelocity = linVelocity;
                 }
 
-                if (!float.IsNaN(_angularVelocities[i]))
+                var angVelocity = _angularVelocities[i];
+
+                if (!float.IsNaN(angVelocity))
                 {
-                    body.AngularVelocity = _angularVelocities[i];
+                    body.AngularVelocity = angVelocity;
                 }
             }
         }

@@ -155,10 +155,6 @@ namespace Robust.Client.Graphics.Clyde
             {
                 isActuallySrgb = loadParams.Srgb;
             }
-            else if (pixelType == typeof(Bgra32))
-            {
-                isActuallySrgb = loadParams.Srgb;
-            }
             else if (pixelType == typeof(A8))
             {
                 DebugTools.Assert(_hasGLTextureSwizzle);
@@ -264,7 +260,6 @@ namespace Robust.Client.Graphics.Clyde
                 // Note that if _hasGLSrgb is off, we import an sRGB texture as non-sRGB.
                 // Shaders are expected to compensate for this
                 Rgba32 => (srgb && _hasGLSrgb ? PIF.Srgb8Alpha8 : PIF.Rgba8, PF.Rgba, PT.UnsignedByte),
-                Bgra32 => (srgb && _hasGLSrgb ? PIF.Srgb8Alpha8 : PIF.Rgba8, PF.Bgra, PT.UnsignedByte),
                 A8 or L8 => (PIF.R8, PF.Red, PT.UnsignedByte),
                 _ => throw new NotSupportedException("Unsupported pixel type."),
             };
@@ -445,7 +440,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             return default(T) switch
             {
-                Rgba32 or Bgra32 => TexturePixelType.Rgba32,
+                Rgba32 => TexturePixelType.Rgba32,
                 L8 => TexturePixelType.L8,
                 A8 => TexturePixelType.A8,
                 _ => throw new NotSupportedException("Unsupported pixel type."),

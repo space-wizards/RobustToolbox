@@ -18,6 +18,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
+using Robust.Shared.Exceptions;
 using HttpListener = ManagedHttpListener.HttpListener;
 using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
 
@@ -36,14 +37,14 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private static readonly JsonSerializer JsonSerializer = new();
-        private readonly List<StatusHostHandler> _handlers = new();
+        private readonly List<StatusHostHandlerAsync> _handlers = new();
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
 
         private string? _serverNameCache;
 
-        public Task ProcessRequestAsync(HttpListenerContext context)
+        public async Task ProcessRequestAsync(HttpListenerContext context)
         {
             var apiContext = (IStatusHandlerContext) new ContextImpl(context);
 
@@ -54,9 +55,9 @@ namespace Robust.Server.ServerStatus
             {
                 foreach (var handler in _handlers)
                 {
-                    if (handler(apiContext))
+                    if (await handler(apiContext))
                     {
-                        return Task.CompletedTask;
+                        return;
                     }
                 }
 
@@ -74,8 +75,6 @@ namespace Robust.Server.ServerStatus
             _httpSawmill.Debug(Sawmill, $"{method} {context.Request.Url!.PathAndQuery} {context.Response.StatusCode} " +
                                          $"{(HttpStatusCode) context.Response.StatusCode} to {context.Request.RemoteEndPoint}");
                                          */
-
-            return Task.CompletedTask;
         }
 
         public event Action<JObject>? OnStatusRequest;
@@ -83,6 +82,11 @@ namespace Robust.Server.ServerStatus
         public event Action<JObject>? OnInfoRequest;
 
         public void AddHandler(StatusHostHandler handler)
+        {
+            _handlers.Add((ctx) => Task.FromResult(handler(ctx)));
+        }
+
+        public void AddHandler(StatusHostHandlerAsync handler)
         {
             _handlers.Add(handler);
         }
@@ -152,27 +156,37 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
+            // Set status host binding to match network manager by default
+            SetCVarIfUnmodified(CVars.StatusBind, $"*:{_netManager.Port}");
+
+            // Check build.json
             var path = PathHelpers.ExecutableRelativeFile("build.json");
-            if (!File.Exists(path))
+            if (File.Exists(path))
             {
-                return;
+                var buildInfo = File.ReadAllText(path);
+                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo)!;
+
+                // Don't replace cvars with contents of build.json if overriden by --cvar or such.
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
+                SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
+                SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
+                SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
+                SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
             }
 
-            var buildInfo = File.ReadAllText(path);
-            var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo)!;
-
-            // Don't replace cvars with contents of build.json if overriden by --cvar or such.
-            SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
-            SetCVarIfUnmodified(CVars.BuildForkId, info.ForkId);
-            SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
-            SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
-            SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
+            // Automatically determine engine version if no other source has provided a result
+            var asmVer = typeof(StatusHost).Assembly.GetName().Version;
+            if (asmVer != null)
+            {
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(3));
+            }
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {
                 if (_configurationManager.GetCVar(cvar) == "")
                     _configurationManager.SetCVar(cvar, val);
             }
+
         }
 
         public void Dispose()
@@ -252,6 +266,32 @@ namespace Robust.Server.ServerStatus
                 using var writer = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
 
                 writer.Write(text);
+            }
+
+            public void Respond(byte[] data, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
+            {
+                Respond(data, (int) code, contentType);
+            }
+
+            public void Respond(byte[] data, int code = 200, string contentType = MediaTypeNames.Text.Plain)
+            {
+                _context.Response.StatusCode = code;
+                _context.Response.ContentType = contentType;
+                _context.Response.ContentLength64 = data.Length;
+
+                if (RequestMethod == HttpMethod.Head)
+                {
+                    _context.Response.Close();
+                    return;
+                }
+
+                // Passing 'true' to this is CRITICAL.
+                // There's a bug in the ManagedHttpListener submodule.
+                // See:
+                // HttpListenerResponse.Managed.cs Close(byte[], bool),
+                // "thisRef.OutputStream.EndWrite"
+                // Yes, this will block, yes, you have to deal with it...
+                _context.Response.Close(data, true);
             }
 
             public void RespondError(HttpStatusCode code)

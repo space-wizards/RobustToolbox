@@ -62,6 +62,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
             _placementManager.PlacementChanged += OnPlacementCanceled;
 
+            OnClose += OnWindowClosed;
+
             Title = "Place Tiles";
             SearchBar.GrabKeyboardFocus();
 
@@ -80,6 +82,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
+            TileList.ClearSelected();
+            _placementManager.Clear();
             SearchBar.Clear();
             BuildTileList("");
             ClearButton.Disabled = true;
@@ -87,6 +91,8 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
         {
+            TileList.ClearSelected();
+            _placementManager.Clear();
             BuildTileList(args.Text);
             ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
         }
@@ -118,6 +124,12 @@ namespace Robust.Client.UserInterface.CustomControls
                 }
                 TileList.AddItem(entry.DisplayName, texture);
             }
+        }
+
+        private void OnWindowClosed()
+        {
+            TileList.ClearSelected();
+            _placementManager.Clear();
         }
 
         private void OnPlacementCanceled(object? sender, EventArgs e)

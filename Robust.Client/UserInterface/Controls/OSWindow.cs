@@ -129,6 +129,7 @@ namespace Robust.Client.UserInterface.Controls
             ClydeWindow = _clyde.CreateWindow(parameters);
             ClydeWindow.RequestClosed += OnWindowRequestClosed;
             ClydeWindow.Destroyed += OnWindowDestroyed;
+            ClydeWindow.Resized += OnWindowResized;
 
             _root = UserInterfaceManager.CreateWindowRoot(ClydeWindow);
             _root.AddChild(this);
@@ -165,6 +166,11 @@ namespace Robust.Client.UserInterface.Controls
             // and forcing us to have a code path that ignores the RequestClosed code.
 
             RealClosed();
+        }
+
+        private void OnWindowResized(WindowResizedEventArgs obj)
+        {
+            SetSize = obj.NewSize;
         }
 
         private void RealClosed()

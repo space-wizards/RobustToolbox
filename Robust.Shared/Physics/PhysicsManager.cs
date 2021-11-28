@@ -11,8 +11,6 @@ namespace Robust.Shared.Physics
         /// </summary>
         void ClearTransforms();
 
-        public bool CreateTransform(PhysicsComponent body);
-
         public Transform EnsureTransform(PhysicsComponent body);
 
         public Transform EnsureTransform(EntityUid uid);
@@ -36,8 +34,9 @@ namespace Robust.Shared.Physics
         private Transform GetPhysicsTransform(EntityUid uid)
         {
             var xformComp = _entManager.GetComponent<TransformComponent>(uid);
+            var (worldPos, worldRot) = xformComp.GetWorldPositionRotation();
 
-            return new(xformComp.WorldPosition, (float) xformComp.WorldRotation.Theta);
+            return new(worldPos, (float) worldRot.Theta);
         }
 
         /// <inheritdoc />
@@ -46,29 +45,20 @@ namespace Robust.Shared.Physics
             _transforms.Clear();
         }
 
-        public bool CreateTransform(PhysicsComponent body)
-        {
-            return CreateTransform(body.Owner.Uid);
-        }
-
-        public bool CreateTransform(EntityUid uid)
-        {
-            if (_transforms.ContainsKey(uid)) return false;
-
-            _transforms[uid] = GetPhysicsTransform(uid);
-            return true;
-        }
-
         public Transform EnsureTransform(PhysicsComponent body)
         {
-            CreateTransform(body);
-            return _transforms[body.Owner.Uid];
+            return EnsureTransform(body.OwnerUid);
         }
 
         public Transform EnsureTransform(EntityUid uid)
         {
-            CreateTransform(uid);
-            return _transforms[uid];
+            if (!_transforms.TryGetValue(uid, out var transform))
+            {
+                transform = GetPhysicsTransform(uid);
+                _transforms[uid] = transform;
+            }
+
+            return transform;
         }
 
         public void SetTransform(EntityUid uid, Transform transform)

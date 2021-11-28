@@ -74,10 +74,10 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
+            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
+            var position = Owner.Transform.Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
-                var grid = _mapManager.GetGrid(Owner.Transform.GridID);
-                var position = Owner.Transform.Coordinates;
                 foreach (var neighbor in grid.GetInDir(position, dir))
                 {
                     if (Owner.EntityManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
@@ -88,10 +88,20 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            CheckDir(Direction.North, OccluderDir.North);
-            CheckDir(Direction.East, OccluderDir.East);
-            CheckDir(Direction.South, OccluderDir.South);
-            CheckDir(Direction.West, OccluderDir.West);
+            var angle = Owner.Transform.LocalRotation;
+            var dirRolling = angle.GetCardinalDir();
+            // dirRolling starts at effective south
+
+            CheckDir(dirRolling, OccluderDir.South);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.West);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.North);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.East);
         }
 
         [Flags]

@@ -80,14 +80,18 @@ namespace Robust.UnitTesting.Shared.Maths
 
         // Offset it just to make sure the rotation is also gucci.
         private static readonly Vector2 Offset = new Vector2(10.0f, 10.0f);
+        private static readonly Angle Rotation = Angle.FromDegrees(45);
 
-        private static Box2Rotated IntersectionBox = new(Box2.UnitCentered.Translated(Offset), Angle.FromDegrees(45));
+        // Box centered at [10, 10] rotated 45 degrees around (0,0) becomes a box centered on the y-axis at y =
+        // sqrt(2)*10.
+        private static Box2Rotated IntersectionBox = new(Box2.UnitCentered.Translated(Offset), Rotation);
+        private static readonly Vector2 IntersectionBoxCenter = Rotation.RotateVec(Offset);
 
         private static IEnumerable<Vector2> InboundPoints => new Vector2[]
         {
-            Offset,
-            Offset - new Vector2(-0.5f, 0.0f),
-            Offset + new Vector2(0.1f, 0.1f),
+            IntersectionBoxCenter, // center of box
+            IntersectionBoxCenter - (-0.7f, 0.0f), // lowest point of box (just short of sqrt(0.5) below center)
+            IntersectionBoxCenter + (0.353f, 0.353f), // close to upper-right flat-edge of box, just shy of 0.5 units from the center
         };
 
         [Test]
@@ -96,12 +100,14 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(IntersectionBox.Contains(point), $"Rotated box doesn't contain {point}");
         }
 
+        // for the points outside of the box, take the 4 corners that would normally be inside the box if it weren't
+        // rotated
         private static IEnumerable<Vector2> OutboundPoints => new Vector2[]
         {
-            Offset + new Vector2(-0.48f, -0.48f),
-            Offset + new Vector2(-0.48f, 0.48f),
-            Offset + new Vector2(0.48f, 0.48f),
-            Offset + new Vector2(0.48f, -0.48f),
+            IntersectionBoxCenter + new Vector2(-0.48f, -0.48f),
+            IntersectionBoxCenter + new Vector2(-0.48f, 0.48f),
+            IntersectionBoxCenter + new Vector2(0.48f, 0.48f),
+            IntersectionBoxCenter + new Vector2(0.48f, -0.48f),
         };
 
         [Test]

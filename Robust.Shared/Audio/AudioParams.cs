@@ -3,6 +3,7 @@ using System;
 using System.Diagnostics.Contracts;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Audio
 {
@@ -84,7 +85,7 @@ namespace Robust.Shared.Audio
         /// <summary>
         ///     The "default" audio configuration.
         /// </summary>
-        public static readonly AudioParams Default = new(0, 1, "Master", SoundSystem.DefaultSoundRange, 1, 1, false, 0f);
+        public static readonly AudioParams Default = new(0, 1, "Master", SharedAudioSystem.DefaultSoundRange, 1, 1, false, 0f);
 
         public AudioParams(
             float volume,
@@ -216,9 +217,15 @@ namespace Robust.Shared.Audio
 
         public void PopulateDefaultValues()
         {
-            PitchScale = 1f;
-            BusName = "Master";
-            MaxDistance = SoundSystem.DefaultSoundRange;
+            Attenuation = Default.Attenuation;
+            Volume = Default.Volume;
+            PitchScale = Default.PitchScale;
+            BusName = Default.BusName;
+            MaxDistance = Default.MaxDistance;
+            RolloffFactor = Default.RolloffFactor;
+            ReferenceDistance = Default.ReferenceDistance;
+            Loop = Default.Loop;
+            PlayOffsetSeconds = Default.PlayOffsetSeconds;
         }
     }
 }

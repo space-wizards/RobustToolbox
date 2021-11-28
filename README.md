@@ -10,7 +10,7 @@ Use the [content repo](https://github.com/space-wizards/space-station-14) for ac
 
 ## Documentation/Wiki
 
-The [HackMD Wiki](https://hackmd.io/@ss14/docs/wiki) has documentation on SS14s content, engine, game design and more. We also have lots of resources for new contributors to the project.
+The [wiki](https://docs.spacestation14.io/) has documentation on SS14s content, engine, game design and more. We also have lots of resources for new contributors to the project.
 
 ## Contributing
 

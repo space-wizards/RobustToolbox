@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 
@@ -7,9 +7,9 @@ namespace Robust.Client.GameObjects
     [UsedImplicitly]
     internal sealed class AppearanceSystem : EntitySystem
     {
-        private readonly Queue<AppearanceComponent> _queuedUpdates = new();
+        private readonly Queue<ClientAppearanceComponent> _queuedUpdates = new();
 
-        public void EnqueueUpdate(AppearanceComponent component)
+        public void EnqueueUpdate(ClientAppearanceComponent component)
         {
             _queuedUpdates.Enqueue(component);
         }

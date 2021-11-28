@@ -233,11 +233,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override string ToString()
         {
-            if (Deleted)
-            {
-                return $"{Name} ({Uid}, {Prototype?.ID})D";
-            }
-            return $"{Name} ({Uid}, {Prototype?.ID})";
+            return EntityManager.ToPrettyString(Uid);
         }
     }
 }

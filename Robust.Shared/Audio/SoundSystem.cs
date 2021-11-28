@@ -11,11 +11,6 @@ namespace Robust.Shared.Audio
     public static class SoundSystem
     {
         /// <summary>
-        /// Default max range at which the sound can be heard.
-        /// </summary>
-        public static int DefaultSoundRange => GetAudio()?.DefaultSoundRange ?? 0;
-
-        /// <summary>
         /// Used in the PAS to designate the physics collision mask of occluders.
         /// </summary>
         public static int OcclusionCollisionMask

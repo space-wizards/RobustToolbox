@@ -135,6 +135,20 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        public IEnumerable<Contact> Contacts
+        {
+            get
+            {
+                var edge = ContactEdges;
+
+                while (edge != null)
+                {
+                    yield return edge.Contact!;
+                    edge = edge.Next;
+                }
+            }
+        }
+
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
@@ -589,7 +603,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float Inertia
         {
-            get => _inertia + Mass * Vector2.Dot(LocalCenter, LocalCenter);
+            get => _inertia + _mass * Vector2.Dot(_localCenter, _localCenter);
             set
             {
                 DebugTools.Assert(!float.IsNaN(value));
@@ -600,7 +614,7 @@ namespace Robust.Shared.GameObjects
 
                 if (value > 0.0f && !_fixedRotation)
                 {
-                    _inertia = value - Mass * Vector2.Dot(LocalCenter, LocalCenter);
+                    _inertia = value - Mass * Vector2.Dot(_localCenter, _localCenter);
                     DebugTools.Assert(_inertia > 0.0f);
                     InvI = 1.0f / _inertia;
                     Dirty();
@@ -644,7 +658,6 @@ namespace Robust.Shared.GameObjects
         [DataField("fixedRotation")]
         private bool _fixedRotation = true;
 
-        // TODO: Will be used someday
         /// <summary>
         ///     Get this body's center of mass offset to world position.
         /// </summary>
@@ -658,6 +671,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_bodyType != BodyType.Dynamic) return;
+
                 if (value.EqualsApprox(_localCenter)) return;
 
                 _localCenter = value;
@@ -954,6 +968,11 @@ namespace Robust.Shared.GameObjects
             return Transform.Mul(GetTransform(), localPoint);
         }
 
+        public Vector2 GetLocalVector2(Vector2 worldVector)
+        {
+            return Transform.MulT(new Quaternion2D((float) Owner.EntityManager.GetComponent<TransformComponent>(OwnerUid).WorldRotation.Theta), worldVector);
+        }
+
         public void FixtureChanged(Fixture fixture)
         {
             // TODO: Optimise this a LOT
@@ -989,9 +1008,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal Transform GetTransform()
+        public Transform GetTransform()
         {
-            return new(Owner.Transform.WorldPosition, (float) Owner.Transform.WorldRotation.Theta);
+            var (worldPos, worldRot) = Owner.Transform.GetWorldPositionRotation();
+
+            var xf = new Transform(worldPos, (float) worldRot.Theta);
+            // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
+
+            return xf;
         }
 
         /// <summary>
@@ -1115,8 +1139,7 @@ namespace Robust.Shared.GameObjects
             _invMass = 0.0f;
             _inertia = 0.0f;
             InvI = 0.0f;
-            LocalCenter = Vector2.Zero;
-            // Sweep
+            _localCenter = Vector2.Zero;
 
             if (((int) _bodyType & (int) BodyType.Kinematic) != 0)
             {
@@ -1124,33 +1147,18 @@ namespace Robust.Shared.GameObjects
             }
 
             var localCenter = Vector2.Zero;
+            var shapeManager = IoCManager.Resolve<IShapeManager>();
 
             foreach (var fixture in _fixtures)
             {
                 if (fixture.Mass <= 0.0f) continue;
 
-                var fixMass = fixture.Mass;
+                var data = new MassData {Mass = fixture.Mass};
+                shapeManager.GetMassData(fixture.Shape, ref data);
 
-                _mass += fixMass;
-
-                var center = Vector2.Zero;
-
-                // TODO: God this is garbage
-                switch (fixture.Shape)
-                {
-                    case PhysShapeAabb aabb:
-                        center = aabb.Centroid;
-                        break;
-                    case PolygonShape poly:
-                        center = poly.Centroid;
-                        break;
-                    case PhysShapeCircle circle:
-                        center = circle.Position;
-                        break;
-                }
-
-                localCenter += center * fixMass;
-                _inertia += fixture.Inertia;
+                _mass += data.Mass;
+                localCenter += data.Center * data.Mass;
+                _inertia += data.I;
             }
 
             if (BodyType == BodyType.Static)
@@ -1173,7 +1181,7 @@ namespace Robust.Shared.GameObjects
             if (_inertia > 0.0f && !_fixedRotation)
             {
                 // Center inertia about center of mass.
-                _inertia -= _mass * Vector2.Dot(Vector2.Zero, Vector2.Zero);
+                _inertia -= _mass * Vector2.Dot(localCenter, localCenter);
 
                 DebugTools.Assert(_inertia > 0.0f);
                 InvI = 1.0f / _inertia;
@@ -1184,16 +1192,19 @@ namespace Robust.Shared.GameObjects
                 InvI = 0.0f;
             }
 
-            LocalCenter = Vector2.Zero;
+            _localCenter = localCenter;
+
+            // TODO: Calculate Sweep
+
             /*
-            var oldCenter = _sweep.Center;
-            _sweep.LocalCenter = localCenter;
-            _sweep.Center0 = _sweep.Center = Physics.Transform.Mul(GetTransform(), _sweep.LocalCenter);
+            var oldCenter = Sweep.Center;
+            Sweep.LocalCenter = localCenter;
+            Sweep.Center0 = Sweep.Center = Transform.Mul(GetTransform(), Sweep.LocalCenter);
+            */
 
             // Update center of mass velocity.
-            var a = _sweep.Center - oldCenter;
-            _linVelocity += new Vector2(-_angVelocity * a.y, _angVelocity * a.x);
-            */
+            // _linVelocity += Vector2.Cross(_angVelocity, Worl - oldCenter);
+
         }
 
         /// <summary>
@@ -1218,20 +1229,14 @@ namespace Robust.Shared.GameObjects
                 var aUid = jointComponentA.Owner.Uid;
                 var bUid = jointComponentB.Owner.Uid;
 
-                ValueTuple<EntityUid, EntityUid> uids;
-
-                uids = aUid.CompareTo(bUid) < 0 ?
-                    new ValueTuple<EntityUid, EntityUid>(aUid, bUid) :
-                    new ValueTuple<EntityUid, EntityUid>(bUid, aUid);
-
                 foreach (var (_, joint) in jointComponentA.Joints)
                 {
                     // Check if either: the joint even allows collisions OR the other body on the joint is actually the other body we're checking.
-                    if (joint.CollideConnected ||
-                        uids.Item1 != joint.BodyAUid ||
-                        uids.Item2 != joint.BodyBUid) continue;
-
-                    return false;
+                    if (!joint.CollideConnected &&
+                        (aUid == joint.BodyAUid &&
+                         bUid == joint.BodyBUid) ||
+                        (bUid == joint.BodyAUid ||
+                         aUid == joint.BodyBUid)) return false;
                 }
             }
 

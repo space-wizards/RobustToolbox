@@ -441,9 +441,6 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public int DefaultSoundRange => 25;
-
-        /// <inheritdoc />
         public int OcclusionCollisionMask { get; set; }
 
         /// <inheritdoc />

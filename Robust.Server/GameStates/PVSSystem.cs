@@ -305,7 +305,7 @@ namespace Robust.Server.GameStates
                 _viewerEntsPool.Return(viewers);
             }
 
-            var expandEvent = new ExpandPvsEvent(new List<EntityUid>());
+            var expandEvent = new ExpandPvsEvent((IPlayerSession) session, new List<EntityUid>());
             RaiseLocalEvent(ref expandEvent);
 
             if (expandEvent.Entities.Count > 0)
@@ -712,10 +712,12 @@ namespace Robust.Server.GameStates
 
     public readonly struct ExpandPvsEvent
     {
+        public readonly IPlayerSession Session;
         public readonly List<EntityUid> Entities;
 
-        public ExpandPvsEvent(List<EntityUid> entities)
+        public ExpandPvsEvent(IPlayerSession session, List<EntityUid> entities)
         {
+            Session = session;
             Entities = entities;
         }
     }

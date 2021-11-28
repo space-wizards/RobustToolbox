@@ -50,6 +50,7 @@ namespace Robust.Server.Console.Commands
             public string Command => "removeview";
             public string Description => $"Allows you to unsubscribe to an entity's view for debugging purposes";
             public string Help => $"{Command} <entityUid>";
+
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
                 var session = shell.Player;
@@ -82,5 +83,6 @@ namespace Robust.Server.Console.Commands
 
                 EntitySystem.Get<ViewSubscriberSystem>().RemoveViewSubscriber(uid, playerSession);
             }
+        }
     }
 }

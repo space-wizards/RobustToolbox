@@ -373,6 +373,10 @@ namespace Robust.Server.GameStates
 
                     chunk.FastGetAllAnchoredEnts(uid =>
                     {
+                        // Given the anchored ent is parented to the chunk we already have its parents
+                        // Could maybe also add vis check here? Though PaulVS soon TM
+                        if (!visibleEnts.Add(uid)) return;
+
                         var ent = _entMan.GetComponent<MetaDataComponent>(uid);
 
                         if (ent.EntityLastModifiedTick < lastSeenChunk)
@@ -522,9 +526,8 @@ namespace Robust.Server.GameStates
 
             foreach (var entityUid in currentSet)
             {
-
                 // skip sending anchored entities (walls)
-                DebugTools.Assert(!EntityManager.GetComponent<TransformComponent>(entityUid).Anchored);
+                if (EntityManager.GetComponent<TransformComponent>(entityUid).Anchored) continue;
 
                 if (previousSet.Contains(entityUid))
                 {

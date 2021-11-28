@@ -15,8 +15,6 @@ namespace Robust.Server.GameObjects
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private const int AudioDistanceRange = 25;
-
         private uint _streamIndex;
 
         private class AudioSourceServer : IPlayingAudioStream
@@ -67,9 +65,6 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public int DefaultSoundRange => AudioDistanceRange;
-
-        /// <inheritdoc />
         public int OcclusionCollisionMask { get; set; }
 
         /// <inheritdoc />
@@ -97,7 +92,7 @@ namespace Robust.Server.GameObjects
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS
-            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
+            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? DefaultSoundRange : audioParams.Value.MaxDistance;
 
             if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
                 return null;
@@ -129,7 +124,7 @@ namespace Robust.Server.GameObjects
         public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS
-            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
+            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? DefaultSoundRange : audioParams.Value.MaxDistance;
 
             var id = CacheIdentifier();
 

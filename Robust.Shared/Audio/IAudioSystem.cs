@@ -10,11 +10,6 @@ namespace Robust.Shared.Audio
     public interface IAudioSystem
     {
         /// <summary>
-        /// Default max range at which the sound can be heard.
-        /// </summary>
-        int DefaultSoundRange { get; }
-
-        /// <summary>
         /// Used in the PAS to designate the physics collision mask of occluders.
         /// </summary>
         int OcclusionCollisionMask { get; set; }

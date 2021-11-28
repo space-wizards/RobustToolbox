@@ -534,13 +534,6 @@ namespace Robust.Client.GameStates
 #endif
             }
 
-            foreach (var entity in toInitialize)
-            {
-#if EXCEPTION_TOLERANCE
-                if (brokenEnts.Contains(entity))
-                    continue;
-#endif
-            }
 #if EXCEPTION_TOLERANCE
             foreach (var entity in brokenEnts)
             {

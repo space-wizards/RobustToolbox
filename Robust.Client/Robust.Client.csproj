@@ -8,6 +8,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../bin/Client</OutputPath>
     <NoWarn>NU1701</NoWarn>
+    <RobustILLink>true</RobustILLink>
   </PropertyGroup>
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
@@ -44,10 +45,16 @@
 
     <EmbeddedResource Include="Graphics\Clyde\Shaders\*" />
   </ItemGroup>
+  <ItemGroup>
+    <RobustLinkRoots Include="Robust.Client" />
+    <RobustLinkAssemblies Include="TerraFX.Interop.Windows" />
+    <RobustLinkAssemblies Include="OpenToolkit.Graphics" />
+  </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <PropertyGroup>
     <RobustToolsPath>../Tools</RobustToolsPath>
   </PropertyGroup>
   <Target Name="RobustAfterBuild" AfterTargets="Build" />
   <Import Project="..\MSBuild\XamlIL.targets" />
+  <Import Project="..\MSBuild\Robust.Trimming.targets" />
 </Project>

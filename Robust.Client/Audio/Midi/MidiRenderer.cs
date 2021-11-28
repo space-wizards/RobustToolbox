@@ -297,7 +297,7 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
-                    _player?.SetLoop(value ? -1 : 1);
+                    _player?.SetLoop(value ? -1 : 0);
                 _loopMidi = value;
             }
         }

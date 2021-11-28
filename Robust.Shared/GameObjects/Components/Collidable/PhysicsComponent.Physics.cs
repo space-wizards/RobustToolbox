@@ -1010,10 +1010,9 @@ namespace Robust.Shared.GameObjects
 
         public Transform GetTransform()
         {
-            var position = Owner.Transform.WorldPosition;
-            var angle = (float) Owner.Transform.WorldRotation.Theta;
+            var (worldPos, worldRot) = Owner.Transform.GetWorldPositionRotation();
 
-            var xf = new Transform(position, angle);
+            var xf = new Transform(worldPos, (float) worldRot.Theta);
             // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
 
             return xf;

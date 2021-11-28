@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -268,7 +268,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 var (desc, errCode) = errorResult!.Value;
-                return (null, $"[{errCode}]: {desc}");
+                return (null, (string)$"[{errCode}]: {desc}");
             }
 
             public void WindowDestroy(WindowReg window)

@@ -260,16 +260,18 @@ internal partial class PVSSystem : EntitySystem
             return (allStates, deletions);
         }
 
+        var playerVisibleSet = _playerVisibleSets[session];
         var visibleEnts = _visSetPool.Get();
+        var toSend = new Dictionary<EntityUid, PVSEntityVisiblity>();
 
         foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
         {
-            visibleEnts.Add(entityUid);
+            TryAddToVisibleEnts(entityUid, playerVisibleSet, toSend, fromTick, ref newEntitiesSent);
         }
 
         foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
         {
-            visibleEnts.Add(entityUid);
+            TryAddToVisibleEnts(entityUid, playerVisibleSet, toSend, fromTick, ref newEntitiesSent);
         }
 
         var viewers = GetSessionViewers(session);
@@ -283,7 +285,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             //todo at some point just register the viewerentities as localoverrides
-            RecursiveAdd(eyeEuid, visibleEnts, visMask);
+            TryAddToVisibleEnts(eyeEuid, playerVisibleSet, toSend, fromTick, ref newEntitiesSent, visMask);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -293,7 +295,7 @@ internal partial class PVSSystem : EntitySystem
                 {
                     foreach (var index in chunk)
                     {
-                        RecursiveAdd(index, visibleEnts, visMask);
+                        TryAddToVisibleEnts(index, playerVisibleSet, toSend, fromTick, ref newEntitiesSent, visMask);
                     }
                 }
             }
@@ -310,7 +312,7 @@ internal partial class PVSSystem : EntitySystem
                     {
                         foreach (var index in chunk)
                         {
-                            RecursiveAdd(index, visibleEnts, visMask);
+                            TryAddToVisibleEnts(index, playerVisibleSet, toSend, fromTick, ref newEntitiesSent, visMask);
                         }
                     }
                 }
@@ -320,78 +322,21 @@ internal partial class PVSSystem : EntitySystem
         viewers.Clear();
         _viewerEntsPool.Return(viewers);
 
-        var playerVisibleSet = _playerVisibleSets[session];
         var entityStates = new List<EntityState>();
 
-        //send new entities that we couldn't send last time
-        var skippedNewEntities = new HashSet<EntityUid>();
-
-        var processed = new HashSet<EntityUid>();
-
-        bool TryGenerateState(EntityUid entityUid, [NotNullWhen(true)] out EntityState? state, bool dontSkip = false)
+        foreach (var (entityUid, visiblity) in toSend)
         {
-            state = null;
-
-            //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-            if(!entityUid.IsValid()) return false;
-
-            // this entity was already sent using out contained-algo :tm:
-            if(processed.Contains(entityUid)) return false;
-            processed.Add(entityUid);
-
-            //remove entities we can see rn from the playerVisibleSet so that only the culled ones remain
-            //use tick zero for new entities, fromTick for entities that were already in our view
-            var @new = !playerVisibleSet.Remove(entityUid);
-            var tick = @new ? GameTick.Zero : fromTick;
-
-            if (@new)
-            {
-                if(newEntitiesSent > _newEntityBudget && !dontSkip)
-                {
-                    skippedNewEntities.Add(entityUid);
-                    return false;
-                }
-
-                newEntitiesSent++;
-            }
-            else if (EntityManager.GetComponent<MetaDataComponent>(entityUid).EntityLastModifiedTick < fromTick)
-            {
-                //entity has been sent before and hasnt been updated since
-                return false;
-            }
-
-            state = GetEntityState(session, entityUid, tick);
-
-            return @new || !state.Empty;
-        }
-
-        foreach (var entityUid in visibleEnts)
-        {
-            if(!TryGenerateState(entityUid, out var state))
+            if (visiblity == PVSEntityVisiblity.StayedUnchanged)
                 continue;
 
-            foreach (var change in state.ComponentChanges.Value)
-            {
-                if(change.State is not ContainerManagerComponent.ContainerManagerComponentState containerState)
-                    continue;
+            var @new = visiblity == PVSEntityVisiblity.Entered;
 
-                foreach (var containerData in containerState.ContainerSet)
-                {
-                    foreach (var containedEntity in containerData.ContainedEntities)
-                    {
-                        if(TryGenerateState(containedEntity, out var containedState, true))
-                            entityStates.Add(containedState);
-                    }
-                }
-            }
+            var state = GetEntityState(session, entityUid, @new ? GameTick.Zero : fromTick);
+
+            //this entity is not new & nothing changed
+            if(!@new && state.Empty) continue;
 
             entityStates.Add(state);
-        }
-
-        //remove the sent entities from the queue
-        foreach (var entityUid in skippedNewEntities)
-        {
-            visibleEnts.Remove(entityUid);
         }
 
         foreach (var entityUid in playerVisibleSet)
@@ -408,6 +353,7 @@ internal partial class PVSSystem : EntitySystem
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(), true));
         }
 
+        visibleEnts.UnionWith(toSend.Keys);
         _playerVisibleSets[session] = visibleEnts;
         _visSetPool.Return(playerVisibleSet);
 
@@ -417,44 +363,66 @@ internal partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool RecursiveAdd(EntityUid uid, HashSet<EntityUid> visSet, uint visMask)
+    private bool TryAddToVisibleEnts(EntityUid uid, HashSet<EntityUid> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
     {
-        // we are done, this ent has already been checked and is visible
-        if (visSet.Contains(uid))
-            return true;
+        //are we valid yet?
+        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
+        if (!uid.IsValid()) return false;
+
+        var entity = EntityManager.GetEntity(uid);
+
+        var parent = entity.Transform.ParentUid;
+
+        if (!trustParent && //do we have it on good authority the parent exists?
+            parent.IsValid() && //is it not a worldentity?
+            !toSend.ContainsKey(parent) && //was the parent not yet added to toSend?
+            !TryAddToVisibleEnts(parent, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, visMask)) //did we just fail to add the parent?
+            return false; //we failed? suppose we dont get added either
+
+        //did we already get added?
+        if (toSend.ContainsKey(uid)) return true;
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (EntityManager.TryGetComponent<VisibilityComponent>(uid, out var visComp))
+        if (visMask != null && EntityManager.TryGetComponent<VisibilityComponent>(uid, out var visComp))
         {
             if ((visMask & visComp.Layer) == 0)
                 return false;
         }
 
-        var xform = EntityManager.GetComponent<TransformComponent>(uid);
+        //did the previous tick see us?
+        var @new = !previousVisibleEnts.Remove(uid);
 
-        var parentUid = xform.ParentUid;
-
-        // this is the world entity, it is always visible
-        if (!parentUid.IsValid())
+        if (@new)
         {
-            visSet.Add(uid);
+            //we just entered pvs, do we still have enough budget to send us?
+            if(!dontSkip && newEntitiesSent > _newEntityBudget)
+                return false;
+
+            newEntitiesSent++;
+        }
+
+        //we *need* to send out contained entities too as part of the intial state
+        if (EntityManager.TryGetComponent(uid, out ContainerManagerComponent containerManagerComponent))
+        {
+            foreach (var container in containerManagerComponent.GetAllContainers())
+            {
+                foreach (var containedEntity in container.ContainedEntities)
+                {
+                    TryAddToVisibleEnts(containedEntity.Uid, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
+                        true, true);
+                }
+            }
+        }
+
+        if (!@new && entity.MetaData.EntityLastModifiedTick < fromTick)
+        {
+            //entity has been sent before and hasnt been updated since
+            toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);
             return true;
         }
 
-        // parent is already in the set
-        if (visSet.Contains(parentUid))
-        {
-            visSet.Add(uid);
-            return true;
-        }
-
-        // parent was not added, so we are not either
-        if (!RecursiveAdd(parentUid, visSet, visMask))
-            return false;
-
-        // add us
-        visSet.Add(uid);
-
+        //add us
+        toSend.Add(uid, @new ? PVSEntityVisiblity.Entered : PVSEntityVisiblity.StayedChanged);
         return true;
     }
 

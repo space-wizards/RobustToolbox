@@ -70,6 +70,7 @@ internal partial class PVSSystem : EntitySystem
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
     private readonly ConcurrentDictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
+    private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
     {
@@ -378,9 +379,12 @@ internal partial class PVSSystem : EntitySystem
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
-        var entity = EntityManager.GetEntity(uid);
+        if (!_cachedPackets.TryGetValue(uid, out var packet))
+        {
+            _cachedPackets[uid] = packet = new PVSEntityPacket(EntityManager, uid);
+        }
 
-        var parent = entity.Transform.ParentUid;
+        var parent = packet.TransformComponent.ParentUid;
 
         if (!trustParent && //do we have it on good authority the parent exists?
             parent.IsValid() && //is it not a worldentity?
@@ -392,9 +396,9 @@ internal partial class PVSSystem : EntitySystem
         if (toSend.ContainsKey(uid)) return true;
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null && EntityManager.TryGetComponent<VisibilityComponent>(uid, out var visComp))
+        if (visMask != null && packet.VisibilityComponent != null)
         {
-            if ((visMask & visComp.Layer) == 0)
+            if ((visMask & packet.VisibilityComponent.Layer) == 0)
                 return false;
         }
 
@@ -411,9 +415,9 @@ internal partial class PVSSystem : EntitySystem
         }
 
         //we *need* to send out contained entities too as part of the intial state
-        if (EntityManager.TryGetComponent(uid, out ContainerManagerComponent containerManagerComponent))
+        if (packet.ContainerManagerComponent != null)
         {
-            foreach (var container in containerManagerComponent.GetAllContainers())
+            foreach (var container in packet.ContainerManagerComponent.GetAllContainers())
             {
                 foreach (var containedEntity in container.ContainedEntities)
                 {
@@ -423,7 +427,7 @@ internal partial class PVSSystem : EntitySystem
             }
         }
 
-        if (!@new && entity.MetaData.EntityLastModifiedTick < fromTick)
+        if (!@new && packet.MetaDataComponent.EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);

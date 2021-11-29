@@ -371,7 +371,7 @@ namespace Robust.Shared
         /// Should improve performance and fixes main window sRGB handling with ANGLE.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
-            CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle_custom_swap_chain", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.

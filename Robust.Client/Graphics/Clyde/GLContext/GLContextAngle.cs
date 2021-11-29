@@ -318,6 +318,38 @@ namespace Robust.Client.Graphics.Clyde
                         Logger.DebugS("clyde.ogl.angle", $"Found display adapter with name: {adapterName}");
                     }
 
+#pragma warning disable CA1416
+                    IDXGIFactory6* factory6;
+                    if (_adapter == null && _factory->QueryInterface(__uuidof<IDXGIFactory6>(), (void**) &factory6) == 0)
+                    {
+                        var gpuPref = (DXGI_GPU_PREFERENCE) Clyde._cfg.GetCVar(CVars.DisplayGpuPreference);
+                        IDXGIAdapter1* adapter;
+                        for (var adapterIndex = 0u;
+                             factory6->EnumAdapterByGpuPreference(
+                                 adapterIndex,
+                                 gpuPref,
+                                 __uuidof<IDXGIAdapter1>(),
+                                 (void**)&adapter) != DXGI_ERROR_NOT_FOUND;
+                             adapterIndex++)
+                        {
+                            /*
+                            DXGI_ADAPTER_DESC1 aDesc;
+                            ThrowIfFailed("GetDesc1", adapter->GetDesc1(&aDesc));
+
+                            var aDescName = new ReadOnlySpan<char>(aDesc.Description, 128);
+
+                            Logger.DebugS("clyde.ogl.angle", aDescName.ToString());
+
+                            adapter->Release();
+                            */
+                            _adapter = adapter;
+                            break;
+                        }
+
+                        factory6->Release();
+                    }
+#pragma warning restore CA1416
+
                     Span<D3D_FEATURE_LEVEL> featureLevels = stackalloc D3D_FEATURE_LEVEL[]
                     {
                         // 11_0 can do GLES3

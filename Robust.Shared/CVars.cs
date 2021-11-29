@@ -389,6 +389,19 @@ namespace Robust.Shared
             CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
 
         /// <summary>
+        /// What type of GPU to prefer when creating a graphics context, for things such as hybrid GPU laptops.
+        /// </summary>
+        /// <remarks>
+        /// This setting is not always respect depending on platform and rendering API used.
+        /// Values are:
+        /// 0 = unspecified (DXGI_GPU_PREFERENCE_UNSPECIFIED)
+        /// 1 = minimum power (DXGI_GPU_PREFERENCE_MINIMUM_POWER)
+        /// 2 = high performance (DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayGpuPreference =
+            CVarDef.Create("display.gpu_preference", 2, CVar.CLIENTONLY);
+
+        /// <summary>
         /// Use EGL to create GL context instead of GLFW, if possible.
         /// </summary>
         /// <remarks>

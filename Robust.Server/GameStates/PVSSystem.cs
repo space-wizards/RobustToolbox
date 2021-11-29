@@ -384,6 +384,13 @@ internal partial class PVSSystem : EntitySystem
             _cachedPackets[uid] = packet = new PVSEntityPacket(EntityManager, uid);
         }
 
+        // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
+        if (visMask != null && packet.VisibilityComponent != null)
+        {
+            if ((visMask & packet.VisibilityComponent.Layer) == 0)
+                return false;
+        }
+
         var parent = packet.TransformComponent.ParentUid;
 
         if (!trustParent && //do we have it on good authority the parent exists?
@@ -392,15 +399,8 @@ internal partial class PVSSystem : EntitySystem
             !TryAddToVisibleEnts(parent, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, visMask)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
-        //did we already get added?
+        //did we already get added through the parent call?
         if (toSend.ContainsKey(uid)) return true;
-
-        // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null && packet.VisibilityComponent != null)
-        {
-            if ((visMask & packet.VisibilityComponent.Layer) == 0)
-                return false;
-        }
 
         //did the previous tick see us?
         var @new = !previousVisibleEnts.Remove(uid);

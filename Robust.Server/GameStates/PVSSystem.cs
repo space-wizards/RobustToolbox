@@ -379,6 +379,9 @@ internal partial class PVSSystem : EntitySystem
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
+        //did we already get added?
+        if (toSend.ContainsKey(uid)) return true;
+
         if (!_cachedPackets.TryGetValue(uid, out var packet))
         {
             _cachedPackets[uid] = packet = new PVSEntityPacket(EntityManager, uid);

@@ -66,6 +66,7 @@ namespace Robust.Client.Graphics.Clyde
         private ISawmill _sawmillOgl = default!;
 
         private IBindingsContext _glBindingsContext = default!;
+        private bool _earlyGLInit;
 
         public Clyde()
         {

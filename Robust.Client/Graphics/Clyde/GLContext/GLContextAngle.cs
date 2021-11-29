@@ -202,6 +202,7 @@ namespace Robust.Client.Graphics.Clyde
                 // and so that we can know _hasGLSrgb in window creation.
                 eglMakeCurrent(_eglDisplay, null, null, _eglContext);
                 Clyde.InitOpenGL();
+                Clyde._earlyGLInit = true;
             }
 
             private void TryInitializeCore()

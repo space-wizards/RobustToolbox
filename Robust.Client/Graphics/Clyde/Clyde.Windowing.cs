@@ -218,7 +218,8 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
-            InitOpenGL();
+            if (!_earlyGLInit)
+                InitOpenGL();
 
             _sawmillOgl.Debug("Setting viewport and rendering splash...");
 

@@ -367,14 +367,14 @@ namespace Robust.Shared
         /// On Windows, use ANGLE as OpenGL implementation.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngle =
-            CVarDef.Create("display.angle", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Use a custom swap chain when using ANGLE.
         /// Should improve performance and fixes main window sRGB handling with ANGLE.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
-            CVarDef.Create("display.angle_custom_swap_chain", false, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.

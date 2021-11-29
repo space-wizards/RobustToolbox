@@ -1,28 +1,32 @@
-﻿/*
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using Robust.Shared.Console;
 using Robust.Shared.Utility;
-using TerraFX.Interop;
-using static TerraFX.Interop.D3D_DRIVER_TYPE;
-using static TerraFX.Interop.D3D_FEATURE_LEVEL;
-using static TerraFX.Interop.DXGI_MEMORY_SEGMENT_GROUP;
-using static TerraFX.Interop.DXGI_SWAP_EFFECT;
-using static TerraFX.Interop.Windows;
+using TerraFX.Interop.DirectX;
+using TerraFX.Interop.Windows;
+using static TerraFX.Interop.DirectX.DXGI_MEMORY_SEGMENT_GROUP;
+using static TerraFX.Interop.Windows.Windows;
+using static TerraFX.Interop.DirectX.DirectX;
+using static TerraFX.Interop.DirectX.DXGI;
 
 namespace Robust.Client.Graphics.Clyde
 {
     public sealed class VramCommand : IConsoleCommand
     {
         public string Command => "vram";
-        public string Description => "Checks vram";
+        public string Description => "Displays video memory usage statics by the game.";
         public string Help => "Usage: vram";
 
         public unsafe void Execute(IConsoleShell shell, string argStr, string[] args)
         {
+            if (!OperatingSystem.IsWindows())
+            {
+                shell.WriteError("This command is only supported on Windows.");
+                return;
+            }
+
             IDXGIFactory1* dxgiFactory;
-            var iid = IID_IDXGIFactory1;
-            ThrowIfFailed(nameof(CreateDXGIFactory1), CreateDXGIFactory1(&iid, (void**) &dxgiFactory));
+            ThrowIfFailed(nameof(CreateDXGIFactory1), CreateDXGIFactory1(__uuidof<IDXGIFactory1>(), (void**) &dxgiFactory));
 
             uint idx = 0;
             IDXGIAdapter* adapter;
@@ -30,8 +34,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 DXGI_ADAPTER_DESC2 desc;
                 IDXGIAdapter3* adapter3;
-                iid = IID_IDXGIAdapter3;
-                adapter->QueryInterface(&iid, (void**) &adapter3);
+                adapter->QueryInterface(__uuidof<IDXGIAdapter3>(), (void**) &adapter3);
+                adapter->Release();
                 ThrowIfFailed("GetDesc", adapter3->GetDesc2(&desc));
 
                 var descString = new ReadOnlySpan<char>(desc.Description, 128).TrimEnd('\0');
@@ -46,6 +50,8 @@ namespace Robust.Client.Graphics.Clyde
                 shell.WriteLine($"Usage (non local): {ByteHelpers.FormatBytes((long) memInfo.CurrentUsage)}");
 
                 idx += 1;
+
+                adapter3->Release();
             }
         }
 
@@ -58,4 +64,3 @@ namespace Robust.Client.Graphics.Clyde
         }
     }
 }
-*/

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -499,12 +500,14 @@ namespace Robust.Server.Maps
 
             private void FixMapEntities()
             {
+                var pvs = EntitySystem.Get<PVSSystem>();
                 foreach (var entity in Entities)
                 {
                     if (entity.TryGetComponent(out IMapGridComponent? grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity.Uid;
+                        pvs.EntityPVSCollection.UpdateIndex(entity.Uid);
                     }
                 }
             }

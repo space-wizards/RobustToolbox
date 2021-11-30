@@ -62,6 +62,7 @@ internal partial class PVSSystem : EntitySystem
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 
     private PVSCollection<EntityUid, IEntity> _entityPvsCollection = default!;
+    public PVSCollection<EntityUid, IEntity> EntityPVSCollection => _entityPvsCollection;
     private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =

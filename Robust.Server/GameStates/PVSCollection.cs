@@ -306,6 +306,17 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
 
     #region UpdateIndex
 
+    private bool IsOverride(TIndex index)
+    {
+        if (_locationChangeBuffer.TryGetValue(index, out var change) &&
+            change is GlobalOverride or LocalOverride) return true;
+
+        if (_indexLocations.TryGetValue(index, out var indexLoc) &&
+            indexLoc is GlobalOverride or LocalOverride) return true;
+
+        return false;
+    }
+
     /// <summary>
     /// Updates an <see cref="TIndex"/> to be sent to all players at all times.
     /// </summary>
@@ -313,7 +324,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+        if(!removeFromOverride && IsOverride(index))
             return;
 
         RegisterUpdate(index, new GlobalOverride());
@@ -327,7 +338,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, ICommonSession session, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+        if(!removeFromOverride && IsOverride(index))
             return;
 
         RegisterUpdate(index, new LocalOverride(session));
@@ -341,20 +352,20 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, EntityCoordinates coordinates, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+        if(!removeFromOverride && IsOverride(index))
             return;
 
         var gridId = coordinates.GetGridId(_entityManager);
         if (gridId != GridId.Invalid)
         {
             var gridIndices = GetChunkIndices(_mapManager.GetGrid(gridId).LocalToGrid(coordinates));
-            UpdateIndex(index, gridId, gridIndices);
+            UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
             return;
         }
 
         var mapId = coordinates.GetMapId(_entityManager);
         var mapIndices = GetChunkIndices(coordinates.ToMapPos(_entityManager));
-        UpdateIndex(index, mapId, mapIndices);
+        UpdateIndex(index, mapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 
     /// <summary>
@@ -366,7 +377,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, GridId gridId, Vector2i chunkIndices, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+        if(!removeFromOverride && IsOverride(index))
             return;
 
         RegisterUpdate(index, new GridChunkLocation(gridId, chunkIndices));
@@ -381,7 +392,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, MapId mapId, Vector2i chunkIndices, bool removeFromOverride = false)
     {
-        if(!removeFromOverride && _indexLocations.TryGetValue(index, out var location) && location is GlobalOverride or LocalOverride)
+        if(!removeFromOverride && IsOverride(index))
             return;
 
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));

@@ -418,19 +418,6 @@ internal partial class PVSSystem : EntitySystem
             newEntitiesSent++;
         }
 
-        //we *need* to send out contained entities too as part of the intial state
-        if (packet.ContainerManagerComponent != null)
-        {
-            foreach (var container in packet.ContainerManagerComponent.GetAllContainers())
-            {
-                foreach (var containedEntity in container.ContainedEntities)
-                {
-                    TryAddToVisibleEnts(containedEntity.Uid, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
-                        true, true);
-                }
-            }
-        }
-
         if (!@new && packet.MetaDataComponent.EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since

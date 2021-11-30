@@ -32,7 +32,9 @@ namespace Robust.Client.Log
             formatted.Pop();
             formatted.AddText($"] {sawmillName}: ");
             formatted.Pop();
+            formatted.PushColor(Color.LightGray);
             formatted.AddText(message.RenderMessage());
+            formatted.Pop();
             if (message.Exception != null)
             {
                 formatted.AddText("\n");

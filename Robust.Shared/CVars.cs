@@ -83,14 +83,11 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetPVS =
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
-        public static readonly CVarDef<float> StreamedTilesPerSecond =
-            CVarDef.Create("net.stream_tps", 500f, CVar.ARCHIVE | CVar.SERVER);
-
-        public static readonly CVarDef<float> StreamedTileRange =
-            CVarDef.Create("net.stream_range", 15f, CVar.ARCHIVE | CVar.SERVER);
-
         public static readonly CVarDef<float> NetMaxUpdateRange =
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        public static readonly CVarDef<int> NetPVSEntityBudget =
+            CVarDef.Create("net.pvsbudget", 20, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);

@@ -314,7 +314,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession session)
+        public override ComponentState GetComponentState()
         {
             return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, LinearVelocity, AngularVelocity, BodyType);
         }

@@ -42,17 +42,6 @@ namespace Robust.Server.GameStates
 
         private ISawmill _logger = default!;
 
-        public float PvsRange
-        {
-            get => _configurationManager.GetCVar(CVars.NetMaxUpdateRange);
-            set => _configurationManager.SetCVar(CVars.NetMaxUpdateRange, value);
-        }
-
-        public void SetTransformNetId(ushort netId)
-        {
-            _pvs.SetTransformNetId(netId);
-        }
-
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");
@@ -114,8 +103,6 @@ namespace Robust.Server.GameStates
         public void SendGameStateUpdate()
         {
             DebugTools.Assert(_networkManager.IsServer);
-
-            _pvs.ViewSize = PvsRange * 2;
 
             if (!_networkManager.IsConnected)
             {
@@ -183,6 +170,8 @@ namespace Robust.Server.GameStates
 
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
+
+            _pvs.ProcessCollections();
 
             Parallel.ForEach(_playerManager.ServerSessions, session =>
             {

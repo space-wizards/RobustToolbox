@@ -47,9 +47,8 @@ namespace Robust.Shared.GameObjects
             _mapIndex = MapId.Nullspace;
         }
 
-        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new MapComponentState(_mapIndex, LightingEnabled);
         }

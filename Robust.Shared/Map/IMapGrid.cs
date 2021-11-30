@@ -240,6 +240,8 @@ namespace Robust.Shared.Map
         /// </summary>
         Vector2i LocalToChunkIndices(EntityCoordinates gridPos);
 
+        Vector2 LocalToGrid(EntityCoordinates position);
+
         #endregion Transforms
 
         #region Collision

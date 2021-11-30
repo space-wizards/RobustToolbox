@@ -695,12 +695,19 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+        public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
         {
-            var getState = new ComponentGetState(player);
+            var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 
-            return getState.State ?? component.GetComponentState(player);
+            return getState.State ?? component.GetComponentState();
+        }
+
+        public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+        {
+            var attempt = new ComponentGetStateAttemptEvent(player);
+            eventBus.RaiseComponentEvent(component, attempt);
+            return !attempt.Cancelled;
         }
 
         #endregion

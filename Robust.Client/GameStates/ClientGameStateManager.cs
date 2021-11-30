@@ -18,6 +18,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Players;
@@ -38,6 +39,8 @@ namespace Robust.Client.GameStates
         private readonly Queue<(uint sequence, GameTick sourceTick, EntityEventArgs msg, object sessionMsg)>
             _pendingSystemMessages
                 = new();
+
+        private readonly Dictionary<EntityUid, MapId> _hiddenEntities = new();
 
         private uint _metaCompNetId;
 
@@ -379,7 +382,6 @@ namespace Robust.Client.GameStates
             var outputData = new Dictionary<EntityUid, Dictionary<uint, ComponentState>>();
 
             Debug.Assert(_players.LocalPlayer != null, "_players.LocalPlayer != null");
-            var player = _players.LocalPlayer.Session;
 
             var bus = _entityManager.EventBus;
 
@@ -390,7 +392,7 @@ namespace Robust.Client.GameStates
 
                 foreach (var (netId, component) in _entityManager.GetNetComponents(createdEntity))
                 {
-                    var state = _entityManager.GetComponentState(bus, component, player);
+                    var state = _entityManager.GetComponentState(bus, component);
 
                     if(state.GetType() == typeof(ComponentState))
                         continue;
@@ -428,14 +430,20 @@ namespace Robust.Client.GameStates
             var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
             var toInitialize = new List<Entity>();
             var created = new List<EntityUid>();
+            var toHide = new List<EntityUid>();
+            var toShow = new List<EntityUid>();
 
             foreach (var es in curEntStates)
             {
+                EntityUid uid;
                 //Known entities
                 if (_entities.TryGetEntity(es.Uid, out var entity))
                 {
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] MOD {es.Uid}");
                     toApply.Add(entity, (es, null));
+                    if(_hiddenEntities.ContainsKey(es.Uid))
+                        toShow.Add(es.Uid);
+                    uid = es.Uid;
                 }
                 else //Unknown entities
                 {
@@ -449,7 +457,10 @@ namespace Robust.Client.GameStates
                     toApply.Add(newEntity, (es, null));
                     toInitialize.Add(newEntity);
                     created.Add(newEntity.Uid);
+                    uid = newEntity.Uid;
                 }
+                if(es.Hide)
+                    toHide.Add(uid);
             }
 
             foreach (var es in nextEntStates)
@@ -523,19 +534,27 @@ namespace Robust.Client.GameStates
 #endif
             }
 
-            foreach (var entity in toInitialize)
-            {
-#if EXCEPTION_TOLERANCE
-                if (brokenEnts.Contains(entity))
-                    continue;
-#endif
-            }
 #if EXCEPTION_TOLERANCE
             foreach (var entity in brokenEnts)
             {
                 entity.Delete();
             }
 #endif
+
+            foreach (var entityUid in toHide)
+            {
+                if(_entityManager.HasComponent<MapGridComponent>(entityUid)) continue;
+
+                var xform = _entityManager.GetComponent<TransformComponent>(entityUid);
+                _hiddenEntities.Add(entityUid, xform.MapID);
+                xform.ChangeMapId(MapId.Nullspace);
+            }
+
+            foreach (var entityUid in toShow)
+            {
+                _entityManager.GetComponent<TransformComponent>(entityUid).ChangeMapId(_hiddenEntities[entityUid]);
+                _hiddenEntities.Remove(entityUid);
+            }
 
             return created;
         }

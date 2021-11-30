@@ -145,7 +145,7 @@ namespace Robust.Shared.GameObjects
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return (T)EntityManager.GetComponent(Uid, typeof(T));
+            return EntityManager.GetComponent<T>(Uid);
         }
 
         public IComponent GetComponent(Type type)

@@ -15,10 +15,8 @@ namespace Robust.Shared.GameObjects
     {
         #region Members
 
-        /// <inheritdoc />
         public IEntityManager EntityManager { get; }
 
-        /// <inheritdoc />
         [ViewVariables]
         public EntityUid Uid { get; }
 
@@ -28,7 +26,6 @@ namespace Robust.Shared.GameObjects
         public GameTick LastModifiedTick { get => MetaData.EntityLastModifiedTick; internal set => MetaData.EntityLastModifiedTick = value; }
 
 
-        /// <inheritdoc />
         [ViewVariables]
         public EntityPrototype? Prototype
         {
@@ -36,7 +33,6 @@ namespace Robust.Shared.GameObjects
             internal set => MetaData.EntityPrototype = value;
         }
 
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public string Description
         {
@@ -44,7 +40,6 @@ namespace Robust.Shared.GameObjects
             set => MetaData.EntityDescription = value;
         }
 
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public string Name
         {
@@ -52,13 +47,10 @@ namespace Robust.Shared.GameObjects
             set => MetaData.EntityName = value;
         }
 
-        /// <inheritdoc />
         public bool Initialized => LifeStage >= EntityLifeStage.Initialized;
 
-        /// <inheritdoc />
         public bool Initializing => LifeStage == EntityLifeStage.Initializing;
 
-        /// <inheritdoc />
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
@@ -66,13 +58,11 @@ namespace Robust.Shared.GameObjects
 
         private TransformComponent? _transform;
 
-        /// <inheritdoc />
         [ViewVariables]
         public TransformComponent Transform => _transform ??= GetComponent<TransformComponent>();
 
         private MetaDataComponent? _metaData;
 
-        /// <inheritdoc />
         [ViewVariables]
         public MetaDataComponent MetaData
         {
@@ -90,7 +80,6 @@ namespace Robust.Shared.GameObjects
             Uid = uid;
         }
 
-        /// <inheritdoc />
         public bool IsValid()
         {
             return EntityManager.EntityExists(Uid);
@@ -100,7 +89,6 @@ namespace Robust.Shared.GameObjects
 
         #region Component Messaging
 
-        /// <inheritdoc />
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendMessage(IComponent? owner, ComponentMessage message)
         {
@@ -112,7 +100,6 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        /// <inheritdoc />
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
         {
@@ -133,32 +120,27 @@ namespace Robust.Shared.GameObjects
             EntityManager.AddComponent(this, component);
         }
 
-        /// <inheritdoc />
         public T AddComponent<T>()
             where T : Component, new()
         {
             return EntityManager.AddComponent<T>(this);
         }
 
-        /// <inheritdoc />
         public void RemoveComponent<T>()
         {
             EntityManager.RemoveComponent<T>(Uid);
         }
 
-        /// <inheritdoc />
         public bool HasComponent<T>()
         {
             return EntityManager.HasComponent<T>(Uid);
         }
 
-        /// <inheritdoc />
         public bool HasComponent(Type type)
         {
             return EntityManager.HasComponent(Uid, type);
         }
 
-        /// <inheritdoc />
         public T GetComponent<T>()
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
@@ -166,7 +148,6 @@ namespace Robust.Shared.GameObjects
             return (T)EntityManager.GetComponent(Uid, typeof(T));
         }
 
-        /// <inheritdoc />
         public IComponent GetComponent(Type type)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
@@ -174,7 +155,6 @@ namespace Robust.Shared.GameObjects
             return EntityManager.GetComponent(Uid, type);
         }
 
-        /// <inheritdoc />
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
@@ -187,7 +167,6 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(out T? component) ? component : default;
         }
 
-        /// <inheritdoc />
         public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
@@ -200,33 +179,28 @@ namespace Robust.Shared.GameObjects
             return TryGetComponent(type, out var component) ? component : null;
         }
 
-        /// <inheritdoc />
         public void QueueDelete()
         {
             EntityManager.QueueDeleteEntity(this);
         }
 
-        /// <inheritdoc />
         public void Delete()
         {
             EntityManager.DeleteEntity(this);
         }
 
-        /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents()
         {
             return EntityManager.GetComponents(Uid);
         }
 
-        /// <inheritdoc />
         public IEnumerable<T> GetAllComponents<T>()
         {
             return EntityManager.GetComponents<T>(Uid);
         }
 
         #endregion Components
-
-        /// <inheritdoc />
+        
         public override string ToString()
         {
             return EntityManager.ToPrettyString(Uid);

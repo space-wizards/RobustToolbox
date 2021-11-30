@@ -111,11 +111,17 @@ namespace Robust.Shared.Utility.Markup
         }
 
 
-        public FormattedMessage Render() => Build().Build();
+        public FormattedMessage Render(Section? defStyle = default) => Build(defStyle).Build();
 
-        public FormattedMessage.Builder Build()
+        public FormattedMessage.Builder Build(Section? defStyle = default)
         {
-            var b = new FormattedMessage.Builder();
+            FormattedMessage.Builder b;
+            if (defStyle != null)
+                b = FormattedMessage.Builder.FromFormattedMessage(
+                        new FormattedMessage(new[] {defStyle.Value})
+                    );
+            else
+                b = new FormattedMessage.Builder();
 
             foreach (var t in _tags)
             {
@@ -130,14 +136,14 @@ namespace Robust.Shared.Utility.Markup
             return b;
         }
 
-        public static FormattedMessage.Builder BuildMarkup(string text)
+        public static FormattedMessage.Builder BuildMarkup(string text, Section? defStyle = default)
         {
             var nb = new Basic();
             nb.AddMarkup(text);
-            return nb.Build();
+            return nb.Build(defStyle);
         }
 
-        public static FormattedMessage RenderMarkup(string text) => BuildMarkup(text).Build();
+        public static FormattedMessage RenderMarkup(string text, Section? defStyle = default) => BuildMarkup(text, defStyle).Build();
 
         /// <summary>
         ///     Escape a string of text to be able to be formatted into markup.

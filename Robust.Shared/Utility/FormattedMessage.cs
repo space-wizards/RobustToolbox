@@ -177,7 +177,7 @@ namespace Robust.Shared.Utility
                 new Section()
             };
 
-            public static Builder FromFormattedText(FormattedMessage orig) => new ()
+            public static Builder FromFormattedMessage(FormattedMessage orig) => new ()
             {
                 // Again, we always need at least one _work item, so if the FormattedMessage
                 // is empty, we'll forge one.

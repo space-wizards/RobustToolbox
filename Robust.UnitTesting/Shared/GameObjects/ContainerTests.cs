@@ -18,7 +18,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         /// and tests that said children are added to the container when they do arrive on the client.
         /// </summary>
         /// <returns></returns>
-        /*todo paul reenable this  [Test]
+        [Test]
          public async Task TestContainerNonexistantItems()
          {
              var server = StartServer();
@@ -268,7 +268,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  Assert.That(containerSystem.ExpectedEntities.Count, Is.EqualTo(0));
 
             });
-        }*/
+        }
 
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Reflection;
@@ -79,7 +80,7 @@ namespace Robust.Shared.Serialization
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer}
+                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer, new IEntitySerializer()}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);

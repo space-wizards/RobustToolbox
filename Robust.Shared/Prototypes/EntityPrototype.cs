@@ -174,7 +174,7 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        public void UpdateEntity(Entity entity)
+        public void UpdateEntity(IEntity entity)
         {
             if (ID != entity.Prototype?.ID)
             {
@@ -229,7 +229,7 @@ namespace Robust.Shared.Prototypes
             entity.MetaData.EntityPrototype = this;
         }
 
-        internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory,
+        internal static void LoadEntity(EntityPrototype? prototype, IEntity entity, IComponentFactory factory,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             /*YamlObjectSerializer.Context? defaultContext = null;
@@ -271,7 +271,7 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName,
+        private static void EnsureCompExistsAndDeserialize(IEntity entity, IComponentFactory factory, string compName,
             IComponent data, ISerializationContext? context)
         {
             var compType = factory.GetRegistration(compName).Type;

@@ -40,12 +40,12 @@ namespace Robust.Client.GameObjects
 
         void IClientEntityManagerInternal.InitializeEntity(IEntity entity)
         {
-            base.InitializeEntity((Entity)entity);
+            base.InitializeEntity(entity);
         }
 
         void IClientEntityManagerInternal.StartEntity(IEntity entity)
         {
-            base.StartEntity((Entity)entity);
+            base.StartEntity(entity);
         }
 
         #region IEntityNetworkManager impl

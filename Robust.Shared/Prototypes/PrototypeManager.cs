@@ -364,7 +364,7 @@ namespace Robust.Shared.Prototypes
                 foreach (var entity in _entityManager.GetEntities()
                     .Where(e => e.Prototype != null && e.Prototype.ID == prototype))
                 {
-                    ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
+                    ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((IEntity) entity);
                 }
             }
 #endif

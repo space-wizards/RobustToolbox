@@ -10,8 +10,8 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [CopyByRef]
-    public abstract class IEntity
+    [CopyByRef, Serializable]
+    public sealed class IEntity
     {
         #region Members
 

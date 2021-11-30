@@ -43,7 +43,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, Entity> Entities = new();
+        protected readonly Dictionary<EntityUid, IEntity> Entities = new();
 
         private EntityEventBus _eventBus = null!;
 
@@ -192,7 +192,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity, coordinates.GetMapId(this));
+            InitializeAndStartEntity(entity, coordinates.GetMapId(this));
             return entity;
         }
 
@@ -200,7 +200,7 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity, coordinates.MapId);
+            InitializeAndStartEntity(entity, coordinates.MapId);
             return entity;
         }
 
@@ -360,7 +360,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(string? prototypeName, EntityUid? uid = null)
+        private protected IEntity AllocEntity(string? prototypeName, EntityUid? uid = null)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -379,7 +379,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(EntityUid? uid = null)
+        private protected IEntity AllocEntity(EntityUid? uid = null)
         {
             if (uid == null)
             {
@@ -391,7 +391,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new Entity(this, uid.Value);
+            var entity = new IEntity(this, uid.Value);
 
 
             // we want this called before adding components
@@ -417,7 +417,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected virtual IEntity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);
@@ -437,12 +437,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(Entity entity, IEntityLoadContext? context)
+        private protected void LoadEntity(IEntity entity, IEntityLoadContext? context)
         {
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private void InitializeAndStartEntity(Entity entity, MapId mapId)
+        private void InitializeAndStartEntity(IEntity entity, MapId mapId)
         {
             try
             {
@@ -460,13 +460,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(Entity entity)
+        protected void InitializeEntity(IEntity entity)
         {
             InitializeComponents(entity.Uid);
             EntityInitialized?.Invoke(this, entity.Uid);
         }
 
-        protected void StartEntity(Entity entity)
+        protected void StartEntity(IEntity entity)
         {
             StartComponents(entity.Uid);
             EntityStarted?.Invoke(this, entity.Uid);

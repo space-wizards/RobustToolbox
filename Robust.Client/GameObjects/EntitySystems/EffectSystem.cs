@@ -354,7 +354,6 @@ namespace Robust.Client.GameObjects
                 var worldHandle = args.WorldHandle;
                 ShaderInstance? currentShader = null;
                 var player = _playerManager.LocalPlayer?.ControlledEntity;
-                var eyeRotation = _owner.eyeManager.CurrentEye.Rotation;
 
                 foreach (var effect in _owner._Effects)
                 {
@@ -372,16 +371,18 @@ namespace Robust.Client.GameObjects
                         currentShader = newShader;
                     }
 
+                    // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
 
                     var coordinates =
                         (effect.AttachedEntity?.Transform.Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
+                    var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
                     var effectOrigin = coordinates.ToMapPos(_entityManager);
 
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
-                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation - eyeRotation, effectOrigin);
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation - rotation, effectOrigin);
 
                     worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }

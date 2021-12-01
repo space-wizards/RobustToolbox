@@ -3,7 +3,6 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Server.Console.Commands;
@@ -50,9 +49,9 @@ public sealed class ScaleCommand : IConsoleCommand
             spriteComponent.Scale *= scale;
         }
 
-        if (entManager.TryGetComponent(uid, out FixturesComponent? manager))
+        if (entManager.TryGetComponent(uid, out PhysicsComponent? body))
         {
-            foreach (var (_, fixture) in manager.Fixtures)
+            foreach (var fixture in body._fixtures)
             {
                 // TODO: May be worthwhile to swap to density like box2d? Either way mass is unchanged for now.
                 switch (fixture.Shape)
@@ -80,9 +79,9 @@ public sealed class ScaleCommand : IConsoleCommand
                     default:
                         throw new NotImplementedException();
                 }
-            }
 
-            EntitySystem.Get<FixtureSystem>().FixtureUpdate(manager);
+                body.FixtureChanged(fixture);
+            }
         }
     }
 

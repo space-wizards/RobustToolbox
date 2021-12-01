@@ -130,7 +130,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
 
             broadphase.CreateFixture(ground, horizontalFixture);
 
@@ -194,7 +194,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
             broadphase.CreateFixture(ground, horizontalFixture);
 
             var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
@@ -258,7 +258,7 @@ namespace Robust.Server.Console.Commands
                 Hard = true
             };
 
-            var broadphase = EntitySystem.Get<FixtureSystem>();
+            var broadphase = EntitySystem.Get<SharedBroadphaseSystem>();
             broadphase.CreateFixture(ground, horizontalFixture);
 
             // Setup boxes
@@ -296,7 +296,7 @@ namespace Robust.Server.Console.Commands
 
         private void CreateTumbler(MapId mapId)
         {
-            var broadphaseSystem = EntitySystem.Get<FixtureSystem>();
+            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId)).Uid;

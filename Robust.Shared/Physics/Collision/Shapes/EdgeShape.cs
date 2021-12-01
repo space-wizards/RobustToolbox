@@ -160,5 +160,10 @@ namespace Robust.Shared.Physics.Collision.Shapes
             // It's a line
             return 0f;
         }
+
+        public void ApplyState()
+        {
+            return;
+        }
     }
 }

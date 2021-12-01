@@ -24,4 +24,17 @@ namespace Robust.Shared.GameObjects
             Component = component;
         }
     }
+
+    public sealed class FixtureUpdateMessage : EntityEventArgs
+    {
+        public PhysicsComponent Body { get; }
+
+        public Fixture Fixture { get; }
+
+        public FixtureUpdateMessage(PhysicsComponent body, Fixture fixture)
+        {
+            Body = body;
+            Fixture = fixture;
+        }
+    }
 }

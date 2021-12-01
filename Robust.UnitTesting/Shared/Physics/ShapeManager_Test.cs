@@ -7,21 +7,21 @@ using Robust.Shared.Physics.Collision.Shapes;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    [TestOf(typeof(FixtureSystem))]
-    public class FixtureShape_Test : RobustUnitTest
+    [TestOf(typeof(IShapeManager))]
+    public class ShapeManager_Test : RobustUnitTest
     {
-        private FixtureSystem _shapeManager = default!;
+        private IShapeManager _shapeManager = default!;
 
         [OneTimeSetUp]
         public void Setup()
         {
-            _shapeManager = new FixtureSystem();
+            _shapeManager = new ShapeManager();
         }
 
         [Test]
         public void TestCirclePoint()
         {
-            var circle = new PhysShapeCircle {Radius = 0.5f};
+            var circle = new PhysShapeCircle() {Radius = 0.5f};
             var transform = new Transform(0f);
             var posA = Vector2.One;
             var posB = Vector2.Zero;

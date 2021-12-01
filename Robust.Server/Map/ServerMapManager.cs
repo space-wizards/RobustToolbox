@@ -51,11 +51,11 @@ namespace Robust.Server.Map
 
             // TODO: Like MapManager injecting this is a PITA so need to work out an easy way to do it.
             // Maybe just add like a PostInject method that gets called way later?
-            var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
             foreach (var fixture in chunk.Fixtures)
             {
-                fixtureSystem.DestroyFixture(body, fixture);
+                broadphaseSystem.DestroyFixture(body, fixture);
             }
         }
 

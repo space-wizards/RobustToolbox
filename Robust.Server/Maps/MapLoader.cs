@@ -441,21 +441,19 @@ namespace Robust.Server.Maps
             {
                 var entManager = IoCManager.Resolve<IEntityManager>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
 
                 foreach (var grid in Grids)
                 {
                     var gridInternal = (IMapGridInternal) grid;
-                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
-                    body.Broadphase = _mapManager.GetMapEntity(grid.ParentMapId).GetComponent<BroadphaseComponent>();
-                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
+                    var body = entManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
                     gridFixtures.ProcessGrid(gridInternal);
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)
-                    var toRemove = new RemQueue<Fixture>();
+                    var toRemove = new List<Fixture>();
 
-                    foreach (var (_, fixture) in fixtures.Fixtures)
+                    foreach (var fixture in body.Fixtures)
                     {
                         var found = false;
 
@@ -479,10 +477,8 @@ namespace Robust.Server.Maps
 
                     foreach (var fixture in toRemove)
                     {
-                        fixtureSystem.DestroyFixture(body, fixture, false, fixtures);
+                        broadphaseSystem.DestroyFixture(fixture);
                     }
-
-                    fixtureSystem.FixtureUpdate(fixtures, body);
                 }
             }
 

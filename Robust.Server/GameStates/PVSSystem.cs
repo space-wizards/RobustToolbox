@@ -62,6 +62,7 @@ internal partial class PVSSystem : EntitySystem
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 
     private PVSCollection<EntityUid, IEntity> _entityPvsCollection = default!;
+    public PVSCollection<EntityUid, IEntity> EntityPVSCollection => _entityPvsCollection;
     private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
@@ -281,6 +282,13 @@ internal partial class PVSSystem : EntitySystem
         }
 
         foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
+        {
+            TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
+        }
+
+        var expandEvent = new ExpandPvsEvent((IPlayerSession) session, new List<EntityUid>());
+        RaiseLocalEvent(ref expandEvent);
+        foreach (var entityUid in expandEvent.Entities)
         {
             TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
         }
@@ -592,5 +600,17 @@ internal partial class PVSSystem : EntitySystem
         var map = xform.MapID;
 
         return (view, map);
+    }
+}
+
+public readonly struct ExpandPvsEvent
+{
+    public readonly IPlayerSession Session;
+    public readonly List<EntityUid> Entities;
+
+    public ExpandPvsEvent(IPlayerSession session, List<EntityUid> entities)
+    {
+        Session = session;
+        Entities = entities;
     }
 }

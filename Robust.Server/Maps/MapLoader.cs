@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -440,19 +441,21 @@ namespace Robust.Server.Maps
             {
                 var entManager = IoCManager.Resolve<IEntityManager>();
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
 
                 foreach (var grid in Grids)
                 {
                     var gridInternal = (IMapGridInternal) grid;
-                    var body = entManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
+                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
+                    body.Broadphase = _mapManager.GetMapEntity(grid.ParentMapId).GetComponent<BroadphaseComponent>();
+                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)
-                    var toRemove = new List<Fixture>();
+                    var toRemove = new RemQueue<Fixture>();
 
-                    foreach (var fixture in body.Fixtures)
+                    foreach (var (_, fixture) in fixtures.Fixtures)
                     {
                         var found = false;
 
@@ -476,8 +479,10 @@ namespace Robust.Server.Maps
 
                     foreach (var fixture in toRemove)
                     {
-                        broadphaseSystem.DestroyFixture(fixture);
+                        fixtureSystem.DestroyFixture(body, fixture, false, fixtures);
                     }
+
+                    fixtureSystem.FixtureUpdate(fixtures, body);
                 }
             }
 
@@ -499,12 +504,14 @@ namespace Robust.Server.Maps
 
             private void FixMapEntities()
             {
+                var pvs = EntitySystem.Get<PVSSystem>();
                 foreach (var entity in Entities)
                 {
                     if (entity.TryGetComponent(out IMapGridComponent? grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity.Uid;
+                        pvs?.EntityPVSCollection.UpdateIndex(entity.Uid);
                     }
                 }
             }

@@ -48,7 +48,6 @@ namespace Robust.Shared
             IoCManager.Register<IManifoldManager, CollisionManager>();
             IoCManager.Register<IIslandManager, IslandManager>();
             IoCManager.Register<IVerticesSimplifier, RamerDouglasPeuckerSimplifier>();
-            IoCManager.Register<IShapeManager, ShapeManager>();
         }
     }
 }

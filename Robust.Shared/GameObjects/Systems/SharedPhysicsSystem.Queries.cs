@@ -73,7 +73,7 @@ namespace Robust.Shared.GameObjects
 
             var state = (body, entities);
 
-            foreach (var fixture in body.Fixtures)
+            foreach (var fixture in body._fixtures)
             {
                 foreach (var proxy in fixture.Proxies)
                 {
@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
 
                 var localTransform = new Transform(broadInvMatrix.Transform(transform.Position), transform.Quaternion2D.Angle - broadRot);
 
-                foreach (var fixture in body.Fixtures)
+                foreach (var fixture in body._fixtures)
                 {
                     var collisionMask = fixture.CollisionMask;
                     var collisionLayer = fixture.CollisionLayer;

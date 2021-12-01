@@ -17,7 +17,6 @@ namespace Robust.UnitTesting.Shared.Physics
   - type: Transform
   - type: Physics
     bodyType: Dynamic
-  - type: Fixtures
   - type: CollisionWake
 ";
 

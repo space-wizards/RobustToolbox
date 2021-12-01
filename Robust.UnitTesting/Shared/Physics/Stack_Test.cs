@@ -49,11 +49,11 @@ namespace Robust.UnitTesting.Shared.Physics
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-            var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
+            var broadphaseSystem = entitySystemManager.GetEntitySystem<SharedBroadphaseSystem>();
             MapId mapId;
 
-            const int columnCount = 1;
-            const int rowCount = 15;
+            var columnCount = 1;
+            var rowCount = 15;
             PhysicsComponent[] bodies = new PhysicsComponent[columnCount * rowCount];
             Vector2 firstPos = Vector2.Zero;
 
@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     Hard = true
                 };
 
-                fixtureSystem.CreateFixture(ground, horizontalFixture);
+                broadphaseSystem.CreateFixture(ground, horizontalFixture);
 
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
                 var verticalFixture = new Fixture(ground, vertical)
@@ -83,7 +83,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     Hard = true
                 };
 
-                fixtureSystem.CreateFixture(ground, verticalFixture);
+                broadphaseSystem.CreateFixture(ground, verticalFixture);
 
                 var xs = new[]
                 {
@@ -116,7 +116,7 @@ namespace Robust.UnitTesting.Shared.Physics
                             Hard = true,
                         };
 
-                        fixtureSystem.CreateFixture(box, fixture);
+                        broadphaseSystem.CreateFixture(box, fixture);
 
                         bodies[j * rowCount + i] = box;
                     }
@@ -164,7 +164,8 @@ namespace Robust.UnitTesting.Shared.Physics
             var entityManager = server.ResolveDependency<IEntityManager>();
             var mapManager = server.ResolveDependency<IMapManager>();
             var entitySystemManager = server.ResolveDependency<IEntitySystemManager>();
-            var fixtureSystem = entitySystemManager.GetEntitySystem<FixtureSystem>();
+            var physicsSystem = entitySystemManager.GetEntitySystem<SharedPhysicsSystem>();
+            var broadphaseSystem = entitySystemManager.GetEntitySystem<SharedBroadphaseSystem>();
             MapId mapId;
 
             var columnCount = 1;
@@ -187,7 +188,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     Hard = true
                 };
 
-                fixtureSystem.CreateFixture(ground, horizontalFixture);
+                broadphaseSystem.CreateFixture(ground, horizontalFixture);
 
                 var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
                 var verticalFixture = new Fixture(ground, vertical)
@@ -197,7 +198,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     Hard = true
                 };
 
-                fixtureSystem.CreateFixture(ground, verticalFixture);
+                broadphaseSystem.CreateFixture(ground, verticalFixture);
 
                 var xs = new[]
                 {
@@ -226,7 +227,7 @@ namespace Robust.UnitTesting.Shared.Physics
                             Hard = true,
                         };
 
-                        fixtureSystem.CreateFixture(circle, fixture);
+                        broadphaseSystem.CreateFixture(circle, fixture);
 
                         bodies[j * rowCount + i] = circle;
                     }

@@ -15,6 +15,7 @@ namespace Robust.Shared.GameObjects
         public readonly bool SleepingAllowed;
         public readonly bool FixedRotation;
         public readonly BodyStatus Status;
+        public readonly List<Fixture> Fixtures;
 
         public readonly Vector2 LinearVelocity;
         public readonly float AngularVelocity;
@@ -27,6 +28,8 @@ namespace Robust.Shared.GameObjects
         /// <param name="sleepingAllowed"></param>
         /// <param name="fixedRotation"></param>
         /// <param name="status"></param>
+        /// <param name="fixtures"></param>
+        /// <param name="joints"></param>
         /// <param name="linearVelocity">Current linear velocity of the entity in meters per second.</param>
         /// <param name="angularVelocity">Current angular velocity of the entity in radians per sec.</param>
         /// <param name="bodyType"></param>
@@ -35,6 +38,7 @@ namespace Robust.Shared.GameObjects
             bool sleepingAllowed,
             bool fixedRotation,
             BodyStatus status,
+            List<Fixture> fixtures,
             Vector2 linearVelocity,
             float angularVelocity,
             BodyType bodyType)
@@ -43,6 +47,7 @@ namespace Robust.Shared.GameObjects
             SleepingAllowed = sleepingAllowed;
             FixedRotation = fixedRotation;
             Status = status;
+            Fixtures = fixtures;
 
             LinearVelocity = linearVelocity;
             AngularVelocity = angularVelocity;

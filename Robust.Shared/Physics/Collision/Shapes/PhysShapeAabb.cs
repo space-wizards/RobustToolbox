@@ -32,6 +32,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             {
                 if (MathHelper.CloseToPercent(_radius, value)) return;
                 _radius = value;
+                OnDataChanged?.Invoke();
             }
         }
 
@@ -57,6 +58,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                     return;
 
                 _localBounds = value;
+                OnDataChanged?.Invoke();
             }
         }
 
@@ -74,6 +76,13 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             return new Box2Rotated(_localBounds.Translated(transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox().Enlarged(_radius);
         }
+
+        /// <inheritdoc />
+        public void ApplyState() { }
+
+        // TODO
+        [field: NonSerialized]
+        public event Action? OnDataChanged;
 
         [Pure]
         internal List<Vector2> GetVertices()

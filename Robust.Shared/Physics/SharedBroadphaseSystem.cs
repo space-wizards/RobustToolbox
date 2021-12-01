@@ -183,7 +183,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void UpdateBroadphaseCache(BroadphaseComponent broadphase)
+        internal void UpdateBroadphaseCache(BroadphaseComponent broadphase)
         {
             var uid = broadphase.OwnerUid;
 
@@ -409,14 +409,15 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Remove all of our fixtures from the broadphase.
         /// </summary>
-        /// <param name="body"></param>
-        private void DestroyProxies(PhysicsComponent body)
+        private void DestroyProxies(PhysicsComponent body, FixturesComponent? manager = null)
         {
+            if (!Resolve(body.OwnerUid, ref manager)) return;
+
             var broadphase = body.Broadphase;
 
             if (broadphase == null) return;
 
-            foreach (var fixture in body._fixtures)
+            foreach (var (_, fixture) in manager.Fixtures)
             {
                 DestroyProxies(broadphase, fixture);
             }
@@ -440,9 +441,15 @@ namespace Robust.Shared.Physics
             CreateProxies(body, true);
         }
 
-        internal void RemoveBody(PhysicsComponent body)
+        internal void RemoveBody(PhysicsComponent body, FixturesComponent? manager = null)
         {
-            DestroyProxies(body);
+            // TODO: Would reaaalllyy like for this to not be false in future
+            if (!Resolve(body.OwnerUid, ref manager, false))
+            {
+                return;
+            }
+
+            DestroyProxies(body, manager);
         }
 
         private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -558,91 +565,6 @@ namespace Robust.Shared.Physics
             _queuedRotates.Enqueue(args);
         }
 
-        public void CreateFixture(PhysicsComponent body, Fixture fixture)
-        {
-            fixture.ID = body.GetFixtureName(fixture);
-            body._fixtures.Add(fixture);
-            body.FixtureCount += 1;
-            fixture.Body = body;
-
-            // TODO: Assert world locked
-            // Broadphase should be set in the future TM
-            // Should only happen for nullspace / initializing entities
-            if (body.Broadphase != null)
-            {
-                UpdateBroadphaseCache(body.Broadphase);
-                CreateProxies(fixture, body.Owner.Transform.WorldPosition, false);
-            }
-
-            // Supposed to be wrapped in density but eh
-            body.ResetMassData();
-            body.Dirty();
-            // TODO: Set newcontacts to true.
-        }
-
-        public Fixture CreateFixture(PhysicsComponent body, IPhysShape shape)
-        {
-            var fixture = new Fixture(body, shape);
-            CreateFixture(body, fixture);
-            return fixture;
-        }
-
-        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass)
-        {
-            // TODO: Make it take in density instead
-            var fixture = new Fixture(body, shape) {Mass = mass};
-            CreateFixture(body, fixture);
-        }
-
-        public void DestroyFixture(PhysicsComponent body, string id)
-        {
-            var fixture = body.GetFixture(id);
-            if (fixture == null) return;
-            DestroyFixture(body, fixture);
-        }
-
-        public void DestroyFixture(Fixture fixture)
-        {
-            DestroyFixture(fixture.Body, fixture);
-        }
-
-        public void DestroyFixture(PhysicsComponent body, Fixture fixture)
-        {
-            // TODO: Assert world locked
-            DebugTools.Assert(fixture.Body == body);
-            DebugTools.Assert(body.FixtureCount > 0);
-
-            if (!body._fixtures.Remove(fixture))
-                return;
-
-            var edge = body.ContactEdges;
-
-            while (edge != null)
-            {
-                var contact = edge.Contact!;
-                edge = edge.Next;
-
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixture == fixtureA || fixture == fixtureB)
-                {
-                    body.PhysicsMap?.ContactManager.Destroy(contact);
-                }
-            }
-
-            var broadphase = GetBroadphase(fixture.Body);
-
-            if (broadphase != null)
-            {
-                DestroyProxies(broadphase, fixture);
-            }
-
-            body.FixtureCount -= 1;
-            body.ResetMassData();
-            body.Dirty();
-        }
-
         private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot)
         {
             // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
@@ -733,6 +655,7 @@ namespace Robust.Shared.Physics
             if (body.Owner.Transform.MapID == MapId.Nullspace) return;
 
             var worldPos = body.Owner.Transform.WorldPosition;
+            var worldRot = body.Owner.Transform.WorldRotation;
 
             // Outside of PVS (TODO Remove when PVS is better)
             if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
@@ -756,7 +679,7 @@ namespace Robust.Shared.Physics
 
             foreach (var fixture in body.Fixtures)
             {
-                CreateProxies(fixture, worldPos, useCache);
+                CreateProxies(fixture, worldPos, worldRot, useCache);
             }
 
             // Ensure cache remains up to date if the broadphase is moving.
@@ -773,7 +696,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Create the proxies for this fixture on the body's broadphase.
         /// </summary>
-        private void CreateProxies(Fixture fixture, Vector2 worldPos, bool useCache)
+        internal void CreateProxies(Fixture fixture, Vector2 worldPos, Angle worldRot, bool useCache)
         {
             // Ideally we would always just defer this until Update / FrameUpdate but that will have to wait for a future
             // PR for my own sanity.
@@ -800,7 +723,7 @@ namespace Robust.Shared.Physics
 
             Matrix3 broadphaseInvMatrix;
             (Vector2 Position, float Rotation) broadphaseTransform;
-            var xform = broadphase.Owner.Transform;
+            var xform = EntityManager.GetComponent<TransformComponent>(broadphase.OwnerUid);
 
             if (useCache)
             {
@@ -817,7 +740,6 @@ namespace Robust.Shared.Physics
                 broadphaseTransform = (wp, (float) wr.Theta);
             }
 
-            var worldRot = fixture.Body.Owner.Transform.WorldRotation;
             var localPos = broadphaseInvMatrix.Transform(worldPos);
 
             var transform = new Transform(localPos, worldRot - broadphaseTransform.Rotation);
@@ -841,7 +763,7 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Destroy the proxies for this fixture on the broadphase.
         /// </summary>
-        private void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture)
+        internal void DestroyProxies(BroadphaseComponent broadphase, Fixture fixture)
         {
             if (broadphase == null)
             {
@@ -878,21 +800,6 @@ namespace Robust.Shared.Physics
             physicsComponent.Awake = true;
         }
 
-        private void OnMapCreated(object? sender, MapEventArgs e)
-        {
-            if (e.Map == MapId.Nullspace) return;
-
-            var mapEnt = _mapManager.GetMapEntity(e.Map);
-            mapEnt.EnsureComponent<BroadphaseComponent>();
-            _moveBuffer[e.Map] = new Dictionary<FixtureProxy, Box2>(64);
-        }
-
-        private void OnMapDestroyed(object? sender, MapEventArgs e)
-        {
-            _moveBuffer.Remove(e.Map);
-            _movedGrids.Remove(e.Map);
-        }
-
         public override void Shutdown()
         {
             base.Shutdown();
@@ -902,10 +809,25 @@ namespace Robust.Shared.Physics
             _mapManager.MapDestroyed -= OnMapDestroyed;
         }
 
+        #region Broadphase management
+
+        private void OnMapCreated(object? sender, MapEventArgs e)
+        {
+            if (e.Map == MapId.Nullspace) return;
+
+            EntityManager.EnsureComponent<BroadphaseComponent>(_mapManager.GetMapEntityId(e.Map));
+            _moveBuffer[e.Map] = new Dictionary<FixtureProxy, Box2>(64);
+        }
+
+        private void OnMapDestroyed(object? sender, MapEventArgs e)
+        {
+            _moveBuffer.Remove(e.Map);
+            _movedGrids.Remove(e.Map);
+        }
+
         private void HandleGridInit(GridInitializeEvent ev)
         {
-            var grid = EntityManager.GetEntity(ev.EntityUid);
-            grid.EnsureComponent<BroadphaseComponent>();
+            EntityManager.EnsureComponent<BroadphaseComponent>(ev.EntityUid);
         }
 
         private void HandleBroadphaseInit(EntityUid uid, BroadphaseComponent component, ComponentInit args)
@@ -913,6 +835,8 @@ namespace Robust.Shared.Physics
             var capacity = (int) Math.Max(MinimumBroadphaseCapacity, Math.Ceiling(component.Owner.Transform.ChildCount / (float) MinimumBroadphaseCapacity) * MinimumBroadphaseCapacity);
             component.Tree = new DynamicTreeBroadPhase(capacity);
         }
+
+        #endregion
 
         internal BroadphaseComponent? GetBroadphase(PhysicsComponent body)
         {
@@ -982,11 +906,6 @@ namespace Robust.Shared.Physics
                     yield return broadphase;
                 }
             }
-        }
-
-        internal IEnumerable<BroadphaseComponent> GetBroadphases(MapId mapId, Vector2 worldPos)
-        {
-            return GetBroadphases(mapId, new Box2(worldPos, worldPos));
         }
 
         private sealed class InvalidBroadphaseException : Exception

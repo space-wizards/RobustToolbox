@@ -6,19 +6,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
-    public interface IShapeManager
+    public partial class FixtureSystem
     {
         /// <summary>
-        /// Returns whether a particular point intersects the specified shape.
+        /// Tests whether a particular point is contained in the shape.
         /// </summary>
-        bool TestPoint(IPhysShape shape, Transform xform, Vector2 worldPoint);
-
-        void GetMassData(IPhysShape shape, ref MassData data);
-    }
-
-    public class ShapeManager : IShapeManager
-    {
-        /// <inheritdoc />
         public bool TestPoint(IPhysShape shape, Transform xform, Vector2 worldPoint)
         {
             switch (shape)

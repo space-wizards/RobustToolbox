@@ -66,9 +66,12 @@ entities:
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
             var gridFixtures = new GridFixtureSystem();
+            var fixtures = new FixtureSystem();
+            // MOCKS WHY
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
             mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
+            mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
             //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
@@ -103,7 +106,11 @@ entities:
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             var mapId = map.CreateMap();
-            map.GetMapEntity(mapId).EnsureComponent<PhysicsMapComponent>();
+            // Yay test bullshit
+            var mapUid = map.GetMapEntityId(mapId);
+            entMan.EnsureComponent<PhysicsMapComponent>(mapUid);
+            entMan.EnsureComponent<BroadphaseComponent>(mapUid);
+
             var mapLoad = IoCManager.Resolve<IMapLoader>();
             var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
 

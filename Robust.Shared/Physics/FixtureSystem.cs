@@ -72,6 +72,9 @@ namespace Robust.Shared.Physics
                 {
                     fixture.Body = body;
                 }
+
+                // Make sure all the right stuff is set on the body
+                FixtureUpdate(component);
             }
             /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else
@@ -79,9 +82,6 @@ namespace Robust.Shared.Physics
                 Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {EntityManager.GetEntity(uid)}");
             }
             */
-
-            // Make sure all the right stuff is set on the body
-            FixtureUpdate(component);
         }
 
         #region Public

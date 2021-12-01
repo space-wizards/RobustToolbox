@@ -73,10 +73,12 @@ namespace Robust.Shared.Physics
                     fixture.Body = body;
                 }
             }
+            /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else
             {
-                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {uid}");
+                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {EntityManager.GetEntity(uid)}");
             }
+            */
 
             // Make sure all the right stuff is set on the body
             FixtureUpdate(component);

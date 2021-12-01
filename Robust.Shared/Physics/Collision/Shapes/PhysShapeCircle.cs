@@ -72,9 +72,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
             return new Box2(p.X - _radius, p.Y - _radius, p.X + _radius, p.Y + _radius);
         }
 
-        /// <inheritdoc />
-        public void ApplyState() { }
-
         public bool Equals(IPhysShape? other)
         {
             if (other is not PhysShapeCircle otherCircle) return false;

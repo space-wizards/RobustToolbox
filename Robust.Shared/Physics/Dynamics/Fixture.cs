@@ -82,7 +82,8 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseToPercent(value, _friction)) return;
 
                 _friction = value;
-                Body.FixtureChanged(this);
+                // TODO: EntitySystem
+                // Body.FixtureChanged(this);
             }
         }
 
@@ -99,10 +100,11 @@ namespace Robust.Shared.Physics.Dynamics
             get => _restitution;
             set
             {
-                if (MathHelper.CloseToPercent(value, _restitution)) return;
+                if (MathHelper.CloseTo(value, _restitution)) return;
 
+                // TODO: EntitySystem
                 _restitution = value;
-                Body.FixtureChanged(this);
+                // Body.FixtureChanged(this);
             }
         }
 
@@ -125,9 +127,10 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_hard == value)
                     return;
 
+                // TODO: EntitySystem
                 _hard = value;
                 Body.Awake = true;
-                Body.FixtureChanged(this);
+                // Body.FixtureChanged(this);
             }
         }
 
@@ -153,9 +156,9 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 if (MathHelper.CloseToPercent(value, _mass)) return;
 
+                // TODO: EntitySystem
                 _mass = MathF.Max(0f, value);
-                ComputeProperties();
-                Body.FixtureChanged(this);
+                // Body.FixtureChanged(this);
                 Body.ResetMassData();
             }
         }
@@ -175,8 +178,9 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionLayer == value)
                     return;
 
+                // TODO: EntitySystem
                 _collisionLayer = value;
-                Body.FixtureChanged(this);
+                // Body.FixtureChanged(this);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
@@ -196,8 +200,9 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionMask == value)
                     return;
 
+                // TODO: EntitySystem
                 _collisionMask = value;
-                Body.FixtureChanged(this);
+                // Body.FixtureChanged(this);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
@@ -276,47 +281,8 @@ namespace Robust.Shared.Physics.Dynamics
             fixture._mass = _mass;
         }
 
-        // Moved from Shape because no MassData on Shape anymore (due to serv3 and physics ease-of-use etc etc.)
-        internal void ComputeProperties()
-        {
-            switch (Shape)
-            {
-                case EdgeShape edge:
-                    ComputeEdge(edge);
-                    break;
-                case PhysShapeAabb aabb:
-                    ComputeAABB(aabb);
-                    break;
-                case PhysShapeCircle circle:
-                    ComputeCircle(circle);
-                    break;
-                case PolygonShape poly:
-                    ComputePoly(poly, out _);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
         #region ComputeProperties
-        private void ComputeAABB(PhysShapeAabb aabb)
-        {
-            var area = aabb.LocalBounds.Width * aabb.LocalBounds.Height;
-            float I = 0.0f;
 
-            //The area is too small for the engine to handle.
-            DebugTools.Assert(area > float.Epsilon);
-
-            // Total mass
-            // TODO: Do we need this?
-            var density = area > 0.0f ? Mass / area : 0.0f;
-
-            // Center of mass
-            aabb.Centroid = Vector2.Zero;
-
-            // Inertia tensor relative to the local origin (point s).
-            _inertia = density * I;
-        }
 
         private void ComputePoly(PolygonShape poly, out float area)
         {

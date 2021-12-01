@@ -28,13 +28,9 @@ using System.Linq;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Localization;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
-using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Players;
@@ -77,6 +73,13 @@ namespace Robust.Shared.GameObjects
 
         public bool IgnoreCCD { get; set; }
 
+        // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
+        // on physics bodies for massive shuttle perf savings.
+        [Obsolete("Use FixturesComponent instead.")]
+        public IReadOnlyList<Fixture> Fixtures => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Values.ToList();
+
+        public int FixtureCount => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Count;
+
         [ViewVariables]
         public int ContactCount
         {
@@ -91,47 +94,6 @@ namespace Robust.Shared.GameObjects
                 }
 
                 return count;
-            }
-        }
-
-        [ViewVariables]
-        public Box2 LocalAABB
-        {
-            get
-            {
-                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-                var broadphase = broadphaseSystem.GetBroadphase(this);
-
-                if (broadphase == null) return new Box2();
-
-                var worldPos = Owner.Transform.WorldPosition;
-                var aabb = new Box2(worldPos, worldPos);
-
-                foreach (var fixture in Fixtures)
-                {
-                    foreach (var proxy in fixture.Proxies)
-                    {
-                        aabb = aabb.Union(proxy.AABB);
-                    }
-                }
-
-                return aabb;
-            }
-        }
-
-        [ViewVariables]
-        public Box2 WorldAABB
-        {
-            get
-            {
-                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-                var broadphase = broadphaseSystem.GetBroadphase(this);
-
-                if (broadphase == null) return new Box2();
-                var localAABB = LocalAABB;
-                var center = broadphase.Owner.Transform.WorldMatrix.Transform(localAABB.Center);
-
-                return new Box2Rotated(localAABB.Translated(center), broadphase.Owner.Transform.WorldRotation, center).CalcBoundingBox();
             }
         }
 
@@ -294,29 +256,10 @@ namespace Robust.Shared.GameObjects
             Awake = true;
         }
 
-        void ISerializationHooks.AfterDeserialization()
-        {
-            FixtureCount = _fixtures.Count;
-
-            foreach (var fixture in _fixtures)
-            {
-                fixture.Body = this;
-                fixture.ComputeProperties();
-                fixture.ID = GetFixtureName(fixture);
-            }
-
-            ResetMassData();
-
-            if (_mass > 0f && (BodyType & (BodyType.Dynamic | BodyType.KinematicController)) != 0)
-            {
-                _invMass = 1.0f / _mass;
-            }
-        }
-
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _fixtures, LinearVelocity, AngularVelocity, BodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _linVelocity, _angVelocity, _bodyType);
         }
 
         /// <inheritdoc />
@@ -333,118 +276,12 @@ namespace Robust.Shared.GameObjects
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
 
-            /*
-             * -- Fixtures --
-             */
-
-            var toAddFixtures = new List<Fixture>();
-            var toRemoveFixtures = new List<Fixture>();
-            var computeProperties = false;
-
-            // Given a bunch of data isn't serialized need to sort of re-initialise it
-            var newFixtures = new List<Fixture>(newState.Fixtures.Count);
-            foreach (var fixture in newState.Fixtures)
-            {
-                var newFixture = new Fixture();
-                fixture.CopyTo(newFixture);
-                newFixture.Body = this;
-                newFixtures.Add(newFixture);
-            }
-
-            // Add / update new fixtures
-            foreach (var fixture in newFixtures)
-            {
-                var found = false;
-
-                foreach (var existing in _fixtures)
-                {
-                    if (!fixture.ID.Equals(existing.ID)) continue;
-
-                    if (!fixture.Equals(existing))
-                    {
-                        toAddFixtures.Add(fixture);
-                        toRemoveFixtures.Add(existing);
-                    }
-
-                    found = true;
-                    break;
-                }
-
-                if (!found)
-                {
-                    toAddFixtures.Add(fixture);
-                }
-            }
-
-            // Remove old fixtures
-            foreach (var existing in _fixtures)
-            {
-                var found = false;
-
-                foreach (var fixture in newFixtures)
-                {
-                    if (fixture.ID.Equals(existing.ID))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    toRemoveFixtures.Add(existing);
-                }
-            }
-
-            var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
-
-            foreach (var fixture in toRemoveFixtures)
-            {
-                computeProperties = true;
-                broadphaseSystem.DestroyFixture(this, fixture);
-            }
-
-            // TODO: We also still need event listeners for shapes (Probably need C# events)
-            foreach (var fixture in toAddFixtures)
-            {
-                computeProperties = true;
-                broadphaseSystem.CreateFixture(this, fixture);
-                fixture.Shape.ApplyState();
-            }
-
-            /*
-             * -- Sundries --
-             */
-
             Dirty();
-            if (computeProperties)
-            {
-                ResetMassData();
-            }
-
             LinearVelocity = newState.LinearVelocity;
             // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
             AngularVelocity = newState.AngularVelocity;
             BodyType = newState.BodyType;
             Predict = false;
-        }
-
-        public Fixture? GetFixture(string name)
-        {
-            // Sooo I'd rather have fixtures as a list in serialization but there's not really an easy way to have it as a
-            // temporary value on deserialization so we can store it as a dictionary of <name, fixture>
-            // given 100% of bodies have 1-2 fixtures this isn't really a performance problem right now but
-            // should probably be done at some stage
-            // If we really need it then you just deserialize onto a dummy field that then just never gets used again.
-            foreach (var fixture in _fixtures)
-            {
-                if (fixture.ID.Equals(name))
-                {
-                    return fixture;
-                }
-            }
-
-            return null;
         }
 
         /// <summary>
@@ -468,7 +305,7 @@ namespace Robust.Shared.GameObjects
 
             var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in _fixtures)
+            foreach (var fixture in Fixtures)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
@@ -479,17 +316,6 @@ namespace Robust.Shared.GameObjects
 
             return bounds;
         }
-
-        [ViewVariables]
-        public int FixtureCount { get; internal set; }
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public IReadOnlyList<Fixture> Fixtures => _fixtures;
-
-        [DataField("fixtures")]
-        [NeverPushInheritance]
-        internal List<Fixture> _fixtures = new();
 
         /// <summary>
         ///     Enables or disabled collision processing of this component.
@@ -525,57 +351,19 @@ namespace Robust.Shared.GameObjects
         ///     This is useful for triggers or such to detect collision without actually causing a blockage.
         /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
-        public bool Hard
-        {
-            get
-            {
-                foreach (var fixture in Fixtures)
-                {
-                    if (fixture.Hard) return true;
-                }
-
-                return false;
-            }
-            set
-            {
-                foreach (var fixture in Fixtures)
-                {
-                    fixture.Hard = value;
-                }
-            }
-        }
+        public bool Hard { get; internal set; }
 
         /// <summary>
         ///     Bitmask of the collision layers this component is a part of.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionLayer
-        {
-            get
-            {
-                var layers = 0x0;
-
-                foreach (var fixture in Fixtures)
-                    layers |= fixture.CollisionLayer;
-                return layers;
-            }
-        }
+        [ViewVariables]
+        public int CollisionLayer { get; internal set; }
 
         /// <summary>
         ///     Bitmask of the layers this component collides with.
         /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public int CollisionMask
-        {
-            get
-            {
-                var mask = 0x0;
-
-                foreach (var fixture in Fixtures)
-                    mask |= fixture.CollisionMask;
-                return mask;
-            }
-        }
+        [ViewVariables]
+        public int CollisionMask { get; internal set; }
 
         // I made Mass read-only just because overwriting it doesn't touch inertia.
         /// <summary>
@@ -973,41 +761,6 @@ namespace Robust.Shared.GameObjects
             return Transform.MulT(new Quaternion2D((float) Owner.EntityManager.GetComponent<TransformComponent>(OwnerUid).WorldRotation.Theta), worldVector);
         }
 
-        public void FixtureChanged(Fixture fixture)
-        {
-            // TODO: Optimise this a LOT
-            Dirty();
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new FixtureUpdateMessage(this, fixture));
-        }
-
-        public string GetFixtureName(Fixture fixture)
-        {
-            if (!string.IsNullOrEmpty(fixture.ID)) return fixture.ID;
-
-            var i = 0;
-
-            while (true)
-            {
-                var found = false;
-                ++i;
-                var name = $"fixture_{i}";
-
-                foreach (var existing in _fixtures)
-                {
-                    if (existing.ID.Equals(name))
-                    {
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                {
-                    return name;
-                }
-            }
-        }
-
         public Transform GetTransform()
         {
             var (worldPos, worldRot) = Owner.Transform.GetWorldPositionRotation();
@@ -1121,16 +874,11 @@ namespace Robust.Shared.GameObjects
             {
                 _awake = false;
             }
-        }
 
-        protected override void OnRemove()
-        {
-            base.OnRemove();
-            // Need to do these immediately in case collision behaviors deleted the body
-            // TODO: Could be more optimal as currently broadphase will call this ANYWAY
-            DestroyContacts();
-            EntitySystem.Get<SharedBroadphaseSystem>().RemoveBody(this);
-            CanCollide = false;
+            var startup = new PhysicsInitializedEvent(Owner.Uid);
+            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref startup);
+
+            ResetMassData();
         }
 
         public void ResetMassData()
@@ -1147,9 +895,9 @@ namespace Robust.Shared.GameObjects
             }
 
             var localCenter = Vector2.Zero;
-            var shapeManager = IoCManager.Resolve<IShapeManager>();
+            var shapeManager = EntitySystem.Get<FixtureSystem>();
 
-            foreach (var fixture in _fixtures)
+            foreach (var fixture in Fixtures)
             {
                 if (fixture.Mass <= 0.0f) continue;
 

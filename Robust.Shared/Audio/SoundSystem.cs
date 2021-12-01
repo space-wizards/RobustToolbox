@@ -40,6 +40,7 @@ namespace Robust.Shared.Audio
         /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
+        /// <param name="audioParams">Whether to automatically add all players in range.</param>
         public static IPlayingAudioStream? Play(Filter playerFilter, string filename, AudioParams? audioParams = null)
         {
             return GetAudio()?.Play(playerFilter, filename, audioParams);
@@ -52,9 +53,10 @@ namespace Robust.Shared.Audio
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="entity">The entity "emitting" the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
+        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null,
+            bool addInRange = false)
         {
-            return GetAudio()?.Play(playerFilter, filename, entity, audioParams);
+            return GetAudio()?.Play(playerFilter, filename, entity, audioParams, addInRange);
         }
 
         /// <summary>
@@ -64,9 +66,10 @@ namespace Robust.Shared.Audio
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="uid">The UID of the entity "emitting" the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
+        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null,
+            bool addInRange = false)
         {
-            return GetAudio()?.Play(playerFilter, filename, uid, audioParams);
+            return GetAudio()?.Play(playerFilter, filename, uid, audioParams, addInRange);
         }
 
         /// <summary>
@@ -76,9 +79,10 @@ namespace Robust.Shared.Audio
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="coordinates">The coordinates at which to play the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
+        public static IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates,
+            AudioParams? audioParams = null, bool addInRange = false)
         {
-            return GetAudio()?.Play(playerFilter, filename, coordinates, audioParams);
+            return GetAudio()?.Play(playerFilter, filename, coordinates, audioParams, addInRange);
         }
 
         internal class QueryAudioSystem : EntityEventArgs

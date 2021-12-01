@@ -64,30 +64,18 @@ namespace Robust.Shared.Physics
 
             component.SerializedFixtures.Clear();
 
-            if (component.Fixtures.Count <= 0 ||
-                !EntityManager.TryGetComponent(uid, out PhysicsComponent? body) ||
-                !EntityManager.TryGetComponent(uid, out TransformComponent? xform)) return;
-
-            // Ordering issues man
-            var broadphase = _broadphaseSystem.GetBroadphase(body);
-            body.Broadphase = broadphase;
-
-            if (broadphase != null)
+            // Can't ACTUALLY add it to the broadphase here because transform is still in a transient dimension on the 5th plane
+            // hence we'll just make sure its body is set and SharedBroadphaseSystem will deal with it later.
+            if (EntityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
-                var worldPos = xform.WorldPosition;
-                var worldRot = xform.WorldRotation;
-
-                // Can't resolve in serialization so here we are.
-                // TODO: Support for large body DynamicTrees (i.e. 1 proxy for the entire body)
                 foreach (var (_, fixture) in component.Fixtures)
                 {
-                    // It's possible that fixtures were added at some stage prior to this so we'll just check if they're on the broadphase
-                    if (fixture.ProxyCount > 0) continue;
-
                     fixture.Body = body;
-
-                    _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot, false);
                 }
+            }
+            else
+            {
+                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {uid}");
             }
 
             // Make sure all the right stuff is set on the body

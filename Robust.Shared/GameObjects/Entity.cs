@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
@@ -17,7 +18,7 @@ namespace Robust.Shared.GameObjects
         #region Members
 
         /// <inheritdoc />
-        public IEntityManager EntityManager { get; }
+        public IEntityManager EntityManager => IoCManager.Resolve<IEntityManager>();
 
         /// <inheritdoc />
         [ViewVariables]
@@ -26,7 +27,17 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         EntityLifeStage IEntity.LifeStage { get => LifeStage; set => LifeStage = value; }
 
-        public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
+        public EntityLifeStage LifeStage
+        {
+            get
+            {
+                if (!EntityManager.EntityExists(Uid))
+                    return EntityLifeStage.Deleted;
+
+                return MetaData.EntityLifeStage;
+            }
+            internal set => MetaData.EntityLifeStage = value;
+        }
 
         [ViewVariables]
         GameTick IEntity.LastModifiedTick { get => MetaData.EntityLastModifiedTick; set => MetaData.EntityLastModifiedTick = value; }
@@ -68,20 +79,24 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
-        private TransformComponent? _transform;
-
         /// <inheritdoc />
         [ViewVariables]
-        public TransformComponent Transform => _transform ??= GetComponent<TransformComponent>();
-
-        private MetaDataComponent? _metaData;
+        public TransformComponent Transform
+        {
+            get
+            {
+                return (TransformComponent)IoCManager.Resolve<IEntityManager>().GetComponent(Uid, typeof(TransformComponent));
+            }
+        }
 
         /// <inheritdoc />
         [ViewVariables]
         public MetaDataComponent MetaData
         {
-            get => _metaData ??= GetComponent<MetaDataComponent>();
-            internal set => _metaData = value;
+            get
+            {
+                return (MetaDataComponent)IoCManager.Resolve<IEntityManager>().GetComponent(Uid, typeof(MetaDataComponent));
+            }
         }
 
         #endregion Members
@@ -90,7 +105,6 @@ namespace Robust.Shared.GameObjects
 
         public Entity(IEntityManager entityManager, EntityUid uid)
         {
-            EntityManager = entityManager;
             Uid = uid;
         }
 

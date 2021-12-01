@@ -306,15 +306,15 @@ namespace Robust.Shared.GameObjects
                 RecursiveDeleteEntity(childTransform.Owner);
             }
 
-            // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(entity.Uid);
-
             // map does not have a parent node, everything else needs to be detached
             if (transform.ParentUid != EntityUid.Invalid)
             {
                 // Detach from my parent, if any
                 transform.DetachParentToNull();
             }
+
+            // Dispose all my components, in a safe order so transform is available
+            DisposeComponents(entity.Uid);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
@@ -343,7 +343,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(uid, out _);
+            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
         }
 
         /// <summary>
@@ -402,7 +402,6 @@ namespace Robust.Shared.GameObjects
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
             var metadata = new MetaDataComponent() { Owner = entity };
-            entity.MetaData = metadata;
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid.Value, metadata);

@@ -82,8 +82,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseToPercent(value, _friction)) return;
 
                 _friction = value;
-                // TODO: EntitySystem
-                // Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(Body.Owner.EntityManager.GetComponent<FixturesComponent>(Body.OwnerUid), Body);
             }
         }
 
@@ -102,9 +101,8 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 if (MathHelper.CloseTo(value, _restitution)) return;
 
-                // TODO: EntitySystem
                 _restitution = value;
-                // Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(Body.Owner.EntityManager.GetComponent<FixturesComponent>(Body.OwnerUid), Body);
             }
         }
 
@@ -127,10 +125,9 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_hard == value)
                     return;
 
-                // TODO: EntitySystem
                 _hard = value;
                 Body.Awake = true;
-                // Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(Body.Owner.EntityManager.GetComponent<FixturesComponent>(Body.OwnerUid), Body);
             }
         }
 
@@ -156,9 +153,8 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 if (MathHelper.CloseToPercent(value, _mass)) return;
 
-                // TODO: EntitySystem
                 _mass = MathF.Max(0f, value);
-                // Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(Body.Owner.EntityManager.GetComponent<FixturesComponent>(Body.OwnerUid), Body);
                 Body.ResetMassData();
             }
         }
@@ -178,9 +174,8 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionLayer == value)
                     return;
 
-                // TODO: EntitySystem
                 _collisionLayer = value;
-                // Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(Body.Owner.EntityManager.GetComponent<FixturesComponent>(Body.OwnerUid), Body);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
@@ -200,9 +195,8 @@ namespace Robust.Shared.Physics.Dynamics
                 if (_collisionMask == value)
                     return;
 
-                // TODO: EntitySystem
                 _collisionMask = value;
-                // Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(Body.Owner.EntityManager.GetComponent<FixturesComponent>(Body.OwnerUid), Body);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }

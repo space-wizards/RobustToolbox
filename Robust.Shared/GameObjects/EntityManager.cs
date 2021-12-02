@@ -293,10 +293,10 @@ namespace Robust.Shared.GameObjects
             if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
 
+            var uid = entity.Uid;
             var transform = entity.Transform;
             var metadata = entity.MetaData;
             entity.LifeStage = EntityLifeStage.Terminating;
-
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
@@ -304,6 +304,13 @@ namespace Robust.Shared.GameObjects
             {
                 // Recursion Alert
                 RecursiveDeleteEntity(childTransform.Owner);
+            }
+
+            // Shut down all components.
+            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            {
+                if(component.Running)
+                    component.LifeShutdown();
             }
 
             // map does not have a parent node, everything else needs to be detached

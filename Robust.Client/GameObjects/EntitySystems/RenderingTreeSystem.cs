@@ -247,7 +247,7 @@ namespace Robust.Client.GameObjects
 
         internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
         {
-            if (entity.Transform.MapID == MapId.Nullspace ||
+            if (entity.Deleted || entity.Transform.MapID == MapId.Nullspace ||
                 entity.HasComponent<RenderingTreeComponent>()) return null;
 
             var parent = entity.Transform.Parent?.Owner;
@@ -265,7 +265,7 @@ namespace Robust.Client.GameObjects
 
         private bool IsVisible(SpriteComponent component)
         {
-            return component.Visible && !component.ContainerOccluded;
+            return component.Visible && !component.ContainerOccluded && !component.Deleted;
         }
 
         public override void FrameUpdate(float frameTime)
@@ -312,7 +312,7 @@ namespace Robust.Client.GameObjects
             {
                 light.TreeUpdateQueued = false;
 
-                if (!light.Enabled || light.ContainerOccluded)
+                if (light.Deleted || !light.Enabled || light.ContainerOccluded)
                 {
                     ClearLight(light);
                     continue;

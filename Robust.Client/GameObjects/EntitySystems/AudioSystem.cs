@@ -282,7 +282,7 @@ namespace Robust.Client.GameObjects
         /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
         /// <param name="audioParams"></param>
         private IPlayingAudioStream? Play(string filename, IEntity entity, EntityCoordinates fallbackCoordinates,
-            AudioParams? audioParams = null, bool addInRange = true)
+            AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
@@ -301,7 +301,7 @@ namespace Robust.Client.GameObjects
         /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when entity is invalid.</param>
         /// <param name="audioParams"></param>
         private IPlayingAudioStream? Play(AudioStream stream, IEntity entity, EntityCoordinates fallbackCoordinates,
-            AudioParams? audioParams = null, bool addInRange = true)
+            AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
             if (!source.SetPosition(entity.Transform.WorldPosition))
@@ -335,7 +335,7 @@ namespace Robust.Client.GameObjects
         /// <param name="fallbackCoordinates">The map or grid coordinates at which to play the audio when coordinates are invalid.</param>
         /// <param name="audioParams"></param>
         private IPlayingAudioStream? Play(string filename, EntityCoordinates coordinates, EntityCoordinates fallbackCoordinates,
-            AudioParams? audioParams = null, bool addInRange = true)
+            AudioParams? audioParams = null)
         {
             if (_resourceCache.TryGetResource<AudioResource>(new ResourcePath(filename), out var audio))
             {
@@ -450,22 +450,19 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null,
-            bool addInRange = true)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
             return Play(filename, entity, GetFallbackCoordinates(entity.Transform.MapPosition), audioParams);
         }
 
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null,
-            bool addInRange = true)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             return EntityManager.TryGetEntity(uid, out var entity)
                 ? Play(filename, entity, GetFallbackCoordinates(entity.Transform.MapPosition), audioParams) : null;
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null,
-            bool addInRange = true)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
             return Play(filename, coordinates, GetFallbackCoordinates(coordinates.ToMap(_entityManager)), audioParams);
         }

@@ -84,14 +84,12 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null,
-            bool addInRange = true)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            return Play(playerFilter, filename, entity.Uid, audioParams, addInRange);
+            return Play(playerFilter, filename, entity.Uid, audioParams);
         }
 
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null,
-            bool addInRange = true)
+        public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? DefaultSoundRange : audioParams.Value.MaxDistance;
@@ -114,7 +112,7 @@ namespace Robust.Server.GameObjects
             };
 
             // We clone the filter here as to not modify the original instance.
-            if (range > 0.0f && addInRange)
+            if (range > 0.0f)
                 playerFilter = playerFilter.Clone().AddInRange(transform.MapPosition, range);
 
             RaiseNetworkEvent(msg, playerFilter);
@@ -123,8 +121,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null,
-            bool addInRange = true)
+        public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS
             var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? DefaultSoundRange : audioParams.Value.MaxDistance;
@@ -143,7 +140,7 @@ namespace Robust.Server.GameObjects
             };
 
             // We clone the filter here as to not modify the original instance.
-            if (range > 0.0f && addInRange)
+            if (range > 0.0f)
                 playerFilter = playerFilter.Clone().AddInRange(coordinates.ToMap(EntityManager), range);
 
             RaiseNetworkEvent(msg, playerFilter);

@@ -128,7 +128,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns a string with various information regarding an entity.
         /// </summary>
-        string ToPrettyString(EntityUid uid);
+        EntityStringRepresentation ToPrettyString(EntityUid uid);
 
         #endregion Entity Management
     }

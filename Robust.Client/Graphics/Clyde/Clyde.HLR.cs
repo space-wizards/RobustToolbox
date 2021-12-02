@@ -406,7 +406,7 @@ namespace Robust.Client.Graphics.Clyde
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color clearColor=default)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor=default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
@@ -420,7 +420,8 @@ namespace Robust.Client.Graphics.Clyde
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(clearColor);
+                if (clearColor is not null)
+                    ClearFramebuffer(clearColor.Value);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);

@@ -128,9 +128,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 Normals[i] = temp.Normalized;
             }
 
-            // Compute the polygon mass data
-            // TODO: Update fixture. Maybe use events for it? Who tf knows.
-            // If we get grid polys then we'll actually need runtime updating of bbs.
+            // TODO: Updates (network etc)
         }
 
         public ShapeType ShapeType => ShapeType.Polygon;
@@ -245,11 +243,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
             var r = new Vector2(_radius, _radius);
             return new Box2(lower - r, upper + r);
-        }
-
-        public void ApplyState()
-        {
-            return;
         }
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)

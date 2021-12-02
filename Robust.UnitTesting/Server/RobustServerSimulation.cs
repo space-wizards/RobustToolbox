@@ -231,10 +231,12 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<PhysicsMapComponent>();
+            compFactory.RegisterClass<FixturesComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -247,9 +249,11 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+            entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
 

@@ -30,8 +30,8 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             await _server.WaitIdleAsync();
             var entManager = _server.ResolveDependency<IEntityManager>();
-            var broadphaseSystem = _server.ResolveDependency<IEntitySystemManager>()
-                .GetEntitySystem<SharedBroadphaseSystem>();
+            var fixtureSystem = _server.ResolveDependency<IEntitySystemManager>()
+                .GetEntitySystem<FixtureSystem>();
 
             await _server.WaitAssertion(() =>
             {
@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 var box = boxEnt.AddComponent<PhysicsComponent>();
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
-                var fixture = broadphaseSystem.CreateFixture(box, poly);
+                var fixture = fixtureSystem.CreateFixture(box, poly);
                 fixture.Mass = 1f;
                 box.FixedRotation = false;
                 box.BodyType = BodyType.Dynamic;

@@ -306,7 +306,8 @@ namespace Robust.Shared.GameObjects
                     }
 
                     _final = true;
-                    component = _mapManager.GetMapEntity(_mapId).GetComponent<EntityLookupComponent>();
+                    IEntity tempQualifier = _mapManager.GetMapEntity(_mapId);
+                    component = IoCManager.Resolve<IEntityManager>().GetComponent<EntityLookupComponent>(tempQualifier.Uid);
                     return true;
                 }
 

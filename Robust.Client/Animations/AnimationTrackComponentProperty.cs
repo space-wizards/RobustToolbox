@@ -2,6 +2,7 @@ using System;
 using JetBrains.Annotations;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.Animations
 {
@@ -19,7 +20,7 @@ namespace Robust.Client.Animations
             }
 
             var entity = (IEntity) context;
-            var component = entity.GetComponent(ComponentType);
+            var component = IoCManager.Resolve<IEntityManager>().GetComponent(entity.Uid, ComponentType);
 
             if (component is IAnimationProperties properties)
             {

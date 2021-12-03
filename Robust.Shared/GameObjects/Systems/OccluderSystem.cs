@@ -38,10 +38,12 @@ namespace Robust.Shared.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<OccluderTreeComponent>();
+                IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
+                yield return IoCManager.Resolve<IEntityManager>().GetComponent<OccluderTreeComponent>(tempQualifier.Uid);
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<OccluderTreeComponent>();
+            IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            yield return IoCManager.Resolve<IEntityManager>().GetComponent<OccluderTreeComponent>(tempQualifier1.Uid);
         }
 
         private void HandleOccluderInit(EntityUid uid, OccluderComponent component, ComponentInit args)

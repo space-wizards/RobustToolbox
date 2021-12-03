@@ -87,7 +87,7 @@ namespace Robust.Client.Player
             var previous = ControlledEntity;
             if (previous is {((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Initialized): true, ((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted): false})
             {
-                previous.GetComponent<EyeComponent>().Current = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous.Uid).Current = false;
 
                 // notify ECS Systems
                 IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));

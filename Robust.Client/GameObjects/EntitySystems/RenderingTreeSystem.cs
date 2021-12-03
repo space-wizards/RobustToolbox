@@ -43,10 +43,12 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+                IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
+                yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier.Uid);
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+            IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1.Uid);
         }
 
         internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
@@ -55,10 +57,12 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+                IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
+                yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier.Uid);
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+            IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1.Uid);
         }
 
         public override void Initialize()

@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.ID, Is.EqualTo("dummy"));
             Assert.That(container.Owner, Is.EqualTo(entity));
 
-            var manager = entity.GetComponent<IContainerManager>();
+            var manager = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity.Uid);
 
             Assert.That(container.Manager, Is.EqualTo(manager));
             Assert.That(() => ContainerHelpers.CreateContainer<Container>(entity, "dummy"), Throws.ArgumentException);
@@ -264,7 +264,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             container.ShowContents = true;
             container.Insert(childEnt);
 
-            var containerMan = entity.GetComponent<IContainerManager>();
+            var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity.Uid);
             var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState();
 
             Assert.That(state.ContainerSet.Count, Is.EqualTo(1));

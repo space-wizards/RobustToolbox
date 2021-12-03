@@ -447,7 +447,8 @@ namespace Robust.Server.Maps
                 {
                     var gridInternal = (IMapGridInternal) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
-                    body.Broadphase = _mapManager.GetMapEntity(grid.ParentMapId).GetComponent<BroadphaseComponent>();
+                    IEntity tempQualifier = _mapManager.GetMapEntity(grid.ParentMapId);
+                    body.Broadphase = IoCManager.Resolve<IEntityManager>().GetComponent<BroadphaseComponent>(tempQualifier.Uid);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
 

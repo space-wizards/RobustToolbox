@@ -121,7 +121,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(oldMapEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(oldMapEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted);
             Assert.That(newMapEntity.HasComponent<IMapComponent>());
 
-            var mapComp = newMapEntity.GetComponent<IMapComponent>();
+            var mapComp = IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(newMapEntity.Uid);
             Assert.That(mapComp.WorldMap == mapID);
         }
 

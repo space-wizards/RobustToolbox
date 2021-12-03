@@ -427,7 +427,8 @@ namespace Robust.Shared.GameObjects
                 {
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
-                        _anchored = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                        IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
+                        _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier.Uid).AnchorEntity(this);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -437,7 +438,8 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                    IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
+                    _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier.Uid).AnchorEntity(this);
                 }
                 else if (!value && _anchored)
                 {

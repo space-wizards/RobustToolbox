@@ -842,7 +842,10 @@ namespace Robust.Shared.GameObjects
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
             if (Owner.Transform.MapID != MapId.Nullspace)
-                PhysicsMap = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID).GetComponent<SharedPhysicsMapComponent>();
+            {
+                IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID);
+                PhysicsMap = IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid);
+            }
 
             Dirty();
             // Yeah yeah TODO Combine these

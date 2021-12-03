@@ -90,7 +90,7 @@ namespace Robust.Client.Placement
             var sce = pManager.CurrentPlacementOverlayEntity;
             if (sce == null || (!IoCManager.Resolve<IEntityManager>().EntityExists(sce.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(sce.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
                 return;
-            var sc = sce.GetComponent<SpriteComponent>();
+            var sc = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(sce.Uid);
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)

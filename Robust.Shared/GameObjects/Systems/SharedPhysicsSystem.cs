@@ -241,13 +241,15 @@ namespace Robust.Shared.GameObjects
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
-                MapManager.GetMapEntity(oldMapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
+                IEntity tempQualifier = MapManager.GetMapEntity(oldMapId);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).RemoveBody(physicsComponent);
             }
 
             var newMapId = message.Entity.Transform.MapID;
             if (newMapId != MapId.Nullspace)
             {
-                MapManager.GetMapEntity(newMapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
+                IEntity tempQualifier = MapManager.GetMapEntity(newMapId);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).AddBody(physicsComponent);
             }
         }
 
@@ -260,11 +262,13 @@ namespace Robust.Shared.GameObjects
 
             if (message.Component.Deleted || !message.Component.CanCollide)
             {
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(message.Component);
+                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).RemoveBody(message.Component);
             }
             else
             {
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(message.Component);
+                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).AddBody(message.Component);
             }
         }
 
@@ -275,7 +279,8 @@ namespace Robust.Shared.GameObjects
             if (mapId == MapId.Nullspace)
                 return;
 
-            MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddAwakeBody(message.Body);
+            IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).AddAwakeBody(message.Body);
         }
 
         private void HandleSleepMessage(PhysicsSleepMessage message)
@@ -285,7 +290,8 @@ namespace Robust.Shared.GameObjects
             if (mapId == MapId.Nullspace)
                 return;
 
-            MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveSleepBody(message.Body);
+            IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).RemoveSleepBody(message.Body);
         }
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
@@ -299,7 +305,10 @@ namespace Robust.Shared.GameObjects
 			Get<SharedJointSystem>().ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
+            {
+                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).RemoveBody(physicsComponent);
+            }
         }
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
@@ -309,7 +318,10 @@ namespace Robust.Shared.GameObjects
             var mapId = message.Container.Owner.Transform.MapID;
 
             if (mapId != MapId.Nullspace)
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
+            {
+                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).AddBody(physicsComponent);
+            }
         }
 
         /// <summary>

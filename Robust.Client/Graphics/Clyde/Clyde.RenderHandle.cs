@@ -130,7 +130,7 @@ namespace Robust.Client.Graphics.Clyde
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }
 
-                var sprite = entity.GetComponent<SpriteComponent>();
+                var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(entity.Uid);
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;

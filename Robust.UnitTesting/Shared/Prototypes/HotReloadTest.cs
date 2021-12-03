@@ -59,7 +59,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             _maps.CreateNewMapEntity(new MapId(0));
             var entity = _entities.SpawnEntity(DummyId, MapCoordinates.Nullspace);
-            var entityComponent = entity.GetComponent<HotReloadTestComponentOne>();
+            var entityComponent = IoCManager.Resolve<IEntityManager>().GetComponent<HotReloadTestComponentOne>(entity.Uid);
 
             Assert.That(entityComponent.Value, Is.EqualTo(5));
             Assert.False(entity.HasComponent<HotReloadTestComponentTwo>());

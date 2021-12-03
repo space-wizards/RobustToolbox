@@ -41,10 +41,6 @@ namespace Robust.Shared.GameObjects
 
         #endregion Initialization
 
-        #region Component Messaging
-
-        #endregion Component Messaging
-
         #region Components
 
         public bool HasComponent<T>()
@@ -55,16 +51,6 @@ namespace Robust.Shared.GameObjects
         public bool HasComponent(Type type)
         {
             return IoCManager.Resolve<IEntityManager>().HasComponent(Uid, type);
-        }
-
-        public T GetComponent<T>()
-        {
-            return IoCManager.Resolve<IEntityManager>().GetComponent<T>(Uid);
-        }
-
-        public IComponent GetComponent(Type type)
-        {
-            return IoCManager.Resolve<IEntityManager>().GetComponent(Uid, type);
         }
 
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class

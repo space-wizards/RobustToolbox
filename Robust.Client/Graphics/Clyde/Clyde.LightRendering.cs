@@ -6,6 +6,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -329,7 +330,8 @@ namespace Robust.Client.Graphics.Clyde
             var mapId = eye.Position.MapId;
 
             // If this map has lighting disabled, return
-            if (!_mapManager.GetMapEntity(mapId).GetComponent<IMapComponent>().LightingEnabled)
+            IEntity tempQualifier = _mapManager.GetMapEntity(mapId);
+            if (!IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(tempQualifier.Uid).LightingEnabled)
             {
                 return;
             }

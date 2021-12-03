@@ -399,7 +399,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var entity = new IEntity(uid.Value);
-            
+
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
 

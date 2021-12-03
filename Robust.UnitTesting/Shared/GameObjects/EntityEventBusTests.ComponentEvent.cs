@@ -119,7 +119,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entManMock = new Mock<IEntityManager>();
 
-            var ent = new IEntity(entManMock.Object, entUid);
+            var ent = new IEntity(entUid);
             compInstance.Owner = ent;
 
             var compRegistration = new Mock<IComponentRegistration>();

@@ -120,7 +120,7 @@ namespace Robust.Client.GameObjects
 
         private static void SetEntityContextActive(IInputManager inputMan, IEntity entity)
         {
-            if(entity == null || !entity.IsValid())
+            if(entity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid))
                 throw new ArgumentNullException(nameof(entity));
 
             if (!entity.TryGetComponent(out InputComponent? inputComp))

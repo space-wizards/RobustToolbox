@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Containers
 {
@@ -129,7 +130,7 @@ namespace Robust.Shared.Containers
         {
             var oldParentEntity = message.OldParent;
 
-            if (oldParentEntity == null || !oldParentEntity.IsValid())
+            if (oldParentEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(oldParentEntity.Uid))
                 return;
 
             if (oldParentEntity.TryGetComponent(out IContainerManager? containerManager))

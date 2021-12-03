@@ -5,6 +5,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.ViewVariables;
 
@@ -90,7 +91,7 @@ namespace Robust.Server.GameObjects
                 var attachedEntity = session.AttachedEntity;
 
                 // The component manages the set of sessions, so this invalid session should be removed soon.
-                if (attachedEntity == null || !attachedEntity.IsValid())
+                if (attachedEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(attachedEntity.Uid))
                 {
                     continue;
                 }

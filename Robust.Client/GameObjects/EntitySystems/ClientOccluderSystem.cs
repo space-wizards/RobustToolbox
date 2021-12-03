@@ -70,7 +70,7 @@ namespace Robust.Client.GameObjects
         private void HandleDirtyEvent(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
-            if (sender.IsValid() &&
+            if (IoCManager.Resolve<IEntityManager>().EntityExists(sender.Uid) &&
                 sender.TryGetComponent(out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {

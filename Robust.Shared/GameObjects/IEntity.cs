@@ -39,11 +39,6 @@ namespace Robust.Shared.GameObjects
             Uid = uid;
         }
 
-        public bool IsValid()
-        {
-            return IoCManager.Resolve<IEntityManager>().EntityExists(Uid);
-        }
-
         #endregion Initialization
 
         #region Component Messaging

@@ -109,7 +109,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
-            DebugTools.Assert(toremove.IsValid());
+            DebugTools.Assert(IoCManager.Resolve<IEntityManager>().EntityExists(toremove.Uid));
 
             if (!CanRemove(toremove)) return false;
             InternalRemove(toremove);
@@ -124,7 +124,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toRemove);
-            DebugTools.Assert(toRemove.IsValid());
+            DebugTools.Assert(IoCManager.Resolve<IEntityManager>().EntityExists(toRemove.Uid));
 
             InternalRemove(toRemove);
         }
@@ -168,7 +168,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
-            DebugTools.Assert(toremove.IsValid());
+            DebugTools.Assert(IoCManager.Resolve<IEntityManager>().EntityExists(toremove.Uid));
 
             IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new EntRemovedFromContainerMessage(toremove, this));
             IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));

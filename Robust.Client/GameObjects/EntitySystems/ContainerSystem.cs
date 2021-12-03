@@ -131,8 +131,8 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    if (!container.ContainedEntities.Contains(entity))
-                        container.Insert(entity);
+                    if (!container.ContainedEntities.Contains(entity.Value))
+                        container.Insert(entity.Value);
                 }
             }
         }

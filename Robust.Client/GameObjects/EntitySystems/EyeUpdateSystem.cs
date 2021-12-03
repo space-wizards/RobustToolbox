@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Physics;
@@ -71,16 +71,15 @@ namespace Robust.Client.GameObjects
             // TODO: Content should have its own way of handling this. We should have a default behavior that they can overwrite.
 
             EntityUid? tempQualifier = _playerManager.LocalPlayer?.ControlledEntity;
-            var playerTransform = (tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier) : null);
+            var playerTransform = (tempQualifier != null ? EntityManager.GetComponent<TransformComponent>(tempQualifier.Value) : null);
 
             if (playerTransform == null) return;
 
             var gridId = playerTransform.GridID;
 
-            var tempQualifier1 = _mapManager.GetMapEntity(playerTransform.MapID);
             var parent = gridId != GridId.Invalid && EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEnt) ?
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt)
-                : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier1);
+                EntityManager.GetComponent<TransformComponent>(gridEnt!.Value)
+                : EntityManager.GetComponent<TransformComponent>(_mapManager.GetMapEntityId(playerTransform.MapID));
 
             // Make sure that we don't fire the vomit carousel when we spawn in
             if (_lastParent is null)

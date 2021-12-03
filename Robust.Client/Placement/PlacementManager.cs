@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.GameObjects;
@@ -496,7 +496,7 @@ namespace Robust.Client.Placement
             var ent = PlayerManager.LocalPlayer!.ControlledEntity;
             if (ent != null)
             {
-                map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent).MapID;
+                map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Value).MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -519,7 +519,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                var map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent).MapID;
+                var map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Value).MapID;
                 if (map == MapId.Nullspace || !Eraser)
                 {
                     coordinates = new EntityCoordinates();
@@ -638,7 +638,7 @@ namespace Robust.Client.Placement
                 || PlayerManager.LocalPlayer?.ControlledEntity == null)
                 return;
 
-            var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(PlayerManager.LocalPlayer.ControlledEntity).WorldPosition;
+            var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(PlayerManager.LocalPlayer.ControlledEntity.Value).WorldPosition;
 
             handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }
@@ -661,8 +661,8 @@ namespace Robust.Client.Placement
         {
             if (CurrentPlacementOverlayEntity != null)
             {
-                if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(CurrentPlacementOverlayEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity).EntityLifeStage) >= EntityLifeStage.Deleted))
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) CurrentPlacementOverlayEntity);
+                if (!((!EntityManager.EntityExists(CurrentPlacementOverlayEntity.Value) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value).EntityLifeStage) >= EntityLifeStage.Deleted))
+                    EntityManager.DeleteEntity((EntityUid) CurrentPlacementOverlayEntity);
                 CurrentPlacementOverlayEntity = null;
             }
         }
@@ -671,7 +671,7 @@ namespace Robust.Client.Placement
         {
             EnsureNoPlacementOverlayEntity();
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-            return CurrentPlacementOverlayEntity.EnsureComponent<SpriteComponent>();
+            return EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value);
         }
 
         private void PreparePlacement(string templateName)

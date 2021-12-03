@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(physics.Awake, Is.EqualTo(false));
                 Assert.That(physics.CanCollide, Is.EqualTo(false));
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(mapManager.GetMapEntity(mapId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(mapManager.GetMapEntityId(mapId));
             });
 
             // Juussttt in case we'll re-parent it to the map and check its collision is back on.

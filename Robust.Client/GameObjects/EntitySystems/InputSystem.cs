@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -110,7 +110,7 @@ namespace Robust.Client.GameObjects
         {
             if (message.AttachedEntity != null) // attach
             {
-                SetEntityContextActive(_inputManager, message.AttachedEntity);
+                SetEntityContextActive(_inputManager, message.AttachedEntity.Value);
             }
             else // detach
             {
@@ -151,7 +151,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
+            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity.Value);
         }
     }
 

@@ -245,10 +245,10 @@ namespace Robust.Client.Console.Commands
                 shell.WriteError("That entity does not exist. Sorry lad.");
                 return;
             }
-
-            shell.WriteLine($"{entity}: {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}");
-            shell.WriteLine($"init/del/lmt: {(!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized}/{(!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick}");
-            foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(entity))
+            var meta = entmgr.GetComponent<MetaDataComponent>(entity.Value);
+            shell.WriteLine($"{entity}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
+            shell.WriteLine($"init/del/lmt: {(!entmgr.EntityExists(entity.Value) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Initialized}/{(!entmgr.EntityExists(entity.Value) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Deleted}/{meta.EntityLastModifiedTick}");
+            foreach (var component in entmgr.GetComponents(entity.Value))
             {
                 shell.WriteLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)

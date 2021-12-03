@@ -19,9 +19,14 @@ namespace Robust.Client.GameObjects
             var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var localAABB = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
-
-            return localAABB;
+            if(tree == null)
+            {
+                return bounds.CalcBoundingBox();
+            }
+            else
+            {
+                return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(bounds);
+            }
         }
 
         private static Box2 LightAabbFunc(in PointLightComponent value)
@@ -30,8 +35,15 @@ namespace Robust.Client.GameObjects
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var localPos = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.Transform(worldPos) ?? worldPos;
-
+            Vector2 localPos;
+            if (tree == null)
+            {
+                localPos = worldPos;
+            }
+            else
+            {
+                localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.Transform(worldPos);
+            }
             return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
 
@@ -42,9 +54,14 @@ namespace Robust.Client.GameObjects
             var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos.Value), worldRot.Value, worldPos.Value);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var localAABB = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
-
-            return localAABB;
+            if(tree == null)
+            {
+                return bounds.CalcBoundingBox();
+            }
+            else
+            {
+                return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(bounds);
+            }
         }
 
         internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)
@@ -54,8 +71,14 @@ namespace Robust.Client.GameObjects
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var localPos = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.Transform(worldPos.Value) ?? worldPos.Value;
-
+            Vector2 localPos;
+            if (tree == null)
+            {
+                localPos = worldPos.Value;
+            } else
+            {
+                localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.Transform(worldPos.Value);
+            }
             return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
     }

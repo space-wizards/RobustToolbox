@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
 using Robust.Shared.Map;
@@ -96,11 +96,11 @@ Mouse Pos:
             }
             else
             {
-                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity);
+                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity.Value);
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity).Coordinates;
+                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity.Value).Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}

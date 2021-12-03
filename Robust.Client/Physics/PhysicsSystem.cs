@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -35,7 +35,7 @@ namespace Robust.Client.Physics
         protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
-            var mapUid = MapManager.GetMapEntity(eventArgs.Map);
+            var mapUid = MapManager.GetMapEntityId(eventArgs.Map);
             IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsMapComponent>(mapUid);
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
@@ -330,7 +330,7 @@ namespace Robust.Client.Graphics.Clyde
             var mapId = eye.Position.MapId;
 
             // If this map has lighting disabled, return
-            var mapUid = _mapManager.GetMapEntity(mapId);
+            var mapUid = _mapManager.GetMapEntityId(mapId);
             if (!IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(mapUid).LightingEnabled)
             {
                 return;

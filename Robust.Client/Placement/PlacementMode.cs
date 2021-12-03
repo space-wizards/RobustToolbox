@@ -6,6 +6,7 @@ using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -87,7 +88,7 @@ namespace Robust.Client.Placement
         public virtual void Render(DrawingHandleWorld handle)
         {
             var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce == null || sce.Deleted)
+            if (sce == null || (!IoCManager.Resolve<IEntityManager>().EntityExists(sce.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(sce.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
                 return;
             var sc = sce.GetComponent<SpriteComponent>();
 

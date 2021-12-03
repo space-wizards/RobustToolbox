@@ -223,7 +223,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
-            if (Entities.TryGetValue(uid, out var cEntity) && !cEntity.Deleted)
+            if (Entities.TryGetValue(uid, out var cEntity) && !((!IoCManager.Resolve<IEntityManager>().EntityExists(cEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(cEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
             {
                 entity = cEntity;
                 return true;
@@ -276,7 +276,7 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (e.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
                 return;
 
             if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityLifeStage) >= EntityLifeStage.Terminating)
@@ -291,7 +291,7 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(IEntity entity)
         {
-            if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
+            if((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
 
             var uid = entity.Uid;

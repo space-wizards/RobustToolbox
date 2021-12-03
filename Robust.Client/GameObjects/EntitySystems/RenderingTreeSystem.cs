@@ -247,7 +247,7 @@ namespace Robust.Client.GameObjects
 
         internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
         {
-            if (entity.Deleted || entity.Transform.MapID == MapId.Nullspace ||
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.MapID == MapId.Nullspace ||
                 entity.HasComponent<RenderingTreeComponent>()) return null;
 
             var parent = entity.Transform.Parent?.Owner;

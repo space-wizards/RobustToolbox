@@ -473,7 +473,7 @@ internal partial class PVSSystem : EntitySystem
 
             foreach (var uid in add)
             {
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
+                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
 
                 DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
 
@@ -485,7 +485,7 @@ internal partial class PVSSystem : EntitySystem
             {
                 DebugTools.Assert(!add.Contains(uid));
 
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
+                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
 
                 DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
 
@@ -503,7 +503,7 @@ internal partial class PVSSystem : EntitySystem
 
         foreach (var entity in EntityManager.GetEntities())
         {
-            if (entity.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
                 continue;
             }

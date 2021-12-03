@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -124,7 +125,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
-                if (entity.Deleted)
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }

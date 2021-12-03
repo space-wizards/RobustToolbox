@@ -212,7 +212,7 @@ namespace Robust.Server.Placement
             foreach (IEntity entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<ActorComponent>())
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<ActorComponent>())
                     continue;
                 entity.Delete();
             }

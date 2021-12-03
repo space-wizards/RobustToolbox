@@ -239,14 +239,14 @@ namespace Robust.Shared.GameObjects
                 _handledThisTick.Add(mapChangeEvent.Entity.Uid);
                 RemoveFromEntityTrees(mapChangeEvent.Entity);
 
-                if (mapChangeEvent.Entity.Deleted || mapChangeEvent.Entity.Transform.Anchored) continue;
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(mapChangeEvent.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(mapChangeEvent.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || mapChangeEvent.Entity.Transform.Anchored) continue;
                 UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender.Uid) ||
-                    moveEvent.Sender.Deleted ||
+                    (!IoCManager.Resolve<IEntityManager>().EntityExists(moveEvent.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(moveEvent.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                     moveEvent.Sender.Transform.Anchored) continue;
 
                 DebugTools.Assert(!moveEvent.Sender.Transform.Anchored);
@@ -256,7 +256,7 @@ namespace Robust.Shared.GameObjects
             while (_rotateQueue.TryPop(out var rotateEvent))
             {
                 if (!_handledThisTick.Add(rotateEvent.Sender.Uid) ||
-                    rotateEvent.Sender.Deleted ||
+                    (!IoCManager.Resolve<IEntityManager>().EntityExists(rotateEvent.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(rotateEvent.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                     rotateEvent.Sender.Transform.Anchored) continue;
 
                 DebugTools.Assert(!rotateEvent.Sender.Transform.Anchored);
@@ -354,7 +354,7 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
-                    if (ent.Deleted) return true;
+                    if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) return true;
                     found = true;
                     return false;
 
@@ -417,7 +417,7 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
+                    if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
                     {
                         list.Add(ent);
                     }
@@ -448,7 +448,7 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
+                    if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
                     {
                         list.Add(ent);
                     }
@@ -534,7 +534,7 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
-                    if (!ent.Deleted)
+                    if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
                     {
                         list.Add(ent);
                     }
@@ -665,7 +665,7 @@ namespace Robust.Shared.GameObjects
 
                 foreach (var entity in comp.Tree)
                 {
-                    if (entity.Deleted) continue;
+                    if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
 
                     yield return entity;
                 }
@@ -760,7 +760,7 @@ namespace Robust.Shared.GameObjects
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.
-            if (entity.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
                 RemoveFromEntityTrees(entity);
                 return true;
@@ -837,7 +837,7 @@ namespace Robust.Shared.GameObjects
         {
             Vector2 pos;
 
-            if (ent.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
                 pos = ent.Transform.WorldPosition;
                 return new Box2(pos, pos);

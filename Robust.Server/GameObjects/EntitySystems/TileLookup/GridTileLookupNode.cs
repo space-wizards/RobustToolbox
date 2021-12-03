@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects
@@ -17,7 +18,7 @@ namespace Robust.Server.GameObjects
             {
                 foreach (var entity in _entities)
                 {
-                    if (!entity.Deleted)
+                    if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
                     {
                         yield return entity;
                     }

@@ -84,7 +84,7 @@ namespace Robust.Shared.GameObjects
             {
                 while (queue.TryDequeue(out var ev))
                 {
-                    if (ev.Sender.Deleted)
+                    if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
                         continue;
 
                     // Hopefully we can remove this when PVS gets updated to not use NaNs

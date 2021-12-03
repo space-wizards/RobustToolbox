@@ -132,7 +132,7 @@ namespace Robust.Shared.Physics
             // Body update may not necessarily handle this (unless the thing's deleted) so we'll still do this work regardless.
             while (_queuedParents.TryDequeue(out var parent))
             {
-                if (parent.Entity.Deleted ||
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(parent.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(parent.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                     !parent.Entity.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
@@ -142,7 +142,7 @@ namespace Robust.Shared.Physics
 
             while (_queuedMoves.TryDequeue(out var move))
             {
-                if (move.Sender.Deleted ||
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(move.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(move.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                     !move.Sender.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
@@ -155,7 +155,7 @@ namespace Robust.Shared.Physics
             while (_queuedRotates.TryDequeue(out var rotate))
             {
                 if (!_handledThisTick.Add(rotate.Sender.Uid) ||
-                    rotate.Sender.Deleted ||
+                    (!IoCManager.Resolve<IEntityManager>().EntityExists(rotate.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(rotate.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                     !rotate.Sender.TryGetComponent(out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
@@ -789,7 +789,7 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
         {
-            if (ev.Entity.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
 
             physicsComponent.CanCollide = false;
             physicsComponent.Awake = false;
@@ -797,7 +797,7 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
         {
-            if (ev.Entity.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
 
             physicsComponent.CanCollide = true;
             physicsComponent.Awake = true;

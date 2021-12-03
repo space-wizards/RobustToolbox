@@ -27,10 +27,8 @@ namespace Robust.Shared.GameObjects
             set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName = value;
         }
 
-        public bool Deleted => (!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted;
-
         [ViewVariables]
-        public bool Paused { get => Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused; set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused = value; }
+        public bool Paused { get => (!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused; set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused = value; }
 
         [ViewVariables]
         public TransformComponent Transform => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Uid);
@@ -107,21 +105,21 @@ namespace Robust.Shared.GameObjects
 
         public T GetComponent<T>()
         {
-            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted), "Tried to get component on a deleted entity.");
 
             return IoCManager.Resolve<IEntityManager>().GetComponent<T>(Uid);
         }
 
         public IComponent GetComponent(Type type)
         {
-            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted), "Tried to get component on a deleted entity.");
 
             return IoCManager.Resolve<IEntityManager>().GetComponent(Uid, type);
         }
 
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
         {
-            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted), "Tried to get component on a deleted entity.");
 
             return IoCManager.Resolve<IEntityManager>().TryGetComponent(Uid, out component);
         }
@@ -133,7 +131,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
         {
-            DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted), "Tried to get component on a deleted entity.");
 
             return IoCManager.Resolve<IEntityManager>().TryGetComponent(Uid, type, out component);
         }

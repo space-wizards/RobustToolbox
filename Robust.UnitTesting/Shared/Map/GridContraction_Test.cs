@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -35,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That(gridEntity.Deleted);
+                Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted);
             });
         }
 
@@ -72,7 +73,8 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That(!entManager.GetEntity(grid.GridEntityId).Deleted);
+                IEntity tempQualifier = entManager.GetEntity(grid.GridEntityId);
+                Assert.That(!((!IoCManager.Resolve<IEntityManager>().EntityExists(tempQualifier.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(tempQualifier.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
             });
         }
     }

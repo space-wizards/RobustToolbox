@@ -254,11 +254,11 @@ namespace Robust.UnitTesting.Shared.Map
             mapEnt.Delete();
 
             // These shouldn't be valid anymore.
-            Assert.That(newEnt.Deleted, Is.True);
-            Assert.That(gridEnt.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(newEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(newEnt.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
 
-            Assert.That(newEntParent!.Deleted, Is.True);
-            Assert.That(gridEntParent!.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(newEntParent!.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(newEntParent!.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEntParent!.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEntParent!.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
         }
 
         [Test]

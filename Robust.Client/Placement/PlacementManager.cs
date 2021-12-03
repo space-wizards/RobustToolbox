@@ -661,7 +661,7 @@ namespace Robust.Client.Placement
         {
             if (CurrentPlacementOverlayEntity != null)
             {
-                if (!CurrentPlacementOverlayEntity.Deleted)
+                if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(CurrentPlacementOverlayEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
                     CurrentPlacementOverlayEntity.Delete();
                 CurrentPlacementOverlayEntity = null;
             }

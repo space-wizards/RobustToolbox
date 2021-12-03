@@ -172,7 +172,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var toUpdate in _updateQueue)
             {
-                if (toUpdate.Deleted)
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(toUpdate.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(toUpdate.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
                 {
                     continue;
                 }

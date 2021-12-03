@@ -45,7 +45,7 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if (entity.Deleted ||
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                 entity.HasComponent<IMapComponent>() ||
                 entity.HasComponent<IMapGridComponent>() ||
                 entity.IsInContainer())

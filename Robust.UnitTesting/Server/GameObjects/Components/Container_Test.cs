@@ -4,6 +4,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Players;
 
@@ -153,7 +154,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(entityItem.Transform.Parent!.Owner, Is.EqualTo(entityOne));
 
             entityOne.Delete();
-            Assert.That(entityTwo.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entityTwo.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entityTwo.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
         }
 
         [Test]

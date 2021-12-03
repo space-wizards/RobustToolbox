@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.GameObjects
 {
@@ -17,7 +18,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var timer in timers)
             {
-                if (!timer.Deleted && !timer.Owner.Deleted && timer.RemoveOnEmpty && timer.TimerCount == 0)
+                if (!timer.Deleted && !((!IoCManager.Resolve<IEntityManager>().EntityExists(timer.Owner.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(timer.Owner.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) && timer.RemoveOnEmpty && timer.TimerCount == 0)
                 {
                     EntityManager.RemoveComponent<TimerComponent>(timer.Owner.Uid);
                 }

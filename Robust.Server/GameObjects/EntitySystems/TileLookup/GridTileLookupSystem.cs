@@ -120,7 +120,7 @@ namespace Robust.Server.GameObjects
 
         private HashSet<GridTileLookupNode> GetOrCreateNodes(IEntity entity)
         {
-            if (entity.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
                 throw new InvalidOperationException($"Can't get nodes for deleted entity {entity.Name}!");
             }
@@ -280,7 +280,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var (entity, _) in _lastKnownNodes)
             {
-                if (entity.Deleted || entity.Transform.GridID == gridId)
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.GridID == gridId)
                     toRemove.Add(entity);
             }
 
@@ -299,7 +299,7 @@ namespace Robust.Server.GameObjects
         /// <param name="entity"></param>
         private void HandleEntityAdd(IEntity entity)
         {
-            if (entity.Deleted || entity.Transform.GridID == GridId.Invalid)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.GridID == GridId.Invalid)
             {
                 return;
             }
@@ -350,7 +350,7 @@ namespace Robust.Server.GameObjects
             // TODO: When Acruid does TileEntities we may actually be able to delete this system if tile lookups become fast enough
             var gridId = moveEvent.NewPosition.GetGridId(EntityManager);
 
-            if (moveEvent.Sender.Deleted ||
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(moveEvent.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(moveEvent.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
                 gridId == GridId.Invalid ||
                 !moveEvent.NewPosition.IsValid(EntityManager))
             {

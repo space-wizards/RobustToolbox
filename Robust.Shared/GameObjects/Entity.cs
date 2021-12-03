@@ -77,7 +77,7 @@ namespace Robust.Shared.GameObjects
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
-        public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
+        public bool Paused { get => Deleted || MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
         /// <inheritdoc />
         [ViewVariables]

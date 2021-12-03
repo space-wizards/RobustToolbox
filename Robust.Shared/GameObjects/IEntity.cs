@@ -26,11 +26,6 @@ namespace Robust.Shared.GameObjects
 
         #region Components
 
-        public T? GetComponentOrNull<T>() where T : class, IComponent
-        {
-            return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<T>(Uid);
-        }
-
         #endregion Components
     }
 }

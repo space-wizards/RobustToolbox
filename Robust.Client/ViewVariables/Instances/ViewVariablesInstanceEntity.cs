@@ -202,7 +202,7 @@ namespace Robust.Client.ViewVariables.Instances
             _clientComponentsAddButton.OnPressed += OnClientComponentsAddButtonPressed;
             _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
 
-            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
+            var componentList = IoCManager.Resolve<IEntityManager>().GetComponents(_entity.Uid).OrderBy(c => c.GetType().ToString());
 
             foreach (var component in componentList)
             {

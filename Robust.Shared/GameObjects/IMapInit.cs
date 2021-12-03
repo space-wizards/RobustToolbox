@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
@@ -30,7 +31,7 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage = EntityLifeStage.MapInitialized;
 
             IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(entity.Uid, MapInit, false);
-            foreach (var init in entity.GetAllComponents<IMapInit>())
+            foreach (var init in IoCManager.Resolve<IEntityManager>().GetComponents<IMapInit>(entity.Uid))
             {
                 init.MapInit();
             }

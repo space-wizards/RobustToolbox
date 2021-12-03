@@ -805,7 +805,7 @@ namespace Robust.Server.Maps
 
                     var components = new YamlSequenceNode();
                     // See engine#636 for why the Distinct() call.
-                    foreach (var component in entity.GetAllComponents())
+                    foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(entity.Uid))
                     {
                         if (component is MapSaveIdComponent)
                             continue;

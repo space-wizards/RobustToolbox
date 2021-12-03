@@ -109,16 +109,6 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IEntityManager>().DeleteEntity(Uid);
         }
 
-        public IEnumerable<IComponent> GetAllComponents()
-        {
-            return IoCManager.Resolve<IEntityManager>().GetComponents(Uid);
-        }
-
-        public IEnumerable<T> GetAllComponents<T>()
-        {
-            return IoCManager.Resolve<IEntityManager>().GetComponents<T>(Uid);
-        }
-
         #endregion Components
 
         public override string ToString()

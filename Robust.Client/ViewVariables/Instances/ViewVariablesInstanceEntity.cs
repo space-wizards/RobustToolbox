@@ -40,7 +40,7 @@ namespace Robust.Client.ViewVariables.Instances
         private const int TabServerComponents = 3;
 
         private TabContainer _tabs = default!;
-        private IEntity _entity = default!;
+        private EntityUid _entity = default!;
 
         private ViewVariablesAddWindow? _addComponentWindow;
         private bool _addComponentServer;

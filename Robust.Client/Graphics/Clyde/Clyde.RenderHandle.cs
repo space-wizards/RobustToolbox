@@ -123,7 +123,7 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSetScissor(scissorBox);
             }
 
-            public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+            public void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
                 if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted)
                 {
@@ -347,7 +347,7 @@ namespace Robust.Client.Graphics.Clyde
                         rect.BottomLeft, rect.BottomRight, color, subRegion);
                 }
 
-                public override void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+                public override void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
                 {
                     _renderHandle.DrawEntity(entity, position, scale, overrideDirection);
                 }

@@ -40,24 +40,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">Concrete component type to add.</typeparam>
         /// <returns>The newly added component.</returns>
-        T AddComponent<T>(IEntity entity) where T : Component, new();
-
-        /// <summary>
-        ///     Adds a Component type to an entity. If the entity is already Initialized, the component will
-        ///     automatically be Initialized and Started.
-        /// </summary>
-        /// <typeparam name="T">Concrete component type to add.</typeparam>
-        /// <returns>The newly added component.</returns>
         T AddComponent<T>(EntityUid uid) where T : Component, new();
-
-        /// <summary>
-        ///     Adds a Component to an entity. If the entity is already Initialized, the component will
-        ///     automatically be Initialized and Started.
-        /// </summary>
-        /// <param name="entity">Entity being modified.</param>
-        /// <param name="component">Component to add.</param>
-        /// <param name="overwrite">Should it overwrite existing components?</param>
-        void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component;
 
         /// <summary>
         ///     Adds a Component to an entity. If the entity is already Initialized, the component will
@@ -135,14 +118,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="netId">Network ID to check for.</param>
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
         bool HasComponent(EntityUid uid, ushort netId);
-
-        /// <summary>
-        ///     This method will always return a component for a certain entity, adding it if it's not there already.
-        /// </summary>
-        /// <param name="entity">Entity to modify.</param>
-        /// <typeparam name="T">Component to add.</typeparam>
-        /// <returns>The component in question</returns>
-        T EnsureComponent<T>(IEntity entity) where T : Component, new();
 
         /// <summary>
         ///     This method will always return a component for a certain entity, adding it if it's not there already.

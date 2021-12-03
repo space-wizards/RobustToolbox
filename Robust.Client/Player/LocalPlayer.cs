@@ -28,10 +28,7 @@ namespace Robust.Client.Player
         ///     Game entity that the local player is controlling. If this is null, the player is not attached to any
         ///     entity at all.
         /// </summary>
-        [ViewVariables] public IEntity? ControlledEntity { get; private set; }
-
-        [ViewVariables] public EntityUid? ControlledEntityUid => ControlledEntity;
-
+        [ViewVariables] public EntityUid? ControlledEntity { get; private set; }
 
         [ViewVariables] public NetUserId UserId { get; set; }
 
@@ -58,7 +55,7 @@ namespace Robust.Client.Player
         ///     Attaches a client to an entity.
         /// </summary>
         /// <param name="entity">Entity to attach the client to.</param>
-        public void AttachEntity(IEntity entity)
+        public void AttachEntity(EntityUid entity)
         {
             // Detach and cleanup first
             DetachEntity();
@@ -66,17 +63,20 @@ namespace Robust.Client.Player
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<EyeComponent?>(ControlledEntity, out var eye))
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
+            if (!entMan.TryGetComponent<EyeComponent?>(entity, out var eye))
             {
-                eye = IoCManager.Resolve<IEntityManager>().AddComponent<EyeComponent>(ControlledEntity);
+                eye = entMan.AddComponent<EyeComponent>(entity);
             }
             eye.Current = true;
 
             EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
 
             // notify ECS Systems
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(ControlledEntity, new PlayerAttachedEvent(ControlledEntity));
+            var eventBus = entMan.EventBus;
+            eventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(entity));
+            eventBus.RaiseLocalEvent(entity, new PlayerAttachedEvent(entity));
         }
 
         /// <summary>
@@ -84,21 +84,22 @@ namespace Robust.Client.Player
         /// </summary>
         public void DetachEntity()
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
             var previous = ControlledEntity;
-            if (previous is {((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Initialized): true, ((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted): false})
+            if (previous != null && entMan.EntityExists(previous.Value))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous).Current = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous.Value).Current = false;
 
                 // notify ECS Systems
                 IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous, new PlayerDetachedEvent(previous));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value));
             }
 
             ControlledEntity = null;
 
             if (previous != null)
             {
-                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous));
+                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous.Value));
             }
         }
 
@@ -148,21 +149,21 @@ namespace Robust.Client.Player
 
     public class EntityDetachedEventArgs : EventArgs
     {
-        public EntityDetachedEventArgs(IEntity oldEntity)
+        public EntityDetachedEventArgs(EntityUid oldEntity)
         {
             OldEntity = oldEntity;
         }
 
-        public IEntity OldEntity { get; }
+        public EntityUid OldEntity { get; }
     }
 
     public class EntityAttachedEventArgs : EventArgs
     {
-        public EntityAttachedEventArgs(IEntity newEntity)
+        public EntityAttachedEventArgs(EntityUid newEntity)
         {
             NewEntity = newEntity;
         }
 
-        public IEntity NewEntity { get; }
+        public EntityUid NewEntity { get; }
     }
 }

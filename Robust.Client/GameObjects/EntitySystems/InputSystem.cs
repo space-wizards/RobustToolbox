@@ -118,7 +118,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void SetEntityContextActive(IInputManager inputMan, IEntity entity)
+        private static void SetEntityContextActive(IInputManager inputMan, EntityUid entity)
         {
             if(entity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(entity))
                 throw new ArgumentNullException(nameof(entity));
@@ -163,13 +163,13 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public IEntity? AttachedEntity { get; }
+        public EntityUid? AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(IEntity? attachedEntity)
+        public PlayerAttachSysMessage(EntityUid? attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }
@@ -177,21 +177,21 @@ namespace Robust.Client.GameObjects
 
     public class PlayerAttachedEvent : EntityEventArgs
     {
-        public PlayerAttachedEvent(IEntity entity)
+        public PlayerAttachedEvent(EntityUid entity)
         {
             Entity = entity;
         }
 
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
     }
 
     public class PlayerDetachedEvent : EntityEventArgs
     {
-        public PlayerDetachedEvent(IEntity entity)
+        public PlayerDetachedEvent(EntityUid entity)
         {
             Entity = entity;
         }
 
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
     }
 }

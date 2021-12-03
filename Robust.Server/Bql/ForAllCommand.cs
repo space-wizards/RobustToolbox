@@ -36,19 +36,23 @@ namespace Robust.Server.Bql
         }
 
         // This will be refactored out soon.
-        private static string SubstituteEntityDetails(IConsoleShell shell, IEntity ent, string ruleString)
+        private static string SubstituteEntityDetails(IConsoleShell shell, EntityUid ent, string ruleString)
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var transform = entMan.GetComponent<TransformComponent>(ent);
+            var metadata = entMan.GetComponent<MetaDataComponent>(ent);
+
             // gross, is there a better way to do this?
             ruleString = ruleString.Replace("$ID", ent.ToString());
             ruleString = ruleString.Replace("$WX",
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent).WorldPosition.X.ToString(CultureInfo.InvariantCulture));
+                transform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$WY",
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent).WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
+                transform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$LX",
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent).LocalPosition.X.ToString(CultureInfo.InvariantCulture));
+                transform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$LY",
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent).LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
-            ruleString = ruleString.Replace("$NAME", IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityName);
+                transform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
+            ruleString = ruleString.Replace("$NAME", metadata.EntityName);
 
             if (shell.Player is IPlayerSession player)
             {

@@ -113,13 +113,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition)
+        public OccluderDirtyEvent(EntityUid sender, (GridId grid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
             Sender = sender;
         }
 
         public (GridId grid, Vector2i pos)? LastPosition { get; }
-        public IEntity Sender { get; }
+        public EntityUid Sender { get; }
     }
 }

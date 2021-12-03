@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, MetaDataComponent> Entities = new();
+        protected readonly Dictionary<EntityUid, EntityUid> Entities = new();
 
         private EntityEventBus _eventBus = null!;
 
@@ -146,19 +146,19 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        public IEntity CreateEntityUninitialized(string? prototypeName, EntityUid? euid)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid? euid)
         {
             return CreateEntity(prototypeName, euid);
         }
 
         /// <inheritdoc />
-        public virtual IEntity CreateEntityUninitialized(string? prototypeName)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName)
         {
             return CreateEntity(prototypeName);
         }
 
         /// <inheritdoc />
-        public virtual IEntity CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, EntityCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
 
@@ -171,7 +171,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
+        public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
@@ -185,7 +185,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual IEntity SpawnEntity(string? protoName, EntityCoordinates coordinates)
+        public virtual EntityUid SpawnEntity(string? protoName, EntityCoordinates coordinates)
         {
             if (!coordinates.IsValid(this))
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
@@ -196,7 +196,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
+        public virtual EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
             InitializeAndStartEntity(entity, coordinates.MapId);
@@ -208,7 +208,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="uid"></param>
         /// <returns>Entity or throws if the entity doesn't exist</returns>
-        public IEntity GetEntity(EntityUid uid)
+        public EntityUid GetEntity(EntityUid uid)
         {
             return Entities[uid];
         }
@@ -219,7 +219,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="uid"></param>
         /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
         /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
+        public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out EntityUid? entity)
         {
             if (Entities.TryGetValue(uid, out var cEntity) && !((!IoCManager.Resolve<IEntityManager>().EntityExists(cEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(cEntity).EntityLifeStage) >= EntityLifeStage.Deleted))
             {
@@ -237,7 +237,7 @@ namespace Robust.Shared.GameObjects
         public int EntityCount => Entities.Count;
 
         /// <inheritdoc />
-        public IEnumerable<IEntity> GetEntities() => Entities.Values;
+        public IEnumerable<EntityUid> GetEntities() => Entities.Values;
 
         public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
 
@@ -269,7 +269,7 @@ namespace Robust.Shared.GameObjects
         /// Shuts-down and removes given Entity. This is also broadcast to all clients.
         /// </summary>
         /// <param name="e">Entity to remove</param>
-        public virtual void DeleteEntity(IEntity e)
+        public virtual void DeleteEntity(EntityUid e)
         {
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
@@ -287,7 +287,7 @@ namespace Robust.Shared.GameObjects
             RecursiveDeleteEntity(e);
         }
 
-        private void RecursiveDeleteEntity(IEntity entity)
+        private void RecursiveDeleteEntity(EntityUid entity)
         {
             if((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
@@ -328,23 +328,10 @@ namespace Robust.Shared.GameObjects
             Entities.Remove(entity);
         }
 
-        public void QueueDeleteEntity(IEntity entity)
-        {
-            QueueDeleteEntity((EntityUid) entity);
-        }
-
         public void QueueDeleteEntity(EntityUid uid)
         {
             if(QueuedDeletionsSet.Add(uid))
                 QueuedDeletions.Enqueue(uid);
-        }
-
-        public void DeleteEntity(EntityUid uid)
-        {
-            if (TryGetEntity(uid, out var entity))
-            {
-                DeleteEntity(entity);
-            }
         }
 
         public bool EntityExists(EntityUid uid)
@@ -366,7 +353,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected IEntity AllocEntity(string? prototypeName, EntityUid? uid = null)
+        private protected EntityUid AllocEntity(string? prototypeName, EntityUid? uid = null)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -385,7 +372,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected IEntity AllocEntity(EntityUid? uid = null)
+        private protected EntityUid AllocEntity(EntityUid? uid = null)
         {
             if (uid == null)
             {
@@ -397,31 +384,26 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new IEntity(uid.Value);
-
             // we want this called before adding components
-            EntityAdded?.Invoke(this, entity);
-
-            // We do this after the event, so if the event throws we have not committed
-            Entities[entity] = entity;
+            EntityAdded?.Invoke(this, uid.Value);
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
-            var metadata = new MetaDataComponent() { Owner = entity };
+            var metadata = new MetaDataComponent() { Owner = uid.Value };
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid.Value, metadata);
 
             // allocate the required TransformComponent
-            AddComponent<TransformComponent>(entity);
+            AddComponent<TransformComponent>(uid.Value);
 
 
-            return entity;
+            return uid.Value;
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual IEntity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);
@@ -441,12 +423,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(IEntity entity, IEntityLoadContext? context)
+        private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
             EntityPrototype.LoadEntity(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, context);
         }
 
-        private void InitializeAndStartEntity(IEntity entity, MapId mapId)
+        private void InitializeAndStartEntity(EntityUid entity, MapId mapId)
         {
             try
             {
@@ -464,13 +446,13 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(IEntity entity)
+        protected void InitializeEntity(EntityUid entity)
         {
             InitializeComponents(entity);
             EntityInitialized?.Invoke(this, entity);
         }
 
-        protected void StartEntity(IEntity entity)
+        protected void StartEntity(EntityUid entity)
         {
             StartComponents(entity);
             EntityStarted?.Invoke(this, entity);

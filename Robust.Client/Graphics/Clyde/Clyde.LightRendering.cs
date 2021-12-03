@@ -330,8 +330,8 @@ namespace Robust.Client.Graphics.Clyde
             var mapId = eye.Position.MapId;
 
             // If this map has lighting disabled, return
-            IEntity tempQualifier = _mapManager.GetMapEntity(mapId);
-            if (!IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(tempQualifier).LightingEnabled)
+            var mapUid = _mapManager.GetMapEntity(mapId);
+            if (!IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(mapUid).LightingEnabled)
             {
                 return;
             }

@@ -32,7 +32,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// Readonly collection of all the entities contained within this specific container
         /// </summary>
-        IReadOnlyList<IEntity> ContainedEntities { get; }
+        IReadOnlyList<EntityUid> ContainedEntities { get; }
 
         List<EntityUid> ExpectedEntities { get; }
 
@@ -64,7 +64,7 @@ namespace Robust.Shared.Containers
         /// <summary>
         /// The entity owning this container.
         /// </summary>
-        IEntity Owner { get; }
+        EntityUid Owner { get; }
 
         /// <summary>
         /// Should the contents of this container be shown? False for closed containers like lockers, true for
@@ -77,7 +77,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert">The entity to attempt to insert.</param>
         /// <returns>True if the entity can be inserted, false otherwise.</returns>
-        bool CanInsert(IEntity toinsert);
+        bool CanInsert(EntityUid toinsert);
 
         /// <summary>
         /// Attempts to insert the entity into this container.
@@ -92,28 +92,28 @@ namespace Robust.Shared.Containers
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(IEntity toinsert);
+        bool Insert(EntityUid toinsert);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
         /// </summary>
         /// <param name="toremove">The entity to check.</param>
         /// <returns>True if the entity can be removed, false otherwise.</returns>
-        bool CanRemove(IEntity toremove);
+        bool CanRemove(EntityUid toremove);
 
         /// <summary>
         /// Attempts to remove the entity from this container.
         /// </summary>
         /// <param name="toremove">The entity to attempt to remove.</param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(IEntity toremove);
+        bool Remove(EntityUid toremove);
 
         /// <summary>
         /// Forcefully removes an entity from the container. Normally you would want to use <see cref="Remove" />,
         /// this function should be avoided.
         /// </summary>
         /// <param name="toRemove">The entity to attempt to remove.</param>
-        void ForceRemove(IEntity toRemove);
+        void ForceRemove(EntityUid toRemove);
 
         /// <summary>
         /// Checks if the entity is contained in this container.
@@ -121,7 +121,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="contained">The entity to check.</param>
         /// <returns>True if the entity is immediately contained in this container, false otherwise.</returns>
-        bool Contains(IEntity contained);
+        bool Contains(EntityUid contained);
 
         /// <summary>
         /// Clears the container and marks it as deleted.

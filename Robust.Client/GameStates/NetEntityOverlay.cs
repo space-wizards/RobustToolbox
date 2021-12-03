@@ -110,8 +110,8 @@ namespace Robust.Client.GameStates
                 if(_entityManager.EntityExists(netEnt.Id))
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
-                    IEntity tempQualifier = _entityManager.GetEntity(netEnt.Id);
-                    var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).MapPosition;
+                    var uid = netEnt.Id;
+                    var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(uid).MapPosition;
                     netEnt.InPVS =  !pvsEnabled || (pvsBox.Contains(position.Position) && position.MapId == pvsCenter.MapId);
                     _netEnts[i] = netEnt; // copy struct back
                     continue;
@@ -168,8 +168,9 @@ namespace Robust.Client.GameStates
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
+                var uid = netEnt.Id;
 
-                if (!_entityManager.TryGetEntity(netEnt.Id, out var ent))
+                if (!_entityManager.EntityExists(uid))
                 {
                     _netEnts.RemoveSwap(i);
                     i--;
@@ -178,7 +179,7 @@ namespace Robust.Client.GameStates
 
                 var xPos = 100;
                 var yPos = 10 + _lineHeight * i;
-                var name = $"({netEnt.Id}) {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityPrototype?.ID}";
+                var name = $"({netEnt.Id}) {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID}";
                 var color = CalcTextColor(ref netEnt);
                 screenHandle.DrawString(_font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
                 DrawTrafficBox(screenHandle, ref netEnt, xPos, yPos);

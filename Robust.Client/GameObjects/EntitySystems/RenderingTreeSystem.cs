@@ -43,11 +43,11 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
+                var tempQualifier = grid.GridEntityId;
                 yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
-            IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            var tempQualifier1 = _mapManager.GetMapEntity(mapId);
             yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
@@ -57,11 +57,11 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
+                var tempQualifier = grid.GridEntityId;
                 yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
-            IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            var tempQualifier1 = _mapManager.GetMapEntity(mapId);
             yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
@@ -249,19 +249,20 @@ namespace Robust.Client.GameObjects
             EntityManager.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).EnsureComponent<RenderingTreeComponent>();
         }
 
-        internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
+        internal static RenderingTreeComponent? GetRenderTree(EntityUid entity)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace ||
+            if (!IoCManager.Resolve<IEntityManager>().EntityExists(entity) || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace ||
                 IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(entity)) return null;
 
             var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent?.Owner;
 
             while (true)
             {
-                if (parent == null) break;
+                if (parent == null)
+                    break;
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out RenderingTreeComponent? comp)) return comp;
-                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Value, out RenderingTreeComponent? comp)) return comp;
+                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Value).Parent?.Owner;
             }
 
             return null;

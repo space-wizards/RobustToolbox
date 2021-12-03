@@ -414,7 +414,7 @@ namespace Robust.Client.Placement
             return false;
         }
 
-        public void HandleDeletion(IEntity entity)
+        public void HandleDeletion(EntityUid entity)
         {
             if (!IsActive || !Eraser) return;
             if (Hijack != null && Hijack.HijackDeletion(entity)) return;

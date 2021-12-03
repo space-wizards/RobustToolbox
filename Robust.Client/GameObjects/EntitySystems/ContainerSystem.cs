@@ -183,7 +183,7 @@ namespace Robust.Client.GameObjects
             _updateQueue.Clear();
         }
 
-        private static void UpdateEntityRecursively(IEntity entity)
+        private static void UpdateEntityRecursively(EntityUid entity)
         {
             // TODO: Since we are recursing down,
             // we could cache ShowContents data here to speed it up for children.
@@ -196,7 +196,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void UpdateEntity(IEntity entity)
+        private static void UpdateEntity(EntityUid entity)
         {
             if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out SpriteComponent? sprite))
             {

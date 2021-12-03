@@ -15,7 +15,7 @@ namespace Robust.Shared.Containers
     {
         /// <inheritdoc />
         [ViewVariables]
-        public abstract IReadOnlyList<IEntity> ContainedEntities { get; }
+        public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
 
         [ViewVariables]
         public abstract List<EntityUid> ExpectedEntities { get; }
@@ -41,7 +41,7 @@ namespace Robust.Shared.Containers
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner => Manager.Owner;
+        public EntityUid Owner => Manager.Owner;
 
         /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
@@ -55,7 +55,7 @@ namespace Robust.Shared.Containers
         protected BaseContainer() { }
 
         /// <inheritdoc />
-        public bool Insert(IEntity toinsert)
+        public bool Insert(EntityUid toinsert)
         {
             DebugTools.Assert(!Deleted);
 
@@ -85,7 +85,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public virtual bool CanInsert(IEntity toinsert)
+        public virtual bool CanInsert(EntityUid toinsert)
         {
             DebugTools.Assert(!Deleted);
 
@@ -104,7 +104,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(IEntity toremove)
+        public bool Remove(EntityUid toremove)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
@@ -119,7 +119,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public void ForceRemove(IEntity toRemove)
+        public void ForceRemove(EntityUid toRemove)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
@@ -130,14 +130,14 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public virtual bool CanRemove(IEntity toremove)
+        public virtual bool CanRemove(EntityUid toremove)
         {
             DebugTools.Assert(!Deleted);
             return Contains(toremove);
         }
 
         /// <inheritdoc />
-        public abstract bool Contains(IEntity contained);
+        public abstract bool Contains(EntityUid contained);
 
         /// <inheritdoc />
         public virtual void Shutdown()
@@ -150,7 +150,7 @@ namespace Robust.Shared.Containers
         /// Implement to store the reference in whatever form you want
         /// </summary>
         /// <param name="toinsert"></param>
-        protected virtual void InternalInsert(IEntity toinsert)
+        protected virtual void InternalInsert(EntityUid toinsert)
         {
             DebugTools.Assert(!Deleted);
 
@@ -163,15 +163,17 @@ namespace Robust.Shared.Containers
         /// Implement to remove the reference you used to store the entity
         /// </summary>
         /// <param name="toremove"></param>
-        protected virtual void InternalRemove(IEntity toremove)
+        protected virtual void InternalRemove(EntityUid toremove)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
             DebugTools.Assert(IoCManager.Resolve<IEntityManager>().EntityExists(toremove));
 
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
+            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
+            entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
             Manager.Dirty();
         }
     }

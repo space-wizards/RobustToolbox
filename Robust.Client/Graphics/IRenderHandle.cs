@@ -12,6 +12,6 @@ namespace Robust.Client.Graphics
         void RenderInRenderTarget(IRenderTarget target, Action a, Color clearColor=default);
 
         void SetScissor(UIBox2i? scissorBox);
-        void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
+        void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
     }
 }

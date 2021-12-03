@@ -2076,8 +2076,7 @@ namespace Robust.Client.GameObjects
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            IEntity tempQualifier = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var dummy = (EntityUid) tempQualifier;
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
 
             var anyTexture = false;
@@ -2116,8 +2115,7 @@ namespace Robust.Client.GameObjects
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            IEntity tempQualifier = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
-            var dummy = (EntityUid) tempQualifier;
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
             var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
             entityManager.DeleteEntity(dummy);

@@ -19,9 +19,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
-        [ViewVariables]
-        public GameTick LastModifiedTick { get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick; internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick = value; }
-
 
         [ViewVariables(VVAccess.ReadWrite)]
         public string Name

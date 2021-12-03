@@ -14,6 +14,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -476,7 +477,7 @@ internal partial class PVSSystem : EntitySystem
 
                 DebugTools.Assert(entity.Initialized);
 
-                if (entity.LastModifiedTick >= fromTick)
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, entity.Uid, GameTick.Zero));
             }
 
@@ -488,7 +489,7 @@ internal partial class PVSSystem : EntitySystem
 
                 DebugTools.Assert(entity.Initialized);
 
-                if (entity.LastModifiedTick >= fromTick)
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
             }
         }
@@ -509,7 +510,7 @@ internal partial class PVSSystem : EntitySystem
 
             DebugTools.Assert(entity.Initialized);
 
-            if (entity.LastModifiedTick >= fromTick)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
                 stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
         }
 

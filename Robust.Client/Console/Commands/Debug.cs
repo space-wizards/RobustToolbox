@@ -26,6 +26,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
@@ -246,7 +247,7 @@ namespace Robust.Client.Console.Commands
             }
 
             shell.WriteLine($"{entity.Uid}: {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.ID}/{entity.Name}");
-            shell.WriteLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
+            shell.WriteLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick}");
             foreach (var component in entity.GetAllComponents())
             {
                 shell.WriteLine(component.ToString() ?? "");

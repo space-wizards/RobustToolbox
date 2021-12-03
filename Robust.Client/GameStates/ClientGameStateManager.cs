@@ -341,7 +341,7 @@ namespace Robust.Client.GameStates
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
-                if (entity.Uid.IsClientSide() || entity.LastModifiedTick < curTick)
+                if (entity.Uid.IsClientSide() || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick < curTick)
                 {
                     continue;
                 }

@@ -378,7 +378,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(testThree.TestOne, Is.Null);
 
             // Let's actually remove the removed components first.
-            dummy.EntityManager.CullRemovedComponents();
+            IoCManager.Resolve<IEntityManager>().CullRemovedComponents();
 
             // Re-add test one and two.
             testOne = dummy.AddComponent<TestOneComponent>();

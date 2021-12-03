@@ -1,6 +1,7 @@
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -31,7 +32,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_enabled == value) return;
                 base.Enabled = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
             }
         }
 
@@ -44,7 +45,7 @@ namespace Robust.Client.GameObjects
                 if (_containerOccluded == value) return;
 
                 _containerOccluded = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
             }
         }
 
@@ -151,7 +152,7 @@ namespace Robust.Client.GameObjects
                 if (MathHelper.CloseToPercent(value, _radius)) return;
 
                 base.Radius = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
         }
 

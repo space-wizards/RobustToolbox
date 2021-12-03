@@ -89,7 +89,7 @@ namespace Robust.Client.GameObjects
 
             var playerSession = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.Session;
             if(playerSession != null)
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new BoundUIClosedEvent(uiKey, Owner.Uid, playerSession));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new BoundUIClosedEvent(uiKey, Owner.Uid, playerSession));
         }
 
         internal void SendMessage(BoundUserInterfaceMessage message, object uiKey)

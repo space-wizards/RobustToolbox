@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
@@ -183,7 +184,7 @@ namespace Robust.Shared.GameObjects
             // ReSharper disable once RedundantAssertionStatement
             DebugTools.AssertNotNull(Owner);
 
-            return Owner.EntityManager.EventBus;
+            return IoCManager.Resolve<IEntityManager>().EventBus;
         }
 
         /// <summary>
@@ -191,7 +192,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected virtual void OnAdd()
         {
-            CreationTick = Owner.EntityManager.CurrentTick;
+            CreationTick = IoCManager.Resolve<IEntityManager>().CurrentTick;
             GetBus().RaiseComponentEvent(this, CompAddInstance);
             LifeStage = ComponentLifeStage.Added;
         }
@@ -246,7 +247,7 @@ namespace Robust.Shared.GameObjects
             if(Owner is null || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
-            var entManager = Owner.EntityManager;
+            var entManager = IoCManager.Resolve<IEntityManager>();
             entManager.DirtyEntity(OwnerUid);
             LastModifiedTick = entManager.CurrentTick;
         }

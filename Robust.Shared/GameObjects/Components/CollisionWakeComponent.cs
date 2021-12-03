@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -36,7 +37,7 @@ namespace Robust.Shared.GameObjects
 
         internal void RaiseStateChange()
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);
         }
 
         protected override void OnRemove()

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -153,8 +154,8 @@ namespace Robust.Shared.Containers
         {
             DebugTools.Assert(!Deleted);
 
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntInsertedIntoContainerMessage(toinsert, this));
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new EntInsertedIntoContainerMessage(toinsert, this));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
             Manager.Dirty();
         }
 
@@ -169,8 +170,8 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNotNull(toremove);
             DebugTools.Assert(toremove.IsValid());
 
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntRemovedFromContainerMessage(toremove, this));
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new EntRemovedFromContainerMessage(toremove, this));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
             Manager.Dirty();
         }
     }

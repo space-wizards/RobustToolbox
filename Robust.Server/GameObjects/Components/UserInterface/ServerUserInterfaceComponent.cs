@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -245,7 +246,7 @@ namespace Robust.Server.GameObjects
         private void CloseShared(IPlayerSession session)
         {
             var owner = Owner.Owner;
-            owner.EntityManager.EventBus.RaiseLocalEvent(owner.Uid, new BoundUIClosedEvent(UiKey, owner.Uid, session));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner.Uid, new BoundUIClosedEvent(UiKey, owner.Uid, session));
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);

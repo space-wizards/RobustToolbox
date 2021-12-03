@@ -2,6 +2,7 @@ using System;
 using Robust.Client.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
@@ -74,8 +75,8 @@ namespace Robust.Client.Player
             EntityAttached?.Invoke(new EntityAttachedEventArgs(entity));
 
             // notify ECS Systems
-            ControlledEntity.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
-            ControlledEntity.EntityManager.EventBus.RaiseLocalEvent(ControlledEntity.Uid, new PlayerAttachedEvent(ControlledEntity));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(ControlledEntity.Uid, new PlayerAttachedEvent(ControlledEntity));
         }
 
         /// <summary>
@@ -89,8 +90,8 @@ namespace Robust.Client.Player
                 previous.GetComponent<EyeComponent>().Current = false;
 
                 // notify ECS Systems
-                previous.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
-                previous.EntityManager.EventBus.RaiseLocalEvent(previous.Uid, new PlayerDetachedEvent(previous));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous.Uid, new PlayerDetachedEvent(previous));
             }
 
             ControlledEntity = null;

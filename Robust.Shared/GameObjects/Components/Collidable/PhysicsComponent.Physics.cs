@@ -76,9 +76,9 @@ namespace Robust.Shared.GameObjects
         // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
         // on physics bodies for massive shuttle perf savings.
         [Obsolete("Use FixturesComponent instead.")]
-        public IReadOnlyList<Fixture> Fixtures => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Values.ToList();
+        public IReadOnlyList<Fixture> Fixtures => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(OwnerUid).Fixtures.Values.ToList();
 
-        public int FixtureCount => Owner.EntityManager.GetComponent<FixturesComponent>(OwnerUid).Fixtures.Count;
+        public int FixtureCount => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(OwnerUid).Fixtures.Count;
 
         [ViewVariables]
         public int ContactCount
@@ -152,7 +152,7 @@ namespace Robust.Shared.GameObjects
 
                 EntitySystem.Get<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
             }
         }
 
@@ -168,7 +168,7 @@ namespace Robust.Shared.GameObjects
             if (_awake || _bodyType == BodyType.Static) return;
 
             _awake = true;
-            Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
         }
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
@@ -195,11 +195,11 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsWakeMessage(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new PhysicsWakeMessage(this));
             }
             else
             {
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsSleepMessage(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new PhysicsSleepMessage(this));
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -334,8 +334,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _canCollide = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, OwnerUid, _canCollide));
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, OwnerUid, _canCollide));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
         }
@@ -758,7 +758,7 @@ namespace Robust.Shared.GameObjects
 
         public Vector2 GetLocalVector2(Vector2 worldVector)
         {
-            return Transform.MulT(new Quaternion2D((float) Owner.EntityManager.GetComponent<TransformComponent>(OwnerUid).WorldRotation.Theta), worldVector);
+            return Transform.MulT(new Quaternion2D((float) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(OwnerUid).WorldRotation.Theta), worldVector);
         }
 
         public Transform GetTransform()
@@ -852,11 +852,11 @@ namespace Robust.Shared.GameObjects
             {
                 if (!Awake)
                 {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 }
                 else
                 {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
 
                 if (Owner.IsInContainer())
@@ -866,8 +866,8 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsUpdateMessage(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new PhysicsUpdateMessage(this));
                 }
             }
             else
@@ -876,7 +876,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var startup = new PhysicsInitializedEvent(Owner.Uid);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref startup);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, ref startup);
 
             ResetMassData();
         }
@@ -989,12 +989,12 @@ namespace Robust.Shared.GameObjects
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 
             preventCollideMessage = new PreventCollideEvent(other, this);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(other.Owner.Uid, preventCollideMessage);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(other.Owner.Uid, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 

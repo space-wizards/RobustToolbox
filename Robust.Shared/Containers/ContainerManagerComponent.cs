@@ -179,7 +179,7 @@ namespace Robust.Shared.Containers
             {
                 foreach (var containerEntity in container.ContainedEntities)
                 {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local,
                         new UpdateContainerOcclusionMessage(containerEntity));
                 }
             }

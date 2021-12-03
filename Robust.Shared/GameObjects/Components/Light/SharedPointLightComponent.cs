@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -38,7 +39,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightToggleEvent(_enabled));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new PointLightToggleEvent(_enabled));
                 Dirty();
             }
         }

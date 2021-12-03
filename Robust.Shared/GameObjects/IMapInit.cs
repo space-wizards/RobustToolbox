@@ -1,3 +1,4 @@
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -28,7 +29,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(entity.LifeStage == EntityLifeStage.Initialized);
             entity.LifeStage = EntityLifeStage.MapInitialized;
 
-            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, MapInit, false);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(entity.Uid, MapInit, false);
             foreach (var init in entity.GetAllComponents<IMapInit>())
             {
                 init.MapInit();

@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -28,7 +29,7 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new OccluderUpdateEvent(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new OccluderUpdateEvent(this));
             }
         }
 
@@ -44,11 +45,11 @@ namespace Robust.Shared.GameObjects
                 _enabled = value;
                 if (_enabled)
                 {
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new OccluderAddEvent(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new OccluderAddEvent(this));
                 }
                 else
                 {
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new OccluderRemoveEvent(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new OccluderRemoveEvent(this));
                 }
 
                 Dirty();

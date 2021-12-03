@@ -138,7 +138,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref rotateEvent);
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref rotateEvent);
                 }
                 else
                 {
@@ -176,7 +176,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public TransformComponent? Parent
         {
-            get => !_parent.IsValid() ? null : Owner.EntityManager.GetComponent<TransformComponent>(_parent);
+            get => !_parent.IsValid() ? null : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_parent);
             internal set
             {
                 if (_anchored && value?.OwnerUid != _parent)
@@ -202,7 +202,7 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = Owner.EntityManager.GetComponent<TransformComponent>(value);
+            set => Parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace Robust.Shared.GameObjects
                 if (!sameParent)
                 {
                     changedParent = true;
-                    var newParent = Owner.EntityManager.GetComponent<TransformComponent>(value.EntityId);
+                    var newParent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.EntityId);
 
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
@@ -336,7 +336,7 @@ namespace Robust.Shared.GameObjects
                     GridID = GetGridIndex();
 
                     var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref entParentChangedMessage);
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref entParentChangedMessage);
                 }
 
                 // These conditions roughly emulate the effects of the code before I changed things,
@@ -354,7 +354,7 @@ namespace Robust.Shared.GameObjects
                         if(!oldPosition.Position.Equals(Coordinates.Position))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
-                            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
+                            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                         }
                     }
                 }
@@ -400,7 +400,7 @@ namespace Robust.Shared.GameObjects
                 {
                     RebuildMatrices();
                     var moveEvent = new MoveEvent(Owner, oldGridPos, Coordinates, this);
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                 }
                 else
                 {
@@ -427,7 +427,7 @@ namespace Robust.Shared.GameObjects
                 {
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
-                        _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                        _anchored = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -437,14 +437,14 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    _anchored = Owner.EntityManager.GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
+                    _anchored = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId).GetComponent<IMapGridComponent>().AnchorEntity(this);
                 }
                 else if (!value && _anchored)
                 {
                     // An anchored entity is always parented to the grid.
                     // If Transform.Anchored is true in the prototype but the entity was not spawned with a grid as the parent,
                     // then this will be false.
-                    if (Owner.EntityManager.TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent<IMapGridComponent>(ParentUid, out var gridComp))
                         gridComp.UnanchorEntity(this);
                     else
                         SetAnchored(false);
@@ -454,7 +454,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables]
         public IEnumerable<TransformComponent> Children =>
-            _children.Select(u => Owner.EntityManager.GetEntity(u).Transform);
+            _children.Select(u => IoCManager.Resolve<IEntityManager>().GetEntity(u).Transform);
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
 
@@ -592,14 +592,14 @@ namespace Robust.Shared.GameObjects
             if (_oldCoords != null)
             {
                 var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, worldAABB);
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
                 var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref rotateEvent);
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref rotateEvent);
                 _oldLocalRotation = null;
             }
         }
@@ -621,7 +621,7 @@ namespace Robust.Shared.GameObjects
             IEntity newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
             {
-                newMapEntity = Owner.EntityManager.GetEntity(mapGrid.GridEntityId);
+                newMapEntity = IoCManager.Resolve<IEntityManager>().GetEntity(mapGrid.GridEntityId);
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId))
             {
@@ -666,7 +666,7 @@ namespace Robust.Shared.GameObjects
 
             _parent = EntityUid.Invalid;
             var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref entParentChangedMessage);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref entParentChangedMessage);
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
 
@@ -704,7 +704,7 @@ namespace Robust.Shared.GameObjects
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, Owner.EntityManager);
+            UpdateChildMapIdsRecursive(MapID, IoCManager.Resolve<IEntityManager>());
         }
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
@@ -726,7 +726,7 @@ namespace Robust.Shared.GameObjects
 
         private void MapIdChanged(MapId oldId)
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new EntMapIdChangedMessage(Owner, oldId));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(IEntity parent)
@@ -770,7 +770,7 @@ namespace Robust.Shared.GameObjects
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
-                var xform = Owner.EntityManager.GetComponent<TransformComponent>(parent);
+                var xform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform.GetLocalMatrix();
                 Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
@@ -796,7 +796,7 @@ namespace Robust.Shared.GameObjects
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
-                var xform = Owner.EntityManager.GetComponent<TransformComponent>(parent);
+                var xform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform.GetLocalMatrix();
                 Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
@@ -859,7 +859,7 @@ namespace Robust.Shared.GameObjects
                         }
                         else
                         {
-                            if (!Owner.EntityManager.TryGetEntity(newParentId, out var newParent))
+                            if (!IoCManager.Resolve<IEntityManager>().TryGetEntity(newParentId, out var newParent))
                             {
 #if !EXCEPTION_TOLERANCE
                                 throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
@@ -978,7 +978,7 @@ namespace Robust.Shared.GameObjects
             }
 
             ActivelyLerping = true;
-            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new TransformStartLerpMessage(this));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new TransformStartLerpMessage(this));
         }
 
         /// <summary>
@@ -1035,7 +1035,7 @@ namespace Robust.Shared.GameObjects
             Dirty();
 
             var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, ref anchorStateChangedEvent);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, ref anchorStateChangedEvent);
         }
     }
 

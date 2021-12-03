@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -193,8 +194,8 @@ namespace Robust.Shared.Map
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
         public EntityCoordinates WithEntityId(IEntity entity)
         {
-            var entityManager = entity.EntityManager;
-            var mapPos = ToMap(entity.EntityManager);
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var mapPos = ToMap(IoCManager.Resolve<IEntityManager>());
 
             if(!IsValid(entityManager) || entity.Transform.MapID != mapPos.MapId)
                 return new EntityCoordinates(entity.Uid, Vector2.Zero);

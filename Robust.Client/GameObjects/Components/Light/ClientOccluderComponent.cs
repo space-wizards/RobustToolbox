@@ -60,7 +60,7 @@ namespace Robust.Client.GameObjects
         {
             if (Owner.Transform.Anchored)
             {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));
             }
         }
@@ -80,7 +80,7 @@ namespace Robust.Client.GameObjects
             {
                 foreach (var neighbor in grid.GetInDir(position, dir))
                 {
-                    if (Owner.EntityManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;

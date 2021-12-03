@@ -16,14 +16,12 @@ namespace Robust.Shared.GameObjects
     {
         #region Members
 
-        public IEntityManager EntityManager => IoCManager.Resolve<IEntityManager>();
-
         [ViewVariables]
         public EntityUid Uid { get; }
 
         public EntityLifeStage LifeStage
         {
-            get => !EntityManager.EntityExists(Uid) ? EntityLifeStage.Deleted : MetaData.EntityLifeStage;
+            get => !IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : MetaData.EntityLifeStage;
             internal set => MetaData.EntityLifeStage = value;
         }
 
@@ -62,10 +60,10 @@ namespace Robust.Shared.GameObjects
         public bool Paused { get => Deleted || MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
         [ViewVariables]
-        public TransformComponent Transform => EntityManager.GetComponent<TransformComponent>(Uid);
+        public TransformComponent Transform => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Uid);
 
         [ViewVariables]
-        public MetaDataComponent MetaData => EntityManager.GetComponent<MetaDataComponent>(Uid);
+        public MetaDataComponent MetaData => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid);
 
         #endregion Members
 
@@ -78,7 +76,7 @@ namespace Robust.Shared.GameObjects
 
         public bool IsValid()
         {
-            return EntityManager.EntityExists(Uid);
+            return IoCManager.Resolve<IEntityManager>().EntityExists(Uid);
         }
 
         #endregion Initialization
@@ -88,7 +86,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendMessage(IComponent? owner, ComponentMessage message)
         {
-            var components = EntityManager.GetComponents(Uid);
+            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Uid);
             foreach (var component in components)
             {
                 if (owner != component)
@@ -99,7 +97,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
         {
-            EntityManager.EntityNetManager?.SendComponentNetworkMessage(channel, this, owner, message);
+            IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, this, owner, message);
         }
 
         #endregion Component Messaging
@@ -113,88 +111,88 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">The component to add.</param>
         public void AddComponent(Component component)
         {
-            EntityManager.AddComponent(this, component);
+            IoCManager.Resolve<IEntityManager>().AddComponent(this, component);
         }
 
         public T AddComponent<T>()
             where T : Component, new()
         {
-            return EntityManager.AddComponent<T>(this);
+            return IoCManager.Resolve<IEntityManager>().AddComponent<T>(this);
         }
 
         public void RemoveComponent<T>()
         {
-            EntityManager.RemoveComponent<T>(Uid);
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<T>(Uid);
         }
 
         public bool HasComponent<T>()
         {
-            return EntityManager.HasComponent<T>(Uid);
+            return IoCManager.Resolve<IEntityManager>().HasComponent<T>(Uid);
         }
 
         public bool HasComponent(Type type)
         {
-            return EntityManager.HasComponent(Uid, type);
+            return IoCManager.Resolve<IEntityManager>().HasComponent(Uid, type);
         }
 
         public T GetComponent<T>()
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.GetComponent<T>(Uid);
+            return IoCManager.Resolve<IEntityManager>().GetComponent<T>(Uid);
         }
 
         public IComponent GetComponent(Type type)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.GetComponent(Uid, type);
+            return IoCManager.Resolve<IEntityManager>().GetComponent(Uid, type);
         }
 
         public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.TryGetComponent(Uid, out component);
+            return IoCManager.Resolve<IEntityManager>().TryGetComponent(Uid, out component);
         }
 
         public T? GetComponentOrNull<T>() where T : class, IComponent
         {
-            return EntityManager.GetComponentOrNull<T>(Uid);
+            return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<T>(Uid);
         }
 
         public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
         {
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
-            return EntityManager.TryGetComponent(Uid, type, out component);
+            return IoCManager.Resolve<IEntityManager>().TryGetComponent(Uid, type, out component);
         }
 
         public void QueueDelete()
         {
-            EntityManager.QueueDeleteEntity(this);
+            IoCManager.Resolve<IEntityManager>().QueueDeleteEntity(Uid);
         }
 
         public void Delete()
         {
-            EntityManager.DeleteEntity(this);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(Uid);
         }
 
         public IEnumerable<IComponent> GetAllComponents()
         {
-            return EntityManager.GetComponents(Uid);
+            return IoCManager.Resolve<IEntityManager>().GetComponents(Uid);
         }
 
         public IEnumerable<T> GetAllComponents<T>()
         {
-            return EntityManager.GetComponents<T>(Uid);
+            return IoCManager.Resolve<IEntityManager>().GetComponents<T>(Uid);
         }
 
         #endregion Components
 
         public override string ToString()
         {
-            return EntityManager.ToPrettyString(Uid);
+            return IoCManager.Resolve<IEntityManager>().ToPrettyString(Uid);
         }
     }
 }

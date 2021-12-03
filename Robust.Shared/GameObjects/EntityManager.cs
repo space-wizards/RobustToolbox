@@ -10,8 +10,6 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
 {
-    public delegate void EntityQueryCallback(IEntity entity);
-
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
     /// <inheritdoc />
@@ -44,7 +42,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, IEntity> Entities = new();
+        protected readonly Dictionary<EntityUid, MetaDataComponent> Entities = new();
 
         private EntityEventBus _eventBus = null!;
 

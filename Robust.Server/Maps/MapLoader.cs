@@ -757,7 +757,7 @@ namespace Robust.Server.Maps
                     }
                     else
                     {
-                        EntityUidMap.Add(mapIdComp.OwnerUid, uid);
+                        EntityUidMap.Add(((IComponent) mapIdComp).Owner, uid);
                         takenIds.Add(uid);
                     }
                 }

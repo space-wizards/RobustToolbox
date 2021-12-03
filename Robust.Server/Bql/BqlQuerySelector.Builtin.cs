@@ -29,7 +29,7 @@ namespace Robust.Server.Bql
             }
 
             return entityManager.GetAllComponents((Type) arguments[0])
-                .Select(x => x.OwnerUid);
+                .Select(x => x.Owner);
         }
     }
 
@@ -62,8 +62,7 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var uid = (EntityUid) arguments[0];
-            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) &&
-                                     transform.Parent?.OwnerUid == uid) ^ isInverted);
+            return input.Where(e => (entityManager.TryGetComponent<TransformComponent>(e, out var transform) && transform.Parent?.Owner == uid) ^ isInverted);
         }
     }
 
@@ -108,7 +107,7 @@ namespace Robust.Server.Bql
             return input.SelectMany(e =>
             {
                 return entityManager.TryGetComponent<TransformComponent>(e, out var transform)
-                    ? transform.Children.Select(y => y.OwnerUid)
+                    ? transform.Children.Select(y => ((IComponent) y).Owner)
                     : new List<EntityUid>();
             });
         }
@@ -133,8 +132,8 @@ namespace Robust.Server.Bql
                 var search = doing.SelectMany(x => x.Children.Select(y => y.Owner));
                 if (!search.Any())
                     break;
-                toSearch = doing.SelectMany(x => x.Children.Select(y => y.OwnerUid)).Where(x => x != EntityUid.Invalid);
-                children.Add(doing.SelectMany(x => x.Children.Select(y => y.OwnerUid)).Where(x => x != EntityUid.Invalid));
+                toSearch = doing.SelectMany(x => x.Children.Select(y => ((IComponent) y).Owner)).Where(x => x != EntityUid.Invalid);
+                children.Add(doing.SelectMany(x => x.Children.Select(y => ((IComponent) y).Owner)).Where(x => x != EntityUid.Invalid));
             }
 
             return children.SelectMany(x => x);
@@ -151,13 +150,13 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             return input.Where(entityManager.HasComponent<TransformComponent>)
-                .Select(e => entityManager.GetComponent<TransformComponent>(e).OwnerUid)
+                .Select(e => { return ((IComponent) entityManager.GetComponent<TransformComponent>(e)).Owner; })
                 .Distinct();
         }
 
         public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return DoSelection(entityManager.EntityQuery<TransformComponent>().Select(x => x.OwnerUid), arguments,
+            return DoSelection(entityManager.EntityQuery<TransformComponent>().Select(x => ((IComponent) x).Owner), arguments,
                 isInverted, entityManager);
         }
     }

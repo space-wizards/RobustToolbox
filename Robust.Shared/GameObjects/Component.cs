@@ -37,11 +37,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner { get; set; } = default!;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public EntityUid OwnerUid => Owner;
+        public EntityUid Owner { get; set; } = default!;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -248,7 +244,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var entManager = IoCManager.Resolve<IEntityManager>();
-            entManager.DirtyEntity(OwnerUid);
+            entManager.DirtyEntity(Owner);
             LastModifiedTick = entManager.CurrentTick;
         }
 

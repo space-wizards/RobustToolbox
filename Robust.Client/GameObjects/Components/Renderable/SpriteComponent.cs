@@ -47,7 +47,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -303,7 +303,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -1505,7 +1505,7 @@ namespace Robust.Client.GameObjects
         {
             // Look this was an easy way to get bounds checks for layer updates.
             // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            IEntity tempQualifier = Owner;
+            EntityUid tempQualifier = Owner;
             if ((tempQualifier != null ? IoCManager.Resolve<IEntityManager>() : null)?.EventBus != null)
                 UpdateBounds();
 
@@ -1515,7 +1515,7 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueued = true;
             // Yes that null check is valid because of that stupid fucking dummy IEntity.
             // Who thought that was a good idea.
-            IEntity tempQualifier1 = Owner;
+            EntityUid tempQualifier1 = Owner;
             (tempQualifier1 != null ? IoCManager.Resolve<IEntityManager>() : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
@@ -1657,7 +1657,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
         }
 
         /// <summary>

@@ -101,7 +101,7 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            _eventTables.DispatchComponent<TEvent>(component.OwnerUid, component, ref unitRef, false);
+            _eventTables.DispatchComponent<TEvent>(component.Owner, component, ref unitRef, false);
         }
 
         /// <inheritdoc />
@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            _eventTables.DispatchComponent<TEvent>(component.OwnerUid, component, ref unitRef, true);
+            _eventTables.DispatchComponent<TEvent>(component.Owner, component, ref unitRef, true);
         }
 
         /// <inheritdoc />

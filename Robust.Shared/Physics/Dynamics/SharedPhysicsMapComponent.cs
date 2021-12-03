@@ -360,7 +360,7 @@ namespace Robust.Shared.Physics.Dynamics
                         other.Island = true;
                     }
 
-                    if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(body.OwnerUid, out JointComponent? jointComponent)) continue;
+                    if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(((IComponent) body).Owner, out JointComponent? jointComponent)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {

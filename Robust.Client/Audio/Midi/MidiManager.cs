@@ -299,7 +299,7 @@ namespace Robust.Client.Audio.Midi
                 }
                 else if (renderer.TrackingEntity != null)
                 {
-                    mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(renderer.TrackingEntity).MapPosition;
+                    mapPos = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity.Value).MapPosition;
                 }
 
                 if (mapPos != null)
@@ -322,7 +322,7 @@ namespace Robust.Client.Audio.Midi
                                     sourceRelative.Normalized,
                                     OcclusionCollisionMask),
                                 sourceRelative.Length,
-                                renderer.TrackingEntity);
+                                renderer.TrackingEntity.Value);
                         }
 
                         renderer.Source.SetOcclusion(occlusion);

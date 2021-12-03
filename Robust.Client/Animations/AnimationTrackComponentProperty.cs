@@ -19,7 +19,7 @@ namespace Robust.Client.Animations
                 throw new InvalidOperationException("Must set parameters to non-null values.");
             }
 
-            var entity = (IEntity) context;
+            var entity = (EntityUid) context;
             var component = IoCManager.Resolve<IEntityManager>().GetComponent(entity, ComponentType);
 
             if (component is IAnimationProperties properties)

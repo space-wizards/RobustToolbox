@@ -979,30 +979,6 @@ namespace Robust.Server.Maps
                 bool skipHook,
                 ISerializationContext? context)
             {
-                if (node.Value == "null")
-                {
-                    return new DeserializedValue<EntityUid>(EntityUid.Invalid);
-                }
-
-                var val = int.Parse(node.Value);
-                if (val >= Entities.Count)
-                {
-                    Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
-                }
-                else
-                {
-                    return new DeserializedValue<EntityUid>(UidEntityMap[val]);
-                }
-
-                return new DeserializedValue<EntityUid>(EntityUid.Invalid);
-            }
-
-            DeserializationResult ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
-                ValueDataNode node,
-                IDependencyCollection dependencies,
-                bool skipHook,
-                ISerializationContext? context)
-            {
                 var val = int.Parse(node.Value);
 
                 if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrDefault(e => e == UidEntityMap[val], out var entity))

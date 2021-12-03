@@ -62,8 +62,8 @@ internal partial class PVSSystem : EntitySystem
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 
-    private PVSCollection<EntityUid, IEntity> _entityPvsCollection = default!;
-    public PVSCollection<EntityUid, IEntity> EntityPVSCollection => _entityPvsCollection;
+    private PVSCollection<EntityUid, EntityUid> _entityPvsCollection = default!;
+    public PVSCollection<EntityUid, EntityUid> EntityPVSCollection => _entityPvsCollection;
     private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
@@ -78,7 +78,7 @@ internal partial class PVSSystem : EntitySystem
     {
         base.Initialize();
 
-        _entityPvsCollection = RegisterPVSCollection<EntityUid, IEntity>(EntityManager.GetEntity);
+        _entityPvsCollection = RegisterPVSCollection<EntityUid, EntityUid>(EntityManager.GetEntity);
         _mapManager.MapCreated += OnMapCreated;
         _mapManager.MapDestroyed += OnMapDestroyed;
         _mapManager.OnGridCreated += OnGridCreated;

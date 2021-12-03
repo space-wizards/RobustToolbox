@@ -67,11 +67,6 @@ namespace Robust.Client.GameObjects
             //Create effect from creation message
             var effect = new Effect(message, resourceCache, _mapManager, _entityManager);
             effect.Deathtime = gameTiming.CurTime + message.LifeTime;
-            if (effect.AttachedEntityUid != null
-                && _entityManager.TryGetEntity(effect.AttachedEntityUid.Value, out var attachedEntity))
-            {
-                effect.AttachedEntity = attachedEntity;
-            }
 
             _Effects.Add(effect);
         }
@@ -355,9 +350,9 @@ namespace Robust.Client.GameObjects
 
                 foreach (var effect in _owner._Effects)
                 {
-                    IEntity? tempQualifier = effect.AttachedEntity;
-                    if ((tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier) : null).MapID != (player != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player) : null).MapID &&
-                        effect.Coordinates.GetMapId(_entityManager) != map)
+                    var tempQualifier = effect.AttachedEntityUid;
+                    if(_entityManager.GetComponent<TransformComponent>(tempQualifier!.Value).MapID != _entityManager.GetComponent<TransformComponent>(player!.Value).MapID
+                        && effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }
@@ -373,9 +368,9 @@ namespace Robust.Client.GameObjects
                     // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
 
-                    IEntity? tempQualifier1 = effect.AttachedEntity;
-                    var coordinates =
-                        ((tempQualifier1 != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier1) : null).Coordinates ?? effect.Coordinates)
+                    var tempQualifier1 = effect.AttachedEntityUid;
+                    var coordinates = 
+                        (tempQualifier1 != null ? _entityManager.GetComponent<TransformComponent>(tempQualifier1.Value).Coordinates : effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
                     var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;

@@ -61,7 +61,7 @@ namespace Robust.Client.Player
             DetachEntity();
 
             ControlledEntity = entity;
-            InternalSession.AttachedEntity = entity;
+            InternalSession.AttachedEntityUid = entity;
 
             var entMan = IoCManager.Resolve<IEntityManager>();
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -322,10 +322,10 @@ namespace Robust.Client.Audio.Midi
                                     sourceRelative.Normalized,
                                     OcclusionCollisionMask),
                                 sourceRelative.Length,
-                                renderer.TrackingEntity.Value);
+                                renderer?.TrackingEntity);
                         }
 
-                        renderer.Source.SetOcclusion(occlusion);
+                        renderer!.Source.SetOcclusion(occlusion);
                     }
 
                     if (renderer.Source.SetPosition(pos.Position))
@@ -335,7 +335,7 @@ namespace Robust.Client.Audio.Midi
 
                     if (renderer.TrackingEntity != null)
                     {
-                        renderer.Source.SetVelocity(renderer.TrackingEntity.GlobalLinearVelocity());
+                        renderer.Source.SetVelocity(renderer.TrackingEntity.Value.GlobalLinearVelocity());
                     }
 
                     if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))

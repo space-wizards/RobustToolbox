@@ -82,8 +82,8 @@ namespace Robust.Client.GameObjects
 
         private void PlayAudioEntityHandler(PlayAudioEntityMessage ev)
         {
-            var stream = EntityManager.TryGetEntity(ev.EntityUid, out var entity) ?
-                (PlayingStream?) Play(ev.FileName, entity, ev.FallbackCoordinates, ev.AudioParams)
+            var stream = EntityManager.EntityExists(ev.EntityUid) ?
+                (PlayingStream?) Play(ev.FileName, ev.EntityUid, ev.FallbackCoordinates, ev.AudioParams)
                 : (PlayingStream?) Play(ev.FileName, ev.Coordinates, ev.FallbackCoordinates, ev.AudioParams);
 
             if (stream != null)

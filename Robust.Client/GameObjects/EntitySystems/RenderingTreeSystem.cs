@@ -47,7 +47,7 @@ namespace Robust.Client.GameObjects
                 yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
-            var tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            var tempQualifier1 = _mapManager.GetMapEntityId(mapId);
             yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
@@ -61,7 +61,7 @@ namespace Robust.Client.GameObjects
                 yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
-            var tempQualifier1 = _mapManager.GetMapEntity(mapId);
+            var tempQualifier1 = _mapManager.GetMapEntityId(mapId);
             yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
@@ -241,7 +241,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            _mapManager.GetMapEntity(e.Map).EnsureComponent<RenderingTreeComponent>();
+            _mapManager.GetMapEntityId(e.Map).EnsureComponent<RenderingTreeComponent>();
         }
 
         private void MapManagerOnGridCreated(MapId mapId, GridId gridId)

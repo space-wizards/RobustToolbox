@@ -398,9 +398,8 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new IEntity(this, uid.Value);
-
-
+            var entity = new IEntity(uid.Value);
+            
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
 

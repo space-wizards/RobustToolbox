@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -15,7 +16,7 @@ namespace Robust.Shared.GameObjects
     {
         #region Members
 
-        public IEntityManager EntityManager { get; }
+        public IEntityManager EntityManager => IoCManager.Resolve<IEntityManager>();
 
         [ViewVariables]
         public EntityUid Uid { get; }
@@ -54,29 +55,20 @@ namespace Robust.Shared.GameObjects
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
-        public bool Paused { get => MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
-
-        private TransformComponent? _transform;
+        public bool Paused { get => Deleted || MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
 
         [ViewVariables]
-        public TransformComponent Transform => _transform ??= GetComponent<TransformComponent>();
-
-        private MetaDataComponent? _metaData;
+        public TransformComponent Transform => EntityManager.GetComponent<TransformComponent>(Uid);
 
         [ViewVariables]
-        public MetaDataComponent MetaData
-        {
-            get => _metaData ??= GetComponent<MetaDataComponent>();
-            internal set => _metaData = value;
-        }
+        public MetaDataComponent MetaData => EntityManager.GetComponent<MetaDataComponent>(Uid);
 
         #endregion Members
 
         #region Initialization
 
-        public IEntity(IEntityManager entityManager, EntityUid uid)
+        public IEntity(EntityUid uid)
         {
-            EntityManager = entityManager;
             Uid = uid;
         }
 
@@ -200,7 +192,7 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion Components
-        
+
         public override string ToString()
         {
             return EntityManager.ToPrettyString(Uid);

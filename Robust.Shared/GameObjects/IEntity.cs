@@ -100,10 +100,5 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion Components
-
-        public override string ToString()
-        {
-            return IoCManager.Resolve<IEntityManager>().ToPrettyString(Uid);
-        }
     }
 }

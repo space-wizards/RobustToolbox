@@ -564,17 +564,18 @@ namespace Robust.Shared.GameObjects
             {
                 var linearVelocity = _linVelocity;
                 var angularVelocity = _angVelocity;
-                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Parent?.Owner;
+                var entMan = IoCManager.Resolve<IEntityManager>();
+                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
                 while (parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out PhysicsComponent? body))
+                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
                     {
                         linearVelocity += body.LinearVelocity;
                         angularVelocity += body.AngularVelocity;
                     }
 
-                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
+                    parent = parent.Parent;
                 }
 
                 return (linearVelocity, angularVelocity);
@@ -620,16 +621,17 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _linVelocity;
-                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Parent?.Owner;
+                var entMan = IoCManager.Resolve<IEntityManager>();
+                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
                 while (parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out PhysicsComponent? body))
+                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
                     {
                         velocity += body.LinearVelocity;
                     }
 
-                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
+                    parent = parent.Parent;
                 }
 
                 return velocity;
@@ -675,16 +677,17 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _angVelocity;
-                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Parent?.Owner;
+                var entMan = IoCManager.Resolve<IEntityManager>();
+                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
                 while (parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out PhysicsComponent? body))
+                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
                     {
                         velocity += body.AngularVelocity;
                     }
 
-                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
+                    parent = parent.Parent;
                 }
 
                 return velocity;
@@ -841,9 +844,11 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID != MapId.Nullspace)
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner);
+            var mapId = transform.MapID;
+            if (mapId != MapId.Nullspace)
             {
-                IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID);
+                EntityUid tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntityId(mapId);
                 PhysicsMap = IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier);
             }
 

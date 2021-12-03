@@ -68,8 +68,8 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null)
         {
-            if (Resolve(uid, ref containerManager, false) && EntityManager.TryGetEntity(containedUid, out var containedEntity))
-                return containerManager.TryGetContainer(containedEntity, out container);
+            if (Resolve(uid, ref containerManager, false) && EntityManager.EntityExists(containedUid))
+                return containerManager.TryGetContainer(containedUid, out container);
 
             container = null;
             return false;
@@ -77,21 +77,21 @@ namespace Robust.Shared.Containers
 
         public bool ContainsEntity(EntityUid uid, EntityUid containedUid, ContainerManagerComponent? containerManager = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.TryGetEntity(containedUid, out var containedEntity))
+            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
                 return false;
 
-            return containerManager.ContainsEntity(containedEntity);
+            return containerManager.ContainsEntity(containedUid);
         }
 
         public void RemoveEntity(EntityUid uid, EntityUid containedUid, bool force = false, ContainerManagerComponent? containerManager = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.TryGetEntity(containedUid, out var containedEntity))
+            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
                 return;
 
             if (force)
-                containerManager.ForceRemove(containedEntity);
+                containerManager.ForceRemove(containedUid);
             else
-                containerManager.Remove(containedEntity);
+                containerManager.Remove(containedUid);
         }
 
         public ContainerManagerComponent.AllContainersEnumerable GetAllContainers(EntityUid uid, ContainerManagerComponent? containerManager = null)
@@ -130,10 +130,10 @@ namespace Robust.Shared.Containers
         {
             var oldParentEntity = message.OldParent;
 
-            if (oldParentEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(oldParentEntity))
+            if (oldParentEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(oldParentEntity!.Value))
                 return;
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParentEntity, out IContainerManager? containerManager))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
                 containerManager.ForceRemove(message.Entity);
         }
     }

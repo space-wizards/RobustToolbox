@@ -66,7 +66,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity)entity0.Value;
+                EntityUid entity = (EntityUid)entity0.Value;
 
                 if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity, out var grammar) && grammar.Gender.HasValue)
                 {
@@ -145,7 +145,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity)entity0.Value;
+                EntityUid entity = (EntityUid)entity0.Value;
                 ILocValue attrib0 = args.Args[1];
                 if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
@@ -166,7 +166,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity)entity0.Value;
+                EntityUid entity = (EntityUid)entity0.Value;
 
                 if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity, out var grammar) && grammar.ProperNoun.HasValue)
                 {
@@ -256,7 +256,7 @@ namespace Robust.Shared.Localization
             return obj switch
             {
                 ILocValue wrap => new FluentLocWrapperType(wrap),
-                IEntity entity => new FluentLocWrapperType(new LocValueEntity(entity)),
+                EntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity)),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
                 TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan)),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),

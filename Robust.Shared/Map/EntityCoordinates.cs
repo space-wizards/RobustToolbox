@@ -135,7 +135,7 @@ namespace Robust.Shared.Map
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             var mapId = coordinates.MapId;
-            var mapEntity = mapManager.GetMapEntity(mapId);
+            var mapEntity = mapManager.GetMapEntityId(mapId);
 
             return new EntityCoordinates(mapEntity, coordinates.Position);
         }
@@ -182,10 +182,10 @@ namespace Robust.Shared.Map
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
         public EntityCoordinates WithEntityId(IEntityManager entityManager, EntityUid entityId)
         {
-            if(!entityManager.TryGetEntity(entityId, out var entity))
+            if(!entityManager.EntityExists(entityId))
                 return new EntityCoordinates(entityId, Vector2.Zero);
 
-            return WithEntityId(entity);
+            return WithEntityId(entityId);
         }
 
         /// <summary>
@@ -196,12 +196,12 @@ namespace Robust.Shared.Map
         public EntityCoordinates WithEntityId(EntityUid entity)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapPos = ToMap(IoCManager.Resolve<IEntityManager>());
+            var mapPos = ToMap(entityManager);
 
-            if(!IsValid(entityManager) || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
+            if(!IsValid(entityManager) || entityManager.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
                 return new EntityCoordinates(entity, Vector2.Zero);
 
-            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
+            var localPos = entityManager.GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
             return new EntityCoordinates(entity, localPos);
         }
 

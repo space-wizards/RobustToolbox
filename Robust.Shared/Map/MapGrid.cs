@@ -109,16 +109,14 @@ namespace Robust.Shared.Map
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
                 {
-                    IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition;
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldPosition;
                 }
 
                 return Vector2.Zero;
             }
             set
             {
-                IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldPosition = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -132,16 +130,14 @@ namespace Robust.Shared.Map
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
                 {
-                    IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldRotation;
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldRotation;
                 }
 
                 return Angle.Zero;
             }
             set
             {
-                IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldRotation = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldRotation = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

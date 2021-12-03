@@ -19,9 +19,9 @@ namespace Robust.Shared.GameObjects
         public static bool EnsureComponent<T>(this EntityUid entity, out T component) where T : Component, new()
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            ref T? comp = ref component!;
-            if (entMan.TryGetComponent(entity, out comp))
+            if (entMan.TryGetComponent<T>(entity, out var comp))
             {
+                component = comp;
                 return true;
             }
 
@@ -62,9 +62,9 @@ namespace Robust.Shared.GameObjects
         public static bool EnsureComponentWarn<T>(this EntityUid entity, out T component, string? warning = null) where T : Component, new()
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            ref T? comp = ref component!;
-            if (entMan.TryGetComponent(entity, out comp))
+            if (entMan.TryGetComponent<T>(entity, out var comp))
             {
+                component = comp;
                 return true;
             }
 

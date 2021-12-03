@@ -511,7 +511,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // second level node, terminates recursion up the branch of the tree
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.OwnerUid, out IMapComponent? mapComp))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.Owner, out IMapComponent? mapComp))
                     {
                         value = mapComp.WorldMap;
                     }
@@ -861,7 +861,7 @@ namespace Robust.Shared.GameObjects
                         }
                         else
                         {
-                            if (!IoCManager.Resolve<IEntityManager>().TryGetEntity(newParentId, out var newParent))
+                            if (!IoCManager.Resolve<IEntityManager>().EntityExists(newParentId))
                             {
 #if !EXCEPTION_TOLERANCE
                                 throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
@@ -872,7 +872,7 @@ namespace Robust.Shared.GameObjects
 #endif
                             }
 
-                            AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newParent));
+                            AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newParentId));
                         }
                     }
 

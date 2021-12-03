@@ -200,14 +200,17 @@ namespace Robust.Shared.GameObjects
             );
         }
 
-        private static Box2 GetRelativeAABBFromEntity(in EntityUid entity)
+        private Box2 GetRelativeAABBFromEntity(in EntityUid entity)
         {
             // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
 
             var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
 
-            return (tree != null ? _entityManager.GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.TransformBox(aabb) ?? aabb;
+            if (tree == null)
+                return aabb;
+
+            return _entityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(aabb);
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -226,7 +229,7 @@ namespace Robust.Shared.GameObjects
         {
             if (eventArgs.Map == MapId.Nullspace) return;
 
-            _mapManager.GetMapEntity(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
+            _mapManager.GetMapEntityId(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
         }
 
         public void Update()
@@ -285,9 +288,9 @@ namespace Robust.Shared.GameObjects
 
             private bool _final;
 
-            public LookupsEnumerator(IEntityManager _entityManager, IMapManager mapManager, MapId mapId, FindGridsEnumerator enumerator)
+            public LookupsEnumerator(IEntityManager entityManager, IMapManager mapManager, MapId mapId, FindGridsEnumerator enumerator)
             {
-                _entityManager = _entityManager;
+                _entityManager = entityManager;
                 _mapManager = mapManager;
 
                 _mapId = mapId;
@@ -324,8 +327,8 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                 {
-                    if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
-                    yield return ent;
+                    if (!_entityManager.EntityExists(uid)) continue;
+                    yield return uid;
                 }
             }
         }
@@ -337,8 +340,8 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var uid in grid.GetAnchoredEntities(worldBounds))
                 {
-                    if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
-                    yield return ent;
+                    if (!_entityManager.EntityExists(uid)) continue;
+                    yield return uid;
                 }
             }
         }
@@ -391,8 +394,8 @@ namespace Robust.Shared.GameObjects
                 {
                     foreach (var uid in grid.GetAnchoredEntities(worldAABB))
                     {
-                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
-                        callback(ent);
+                        if (!_entityManager.EntityExists(uid)) continue;
+                        callback(uid);
                     }
                 }
             }
@@ -494,10 +497,10 @@ namespace Robust.Shared.GameObjects
                 _mapManager.TryFindGridAt(mapId, position, out var grid) &&
                 grid.TryGetTileRef(position, out var tile))
             {
-                foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
+                foreach (var uid in grid.GetAnchoredEntities(tile.GridIndices))
                 {
-                    if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
-                    state.list.Add(entity);
+                    if (!_entityManager.EntityExists(uid)) continue;
+                    state.list.Add(uid);
                 }
             }
 
@@ -678,10 +681,10 @@ namespace Robust.Shared.GameObjects
             {
                 foreach (var tile in grid.GetAllTiles())
                 {
-                    foreach (var ent in grid.GetAnchoredEntities(tile.GridIndices))
+                    foreach (var uid in grid.GetAnchoredEntities(tile.GridIndices))
                     {
-                        if (!_entityManager.TryGetEntity(ent, out var entity)) continue;
-                        yield return entity;
+                        if (!_entityManager.EntityExists(uid)) continue;
+                        yield return uid;
                     }
                 }
             }
@@ -716,8 +719,8 @@ namespace Robust.Shared.GameObjects
                 {
                     foreach (var uid in grid.GetAnchoredEntities(aabb))
                     {
-                        if (!_entityManager.TryGetEntity(uid, out var ent)) continue;
-                        list.Add(ent);
+                        if (!_entityManager.EntityExists(uid)) continue;
+                        list.Add(uid);
                     }
                 }
             }
@@ -729,7 +732,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private static EntityLookupComponent? GetLookup(EntityUid entity)
+        private EntityLookupComponent? GetLookup(EntityUid entity)
         {
             if (_entityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace)
             {
@@ -743,14 +746,14 @@ namespace Robust.Shared.GameObjects
                 return null;
             }
 
-            var parent = _entityManager.GetComponent<TransformComponent>(entity).Parent?.Owner;
+            var parent = _entityManager.GetComponent<TransformComponent>(entity).Parent;
 
             while (true)
             {
                 if (parent == null) break;
 
-                if (_entityManager.TryGetComponent(parent, out EntityLookupComponent? comp)) return comp;
-                parent = _entityManager.GetComponent<TransformComponent>(parent).Parent?.Owner;
+                if (_entityManager.TryGetComponent(parent.Owner, out EntityLookupComponent? comp)) return comp;
+                parent = parent.Parent;
             }
 
             return null;

@@ -23,8 +23,7 @@ namespace Robust.Shared.Containers
                 if (ContainedEntity == null)
                     return Array.Empty<EntityUid>();
 
-                // Cast to handle nullability.
-                return (EntityUid[]) _containedEntityArray!;
+                return _containedEntityArray;
             }
         }
 
@@ -36,7 +35,8 @@ namespace Robust.Shared.Containers
             private set
             {
                 _containedEntity = value;
-                _containedEntityArray[0] = value;
+                if (value != null)
+                    _containedEntityArray[0] = value!.Value;
             }
         }
 
@@ -45,7 +45,7 @@ namespace Robust.Shared.Containers
         private EntityUid? _containedEntity;
         private readonly List<EntityUid> _expectedEntities = new();
         // Used by ContainedEntities to avoid allocating.
-        private readonly EntityUid?[] _containedEntityArray = new EntityUid[1];
+        private readonly EntityUid[] _containedEntityArray = new EntityUid[1];
 
         /// <inheritdoc />
         public override string ContainerType => ClassName;

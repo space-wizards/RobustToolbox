@@ -63,7 +63,7 @@ namespace Robust.Shared.GameObjects
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntity(mapId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
         }
 

@@ -448,7 +448,7 @@ namespace Robust.Shared.Map
 
                 if (result != null)
                 {
-                    grid.GridEntityId = result.OwnerUid;
+                    grid.GridEntityId = result.Owner;
                     Logger.DebugS("map", $"Rebinding grid {actualID} to entity {grid.GridEntityId}");
                 }
                 else
@@ -466,7 +466,7 @@ namespace Robust.Shared.Map
                     //are applied. After they are applied the parent may be different, but the MapId will
                     //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
                     //use in transform states anytime before the state parent is properly set.
-                    _entityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(GetMapEntity(currentMapID));
+                    _entityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(GetMapEntityIdOrThrow(currentMapID));
 
                     _entityManager.InitializeComponents(gridEnt);
                     _entityManager.StartComponents(gridEnt);
@@ -696,12 +696,12 @@ namespace Robust.Shared.Map
 
             var entityId = grid.GridEntityId;
 
-            if (_entityManager.TryGetEntity(entityId, out var gridEnt))
+            if (_entityManager.EntityExists(entityId))
             {
                 // DeleteGrid may be triggered by the entity being deleted,
                 // so make sure that's not the case.
-                if ((!_entityManager.EntityExists(gridEnt) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(gridEnt).EntityLifeStage) <= EntityLifeStage.MapInitialized)
-                    _entityManager.DeleteEntity((EntityUid) gridEnt);
+                if (_entityManager.GetComponent<MetaDataComponent>(entityId).EntityLifeStage <= EntityLifeStage.MapInitialized)
+                    _entityManager.DeleteEntity(entityId);
             }
 
             grid.Dispose();

@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects
 
             if (anchoredEnts.Count == 0) return;
 
-            var mapEnt = _mapManager.GetMapEntity(grid.ParentMapId);
+            var mapEnt = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
 
             foreach (var ent in anchoredEnts) // changing anchored modifies this set
             {

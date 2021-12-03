@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects
                 yield return EntityManager.GetComponent<OccluderTreeComponent>(grid.GridEntityId);
             }
 
-            yield return EntityManager.GetComponent<OccluderTreeComponent>(_mapManager.GetMapEntity(mapId));
+            yield return EntityManager.GetComponent<OccluderTreeComponent>(_mapManager.GetMapEntityId(mapId));
         }
 
         private void HandleOccluderInit(EntityUid uid, OccluderComponent component, ComponentInit args)
@@ -74,14 +74,14 @@ namespace Robust.Shared.GameObjects
 
             if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || EntityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace) return null;
 
-            var parent = EntityManager.GetComponent<TransformComponent>(entity).Parent?.Owner;
+            var parent = EntityManager.GetComponent<TransformComponent>(entity).Parent;
 
             while (true)
             {
                 if (parent == null) break;
 
-                if (EntityManager.TryGetComponent(parent, out OccluderTreeComponent? comp)) return comp;
-                parent = EntityManager.GetComponent<TransformComponent>(parent).Parent?.Owner;
+                if (EntityManager.TryGetComponent(parent.Owner, out OccluderTreeComponent? comp)) return comp;
+                parent = parent.Parent;
             }
 
             return null;
@@ -158,10 +158,10 @@ namespace Robust.Shared.GameObjects
         {
             if (e.Map == MapId.Nullspace) return;
 
-            _mapManager.GetMapEntity(e.Map).EnsureComponent<OccluderTreeComponent>();
+            _mapManager.GetMapEntityId(e.Map).EnsureComponent<OccluderTreeComponent>();
         }
 
-        private static Box2 ExtractAabbFunc(in OccluderComponent o)
+        private Box2 ExtractAabbFunc(in OccluderComponent o)
         {
             return o.BoundingBox.Translated(EntityManager.GetComponent<TransformComponent>(o.Owner).LocalPosition);
         }
@@ -194,10 +194,10 @@ namespace Robust.Shared.GameObjects
                         if (!value.Enabled)
                             return true;
 
-                        if (predicate != null && predicate.Invoke(value.OwnerUid))
+                        if (predicate != null && predicate.Invoke(value.Owner))
                             return true;
 
-                        var result = new RayCastResults(distFromOrigin, point, value.OwnerUid);
+                        var result = new RayCastResults(distFromOrigin, point, value.Owner);
                         state.Add(result);
                         return !returnOnFirstHit;
                     }, treeRay);

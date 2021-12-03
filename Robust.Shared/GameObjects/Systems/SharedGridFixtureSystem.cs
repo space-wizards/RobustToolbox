@@ -49,7 +49,9 @@ namespace Robust.Shared.GameObjects
             if (!_enabled) return;
 
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
-                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
+                !EntityManager.EntityExists(grid.GridEntityId)) return;
+
+            var gridEnt = grid.GridEntityId;
 
             DebugTools.Assert(chunk.ValidTiles > 0);
 

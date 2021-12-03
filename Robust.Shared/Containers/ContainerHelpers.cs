@@ -31,7 +31,7 @@ namespace Robust.Shared.Containers
             if (entMan.GetComponent<TransformComponent>(entity).Parent == null)
                 return false;
 
-            if (TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).Parent.Owner, out var containerComp))
+            if (TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).ParentUid, out var containerComp))
                 return containerComp.ContainsEntity(entity);
 
             return false;
@@ -183,7 +183,7 @@ namespace Robust.Shared.Containers
 
             // RECURSION ALERT
             if (entMan.GetComponent<TransformComponent>(entity).Parent != null)
-                return TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).Parent.Owner, out manager);
+                return TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).ParentUid, out manager);
 
             return false;
         }

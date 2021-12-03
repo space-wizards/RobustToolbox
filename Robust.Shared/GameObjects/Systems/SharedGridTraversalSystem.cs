@@ -64,13 +64,13 @@ namespace Robust.Shared.GameObjects
 
             // Change parent if necessary
             if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
-                EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) &&
+                EntityManager.EntityExists(grid.GridEntityId) &&
                 grid.GridEntityId != entity)
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Index != transform.GridID)
                 {
-                    transform.AttachParent(gridEnt);
+                    transform.AttachParent(grid.GridEntityId);
                     RaiseLocalEvent(entity, new ChangedGridEvent(entity, transform.GridID, grid.Index));
                 }
             }
@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
                 // Attach them to map / they are on an invalid grid
                 if (oldGridId != GridId.Invalid)
                 {
-                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                    transform.AttachParent(_mapManager.GetMapEntityIdOrThrow(transform.MapID));
                     RaiseLocalEvent(entity, new ChangedGridEvent(entity, oldGridId, GridId.Invalid));
                 }
             }

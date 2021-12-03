@@ -475,7 +475,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public override int GetHashCode()
         {
             // TODO: Need to suss this out
-            return HashCode.Combine((FixtureA != null ? FixtureA.Body.Owner : (EntityUid) null), (FixtureB != null ? FixtureB.Body.Owner : (EntityUid) null));
+            return HashCode.Combine((FixtureA != null ? FixtureA.Body.Owner : EntityUid.Invalid), (FixtureB != null ? FixtureB.Body.Owner : EntityUid.Invalid));
         }
     }
 }

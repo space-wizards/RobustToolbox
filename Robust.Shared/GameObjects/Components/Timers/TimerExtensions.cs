@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Robust.Shared.IoC;
 using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Shared.GameObjects
@@ -10,6 +11,7 @@ namespace Robust.Shared.GameObjects
         private static TimerComponent EnsureTimerComponent(this EntityUid entity)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
+            return entMan.EnsureComponent<TimerComponent>(entity);
         }
 
         public static void AddTimer(this EntityUid entity, Timer timer, CancellationToken cancellationToken = default)

@@ -281,7 +281,7 @@ namespace Robust.Shared.Physics
 
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
-            EntityUid tempQualifier = _mapManager.GetMapEntityId(mapId, true);
+            EntityUid tempQualifier = _mapManager.GetMapEntityIdOrThrow(mapId);
             var contactManager = _entityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).ContactManager;
 
             // TODO: Could store fixtures by broadphase for more perf?
@@ -878,7 +878,7 @@ namespace Robust.Shared.Physics
             {
                 if (parent == null) break;
 
-                if (_entityManager.TryGetComponent(parent.OwnerUid, out BroadphaseComponent? comp)) return comp;
+                if (_entityManager.TryGetComponent(parent.Owner, out BroadphaseComponent? comp)) return comp;
                 parent = parent.Parent;
             }
 

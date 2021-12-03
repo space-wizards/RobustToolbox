@@ -21,7 +21,11 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
-        public EntityLifeStage LifeStage { get => MetaData.EntityLifeStage; internal set => MetaData.EntityLifeStage = value; }
+        public EntityLifeStage LifeStage
+        {
+            get => !EntityManager.EntityExists(Uid) ? EntityLifeStage.Deleted : MetaData.EntityLifeStage;
+            internal set => MetaData.EntityLifeStage = value;
+        }
 
         [ViewVariables]
         public GameTick LastModifiedTick { get => MetaData.EntityLastModifiedTick; internal set => MetaData.EntityLastModifiedTick = value; }

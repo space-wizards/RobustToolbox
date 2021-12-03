@@ -61,10 +61,10 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 mapId = mapManager.CreateMap();
 
-                IEntity tempQualifier2 = mapManager.GetMapEntity(mapId);
+                EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
-                IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
                 var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
@@ -98,7 +98,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     {
                         var x = 0.0f;
 
-                        IEntity tempQualifier1 = entityManager.SpawnEntity(null,
+                        EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                         var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
 
@@ -125,7 +125,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     }
                 }
 
-                IEntity tempQualifier3 = bodies[0].Owner;
+                EntityUid tempQualifier3 = bodies[0].Owner;
                 firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
             });
 
@@ -134,7 +134,7 @@ namespace Robust.UnitTesting.Shared.Physics
             // Check that gravity workin
             await server.WaitAssertion(() =>
             {
-                IEntity tempQualifier = bodies[0].Owner;
+                EntityUid tempQualifier = bodies[0].Owner;
                 Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition);
             });
 
@@ -180,10 +180,10 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
-                IEntity tempQualifier2 = mapManager.GetMapEntity(mapId);
+                EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
-                IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
                 var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
@@ -219,7 +219,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     {
                         var x = 0.0f;
 
-                        IEntity tempQualifier1 = entityManager.SpawnEntity(null,
+                        EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
                         var circle = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
 
@@ -240,7 +240,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     }
                 }
 
-                IEntity tempQualifier3 = bodies[0].Owner;
+                EntityUid tempQualifier3 = bodies[0].Owner;
                 firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
             });
 
@@ -249,7 +249,7 @@ namespace Robust.UnitTesting.Shared.Physics
             // Check that gravity workin
             await server.WaitAssertion(() =>
             {
-                IEntity tempQualifier = bodies[0].Owner;
+                EntityUid tempQualifier = bodies[0].Owner;
                 Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition);
             });
 

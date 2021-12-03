@@ -280,32 +280,32 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             /// <summary>
             /// The generic container class uses a list of entities
             /// </summary>
-            private readonly List<IEntity> _containerList = new();
+            private readonly List<EntityUid> _containerList = new();
             private readonly List<EntityUid> _expectedEntities = new();
 
             public override string ContainerType => nameof(ContainerOnlyContainer);
 
             /// <inheritdoc />
-            public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+            public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(IEntity toinsert)
+            protected override void InternalInsert(EntityUid toinsert)
             {
                 _containerList.Add(toinsert);
                 base.InternalInsert(toinsert);
             }
 
             /// <inheritdoc />
-            protected override void InternalRemove(IEntity toremove)
+            protected override void InternalRemove(EntityUid toremove)
             {
                 _containerList.Remove(toremove);
                 base.InternalRemove(toremove);
             }
 
             /// <inheritdoc />
-            public override bool Contains(IEntity contained)
+            public override bool Contains(EntityUid contained)
             {
                 return _containerList.Contains(contained);
             }
@@ -321,7 +321,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
                 }
             }
 
-            public override bool CanInsert(IEntity toinsert)
+            public override bool CanInsert(EntityUid toinsert)
             {
                 return IoCManager.Resolve<IEntityManager>().TryGetComponent(toinsert, out IContainerManager? _);
             }

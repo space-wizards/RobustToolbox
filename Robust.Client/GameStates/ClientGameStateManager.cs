@@ -494,7 +494,7 @@ namespace Robust.Client.GameStates
             }
 
 #if EXCEPTION_TOLERANCE
-            HashSet<Entity> brokenEnts = new HashSet<Entity>();
+            HashSet<IEntity> brokenEnts = new HashSet<IEntity>();
 #endif
 
             foreach (var entity in toInitialize)

@@ -277,7 +277,7 @@ namespace Robust.Shared.Prototypes
         {
             var compType = factory.GetRegistration(compName).Type;
 
-            if (!entity.TryGetComponent(compType, out var component))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, compType, out var component))
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;

@@ -24,13 +24,6 @@ namespace Robust.Shared.GameObjects
 
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public string Description
-        {
-            get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityDescription;
-            set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityDescription = value;
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
         public string Name
         {
             get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName;

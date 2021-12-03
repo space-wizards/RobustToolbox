@@ -243,7 +243,7 @@ test-message-custom-attrib = { ATTRIB($entity, ""otherAttrib"") }
             var ent = entMan.CreateEntityUninitialized(prototype);
 
             Assert.That(ent.Name, Is.EqualTo("A"));
-            Assert.That(ent.Description, Is.EqualTo("B"));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityDescription, Is.EqualTo("B"));
             Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityPrototype!.EditorSuffix, Is.EqualTo("C"));
 
             Assert.That(loc.GetString("test-message-gender", ("entity", ent)), Is.EqualTo("male"));

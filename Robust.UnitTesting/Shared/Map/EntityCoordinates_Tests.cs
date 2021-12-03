@@ -84,7 +84,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             Assert.That(result, Is.True);
 
-            mapEntity.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(mapEntity.Uid);
 
             result = coords.IsValid(entityManager);
 
@@ -251,7 +251,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(newEntParent, Is.EqualTo(mapEnt));
 
             // Deleting the parent should make TryGetParent return false.
-            mapEnt.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(mapEnt.Uid);
 
             // These shouldn't be valid anymore.
             Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(newEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(newEnt.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);

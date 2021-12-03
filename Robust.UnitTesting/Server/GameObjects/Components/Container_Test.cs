@@ -64,7 +64,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(manager.GetContainer("dummy2"), Is.EqualTo(container2));
             Assert.That(() => manager.GetContainer("dummy3"), Throws.TypeOf<KeyNotFoundException>());
 
-            entity.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
 
             Assert.That(manager.Deleted, Is.True);
             Assert.That(container.Deleted, Is.True);
@@ -94,7 +94,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(success, Is.False);
 
             container.Insert(inserted);
-            owner.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(owner.Uid);
             // Make sure inserted was detached.
             Assert.That(transform.Deleted, Is.True);
         }
@@ -121,7 +121,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.Contains(entity), Is.True);
             Assert.That(entity.Transform.Parent!.Owner, Is.EqualTo(owner));
 
-            owner.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(owner.Uid);
             Assert.That(transform.Deleted, Is.True);
         }
 
@@ -153,7 +153,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.Contains(entityItem), Is.True);
             Assert.That(entityItem.Transform.Parent!.Owner, Is.EqualTo(entityOne));
 
-            entityOne.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(entityOne.Uid);
             Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entityTwo.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entityTwo.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
         }
 
@@ -317,7 +317,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
                 foreach (var entity in _containerList)
                 {
-                    entity.Delete();
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
                 }
             }
 

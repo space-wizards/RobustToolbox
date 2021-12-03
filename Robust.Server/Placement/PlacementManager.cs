@@ -214,7 +214,7 @@ namespace Robust.Server.Placement
             {
                 if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<ActorComponent>())
                     continue;
-                entity.Delete();
+                IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
             }
         }
 

@@ -33,7 +33,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            entity.Delete();
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
         }
     }
 }

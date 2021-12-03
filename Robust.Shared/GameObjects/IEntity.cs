@@ -104,11 +104,6 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IEntityManager>().QueueDeleteEntity(Uid);
         }
 
-        public void Delete()
-        {
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(Uid);
-        }
-
         #endregion Components
 
         public override string ToString()

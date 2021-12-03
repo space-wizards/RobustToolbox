@@ -92,7 +92,7 @@ namespace Robust.Shared.Map
 
                 foreach (var childTransform in mapEnt.Transform.Children.ToArray())
                 {
-                    childTransform.Owner.Delete();
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity(childTransform.Owner.Uid);
                 }
             }
 
@@ -140,7 +140,7 @@ namespace Robust.Shared.Map
                 if (_entityManager.TryGetEntity(entId, out var entity))
                 {
                     Logger.InfoS("map", $"Deleting map entity {entId}");
-                    entity.Delete();
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
                 }
 
                 if (_mapEntities.Remove(MapId.Nullspace))
@@ -208,7 +208,7 @@ namespace Robust.Shared.Map
             if (_mapEntities.TryGetValue(mapID, out var ent))
             {
                 if (_entityManager.TryGetEntity(ent, out var mapEnt))
-                    mapEnt.Delete();
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity(mapEnt.Uid);
 
                 _mapEntities.Remove(mapID);
             }
@@ -712,7 +712,7 @@ namespace Robust.Shared.Map
                 // DeleteGrid may be triggered by the entity being deleted,
                 // so make sure that's not the case.
                 if ((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt.Uid).EntityLifeStage) <= EntityLifeStage.MapInitialized)
-                    gridEnt.Delete();
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity(gridEnt.Uid);
             }
 
             grid.Dispose();

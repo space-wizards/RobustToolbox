@@ -277,7 +277,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
         {
-            Owner.SendNetworkMessage(this, message, channel);
+            IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, Owner, this, message);
         }
 
         /// <inheritdoc />

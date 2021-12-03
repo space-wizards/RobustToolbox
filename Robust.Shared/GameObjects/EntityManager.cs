@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -295,7 +296,7 @@ namespace Robust.Shared.GameObjects
 
             var uid = entity.Uid;
             var transform = entity.Transform;
-            var metadata = entity.MetaData;
+            var metadata = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid);
             entity.LifeStage = EntityLifeStage.Terminating;
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 

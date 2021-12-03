@@ -21,33 +21,33 @@ namespace Robust.Shared.GameObjects
 
         public EntityLifeStage LifeStage
         {
-            get => !IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : MetaData.EntityLifeStage;
-            internal set => MetaData.EntityLifeStage = value;
+            get => !IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage;
+            internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage = value;
         }
 
         [ViewVariables]
-        public GameTick LastModifiedTick { get => MetaData.EntityLastModifiedTick; internal set => MetaData.EntityLastModifiedTick = value; }
+        public GameTick LastModifiedTick { get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick; internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick = value; }
 
 
         [ViewVariables]
         public EntityPrototype? Prototype
         {
-            get => MetaData.EntityPrototype;
-            internal set => MetaData.EntityPrototype = value;
+            get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPrototype;
+            internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPrototype = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public string Description
         {
-            get => MetaData.EntityDescription;
-            set => MetaData.EntityDescription = value;
+            get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityDescription;
+            set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityDescription = value;
         }
 
         [ViewVariables(VVAccess.ReadWrite)]
         public string Name
         {
-            get => MetaData.EntityName;
-            set => MetaData.EntityName = value;
+            get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName;
+            set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName = value;
         }
 
         public bool Initialized => LifeStage >= EntityLifeStage.Initialized;
@@ -57,13 +57,10 @@ namespace Robust.Shared.GameObjects
         public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
 
         [ViewVariables]
-        public bool Paused { get => Deleted || MetaData.EntityPaused; set => MetaData.EntityPaused = value; }
+        public bool Paused { get => Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused; set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused = value; }
 
         [ViewVariables]
         public TransformComponent Transform => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Uid);
-
-        [ViewVariables]
-        public MetaDataComponent MetaData => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid);
 
         #endregion Members
 

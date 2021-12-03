@@ -226,7 +226,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // Update entity metadata
-            entity.MetaData.EntityPrototype = this;
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype = this;
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, IEntity entity, IComponentFactory factory,

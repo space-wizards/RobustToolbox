@@ -323,7 +323,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             public override bool CanInsert(IEntity toinsert)
             {
-                return toinsert.TryGetComponent(out IContainerManager? _);
+                return IoCManager.Resolve<IEntityManager>().TryGetComponent(toinsert.Uid, out IContainerManager? _);
             }
         }
     }

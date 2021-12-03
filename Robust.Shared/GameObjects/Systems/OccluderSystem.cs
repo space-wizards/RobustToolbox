@@ -82,7 +82,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (parent == null) break;
 
-                if (parent.TryGetComponent(out OccluderTreeComponent? comp)) return comp;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out OccluderTreeComponent? comp)) return comp;
                 parent = parent.Transform.Parent?.Owner;
             }
 

@@ -352,7 +352,7 @@ namespace Robust.Shared.Map
             }
 
             // re-use or add map component
-            if (!newMapEntity.TryGetComponent(out MapComponent? mapComp))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(newMapEntity.Uid, out MapComponent? mapComp))
             {
                 mapComp = IoCManager.Resolve<IEntityManager>().AddComponent<MapComponent>(newMapEntity);
             }

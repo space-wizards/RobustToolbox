@@ -83,7 +83,7 @@ namespace Robust.Shared.GameObjects
 
                 xform.SetAnchored(result);
 
-                if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<PhysicsComponent?>(xform.Owner.Uid, out var physicsComponent))
                 {
                     physicsComponent.BodyType = BodyType.Static;
                 }
@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
             Grid.RemoveFromSnapGridCell(tileIndices, transform.OwnerUid);
             xform.SetAnchored(false);
-            if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent<PhysicsComponent?>(xform.Owner.Uid, out var physicsComponent))
             {
                 physicsComponent.BodyType = BodyType.Dynamic;
             }

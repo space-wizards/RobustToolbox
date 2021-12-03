@@ -198,7 +198,7 @@ namespace Robust.Client.GameObjects
 
         private static void UpdateEntity(IEntity entity)
         {
-            if (entity.TryGetComponent(out SpriteComponent? sprite))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out SpriteComponent? sprite))
             {
                 sprite.ContainerOccluded = false;
 
@@ -216,7 +216,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (entity.TryGetComponent(out PointLightComponent? light))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out PointLightComponent? light))
             {
                 light.ContainerOccluded = false;
 

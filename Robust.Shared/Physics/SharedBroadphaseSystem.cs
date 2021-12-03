@@ -133,7 +133,7 @@ namespace Robust.Shared.Physics
             while (_queuedParents.TryDequeue(out var parent))
             {
                 if ((!IoCManager.Resolve<IEntityManager>().EntityExists(parent.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(parent.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                    !parent.Entity.TryGetComponent(out PhysicsComponent? body) ||
+                    !IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Entity.Uid, out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
                 UpdateBroadphase(body);
@@ -143,7 +143,7 @@ namespace Robust.Shared.Physics
             while (_queuedMoves.TryDequeue(out var move))
             {
                 if ((!IoCManager.Resolve<IEntityManager>().EntityExists(move.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(move.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                    !move.Sender.TryGetComponent(out PhysicsComponent? body) ||
+                    !IoCManager.Resolve<IEntityManager>().TryGetComponent(move.Sender.Uid, out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
                 var worldPos = move.NewPosition.ToMapPos(EntityManager);
@@ -156,7 +156,7 @@ namespace Robust.Shared.Physics
             {
                 if (!_handledThisTick.Add(rotate.Sender.Uid) ||
                     (!IoCManager.Resolve<IEntityManager>().EntityExists(rotate.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(rotate.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                    !rotate.Sender.TryGetComponent(out PhysicsComponent? body) ||
+                    !IoCManager.Resolve<IEntityManager>().TryGetComponent(rotate.Sender.Uid, out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
                 var worldPos = rotate.Sender.Transform.WorldPosition;
@@ -790,7 +790,7 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || !IoCManager.Resolve<IEntityManager>().TryGetComponent(ev.Entity.Uid, out PhysicsComponent? physicsComponent)) return;
 
             physicsComponent.CanCollide = false;
             physicsComponent.Awake = false;
@@ -798,7 +798,7 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || !ev.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || !IoCManager.Resolve<IEntityManager>().TryGetComponent(ev.Entity.Uid, out PhysicsComponent? physicsComponent)) return;
 
             physicsComponent.CanCollide = true;
             physicsComponent.Awake = true;
@@ -873,7 +873,7 @@ namespace Robust.Shared.Physics
             {
                 if (parent == null) break;
 
-                if (parent.TryGetComponent(out BroadphaseComponent? comp)) return comp;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out BroadphaseComponent? comp)) return comp;
                 parent = parent.Transform.Parent?.Owner;
             }
 

@@ -123,10 +123,10 @@ namespace Robust.Client.GameObjects
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             // Ironically this was lagging the GC lolz
-            if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Owner.Uid, out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
 
-            if (sender.Owner.TryGetComponent(out PointLightComponent? light))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Owner.Uid, out PointLightComponent? light))
                 QueueLightUpdate(light);
 
             foreach (TransformComponent child in sender.Children)
@@ -260,7 +260,7 @@ namespace Robust.Client.GameObjects
             {
                 if (parent == null) break;
 
-                if (parent.TryGetComponent(out RenderingTreeComponent? comp)) return comp;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out RenderingTreeComponent? comp)) return comp;
                 parent = parent.Transform.Parent?.Owner;
             }
 

@@ -123,7 +123,7 @@ namespace Robust.Client.GameObjects
             if(entity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid))
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!entity.TryGetComponent(out InputComponent? inputComp))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out InputComponent? inputComp))
             {
                 Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);

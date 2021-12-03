@@ -508,7 +508,7 @@ namespace Robust.Server.Maps
                 var pvs = EntitySystem.Get<PVSSystem>();
                 foreach (var entity in Entities)
                 {
-                    if (entity.TryGetComponent(out IMapGridComponent? grid))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out IMapGridComponent? grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity.Uid;
@@ -734,7 +734,7 @@ namespace Robust.Server.Maps
                     if (IsMapSavable(entity))
                     {
                         Entities.Add(entity);
-                        if (entity.TryGetComponent(out MapSaveIdComponent? mapSaveId))
+                        if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out MapSaveIdComponent? mapSaveId))
                         {
                             withUid.Add(mapSaveId);
                         }

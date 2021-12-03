@@ -568,7 +568,7 @@ namespace Robust.Shared.GameObjects
 
                 while (parent != null)
                 {
-                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out PhysicsComponent? body))
                     {
                         linearVelocity += body.LinearVelocity;
                         angularVelocity += body.AngularVelocity;
@@ -624,7 +624,7 @@ namespace Robust.Shared.GameObjects
 
                 while (parent != null)
                 {
-                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out PhysicsComponent? body))
                     {
                         velocity += body.LinearVelocity;
                     }
@@ -679,7 +679,7 @@ namespace Robust.Shared.GameObjects
 
                 while (parent != null)
                 {
-                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out PhysicsComponent? body))
                     {
                         velocity += body.AngularVelocity;
                     }
@@ -974,8 +974,8 @@ namespace Robust.Shared.GameObjects
             // Does a joint prevent collision?
             // if one of them doesn't have jointcomp then they can't share a common joint.
             // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-            if (Owner.TryGetComponent(out JointComponent? jointComponentA) &&
-                other.Owner.TryGetComponent(out JointComponent? jointComponentB))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner.Uid, out JointComponent? jointComponentA) &&
+                IoCManager.Resolve<IEntityManager>().TryGetComponent(other.Owner.Uid, out JointComponent? jointComponentB))
             {
                 var aUid = jointComponentA.Owner.Uid;
                 var bUid = jointComponentB.Owner.Uid;

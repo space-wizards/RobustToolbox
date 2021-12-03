@@ -511,7 +511,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // second level node, terminates recursion up the branch of the tree
-                    if (p.Owner.TryGetComponent(out IMapComponent? mapComp))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.Owner.Uid, out IMapComponent? mapComp))
                     {
                         value = mapComp.WorldMap;
                     }
@@ -551,7 +551,7 @@ namespace Robust.Shared.GameObjects
                 return GridId.Invalid;
             }
 
-            if (Owner.TryGetComponent(out IMapGridComponent? gridComponent))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner.Uid, out IMapGridComponent? gridComponent))
             {
                 return gridComponent.GridIndex;
             }

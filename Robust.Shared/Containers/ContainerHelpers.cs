@@ -170,7 +170,7 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
 
-            if (entity.TryGetComponent(out manager))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out manager))
                 return true;
 
             // RECURSION ALERT
@@ -272,7 +272,7 @@ namespace Robust.Shared.Containers
         public static T CreateContainer<T>(this IEntity entity, string containerId)
             where T : IContainer
         {
-            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<IContainerManager?>(entity.Uid, out var containermanager))
                 containermanager = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(entity);
 
             return containermanager.MakeContainer<T>(containerId);

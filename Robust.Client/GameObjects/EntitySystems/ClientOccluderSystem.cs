@@ -71,7 +71,7 @@ namespace Robust.Client.GameObjects
         {
             var sender = ev.Sender;
             if (IoCManager.Resolve<IEntityManager>().EntityExists(sender.Uid) &&
-                sender.TryGetComponent(out ClientOccluderComponent? iconSmooth)
+                IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Uid, out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {
                 var grid1 = _mapManager.GetGrid(sender.Transform.GridID);

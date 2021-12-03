@@ -53,13 +53,13 @@ namespace Robust.Shared.GameObjects
 
             DebugTools.Assert(chunk.ValidTiles > 0);
 
-            if (!gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(gridEnt.Uid, out PhysicsComponent? physicsComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
-            if (!gridEnt.TryGetComponent(out FixturesComponent? fixturesComponent))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(gridEnt.Uid, out FixturesComponent? fixturesComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(fixturesComponent)}");
                 return;

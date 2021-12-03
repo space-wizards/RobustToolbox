@@ -42,7 +42,7 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestEntity = snapToEntities[0];
-            if (!closestEntity.TryGetComponent<ISpriteComponent>(out var component) || component.BaseRSI == null)
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ISpriteComponent?>(closestEntity.Uid, out var component) || component.BaseRSI == null)
             {
                 return;
             }

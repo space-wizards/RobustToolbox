@@ -43,7 +43,7 @@ namespace Robust.Shared.GameObjects
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (Owner.TryGetComponent(out IPhysBody? body) && (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityLifeStage) < EntityLifeStage.Terminating)
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner.Uid, out IPhysBody? body) && (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityLifeStage) < EntityLifeStage.Terminating)
             {
                 body.CanCollide = true;
             }

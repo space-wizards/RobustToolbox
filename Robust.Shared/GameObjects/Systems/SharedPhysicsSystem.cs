@@ -143,14 +143,14 @@ namespace Robust.Shared.GameObjects
             var entity = args.Entity;
 
             if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized) ||
-                !entity.TryGetComponent(out PhysicsComponent? body) ||
+                !IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out PhysicsComponent? body) ||
                 entity.IsInContainer()) return;
 
             var oldParent = args.OldParent;
             var linearVelocityDiff = Vector2.Zero;
             var angularVelocityDiff = 0f;
 
-            if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
+            if (oldParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParent.Uid, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
@@ -160,7 +160,7 @@ namespace Robust.Shared.GameObjects
 
             var newParent = entity.Transform.Parent?.Owner;
 
-            if (newParent != null && newParent.TryGetComponent(out PhysicsComponent? newBody))
+            if (newParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(newParent.Uid, out PhysicsComponent? newBody))
             {
                 var (linear, angular) = newBody.MapVelocities;
 
@@ -234,7 +234,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapChange(EntMapIdChangedMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity.Uid, out PhysicsComponent? physicsComponent))
                 return;
 
             Get<SharedJointSystem>().ClearJoints(physicsComponent);
@@ -296,7 +296,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity.Uid, out PhysicsComponent? physicsComponent)) return;
 
             var mapId = message.Container.Owner.Transform.MapID;
 
@@ -313,7 +313,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity.Uid, out PhysicsComponent? physicsComponent)) return;
 
             var mapId = message.Container.Owner.Transform.MapID;
 

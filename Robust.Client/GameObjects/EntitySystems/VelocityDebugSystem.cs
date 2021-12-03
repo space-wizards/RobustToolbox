@@ -35,7 +35,7 @@ namespace Robust.Client.GameObjects
 
             var player = _playerManager.LocalPlayer?.ControlledEntity;
 
-            if (player == null || !player.TryGetComponent(out PhysicsComponent? body))
+            if (player == null || !IoCManager.Resolve<IEntityManager>().TryGetComponent(player.Uid, out PhysicsComponent? body))
             {
                 _label.Visible = false;
                 return;

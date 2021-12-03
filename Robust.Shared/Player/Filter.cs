@@ -184,7 +184,7 @@ namespace Robust.Shared.Player
         {
             return RemoveWhere(session =>
                 session.AttachedEntity == null
-                || !session.AttachedEntity.TryGetComponent(out SharedEyeComponent? eye)
+                || !IoCManager.Resolve<IEntityManager>().TryGetComponent(session.AttachedEntity.Uid, out SharedEyeComponent? eye)
                 || (eye.VisibilityMask & flag) == 0);
         }
 

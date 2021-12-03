@@ -589,7 +589,7 @@ namespace Robust.Shared.GameObjects
 
         private bool Intersecting(IEntity entity, Vector2 mapPosition)
         {
-            if (entity.TryGetComponent(out IPhysBody? component))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out IPhysBody? component))
             {
                 if (component.GetWorldAABB().Contains(mapPosition))
                     return true;
@@ -749,7 +749,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (parent == null) break;
 
-                if (parent.TryGetComponent(out EntityLookupComponent? comp)) return comp;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out EntityLookupComponent? comp)) return comp;
                 parent = parent.Transform.Parent?.Owner;
             }
 
@@ -851,7 +851,7 @@ namespace Robust.Shared.GameObjects
 
             pos = ent.Transform.WorldPosition;
 
-            return ent.TryGetComponent(out ILookupWorldBox2Component? lookup) ?
+            return IoCManager.Resolve<IEntityManager>().TryGetComponent(ent.Uid, out ILookupWorldBox2Component? lookup) ?
                 lookup.GetWorldAABB(pos) :
                 new Box2(pos, pos);
         }

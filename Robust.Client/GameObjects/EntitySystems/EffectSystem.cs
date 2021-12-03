@@ -119,8 +119,6 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Entity that the effect is attached to
             /// </summary>
-            public IEntity? AttachedEntity { get; set; }
-
             public EntityUid? AttachedEntityUid { get; }
 
             /// <summary>

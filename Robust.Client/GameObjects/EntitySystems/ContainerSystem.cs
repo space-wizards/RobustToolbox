@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
-        private readonly HashSet<IEntity> _updateQueue = new();
+        private readonly HashSet<EntityUid> _updateQueue = new();
 
         public readonly Dictionary<EntityUid, IContainer> ExpectedEntities = new();
 
@@ -89,12 +89,12 @@ namespace Robust.Client.GameObjects
                 container.OccludesLight = occludesLight;
 
                 // Remove gone entities.
-                List<IEntity>? toRemove = null;
+                List<EntityUid>? toRemove = null;
                 foreach (var entity in container.ContainedEntities)
                 {
                     if (!entityUids.Contains(entity))
                     {
-                        toRemove ??= new List<IEntity>();
+                        toRemove ??= new List<EntityUid>();
                         toRemove.Add(entity);
                     }
                 }

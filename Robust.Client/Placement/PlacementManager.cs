@@ -99,7 +99,7 @@ namespace Robust.Client.Placement
         /// Colour of this gets swapped around in PlacementMode.
         /// This entity needs to stay in nullspace.
         /// </summary>
-        public IEntity? CurrentPlacementOverlayEntity { get; set; }
+        public EntityUid? CurrentPlacementOverlayEntity { get; set; }
 
         /// <summary>
         /// A BAD way to explicitly control the icons used!!!

@@ -42,9 +42,8 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity? AttachedEntity { get; set; }
-
-        [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity;
+        /// <inheritdoc />
+        [ViewVariables] public EntityUid? AttachedEntityUid { get; set; }
 
         private SessionStatus _status = SessionStatus.Connecting;
 
@@ -113,7 +112,7 @@ namespace Robust.Server.Player
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
-        public void AttachToEntity(IEntity? entity)
+        public void AttachToEntity(EntityUid? entity)
         {
             DetachFromEntity();
 
@@ -154,7 +153,7 @@ namespace Robust.Server.Player
 
             if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntityUid.Value))
             {
-                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
+                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntityUid}\"! Is it missing an ActorComponent?");
             }
         }
 
@@ -178,9 +177,9 @@ namespace Robust.Server.Player
 
         private void SetAttachedEntityName()
         {
-            if (Name != null && AttachedEntity != null)
+            if (Name != null && AttachedEntityUid != null)
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity).EntityName = Name;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntityUid!.Value).EntityName = Name;
             }
         }
 
@@ -199,7 +198,7 @@ namespace Robust.Server.Player
         public LoginType AuthType => ConnectedClient.AuthType;
 
         /// <inheritdoc />
-        void IPlayerSession.SetAttachedEntity(IEntity? entity)
+        void IPlayerSession.SetAttachedEntity(EntityUid? entity)
         {
             // TODO: Use EntityUid for this.
             AttachedEntity = entity;

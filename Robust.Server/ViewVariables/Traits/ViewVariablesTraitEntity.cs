@@ -10,11 +10,11 @@ namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitEntity : ViewVariablesTrait
     {
-        private readonly IEntity _entity;
+        private readonly EntityUid _entity;
 
         public ViewVariablesTraitEntity(IViewVariablesSession session) : base(session)
         {
-            _entity = (IEntity) Session.Object;
+            _entity = (EntityUid) Session.Object;
         }
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)

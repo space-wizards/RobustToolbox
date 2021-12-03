@@ -9,7 +9,7 @@ namespace Robust.Shared.GameObjects
     ///     This can be used by the EntityManager to reference an IEntity.
     /// </summary>
     [Serializable, NetSerializable]
-    public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
+    public class EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
     {
         /// <summary>
         ///     If this bit is set on a UID, it's client sided.

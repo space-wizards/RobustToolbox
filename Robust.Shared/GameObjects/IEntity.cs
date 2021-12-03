@@ -6,26 +6,12 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [CopyByRef, Serializable]
-    public sealed class IEntity
+    public sealed class IEntity : EntityUid
     {
-        #region Members
+        [ViewVariables] public EntityUid Uid => this;
 
-        [ViewVariables]
-        public EntityUid Uid { get; }
-
-        #endregion Members
-
-        #region Initialization
-
-        public IEntity(EntityUid uid)
+        public IEntity(int uid) : base(uid)
         {
-            Uid = uid;
         }
-
-        #endregion Initialization
-
-        #region Components
-
-        #endregion Components
     }
 }

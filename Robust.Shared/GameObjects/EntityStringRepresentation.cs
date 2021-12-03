@@ -25,7 +25,6 @@ public readonly record struct EntityStringRepresentation
 
         return $"{Name} ({Uid}{(Prototype != null ? $", {Prototype}" : "")}{(Session != null ? $", {Session.Name}" : "")}){(Deleted ? "D" : "")}";
     }
-
-    public static implicit operator EntityUid(EntityStringRepresentation rep) => rep.Uid;
+    
     public static implicit operator string(EntityStringRepresentation rep) => rep.ToString();
 }

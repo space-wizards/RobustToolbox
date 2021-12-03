@@ -69,7 +69,7 @@ namespace Robust.Client.ViewVariables.Instances
 
         public override void Initialize(SS14Window window, object obj)
         {
-            _entity = (IEntity) obj;
+            _entity = (EntityUid) obj;
 
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);

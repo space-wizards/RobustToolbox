@@ -22,19 +22,19 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Incorrect number of arguments. " + Help);
             }
 
-            if (args.Length == 1 && player?.AttachedEntity != null)
+            if (args.Length == 1 && player != null && player.AttachedEntity != null)
             {
-                ent.SpawnEntity(args[0], IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).Coordinates);
+                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(player.AttachedEntity).Coordinates);
             }
             else if (args.Length == 2)
             {
-                IEntity tempQualifier = ent.GetEntity(EntityUid.Parse(args[1]));
-                ent.SpawnEntity(args[0], IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).Coordinates);
+                var uid = ent.GetEntity(EntityUid.Parse(args[1]));
+                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(uid).Coordinates);
             }
-            else if (player?.AttachedEntity != null)
+            else if (player != null && player.AttachedEntity != null)
             {
                 var coords = new MapCoordinates(float.Parse(args[1]),
-                    float.Parse(args[2]), IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).MapID);
+                    float.Parse(args[2]), ent.GetComponent<TransformComponent>(player.AttachedEntity).MapID);
                 ent.SpawnEntity(args[0], coords);
             }
         }

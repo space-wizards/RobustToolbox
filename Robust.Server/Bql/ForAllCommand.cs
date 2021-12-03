@@ -58,16 +58,17 @@ namespace Robust.Server.Bql
             {
                 if (player.AttachedEntity != null)
                 {
-                    var p = player.AttachedEntity;
+                    var puid= player.AttachedEntity;
+                    var ptransform = entMan.GetComponent<TransformComponent>(puid);
                     ruleString = ruleString.Replace("$PID", ent.ToString());
                     ruleString = ruleString.Replace("$PWX",
-                        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(p).WorldPosition.X.ToString(CultureInfo.InvariantCulture));
+                        ptransform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PWY",
-                        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(p).WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
+                        ptransform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PLX",
-                        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(p).LocalPosition.X.ToString(CultureInfo.InvariantCulture));
+                        ptransform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PLY",
-                        IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(p).LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
+                        ptransform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
                 }
             }
 

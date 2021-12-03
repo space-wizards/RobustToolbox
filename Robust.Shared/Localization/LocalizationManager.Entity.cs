@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
+using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
@@ -29,13 +30,13 @@ namespace Robust.Shared.Localization
                 return true;
             }
 
-            if (entity.Prototype == null)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype == null)
             {
                 value = null;
                 return false;
             }
 
-            var data = GetEntityData(entity.Prototype.ID);
+            var data = GetEntityData(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype.ID);
             return data.Attributes.TryGetValue(attribute, out value);
         }
 

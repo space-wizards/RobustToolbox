@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Server.GameObjects
             Assert.That(() => EntityManager.SpawnEntity(prototypeName, MapCoordinates.Nullspace),
                 Throws.TypeOf<EntityCreationException>());
 
-            Assert.That(EntityManager.GetEntities().Where(p => p.Prototype?.ID == prototypeName), Is.Empty);
+            Assert.That(EntityManager.GetEntities().Where(p => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(p.Uid).EntityPrototype?.ID == prototypeName), Is.Empty);
         }
 
         private sealed class ThrowsInAddComponent : Component

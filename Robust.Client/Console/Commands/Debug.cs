@@ -23,6 +23,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
@@ -43,7 +44,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
             {
-                shell.WriteLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.");
+                shell.WriteLine($"entity {e.Uid}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype?.ID}, {e.Transform.Coordinates}.");
             }
         }
     }
@@ -244,7 +245,7 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            shell.WriteLine($"{entity.Uid}: {entity.Prototype?.ID}/{entity.Name}");
+            shell.WriteLine($"{entity.Uid}: {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.ID}/{entity.Name}");
             shell.WriteLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
             foreach (var component in entity.GetAllComponents())
             {

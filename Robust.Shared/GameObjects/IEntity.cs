@@ -23,13 +23,6 @@ namespace Robust.Shared.GameObjects
         public GameTick LastModifiedTick { get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick; internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick = value; }
 
 
-        [ViewVariables]
-        public EntityPrototype? Prototype
-        {
-            get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPrototype;
-            internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPrototype = value;
-        }
-
         [ViewVariables(VVAccess.ReadWrite)]
         public string Description
         {

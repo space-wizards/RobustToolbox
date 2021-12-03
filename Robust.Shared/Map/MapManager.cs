@@ -711,7 +711,7 @@ namespace Robust.Shared.Map
             {
                 // DeleteGrid may be triggered by the entity being deleted,
                 // so make sure that's not the case.
-                if (gridEnt.LifeStage <= EntityLifeStage.MapInitialized)
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt.Uid).EntityLifeStage) <= EntityLifeStage.MapInitialized)
                     gridEnt.Delete();
             }
 

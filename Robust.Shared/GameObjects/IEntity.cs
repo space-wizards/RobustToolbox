@@ -19,12 +19,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
-        public EntityLifeStage LifeStage
-        {
-            get => !IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage;
-            internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage = value;
-        }
-
         [ViewVariables]
         public GameTick LastModifiedTick { get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick; internal set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLastModifiedTick = value; }
 
@@ -50,11 +44,11 @@ namespace Robust.Shared.GameObjects
             set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName = value;
         }
 
-        public bool Initialized => LifeStage >= EntityLifeStage.Initialized;
+        public bool Initialized => (!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Initialized;
 
-        public bool Initializing => LifeStage == EntityLifeStage.Initializing;
+        public bool Initializing => (!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) == EntityLifeStage.Initializing;
 
-        public bool Deleted => LifeStage >= EntityLifeStage.Deleted;
+        public bool Deleted => (!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted;
 
         [ViewVariables]
         public bool Paused { get => Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused; set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused = value; }

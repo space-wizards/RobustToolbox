@@ -279,7 +279,7 @@ namespace Robust.Shared.GameObjects
             if (e.Deleted)
                 return;
 
-            if (e.LifeStage >= EntityLifeStage.Terminating)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityLifeStage) >= EntityLifeStage.Terminating)
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException("Called Delete on an entity already being deleted.");
 #else
@@ -297,7 +297,7 @@ namespace Robust.Shared.GameObjects
             var uid = entity.Uid;
             var transform = entity.Transform;
             var metadata = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid);
-            entity.LifeStage = EntityLifeStage.Terminating;
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage = EntityLifeStage.Terminating;
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly

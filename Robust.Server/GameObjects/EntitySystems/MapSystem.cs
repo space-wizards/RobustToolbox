@@ -59,7 +59,7 @@ namespace Robust.Server.GameObjects
         {
             if (!_deleteEmptyGrids ||
                 !EntityManager.TryGetEntity(uid, out var gridEnt) ||
-                gridEnt.LifeStage >= EntityLifeStage.Terminating) return;
+                (!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt.Uid).EntityLifeStage) >= EntityLifeStage.Terminating) return;
 
             MapManager.DeleteGrid(args.GridId);
         }

@@ -28,9 +28,6 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables]
-        public bool Paused { get => (!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused; set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityPaused = value; }
-
-        [ViewVariables]
         public TransformComponent Transform => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Uid);
 
         #endregion Members

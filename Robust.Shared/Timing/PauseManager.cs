@@ -28,7 +28,7 @@ namespace Robust.Shared.Timing
 
                 foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
                 {
-                    entity.Paused = true;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = true;
                 }
             }
             else
@@ -37,7 +37,7 @@ namespace Robust.Shared.Timing
 
                 foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
                 {
-                    entity.Paused = false;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = false;
                 }
             }
         }
@@ -52,7 +52,7 @@ namespace Robust.Shared.Timing
             foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
                 entity.RunMapInit();
-                entity.Paused = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = false;
             }
         }
 
@@ -71,7 +71,7 @@ namespace Robust.Shared.Timing
                     continue;
 
                 entity.RunMapInit();
-                entity.Paused = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = false;
             }
         }
 

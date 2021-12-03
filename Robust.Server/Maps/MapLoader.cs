@@ -137,7 +137,7 @@ namespace Robust.Server.Maps
                 {
                     foreach (var entity in context.Entities)
                     {
-                        entity.Paused = true;
+                        IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = true;
                     }
                 }
             }

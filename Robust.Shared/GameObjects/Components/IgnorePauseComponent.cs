@@ -11,7 +11,7 @@ namespace Robust.Shared.GameObjects
         protected override void OnAdd()
         {
             base.OnAdd();
-            Owner.Paused = false;
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityPaused = false;
         }
 
         protected override void OnRemove()
@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
             base.OnRemove();
             if (IoCManager.Resolve<IPauseManager>().IsMapPaused(Owner.Transform.MapID))
             {
-                Owner.Paused = true;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityPaused = true;
             }
         }
     }

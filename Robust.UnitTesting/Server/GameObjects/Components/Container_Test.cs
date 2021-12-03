@@ -153,7 +153,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(entityItem.Transform.Parent!.Owner, Is.EqualTo(entityOne));
 
             entityOne.Delete();
-            Assert.That(entityTwo.Transform.Deleted, Is.True);
+            Assert.That(entityTwo.Deleted, Is.True);
         }
 
         [Test]

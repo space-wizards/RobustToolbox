@@ -87,6 +87,13 @@ namespace Robust.Server.GameObjects
             return entity;
         }
 
+        public override EntityStringRepresentation ToPrettyString(EntityUid uid)
+        {
+            TryGetComponent(uid, out ActorComponent? actor);
+
+            return base.ToPrettyString(uid) with { Session = actor?.PlayerSession };
+        }
+
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;

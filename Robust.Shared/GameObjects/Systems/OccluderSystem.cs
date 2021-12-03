@@ -72,7 +72,7 @@ namespace Robust.Shared.GameObjects
         {
             var entity = component.Owner;
 
-            if (entity.Transform.MapID == MapId.Nullspace) return null;
+            if (entity.Deleted || entity.Transform.MapID == MapId.Nullspace) return null;
 
             var parent = entity.Transform.Parent?.Owner;
 

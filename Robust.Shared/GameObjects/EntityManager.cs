@@ -293,10 +293,10 @@ namespace Robust.Shared.GameObjects
             if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
 
+            var uid = entity.Uid;
             var transform = entity.Transform;
             var metadata = entity.MetaData;
             entity.LifeStage = EntityLifeStage.Terminating;
-
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
@@ -306,8 +306,12 @@ namespace Robust.Shared.GameObjects
                 RecursiveDeleteEntity(childTransform.Owner);
             }
 
-            // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(entity.Uid);
+            // Shut down all components.
+            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            {
+                if(component.Running)
+                    component.LifeShutdown();
+            }
 
             // map does not have a parent node, everything else needs to be detached
             if (transform.ParentUid != EntityUid.Invalid)
@@ -315,6 +319,9 @@ namespace Robust.Shared.GameObjects
                 // Detach from my parent, if any
                 transform.DetachParentToNull();
             }
+
+            // Dispose all my components, in a safe order so transform is available
+            DisposeComponents(entity.Uid);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
@@ -343,7 +350,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(uid, out _);
+            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
         }
 
         /// <summary>
@@ -402,7 +409,6 @@ namespace Robust.Shared.GameObjects
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
             var metadata = new MetaDataComponent() { Owner = entity };
-            entity.MetaData = metadata;
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid.Value, metadata);
@@ -473,15 +479,15 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual string ToPrettyString(EntityUid uid)
+        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
             if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
-                return $"{uid}D";
+                return new EntityStringRepresentation(uid, true);
 
-            var metaData = (MetaDataComponent) component;
+            var metadata = (MetaDataComponent) component;
 
-            return $"{metaData.EntityName} ({uid}, {metaData.EntityPrototype?.ID}){(metaData.EntityDeleted ? "D" : "")}";
+            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
         }
 
 #endregion Entity Management

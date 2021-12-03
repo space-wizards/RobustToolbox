@@ -58,7 +58,7 @@ internal partial class PVSSystem : EntitySystem
     private float _viewSize;
 
     /// <summary>
-    /// All <see cref="EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
+    /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 

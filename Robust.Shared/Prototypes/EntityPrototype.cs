@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -185,12 +186,12 @@ namespace Robust.Shared.Prototypes
 
             var factory = IoCManager.Resolve<IComponentFactory>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var oldPrototype = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype;
+            var oldPrototype = entityManager.GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype;
 
-            var oldPrototypeComponents = oldPrototype.Components.Keys
+            var oldPrototypeComponents = oldPrototype?.Components.Keys
                 .Where(n => n != "Transform" && n != "MetaData")
                 .Select(name => (name, factory.GetRegistration(name).Type))
-                .ToList();
+                .ToList() ?? new List<(string name, Type Type)>();
             var newPrototypeComponents = Components.Keys
                 .Where(n => n != "Transform" && n != "MetaData")
                 .Select(name => (name, factory.GetRegistration(name).Type))

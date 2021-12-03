@@ -30,13 +30,13 @@ namespace Robust.Shared.Localization
                 return true;
             }
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype == null)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype is not {} prototype)
             {
                 value = null;
                 return false;
             }
 
-            var data = GetEntityData(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype.ID);
+            var data = GetEntityData(prototype.ID);
             return data.Attributes.TryGetValue(attribute, out value);
         }
 

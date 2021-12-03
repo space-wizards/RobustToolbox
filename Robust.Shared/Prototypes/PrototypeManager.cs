@@ -362,7 +362,7 @@ namespace Robust.Shared.Prototypes
             foreach (var prototype in pushed[typeof(EntityPrototype)])
             {
                 foreach (var entity in _entityManager.GetEntities()
-                    .Where(e => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype != null && IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype.ID == prototype))
+                    .Where(e => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype != null && IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype?.ID == prototype))
                 {
                     ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((IEntity) entity);
                 }

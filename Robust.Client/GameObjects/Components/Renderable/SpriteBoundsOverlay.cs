@@ -75,11 +75,11 @@ namespace Robust.Client.GameObjects
 
             foreach (var comp in _renderTree.GetRenderTrees(currentMap, viewport))
             {
-                var localAABB = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid).InvWorldMatrix.TransformBox(viewport);
+                var localAABB = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(viewport);
 
                 foreach (var sprite in comp.SpriteTree.QueryAabb(localAABB))
                 {
-                    var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sprite.Owner.Uid).WorldPosition;
+                    var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sprite.Owner).WorldPosition;
                     var bounds = sprite.CalculateBoundingBox(worldPos);
                     handle.DrawRect(bounds, Color.Red.WithAlpha(0.2f));
                     handle.DrawRect(bounds.Scale(0.2f).Translated(-new Vector2(0f, bounds.Extents.Y)), Color.Blue.WithAlpha(0.5f));

@@ -96,17 +96,17 @@ Mouse Pos:
             }
             else
             {
-                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity.Uid);
+                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity);
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity.Uid).Coordinates;
+                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity).Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
     EntId: {3}
-    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid,
+    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner,
                     entityTransform.GridID);
             }
 

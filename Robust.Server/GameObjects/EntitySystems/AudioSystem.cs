@@ -86,7 +86,7 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            return Play(playerFilter, filename, entity.Uid, audioParams);
+            return Play(playerFilter, filename, (EntityUid) entity, audioParams);
         }
 
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)

@@ -118,7 +118,7 @@ namespace Robust.Client.GameObjects
 
             _eye = new Eye
             {
-                Position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapPosition,
+                Position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapPosition,
                 Zoom = _setZoomOnInitialize,
                 DrawFov = _setDrawFovOnInitialize
             };
@@ -166,7 +166,7 @@ namespace Robust.Client.GameObjects
         public void UpdateEyePosition()
         {
             if (_eye == null) return;
-            var mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapPosition;
+            var mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapPosition;
             _eye.Position = new MapCoordinates(mapPos.Position, mapPos.MapId);
         }
     }

@@ -18,12 +18,12 @@ namespace Robust.Server.GameObjects
             {
                 foreach (var entity in _entities)
                 {
-                    if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
+                    if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted))
                     {
                         yield return entity;
                     }
 
-                    if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out ContainerManagerComponent? containerManager)) continue;
+                    if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out ContainerManagerComponent? containerManager)) continue;
                     foreach (var container in containerManager.GetAllContainers())
                     {
                         foreach (var child in container.ContainedEntities)

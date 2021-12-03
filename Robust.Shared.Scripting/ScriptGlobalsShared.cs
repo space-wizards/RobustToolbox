@@ -54,7 +54,7 @@ namespace Robust.Shared.Scripting
         public T gcm<T>(int i)
         {
             IEntity tempQualifier = getent(i);
-            return IoCManager.Resolve<IEntityManager>().GetComponent<T>(tempQualifier.Uid);
+            return IoCManager.Resolve<IEntityManager>().GetComponent<T>(tempQualifier);
         }
 
         public IEntity getent(EntityUid uid)

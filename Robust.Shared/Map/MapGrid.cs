@@ -110,7 +110,7 @@ namespace Robust.Shared.Map
                 if(GridEntityId.IsValid())
                 {
                     IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldPosition;
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition;
                 }
 
                 return Vector2.Zero;
@@ -118,7 +118,7 @@ namespace Robust.Shared.Map
             set
             {
                 IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldPosition = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -133,7 +133,7 @@ namespace Robust.Shared.Map
                 if(GridEntityId.IsValid())
                 {
                     IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldRotation;
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldRotation;
                 }
 
                 return Angle.Zero;
@@ -141,7 +141,7 @@ namespace Robust.Shared.Map
             set
             {
                 IEntity tempQualifier = _mapManager.EntityManager.GetEntity(GridEntityId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldRotation = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldRotation = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

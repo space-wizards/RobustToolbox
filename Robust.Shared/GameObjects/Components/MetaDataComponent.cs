@@ -143,11 +143,11 @@ namespace Robust.Shared.GameObjects
             get => _entityPaused;
             set
             {
-                if (_entityPaused == value || value && IoCManager.Resolve<IEntityManager>().HasComponent<IgnorePauseComponent>(Owner.Uid))
+                if (_entityPaused == value || value && IoCManager.Resolve<IEntityManager>().HasComponent<IgnorePauseComponent>(Owner))
                     return;
 
                 _entityPaused = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new EntityPausedEvent(Owner.Uid, value));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 

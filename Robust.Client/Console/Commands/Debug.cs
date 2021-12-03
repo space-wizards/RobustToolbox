@@ -43,9 +43,9 @@ namespace Robust.Client.Console.Commands
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
+            foreach (var e in entityManager.GetEntities().OrderBy(e => (EntityUid) e))
             {
-                shell.WriteLine($"entity {e.Uid}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype?.ID}, {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(e.Uid).Coordinates}.");
+                shell.WriteLine($"entity {e}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(e).Coordinates}.");
             }
         }
     }
@@ -246,9 +246,9 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            shell.WriteLine($"{entity.Uid}: {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.ID}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName}");
-            shell.WriteLine($"init/del/lmt: {(!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized}/{(!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick}");
-            foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(entity.Uid))
+            shell.WriteLine($"{entity}: {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}");
+            shell.WriteLine($"init/del/lmt: {(!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized}/{(!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick}");
+            foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(entity))
             {
                 shell.WriteLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)

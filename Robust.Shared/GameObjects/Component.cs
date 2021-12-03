@@ -41,11 +41,11 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityUid OwnerUid => Owner.Uid;
+        public EntityUid OwnerUid => Owner;
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Paused => (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityPaused;
+        public bool Paused => (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityPaused;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -260,7 +260,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendMessage(ComponentMessage message)
         {
-            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner.Uid);
+            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner);
             foreach (var component in components)
             {
                 if (this != component)

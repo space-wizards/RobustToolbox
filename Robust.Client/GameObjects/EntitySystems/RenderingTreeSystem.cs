@@ -44,11 +44,11 @@ namespace Robust.Client.GameObjects
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
                 IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
-                yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier.Uid);
+                yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
             IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
-            yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1.Uid);
+            yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
         internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
@@ -58,11 +58,11 @@ namespace Robust.Client.GameObjects
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
                 IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
-                yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier.Uid);
+                yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
             IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
-            yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1.Uid);
+            yield return IoCManager.Resolve<IEntityManager>().GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
         public override void Initialize()
@@ -110,23 +110,23 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMoved(ref MoveEvent args)
         {
-            AnythingMovedSubHandler(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(args.Sender.Uid));
+            AnythingMovedSubHandler(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(args.Sender));
         }
 
         private void AnythingMovedSubHandler(TransformComponent sender)
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
-            if (!_checkedChildren.Add(sender.Owner.Uid) ||
-                IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(sender.Owner.Uid)) return;
+            if (!_checkedChildren.Add(sender.Owner) ||
+                IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(sender.Owner)) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             // Ironically this was lagging the GC lolz
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Owner.Uid, out SpriteComponent? sprite))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Owner, out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Owner.Uid, out PointLightComponent? light))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Owner, out PointLightComponent? light))
                 QueueLightUpdate(light);
 
             foreach (TransformComponent child in sender.Children)
@@ -251,17 +251,17 @@ namespace Robust.Client.GameObjects
 
         internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID == MapId.Nullspace ||
-                IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(entity.Uid)) return null;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace ||
+                IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(entity)) return null;
 
-            var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent?.Owner;
+            var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent?.Owner;
 
             while (true)
             {
                 if (parent == null) break;
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out RenderingTreeComponent? comp)) return comp;
-                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out RenderingTreeComponent? comp)) return comp;
+                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
             }
 
             return null;
@@ -288,7 +288,7 @@ namespace Robust.Client.GameObjects
                 var oldMapTree = sprite.RenderTree;
                 var newMapTree = GetRenderTree(sprite.Owner);
                 // TODO: Temp PVS guard
-                var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sprite.Owner.Uid).WorldPosition;
+                var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sprite.Owner).WorldPosition;
 
                 if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {
@@ -325,7 +325,7 @@ namespace Robust.Client.GameObjects
                 var oldMapTree = light.RenderTree;
                 var newMapTree = GetRenderTree(light.Owner);
                 // TODO: Temp PVS guard
-                var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(light.Owner.Uid).WorldPosition;
+                var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(light.Owner).WorldPosition;
 
                 if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {

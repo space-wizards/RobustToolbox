@@ -88,13 +88,13 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
             var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
-            entMan.InitializeComponents(oldEntity.Uid);
+            entMan.InitializeComponents(oldEntity);
 
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
             Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(oldEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(oldEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(oldEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(oldEntity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
 
         }
 
@@ -118,10 +118,10 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.SetMapEntity(mapID, newMapEntity);
 
             // Assert
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(oldMapEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(oldMapEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted);
-            Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(newMapEntity.Uid));
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(oldMapEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(oldMapEntity).EntityLifeStage) >= EntityLifeStage.Deleted);
+            Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(newMapEntity));
 
-            var mapComp = IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(newMapEntity.Uid);
+            var mapComp = IoCManager.Resolve<IEntityManager>().GetComponent<IMapComponent>(newMapEntity);
             Assert.That(mapComp.WorldMap == mapID);
         }
 
@@ -141,7 +141,7 @@ namespace Robust.UnitTesting.Shared.Map
             var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             // Assert
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).MapID, Is.EqualTo(MapId.Nullspace));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).MapID, Is.EqualTo(MapId.Nullspace));
         }
 
         [Test]
@@ -154,7 +154,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
             Assert.That(mapMan.GetMapEntityId(MapId.Nullspace), Is.EqualTo(EntityUid.Invalid));
         }
     }

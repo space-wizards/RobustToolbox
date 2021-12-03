@@ -47,7 +47,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Entity Uid that this component is attached to.
         /// </summary>
-        EntityUid OwnerUid => Owner.Uid;
+        EntityUid OwnerUid => Owner;
 
         /// <summary>
         /// Component has been properly initialized.

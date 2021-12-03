@@ -11,15 +11,15 @@ namespace Robust.Shared.GameObjects
         protected override void OnAdd()
         {
             base.OnAdd();
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityPaused = false;
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityPaused = false;
         }
 
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID))
+            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityPaused = true;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityPaused = true;
             }
         }
     }

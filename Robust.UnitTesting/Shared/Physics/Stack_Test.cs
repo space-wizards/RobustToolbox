@@ -62,7 +62,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 mapId = mapManager.CreateMap();
 
                 IEntity tempQualifier2 = mapManager.GetMapEntity(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2.Uid).Gravity = new Vector2(0, -9.8f);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
                 IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
@@ -126,7 +126,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 }
 
                 IEntity tempQualifier3 = bodies[0].Owner;
-                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3.Uid).WorldPosition;
+                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -135,7 +135,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 IEntity tempQualifier = bodies[0].Owner;
-                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldPosition);
+                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition);
             });
 
             // Assert
@@ -150,7 +150,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     for (var i = 0; i < bodies.Length; i++)
                     {
                         var body = bodies[j * columnCount + i];
-                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner.Uid).WorldPosition;
+                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner).WorldPosition;
 
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
@@ -181,7 +181,7 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 mapId = mapManager.CreateMap();
                 IEntity tempQualifier2 = mapManager.GetMapEntity(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2.Uid).Gravity = new Vector2(0, -9.8f);
+                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
                 IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
@@ -241,7 +241,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 }
 
                 IEntity tempQualifier3 = bodies[0].Owner;
-                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3.Uid).WorldPosition;
+                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -250,7 +250,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 IEntity tempQualifier = bodies[0].Owner;
-                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldPosition);
+                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition);
             });
 
             // Assert
@@ -265,7 +265,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     for (var i = 0; i < bodies.Length; i++)
                     {
                         var body = bodies[j * columnCount + i];
-                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner.Uid).WorldPosition;
+                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner).WorldPosition;
 
                         var expectedY = 0.5f + i;
 

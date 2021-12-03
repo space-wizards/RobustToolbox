@@ -8,8 +8,6 @@ namespace Robust.Shared.GameObjects
     [CopyByRef, Serializable]
     public sealed class IEntity : EntityUid
     {
-        [ViewVariables] public EntityUid Uid => this;
-
         public IEntity(int uid) : base(uid)
         {
         }

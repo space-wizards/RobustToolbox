@@ -19,7 +19,7 @@ namespace Robust.Shared.GameObjects
         public static bool EnsureComponent<T>(this IEntity entity, out T component) where T : Component, new()
         {
             ref T? comp = ref component!;
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out comp))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out comp))
             {
                 return true;
             }
@@ -37,7 +37,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>The existing component, or the new component if none existed yet.</returns>
         public static T EnsureComponent<T>(this IEntity entity) where T : Component, new()
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out T? component))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out T? component))
             {
                 return component;
             }
@@ -60,12 +60,12 @@ namespace Robust.Shared.GameObjects
         public static bool EnsureComponentWarn<T>(this IEntity entity, out T component, string? warning = null) where T : Component, new()
         {
             ref T? comp = ref component!;
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out comp))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out comp))
             {
                 return true;
             }
 
-            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapPosition} did not have a {typeof(T)}";
+            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 
@@ -86,12 +86,12 @@ namespace Robust.Shared.GameObjects
         /// <returns>The existing component, or the new component if none existed yet.</returns>
         public static T EnsureComponentWarn<T>(this IEntity entity, string? warning = null) where T : Component, new()
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out T? component))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out T? component))
             {
                 return component;
             }
 
-            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapPosition} did not have a {typeof(T)}";
+            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 

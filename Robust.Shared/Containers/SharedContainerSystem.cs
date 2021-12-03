@@ -130,10 +130,10 @@ namespace Robust.Shared.Containers
         {
             var oldParentEntity = message.OldParent;
 
-            if (oldParentEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(oldParentEntity.Uid))
+            if (oldParentEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(oldParentEntity))
                 return;
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParentEntity.Uid, out IContainerManager? containerManager))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParentEntity, out IContainerManager? containerManager))
                 containerManager.ForceRemove(message.Entity);
         }
     }

@@ -341,21 +341,21 @@ namespace Robust.Client.GameStates
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
-                if (entity.Uid.IsClientSide() || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick < curTick)
+                if (entity.IsClientSide() || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick < curTick)
                 {
                     continue;
                 }
 
-                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity.Uid} was made dirty.");
+                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity} was made dirty.");
 
-                if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
+                if (!_processor.TryGetLastServerStates(entity, out var last))
                 {
                     // Entity was probably deleted on the server so do nothing.
                     continue;
                 }
 
                 // TODO: handle component deletions/creations.
-                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
                     DebugTools.AssertNotNull(netId);
 
@@ -456,8 +456,8 @@ namespace Robust.Client.GameStates
                     var newEntity = _entities.CreateEntity(metaState.PrototypeId, es.Uid);
                     toApply.Add(newEntity, (es, null));
                     toInitialize.Add(newEntity);
-                    created.Add(newEntity.Uid);
-                    uid = newEntity.Uid;
+                    created.Add(newEntity);
+                    uid = newEntity;
                 }
                 if(es.Hide)
                     toHide.Add(uid);
@@ -563,7 +563,7 @@ namespace Robust.Client.GameStates
             EntityState? nextState)
         {
             var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
-            var entityUid = entity.Uid;
+            var entityUid = (EntityUid) entity;
 
             if (curState != null)
             {

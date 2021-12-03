@@ -43,7 +43,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
             ISerializationContext? context = null)
         {
-            return new ValueDataNode(value.Uid.ToString());
+            return new ValueDataNode(value.ToString());
         }
     }
 }

@@ -88,9 +88,9 @@ namespace Robust.Client.Placement
         public virtual void Render(DrawingHandleWorld handle)
         {
             var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce == null || (!IoCManager.Resolve<IEntityManager>().EntityExists(sce.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(sce.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if (sce == null || (!IoCManager.Resolve<IEntityManager>().EntityExists(sce) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(sce).EntityLifeStage) >= EntityLifeStage.Deleted)
                 return;
-            var sc = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(sce.Uid);
+            var sc = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(sce);
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -116,7 +116,7 @@ namespace Robust.Client.Placement
                     return; // Just some paranoia just in case
                 var entity = coordinate.GetEntity(pManager.EntityManager);
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var worldRot = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldRotation + dirAng;
+                var worldRot = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).WorldRotation + dirAng;
 
                 sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 sc.Render(handle, pManager.eyeManager.CurrentEye.Rotation, worldRot, worldPos);
@@ -206,7 +206,7 @@ namespace Robust.Client.Placement
             }
 
             var range = pManager.CurrentPermission!.Range;
-            if (range > 0 && !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(pManager.PlayerManager.LocalPlayer.ControlledEntity.Uid).Coordinates.InRange(pManager.EntityManager, coordinates, range))
+            if (range > 0 && !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(pManager.PlayerManager.LocalPlayer.ControlledEntity).Coordinates.InRange(pManager.EntityManager, coordinates, range))
                 return false;
             return true;
         }

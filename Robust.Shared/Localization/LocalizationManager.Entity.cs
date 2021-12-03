@@ -24,13 +24,13 @@ namespace Robust.Shared.Localization
 
         private bool TryGetEntityLocAttrib(IEntity entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity.Uid, out var grammar) &&
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity, out var grammar) &&
                 grammar.Attributes.TryGetValue(attribute, out value))
             {
                 return true;
             }
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype is not {} prototype)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype is not {} prototype)
             {
                 value = null;
                 return false;

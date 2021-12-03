@@ -15,34 +15,34 @@ namespace Robust.Client.GameObjects
 
         private static Box2 SpriteAabbFunc(in SpriteComponent value)
         {
-            var (worldPos, worldRot) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner.Uid).GetWorldPositionRotation();
+            var (worldPos, worldRot) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner).GetWorldPositionRotation();
             var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var localAABB = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner.Uid) : null).InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
+            var localAABB = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
 
             return localAABB;
         }
 
         private static Box2 LightAabbFunc(in PointLightComponent value)
         {
-            var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner.Uid).WorldPosition;
+            var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner).WorldPosition;
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var localPos = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner.Uid) : null).InvWorldMatrix.Transform(worldPos) ?? worldPos;
+            var localPos = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.Transform(worldPos) ?? worldPos;
 
             return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
 
         internal static Box2 SpriteAabbFunc(SpriteComponent value, Vector2? worldPos = null, Angle? worldRot = null)
         {
-            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner.Uid).WorldPosition;
-            worldRot ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner.Uid).WorldRotation;
+            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner).WorldPosition;
+            worldRot ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner).WorldRotation;
             var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos.Value), worldRot.Value, worldPos.Value);
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
 
-            var localAABB = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner.Uid) : null).InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
+            var localAABB = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.TransformBox(bounds) ?? bounds.CalcBoundingBox();
 
             return localAABB;
         }
@@ -50,11 +50,11 @@ namespace Robust.Client.GameObjects
         internal static Box2 LightAabbFunc(PointLightComponent value, Vector2? worldPos = null)
         {
             // Lights are circles so don't need entity's rotation
-            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner.Uid).WorldPosition;
+            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(value.Owner).WorldPosition;
             var tree = RenderingTreeSystem.GetRenderTree(value.Owner);
             var boxSize = value.Radius * 2;
 
-            var localPos = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner.Uid) : null).InvWorldMatrix.Transform(worldPos.Value) ?? worldPos.Value;
+            var localPos = (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner) : null).InvWorldMatrix.Transform(worldPos.Value) ?? worldPos.Value;
 
             return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }

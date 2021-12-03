@@ -204,7 +204,7 @@ namespace Robust.Server.GameObjects
         public PlayerAttachedEvent(IEntity entity, IPlayerSession player, IPlayerSession? kicked = null)
         {
             Entity = entity;
-            EntityUid = entity.Uid;
+            EntityUid = entity;
             Player = player;
             Kicked = kicked;
         }
@@ -222,7 +222,7 @@ namespace Robust.Server.GameObjects
         public PlayerDetachedEvent(IEntity entity, IPlayerSession player)
         {
             Entity = entity;
-            EntityUid = entity.Uid;
+            EntityUid = entity;
             Player = player;
         }
     }

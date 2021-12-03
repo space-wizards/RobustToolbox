@@ -235,7 +235,7 @@ namespace Robust.Server.Console.Commands
             if (player?.AttachedEntity == null)
                 return;
 
-            var pos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity.Uid).Coordinates;
+            var pos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).Coordinates;
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             shell.WriteLine(

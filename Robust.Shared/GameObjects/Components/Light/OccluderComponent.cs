@@ -29,7 +29,7 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new OccluderUpdateEvent(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this));
             }
         }
 
@@ -45,11 +45,11 @@ namespace Robust.Shared.GameObjects
                 _enabled = value;
                 if (_enabled)
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new OccluderAddEvent(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this));
                 }
                 else
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new OccluderRemoveEvent(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this));
                 }
 
                 Dirty();

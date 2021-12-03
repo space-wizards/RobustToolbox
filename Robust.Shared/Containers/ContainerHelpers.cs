@@ -23,14 +23,14 @@ namespace Robust.Shared.Containers
         public static bool IsInContainer(this IEntity entity)
         {
             DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
 
             // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent == null)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent == null)
                 return false;
 
-            if (TryGetManagerComp(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent.Owner, out var containerComp))
+            if (TryGetManagerComp(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent.Owner, out var containerComp))
                 return containerComp.ContainsEntity(entity);
 
             return false;
@@ -45,9 +45,9 @@ namespace Robust.Shared.Containers
         public static bool TryGetContainerMan(this IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
 
-            var parentTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent;
+            var parentTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent;
             if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager) && manager.ContainsEntity(entity))
                 return true;
 
@@ -64,7 +64,7 @@ namespace Robust.Shared.Containers
         public static bool TryGetContainer(this IEntity entity, [NotNullWhen(true)] out IContainer? container)
         {
             DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
 
             if (TryGetContainerMan(entity, out var manager))
                 return manager.TryGetContainer(entity, out container);
@@ -83,7 +83,7 @@ namespace Robust.Shared.Containers
         public static bool TryRemoveFromContainer(this IEntity entity, bool force, out bool wasInContainer)
         {
             DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
 
             if (TryGetContainer(entity, out var container))
             {
@@ -118,7 +118,7 @@ namespace Robust.Shared.Containers
         {
             foreach (var entity in container.ContainedEntities.ToArray())
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
 
                 if (force)
                     container.ForceRemove(entity);
@@ -126,10 +126,10 @@ namespace Robust.Shared.Containers
                     container.Remove(entity);
 
                 if (moveTo.HasValue)
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Coordinates = moveTo.Value;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Coordinates = moveTo.Value;
 
                 if(attachToGridOrMap)
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).AttachToGridOrMap();
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).AttachToGridOrMap();
             }
         }
 
@@ -140,9 +140,9 @@ namespace Robust.Shared.Containers
         {
             foreach (var ent in container.ContainedEntities.ToArray())
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ent) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
                 container.ForceRemove(ent);
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(ent.Uid);
+                IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) ent);
             }
         }
 
@@ -158,7 +158,7 @@ namespace Robust.Shared.Containers
         {
             if (container.Insert(transform.Owner)) return true;
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(container.Owner.Uid).Parent != null
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(container.Owner).Parent != null
                 && TryGetContainer(container.Owner, out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
@@ -168,14 +168,14 @@ namespace Robust.Shared.Containers
         private static bool TryGetManagerComp(this IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out manager))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out manager))
                 return true;
 
             // RECURSION ALERT
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent != null)
-                return TryGetManagerComp(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent.Owner, out manager);
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent != null)
+                return TryGetManagerComp(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent.Owner, out manager);
 
             return false;
         }
@@ -272,7 +272,7 @@ namespace Robust.Shared.Containers
         public static T CreateContainer<T>(this IEntity entity, string containerId)
             where T : IContainer
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<IContainerManager?>(entity.Uid, out var containermanager))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<IContainerManager?>(entity, out var containermanager))
                 containermanager = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(entity);
 
             return containermanager.MakeContainer<T>(containerId);

@@ -53,13 +53,13 @@ namespace Robust.Shared.GameObjects
 
             DebugTools.Assert(chunk.ValidTiles > 0);
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(gridEnt.Uid, out PhysicsComponent? physicsComponent))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(gridEnt, out PhysicsComponent? physicsComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(gridEnt.Uid, out FixturesComponent? fixturesComponent))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(gridEnt, out FixturesComponent? fixturesComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(fixturesComponent)}");
                 return;
@@ -156,7 +156,7 @@ namespace Robust.Shared.GameObjects
             if (updated)
             {
                 _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-                EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+                EntityManager.EventBus.RaiseLocalEvent(gridEnt,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
             }
         }
     }

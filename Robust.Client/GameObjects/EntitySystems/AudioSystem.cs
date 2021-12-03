@@ -125,13 +125,13 @@ namespace Robust.Client.GameObjects
                     }
                     else if (stream.TrackingEntity != null)
                     {
-                        if ((!IoCManager.Resolve<IEntityManager>().EntityExists(stream.TrackingEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(stream.TrackingEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
+                        if ((!IoCManager.Resolve<IEntityManager>().EntityExists(stream.TrackingEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(stream.TrackingEntity).EntityLifeStage) >= EntityLifeStage.Deleted)
                         {
                             StreamDone(stream);
                             continue;
                         }
 
-                        mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(stream.TrackingEntity.Uid).MapPosition;
+                        mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(stream.TrackingEntity).MapPosition;
                     }
 
                     // TODO Remove when coordinates can't be NaN
@@ -304,7 +304,7 @@ namespace Robust.Client.GameObjects
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            if (!source.SetPosition(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldPosition))
+            if (!source.SetPosition(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).WorldPosition))
             {
                 return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
             }
@@ -452,13 +452,13 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
         {
-            return Play(filename, entity, GetFallbackCoordinates(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapPosition), audioParams);
+            return Play(filename, entity, GetFallbackCoordinates(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition), audioParams);
         }
 
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             return EntityManager.TryGetEntity(uid, out var entity)
-                ? Play(filename, entity, GetFallbackCoordinates(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapPosition), audioParams) : null;
+                ? Play(filename, entity, GetFallbackCoordinates(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition), audioParams) : null;
         }
 
         /// <inheritdoc />

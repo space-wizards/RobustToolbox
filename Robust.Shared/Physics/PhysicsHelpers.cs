@@ -10,9 +10,9 @@ namespace Robust.Shared.Physics
         {
             Vector2 result = new Vector2();
 
-            for (TransformComponent transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid); transform.Parent != null; transform = transform.Parent)
+            for (TransformComponent transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity); transform.Parent != null; transform = transform.Parent)
             {
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(transform.Owner.Uid, out PhysicsComponent? physicsComponent))
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(transform.Owner, out PhysicsComponent? physicsComponent))
                 {
                     result += physicsComponent.LinearVelocity;
                 }

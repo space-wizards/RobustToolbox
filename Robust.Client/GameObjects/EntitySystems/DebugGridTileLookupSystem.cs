@@ -81,7 +81,7 @@ namespace Robust.Client.GameObjects
 
                 if (!EntityManager.TryGetEntity(uid, out var entity)) continue;
 
-                text.AppendLine((string) IoCManager.Resolve<IEntityManager>().ToPrettyString(entity.Uid));
+                text.AppendLine((string) IoCManager.Resolve<IEntityManager>().ToPrettyString(entity));
             }
 
             _label.Text = text.ToString();

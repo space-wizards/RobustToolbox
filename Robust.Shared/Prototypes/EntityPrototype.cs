@@ -177,16 +177,16 @@ namespace Robust.Shared.Prototypes
 
         public void UpdateEntity(IEntity entity)
         {
-            if (ID != IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.ID)
+            if (ID != IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID)
             {
                 Logger.Error(
-                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.ID}'");
+                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
                 return;
             }
 
             var factory = IoCManager.Resolve<IComponentFactory>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var oldPrototype = entityManager.GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype;
+            var oldPrototype = entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype;
 
             var oldPrototypeComponents = oldPrototype?.Components.Keys
                 .Where(n => n != "Transform" && n != "MetaData")
@@ -208,7 +208,7 @@ namespace Robust.Shared.Prototypes
                     continue;
                 }
 
-                entityManager.RemoveComponent(entity.Uid, type);
+                entityManager.RemoveComponent(entity, type);
             }
 
             entityManager.CullRemovedComponents();
@@ -222,12 +222,12 @@ namespace Robust.Shared.Prototypes
                 var data = Components[name];
                 var component = (Component) factory.GetComponent(name);
                 component.Owner = entity;
-                componentDependencyManager.OnComponentAdd(entity.Uid, component);
+                componentDependencyManager.OnComponentAdd(entity, component);
                 IoCManager.Resolve<IEntityManager>().AddComponent(entity, component);
             }
 
             // Update entity metadata
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype = this;
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype = this;
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, IEntity entity, IComponentFactory factory,
@@ -277,7 +277,7 @@ namespace Robust.Shared.Prototypes
         {
             var compType = factory.GetRegistration(compName).Type;
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, compType, out var component))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, compType, out var component))
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;

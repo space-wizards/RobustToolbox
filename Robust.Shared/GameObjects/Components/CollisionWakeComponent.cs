@@ -37,13 +37,13 @@ namespace Robust.Shared.GameObjects
 
         internal void RaiseStateChange()
         {
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new CollisionWakeStateMessage(), false);
         }
 
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner.Uid, out IPhysBody? body) && (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityLifeStage) < EntityLifeStage.Terminating)
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out IPhysBody? body) && (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityLifeStage) < EntityLifeStage.Terminating)
             {
                 body.CanCollide = true;
             }

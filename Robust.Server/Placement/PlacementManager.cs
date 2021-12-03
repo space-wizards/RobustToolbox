@@ -121,7 +121,7 @@ namespace Robust.Server.Placement
             {
                 var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(created.Uid).LocalRotation = dirRcv.ToAngle();
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();
             }
             else
             {
@@ -212,9 +212,9 @@ namespace Robust.Server.Placement
             foreach (IEntity entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(entity.Uid) || IoCManager.Resolve<IEntityManager>().HasComponent<ActorComponent>(entity.Uid))
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(entity) || IoCManager.Resolve<IEntityManager>().HasComponent<ActorComponent>(entity))
                     continue;
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
+                IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
             }
         }
 
@@ -223,7 +223,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob.Uid, out var actor))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -244,7 +244,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob.Uid, out var actor))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -265,7 +265,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementCancel(IEntity mob)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob.Uid, out var actor))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -311,7 +311,7 @@ namespace Robust.Server.Placement
         {
             var newPermission = new PlacementInformation
             {
-                MobUid = mob.Uid,
+                MobUid = mob,
                 Range = range,
                 IsTile = false,
                 EntityType = objectType,
@@ -319,7 +319,7 @@ namespace Robust.Server.Placement
             };
 
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
-                                                               where permission.MobUid == mob.Uid
+                                                               where permission.MobUid == mob
                                                                select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -340,7 +340,7 @@ namespace Robust.Server.Placement
         {
             var newPermission = new PlacementInformation
             {
-                MobUid = mob.Uid,
+                MobUid = mob,
                 Range = range,
                 IsTile = true,
                 TileType = _tileDefinitionManager[tileType].TileId,
@@ -348,7 +348,7 @@ namespace Robust.Server.Placement
             };
 
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
-                                                               where permission.MobUid == mob.Uid
+                                                               where permission.MobUid == mob
                                                                select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -368,7 +368,7 @@ namespace Robust.Server.Placement
         public void RevokeAllBuildPermissions(IEntity mob)
         {
             var mobPermissions = BuildPermissions
-                .Where(permission => permission.MobUid == mob.Uid)
+                .Where(permission => permission.MobUid == mob)
                 .ToList();
 
             if (mobPermissions.Count != 0)

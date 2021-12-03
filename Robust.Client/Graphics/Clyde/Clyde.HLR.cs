@@ -374,14 +374,14 @@ namespace Robust.Client.Graphics.Clyde
         {
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid).InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
                     var entity = value.Owner;
-                    var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
+                    var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
 
                     ref var entry = ref state.AllocAdd();
                     entry.sprite = value;

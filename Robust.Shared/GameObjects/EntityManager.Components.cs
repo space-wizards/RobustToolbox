@@ -172,7 +172,7 @@ namespace Robust.Shared.GameObjects
 
         public void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component
         {
-            AddComponent(entity.Uid, component, overwrite);
+            AddComponent((EntityUid) entity, component, overwrite);
         }
 
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
@@ -464,7 +464,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T EnsureComponent<T>(IEntity entity) where T : Component, new()
         {
-            if (TryGetComponent<T>(entity.Uid, out var component))
+            if (TryGetComponent<T>(entity, out var component))
             {
                 return component;
             }

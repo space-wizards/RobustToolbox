@@ -31,7 +31,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Act.
             var testEvent = new TestStructEvent {TestNumber = 5};
             var eventBus = simulation.Resolve<IEntityManager>().EventBus;
-            eventBus.RaiseLocalEvent(entity.Uid, ref testEvent);
+            eventBus.RaiseLocalEvent(entity, ref testEvent);
 
             // Check that the entity system changed the value correctly
             Assert.That(testEvent.TestNumber, Is.EqualTo(10));
@@ -115,7 +115,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Act.
             var testEvent = new TestStructEvent {TestNumber = 5};
             var eventBus = simulation.Resolve<IEntityManager>().EventBus;
-            eventBus.RaiseLocalEvent(entity.Uid, ref testEvent);
+            eventBus.RaiseLocalEvent(entity, ref testEvent);
 
             // Check that the entity systems changed the value correctly
             Assert.That(testEvent.TestNumber, Is.EqualTo(15));

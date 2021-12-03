@@ -30,7 +30,7 @@ namespace Robust.Client.Player
         /// </summary>
         [ViewVariables] public IEntity? ControlledEntity { get; private set; }
 
-        [ViewVariables] public EntityUid? ControlledEntityUid => ControlledEntity?.Uid;
+        [ViewVariables] public EntityUid? ControlledEntityUid => ControlledEntity;
 
 
         [ViewVariables] public NetUserId UserId { get; set; }
@@ -66,7 +66,7 @@ namespace Robust.Client.Player
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<EyeComponent?>(ControlledEntity.Uid, out var eye))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<EyeComponent?>(ControlledEntity, out var eye))
             {
                 eye = IoCManager.Resolve<IEntityManager>().AddComponent<EyeComponent>(ControlledEntity);
             }
@@ -76,7 +76,7 @@ namespace Robust.Client.Player
 
             // notify ECS Systems
             IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(ControlledEntity));
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(ControlledEntity.Uid, new PlayerAttachedEvent(ControlledEntity));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(ControlledEntity, new PlayerAttachedEvent(ControlledEntity));
         }
 
         /// <summary>
@@ -87,11 +87,11 @@ namespace Robust.Client.Player
             var previous = ControlledEntity;
             if (previous is {((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Initialized): true, ((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Deleted): false})
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous.Uid).Current = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous).Current = false;
 
                 // notify ECS Systems
                 IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous.Uid, new PlayerDetachedEvent(previous));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous, new PlayerDetachedEvent(previous));
             }
 
             ControlledEntity = null;

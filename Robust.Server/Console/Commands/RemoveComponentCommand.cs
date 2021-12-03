@@ -46,15 +46,15 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!IoCManager.Resolve<IEntityManager>().HasComponent(entity.Uid, registration.Type))
+            if (!IoCManager.Resolve<IEntityManager>().HasComponent(entity, registration.Type))
             {
-                shell.WriteLine($"No {componentName} component found on entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName}.");
+                shell.WriteLine($"No {componentName} component found on entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}.");
                 return;
             }
 
             entManager.RemoveComponent(uid, registration.Type);
 
-            shell.WriteLine($"Removed {componentName} component from entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName}.");
+            shell.WriteLine($"Removed {componentName} component from entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}.");
         }
     }
 }

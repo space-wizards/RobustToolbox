@@ -1603,7 +1603,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).WorldRotation),
+                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldRotation),
                 DirectionOverride
             );
 
@@ -2076,7 +2076,8 @@ namespace Robust.Client.GameObjects
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            IEntity tempQualifier = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var dummy = (EntityUid) tempQualifier;
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
 
             var anyTexture = false;
@@ -2115,7 +2116,8 @@ namespace Robust.Client.GameObjects
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            IEntity tempQualifier = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var dummy = (EntityUid) tempQualifier;
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
             var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
             entityManager.DeleteEntity(dummy);

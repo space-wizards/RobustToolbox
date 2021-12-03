@@ -213,7 +213,7 @@ namespace Robust.Client.ViewVariables
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is IEntity entity && !((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
+            if (obj is IEntity entity && !((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted))
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }

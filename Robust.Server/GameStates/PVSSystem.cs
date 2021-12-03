@@ -173,7 +173,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        UpdateEntityRecursive(ev.Sender.Uid, ev.Component);
+        UpdateEntityRecursive(ev.Sender, ev.Component);
     }
 
     private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
@@ -433,7 +433,7 @@ internal partial class PVSSystem : EntitySystem
             {
                 foreach (var containedEntity in container.ContainedEntities)
                 {
-                    TryAddToVisibleEnts(containedEntity.Uid, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
+                    TryAddToVisibleEnts(containedEntity, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
                         true, true);
                 }
             }
@@ -473,24 +473,24 @@ internal partial class PVSSystem : EntitySystem
 
             foreach (var uid in add)
             {
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
 
-                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
+                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized);
 
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, entity.Uid, GameTick.Zero));
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(player, entity, GameTick.Zero));
             }
 
             foreach (var uid in dirty)
             {
                 DebugTools.Assert(!add.Contains(uid));
 
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
 
-                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
+                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized);
 
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(player, entity, fromTick));
             }
         }
 
@@ -503,15 +503,15 @@ internal partial class PVSSystem : EntitySystem
 
         foreach (var entity in EntityManager.GetEntities())
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
                 continue;
             }
 
-            DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
+            DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized);
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick >= fromTick)
+                stateEntities.Add(GetEntityState(player, entity, fromTick));
         }
 
         // no point sending an empty collection

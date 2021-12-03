@@ -90,9 +90,9 @@ namespace Robust.Shared.Map
             {
                 var mapEnt = _entityManager.GetEntity(mapEntId);
 
-                foreach (var childTransform in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEnt.Uid).Children.ToArray())
+                foreach (var childTransform in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEnt).Children.ToArray())
                 {
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity(childTransform.Owner.Uid);
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) childTransform.Owner);
                 }
             }
 
@@ -140,7 +140,7 @@ namespace Robust.Shared.Map
                 if (_entityManager.TryGetEntity(entId, out var entity))
                 {
                     Logger.InfoS("map", $"Deleting map entity {entId}");
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
                 }
 
                 if (_mapEntities.Remove(MapId.Nullspace))
@@ -208,7 +208,7 @@ namespace Robust.Shared.Map
             if (_mapEntities.TryGetValue(mapID, out var ent))
             {
                 if (_entityManager.TryGetEntity(ent, out var mapEnt))
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity(mapEnt.Uid);
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) mapEnt);
 
                 _mapEntities.Remove(mapID);
             }
@@ -273,13 +273,13 @@ namespace Robust.Shared.Map
                 else
                 {
                     var newEnt = (IEntity) _entityManager.CreateEntityUninitialized(null, entityUid);
-                    _mapEntities.Add(actualID, newEnt.Uid);
+                    _mapEntities.Add(actualID, newEnt);
 
                     var mapComp = IoCManager.Resolve<IEntityManager>().AddComponent<MapComponent>(newEnt);
                     mapComp.WorldMap = actualID;
-                    _entityManager.InitializeComponents(newEnt.Uid);
-                    _entityManager.StartComponents(newEnt.Uid);
-                    Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt.Uid}");
+                    _entityManager.InitializeComponents(newEnt);
+                    _entityManager.StartComponents(newEnt);
+                    Logger.DebugS("map", $"Binding map {actualID} to entity {newEnt}");
                 }
             }
 
@@ -303,8 +303,8 @@ namespace Robust.Shared.Map
             var newEntity = (IEntity) _entityManager.CreateEntityUninitialized(null);
             SetMapEntity(mapId, newEntity);
 
-            _entityManager.InitializeComponents(newEntity.Uid);
-            _entityManager.StartComponents(newEntity.Uid);
+            _entityManager.InitializeComponents(newEntity);
+            _entityManager.StartComponents(newEntity);
 
             return newEntity;
         }
@@ -332,7 +332,7 @@ namespace Robust.Shared.Map
 
             foreach (var kvEntity in _mapEntities)
             {
-                if (kvEntity.Value == newMapEntity.Uid)
+                if (kvEntity.Value == newMapEntity)
                 {
                     throw new InvalidOperationException(
                         $"Entity {newMapEntity} is already the root node of map {kvEntity.Key}.");
@@ -352,7 +352,7 @@ namespace Robust.Shared.Map
             }
 
             // re-use or add map component
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(newMapEntity.Uid, out MapComponent? mapComp))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(newMapEntity, out MapComponent? mapComp))
             {
                 mapComp = IoCManager.Resolve<IEntityManager>().AddComponent<MapComponent>(newMapEntity);
             }
@@ -363,11 +363,11 @@ namespace Robust.Shared.Map
                         $"Setting map {mapId} root to entity {newMapEntity}, but entity thinks it is root node of map {mapComp.WorldMap}.");
             }
 
-            Logger.DebugS("map", $"Setting map {mapId} entity to {newMapEntity.Uid}");
+            Logger.DebugS("map", $"Setting map {mapId} entity to {newMapEntity}");
 
             // set as new map entity
             mapComp.WorldMap = mapId;
-            _mapEntities[mapId] = newMapEntity.Uid;
+            _mapEntities[mapId] = newMapEntity;
         }
 
         public EntityUid GetMapEntityId(MapId mapId)
@@ -464,9 +464,9 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var gridEnt = (IEntity) EntityManager.CreateEntityUninitialized(null, euid);
+                    var gridEnt = EntityManager.CreateEntityUninitialized(null, euid);
 
-                    grid.GridEntityId = gridEnt.Uid;
+                    grid.GridEntityId = gridEnt;
 
                     Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntityId}");
 
@@ -477,10 +477,10 @@ namespace Robust.Shared.Map
                     //are applied. After they are applied the parent may be different, but the MapId will
                     //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
                     //use in transform states anytime before the state parent is properly set.
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).AttachParent(GetMapEntity(currentMapID));
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).AttachParent(GetMapEntity(currentMapID));
 
-                    _entityManager.InitializeComponents(gridEnt.Uid);
-                    _entityManager.StartComponents(gridEnt.Uid);
+                    _entityManager.InitializeComponents(gridEnt);
+                    _entityManager.StartComponents(gridEnt);
                 }
             }
             else
@@ -550,7 +550,7 @@ namespace Robust.Shared.Map
 
                 // Doesn't use WorldBounds because it's just an AABB.
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
-                var matrix = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).InvWorldMatrix;
+                var matrix = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).InvWorldMatrix;
                 var localPos = matrix.Transform(worldPos);
 
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
@@ -711,8 +711,8 @@ namespace Robust.Shared.Map
             {
                 // DeleteGrid may be triggered by the entity being deleted,
                 // so make sure that's not the case.
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt.Uid).EntityLifeStage) <= EntityLifeStage.MapInitialized)
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity(gridEnt.Uid);
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt).EntityLifeStage) <= EntityLifeStage.MapInitialized)
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) gridEnt);
             }
 
             grid.Dispose();

@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
             _mapIndex = state.MapId;
             LightingEnabled = state.LightingEnabled;
 
-            ((TransformComponent) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid)).ChangeMapId(_mapIndex);
+            ((TransformComponent) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner)).ChangeMapId(_mapIndex);
         }
     }
 

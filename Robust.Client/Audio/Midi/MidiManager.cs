@@ -299,7 +299,7 @@ namespace Robust.Client.Audio.Midi
                 }
                 else if (renderer.TrackingEntity != null)
                 {
-                    mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(renderer.TrackingEntity.Uid).MapPosition;
+                    mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(renderer.TrackingEntity).MapPosition;
                 }
 
                 if (mapPos != null)

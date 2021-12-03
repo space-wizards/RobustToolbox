@@ -69,7 +69,7 @@ namespace Robust.Server.GameObjects
         internal void SendToSession(IPlayerSession session, BoundUserInterfaceMessage message, object uiKey)
         {
             EntitySystem.Get<UserInterfaceSystem>()
-                .SendTo(session, new BoundUIWrapMessage(Owner.Uid, message, uiKey));
+                .SendTo(session, new BoundUIWrapMessage(Owner, message, uiKey));
         }
 
         internal void ReceiveMessage(IPlayerSession session, BoundUIWrapMessage msg)
@@ -246,7 +246,7 @@ namespace Robust.Server.GameObjects
         private void CloseShared(IPlayerSession session)
         {
             var owner = Owner.Owner;
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner.Uid, new BoundUIClosedEvent(UiKey, owner.Uid, session));
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner, new BoundUIClosedEvent(UiKey, owner, session));
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);

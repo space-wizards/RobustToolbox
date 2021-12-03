@@ -53,9 +53,9 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             IEntity tempQualifier = entityManager.GetEntity(UidA);
-            var bodyA = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(tempQualifier.Uid);
+            var bodyA = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(tempQualifier);
             IEntity tempQualifier1 = entityManager.GetEntity(UidB);
-            var bodyB = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(tempQualifier1.Uid);
+            var bodyB = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(tempQualifier1);
 
             var joint = new FrictionJoint(bodyA, bodyB)
             {
@@ -115,7 +115,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="anchor"></param>
         /// <param name="useWorldCoordinates">Set to true if you are using world coordinates as anchors.</param>
         public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor, bool useWorldCoordinates = false)
-            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+            : base(bodyA.Owner, bodyB.Owner)
         {
             if (useWorldCoordinates)
             {
@@ -130,7 +130,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, bool useWorldCoordinates = false)
-            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+            : base(bodyA.Owner, bodyB.Owner)
         {
             if (useWorldCoordinates)
             {

@@ -37,10 +37,10 @@ namespace Robust.Client.GameObjects
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)
         {
-            if (!ExpectedEntities.TryGetValue(ev.Entity.Uid, out var container))
+            if (!ExpectedEntities.TryGetValue(ev.Entity, out var container))
                 return;
 
-            RemoveExpectedEntity(ev.Entity.Uid);
+            RemoveExpectedEntity(ev.Entity);
 
             if (container.Deleted)
                 return;
@@ -92,7 +92,7 @@ namespace Robust.Client.GameObjects
                 List<IEntity>? toRemove = null;
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!entityUids.Contains(entity.Uid))
+                    if (!entityUids.Contains(entity))
                     {
                         toRemove ??= new List<IEntity>();
                         toRemove.Add(entity);
@@ -172,7 +172,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var toUpdate in _updateQueue)
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(toUpdate.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(toUpdate.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(toUpdate) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(toUpdate).EntityLifeStage) >= EntityLifeStage.Deleted)
                 {
                     continue;
                 }
@@ -190,7 +190,7 @@ namespace Robust.Client.GameObjects
             // Am lazy though.
             UpdateEntity(entity);
 
-            foreach (var child in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Children)
+            foreach (var child in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Children)
             {
                 UpdateEntityRecursively(child.Owner);
             }
@@ -198,7 +198,7 @@ namespace Robust.Client.GameObjects
 
         private static void UpdateEntity(IEntity entity)
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out SpriteComponent? sprite))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out SpriteComponent? sprite))
             {
                 sprite.ContainerOccluded = false;
 
@@ -216,7 +216,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out PointLightComponent? light))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out PointLightComponent? light))
             {
                 light.ContainerOccluded = false;
 

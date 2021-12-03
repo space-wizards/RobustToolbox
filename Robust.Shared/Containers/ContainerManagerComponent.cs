@@ -79,7 +79,7 @@ namespace Robust.Shared.Containers
                 for (var index = 0; index < container.ContainedEntities.Count; index++)
                 {
                     var iEntity = container.ContainedEntities[index];
-                    uidArr[index] = iEntity.Uid;
+                    uidArr[index] = iEntity;
                 }
 
                 var sContainer = new ContainerManagerComponentState.ContainerData(container.ContainerType, container.ID, container.ShowContents, container.OccludesLight, uidArr);

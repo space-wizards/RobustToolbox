@@ -81,7 +81,7 @@ namespace Robust.Server.GameObjects
             _sessionCache.Clear();
             _sessionCache.AddRange(ui.SubscribedSessions);
 
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ui.Owner.Owner.Uid);
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ui.Owner.Owner);
 
             var uiPos = transform.WorldPosition;
             var uiMap = transform.MapID;
@@ -91,18 +91,18 @@ namespace Robust.Server.GameObjects
                 var attachedEntity = session.AttachedEntity;
 
                 // The component manages the set of sessions, so this invalid session should be removed soon.
-                if (attachedEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(attachedEntity.Uid))
+                if (attachedEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(attachedEntity))
                 {
                     continue;
                 }
 
-                if (uiMap != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity.Uid).MapID)
+                if (uiMap != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity).MapID)
                 {
                     ui.Close(session);
                     continue;
                 }
 
-                var distanceSquared = (uiPos - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity.Uid).WorldPosition).LengthSquared;
+                var distanceSquared = (uiPos - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity).WorldPosition).LengthSquared;
                 if (distanceSquared > MaxWindowRangeSquared)
                 {
                     ui.Close(session);

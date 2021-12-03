@@ -42,13 +42,13 @@ namespace Robust.UnitTesting.Shared
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // When anchoring should still only be 1 entity.
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy.Uid).Anchored = true;
-                Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy.Uid).Anchored);
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).Anchored = true;
+                Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).Anchored);
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // Even when unanchored should still be there
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy.Uid).Anchored = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).Anchored = false;
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
             });

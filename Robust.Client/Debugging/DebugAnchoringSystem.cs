@@ -85,7 +85,7 @@ namespace Robust.Client.Debugging
                 }
                 else
                 {
-                    text.AppendLine($"uid: {ent}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName}");
+                    text.AppendLine($"uid: {ent}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}");
                 }
             }
 

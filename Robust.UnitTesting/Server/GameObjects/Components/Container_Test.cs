@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(container.ID, Is.EqualTo("dummy"));
             Assert.That(container.Owner, Is.EqualTo(entity));
 
-            var manager = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity.Uid);
+            var manager = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
 
             Assert.That(container.Manager, Is.EqualTo(manager));
             Assert.That(() => ContainerHelpers.CreateContainer<Container>(entity, "dummy"), Throws.ArgumentException);
@@ -64,7 +64,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(manager.GetContainer("dummy2"), Is.EqualTo(container2));
             Assert.That(() => manager.GetContainer("dummy3"), Throws.TypeOf<KeyNotFoundException>());
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
 
             Assert.That(manager.Deleted, Is.True);
             Assert.That(container.Deleted, Is.True);
@@ -78,7 +78,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var owner = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var inserted = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(inserted.Uid);
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(inserted);
 
             var container = ContainerHelpers.CreateContainer<Container>(owner, "dummy");
             Assert.That(container.Insert(inserted), Is.True);
@@ -94,7 +94,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(success, Is.False);
 
             container.Insert(inserted);
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(owner.Uid);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) owner);
             // Make sure inserted was detached.
             Assert.That(transform.Deleted, Is.True);
         }
@@ -106,7 +106,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var owner = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
             var inserted = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(inserted.Uid);
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(inserted);
             var entity = sim.SpawnEntity("dummy", new EntityCoordinates(new EntityUid(1), (0, 0)));
 
             var container = ContainerHelpers.CreateContainer<Container>(owner, "dummy");
@@ -115,13 +115,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
             var container2 = ContainerHelpers.CreateContainer<Container>(inserted, "dummy");
             Assert.That(container2.Insert(entity), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent!.Owner, Is.EqualTo(inserted));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent!.Owner, Is.EqualTo(inserted));
 
             Assert.That(container2.Remove(entity), Is.True);
             Assert.That(container.Contains(entity), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent!.Owner, Is.EqualTo(owner));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent!.Owner, Is.EqualTo(owner));
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(owner.Uid);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) owner);
             Assert.That(transform.Deleted, Is.True);
         }
 
@@ -141,20 +141,20 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container3 = ContainerHelpers.CreateContainer<Container>(entityThree, "dummy");
 
             Assert.That(container.Insert(entityTwo), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityTwo.Uid).Parent!.Owner, Is.EqualTo(entityOne));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityTwo).Parent!.Owner, Is.EqualTo(entityOne));
 
             Assert.That(container2.Insert(entityThree), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityThree.Uid).Parent!.Owner, Is.EqualTo(entityTwo));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityThree).Parent!.Owner, Is.EqualTo(entityTwo));
 
             Assert.That(container3.Insert(entityItem), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityItem.Uid).Parent!.Owner, Is.EqualTo(entityThree));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityThree));
 
             Assert.That(container3.Remove(entityItem), Is.True);
             Assert.That(container.Contains(entityItem), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityItem.Uid).Parent!.Owner, Is.EqualTo(entityOne));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityOne));
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(entityOne.Uid);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entityTwo.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entityTwo.Uid).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entityOne);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entityTwo) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entityTwo).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
         }
 
         [Test]
@@ -210,8 +210,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(result, Is.True);
             Assert.That(container.ContainedEntities.Count, Is.EqualTo(1));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity.Uid).ChildCount, Is.EqualTo(1));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity.Uid).ChildEntityUids.First(), Is.EqualTo(insertEntity.Uid));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity).ChildCount, Is.EqualTo(1));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(containerEntity).ChildEntityUids.First(), Is.EqualTo(insertEntity));
 
             result = insertEntity.TryGetContainerMan(out var resultContainerMan);
             Assert.That(result, Is.True);
@@ -264,7 +264,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             container.ShowContents = true;
             container.Insert(childEnt);
 
-            var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity.Uid);
+            var containerMan = IoCManager.Resolve<IEntityManager>().GetComponent<IContainerManager>(entity);
             var state = (ContainerManagerComponent.ContainerManagerComponentState)containerMan.GetComponentState();
 
             Assert.That(state.ContainerSet.Count, Is.EqualTo(1));
@@ -272,7 +272,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(state.ContainerSet[0].OccludesLight, Is.True);
             Assert.That(state.ContainerSet[0].ShowContents, Is.True);
             Assert.That(state.ContainerSet[0].ContainedEntities.Length, Is.EqualTo(1));
-            Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt.Uid));
+            Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt));
         }
 
         private class ContainerOnlyContainer : BaseContainer
@@ -317,13 +317,13 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 
                 foreach (var entity in _containerList)
                 {
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
+                    IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
                 }
             }
 
             public override bool CanInsert(IEntity toinsert)
             {
-                return IoCManager.Resolve<IEntityManager>().TryGetComponent(toinsert.Uid, out IContainerManager? _);
+                return IoCManager.Resolve<IEntityManager>().TryGetComponent(toinsert, out IContainerManager? _);
             }
         }
     }

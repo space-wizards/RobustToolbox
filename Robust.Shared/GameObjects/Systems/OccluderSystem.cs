@@ -39,11 +39,11 @@ namespace Robust.Shared.GameObjects
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
                 IEntity tempQualifier = EntityManager.GetEntity(grid.GridEntityId);
-                yield return IoCManager.Resolve<IEntityManager>().GetComponent<OccluderTreeComponent>(tempQualifier.Uid);
+                yield return IoCManager.Resolve<IEntityManager>().GetComponent<OccluderTreeComponent>(tempQualifier);
             }
 
             IEntity tempQualifier1 = _mapManager.GetMapEntity(mapId);
-            yield return IoCManager.Resolve<IEntityManager>().GetComponent<OccluderTreeComponent>(tempQualifier1.Uid);
+            yield return IoCManager.Resolve<IEntityManager>().GetComponent<OccluderTreeComponent>(tempQualifier1);
         }
 
         private void HandleOccluderInit(EntityUid uid, OccluderComponent component, ComponentInit args)
@@ -60,7 +60,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleOccluderTreeInit(EntityUid uid, OccluderTreeComponent component, ComponentInit args)
         {
-            var capacity = (int) Math.Min(256, Math.Ceiling(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(component.Owner.Uid).ChildCount / TreeGrowthRate) * TreeGrowthRate);
+            var capacity = (int) Math.Min(256, Math.Ceiling(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(component.Owner).ChildCount / TreeGrowthRate) * TreeGrowthRate);
 
             component.Tree = new DynamicTree<OccluderComponent>(ExtractAabbFunc, capacity: capacity);
         }
@@ -74,16 +74,16 @@ namespace Robust.Shared.GameObjects
         {
             var entity = component.Owner;
 
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID == MapId.Nullspace) return null;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace) return null;
 
-            var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent?.Owner;
+            var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent?.Owner;
 
             while (true)
             {
                 if (parent == null) break;
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out OccluderTreeComponent? comp)) return comp;
-                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out OccluderTreeComponent? comp)) return comp;
+                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
             }
 
             return null;
@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 ExtractAabbFunc(in OccluderComponent o)
         {
-            return o.BoundingBox.Translated(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(o.Owner.Uid).LocalPosition);
+            return o.BoundingBox.Translated(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(o.Owner).LocalPosition);
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
@@ -179,7 +179,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
-                var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid);
+                var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner);
                 var matrix = transform.InvWorldMatrix;
                 var treeRot = transform.WorldRotation;
 

@@ -166,7 +166,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Coordinates = coordinates;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).Coordinates = coordinates;
             }
 
             return newEntity;
@@ -176,13 +176,13 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
 
             // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
-            var oldAnchored = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Anchored;
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Anchored = false;
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).WorldPosition = coordinates.Position;
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Anchored = oldAnchored;
+            var oldAnchored = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).Anchored;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).Anchored = false;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).WorldPosition = coordinates.Position;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).Anchored = oldAnchored;
             return newEntity;
         }
 
@@ -223,7 +223,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>True if a value was returned, false otherwise.</returns>
         public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out IEntity? entity)
         {
-            if (Entities.TryGetValue(uid, out var cEntity) && !((!IoCManager.Resolve<IEntityManager>().EntityExists(cEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(cEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted))
+            if (Entities.TryGetValue(uid, out var cEntity) && !((!IoCManager.Resolve<IEntityManager>().EntityExists(cEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(cEntity).EntityLifeStage) >= EntityLifeStage.Deleted))
             {
                 entity = cEntity;
                 return true;
@@ -276,10 +276,10 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e).EntityLifeStage) >= EntityLifeStage.Deleted)
                 return;
 
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityLifeStage) >= EntityLifeStage.Terminating)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(e) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e).EntityLifeStage) >= EntityLifeStage.Terminating)
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException("Called Delete on an entity already being deleted.");
 #else
@@ -291,14 +291,14 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(IEntity entity)
         {
-            if((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted) //TODO: Why was this still a child if it was already deleted?
+            if((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
 
-            var uid = entity.Uid;
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
-            var metadata = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid);
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage = EntityLifeStage.Terminating;
-            EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
+            var uid = (EntityUid) entity;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
+            var metadata = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity);
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.Terminating;
+            EventBus.RaiseLocalEvent(entity, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var childTransform in transform.Children.ToArray())
@@ -322,17 +322,17 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(entity.Uid);
+            DisposeComponents(entity);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
-            EntityDeleted?.Invoke(this, entity.Uid);
+            EntityDeleted?.Invoke(this, entity);
             EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
-            Entities.Remove(entity.Uid);
+            Entities.Remove(entity);
         }
 
         public void QueueDeleteEntity(IEntity entity)
         {
-            QueueDeleteEntity(entity.Uid);
+            QueueDeleteEntity((EntityUid) entity);
         }
 
         public void QueueDeleteEntity(EntityUid uid)
@@ -379,7 +379,7 @@ namespace Robust.Shared.GameObjects
 
             var entity = AllocEntity(uid);
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype = prototype;
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype = prototype;
 
             return entity;
         }
@@ -402,10 +402,10 @@ namespace Robust.Shared.GameObjects
             var entity = new IEntity(uid.Value);
 
             // we want this called before adding components
-            EntityAdded?.Invoke(this, entity.Uid);
+            EntityAdded?.Invoke(this, entity);
 
             // We do this after the event, so if the event throws we have not committed
-            Entities[entity.Uid] = entity;
+            Entities[entity] = entity;
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
             var metadata = new MetaDataComponent() { Owner = entity };
@@ -431,7 +431,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, uid);
             try
             {
-                EntityPrototype.LoadEntity(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype, entity, ComponentFactory, null);
+                EntityPrototype.LoadEntity(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, null);
                 return entity;
             }
             catch (Exception e)
@@ -445,7 +445,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(IEntity entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype, entity, ComponentFactory, context);
+            EntityPrototype.LoadEntity(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, context);
         }
 
         private void InitializeAndStartEntity(IEntity entity, MapId mapId)
@@ -468,14 +468,14 @@ namespace Robust.Shared.GameObjects
 
         protected void InitializeEntity(IEntity entity)
         {
-            InitializeComponents(entity.Uid);
-            EntityInitialized?.Invoke(this, entity.Uid);
+            InitializeComponents(entity);
+            EntityInitialized?.Invoke(this, entity);
         }
 
         protected void StartEntity(IEntity entity)
         {
-            StartComponents(entity.Uid);
-            EntityStarted?.Invoke(this, entity.Uid);
+            StartComponents(entity);
+            EntityStarted?.Invoke(this, entity);
         }
 
         /// <inheritdoc />

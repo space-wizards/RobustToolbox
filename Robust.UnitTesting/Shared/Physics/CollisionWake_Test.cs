@@ -46,7 +46,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 grid = mapManager.CreateGrid(mapId);
 
                 var entity = entManager.SpawnEntity("CollisionWakeTestItem", new MapCoordinates(Vector2.One, mapId));
-                physics = entManager.GetComponent<PhysicsComponent>(entity.Uid);
+                physics = entManager.GetComponent<PhysicsComponent>(entity);
             });
 
             // Should still be collidable
@@ -57,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(physics.Awake, Is.EqualTo(false));
                 Assert.That(physics.CanCollide, Is.EqualTo(true));
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner.Uid).AttachParent(entManager.GetEntity(grid.GridEntityId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(entManager.GetEntity(grid.GridEntityId));
             });
 
             await server.WaitRunTicks(1);
@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(physics.Awake, Is.EqualTo(false));
                 Assert.That(physics.CanCollide, Is.EqualTo(false));
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner.Uid).AttachParent(mapManager.GetMapEntity(mapId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(mapManager.GetMapEntity(mapId));
             });
 
             // Juussttt in case we'll re-parent it to the map and check its collision is back on.

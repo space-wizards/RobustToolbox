@@ -120,12 +120,12 @@ namespace Robust.Client.GameObjects
 
         private static void SetEntityContextActive(IInputManager inputMan, IEntity entity)
         {
-            if(entity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid))
+            if(entity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(entity))
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity.Uid, out InputComponent? inputComp))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -136,7 +136,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }

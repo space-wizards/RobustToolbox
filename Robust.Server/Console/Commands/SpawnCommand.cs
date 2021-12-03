@@ -24,17 +24,17 @@ namespace Robust.Server.Console.Commands
 
             if (args.Length == 1 && player?.AttachedEntity != null)
             {
-                ent.SpawnEntity(args[0], IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity.Uid).Coordinates);
+                ent.SpawnEntity(args[0], IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).Coordinates);
             }
             else if (args.Length == 2)
             {
                 IEntity tempQualifier = ent.GetEntity(EntityUid.Parse(args[1]));
-                ent.SpawnEntity(args[0], IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).Coordinates);
+                ent.SpawnEntity(args[0], IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).Coordinates);
             }
             else if (player?.AttachedEntity != null)
             {
                 var coords = new MapCoordinates(float.Parse(args[1]),
-                    float.Parse(args[2]), IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity.Uid).MapID);
+                    float.Parse(args[2]), IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).MapID);
                 ent.SpawnEntity(args[0], coords);
             }
         }

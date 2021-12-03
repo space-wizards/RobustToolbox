@@ -175,7 +175,7 @@ namespace Robust.Shared.Localization
     {
         public override string Format(LocContext ctx)
         {
-            return IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Value.Uid).EntityName;
+            return IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Value).EntityName;
         }
     }
 

@@ -23,7 +23,7 @@ namespace Robust.Server.ViewVariables.Traits
             {
                 var list = new List<ViewVariablesBlobEntityComponents.Entry>();
                 // See engine#636 for why the Distinct() call.
-                foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(_entity.Uid))
+                foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(_entity))
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
@@ -44,7 +44,7 @@ namespace Robust.Server.ViewVariables.Traits
 
                 foreach (var type in componentFactory.AllRegisteredTypes)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity.Uid, type))
+                    if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity, type))
                         continue;
 
                     list.Add(componentFactory.GetRegistration(type).Name);

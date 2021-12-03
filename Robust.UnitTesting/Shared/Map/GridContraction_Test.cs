@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEntity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEntity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted);
+                Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEntity).EntityLifeStage) >= EntityLifeStage.Deleted);
             });
         }
 
@@ -74,7 +74,7 @@ namespace Robust.UnitTesting.Shared.Map
                 }
 
                 IEntity tempQualifier = entManager.GetEntity(grid.GridEntityId);
-                Assert.That(!((!IoCManager.Resolve<IEntityManager>().EntityExists(tempQualifier.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(tempQualifier.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
+                Assert.That(!((!IoCManager.Resolve<IEntityManager>().EntityExists(tempQualifier) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(tempQualifier).EntityLifeStage) >= EntityLifeStage.Deleted));
             });
         }
     }

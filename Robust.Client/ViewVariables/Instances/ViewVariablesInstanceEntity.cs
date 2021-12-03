@@ -108,7 +108,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(_entity.Uid, out ISpriteComponent? sprite))
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(_entity, out ISpriteComponent? sprite))
                 {
                     var hBox = new BoxContainer
                     {
@@ -161,7 +161,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             PopulateClientComponents();
 
-            if (!_entity.Uid.IsClientSide())
+            if (!_entity.IsClientSide())
             {
                 _serverVariables = new BoxContainer
                 {
@@ -202,7 +202,7 @@ namespace Robust.Client.ViewVariables.Instances
             _clientComponentsAddButton.OnPressed += OnClientComponentsAddButtonPressed;
             _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
 
-            var componentList = IoCManager.Resolve<IEntityManager>().GetComponents(_entity.Uid).OrderBy(c => c.GetType().ToString());
+            var componentList = IoCManager.Resolve<IEntityManager>().GetComponents(_entity).OrderBy(c => c.GetType().ToString());
 
             foreach (var component in componentList)
             {
@@ -266,12 +266,12 @@ namespace Robust.Client.ViewVariables.Instances
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity.Uid, componentType.FullName));
+                        new ViewVariablesComponentSelector(_entity, componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {
                     // We send a command to remove the component.
-                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity.Uid} {componentType.ComponentName}");
+                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity} {componentType.ComponentName}");
                     PopulateServerComponents();
                 };
                 button.AddChild(removeButton);
@@ -392,7 +392,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var type in componentFactory.AllRegisteredTypes)
             {
-                if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity.Uid, type))
+                if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity, type))
                     continue;
 
                 yield return (componentFactory.GetRegistration(type).Name);
@@ -415,7 +415,7 @@ namespace Robust.Client.ViewVariables.Instances
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity.Uid} {eventArgs.Entry}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity} {eventArgs.Entry}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;
@@ -446,7 +446,7 @@ namespace Robust.Client.ViewVariables.Instances
         {
             try
             {
-                _entityManager.RemoveComponent(_entity.Uid, component);
+                _entityManager.RemoveComponent(_entity, component);
             }
             catch (Exception e)
             {
@@ -503,7 +503,7 @@ namespace Robust.Client.ViewVariables.Instances
                 try
                 {
                     _entitySession =
-                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity.Uid));
+                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity));
                 }
                 catch (SessionDenyException e)
                 {

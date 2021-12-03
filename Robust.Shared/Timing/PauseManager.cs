@@ -28,7 +28,7 @@ namespace Robust.Shared.Timing
 
                 foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
                 {
-                    IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = true;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPaused = true;
                 }
             }
             else
@@ -37,7 +37,7 @@ namespace Robust.Shared.Timing
 
                 foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
                 {
-                    IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = false;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPaused = false;
                 }
             }
         }
@@ -52,7 +52,7 @@ namespace Robust.Shared.Timing
             foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
                 entity.RunMapInit();
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPaused = false;
             }
         }
 
@@ -67,11 +67,11 @@ namespace Robust.Shared.Timing
 
             foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).GridID != gridId)
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID != gridId)
                     continue;
 
                 entity.RunMapInit();
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPaused = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPaused = false;
             }
         }
 

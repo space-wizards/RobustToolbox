@@ -32,8 +32,8 @@ namespace Robust.Client.Placement.Modes
             var mapId = MouseCoords.GetMapId(pManager.EntityManager);
 
             var snapToEntities = IoCManager.Resolve<IEntityLookup>().GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype == pManager.CurrentPrototype && IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID == mapId)
-                .OrderBy(entity => (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
+                .Where(entity => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID == mapId)
+                .OrderBy(entity => (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -42,7 +42,7 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestEntity = snapToEntities[0];
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ISpriteComponent?>(closestEntity.Uid, out var component) || component.BaseRSI == null)
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ISpriteComponent?>(closestEntity, out var component) || component.BaseRSI == null)
             {
                 return;
             }
@@ -51,8 +51,8 @@ namespace Robust.Client.Placement.Modes
 
             var closestRect =
                 Box2.FromDimensions(
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(closestEntity.Uid).WorldPosition.X - closestBounds.X / 2f,
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(closestEntity.Uid).WorldPosition.Y - closestBounds.Y / 2f,
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(closestEntity).WorldPosition.X - closestBounds.X / 2f,
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(closestEntity).WorldPosition.Y - closestBounds.Y / 2f,
                     closestBounds.X, closestBounds.Y);
 
             var sides = new[]

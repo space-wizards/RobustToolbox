@@ -119,7 +119,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private float _invDt0;
 
-        public MapId MapId => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID;
+        public MapId MapId => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
         public void AddAwakeBody(PhysicsComponent body)

@@ -112,7 +112,7 @@ namespace Robust.Server.Console.Commands
             var pauseManager = IoCManager.Resolve<IPauseManager>();
             pauseManager.SetMapPaused(mapId, false);
             IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(mapId);
-            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).Gravity = new Vector2(0, -9.8f);
+            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).Gravity = new Vector2(0, -9.8f);
 
             return;
         }
@@ -286,7 +286,7 @@ namespace Robust.Server.Console.Commands
                     IEntity tempQualifier1 = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                     var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
                     box.BodyType = BodyType.Dynamic;
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(box.Owner.Uid).WorldPosition = y;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(box.Owner).WorldPosition = y;
                     broadphase.CreateFixture(box,
                         new Fixture(box, shape) {
                         CollisionLayer = 2,
@@ -306,10 +306,12 @@ namespace Robust.Server.Console.Commands
             var broadphaseSystem = EntitySystem.Get<FixtureSystem>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId)).Uid;
+            IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
+            var groundUid = (EntityUid) tempQualifier;
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId)).Uid;
+            IEntity tempQualifier1 = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+            var bodyUid = (EntityUid) tempQualifier1;
             var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);
 
             body.BodyType = BodyType.Dynamic;
@@ -357,7 +359,8 @@ namespace Robust.Server.Console.Commands
                 Timer.Spawn(i * 20, () =>
                 {
                     if (!mapManager.MapExists(mapId)) return;
-                    var ent = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId)).Uid;
+                    IEntity tempQualifier2 = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
+                    var ent = (EntityUid) tempQualifier2;
                     var box = entityManager.AddComponent<PhysicsComponent>(ent);
                     box.BodyType = BodyType.Dynamic;
                     box.FixedRotation = false;

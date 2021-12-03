@@ -32,7 +32,7 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Anchored)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Anchored)
             {
                 AnchorStateChanged();
             }
@@ -42,11 +42,11 @@ namespace Robust.Client.GameObjects
         {
             SendDirty();
 
-            if(!IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Anchored)
+            if(!IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).GridID);
-            _lastPosition = (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).GridID, grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Coordinates));
+            var grid = _mapManager.GetGrid(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).GridID);
+            _lastPosition = (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).GridID, grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Coordinates));
         }
 
         protected override void Shutdown()
@@ -58,7 +58,7 @@ namespace Robust.Client.GameObjects
 
         private void SendDirty()
         {
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Anchored)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Anchored)
             {
                 IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));
@@ -69,13 +69,13 @@ namespace Robust.Client.GameObjects
         {
             Occluding = OccluderDir.None;
 
-            if (Deleted || !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Anchored)
+            if (Deleted || !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Anchored)
             {
                 return;
             }
 
-            var grid = _mapManager.GetGrid(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).GridID);
-            var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Coordinates;
+            var grid = _mapManager.GetGrid(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).GridID);
+            var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
                 foreach (var neighbor in grid.GetInDir(position, dir))
@@ -88,7 +88,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            var angle = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).LocalRotation;
+            var angle = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).LocalRotation;
             var dirRolling = angle.GetCardinalDir();
             // dirRolling starts at effective south
 

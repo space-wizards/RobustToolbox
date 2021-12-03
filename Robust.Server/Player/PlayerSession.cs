@@ -44,7 +44,7 @@ namespace Robust.Server.Player
 
         [ViewVariables] public IEntity? AttachedEntity { get; set; }
 
-        [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
+        [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity;
 
         private SessionStatus _status = SessionStatus.Connecting;
 
@@ -120,7 +120,7 @@ namespace Robust.Server.Player
             if (entity == null)
                 return;
 
-            AttachToEntity(entity.Uid);
+            AttachToEntity((EntityUid) entity);
         }
 
         /// <inheritdoc />
@@ -180,7 +180,7 @@ namespace Robust.Server.Player
         {
             if (Name != null && AttachedEntity != null)
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity.Uid).EntityName = Name;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity).EntityName = Name;
             }
         }
 
@@ -233,7 +233,7 @@ namespace Robust.Server.Player
             if (AttachedEntity == null)
                 PlayerState.ControlledEntity = null;
             else
-                PlayerState.ControlledEntity = AttachedEntity.Uid;
+                PlayerState.ControlledEntity = AttachedEntity;
 
             _playerManager.Dirty();
         }

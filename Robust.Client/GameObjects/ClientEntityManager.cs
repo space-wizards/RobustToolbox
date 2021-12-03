@@ -116,7 +116,7 @@ namespace Robust.Client.GameObjects
 
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = entity.Uid;
+            msg.EntityUid = entity;
             msg.NetId = netId.Value;
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;

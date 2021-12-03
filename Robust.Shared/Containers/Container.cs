@@ -62,7 +62,7 @@ namespace Robust.Shared.Containers
 
             foreach (var entity in _containerList)
             {
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(entity.Uid);
+                IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
             }
         }
     }

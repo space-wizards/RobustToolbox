@@ -299,8 +299,8 @@ namespace Robust.Shared.GameObjects
 
         public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).WorldPosition;
-            worldRot ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).WorldRotation;
+            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldPosition;
+            worldRot ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldRotation;
             var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
             var bounds = new Box2(transform.Position, transform.Position);
@@ -564,17 +564,17 @@ namespace Robust.Shared.GameObjects
             {
                 var linearVelocity = _linVelocity;
                 var angularVelocity = _angVelocity;
-                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Parent?.Owner;
+                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Parent?.Owner;
 
                 while (parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out PhysicsComponent? body))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out PhysicsComponent? body))
                     {
                         linearVelocity += body.LinearVelocity;
                         angularVelocity += body.AngularVelocity;
                     }
 
-                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
+                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
                 }
 
                 return (linearVelocity, angularVelocity);
@@ -620,16 +620,16 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _linVelocity;
-                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Parent?.Owner;
+                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Parent?.Owner;
 
                 while (parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out PhysicsComponent? body))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out PhysicsComponent? body))
                     {
                         velocity += body.LinearVelocity;
                     }
 
-                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
+                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
                 }
 
                 return velocity;
@@ -675,16 +675,16 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _angVelocity;
-                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Parent?.Owner;
+                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).Parent?.Owner;
 
                 while (parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out PhysicsComponent? body))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent, out PhysicsComponent? body))
                     {
                         velocity += body.AngularVelocity;
                     }
 
-                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
+                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).Parent?.Owner;
                 }
 
                 return velocity;
@@ -729,7 +729,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -763,7 +763,7 @@ namespace Robust.Shared.GameObjects
 
         public Transform GetTransform()
         {
-            var (worldPos, worldRot) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).GetWorldPositionRotation();
+            var (worldPos, worldRot) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
 
             var xf = new Transform(worldPos, (float) worldRot.Theta);
             // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
@@ -841,10 +841,10 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID != MapId.Nullspace)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID != MapId.Nullspace)
             {
-                IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID);
-                PhysicsMap = IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid);
+                IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID);
+                PhysicsMap = IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier);
             }
 
             Dirty();
@@ -869,7 +869,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new CollisionChangeMessage(this, Owner, _canCollide));
                     IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(OwnerUid, new PhysicsUpdateMessage(this));
                 }
             }
@@ -878,8 +878,8 @@ namespace Robust.Shared.GameObjects
                 _awake = false;
             }
 
-            var startup = new PhysicsInitializedEvent(Owner.Uid);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, ref startup);
+            var startup = new PhysicsInitializedEvent(Owner);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, ref startup);
 
             ResetMassData();
         }
@@ -974,11 +974,11 @@ namespace Robust.Shared.GameObjects
             // Does a joint prevent collision?
             // if one of them doesn't have jointcomp then they can't share a common joint.
             // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner.Uid, out JointComponent? jointComponentA) &&
-                IoCManager.Resolve<IEntityManager>().TryGetComponent(other.Owner.Uid, out JointComponent? jointComponentB))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out JointComponent? jointComponentA) &&
+                IoCManager.Resolve<IEntityManager>().TryGetComponent(other.Owner, out JointComponent? jointComponentB))
             {
-                var aUid = jointComponentA.Owner.Uid;
-                var bUid = jointComponentB.Owner.Uid;
+                var aUid = (EntityUid) jointComponentA.Owner;
+                var bUid = (EntityUid) jointComponentB.Owner;
 
                 foreach (var (_, joint) in jointComponentA.Joints)
                 {
@@ -992,12 +992,12 @@ namespace Robust.Shared.GameObjects
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, preventCollideMessage);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 
             preventCollideMessage = new PreventCollideEvent(other, this);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(other.Owner.Uid, preventCollideMessage);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 

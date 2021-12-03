@@ -39,7 +39,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new PointLightToggleEvent(_enabled));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled));
                 Dirty();
             }
         }

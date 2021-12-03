@@ -428,7 +428,7 @@ namespace Robust.Shared.GameObjects
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
                         IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
-                        _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier.Uid).AnchorEntity(this);
+                        _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier).AnchorEntity(this);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -439,7 +439,7 @@ namespace Robust.Shared.GameObjects
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
                     IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
-                    _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier.Uid).AnchorEntity(this);
+                    _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier).AnchorEntity(this);
                 }
                 else if (!value && _anchored)
                 {
@@ -456,7 +456,11 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables]
         public IEnumerable<TransformComponent> Children =>
-            _children.Select(u => { return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(IoCManager.Resolve<IEntityManager>().GetEntity(u).Uid); });
+            _children.Select(u =>
+            {
+                IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(u);
+                return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier);
+            });
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
 
@@ -511,7 +515,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // second level node, terminates recursion up the branch of the tree
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.Owner.Uid, out IMapComponent? mapComp))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.Owner, out IMapComponent? mapComp))
                     {
                         value = mapComp.WorldMap;
                     }
@@ -546,12 +550,12 @@ namespace Robust.Shared.GameObjects
 
         private GridId GetGridIndex()
         {
-            if (IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(Owner.Uid))
+            if (IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(Owner))
             {
                 return GridId.Invalid;
             }
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner.Uid, out IMapGridComponent? gridComponent))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out IMapGridComponent? gridComponent))
             {
                 return gridComponent.GridIndex;
             }
@@ -733,7 +737,7 @@ namespace Robust.Shared.GameObjects
 
         public void AttachParent(IEntity parent)
         {
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid);
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
             AttachParent(transform);
         }
 
@@ -872,7 +876,7 @@ namespace Robust.Shared.GameObjects
 #endif
                             }
 
-                            AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newParent.Uid));
+                            AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newParent));
                         }
                     }
 

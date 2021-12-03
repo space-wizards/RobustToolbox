@@ -34,7 +34,7 @@ namespace Robust.Server.Console.Commands
 
             var position = new Vector2(posX, posY);
             IEntity? tempQualifier = player.AttachedEntity;
-            var transform = (tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid) : null);
+            var transform = (tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier) : null);
 
             if(transform == null)
                 return;
@@ -104,7 +104,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity.Uid).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity.Uid).Coordinates;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity).Coordinates;
             }
             else if (args.Length > 1)
             {
@@ -140,7 +140,7 @@ namespace Robust.Server.Console.Commands
                         continue;
                     }
 
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity.Uid).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(targetSession.AttachedEntity.Uid).Coordinates;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(targetSession.AttachedEntity).Coordinates;
                 }
             }
         }

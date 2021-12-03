@@ -81,7 +81,7 @@ namespace Robust.Shared.Map
                 return MapCoordinates.Nullspace;
 
             IEntity tempQualifier = entityManager.GetEntity(EntityId);
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid);
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier);
             var worldPos = transform.WorldMatrix.Transform(Position);
             return new MapCoordinates(worldPos, transform.MapID);
         }
@@ -105,11 +105,11 @@ namespace Robust.Shared.Map
         /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
         public static EntityCoordinates FromMap(IEntity entity, MapCoordinates coordinates)
         {
-            if(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID != coordinates.MapId)
+            if(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
-            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).InvWorldMatrix.Transform(coordinates.Position);
-            return new EntityCoordinates(entity.Uid, localPos);
+            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(coordinates.Position);
+            return new EntityCoordinates(entity, localPos);
         }
 
         /// <summary>
@@ -137,7 +137,7 @@ namespace Robust.Shared.Map
             var mapId = coordinates.MapId;
             var mapEntity = mapManager.GetMapEntity(mapId);
 
-            return new EntityCoordinates(mapEntity.Uid, coordinates.Position);
+            return new EntityCoordinates(mapEntity, coordinates.Position);
         }
 
         /// <summary>
@@ -198,11 +198,11 @@ namespace Robust.Shared.Map
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var mapPos = ToMap(IoCManager.Resolve<IEntityManager>());
 
-            if(!IsValid(entityManager) || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID != mapPos.MapId)
-                return new EntityCoordinates(entity.Uid, Vector2.Zero);
+            if(!IsValid(entityManager) || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
+                return new EntityCoordinates(entity, Vector2.Zero);
 
-            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).InvWorldMatrix.Transform(mapPos.Position);
-            return new EntityCoordinates(entity.Uid, localPos);
+            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
+            return new EntityCoordinates(entity, localPos);
         }
 
         /// <summary>
@@ -214,7 +214,7 @@ namespace Robust.Shared.Map
         public GridId GetGridId(IEntityManager entityManager)
         {
             IEntity tempQualifier = GetEntity(entityManager);
-            return !IsValid(entityManager) ? GridId.Invalid : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).GridID;
+            return !IsValid(entityManager) ? GridId.Invalid : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).GridID;
         }
 
         /// <summary>
@@ -226,7 +226,7 @@ namespace Robust.Shared.Map
         public MapId GetMapId(IEntityManager entityManager)
         {
             IEntity tempQualifier = GetEntity(entityManager);
-            return !IsValid(entityManager) ? MapId.Nullspace : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).MapID;
+            return !IsValid(entityManager) ? MapId.Nullspace : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).MapID;
         }
 
         /// <summary>

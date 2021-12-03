@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using Color = Robust.Shared.Maths.Color;
@@ -1027,7 +1028,7 @@ namespace Robust.Client.Graphics.Clyde
                     return cmp;
                 }
 
-                return a.Owner.Uid.CompareTo(b.Owner.Uid);
+                return a.Owner.CompareTo(b.Owner);
             }
         }
 

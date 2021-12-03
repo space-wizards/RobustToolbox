@@ -59,11 +59,11 @@ namespace Robust.Shared.GameObjects
         protected override void Initialize()
         {
             base.Initialize();
-            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).AttachParent(_mapManager.GetMapEntity(mapId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntity(mapId));
             }
         }
 
@@ -76,14 +76,14 @@ namespace Robust.Shared.GameObjects
 
             if (result)
             {
-                xform.Parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid);
+                xform.Parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner);
 
                 // anchor snapping
                 xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;
 
                 xform.SetAnchored(result);
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<PhysicsComponent?>(xform.Owner.Uid, out var physicsComponent))
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
                 {
                     physicsComponent.BodyType = BodyType.Static;
                 }
@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
             Grid.RemoveFromSnapGridCell(tileIndices, transform.OwnerUid);
             xform.SetAnchored(false);
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent<PhysicsComponent?>(xform.Owner.Uid, out var physicsComponent))
+            if (IoCManager.Resolve<IEntityManager>().TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
             {
                 physicsComponent.BodyType = BodyType.Dynamic;
             }

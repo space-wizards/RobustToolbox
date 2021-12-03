@@ -46,9 +46,9 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (IoCManager.Resolve<IEntityManager>().HasComponent(entity.Uid, registration.Type))
+            if (IoCManager.Resolve<IEntityManager>().HasComponent(entity, registration.Type))
             {
-                shell.WriteLine($"Entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName} already has a {componentName} component.");
+                shell.WriteLine($"Entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName} already has a {componentName} component.");
             }
 
             var component = (Component) compFactory.GetComponent(registration.Type);
@@ -56,7 +56,7 @@ namespace Robust.Server.Console.Commands
             component.Owner = entity;
             entManager.AddComponent(entity, component);
 
-            shell.WriteLine($"Added {componentName} component to entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName}.");
+            shell.WriteLine($"Added {componentName} component to entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}.");
         }
     }
 }

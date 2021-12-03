@@ -88,7 +88,7 @@ namespace Robust.Shared.Containers
             IEntity? tempQualifier = ContainedEntity;
             if (tempQualifier != null)
             {
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(tempQualifier.Uid);
+                IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) tempQualifier);
             }
         }
     }

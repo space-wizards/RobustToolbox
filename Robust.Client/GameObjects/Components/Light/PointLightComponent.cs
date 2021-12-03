@@ -32,7 +32,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_enabled == value) return;
                 base.Enabled = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
             }
         }
 
@@ -45,7 +45,7 @@ namespace Robust.Client.GameObjects
                 if (_containerOccluded == value) return;
 
                 _containerOccluded = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
             }
         }
 

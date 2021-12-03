@@ -140,7 +140,7 @@ namespace Robust.Client.Player
         /// <param name="entity">AttachedEntity in the server session.</param>
         private void UpdateAttachedEntity(EntityUid? entity)
         {
-            if (LocalPlayer!.ControlledEntity?.Uid == entity)
+            if (LocalPlayer!.ControlledEntity == entity)
             {
                 return;
             }

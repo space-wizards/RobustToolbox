@@ -68,7 +68,7 @@ namespace Robust.Shared.Localization
             {
                 IEntity entity = (IEntity)entity0.Value;
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity.Uid, out var grammar) && grammar.Gender.HasValue)
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity, out var grammar) && grammar.Gender.HasValue)
                 {
                     return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
                 }
@@ -168,7 +168,7 @@ namespace Robust.Shared.Localization
             {
                 IEntity entity = (IEntity)entity0.Value;
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity.Uid, out var grammar) && grammar.ProperNoun.HasValue)
+                if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity, out var grammar) && grammar.ProperNoun.HasValue)
                 {
                     return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());
                 }

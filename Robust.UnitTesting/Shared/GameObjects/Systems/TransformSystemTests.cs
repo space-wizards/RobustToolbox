@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             entMan.EventBus.SubscribeEvent<MoveEvent>(EventSource.Local, subscriber, MoveEventHandler);
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1.Uid).LocalPosition = Vector2.One;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).LocalPosition = Vector2.One;
 
             Assert.That(calledCount, Is.EqualTo(1));
             void MoveEventHandler(ref MoveEvent ev)

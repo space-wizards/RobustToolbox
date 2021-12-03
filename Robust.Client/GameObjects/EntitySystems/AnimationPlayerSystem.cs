@@ -46,7 +46,7 @@ namespace Robust.Client.GameObjects
             foreach (var key in remie)
             {
                 component.PlayingAnimations.Remove(key);
-                EntityManager.EventBus.RaiseLocalEvent(component.Owner.Uid, new AnimationCompletedEvent {Uid = component.Owner.Uid, Key = key});
+                EntityManager.EventBus.RaiseLocalEvent(component.Owner, new AnimationCompletedEvent {Uid = component.Owner, Key = key});
                 component.AnimationComplete(key);
             }
 

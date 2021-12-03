@@ -358,7 +358,7 @@ namespace Robust.Client.GameObjects
                 foreach (var effect in _owner._Effects)
                 {
                     IEntity? tempQualifier = effect.AttachedEntity;
-                    if ((tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid) : null).MapID != (player != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.Uid) : null).MapID &&
+                    if ((tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier) : null).MapID != (player != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player) : null).MapID &&
                         effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
@@ -377,7 +377,7 @@ namespace Robust.Client.GameObjects
 
                     IEntity? tempQualifier1 = effect.AttachedEntity;
                     var coordinates =
-                        ((tempQualifier1 != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier1.Uid) : null).Coordinates ?? effect.Coordinates)
+                        ((tempQualifier1 != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier1) : null).Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
                     var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;

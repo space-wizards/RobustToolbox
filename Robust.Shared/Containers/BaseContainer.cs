@@ -94,7 +94,7 @@ namespace Robust.Shared.Containers
                 return false;
 
             // no, you can't put maps or grids into containers
-            if (toinsert.HasComponent<IMapComponent>() || toinsert.HasComponent<IMapGridComponent>())
+            if (IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(toinsert.Uid) || IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(toinsert.Uid))
                 return false;
 
             // Crucial, prevent circular insertion.

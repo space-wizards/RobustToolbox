@@ -283,7 +283,7 @@ namespace Robust.Shared.Physics
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!body.Owner.HasComponent<JointComponent>()) return;
+            if (!IoCManager.Resolve<IEntityManager>().HasComponent<JointComponent>(body.Owner.Uid)) return;
 
             EntityManager.RemoveComponent<JointComponent>(body.Owner.Uid);
         }

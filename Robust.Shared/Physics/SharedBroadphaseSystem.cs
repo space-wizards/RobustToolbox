@@ -861,7 +861,7 @@ namespace Robust.Shared.Physics
             }
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (entity.HasComponent<BroadphaseComponent>() &&
+            if (IoCManager.Resolve<IEntityManager>().HasComponent<BroadphaseComponent>(entity.Uid) &&
                 entity.Transform.Parent == null)
             {
                 return null;

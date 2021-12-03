@@ -167,8 +167,9 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1.Uid));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
-            Assert.That(ent1.HasComponent<PhysicsComponent>(), Is.False);
-            Assert.That(entMan.GetEntity(grid.GridEntityId).HasComponent<PhysicsComponent>(), Is.True);
+            Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(ent1.Uid), Is.False);
+            IEntity tempQualifier = entMan.GetEntity(grid.GridEntityId);
+            Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(tempQualifier.Uid), Is.True);
         }
 
         /// <summary>

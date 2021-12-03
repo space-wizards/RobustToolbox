@@ -966,7 +966,7 @@ namespace Robust.Server.Maps
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
                 {
                     // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                    if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
+                    if (!IsBlueprintMode || !IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(CurrentWritingEntity!.Uid) ||
                         CurrentWritingComponent != "Transform")
                     {
                         Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);

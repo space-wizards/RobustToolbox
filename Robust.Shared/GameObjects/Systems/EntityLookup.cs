@@ -737,7 +737,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (entity.HasComponent<EntityLookupComponent>() &&
+            if (IoCManager.Resolve<IEntityManager>().HasComponent<EntityLookupComponent>(entity.Uid) &&
                 entity.Transform.Parent == null)
             {
                 return null;
@@ -801,7 +801,7 @@ namespace Robust.Shared.GameObjects
                 ++necessary;
             }
 
-            if (!entity.HasComponent<EntityLookupComponent>())
+            if (!IoCManager.Resolve<IEntityManager>().HasComponent<EntityLookupComponent>(entity.Uid))
             {
                 foreach (var childTx in entity.Transform.ChildEntityUids)
                 {

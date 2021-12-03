@@ -546,7 +546,7 @@ namespace Robust.Shared.GameObjects
 
         private GridId GetGridIndex()
         {
-            if (Owner.HasComponent<IMapComponent>())
+            if (IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(Owner.Uid))
             {
                 return GridId.Invalid;
             }

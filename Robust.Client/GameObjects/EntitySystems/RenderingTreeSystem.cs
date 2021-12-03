@@ -117,7 +117,7 @@ namespace Robust.Client.GameObjects
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
             if (!_checkedChildren.Add(sender.Owner.Uid) ||
-                sender.Owner.HasComponent<RenderingTreeComponent>()) return;
+                IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(sender.Owner.Uid)) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
@@ -252,7 +252,7 @@ namespace Robust.Client.GameObjects
         internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
         {
             if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.MapID == MapId.Nullspace ||
-                entity.HasComponent<RenderingTreeComponent>()) return null;
+                IoCManager.Resolve<IEntityManager>().HasComponent<RenderingTreeComponent>(entity.Uid)) return null;
 
             var parent = entity.Transform.Parent?.Owner;
 

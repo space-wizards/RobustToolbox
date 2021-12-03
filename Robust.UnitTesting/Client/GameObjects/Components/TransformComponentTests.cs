@@ -91,9 +91,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2 = entMan.SpawnEntity(null, initalPos);
             var node3 = entMan.SpawnEntity(null, initalPos);
 
-            node1.Name = "node1_dummy";
-            node2.Name = "node2_dummy";
-            node3.Name = "node3_dummy";
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(node1.Uid).EntityName = "node1_dummy";
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(node2.Uid).EntityName = "node2_dummy";
+            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(node3.Uid).EntityName = "node3_dummy";
 
             var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1.Uid);
             var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2.Uid);

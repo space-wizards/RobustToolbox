@@ -13,14 +13,6 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityUid Uid { get; }
 
-
-        [ViewVariables(VVAccess.ReadWrite)]
-        public string Name
-        {
-            get => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName;
-            set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName = value;
-        }
-
         #endregion Members
 
         #region Initialization

@@ -48,7 +48,7 @@ namespace Robust.Server.Bql
                 IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Uid).LocalPosition.X.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$LY",
                 IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Uid).LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
-            ruleString = ruleString.Replace("$NAME", ent.Name);
+            ruleString = ruleString.Replace("$NAME", IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityName);
 
             if (shell.Player is IPlayerSession player)
             {

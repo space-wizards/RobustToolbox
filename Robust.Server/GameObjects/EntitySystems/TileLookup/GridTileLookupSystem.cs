@@ -122,7 +122,7 @@ namespace Robust.Server.GameObjects
         {
             if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
-                throw new InvalidOperationException($"Can't get nodes for deleted entity {entity.Name}!");
+                throw new InvalidOperationException($"Can't get nodes for deleted entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityName}!");
             }
 
             if (_lastKnownNodes.TryGetValue(entity, out var nodes))

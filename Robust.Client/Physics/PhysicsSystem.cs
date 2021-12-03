@@ -35,7 +35,8 @@ namespace Robust.Client.Physics
         protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
-            MapManager.GetMapEntity(eventArgs.Map).AddComponent<PhysicsMapComponent>();
+            IEntity tempQualifier = MapManager.GetMapEntity(eventArgs.Map);
+            IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsMapComponent>(tempQualifier);
         }
     }
 }

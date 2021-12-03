@@ -275,7 +275,7 @@ namespace Robust.Shared.Map
                     var newEnt = (IEntity) _entityManager.CreateEntityUninitialized(null, entityUid);
                     _mapEntities.Add(actualID, newEnt.Uid);
 
-                    var mapComp = newEnt.AddComponent<MapComponent>();
+                    var mapComp = IoCManager.Resolve<IEntityManager>().AddComponent<MapComponent>(newEnt);
                     mapComp.WorldMap = actualID;
                     _entityManager.InitializeComponents(newEnt.Uid);
                     _entityManager.StartComponents(newEnt.Uid);
@@ -354,7 +354,7 @@ namespace Robust.Shared.Map
             // re-use or add map component
             if (!newMapEntity.TryGetComponent(out MapComponent? mapComp))
             {
-                mapComp = newMapEntity.AddComponent<MapComponent>();
+                mapComp = IoCManager.Resolve<IEntityManager>().AddComponent<MapComponent>(newMapEntity);
             }
             else
             {
@@ -470,7 +470,7 @@ namespace Robust.Shared.Map
 
                     Logger.DebugS("map", $"Binding grid {actualID} to entity {grid.GridEntityId}");
 
-                    var gridComp = gridEnt.AddComponent<MapGridComponent>();
+                    var gridComp = IoCManager.Resolve<IEntityManager>().AddComponent<MapGridComponent>(gridEnt);
                     gridComp.GridIndex = grid.Index;
 
                     //TODO: This is a hack to get TransformComponent.MapId working before entity states

@@ -120,7 +120,8 @@ namespace Robust.Server.Console.Commands
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
+            IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
             var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
@@ -159,8 +160,9 @@ namespace Robust.Server.Console.Commands
                 {
                     var x = 0.0f;
 
-                    var box = entityManager.SpawnEntity(null,
-                        new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
+                    IEntity tempQualifier1 = entityManager.SpawnEntity(null,
+                        new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                    var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
 
                     box.BodyType = BodyType.Dynamic;
                     shape = new PolygonShape();
@@ -184,7 +186,8 @@ namespace Robust.Server.Console.Commands
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
+            IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
             var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
@@ -222,8 +225,9 @@ namespace Robust.Server.Console.Commands
                 {
                     var x = 0.0f;
 
-                    var box = entityManager.SpawnEntity(null,
-                        new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
+                    IEntity tempQualifier1 = entityManager.SpawnEntity(null,
+                        new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                    var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
 
                     box.BodyType = BodyType.Dynamic;
                     shape = new PhysShapeCircle {Radius = 0.5f};
@@ -248,7 +252,8 @@ namespace Robust.Server.Console.Commands
 
             // Setup ground
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
+            IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+            var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
             var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
@@ -277,7 +282,8 @@ namespace Robust.Server.Console.Commands
 
                 for (var j = i; j < count; ++j)
                 {
-                    var box = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
+                    IEntity tempQualifier1 = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                    var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
                     box.BodyType = BodyType.Dynamic;
                     box.Owner.Transform.WorldPosition = y;
                     broadphase.CreateFixture(box,

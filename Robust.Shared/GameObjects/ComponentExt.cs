@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 
 namespace Robust.Shared.GameObjects
@@ -22,7 +23,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            component = entity.AddComponent<T>();
+            component = IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
             return false;
         }
 
@@ -40,7 +41,7 @@ namespace Robust.Shared.GameObjects
                 return component;
             }
 
-            return entity.AddComponent<T>();
+            return IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
         }
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace Robust.Shared.GameObjects
 
             Logger.Warning(warning);
 
-            component = entity.AddComponent<T>();
+            component = IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
             return false;
         }
 
@@ -92,7 +93,7 @@ namespace Robust.Shared.GameObjects
 
             Logger.Warning(warning);
 
-            return entity.AddComponent<T>();
+            return IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
         }
 
         public static IComponent SetAndDirtyIfChanged<TValue>(

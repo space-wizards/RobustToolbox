@@ -63,7 +63,8 @@ namespace Robust.UnitTesting.Shared.Physics
 
                 mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
-                var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
+                IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
                 var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
                 var horizontalFixture = new Fixture(ground, horizontal)
@@ -96,8 +97,9 @@ namespace Robust.UnitTesting.Shared.Physics
                     {
                         var x = 0.0f;
 
-                        var box = entityManager.SpawnEntity(null,
-                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
+                        IEntity tempQualifier1 = entityManager.SpawnEntity(null,
+                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                        var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
 
                         box.BodyType = BodyType.Dynamic;
                         var poly = new PolygonShape(0.001f);
@@ -177,7 +179,8 @@ namespace Robust.UnitTesting.Shared.Physics
                 mapId = mapManager.CreateMap();
                 mapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().Gravity = new Vector2(0, -9.8f);
 
-                var ground = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId)).AddComponent<PhysicsComponent>();
+                IEntity tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
+                var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
 
                 var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
                 var horizontalFixture = new Fixture(ground, horizontal)
@@ -212,8 +215,9 @@ namespace Robust.UnitTesting.Shared.Physics
                     {
                         var x = 0.0f;
 
-                        var circle = entityManager.SpawnEntity(null,
-                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId)).AddComponent<PhysicsComponent>();
+                        IEntity tempQualifier1 = entityManager.SpawnEntity(null,
+                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                        var circle = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
 
                         circle.LinearDamping = 0.05f;
                         circle.BodyType = BodyType.Dynamic;

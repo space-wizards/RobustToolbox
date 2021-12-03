@@ -223,7 +223,7 @@ namespace Robust.Shared.Prototypes
                 var component = (Component) factory.GetComponent(name);
                 component.Owner = entity;
                 componentDependencyManager.OnComponentAdd(entity.Uid, component);
-                entity.AddComponent(component);
+                IoCManager.Resolve<IEntityManager>().AddComponent(entity, component);
             }
 
             // Update entity metadata
@@ -281,7 +281,7 @@ namespace Robust.Shared.Prototypes
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;
-                entity.AddComponent(newComponent);
+                IoCManager.Resolve<IEntityManager>().AddComponent(entity, newComponent);
                 component = newComponent;
             }
 

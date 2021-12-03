@@ -68,7 +68,7 @@ namespace Robust.Client.Player
 
             if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
             {
-                eye = ControlledEntity.AddComponent<EyeComponent>();
+                eye = IoCManager.Resolve<IEntityManager>().AddComponent<EyeComponent>(ControlledEntity);
             }
             eye.Current = true;
 

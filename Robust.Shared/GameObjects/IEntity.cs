@@ -64,22 +64,6 @@ namespace Robust.Shared.GameObjects
 
         #region Components
 
-        /// <summary>
-        ///     Public method to add a component to an entity.
-        ///     Calls the component's onAdd method, which also adds it to the component manager.
-        /// </summary>
-        /// <param name="component">The component to add.</param>
-        public void AddComponent(Component component)
-        {
-            IoCManager.Resolve<IEntityManager>().AddComponent(this, component);
-        }
-
-        public T AddComponent<T>()
-            where T : Component, new()
-        {
-            return IoCManager.Resolve<IEntityManager>().AddComponent<T>(this);
-        }
-
         public void RemoveComponent<T>()
         {
             IoCManager.Resolve<IEntityManager>().RemoveComponent<T>(Uid);

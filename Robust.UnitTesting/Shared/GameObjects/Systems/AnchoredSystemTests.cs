@@ -3,6 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -307,7 +308,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             var gridEnt = entMan.GetEntity(grid.GridEntityId); // we purposefully use the grid as container so parent stays the same, reparent will unanchor
-            var containerMan = gridEnt.AddComponent<ContainerManagerComponent>();
+            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(gridEnt);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 
@@ -335,7 +336,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
 
             // Act
             // assumed default body is Dynamic
-            var physComp = ent1.AddComponent<PhysicsComponent>();
+            var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
 
             Assert.That(physComp.BodyType, Is.EqualTo(BodyType.Static));
         }
@@ -357,7 +358,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(grid.TileIndicesFor(coordinates), new Tile(1));
 
             var ent1 = entMan.SpawnEntity(null, coordinates);
-            var physComp = ent1.AddComponent<PhysicsComponent>();
+            var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
             physComp.BodyType = BodyType.Dynamic;
 
             // Act
@@ -380,7 +381,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var ent1 = entMan.SpawnEntity(null, new MapCoordinates(new Vector2(7, 7), TestMapId));
             var tileIndices = grid.TileIndicesFor(ent1.Transform.Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
-            var physComp = ent1.AddComponent<PhysicsComponent>();
+            var physComp = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(ent1);
             ent1.Transform.Anchored = true;
 
             // Act
@@ -426,7 +427,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             grid.SetTile(tileIndices, new Tile(1));
 
             var gridEnt = entMan.GetEntity(grid.GridEntityId);
-            var containerMan = gridEnt.AddComponent<ContainerManagerComponent>();
+            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(gridEnt);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 

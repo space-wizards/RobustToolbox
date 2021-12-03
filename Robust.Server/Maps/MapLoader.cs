@@ -612,7 +612,7 @@ namespace Robust.Server.Maps
 
                     if (_loadOptions!.StoreMapUids)
                     {
-                        var comp = entity.AddComponent<MapSaveIdComponent>();
+                        var comp = IoCManager.Resolve<IEntityManager>().AddComponent<MapSaveIdComponent>(entity);
                         comp.Uid = uid;
                     }
                 }

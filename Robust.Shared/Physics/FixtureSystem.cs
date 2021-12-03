@@ -59,7 +59,8 @@ namespace Robust.Shared.Physics
 
                 if (component.Fixtures.TryAdd(fixture.ID, fixture)) continue;
 
-                Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
+                // This can happen on stuff like grids that save their fixtures to the map file.
+                // Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
             }
 
             component.SerializedFixtures.Clear();

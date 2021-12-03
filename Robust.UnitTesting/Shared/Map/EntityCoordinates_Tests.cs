@@ -254,14 +254,11 @@ namespace Robust.UnitTesting.Shared.Map
             mapEnt.Delete();
 
             // These shouldn't be valid anymore.
-            Assert.That(newEnt.Transform.Coordinates.IsValid(entityManager), Is.False);
-            Assert.That(gridEnt.Transform.Coordinates.IsValid(entityManager), Is.False);
+            Assert.That(newEnt.Deleted, Is.True);
+            Assert.That(gridEnt.Deleted, Is.True);
 
-            Assert.That(newEnt.Transform.Coordinates.TryGetEntity(entityManager, out newEntParent), Is.EqualTo(false));
-            Assert.That(newEntParent, Is.Null);
-
-            Assert.That(gridEnt.Transform.Coordinates.TryGetEntity(entityManager, out gridEntParent), Is.EqualTo(false));
-            Assert.That(gridEntParent, Is.Null);
+            Assert.That(newEntParent!.Deleted, Is.True);
+            Assert.That(gridEntParent!.Deleted, Is.True);
         }
 
         [Test]

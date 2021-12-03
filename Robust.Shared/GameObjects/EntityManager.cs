@@ -389,7 +389,7 @@ namespace Robust.Shared.GameObjects
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
             var metadata = new MetaDataComponent() { Owner = uid.Value };
-
+            Entities[uid.Value] = uid.Value;
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid.Value, metadata);
 

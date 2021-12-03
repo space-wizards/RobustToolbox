@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Map
                     grid.SetTile(new Vector2i(i, 0), Tile.Empty);
                 }
 
-                IEntity tempQualifier = entManager.GetEntity(grid.GridEntityId);
+                EntityUid tempQualifier = entManager.GetEntity(grid.GridEntityId);
                 Assert.That(!((!IoCManager.Resolve<IEntityManager>().EntityExists(tempQualifier) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(tempQualifier).EntityLifeStage) >= EntityLifeStage.Deleted));
             });
         }

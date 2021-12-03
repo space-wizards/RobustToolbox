@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
@@ -111,7 +111,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.CreateMap(new MapId(7));
             mapMan.CreateMap(mapID);
-            var oldMapEntity = mapMan.GetMapEntity(mapID);
+            var oldMapEntity = mapMan.GetMapEntityId(mapID);
             var newMapEntity = entMan.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, new MapId(7)));
 
             // Act

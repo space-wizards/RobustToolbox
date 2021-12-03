@@ -392,7 +392,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var type in componentFactory.AllRegisteredTypes)
             {
-                if (_entity.HasComponent(type))
+                if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity.Uid, type))
                     continue;
 
                 yield return (componentFactory.GetRegistration(type).Name);

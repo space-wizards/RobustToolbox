@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -45,7 +46,7 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (entity.HasComponent(registration.Type))
+            if (IoCManager.Resolve<IEntityManager>().HasComponent(entity.Uid, registration.Type))
             {
                 shell.WriteLine($"Entity {entity.Name} already has a {componentName} component.");
             }

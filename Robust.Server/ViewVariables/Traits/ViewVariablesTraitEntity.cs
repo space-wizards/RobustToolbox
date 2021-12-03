@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -43,7 +44,7 @@ namespace Robust.Server.ViewVariables.Traits
 
                 foreach (var type in componentFactory.AllRegisteredTypes)
                 {
-                    if (_entity.HasComponent(type))
+                    if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity.Uid, type))
                         continue;
 
                     list.Add(componentFactory.GetRegistration(type).Name);

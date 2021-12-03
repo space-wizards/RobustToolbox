@@ -22,15 +22,15 @@ namespace Robust.Shared.Localization
             _entityCache.Clear();
         }
 
-        private bool TryGetEntityLocAttrib(IEntity entity, string attribute, [NotNullWhen(true)] out string? value)
+        private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent<GrammarComponent?>(entity, out var grammar) &&
+            if (_entMan.TryGetComponent<GrammarComponent?>(entity, out var grammar) &&
                 grammar.Attributes.TryGetValue(attribute, out value))
             {
                 return true;
             }
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype is not {} prototype)
+            if (_entMan.GetComponent<MetaDataComponent>(entity).EntityPrototype is not {} prototype)
             {
                 value = null;
                 return false;

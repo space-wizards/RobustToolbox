@@ -45,15 +45,15 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(entity) ||
-                IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(entity) ||
+            if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted ||
+                EntityManager.HasComponent<IMapComponent>(entity) ||
+                EntityManager.HasComponent<IMapGridComponent>(entity) ||
                 entity.IsInContainer())
             {
                 return;
             }
 
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
+            var transform = EntityManager.GetComponent<TransformComponent>(entity);
 
             if (float.IsNaN(moveEvent.NewPosition.X) || float.IsNaN(moveEvent.NewPosition.Y))
             {
@@ -90,11 +90,11 @@ namespace Robust.Shared.GameObjects
 
     public sealed class ChangedGridEvent : EntityEventArgs
     {
-        public IEntity Entity;
+        public EntityUid Entity;
         public GridId OldGrid;
         public GridId NewGrid;
 
-        public ChangedGridEvent(IEntity entity, GridId oldGrid, GridId newGrid)
+        public ChangedGridEvent(EntityUid entity, GridId oldGrid, GridId newGrid)
         {
             Entity = entity;
             OldGrid = oldGrid;

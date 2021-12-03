@@ -426,8 +426,7 @@ namespace Robust.Shared.GameObjects
                 {
                     if (value && _mapManager.TryFindGridAt(MapPosition, out var grid))
                     {
-                        IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
-                        _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier).AnchorEntity(this);
+                        _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
                     }
                     // If no grid found then unanchor it.
                     else
@@ -437,8 +436,7 @@ namespace Robust.Shared.GameObjects
                 }
                 else if (value && !_anchored && _mapManager.TryFindGridAt(MapPosition, out var grid))
                 {
-                    IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(grid.GridEntityId);
-                    _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(tempQualifier).AnchorEntity(this);
+                    _anchored = IoCManager.Resolve<IEntityManager>().GetComponent<IMapGridComponent>(grid.GridEntityId).AnchorEntity(this);
                 }
                 else if (!value && _anchored)
                 {
@@ -457,8 +455,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<TransformComponent> Children =>
             _children.Select(u =>
             {
-                IEntity tempQualifier = IoCManager.Resolve<IEntityManager>().GetEntity(u);
-                return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier);
+                return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(u);
             });
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
@@ -514,7 +511,7 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // second level node, terminates recursion up the branch of the tree
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.Owner, out IMapComponent? mapComp))
+                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(p.OwnerUid, out IMapComponent? mapComp))
                     {
                         value = mapComp.WorldMap;
                     }
@@ -623,14 +620,14 @@ namespace Robust.Shared.GameObjects
 
             var mapPos = MapPosition;
 
-            IEntity newMapEntity;
+            EntityUid newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
             {
-                newMapEntity = IoCManager.Resolve<IEntityManager>().GetEntity(mapGrid.GridEntityId);
+                newMapEntity = mapGrid.GridEntityId;
             }
             else if (_mapManager.HasMapEntity(mapPos.MapId))
             {
-                newMapEntity = _mapManager.GetMapEntity(mapPos.MapId);
+                newMapEntity = _mapManager.GetMapEntityIdOrThrow(mapPos.MapId);
             }
             else
             {
@@ -734,7 +731,7 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new EntMapIdChangedMessage(Owner, oldId));
         }
 
-        public void AttachParent(IEntity parent)
+        public void AttachParent(EntityUid parent)
         {
             var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent);
             AttachParent(transform);
@@ -1050,7 +1047,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public readonly struct MoveEvent
     {
-        public MoveEvent(IEntity sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
         {
             Sender = sender;
             OldPosition = oldPos;
@@ -1059,7 +1056,7 @@ namespace Robust.Shared.GameObjects
             WorldAABB = worldAABB;
         }
 
-        public readonly IEntity Sender;
+        public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
         public readonly TransformComponent Component;
@@ -1075,7 +1072,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public readonly struct RotateEvent
     {
-        public RotateEvent(IEntity sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
+        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
         {
             Sender = sender;
             OldRotation = oldRotation;
@@ -1083,7 +1080,7 @@ namespace Robust.Shared.GameObjects
             WorldAABB = worldAABB;
         }
 
-        public readonly IEntity Sender;
+        public readonly EntityUid Sender;
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
 
@@ -1098,11 +1095,11 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public readonly struct AnchorStateChangedEvent
     {
-        public readonly IEntity Entity;
+        public readonly EntityUid Entity;
 
         public readonly bool Anchored;
 
-        public AnchorStateChangedEvent(IEntity entity, bool anchored)
+        public AnchorStateChangedEvent(EntityUid entity, bool anchored)
         {
             Entity = entity;
             Anchored = anchored;

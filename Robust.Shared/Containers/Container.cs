@@ -23,12 +23,12 @@ namespace Robust.Shared.Containers
         /// The generic container class uses a list of entities
         /// </summary>
         [DataField("ents")]
-        private readonly List<IEntity> _containerList = new();
+        private readonly List<EntityUid> _containerList = new();
 
         private readonly List<EntityUid> _expectedEntities = new();
 
         /// <inheritdoc />
-        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+        public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
         public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
@@ -36,21 +36,21 @@ namespace Robust.Shared.Containers
         public override string ContainerType => ClassName;
 
         /// <inheritdoc />
-        protected override void InternalInsert(IEntity toinsert)
+        protected override void InternalInsert(EntityUid toinsert)
         {
             _containerList.Add(toinsert);
             base.InternalInsert(toinsert);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(IEntity toremove)
+        protected override void InternalRemove(EntityUid toremove)
         {
             _containerList.Remove(toremove);
             base.InternalRemove(toremove);
         }
 
         /// <inheritdoc />
-        public override bool Contains(IEntity contained)
+        public override bool Contains(EntityUid contained)
         {
             return _containerList.Contains(contained);
         }
@@ -60,9 +60,10 @@ namespace Robust.Shared.Containers
         {
             base.Shutdown();
 
+            var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var entity in _containerList)
             {
-                IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
+                entMan.DeleteEntity((EntityUid) entity);
             }
         }
     }

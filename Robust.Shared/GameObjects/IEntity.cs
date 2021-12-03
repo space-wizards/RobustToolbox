@@ -158,9 +158,9 @@ namespace Robust.Shared.GameObjects
             return EntityManager.TryGetComponent(Uid, out component);
         }
 
-        public T? GetComponentOrNull<T>() where T : class
+        public T? GetComponentOrNull<T>() where T : class, IComponent
         {
-            return TryGetComponent(out T? component) ? component : default;
+            return EntityManager.GetComponentOrNull<T>(Uid);
         }
 
         public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
@@ -168,11 +168,6 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(!Deleted, "Tried to get component on a deleted entity.");
 
             return EntityManager.TryGetComponent(Uid, type, out component);
-        }
-
-        public IComponent? GetComponentOrNull(Type type)
-        {
-            return TryGetComponent(type, out var component) ? component : null;
         }
 
         public void QueueDelete()

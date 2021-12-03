@@ -45,15 +45,15 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                IoCManager.Resolve<IEntityManager>().HasComponent<IMapComponent>(entity) ||
-                IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(entity) ||
+            if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted ||
+                EntityManager.HasComponent<IMapComponent>(entity) ||
+                EntityManager.HasComponent<IMapGridComponent>(entity) ||
                 entity.IsInContainer())
             {
                 return;
             }
 
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
+            var transform = EntityManager.GetComponent<TransformComponent>(entity);
 
             if (float.IsNaN(moveEvent.NewPosition.X) || float.IsNaN(moveEvent.NewPosition.Y))
             {
@@ -64,13 +64,13 @@ namespace Robust.Shared.GameObjects
 
             // Change parent if necessary
             if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
-                EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) &&
+                EntityManager.EntityExists(grid.GridEntityId) &&
                 grid.GridEntityId != entity)
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Index != transform.GridID)
                 {
-                    transform.AttachParent(gridEnt);
+                    transform.AttachParent(grid.GridEntityId);
                     RaiseLocalEvent(entity, new ChangedGridEvent(entity, transform.GridID, grid.Index));
                 }
             }
@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
                 // Attach them to map / they are on an invalid grid
                 if (oldGridId != GridId.Invalid)
                 {
-                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
+                    transform.AttachParent(_mapManager.GetMapEntityIdOrThrow(transform.MapID));
                     RaiseLocalEvent(entity, new ChangedGridEvent(entity, oldGridId, GridId.Invalid));
                 }
             }
@@ -90,11 +90,11 @@ namespace Robust.Shared.GameObjects
 
     public sealed class ChangedGridEvent : EntityEventArgs
     {
-        public IEntity Entity;
+        public EntityUid Entity;
         public GridId OldGrid;
         public GridId NewGrid;
 
-        public ChangedGridEvent(IEntity entity, GridId oldGrid, GridId newGrid)
+        public ChangedGridEvent(EntityUid entity, GridId oldGrid, GridId newGrid)
         {
             Entity = entity;
             OldGrid = oldGrid;

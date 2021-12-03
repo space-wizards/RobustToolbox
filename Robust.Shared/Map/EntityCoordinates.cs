@@ -80,8 +80,7 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return MapCoordinates.Nullspace;
 
-            IEntity tempQualifier = entityManager.GetEntity(EntityId);
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier);
+            var transform = entityManager.GetComponent<TransformComponent>(EntityId);
             var worldPos = transform.WorldMatrix.Transform(Position);
             return new MapCoordinates(worldPos, transform.MapID);
         }
@@ -103,12 +102,13 @@ namespace Robust.Shared.Map
         /// <param name="coordinates"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        public static EntityCoordinates FromMap(IEntity entity, MapCoordinates coordinates)
+        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates)
         {
-            if(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID != coordinates.MapId)
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
+            if(transform.MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
-            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(coordinates.Position);
+            var localPos = transform.InvWorldMatrix.Transform(coordinates.Position);
             return new EntityCoordinates(entity, localPos);
         }
 
@@ -135,7 +135,7 @@ namespace Robust.Shared.Map
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             var mapId = coordinates.MapId;
-            var mapEntity = mapManager.GetMapEntity(mapId);
+            var mapEntity = mapManager.GetMapEntityId(mapId);
 
             return new EntityCoordinates(mapEntity, coordinates.Position);
         }
@@ -182,10 +182,10 @@ namespace Robust.Shared.Map
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
         public EntityCoordinates WithEntityId(IEntityManager entityManager, EntityUid entityId)
         {
-            if(!entityManager.TryGetEntity(entityId, out var entity))
+            if(!entityManager.EntityExists(entityId))
                 return new EntityCoordinates(entityId, Vector2.Zero);
 
-            return WithEntityId(entity);
+            return WithEntityId(entityId);
         }
 
         /// <summary>
@@ -193,15 +193,15 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entity">The entity that the new coordinates will be local to</param>
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
-        public EntityCoordinates WithEntityId(IEntity entity)
+        public EntityCoordinates WithEntityId(EntityUid entity)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapPos = ToMap(IoCManager.Resolve<IEntityManager>());
+            var mapPos = ToMap(entityManager);
 
-            if(!IsValid(entityManager) || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
+            if(!IsValid(entityManager) || entityManager.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
                 return new EntityCoordinates(entity, Vector2.Zero);
 
-            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
+            var localPos = entityManager.GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
             return new EntityCoordinates(entity, localPos);
         }
 
@@ -213,8 +213,7 @@ namespace Robust.Shared.Map
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
-            IEntity tempQualifier = GetEntity(entityManager);
-            return !IsValid(entityManager) ? GridId.Invalid : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).GridID;
+            return !IsValid(entityManager) ? GridId.Invalid : entityManager.GetComponent<TransformComponent>(EntityId).GridID;
         }
 
         /// <summary>
@@ -225,30 +224,7 @@ namespace Robust.Shared.Map
         /// <returns>Map Id these coordinates are on or <see cref="MapId.Nullspace"/></returns>
         public MapId GetMapId(IEntityManager entityManager)
         {
-            IEntity tempQualifier = GetEntity(entityManager);
-            return !IsValid(entityManager) ? MapId.Nullspace : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).MapID;
-        }
-
-        /// <summary>
-        ///     Returns a reference to the relative entity.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <returns>Relative entity or throws if entity id doesn't exist</returns>
-        public IEntity GetEntity(IEntityManager entityManager)
-        {
-            return entityManager.GetEntity(EntityId);
-        }
-
-        /// <summary>
-        ///     Attempt to get the relative entity, returning whether or not the entity was gotten.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <param name="entity">The relative entity or null if not valid</param>
-        /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(IEntityManager entityManager, [NotNullWhen(true)] out IEntity? entity)
-        {
-            entity = null;
-            return IsValid(entityManager) && entityManager.TryGetEntity(EntityId, out entity);
+            return !IsValid(entityManager) ? MapId.Nullspace : entityManager.GetComponent<TransformComponent>(EntityId).MapID;
         }
 
         /// <summary>

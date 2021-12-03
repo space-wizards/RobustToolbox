@@ -117,7 +117,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool TryGetContainer(IEntity entity, [NotNullWhen(true)] out IContainer? container)
+        public bool TryGetContainer(EntityUid entity, [NotNullWhen(true)] out IContainer? container)
         {
             foreach (var contain in Containers.Values)
             {
@@ -133,7 +133,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool ContainsEntity(IEntity entity)
+        public bool ContainsEntity(EntityUid entity)
         {
             foreach (var container in Containers.Values)
             {
@@ -144,7 +144,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public void ForceRemove(IEntity entity)
+        public void ForceRemove(EntityUid entity)
         {
             foreach (var container in Containers.Values)
             {
@@ -159,7 +159,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(IEntity entity)
+        public bool Remove(EntityUid entity)
         {
             foreach (var containers in Containers.Values)
             {
@@ -175,11 +175,12 @@ namespace Robust.Shared.Containers
             base.Shutdown();
 
             // On shutdown we won't get to process remove events in the containers so this has to be manually done.
+            var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var container in Containers.Values)
             {
                 foreach (var containerEntity in container.ContainedEntities)
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local,
+                    entMan.EventBus.RaiseEvent(EventSource.Local,
                         new UpdateContainerOcclusionMessage(containerEntity));
                 }
             }

@@ -150,29 +150,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public T AddComponent<T>(IEntity entity) where T : Component, new()
-        {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-            var newComponent = _componentFactory.GetComponent<T>();
-
-            newComponent.Owner = entity;
-
-            AddComponent(entity, newComponent);
-
-            return newComponent;
-        }
-
         public T AddComponent<T>(EntityUid uid) where T : Component, new()
         {
-            if (!TryGetEntity(uid, out var entity)) throw new ArgumentException("Entity is not valid or deleted.", nameof(uid));
-
-            return AddComponent<T>(entity);
-        }
-
-        public void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component
-        {
-            AddComponent((EntityUid) entity, component, overwrite);
+            var newComponent = _componentFactory.GetComponent<T>();
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+            return newComponent;
         }
 
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
@@ -459,17 +442,6 @@ namespace Robust.Shared.GameObjects
         {
             return _netComponents.TryGetValue(uid, out var netSet)
                    && netSet.ContainsKey(netId);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T EnsureComponent<T>(IEntity entity) where T : Component, new()
-        {
-            if (TryGetComponent<T>(entity, out var component))
-            {
-                return component;
-            }
-
-            return AddComponent<T>(entity);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

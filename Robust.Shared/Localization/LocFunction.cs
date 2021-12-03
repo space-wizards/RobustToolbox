@@ -171,7 +171,7 @@ namespace Robust.Shared.Localization
         }
     }
 
-    public sealed record LocValueEntity(IEntity Value) : LocValue<IEntity>(Value)
+    public sealed record LocValueEntity(EntityUid Value) : LocValue<EntityUid>(Value)
     {
         public override string Format(LocContext ctx)
         {

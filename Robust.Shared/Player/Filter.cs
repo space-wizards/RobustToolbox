@@ -50,15 +50,6 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(IEntity origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null)
-        {
-            return AddPlayersByPvs(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(origin).MapPosition, rangeMultiplier, playerMan);
-        }
-
-        /// <summary>
-        ///     Adds all players inside an entity's PVS.
-        ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
-        /// </summary>
         public Filter AddPlayersByPvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
             return AddPlayersByPvs(origin.MapPosition, rangeMultiplier);
@@ -143,15 +134,6 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     Add all players whose attached entity match a predicate.
-        ///     Doesn't consider players without an attached entity.
-        /// </summary>
-        public Filter AddWhereAttachedEntity(Predicate<IEntity> predicate)
-        {
-            return AddWhere(session => session.AttachedEntity is { } entity && predicate(entity));
-        }
-
-        /// <summary>
         ///     Add all players whose entity is on a certain grid.
         /// </summary>
         public Filter AddInGrid(GridId gridId)
@@ -173,8 +155,8 @@ namespace Robust.Shared.Player
         public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null)
         {
             return AddWhere(session =>
-                session.AttachedEntity != null &&
-                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity).MapPosition, range), playerMan);
+                session.AttachedEntityUid != null &&
+                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntityUid!.Value).MapPosition, range), playerMan);
         }
 
         /// <summary>
@@ -183,8 +165,8 @@ namespace Robust.Shared.Player
         public Filter RemoveByVisibility(uint flag)
         {
             return RemoveWhere(session =>
-                session.AttachedEntity == null
-                || !IoCManager.Resolve<IEntityManager>().TryGetComponent(session.AttachedEntity, out SharedEyeComponent? eye)
+                session.AttachedEntityUid == null
+                || !IoCManager.Resolve<IEntityManager>().TryGetComponent(session.AttachedEntityUid!.Value, out SharedEyeComponent? eye)
                 || (eye.VisibilityMask & flag) == 0);
         }
 
@@ -217,23 +199,13 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     Removes all players whose attached entity match a predicate.
-        ///     Doesn't consider players without an attached entity.
-        /// </summary>
-        public Filter RemoveWhereAttachedEntity(Predicate<IEntity> predicate)
-        {
-            _recipients.RemoveWhere(session => session.AttachedEntity is { } entity && predicate(entity));
-            return this;
-        }
-
-        /// <summary>
         ///     Removes all players in range of a position.
         /// </summary>
         public Filter RemoveInRange(MapCoordinates position, float range)
         {
             return RemoveWhere(session =>
-                session.AttachedEntity != null &&
-                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity).MapPosition, range));
+                session.AttachedEntityUid != null &&
+                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntityUid.Value!).MapPosition, range));
         }
 
         /// <summary>
@@ -333,14 +305,6 @@ namespace Robust.Shared.Player
         public static Filter Pvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier, entityManager);
-        }
-
-        /// <summary>
-        ///     A filter with every player who's PVS overlaps this entity.
-        /// </summary>
-        public static Filter Pvs(IEntity origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null)
-        {
-            return Empty().AddPlayersByPvs(origin, rangeMultiplier, playerMan);
         }
 
         /// <summary>

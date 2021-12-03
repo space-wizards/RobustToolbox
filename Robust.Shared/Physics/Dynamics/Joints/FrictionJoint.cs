@@ -52,10 +52,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public override Joint GetJoint()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            IEntity tempQualifier = entityManager.GetEntity(UidA);
-            var bodyA = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(tempQualifier);
-            IEntity tempQualifier1 = entityManager.GetEntity(UidB);
-            var bodyB = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(tempQualifier1);
+            var bodyA = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(UidA);
+            var bodyB = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(UidB);
 
             var joint = new FrictionJoint(bodyA, bodyB)
             {

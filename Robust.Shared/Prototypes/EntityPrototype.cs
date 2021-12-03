@@ -175,17 +175,17 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        public void UpdateEntity(IEntity entity)
+        public void UpdateEntity(EntityUid entity)
         {
-            if (ID != IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID)
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            if (ID != entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID)
             {
                 Logger.Error(
-                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
+                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
                 return;
             }
 
             var factory = IoCManager.Resolve<IComponentFactory>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
             var oldPrototype = entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype;
 
             var oldPrototypeComponents = oldPrototype?.Components.Keys
@@ -223,14 +223,14 @@ namespace Robust.Shared.Prototypes
                 var component = (Component) factory.GetComponent(name);
                 component.Owner = entity;
                 componentDependencyManager.OnComponentAdd(entity, component);
-                IoCManager.Resolve<IEntityManager>().AddComponent(entity, component);
+                entityManager.AddComponent(entity, component);
             }
 
             // Update entity metadata
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype = this;
+            entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype = this;
         }
 
-        internal static void LoadEntity(EntityPrototype? prototype, IEntity entity, IComponentFactory factory,
+        internal static void LoadEntity(EntityPrototype? prototype, EntityUid entity, IComponentFactory factory,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             /*YamlObjectSerializer.Context? defaultContext = null;
@@ -272,16 +272,17 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(IEntity entity, IComponentFactory factory, string compName,
+        private static void EnsureCompExistsAndDeserialize(EntityUid entity, IComponentFactory factory, string compName,
             IComponent data, ISerializationContext? context)
         {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
             var compType = factory.GetRegistration(compName).Type;
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, compType, out var component))
+            if (!entityManager.TryGetComponent(entity, compType, out var component))
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;
-                IoCManager.Resolve<IEntityManager>().AddComponent(entity, newComponent);
+                entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
 

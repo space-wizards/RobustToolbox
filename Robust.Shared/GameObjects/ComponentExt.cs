@@ -16,15 +16,16 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">The existing component, or the new component if none existed yet.</param>
         /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
         /// <returns>True if the component already existed, false if it had to be created.</returns>
-        public static bool EnsureComponent<T>(this IEntity entity, out T component) where T : Component, new()
+        public static bool EnsureComponent<T>(this EntityUid entity, out T component) where T : Component, new()
         {
-            ref T? comp = ref component!;
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out comp))
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            if (entMan.TryGetComponent<T>(entity, out var comp))
             {
+                component = comp;
                 return true;
             }
 
-            component = IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
+            component = entMan.AddComponent<T>(entity);
             return false;
         }
 
@@ -35,14 +36,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="entity">The entity to fetch or create the component on.</param>
         /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
         /// <returns>The existing component, or the new component if none existed yet.</returns>
-        public static T EnsureComponent<T>(this IEntity entity) where T : Component, new()
+        public static T EnsureComponent<T>(this EntityUid entity) where T : Component, new()
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out T? component))
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            if (entMan.TryGetComponent(entity, out T? component))
             {
                 return component;
             }
 
-            return IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
+            return entMan.AddComponent<T>(entity);
         }
 
         /// <summary>
@@ -57,19 +59,20 @@ namespace Robust.Shared.GameObjects
         /// </param>
         /// <typeparam name="T">The type of the component to fetch or create.</typeparam>
         /// <returns>True if the component already existed, false if it had to be created.</returns>
-        public static bool EnsureComponentWarn<T>(this IEntity entity, out T component, string? warning = null) where T : Component, new()
+        public static bool EnsureComponentWarn<T>(this EntityUid entity, out T component, string? warning = null) where T : Component, new()
         {
-            ref T? comp = ref component!;
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out comp))
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            if (entMan.TryGetComponent<T>(entity, out var comp))
             {
+                component = comp;
                 return true;
             }
 
-            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
+            warning ??= $"Entity {entity} at {entMan.GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 
-            component = IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
+            component = entMan.AddComponent<T>(entity);
             return false;
         }
 
@@ -84,18 +87,19 @@ namespace Robust.Shared.GameObjects
         ///     Defaults to a predetermined warning if null.
         /// </param>
         /// <returns>The existing component, or the new component if none existed yet.</returns>
-        public static T EnsureComponentWarn<T>(this IEntity entity, string? warning = null) where T : Component, new()
+        public static T EnsureComponentWarn<T>(this EntityUid entity, string? warning = null) where T : Component, new()
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out T? component))
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            if (entMan.TryGetComponent(entity, out T? component))
             {
                 return component;
             }
 
-            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
+            warning ??= $"Entity {entity} at {entMan.GetComponent<TransformComponent>(entity).MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 
-            return IoCManager.Resolve<IEntityManager>().AddComponent<T>(entity);
+            return entMan.AddComponent<T>(entity);
         }
 
         public static IComponent SetAndDirtyIfChanged<TValue>(

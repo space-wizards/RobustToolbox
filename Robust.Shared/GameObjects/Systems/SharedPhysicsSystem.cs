@@ -150,7 +150,7 @@ namespace Robust.Shared.GameObjects
             var linearVelocityDiff = Vector2.Zero;
             var angularVelocityDiff = 0f;
 
-            if (oldParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParent, out PhysicsComponent? oldBody))
+            if (oldParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParent!.Value, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
@@ -158,9 +158,9 @@ namespace Robust.Shared.GameObjects
                 angularVelocityDiff += angular;
             }
 
-            var newParent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent?.Owner;
+            var newParent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).ParentUid;
 
-            if (newParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(newParent, out PhysicsComponent? newBody))
+            if (newParent != EntityUid.Invalid && IoCManager.Resolve<IEntityManager>().TryGetComponent(newParent, out PhysicsComponent? newBody))
             {
                 var (linear, angular) = newBody.MapVelocities;
 
@@ -174,8 +174,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleGridInit(GridInitializeEvent ev)
         {
-            if (!EntityManager.TryGetEntity(ev.EntityUid, out var gridEntity)) return;
-            var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
+            if (!EntityManager.EntityExists(ev.EntityUid)) return;
+            var collideComp = ev.EntityUid.EnsureComponent<PhysicsComponent>();
             collideComp.BodyType = BodyType.Static;
         }
 
@@ -241,14 +241,14 @@ namespace Robust.Shared.GameObjects
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
-                IEntity tempQualifier = MapManager.GetMapEntity(oldMapId);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(oldMapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
             }
 
             var newMapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Entity).MapID;
             if (newMapId != MapId.Nullspace)
             {
-                IEntity tempQualifier = MapManager.GetMapEntity(newMapId);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(newMapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }
@@ -262,12 +262,12 @@ namespace Robust.Shared.GameObjects
 
             if (message.Component.Deleted || !message.Component.CanCollide)
             {
-                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(message.Component);
             }
             else
             {
-                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(message.Component);
             }
         }
@@ -279,7 +279,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == MapId.Nullspace)
                 return;
 
-            IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
             IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(message.Body);
         }
 
@@ -290,7 +290,7 @@ namespace Robust.Shared.GameObjects
             if (mapId == MapId.Nullspace)
                 return;
 
-            IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
             IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(message.Body);
         }
 
@@ -306,7 +306,7 @@ namespace Robust.Shared.GameObjects
 
             if (mapId != MapId.Nullspace)
             {
-                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
             }
         }
@@ -319,7 +319,7 @@ namespace Robust.Shared.GameObjects
 
             if (mapId != MapId.Nullspace)
             {
-                IEntity tempQualifier = MapManager.GetMapEntity(mapId);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }

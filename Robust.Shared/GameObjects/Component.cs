@@ -37,7 +37,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityUid Owner { get; set; } = default!;
+        public EntityUid Owner { get; set; } = EntityUid.Invalid;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -240,7 +240,7 @@ namespace Robust.Shared.GameObjects
         {
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner is null || LifeStage >= ComponentLifeStage.Removing)
+            if(Owner == EntityUid.Invalid || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
             var entManager = IoCManager.Resolve<IEntityManager>();

@@ -12,7 +12,7 @@ namespace Robust.Server.GameObjects
 
         internal Vector2i Indices { get; }
 
-        internal IEnumerable<IEntity> Entities
+        internal IEnumerable<EntityUid> Entities
         {
             get
             {
@@ -35,7 +35,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private readonly HashSet<IEntity> _entities = new();
+        private readonly HashSet<EntityUid> _entities = new();
 
         internal GridTileLookupNode(GridTileLookupChunk parentChunk, Vector2i indices)
         {
@@ -43,12 +43,12 @@ namespace Robust.Server.GameObjects
             Indices = indices;
         }
 
-        internal void AddEntity(IEntity entity)
+        internal void AddEntity(EntityUid entity)
         {
             _entities.Add(entity);
         }
 
-        internal void RemoveEntity(IEntity entity)
+        internal void RemoveEntity(EntityUid entity)
         {
             _entities.Remove(entity);
         }

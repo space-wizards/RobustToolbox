@@ -26,7 +26,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
         /// </summary>
-        private readonly Dictionary<IEntity, HashSet<GridTileLookupNode>> _lastKnownNodes =
+        private readonly Dictionary<EntityUid, HashSet<GridTileLookupNode>> _lastKnownNodes =
                      new();
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entity)
         {
             foreach (var node in GetOrCreateNodes(entity))
             {
@@ -51,7 +51,7 @@ namespace Robust.Server.GameObjects
         /// <param name="gridId"></param>
         /// <param name="gridIndices"></param>
         /// <returns></returns>
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices)
         {
             if (gridId == GridId.Invalid)
             {
@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public List<Vector2i> GetIndices(IEntity entity)
+        public List<Vector2i> GetIndices(EntityUid entity)
         {
             var results = new List<Vector2i>();
 
@@ -118,7 +118,7 @@ namespace Robust.Server.GameObjects
                 (int) (Math.Floor((float) indices.Y / GridTileLookupChunk.ChunkSize) * GridTileLookupChunk.ChunkSize));
         }
 
-        private HashSet<GridTileLookupNode> GetOrCreateNodes(IEntity entity)
+        private HashSet<GridTileLookupNode> GetOrCreateNodes(EntityUid entity)
         {
             if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
@@ -178,7 +178,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        private Dictionary<GridId, List<Vector2i>> GetEntityIndices(IEntity entity)
+        private Dictionary<GridId, List<Vector2i>> GetEntityIndices(EntityUid entity)
         {
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<Vector2i>>();
@@ -198,7 +198,7 @@ namespace Robust.Server.GameObjects
             return results;
         }
 
-        private Box2 GetEntityBox(IEntity entity)
+        private Box2 GetEntityBox(EntityUid entity)
         {
             var aabb = _lookup.GetWorldAabbFromEntity(entity);
 
@@ -276,7 +276,7 @@ namespace Robust.Server.GameObjects
 
         private void HandleGridRemoval(MapId mapId, GridId gridId)
         {
-            var toRemove = new List<IEntity>();
+            var toRemove = new List<EntityUid>();
 
             foreach (var (entity, _) in _lastKnownNodes)
             {
@@ -297,7 +297,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// The node will filter it to the correct category (if possible)
         /// <param name="entity"></param>
-        private void HandleEntityAdd(IEntity entity)
+        private void HandleEntityAdd(EntityUid entity)
         {
             if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID == GridId.Invalid)
             {
@@ -327,7 +327,7 @@ namespace Robust.Server.GameObjects
         ///     Removes this entity from all of the applicable nodes.
         /// </summary>
         /// <param name="entity"></param>
-        private void HandleEntityRemove(IEntity entity)
+        private void HandleEntityRemove(EntityUid entity)
         {
             if (_lastKnownNodes.TryGetValue(entity, out var nodes))
             {

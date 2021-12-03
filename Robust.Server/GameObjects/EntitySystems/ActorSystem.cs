@@ -192,8 +192,7 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class PlayerAttachedEvent : EntityEventArgs
     {
-        public IEntity Entity { get; }
-        public EntityUid EntityUid { get; }
+        public EntityUid Entity { get; }
         public IPlayerSession Player { get; }
 
         /// <summary>
@@ -201,10 +200,9 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public IPlayerSession? Kicked { get; }
 
-        public PlayerAttachedEvent(IEntity entity, IPlayerSession player, IPlayerSession? kicked = null)
+        public PlayerAttachedEvent(EntityUid entity, IPlayerSession player, IPlayerSession? kicked = null)
         {
             Entity = entity;
-            EntityUid = entity;
             Player = player;
             Kicked = kicked;
         }
@@ -215,14 +213,12 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class PlayerDetachedEvent : EntityEventArgs
     {
-        public IEntity Entity { get; }
-        public EntityUid EntityUid { get; }
+        public EntityUid Entity { get; }
         public IPlayerSession Player { get; }
 
-        public PlayerDetachedEvent(IEntity entity, IPlayerSession player)
+        public PlayerDetachedEvent(EntityUid entity, IPlayerSession player)
         {
             Entity = entity;
-            EntityUid = entity;
             Player = player;
         }
     }

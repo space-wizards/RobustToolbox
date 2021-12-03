@@ -83,12 +83,6 @@ namespace Robust.Server.GameObjects
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
-        /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
-        {
-            return Play(playerFilter, filename, (EntityUid) entity, audioParams);
-        }
-
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
             //TODO: Calculate this from PAS

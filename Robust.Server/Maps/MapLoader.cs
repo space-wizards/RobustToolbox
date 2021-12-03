@@ -234,7 +234,7 @@ namespace Robust.Server.Maps
         private class MapContext : ISerializationContext, IEntityLoadContext,
             ITypeSerializer<GridId, ValueDataNode>,
             ITypeSerializer<EntityUid, ValueDataNode>,
-            ITypeReaderWriter<IEntity, ValueDataNode>
+            ITypeReaderWriter<EntityUid, ValueDataNode>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -248,9 +248,9 @@ namespace Robust.Server.Maps
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
             private readonly Dictionary<int, EntityUid> UidEntityMap = new();
-            public readonly List<IEntity> Entities = new();
+            public readonly List<EntityUid> Entities = new();
 
-            private readonly List<(IEntity, YamlMappingNode)> _entitiesToDeserialize
+            private readonly List<(EntityUid, YamlMappingNode)> _entitiesToDeserialize
                 = new();
 
             private bool IsBlueprintMode => GridIDMap.Count == 1;
@@ -261,7 +261,7 @@ namespace Robust.Server.Maps
             private Dictionary<string, YamlMappingNode>? CurrentReadingEntityComponents;
 
             private string? CurrentWritingComponent;
-            private IEntity? CurrentWritingEntity;
+            private EntityUid? CurrentWritingEntity;
 
             private Dictionary<ushort, string>? _tileMap;
 
@@ -284,13 +284,11 @@ namespace Robust.Server.Maps
                 RootNode = new YamlMappingNode();
                 TypeWriters = new Dictionary<Type, object>()
                 {
-                    {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
                 TypeReaders = new Dictionary<(Type, Type), object>()
                 {
-                    {(typeof(IEntity), typeof(ValueDataNode)), this},
                     {(typeof(GridId), typeof(ValueDataNode)), this},
                     {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
@@ -312,13 +310,11 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
                 TypeWriters = new Dictionary<Type, object>()
                 {
-                    {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
                 TypeReaders = new Dictionary<(Type, Type), object>()
                 {
-                    {(typeof(IEntity), typeof(ValueDataNode)), this},
                     {(typeof(GridId), typeof(ValueDataNode)), this},
                     {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
@@ -403,7 +399,7 @@ namespace Robust.Server.Maps
                         continue;
                     }
 
-                    if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype == null)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype is not {} prototype)
                     {
                         continue;
                     }
@@ -414,7 +410,7 @@ namespace Robust.Server.Maps
 
                         if (componentList.Any(p => p["type"].AsString() == component.Name))
                         {
-                            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.Components.ContainsKey(component.Name))
+                            if (prototype.Components.ContainsKey(component.Name))
                             {
                                 // This component is modified by the map so we have to send state.
                                 // Though it's still in the prototype itself so creation doesn't need to be sent.
@@ -447,8 +443,8 @@ namespace Robust.Server.Maps
                 {
                     var gridInternal = (IMapGridInternal) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
-                    IEntity tempQualifier = _mapManager.GetMapEntity(grid.ParentMapId);
-                    body.Broadphase = IoCManager.Resolve<IEntityManager>().GetComponent<BroadphaseComponent>(tempQualifier);
+                    var mapUid = _mapManager.GetMapEntity(grid.ParentMapId);
+                    body.Broadphase = IoCManager.Resolve<IEntityManager>().GetComponent<BroadphaseComponent>(mapUid);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
 
@@ -726,7 +722,7 @@ namespace Robust.Server.Maps
             private void PopulateEntityList()
             {
                 var withUid = new List<MapSaveIdComponent>();
-                var withoutUid = new List<IEntity>();
+                var withoutUid = new List<EntityUid>();
                 var takenIds = new HashSet<int>();
 
                 foreach (var entity in _serverEntityManager.GetEntities())
@@ -791,15 +787,15 @@ namespace Robust.Server.Maps
                         {"uid", EntityUidMap[entity].ToString(CultureInfo.InvariantCulture)}
                     };
 
-                    if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype != null)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype is {} prototype)
                     {
-                        mapping.Add("type", IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.ID);
-                        if (!prototypeCompCache.ContainsKey(IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.ID))
+                        mapping.Add("type", prototype.ID);
+                        if (!prototypeCompCache.ContainsKey(prototype.ID))
                         {
-                            prototypeCompCache[IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.ID] = new Dictionary<string, MappingDataNode>();
-                            foreach (var (compType, comp) in IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.Components)
+                            prototypeCompCache[prototype.ID] = new Dictionary<string, MappingDataNode>();
+                            foreach (var (compType, comp) in prototype.Components)
                             {
-                                prototypeCompCache[IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                                prototypeCompCache[prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
                             }
                         }
                     }
@@ -871,7 +867,7 @@ namespace Robust.Server.Maps
                 return CurrentReadingEntityComponents!.Keys;
             }
 
-            private bool IsMapSavable(IEntity entity)
+            private bool IsMapSavable(EntityUid entity)
             {
                 if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID))
                 {
@@ -914,17 +910,6 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<GridId>(GridId.Invalid);
             }
 
-            ValidationNode ITypeValidator<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
-                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
-            {
-                if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
-                {
-                    return new ErrorNode(node, "Invalid EntityUid", true);
-                }
-
-                return new ValidatedValueNode(node);
-            }
-
             ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
                 ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
             {
@@ -954,19 +939,13 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
-                ISerializationContext? context = null)
-            {
-                return Write(serializationManager, (EntityUid) value, alwaysWrite, context);
-            }
-
             public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
                 {
                     // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                    if (!IsBlueprintMode || !IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(CurrentWritingEntity!) ||
+                    if (!IsBlueprintMode || !_serverEntityManager.HasComponent<MapGridComponent>(CurrentWritingEntity!.Value) ||
                         CurrentWritingComponent != "Transform")
                     {
                         Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
@@ -1018,7 +997,7 @@ namespace Robust.Server.Maps
                 return new DeserializedValue<EntityUid>(EntityUid.Invalid);
             }
 
-            DeserializationResult ITypeReader<IEntity, ValueDataNode>.Read(ISerializationManager serializationManager,
+            DeserializationResult ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
                 ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
@@ -1033,7 +1012,7 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return new DeserializedValue<IEntity>(entity);
+                    return new DeserializedValue<EntityUid>(entity);
                 }
             }
 

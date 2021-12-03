@@ -40,8 +40,8 @@ namespace Robust.Server.GameObjects
         protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
-            IEntity tempQualifier = MapManager.GetMapEntity(eventArgs.Map);
-            IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsMapComponent>(tempQualifier);
+            var mapUid = MapManager.GetMapEntity(eventArgs.Map);
+            IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsMapComponent>(mapUid);
         }
 
         /// <inheritdoc />

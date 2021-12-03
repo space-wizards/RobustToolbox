@@ -473,15 +473,15 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual string ToPrettyString(EntityUid uid)
+        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
             if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
-                return $"{uid}D";
+                return new EntityStringRepresentation(uid, true);
 
-            var metaData = (MetaDataComponent) component;
+            var metadata = (MetaDataComponent) component;
 
-            return $"{metaData.EntityName} ({uid}, {metaData.EntityPrototype?.ID}){(metaData.EntityDeleted ? "D" : "")}";
+            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
         }
 
 #endregion Entity Management

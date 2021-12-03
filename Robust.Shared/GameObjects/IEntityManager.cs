@@ -126,9 +126,9 @@ namespace Robust.Shared.GameObjects
         bool EntityExists(EntityUid uid);
 
         /// <summary>
-        /// Returns a string with various information regarding an entity.
+        /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
-        string ToPrettyString(EntityUid uid);
+        EntityStringRepresentation ToPrettyString(EntityUid uid);
 
         #endregion Entity Management
     }

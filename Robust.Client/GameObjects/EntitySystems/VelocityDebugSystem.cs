@@ -41,7 +41,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            var screenPos = _eyeManager.WorldToScreen(player.Transform.WorldPosition);
+            var screenPos = _eyeManager.WorldToScreen(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.Uid).WorldPosition);
             LayoutContainer.SetPosition(_label, screenPos + new Vector2(0, 50));
             _label.Visible = true;
 

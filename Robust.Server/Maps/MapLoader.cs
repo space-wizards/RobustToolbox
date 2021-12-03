@@ -494,12 +494,12 @@ namespace Robust.Server.Maps
                 foreach (var grid in Grids)
                 {
                     var entity = _serverEntityManager.GetEntity(grid.GridEntityId);
-                    if (entity.Transform.Parent != null)
+                    if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent != null)
                         continue;
 
-                    var mapOffset = entity.Transform.LocalPosition;
-                    entity.Transform.AttachParent(mapEntity);
-                    entity.Transform.WorldPosition = mapOffset;
+                    var mapOffset = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).LocalPosition;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).AttachParent(mapEntity);
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldPosition = mapOffset;
                 }
             }
 
@@ -873,14 +873,14 @@ namespace Robust.Server.Maps
 
             private bool IsMapSavable(IEntity entity)
             {
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(entity.Transform.GridID))
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).GridID))
                 {
                     return false;
                 }
 
                 // Don't serialize things parented to un savable things.
                 // For example clothes inside a person.
-                var current = entity.Transform;
+                var current = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
                 while (current.Parent != null)
                 {
                     if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(current.Parent.Owner.Uid).EntityPrototype?.MapSavable == false)

@@ -158,7 +158,7 @@ namespace Robust.Shared.GameObjects
                 angularVelocityDiff += angular;
             }
 
-            var newParent = entity.Transform.Parent?.Owner;
+            var newParent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent?.Owner;
 
             if (newParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(newParent.Uid, out PhysicsComponent? newBody))
             {
@@ -245,7 +245,7 @@ namespace Robust.Shared.GameObjects
                 IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid).RemoveBody(physicsComponent);
             }
 
-            var newMapId = message.Entity.Transform.MapID;
+            var newMapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Entity.Uid).MapID;
             if (newMapId != MapId.Nullspace)
             {
                 IEntity tempQualifier = MapManager.GetMapEntity(newMapId);
@@ -255,7 +255,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
         {
-            var mapId = message.Component.Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Component.Owner.Uid).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -274,7 +274,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleWakeMessage(PhysicsWakeMessage message)
         {
-            var mapId = message.Body.Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Body.Owner.Uid).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -285,7 +285,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleSleepMessage(PhysicsSleepMessage message)
         {
-            var mapId = message.Body.Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Body.Owner.Uid).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -298,7 +298,7 @@ namespace Robust.Shared.GameObjects
         {
             if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity.Uid, out PhysicsComponent? physicsComponent)) return;
 
-            var mapId = message.Container.Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Container.Owner.Uid).MapID;
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
@@ -315,7 +315,7 @@ namespace Robust.Shared.GameObjects
         {
             if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity.Uid, out PhysicsComponent? physicsComponent)) return;
 
-            var mapId = message.Container.Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Container.Owner.Uid).MapID;
 
             if (mapId != MapId.Nullspace)
             {

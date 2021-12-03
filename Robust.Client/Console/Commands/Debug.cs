@@ -45,7 +45,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
             {
-                shell.WriteLine($"entity {e.Uid}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype?.ID}, {e.Transform.Coordinates}.");
+                shell.WriteLine($"entity {e.Uid}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e.Uid).EntityPrototype?.ID}, {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(e.Uid).Coordinates}.");
             }
         }
     }

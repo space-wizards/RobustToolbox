@@ -96,11 +96,11 @@ Mouse Pos:
             }
             else
             {
-                var entityTransform = _playerManager.LocalPlayer.ControlledEntity.Transform;
+                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity.Uid);
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = _playerManager.LocalPlayer.ControlledEntity.Transform.Coordinates;
+                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity.Uid).Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}

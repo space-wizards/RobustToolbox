@@ -70,15 +70,17 @@ namespace Robust.Client.GameObjects
 
             // TODO: Content should have its own way of handling this. We should have a default behavior that they can overwrite.
 
-            var playerTransform = _playerManager.LocalPlayer?.ControlledEntity?.Transform;
+            IEntity? tempQualifier = _playerManager.LocalPlayer?.ControlledEntity;
+            var playerTransform = (tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid) : null);
 
             if (playerTransform == null) return;
 
             var gridId = playerTransform.GridID;
 
+            IEntity tempQualifier1 = _mapManager.GetMapEntity(playerTransform.MapID);
             var parent = gridId != GridId.Invalid && EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEnt) ?
-                gridEnt.Transform
-                : _mapManager.GetMapEntity(playerTransform.MapID).Transform;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid)
+                : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier1.Uid);
 
             // Make sure that we don't fire the vomit carousel when we spawn in
             if (_lastParent is null)

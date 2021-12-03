@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, collider))
             {
-                var gridCollider = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(collider);
+                var gridCollider = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).InvWorldMatrix.TransformBox(collider);
 
                 broadphase.Tree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
                 {
@@ -105,7 +105,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
             {
-                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var gridAABB = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).InvWorldMatrix.TransformBox(worldAABB);
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
                 {
@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
-                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var gridAABB = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).InvWorldMatrix.TransformBox(worldBounds);
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
                 {
@@ -151,7 +151,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, float enlarge = 0f)
         {
             // TODO: Should use the collisionmanager test for overlap instead (once I optimise and check it actually works).
-            var mapId = body.Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner.Uid).MapID;
 
             if (mapId == MapId.Nullspace || body.FixtureCount == 0) return Array.Empty<PhysicsComponent>();
 
@@ -161,7 +161,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
             {
-                var (_, broadRot, broadInvMatrix) = broadphase.Owner.Transform.GetWorldPositionRotationInvMatrix();
+                var (_, broadRot, broadInvMatrix) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).GetWorldPositionRotationInvMatrix();
 
                 var localTransform = new Transform(broadInvMatrix.Transform(transform.Position), transform.Quaternion2D.Angle - broadRot);
 
@@ -225,11 +225,11 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
-                var matrix = broadphase.Owner.Transform.WorldMatrix;
+                var invMatrix = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).InvWorldMatrix;
+                var matrix = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).WorldMatrix;
 
                 var position = invMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var gridRot = new Angle(-IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).WorldRotation.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
                 var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
@@ -307,8 +307,8 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var offset = broadphase.Owner.Transform.InvWorldMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var offset = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).InvWorldMatrix.Transform(ray.Position);
+                var gridRot = new Angle(-IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphase.Owner.Uid).WorldRotation.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
                 var gridRay = new CollisionRay(offset, direction, ray.CollisionMask);

@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -41,13 +42,13 @@ namespace Robust.UnitTesting.Shared
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // When anchoring should still only be 1 entity.
-                dummy.Transform.Anchored = true;
-                Assert.That(dummy.Transform.Anchored);
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy.Uid).Anchored = true;
+                Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy.Uid).Anchored);
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // Even when unanchored should still be there
-                dummy.Transform.Anchored = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy.Uid).Anchored = false;
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
             });

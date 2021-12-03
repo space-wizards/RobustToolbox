@@ -74,8 +74,8 @@ namespace Robust.Client.GameObjects
                 IoCManager.Resolve<IEntityManager>().TryGetComponent(sender.Uid, out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {
-                var grid1 = _mapManager.GetGrid(sender.Transform.GridID);
-                var coords = sender.Transform.Coordinates;
+                var grid1 = _mapManager.GetGrid(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sender.Uid).GridID);
+                var coords = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sender.Uid).Coordinates;
 
                 _dirtyEntities.Enqueue(sender.Uid);
                 AddValidEntities(grid1.GetInDir(coords, Direction.North));

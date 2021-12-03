@@ -55,7 +55,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(pvsBounds);
+                var bounds = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid).InvWorldMatrix.TransformBox(pvsBounds);
 
                 comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
                 {

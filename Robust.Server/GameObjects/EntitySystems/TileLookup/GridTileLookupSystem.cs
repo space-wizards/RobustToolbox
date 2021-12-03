@@ -183,7 +183,7 @@ namespace Robust.Server.GameObjects
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<Vector2i>>();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(entity.Transform.MapID, GetEntityBox(entity)))
+            foreach (var grid in _mapManager.FindGridsIntersecting(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID, GetEntityBox(entity)))
             {
                 var indices = new List<Vector2i>();
 
@@ -280,7 +280,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var (entity, _) in _lastKnownNodes)
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.GridID == gridId)
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).GridID == gridId)
                     toRemove.Add(entity);
             }
 
@@ -299,7 +299,7 @@ namespace Robust.Server.GameObjects
         /// <param name="entity"></param>
         private void HandleEntityAdd(IEntity entity)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.GridID == GridId.Invalid)
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).GridID == GridId.Invalid)
             {
                 return;
             }
@@ -365,7 +365,7 @@ namespace Robust.Server.GameObjects
 
             // Memory leak protection
             var gridBounds = _mapManager.GetGrid(gridId).WorldBounds;
-            if (!gridBounds.Contains(moveEvent.Sender.Transform.WorldPosition))
+            if (!gridBounds.Contains(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(moveEvent.Sender.Uid).WorldPosition))
             {
                 HandleEntityRemove(moveEvent.Sender);
                 return;

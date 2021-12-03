@@ -27,10 +27,10 @@ namespace Robust.Shared.Containers
 
             // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
-            if (entity.Transform.Parent == null)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent == null)
                 return false;
 
-            if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
+            if (TryGetManagerComp(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent.Owner, out var containerComp))
                 return containerComp.ContainsEntity(entity);
 
             return false;
@@ -47,7 +47,7 @@ namespace Robust.Shared.Containers
             DebugTools.AssertNotNull(entity);
             DebugTools.Assert(!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted));
 
-            var parentTransform = entity.Transform.Parent;
+            var parentTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent;
             if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager) && manager.ContainsEntity(entity))
                 return true;
 
@@ -126,10 +126,10 @@ namespace Robust.Shared.Containers
                     container.Remove(entity);
 
                 if (moveTo.HasValue)
-                    entity.Transform.Coordinates = moveTo.Value;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Coordinates = moveTo.Value;
 
                 if(attachToGridOrMap)
-                    entity.Transform.AttachToGridOrMap();
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).AttachToGridOrMap();
             }
         }
 
@@ -158,7 +158,7 @@ namespace Robust.Shared.Containers
         {
             if (container.Insert(transform.Owner)) return true;
 
-            if (container.Owner.Transform.Parent != null
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(container.Owner.Uid).Parent != null
                 && TryGetContainer(container.Owner, out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
@@ -174,8 +174,8 @@ namespace Robust.Shared.Containers
                 return true;
 
             // RECURSION ALERT
-            if (entity.Transform.Parent != null)
-                return TryGetManagerComp(entity.Transform.Parent.Owner, out manager);
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent != null)
+                return TryGetManagerComp(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent.Owner, out manager);
 
             return false;
         }

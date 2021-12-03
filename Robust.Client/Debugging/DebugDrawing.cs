@@ -61,7 +61,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var entity in _lookup.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
                 {
-                    var transform = entity.Transform;
+                    var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
 
                     var center = transform.WorldPosition;
                     var worldRotation = transform.WorldRotation;

@@ -415,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var (component, lightPos, _) = lights[i];
 
-                var transform = component.Owner.Transform;
+                var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(component.Owner.Uid);
 
                 Texture? mask = null;
                 var rotation = Angle.Zero;
@@ -518,7 +518,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count) state, in PointLightComponent light) =>
                 {
@@ -528,7 +528,7 @@ namespace Robust.Client.Graphics.Clyde
                         return false;
                     }
 
-                    var transform = light.Owner.Transform;
+                    var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(light.Owner.Uid);
 
                     if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
 
@@ -873,12 +873,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    var treeBounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid).InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
                         var occluder = (ClientOccluderComponent)sOccluder;
-                        var transform = occluder.Owner.Transform;
+                        var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(occluder.Owner.Uid);
                         if (!occluder.Enabled)
                         {
                             return true;

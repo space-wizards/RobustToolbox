@@ -357,7 +357,8 @@ namespace Robust.Client.GameObjects
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&
+                    IEntity? tempQualifier = effect.AttachedEntity;
+                    if ((tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid) : null).MapID != (player != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.Uid) : null).MapID &&
                         effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
@@ -374,8 +375,9 @@ namespace Robust.Client.GameObjects
                     // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
 
+                    IEntity? tempQualifier1 = effect.AttachedEntity;
                     var coordinates =
-                        (effect.AttachedEntity?.Transform.Coordinates ?? effect.Coordinates)
+                        ((tempQualifier1 != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier1.Uid) : null).Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
                     var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;

@@ -299,8 +299,8 @@ namespace Robust.Shared.GameObjects
 
         public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            worldPos ??= Owner.Transform.WorldPosition;
-            worldRot ??= Owner.Transform.WorldRotation;
+            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).WorldPosition;
+            worldRot ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).WorldRotation;
             var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
             var bounds = new Box2(transform.Position, transform.Position);
@@ -564,7 +564,7 @@ namespace Robust.Shared.GameObjects
             {
                 var linearVelocity = _linVelocity;
                 var angularVelocity = _angVelocity;
-                var parent = Owner.Transform.Parent?.Owner;
+                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Parent?.Owner;
 
                 while (parent != null)
                 {
@@ -574,7 +574,7 @@ namespace Robust.Shared.GameObjects
                         angularVelocity += body.AngularVelocity;
                     }
 
-                    parent = parent.Transform.Parent?.Owner;
+                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
                 }
 
                 return (linearVelocity, angularVelocity);
@@ -620,7 +620,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _linVelocity;
-                var parent = Owner.Transform.Parent?.Owner;
+                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Parent?.Owner;
 
                 while (parent != null)
                 {
@@ -629,7 +629,7 @@ namespace Robust.Shared.GameObjects
                         velocity += body.LinearVelocity;
                     }
 
-                    parent = parent.Transform.Parent?.Owner;
+                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
                 }
 
                 return velocity;
@@ -675,7 +675,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _angVelocity;
-                var parent = Owner.Transform.Parent?.Owner;
+                var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).Parent?.Owner;
 
                 while (parent != null)
                 {
@@ -684,7 +684,7 @@ namespace Robust.Shared.GameObjects
                         velocity += body.AngularVelocity;
                     }
 
-                    parent = parent.Transform.Parent?.Owner;
+                    parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
                 }
 
                 return velocity;
@@ -729,7 +729,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(Owner.Transform.MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -763,7 +763,7 @@ namespace Robust.Shared.GameObjects
 
         public Transform GetTransform()
         {
-            var (worldPos, worldRot) = Owner.Transform.GetWorldPositionRotation();
+            var (worldPos, worldRot) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).GetWorldPositionRotation();
 
             var xf = new Transform(worldPos, (float) worldRot.Theta);
             // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
@@ -841,9 +841,9 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            if (Owner.Transform.MapID != MapId.Nullspace)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID != MapId.Nullspace)
             {
-                IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID);
+                IEntity tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntity(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID);
                 PhysicsMap = IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier.Uid);
             }
 

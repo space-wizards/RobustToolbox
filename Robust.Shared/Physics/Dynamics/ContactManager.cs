@@ -351,10 +351,10 @@ namespace Robust.Shared.Physics.Dynamics
                     else
                     {
                         // These should really be destroyed before map changes.
-                        DebugTools.Assert(broadphaseA.Owner.Transform.MapID == broadphaseB.Owner.Transform.MapID);
+                        DebugTools.Assert(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphaseA.Owner.Uid).MapID == IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphaseB.Owner.Uid).MapID);
 
-                        var proxyAWorldAABB = broadphaseA.Owner.Transform.WorldMatrix.TransformBox(proxyA.AABB);
-                        var proxyBWorldAABB = broadphaseB.Owner.Transform.WorldMatrix.TransformBox(proxyB.AABB);
+                        var proxyAWorldAABB = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphaseA.Owner.Uid).WorldMatrix.TransformBox(proxyA.AABB);
+                        var proxyBWorldAABB = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(broadphaseB.Owner.Uid).WorldMatrix.TransformBox(proxyB.AABB);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }

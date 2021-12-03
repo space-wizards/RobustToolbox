@@ -81,7 +81,7 @@ namespace Robust.Server.GameObjects
             _sessionCache.Clear();
             _sessionCache.AddRange(ui.SubscribedSessions);
 
-            var transform = ui.Owner.Owner.Transform;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ui.Owner.Owner.Uid);
 
             var uiPos = transform.WorldPosition;
             var uiMap = transform.MapID;
@@ -96,13 +96,13 @@ namespace Robust.Server.GameObjects
                     continue;
                 }
 
-                if (uiMap != attachedEntity.Transform.MapID)
+                if (uiMap != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity.Uid).MapID)
                 {
                     ui.Close(session);
                     continue;
                 }
 
-                var distanceSquared = (uiPos - attachedEntity.Transform.WorldPosition).LengthSquared;
+                var distanceSquared = (uiPos - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity.Uid).WorldPosition).LengthSquared;
                 if (distanceSquared > MaxWindowRangeSquared)
                 {
                     ui.Close(session);

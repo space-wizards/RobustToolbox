@@ -116,7 +116,7 @@ namespace Robust.Client.Placement
                     return; // Just some paranoia just in case
                 var entity = coordinate.GetEntity(pManager.EntityManager);
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var worldRot = entity.Transform.WorldRotation + dirAng;
+                var worldRot = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldRotation + dirAng;
 
                 sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 sc.Render(handle, pManager.eyeManager.CurrentEye.Rotation, worldRot, worldPos);
@@ -206,7 +206,7 @@ namespace Robust.Client.Placement
             }
 
             var range = pManager.CurrentPermission!.Range;
-            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.Coordinates.InRange(pManager.EntityManager, coordinates, range))
+            if (range > 0 && !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(pManager.PlayerManager.LocalPlayer.ControlledEntity.Uid).Coordinates.InRange(pManager.EntityManager, coordinates, range))
                 return false;
             return true;
         }

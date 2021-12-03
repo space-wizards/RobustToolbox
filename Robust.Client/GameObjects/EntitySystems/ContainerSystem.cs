@@ -190,7 +190,7 @@ namespace Robust.Client.GameObjects
             // Am lazy though.
             UpdateEntity(entity);
 
-            foreach (var child in entity.Transform.Children)
+            foreach (var child in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Children)
             {
                 UpdateEntityRecursively(child.Owner);
             }

@@ -496,7 +496,7 @@ namespace Robust.Client.Placement
             var ent = PlayerManager.LocalPlayer!.ControlledEntity;
             if (ent != null)
             {
-                map = ent.Transform.MapID;
+                map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Uid).MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -519,7 +519,7 @@ namespace Robust.Client.Placement
             }
             else
             {
-                var map = ent.Transform.MapID;
+                var map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Uid).MapID;
                 if (map == MapId.Nullspace || !Eraser)
                 {
                     coordinates = new EntityCoordinates();
@@ -638,7 +638,7 @@ namespace Robust.Client.Placement
                 || PlayerManager.LocalPlayer?.ControlledEntity == null)
                 return;
 
-            var worldPos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
+            var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(PlayerManager.LocalPlayer.ControlledEntity.Uid).WorldPosition;
 
             handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }

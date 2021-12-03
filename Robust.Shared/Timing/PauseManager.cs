@@ -67,7 +67,7 @@ namespace Robust.Shared.Timing
 
             foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
             {
-                if (entity.Transform.GridID != gridId)
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).GridID != gridId)
                     continue;
 
                 entity.RunMapInit();

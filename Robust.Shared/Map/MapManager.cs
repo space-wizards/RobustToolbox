@@ -90,7 +90,7 @@ namespace Robust.Shared.Map
             {
                 var mapEnt = _entityManager.GetEntity(mapEntId);
 
-                foreach (var childTransform in mapEnt.Transform.Children.ToArray())
+                foreach (var childTransform in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEnt.Uid).Children.ToArray())
                 {
                     IoCManager.Resolve<IEntityManager>().DeleteEntity(childTransform.Owner.Uid);
                 }
@@ -477,7 +477,7 @@ namespace Robust.Shared.Map
                     //are applied. After they are applied the parent may be different, but the MapId will
                     //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
                     //use in transform states anytime before the state parent is properly set.
-                    gridEnt.Transform.AttachParent(GetMapEntity(currentMapID));
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).AttachParent(GetMapEntity(currentMapID));
 
                     _entityManager.InitializeComponents(gridEnt.Uid);
                     _entityManager.StartComponents(gridEnt.Uid);
@@ -550,7 +550,7 @@ namespace Robust.Shared.Map
 
                 // Doesn't use WorldBounds because it's just an AABB.
                 var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
-                var matrix = gridEnt.Transform.InvWorldMatrix;
+                var matrix = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).InvWorldMatrix;
                 var localPos = matrix.Transform(worldPos);
 
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));

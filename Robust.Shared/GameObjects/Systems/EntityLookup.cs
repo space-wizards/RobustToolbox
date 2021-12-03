@@ -169,7 +169,7 @@ namespace Robust.Shared.GameObjects
         {
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
-            if (@event.Entity.Transform.Anchored)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(@event.Entity.Uid).Anchored)
             {
                 RemoveFromEntityTrees(@event.Entity);
             }
@@ -191,7 +191,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleLookupInit(EntityUid uid, EntityLookupComponent component, ComponentInit args)
         {
-            var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / (float) GrowthRate) * GrowthRate);
+            var capacity = (int) Math.Min(256, Math.Ceiling(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(component.Owner.Uid).ChildCount / (float) GrowthRate) * GrowthRate);
 
             component.Tree = new DynamicTree<IEntity>(
                 GetRelativeAABBFromEntity,
@@ -207,7 +207,7 @@ namespace Robust.Shared.GameObjects
             var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
 
-            return tree?.Owner.Transform.InvWorldMatrix.TransformBox(aabb) ?? aabb;
+            return (tree != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tree.Owner.Uid) : null).InvWorldMatrix.TransformBox(aabb) ?? aabb;
         }
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
@@ -218,7 +218,7 @@ namespace Robust.Shared.GameObjects
         private void HandleEntityStarted(object? sender, EntityUid uid)
         {
             var entity = _entityManager.GetEntity(uid);
-            if (entity.Transform.Anchored) return;
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Anchored) return;
             UpdateEntityTree(entity);
         }
 
@@ -239,7 +239,7 @@ namespace Robust.Shared.GameObjects
                 _handledThisTick.Add(mapChangeEvent.Entity.Uid);
                 RemoveFromEntityTrees(mapChangeEvent.Entity);
 
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(mapChangeEvent.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(mapChangeEvent.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || mapChangeEvent.Entity.Transform.Anchored) continue;
+                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(mapChangeEvent.Entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(mapChangeEvent.Entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapChangeEvent.Entity.Uid).Anchored) continue;
                 UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
             }
 
@@ -247,9 +247,9 @@ namespace Robust.Shared.GameObjects
             {
                 if (!_handledThisTick.Add(moveEvent.Sender.Uid) ||
                     (!IoCManager.Resolve<IEntityManager>().EntityExists(moveEvent.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(moveEvent.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                    moveEvent.Sender.Transform.Anchored) continue;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(moveEvent.Sender.Uid).Anchored) continue;
 
-                DebugTools.Assert(!moveEvent.Sender.Transform.Anchored);
+                DebugTools.Assert(!IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(moveEvent.Sender.Uid).Anchored);
                 UpdateEntityTree(moveEvent.Sender, moveEvent.WorldAABB);
             }
 
@@ -257,9 +257,9 @@ namespace Robust.Shared.GameObjects
             {
                 if (!_handledThisTick.Add(rotateEvent.Sender.Uid) ||
                     (!IoCManager.Resolve<IEntityManager>().EntityExists(rotateEvent.Sender.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(rotateEvent.Sender.Uid).EntityLifeStage) >= EntityLifeStage.Deleted ||
-                    rotateEvent.Sender.Transform.Anchored) continue;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(rotateEvent.Sender.Uid).Anchored) continue;
 
-                DebugTools.Assert(!rotateEvent.Sender.Transform.Anchored);
+                DebugTools.Assert(!IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(rotateEvent.Sender.Uid).Anchored);
                 UpdateEntityTree(rotateEvent.Sender, rotateEvent.WorldAABB);
             }
 
@@ -351,7 +351,7 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var lookup))
             {
-                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(box);
+                var offsetBox = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.TransformBox(box);
 
                 lookup.Tree.QueryAabb(ref found, (ref bool found, in IEntity ent) =>
                 {
@@ -380,7 +380,7 @@ namespace Robust.Shared.GameObjects
             var enumerator = GetLookupsIntersecting(mapId, worldAABB);
             while (enumerator.MoveNext(out var lookup))
             {
-                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var offsetBox = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.TransformBox(worldAABB);
 
                 lookup.Tree._b2Tree.FastQuery(ref offsetBox, (ref IEntity data) => callback(data));
             }
@@ -414,7 +414,7 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var lookup))
             {
-                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var offsetBox = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.TransformBox(worldAABB);
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
@@ -445,7 +445,7 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var lookup))
             {
-                var offsetBox = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var offsetBox = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.TransformBox(worldBounds);
 
                 lookup.Tree.QueryAabb(ref list, (ref List<IEntity> list, in IEntity ent) =>
                 {
@@ -478,7 +478,7 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var lookup))
             {
-                var localPoint = lookup.Owner.Transform.InvWorldMatrix.Transform(position);
+                var localPoint = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.Transform(position);
 
                 lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
@@ -553,8 +553,8 @@ namespace Robust.Shared.GameObjects
 
         private Box2 GetLookupBounds(EntityUid uid, EntityLookupComponent lookup, Vector2 worldPos, Angle worldRot, float enlarged)
         {
-            var localPos = lookup.Owner.Transform.InvWorldMatrix.Transform(worldPos);
-            var localRot = worldRot - lookup.Owner.Transform.WorldRotation;
+            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.Transform(worldPos);
+            var localRot = worldRot - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).WorldRotation;
 
             if (_entityManager.TryGetComponent(uid, out PhysicsComponent? body))
             {
@@ -583,7 +583,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool IsIntersecting(IEntity entityOne, IEntity entityTwo)
         {
-            var position = entityOne.Transform.MapPosition.Position;
+            var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityOne.Uid).MapPosition.Position;
             return Intersecting(entityTwo, position);
         }
 
@@ -596,7 +596,7 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var transform = entity.Transform;
+                var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
                 var entPos = transform.WorldPosition;
                 if (MathHelper.CloseToPercent(entPos.X, mapPosition.X)
                     && MathHelper.CloseToPercent(entPos.Y, mapPosition.Y))
@@ -637,7 +637,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IEntity> GetEntitiesInRange(IEntity entity, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
             var worldAABB = GetWorldAabbFromEntity(entity);
-            return GetEntitiesInRange(entity.Transform.MapID, worldAABB, range, flags);
+            return GetEntitiesInRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID, worldAABB, range, flags);
         }
 
         /// <inheritdoc />
@@ -648,7 +648,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var entity in GetEntitiesInRange(coordinates, range * 2, flags))
             {
-                var angle = new Angle(entity.Transform.WorldPosition - position);
+                var angle = new Angle(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldPosition - position);
                 if (angle.Degrees < direction.Degrees + arcWidth / 2 &&
                     angle.Degrees > direction.Degrees - arcWidth / 2)
                     yield return entity;
@@ -662,7 +662,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (EntityLookupComponent comp in _entityManager.EntityQuery<EntityLookupComponent>(true))
             {
-                if (comp.Owner.Transform.MapID != mapId) continue;
+                if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid).MapID != mapId) continue;
 
                 foreach (var entity in comp.Tree)
                 {
@@ -701,7 +701,7 @@ namespace Robust.Shared.GameObjects
 
             while (enumerator.MoveNext(out var lookup))
             {
-                var offsetPos = lookup.Owner.Transform.InvWorldMatrix.Transform(position);
+                var offsetPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.Transform(position);
 
                 lookup.Tree.QueryPoint(ref state, (ref (List<IEntity> list, Vector2 position) state, in IEntity ent) =>
                 {
@@ -731,26 +731,26 @@ namespace Robust.Shared.GameObjects
 
         private static EntityLookupComponent? GetLookup(IEntity entity)
         {
-            if (entity.Transform.MapID == MapId.Nullspace)
+            if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID == MapId.Nullspace)
             {
                 return null;
             }
 
             // if it's map return null. Grids should return the map's broadphase.
             if (IoCManager.Resolve<IEntityManager>().HasComponent<EntityLookupComponent>(entity.Uid) &&
-                entity.Transform.Parent == null)
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent == null)
             {
                 return null;
             }
 
-            var parent = entity.Transform.Parent?.Owner;
+            var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent?.Owner;
 
             while (true)
             {
                 if (parent == null) break;
 
                 if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out EntityLookupComponent? comp)) return comp;
-                parent = parent.Transform.Parent?.Owner;
+                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
             }
 
             return null;
@@ -768,7 +768,7 @@ namespace Robust.Shared.GameObjects
             }
 
             DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
-            DebugTools.Assert(!entity.Transform.Anchored);
+            DebugTools.Assert(!IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Anchored);
 
             var lookup = GetLookup(entity);
 
@@ -788,10 +788,10 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            var transform = entity.Transform;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
             DebugTools.Assert(transform.Initialized);
 
-            var aabb = lookup.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB.Value);
+            var aabb = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(lookup.Owner.Uid).InvWorldMatrix.TransformBox(worldAABB.Value);
 
             // for debugging
             var necessary = 0;
@@ -803,7 +803,7 @@ namespace Robust.Shared.GameObjects
 
             if (!IoCManager.Resolve<IEntityManager>().HasComponent<EntityLookupComponent>(entity.Uid))
             {
-                foreach (var childTx in entity.Transform.ChildEntityUids)
+                foreach (var childTx in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).ChildEntityUids)
                 {
                     if (!_handledThisTick.Add(childTx)) continue;
 
@@ -840,7 +840,7 @@ namespace Robust.Shared.GameObjects
 
             if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ent.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ent.Uid).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
-                pos = ent.Transform.WorldPosition;
+                pos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Uid).WorldPosition;
                 return new Box2(pos, pos);
             }
 
@@ -849,7 +849,7 @@ namespace Robust.Shared.GameObjects
                 return GetWorldAABB(manager.Owner);
             }
 
-            pos = ent.Transform.WorldPosition;
+            pos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Uid).WorldPosition;
 
             return IoCManager.Resolve<IEntityManager>().TryGetComponent(ent.Uid, out ILookupWorldBox2Component? lookup) ?
                 lookup.GetWorldAABB(pos) :

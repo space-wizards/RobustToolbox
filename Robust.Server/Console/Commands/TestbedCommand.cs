@@ -286,7 +286,7 @@ namespace Robust.Server.Console.Commands
                     IEntity tempQualifier1 = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                     var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
                     box.BodyType = BodyType.Dynamic;
-                    box.Owner.Transform.WorldPosition = y;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(box.Owner.Uid).WorldPosition = y;
                     broadphase.CreateFixture(box,
                         new Fixture(box, shape) {
                         CollisionLayer = 2,

@@ -60,7 +60,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleOccluderTreeInit(EntityUid uid, OccluderTreeComponent component, ComponentInit args)
         {
-            var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / TreeGrowthRate) * TreeGrowthRate);
+            var capacity = (int) Math.Min(256, Math.Ceiling(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(component.Owner.Uid).ChildCount / TreeGrowthRate) * TreeGrowthRate);
 
             component.Tree = new DynamicTree<OccluderComponent>(ExtractAabbFunc, capacity: capacity);
         }
@@ -74,16 +74,16 @@ namespace Robust.Shared.GameObjects
         {
             var entity = component.Owner;
 
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || entity.Transform.MapID == MapId.Nullspace) return null;
+            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID == MapId.Nullspace) return null;
 
-            var parent = entity.Transform.Parent?.Owner;
+            var parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).Parent?.Owner;
 
             while (true)
             {
                 if (parent == null) break;
 
                 if (IoCManager.Resolve<IEntityManager>().TryGetComponent(parent.Uid, out OccluderTreeComponent? comp)) return comp;
-                parent = parent.Transform.Parent?.Owner;
+                parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid).Parent?.Owner;
             }
 
             return null;
@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
 
         private static Box2 ExtractAabbFunc(in OccluderComponent o)
         {
-            return o.BoundingBox.Translated(o.Owner.Transform.LocalPosition);
+            return o.BoundingBox.Translated(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(o.Owner.Uid).LocalPosition);
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
@@ -179,7 +179,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
-                var transform = comp.Owner.Transform;
+                var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(comp.Owner.Uid);
                 var matrix = transform.InvWorldMatrix;
                 var treeRot = transform.WorldRotation;
 

@@ -194,7 +194,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Test two's dependency on Transform should be correct.
             Assert.That(dummyComp.TestTwo!.Transform, Is.Not.Null);
-            Assert.That(dummyComp.TestTwo!.Transform, Is.EqualTo(dummyOne.Transform));
+            Assert.That(dummyComp.TestTwo!.Transform, Is.EqualTo(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummyOne.Uid)));
 
             // Test three's dependency on test one should be correct.
             Assert.That(dummyComp.TestThree!.TestOne, Is.Not.Null);

@@ -4,6 +4,7 @@ using System.Text;
 using Robust.Server.Player;
 using Robust.Shared.Console;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -32,7 +33,8 @@ namespace Robust.Server.Console.Commands
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
             var position = new Vector2(posX, posY);
-            var transform = player.AttachedEntity?.Transform;
+            IEntity? tempQualifier = player.AttachedEntity;
+            var transform = (tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid) : null);
 
             if(transform == null)
                 return;
@@ -102,7 +104,7 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                player.AttachedEntity.Transform.Coordinates = playerSession.AttachedEntity.Transform.Coordinates;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity.Uid).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity.Uid).Coordinates;
             }
             else if (args.Length > 1)
             {
@@ -138,7 +140,7 @@ namespace Robust.Server.Console.Commands
                         continue;
                     }
 
-                    playerSession.AttachedEntity.Transform.Coordinates = targetSession.AttachedEntity.Transform.Coordinates;
+                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity.Uid).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(targetSession.AttachedEntity.Uid).Coordinates;
                 }
             }
         }

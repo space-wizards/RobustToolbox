@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -56,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(physics.Awake, Is.EqualTo(false));
                 Assert.That(physics.CanCollide, Is.EqualTo(true));
 
-                physics.Owner.Transform.AttachParent(entManager.GetEntity(grid.GridEntityId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner.Uid).AttachParent(entManager.GetEntity(grid.GridEntityId));
             });
 
             await server.WaitRunTicks(1);
@@ -66,7 +67,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(physics.Awake, Is.EqualTo(false));
                 Assert.That(physics.CanCollide, Is.EqualTo(false));
 
-                physics.Owner.Transform.AttachParent(mapManager.GetMapEntity(mapId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner.Uid).AttachParent(mapManager.GetMapEntity(mapId));
             });
 
             // Juussttt in case we'll re-parent it to the map and check its collision is back on.

@@ -166,7 +166,7 @@ namespace Robust.Shared.GameObjects
 
             if (coordinates.IsValid(this))
             {
-                newEntity.Transform.Coordinates = coordinates;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Coordinates = coordinates;
             }
 
             return newEntity;
@@ -176,13 +176,13 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            newEntity.Transform.AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).AttachParent(_mapManager.GetMapEntity(coordinates.MapId));
 
             // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
-            var oldAnchored = newEntity.Transform.Anchored;
-            newEntity.Transform.Anchored = false;
-            newEntity.Transform.WorldPosition = coordinates.Position;
-            newEntity.Transform.Anchored = oldAnchored;
+            var oldAnchored = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Anchored;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Anchored = false;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).WorldPosition = coordinates.Position;
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).Anchored = oldAnchored;
             return newEntity;
         }
 
@@ -295,7 +295,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var uid = entity.Uid;
-            var transform = entity.Transform;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
             var metadata = IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid);
             IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage = EntityLifeStage.Terminating;
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);

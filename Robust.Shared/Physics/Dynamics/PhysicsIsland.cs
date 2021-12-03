@@ -517,7 +517,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // body.Sweep.Angle = angle;
 
                     // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
-                    var transform = body.Owner.Transform;
+                    var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner.Uid);
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;

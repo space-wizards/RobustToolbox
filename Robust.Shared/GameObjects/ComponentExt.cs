@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            warning ??= $"Entity {entity} at {entity.Transform.MapPosition} did not have a {typeof(T)}";
+            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 
@@ -91,7 +91,7 @@ namespace Robust.Shared.GameObjects
                 return component;
             }
 
-            warning ??= $"Entity {entity} at {entity.Transform.MapPosition} did not have a {typeof(T)}";
+            warning ??= $"Entity {entity} at {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapPosition} did not have a {typeof(T)}";
 
             Logger.Warning(warning);
 

@@ -141,7 +141,7 @@ namespace Robust.UnitTesting.Shared.Map
             var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             // Assert
-            Assert.That(newEntity.Transform.MapID, Is.EqualTo(MapId.Nullspace));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity.Uid).MapID, Is.EqualTo(MapId.Nullspace));
         }
 
         [Test]

@@ -163,7 +163,7 @@ namespace Robust.Client.Graphics.Clyde
                     DrawingHandleWorld,
                     Angle.Zero,
                     overrideDirection == null
-                        ? entity.Transform.WorldRotation
+                        ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).WorldRotation
                         : Angle.Zero,
                     overrideDirection);
 

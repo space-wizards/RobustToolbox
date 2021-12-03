@@ -116,7 +116,8 @@ entities:
 
             Assert.That(grid, NUnit.Framework.Is.Not.Null);
 
-            var entity = entMan.GetEntity(grid!.GridEntityId).Transform.Children.Single().Owner;
+            IEntity tempQualifier = entMan.GetEntity(grid!.GridEntityId);
+            var entity = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).Children.Single().Owner;
             var c = IoCManager.Resolve<IEntityManager>().GetComponent<MapDeserializeTestComponent>(entity.Uid);
 
             Assert.That(c.Bar, Is.EqualTo(2));

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
@@ -34,18 +35,18 @@ namespace Robust.UnitTesting.Shared.Map
                 var coordinates = new EntityCoordinates(gridEnt.Uid, new Vector2(10, 0));
 
                 // if no rotation and 0,0 position should just be the same coordinate.
-                Assert.That(gridEnt.Transform.WorldRotation, Is.EqualTo(Angle.Zero));
+                Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).WorldRotation, Is.EqualTo(Angle.Zero));
                 Assert.That(grid.WorldToLocal(coordinates.Position), Is.EqualTo(coordinates.Position));
 
                 // Rotate 180 degrees should show -10, 0 for the position in map-terms and 10, 0 for the position in entity terms (i.e. no change).
-                gridEnt.Transform.WorldRotation += new Angle(MathF.PI);
-                Assert.That(gridEnt.Transform.WorldRotation, Is.EqualTo(new Angle(MathF.PI)));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).WorldRotation += new Angle(MathF.PI);
+                Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).WorldRotation, Is.EqualTo(new Angle(MathF.PI)));
                 // Check the map coordinate rotates correctly
                 Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(-10, 0), 0.01f));
                 Assert.That(grid.LocalToWorld(coordinates.Position).EqualsApprox(new Vector2(-10, 0), 0.01f));
 
                 // Now we'll do the same for 180 degrees.
-                gridEnt.Transform.WorldRotation += MathF.PI / 2f;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).WorldRotation += MathF.PI / 2f;
                 // If grid facing down then worldpos of 10, 0 gets rotated 90 degrees CCW and hence should be 0, 10
                 Assert.That(grid.WorldToLocal(new Vector2(10, 0)).EqualsApprox(new Vector2(0, 10), 0.01f));
                 // If grid facing down then local 10,0 pos should just return 0, -10 given it's aligned with the rotation.
@@ -92,19 +93,19 @@ namespace Robust.UnitTesting.Shared.Map
                 // With all cardinal directions these should align.
                 Assert.That(aabb, Is.EqualTo(bounds));
 
-                gridEnt.Transform.LocalRotation = new Angle(Math.PI);
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).LocalRotation = new Angle(Math.PI);
                 aabb = chunk.CalcWorldAABB();
                 bounds = new Box2(new Vector2(-2, -10), new Vector2(0, 0));
 
                 Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
 
-                gridEnt.Transform.LocalRotation = new Angle(-Math.PI / 2);
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).LocalRotation = new Angle(-Math.PI / 2);
                 aabb = chunk.CalcWorldAABB();
                 bounds = new Box2(new Vector2(0, -2), new Vector2(10, 0));
 
                 Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
 
-                gridEnt.Transform.LocalRotation = new Angle(-Math.PI / 4);
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt.Uid).LocalRotation = new Angle(-Math.PI / 4);
                 aabb = chunk.CalcWorldAABB();
                 bounds = new Box2(new Vector2(0, -1.4142135f), new Vector2(8.485281f, 7.071068f));
 

@@ -125,7 +125,8 @@ namespace Robust.UnitTesting.Shared.Physics
                     }
                 }
 
-                firstPos = bodies[0].Owner.Transform.WorldPosition;
+                IEntity tempQualifier3 = bodies[0].Owner;
+                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3.Uid).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -133,7 +134,8 @@ namespace Robust.UnitTesting.Shared.Physics
             // Check that gravity workin
             await server.WaitAssertion(() =>
             {
-                Assert.That(firstPos != bodies[0].Owner.Transform.WorldPosition);
+                IEntity tempQualifier = bodies[0].Owner;
+                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldPosition);
             });
 
             // Assert
@@ -148,7 +150,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     for (var i = 0; i < bodies.Length; i++)
                     {
                         var body = bodies[j * columnCount + i];
-                        var worldPos = body.Owner.Transform.WorldPosition;
+                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner.Uid).WorldPosition;
 
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
@@ -238,7 +240,8 @@ namespace Robust.UnitTesting.Shared.Physics
                     }
                 }
 
-                firstPos = bodies[0].Owner.Transform.WorldPosition;
+                IEntity tempQualifier3 = bodies[0].Owner;
+                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3.Uid).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -246,7 +249,8 @@ namespace Robust.UnitTesting.Shared.Physics
             // Check that gravity workin
             await server.WaitAssertion(() =>
             {
-                Assert.That(firstPos != bodies[0].Owner.Transform.WorldPosition);
+                IEntity tempQualifier = bodies[0].Owner;
+                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).WorldPosition);
             });
 
             // Assert
@@ -261,7 +265,7 @@ namespace Robust.UnitTesting.Shared.Physics
                     for (var i = 0; i < bodies.Length; i++)
                     {
                         var body = bodies[j * columnCount + i];
-                        var worldPos = body.Owner.Transform.WorldPosition;
+                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner.Uid).WorldPosition;
 
                         var expectedY = 0.5f + i;
 

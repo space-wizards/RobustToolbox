@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -51,8 +52,8 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var initialPos = new EntityCoordinates(gridA.GridEntityId, (0, 0));
             var parent = entMan.SpawnEntity(null, initialPos);
             var child = entMan.SpawnEntity(null, initialPos);
-            var parentTrans = parent.Transform;
-            var childTrans = child.Transform;
+            var parentTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid);
+            var childTrans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child.Uid);
 
             var compState = new TransformComponent.TransformComponentState(new Vector2(5, 5), new Angle(0), gridB.GridEntityId, false, false);
             parentTrans.HandleComponentState(compState, null);
@@ -94,9 +95,9 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             node2.Name = "node2_dummy";
             node3.Name = "node3_dummy";
 
-            var node1Trans = node1.Transform;
-            var node2Trans = node2.Transform;
-            var node3Trans = node3.Transform;
+            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1.Uid);
+            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2.Uid);
+            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3.Uid);
 
             var compState = new TransformComponent.TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), gridB.GridEntityId, false, false);
             node1Trans.HandleComponentState(compState, null);

@@ -110,7 +110,8 @@ namespace Robust.Client.GameStates
                 if(_entityManager.EntityExists(netEnt.Id))
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
-                    var position = _entityManager.GetEntity(netEnt.Id).Transform.MapPosition;
+                    IEntity tempQualifier = _entityManager.GetEntity(netEnt.Id);
+                    var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).MapPosition;
                     netEnt.InPVS =  !pvsEnabled || (pvsBox.Contains(position.Position) && position.MapId == pvsCenter.MapId);
                     _netEnts[i] = netEnt; // copy struct back
                     continue;

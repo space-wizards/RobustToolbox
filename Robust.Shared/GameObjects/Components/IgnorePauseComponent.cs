@@ -17,7 +17,7 @@ namespace Robust.Shared.GameObjects
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(Owner.Transform.MapID))
+            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID))
             {
                 IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner.Uid).EntityPaused = true;
             }

@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            var transform = entity.Transform;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid);
 
             if (float.IsNaN(moveEvent.NewPosition.X) || float.IsNaN(moveEvent.NewPosition.Y))
             {

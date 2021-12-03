@@ -27,9 +27,6 @@ namespace Robust.Shared.GameObjects
             set => IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityName = value;
         }
 
-        [ViewVariables]
-        public TransformComponent Transform => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Uid);
-
         #endregion Members
 
         #region Initialization

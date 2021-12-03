@@ -80,7 +80,8 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return MapCoordinates.Nullspace;
 
-            var transform = entityManager.GetEntity(EntityId).Transform;
+            IEntity tempQualifier = entityManager.GetEntity(EntityId);
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid);
             var worldPos = transform.WorldMatrix.Transform(Position);
             return new MapCoordinates(worldPos, transform.MapID);
         }
@@ -104,10 +105,10 @@ namespace Robust.Shared.Map
         /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
         public static EntityCoordinates FromMap(IEntity entity, MapCoordinates coordinates)
         {
-            if(entity.Transform.MapID != coordinates.MapId)
+            if(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
-            var localPos = entity.Transform.InvWorldMatrix.Transform(coordinates.Position);
+            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).InvWorldMatrix.Transform(coordinates.Position);
             return new EntityCoordinates(entity.Uid, localPos);
         }
 
@@ -197,10 +198,10 @@ namespace Robust.Shared.Map
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var mapPos = ToMap(IoCManager.Resolve<IEntityManager>());
 
-            if(!IsValid(entityManager) || entity.Transform.MapID != mapPos.MapId)
+            if(!IsValid(entityManager) || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID != mapPos.MapId)
                 return new EntityCoordinates(entity.Uid, Vector2.Zero);
 
-            var localPos = entity.Transform.InvWorldMatrix.Transform(mapPos.Position);
+            var localPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).InvWorldMatrix.Transform(mapPos.Position);
             return new EntityCoordinates(entity.Uid, localPos);
         }
 
@@ -212,7 +213,8 @@ namespace Robust.Shared.Map
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? GridId.Invalid : GetEntity(entityManager).Transform.GridID;
+            IEntity tempQualifier = GetEntity(entityManager);
+            return !IsValid(entityManager) ? GridId.Invalid : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).GridID;
         }
 
         /// <summary>
@@ -223,7 +225,8 @@ namespace Robust.Shared.Map
         /// <returns>Map Id these coordinates are on or <see cref="MapId.Nullspace"/></returns>
         public MapId GetMapId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? MapId.Nullspace : GetEntity(entityManager).Transform.MapID;
+            IEntity tempQualifier = GetEntity(entityManager);
+            return !IsValid(entityManager) ? MapId.Nullspace : IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier.Uid).MapID;
         }
 
         /// <summary>

@@ -456,7 +456,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables]
         public IEnumerable<TransformComponent> Children =>
-            _children.Select(u => IoCManager.Resolve<IEntityManager>().GetEntity(u).Transform);
+            _children.Select(u => { return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(IoCManager.Resolve<IEntityManager>().GetEntity(u).Uid); });
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
 
@@ -733,7 +733,7 @@ namespace Robust.Shared.GameObjects
 
         public void AttachParent(IEntity parent)
         {
-            var transform = parent.Transform;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent.Uid);
             AttachParent(transform);
         }
 
@@ -872,7 +872,7 @@ namespace Robust.Shared.GameObjects
 #endif
                             }
 
-                            AttachParent(newParent.Transform);
+                            AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newParent.Uid));
                         }
                     }
 

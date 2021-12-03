@@ -59,11 +59,11 @@ namespace Robust.Shared.GameObjects
         protected override void Initialize()
         {
             base.Initialize();
-            var mapId = Owner.Transform.MapID;
+            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                Owner.Transform.AttachParent(_mapManager.GetMapEntity(mapId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid).AttachParent(_mapManager.GetMapEntity(mapId));
             }
         }
 
@@ -76,7 +76,7 @@ namespace Robust.Shared.GameObjects
 
             if (result)
             {
-                xform.Parent = Owner.Transform;
+                xform.Parent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid);
 
                 // anchor snapping
                 xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;

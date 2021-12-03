@@ -52,7 +52,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddPlayersByPvs(IEntity origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null)
         {
-            return AddPlayersByPvs(origin.Transform.MapPosition, rangeMultiplier, playerMan);
+            return AddPlayersByPvs(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(origin.Uid).MapPosition, rangeMultiplier, playerMan);
         }
 
         /// <summary>
@@ -156,7 +156,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddInGrid(GridId gridId)
         {
-            return AddWhereAttachedEntity(entity => entity.Transform.GridID == gridId);
+            return AddWhereAttachedEntity(entity => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).GridID == gridId);
         }
 
         /// <summary>
@@ -164,7 +164,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddInMap(MapId mapId)
         {
-            return AddWhereAttachedEntity(entity => entity.Transform.MapID == mapId);
+            return AddWhereAttachedEntity(entity => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity.Uid).MapID == mapId);
         }
 
         /// <summary>
@@ -174,7 +174,7 @@ namespace Robust.Shared.Player
         {
             return AddWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(session.AttachedEntity.Transform.MapPosition, range), playerMan);
+                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity.Uid).MapPosition, range), playerMan);
         }
 
         /// <summary>
@@ -233,7 +233,7 @@ namespace Robust.Shared.Player
         {
             return RemoveWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(session.AttachedEntity.Transform.MapPosition, range));
+                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity.Uid).MapPosition, range));
         }
 
         /// <summary>

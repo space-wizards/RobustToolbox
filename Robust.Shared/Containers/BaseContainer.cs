@@ -63,14 +63,14 @@ namespace Robust.Shared.Containers
             if (!CanInsert(toinsert))
                 return false;
 
-            var transform = toinsert.Transform;
+            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(toinsert.Uid);
 
             // CanInsert already checks nullability of Parent (or container forgot to call base that does)
             if (toinsert.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
                 return false; // Can't remove from existing container, can't insert.
 
             // Attach to parent first so we can check IsInContainer more easily.
-            transform.AttachParent(Owner.Transform);
+            transform.AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid));
             InternalInsert(toinsert);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
@@ -98,7 +98,7 @@ namespace Robust.Shared.Containers
                 return false;
 
             // Crucial, prevent circular insertion.
-            return !toinsert.Transform.ContainsEntity(Owner.Transform);
+            return !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(toinsert.Uid).ContainsEntity(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner.Uid));
 
             //Improvement: Traverse the entire tree to make sure we are not creating a loop.
         }
@@ -114,7 +114,7 @@ namespace Robust.Shared.Containers
             if (!CanRemove(toremove)) return false;
             InternalRemove(toremove);
 
-            toremove.Transform.AttachParentToContainerOrGrid();
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(toremove.Uid).AttachParentToContainerOrGrid();
             return true;
         }
 

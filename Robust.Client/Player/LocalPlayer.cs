@@ -66,7 +66,7 @@ namespace Robust.Client.Player
             ControlledEntity = entity;
             InternalSession.AttachedEntity = entity;
 
-            if (!ControlledEntity.TryGetComponent<EyeComponent>(out var eye))
+            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<EyeComponent?>(ControlledEntity.Uid, out var eye))
             {
                 eye = IoCManager.Resolve<IEntityManager>().AddComponent<EyeComponent>(ControlledEntity);
             }

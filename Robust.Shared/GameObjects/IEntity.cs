@@ -43,11 +43,6 @@ namespace Robust.Shared.GameObjects
 
         #region Components
 
-        public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
-        {
-            return IoCManager.Resolve<IEntityManager>().TryGetComponent(Uid, out component);
-        }
-
         public T? GetComponentOrNull<T>() where T : class, IComponent
         {
             return IoCManager.Resolve<IEntityManager>().GetComponentOrNull<T>(Uid);

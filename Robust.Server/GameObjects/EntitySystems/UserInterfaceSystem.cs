@@ -88,21 +88,21 @@ namespace Robust.Server.GameObjects
 
             foreach (var session in _sessionCache)
             {
-                var attachedEntity = session.AttachedEntity;
+                var attachedEntityTransform = session.AttachedEntityTransform;
 
                 // The component manages the set of sessions, so this invalid session should be removed soon.
-                if (attachedEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(attachedEntity))
+                if (attachedEntityTransform == null)
                 {
                     continue;
                 }
 
-                if (uiMap != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity).MapID)
+                if (uiMap != attachedEntityTransform.MapID)
                 {
                     ui.Close(session);
                     continue;
                 }
 
-                var distanceSquared = (uiPos - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(attachedEntity).WorldPosition).LengthSquared;
+                var distanceSquared = (uiPos - attachedEntityTransform.WorldPosition).LengthSquared;
                 if (distanceSquared > MaxWindowRangeSquared)
                 {
                     ui.Close(session);

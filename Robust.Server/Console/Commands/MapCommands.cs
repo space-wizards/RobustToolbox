@@ -232,11 +232,12 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
-            if (player?.AttachedEntity == null)
+            var pt = player?.AttachedEntityTransform;
+            if (pt == null)
                 return;
 
-            var pos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).Coordinates;
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var pos = pt.Coordinates;
 
             shell.WriteLine(
                 $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");

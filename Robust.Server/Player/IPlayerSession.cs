@@ -4,6 +4,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.Player
 {
@@ -67,5 +68,15 @@ namespace Robust.Server.Player
         ///     Do NOT use this outside of <see cref="ViewSubscriberSystem"/>.
         /// </summary>
         internal void RemoveViewSubscription(EntityUid eye);
+
+        /// <summary>
+        ///     Porting convenience
+        /// </summary>
+        EntityUid AttachedEntityUidOrInvalid { get => AttachedEntityUid ?? EntityUid.Invalid; }
+
+        /// <summary>
+        ///     Porting convenience for admin commands which use such logic as "at the player's feet", etc: the transform component of the attached entity.
+        /// </summary>
+        TransformComponent? AttachedEntityTransform { get => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntityUidOrInvalid); }
     }
 }

@@ -56,11 +56,10 @@ namespace Robust.Server.Bql
 
             if (shell.Player is IPlayerSession player)
             {
-                if (player.AttachedEntity != null)
+                var ptransform = player.AttachedEntityTransform;
+                if (ptransform != null)
                 {
-                    var puid= player.AttachedEntity;
-                    var ptransform = entMan.GetComponent<TransformComponent>(puid);
-                    ruleString = ruleString.Replace("$PID", ent.ToString());
+                    ruleString = ruleString.Replace("$PID", ptransform.Owner.ToString());
                     ruleString = ruleString.Replace("$PWX",
                         ptransform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PWY",

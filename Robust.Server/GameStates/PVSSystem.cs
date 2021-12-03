@@ -473,24 +473,34 @@ internal partial class PVSSystem : EntitySystem
 
             foreach (var uid in add)
             {
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if (!seenEnts.Add(uid)) continue;
+                if (!EntityManager.EntityExists(uid)) continue;
 
-                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized);
+                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
+                var ls = md.EntityLifeStage;
+                if (ls >= EntityLifeStage.Deleted) continue;
 
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, entity, GameTick.Zero));
+                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+
+                if (md.EntityLastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
             }
 
             foreach (var uid in dirty)
             {
                 DebugTools.Assert(!add.Contains(uid));
 
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || (!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if (!seenEnts.Add(uid)) continue;
+                if (!EntityManager.EntityExists(uid)) continue;
 
-                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized);
+                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
+                var ls = md.EntityLifeStage;
+                if (ls >= EntityLifeStage.Deleted) continue;
 
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, entity, fromTick));
+                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+
+                if (md.EntityLastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(player, uid, fromTick));
             }
         }
 
@@ -503,14 +513,14 @@ internal partial class PVSSystem : EntitySystem
 
         foreach (var entity in EntityManager.GetEntities())
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted)
-            {
-                continue;
-            }
+            if (!EntityManager.EntityExists(entity)) continue;
+            var md = EntityManager.GetComponent<MetaDataComponent>(entity);
+            var ls = md.EntityLifeStage;
+            if (ls >= EntityLifeStage.Deleted) continue;
 
-            DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized);
+            DebugTools.Assert(ls >= EntityLifeStage.Initialized);
 
-            if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick >= fromTick)
+            if (md.EntityLastModifiedTick >= fromTick)
                 stateEntities.Add(GetEntityState(player, entity, fromTick));
         }
 

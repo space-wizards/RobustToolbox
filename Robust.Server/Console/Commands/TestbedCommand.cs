@@ -111,7 +111,7 @@ namespace Robust.Server.Console.Commands
             if (mapId == MapId.Nullspace) return;
             var pauseManager = IoCManager.Resolve<IPauseManager>();
             pauseManager.SetMapPaused(mapId, false);
-            var mapUid = IoCManager.Resolve<IMapManager>().GetMapEntity(mapId);
+            var mapUid = IoCManager.Resolve<IMapManager>().GetMapEntityIdOrThrow(mapId);
             IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
 
             return;

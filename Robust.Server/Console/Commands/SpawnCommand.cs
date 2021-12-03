@@ -22,19 +22,21 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Incorrect number of arguments. " + Help);
             }
 
-            if (args.Length == 1 && player != null && player.AttachedEntity != null)
+            var pAE = player == null ? EntityUid.Invalid : player.AttachedEntityUidOrInvalid;
+
+            if (args.Length == 1 && player != null && pAE != EntityUid.Invalid)
             {
-                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(player.AttachedEntity).Coordinates);
+                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(pAE).Coordinates);
             }
             else if (args.Length == 2)
             {
                 var uid = ent.GetEntity(EntityUid.Parse(args[1]));
                 ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(uid).Coordinates);
             }
-            else if (player != null && player.AttachedEntity != null)
+            else if (player != null && pAE != EntityUid.Invalid)
             {
                 var coords = new MapCoordinates(float.Parse(args[1]),
-                    float.Parse(args[2]), ent.GetComponent<TransformComponent>(player.AttachedEntity).MapID);
+                    float.Parse(args[2]), ent.GetComponent<TransformComponent>(pAE).MapID);
                 ent.SpawnEntity(args[0], coords);
             }
         }

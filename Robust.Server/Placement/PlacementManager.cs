@@ -79,7 +79,7 @@ namespace Robust.Server.Placement
             var dirRcv = msg.DirRcv;
 
             var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
-            var plyEntity = session.AttachedEntity;
+            var plyEntity = session.AttachedEntityTransform;
 
             // Don't have an entity, don't get to place.
             if (plyEntity == null)
@@ -201,15 +201,15 @@ namespace Robust.Server.Placement
         private void HandleEntRemoveReq(EntityUid entityUid)
         {
             //TODO: Some form of admin check
-            if (_entityManager.TryGetEntity(entityUid, out var entity))
-                _entityManager.DeleteEntity(entity);
+            if (_entityManager.EntityExists(entityUid))
+                _entityManager.DeleteEntity(entityUid);
         }
 
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
             EntityCoordinates start = msg.EntityCoordinates;
             Vector2 rectSize = msg.RectSize;
-            foreach (EntityUid entity in IoCManager.Resolve<EntityUidLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
+            foreach (EntityUid entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
                 if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(entity) || IoCManager.Resolve<IEntityManager>().HasComponent<ActorComponent>(entity))

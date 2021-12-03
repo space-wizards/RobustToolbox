@@ -21,7 +21,11 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+            if (player?.Status != SessionStatus.InGame)
+                return;
+
+            var transform = player.AttachedEntityTransform;
+            if (transform == null)
                 return;
 
             if (args.Length < 2 || !float.TryParse(args[0], out var posX) || !float.TryParse(args[1], out var posY))
@@ -33,11 +37,6 @@ namespace Robust.Server.Console.Commands
             var mapMgr = IoCManager.Resolve<IMapManager>();
 
             var position = new Vector2(posX, posY);
-            IEntity? tempQualifier = player.AttachedEntity;
-            var transform = (tempQualifier != null ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier) : null);
-
-            if(transform == null)
-                return;
 
             transform.AttachToGridOrMap();
 
@@ -61,7 +60,7 @@ namespace Robust.Server.Console.Commands
             }
             else
             {
-                var mapEnt = mapMgr.GetMapEntity(mapId);
+                var mapEnt = mapMgr.GetMapEntityIdOrThrow(mapId);
                 transform.WorldPosition = position;
                 transform.AttachParent(mapEnt);
             }
@@ -79,7 +78,7 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame || player.AttachedEntity == null)
+            if (player?.Status != SessionStatus.InGame)
                 return;
 
             if (args.Length == 0)
@@ -88,6 +87,13 @@ namespace Robust.Server.Console.Commands
             }
             else if (args.Length == 1)
             {
+                var playerAE = player.AttachedEntityTransform;
+                if (playerAE == null)
+                {
+                    shell.WriteError("You don't have an entity.");
+                    return;
+                }
+
                 var players = IoCManager.Resolve<IPlayerManager>();
 
                 var username = args[0];
@@ -98,13 +104,14 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                if (playerSession.AttachedEntity == null)
+                var targetAE = playerSession.AttachedEntityTransform;
+                if (targetAE == null)
                 {
                     shell.WriteError(username + " does not have an entity.");
                     return;
                 }
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.AttachedEntity).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity).Coordinates;
+                playerAE.Coordinates = targetAE.Coordinates;
             }
             else if (args.Length > 1)
             {
@@ -117,11 +124,14 @@ namespace Robust.Server.Console.Commands
                     return;
                 }
 
-                if (targetSession.AttachedEntity == null)
+                var targetAE = targetSession.AttachedEntityTransform;
+                if (targetAE == null)
                 {
                     shell.WriteError(target + " does not have an entity.");
                     return;
                 }
+
+                var targetCoords = targetAE.Coordinates;
 
                 foreach (var username in args)
                 {
@@ -134,13 +144,14 @@ namespace Robust.Server.Console.Commands
                         continue;
                     }
 
-                    if (playerSession.AttachedEntity == null)
+                    var victimAE = playerSession.AttachedEntityTransform;
+                    if (victimAE == null)
                     {
                         shell.WriteError(username + " does not have an entity.");
                         continue;
                     }
 
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(playerSession.AttachedEntity).Coordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(targetSession.AttachedEntity).Coordinates;
+                    victimAE.Coordinates = targetCoords;
                 }
             }
         }

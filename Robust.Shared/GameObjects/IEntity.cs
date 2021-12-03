@@ -99,11 +99,6 @@ namespace Robust.Shared.GameObjects
             return IoCManager.Resolve<IEntityManager>().TryGetComponent(Uid, type, out component);
         }
 
-        public void QueueDelete()
-        {
-            IoCManager.Resolve<IEntityManager>().QueueDeleteEntity(Uid);
-        }
-
         #endregion Components
 
         public override string ToString()

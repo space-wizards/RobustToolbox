@@ -272,7 +272,7 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var newEnt = (Entity) _entityManager.CreateEntityUninitialized(null, entityUid);
+                    var newEnt = (IEntity) _entityManager.CreateEntityUninitialized(null, entityUid);
                     _mapEntities.Add(actualID, newEnt.Uid);
 
                     var mapComp = newEnt.AddComponent<MapComponent>();
@@ -300,7 +300,7 @@ namespace Robust.Shared.Map
             DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-            var newEntity = (Entity) _entityManager.CreateEntityUninitialized(null);
+            var newEntity = (IEntity) _entityManager.CreateEntityUninitialized(null);
             SetMapEntity(mapId, newEntity);
 
             _entityManager.InitializeComponents(newEntity.Uid);
@@ -464,7 +464,7 @@ namespace Robust.Shared.Map
                 }
                 else
                 {
-                    var gridEnt = (Entity) EntityManager.CreateEntityUninitialized(null, euid);
+                    var gridEnt = (IEntity) EntityManager.CreateEntityUninitialized(null, euid);
 
                     grid.GridEntityId = gridEnt.Uid;
 

@@ -87,7 +87,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
-            var oldEntity = (Entity)entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
+            var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
             entMan.InitializeComponents(oldEntity.Uid);
 
             mapMan.Restart();

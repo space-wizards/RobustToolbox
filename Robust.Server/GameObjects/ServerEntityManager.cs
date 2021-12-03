@@ -50,20 +50,20 @@ namespace Robust.Server.GameObjects
 
         void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
         {
-            LoadEntity((Entity) entity, context);
+            LoadEntity(entity, context);
         }
 
         void IServerEntityManagerInternal.FinishEntityInitialization(IEntity entity)
         {
-            InitializeEntity((Entity) entity);
+            InitializeEntity(entity);
         }
 
         void IServerEntityManagerInternal.FinishEntityStartup(IEntity entity)
         {
-            StartEntity((Entity) entity);
+            StartEntity(entity);
         }
 
-        private protected override Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected override IEntity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             var entity = base.CreateEntity(prototypeName, uid);
 

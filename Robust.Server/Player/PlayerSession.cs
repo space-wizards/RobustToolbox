@@ -140,12 +140,12 @@ namespace Robust.Server.Player
                 return;
 
 #if EXCEPTION_TOLERANCE
-            if (AttachedEntity!.Deleted)
+            if (!IoCManager.Resolve<IEntityManager>().EntityExists(AttachedEntityUid!.Value))
             {
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.
                 // Work around it.
-                AttachedEntity = null;
+                AttachedEntityUid = null;
                 UpdatePlayerState();
                 return;
             }
@@ -200,8 +200,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         void IPlayerSession.SetAttachedEntity(EntityUid? entity)
         {
-            // TODO: Use EntityUid for this.
-            AttachedEntity = entity;
+            AttachedEntityUid = entity;
             UpdatePlayerState();
         }
 
@@ -229,10 +228,7 @@ namespace Robust.Server.Player
         {
             PlayerState.Status = Status;
             PlayerState.Name = Name;
-            if (AttachedEntity == null)
-                PlayerState.ControlledEntity = null;
-            else
-                PlayerState.ControlledEntity = AttachedEntity;
+            PlayerState.ControlledEntity = AttachedEntityUid;
 
             _playerManager.Dirty();
         }

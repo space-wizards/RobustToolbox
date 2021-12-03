@@ -1,6 +1,7 @@
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Players
 {
@@ -42,5 +43,15 @@ namespace Robust.Shared.Players
         /// on the Client only the LocalPlayer has a network channel.
         /// </remarks>
         INetChannel ConnectedClient { get; }
+
+        /// <summary>
+        ///     Porting convenience
+        /// </summary>
+        EntityUid AttachedEntityUidOrInvalid { get => AttachedEntityUid ?? EntityUid.Invalid; }
+
+        /// <summary>
+        ///     Porting convenience for admin commands which use such logic as "at the player's feet", etc: the transform component of the attached entity.
+        /// </summary>
+        TransformComponent? AttachedEntityTransform { get => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntityUidOrInvalid); }
     }
 }

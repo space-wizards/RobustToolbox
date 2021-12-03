@@ -4,6 +4,7 @@ using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
+using Robust.Shared.IoC;
 
 namespace Robust.Server.Player
 {

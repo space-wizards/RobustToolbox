@@ -443,7 +443,7 @@ namespace Robust.Server.Maps
                 {
                     var gridInternal = (IMapGridInternal) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
-                    var mapUid = _mapManager.GetMapEntity(grid.ParentMapId);
+                    var mapUid = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
                     body.Broadphase = IoCManager.Resolve<IEntityManager>().GetComponent<BroadphaseComponent>(mapUid);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
@@ -485,17 +485,17 @@ namespace Robust.Server.Maps
 
             private void AttachMapEntities()
             {
-                var mapEntity = _mapManager.GetMapEntity(TargetMap);
+                var mapEntity = _mapManager.GetMapEntityIdOrThrow(TargetMap);
 
                 foreach (var grid in Grids)
                 {
-                    var entity = _serverEntityManager.GetEntity(grid.GridEntityId);
-                    if (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Parent != null)
+                    var transform = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                    if (transform.Parent != null)
                         continue;
 
-                    var mapOffset = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).LocalPosition;
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).AttachParent(mapEntity);
-                    IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).WorldPosition = mapOffset;
+                    var mapOffset = transform.LocalPosition;
+                    transform.AttachParent(mapEntity);
+                    transform.WorldPosition = mapOffset;
                 }
             }
 
@@ -810,7 +810,8 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = component.Name;
                         var compMapping = serializationManager.WriteValueAs<MappingDataNode>(component.GetType(), component, context: this);
 
-                        if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype != null && prototypeCompCache[IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype.ID].TryGetValue(component.Name, out var protMapping))
+                        var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
+                        if (md.EntityPrototype != null && prototypeCompCache[md.EntityPrototype.ID].TryGetValue(component.Name, out var protMapping))
                         {
                             compMapping = compMapping.Except(protMapping);
                             if(compMapping == null) continue;
@@ -981,14 +982,14 @@ namespace Robust.Server.Maps
             {
                 var val = int.Parse(node.Value);
 
-                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrDefault(e => e == UidEntityMap[val], out var entity))
+                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrNull(e => e == UidEntityMap[val], out var entity))
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
                     return null!;
                 }
                 else
                 {
-                    return new DeserializedValue<EntityUid>(entity);
+                    return new DeserializedValue<EntityUid>(entity!.Value);
                 }
             }
 

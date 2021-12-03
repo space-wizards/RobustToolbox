@@ -475,7 +475,7 @@ internal partial class PVSSystem : EntitySystem
             {
                 if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
 
-                DebugTools.Assert(entity.Initialized);
+                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
 
                 if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, entity.Uid, GameTick.Zero));
@@ -487,7 +487,7 @@ internal partial class PVSSystem : EntitySystem
 
                 if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
 
-                DebugTools.Assert(entity.Initialized);
+                DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
 
                 if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
@@ -508,7 +508,7 @@ internal partial class PVSSystem : EntitySystem
                 continue;
             }
 
-            DebugTools.Assert(entity.Initialized);
+            DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
 
             if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick >= fromTick)
                 stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));

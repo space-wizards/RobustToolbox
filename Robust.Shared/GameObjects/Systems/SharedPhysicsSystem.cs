@@ -142,7 +142,7 @@ namespace Robust.Shared.GameObjects
         {
             var entity = args.Entity;
 
-            if (!entity.Initialized ||
+            if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized) ||
                 !entity.TryGetComponent(out PhysicsComponent? body) ||
                 entity.IsInContainer()) return;
 

@@ -85,7 +85,7 @@ namespace Robust.Client.Player
         public void DetachEntity()
         {
             var previous = ControlledEntity;
-            if (previous is {Initialized: true, Deleted: false})
+            if (previous is {((!IoCManager.Resolve<IEntityManager>().EntityExists(Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Uid).EntityLifeStage) >= EntityLifeStage.Initialized): true, Deleted: false})
             {
                 previous.GetComponent<EyeComponent>().Current = false;
 

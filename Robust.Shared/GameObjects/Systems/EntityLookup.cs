@@ -766,7 +766,7 @@ namespace Robust.Shared.GameObjects
                 return true;
             }
 
-            DebugTools.Assert(entity.Initialized);
+            DebugTools.Assert((!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized);
             DebugTools.Assert(!entity.Transform.Anchored);
 
             var lookup = GetLookup(entity);

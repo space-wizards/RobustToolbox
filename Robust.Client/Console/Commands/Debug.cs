@@ -247,7 +247,7 @@ namespace Robust.Client.Console.Commands
             }
 
             shell.WriteLine($"{entity.Uid}: {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityPrototype?.ID}/{entity.Name}");
-            shell.WriteLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick}");
+            shell.WriteLine($"init/del/lmt: {(!IoCManager.Resolve<IEntityManager>().EntityExists(entity.Uid) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLifeStage) >= EntityLifeStage.Initialized}/{entity.Deleted}/{IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity.Uid).EntityLastModifiedTick}");
             foreach (var component in entity.GetAllComponents())
             {
                 shell.WriteLine(component.ToString() ?? "");

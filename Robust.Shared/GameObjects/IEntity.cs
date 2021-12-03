@@ -44,17 +44,6 @@ namespace Robust.Shared.GameObjects
         #region Component Messaging
 
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public void SendMessage(IComponent? owner, ComponentMessage message)
-        {
-            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Uid);
-            foreach (var component in components)
-            {
-                if (owner != component)
-                    component.HandleMessage(message, owner);
-            }
-        }
-
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
         {
             IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, this, owner, message);

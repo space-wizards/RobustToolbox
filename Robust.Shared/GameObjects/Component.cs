@@ -260,7 +260,12 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendMessage(ComponentMessage message)
         {
-            Owner.SendMessage(this, message);
+            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner.Uid);
+            foreach (var component in components)
+            {
+                if (this != component)
+                    component.HandleMessage(message, this);
+            }
         }
 
         /// <summary>

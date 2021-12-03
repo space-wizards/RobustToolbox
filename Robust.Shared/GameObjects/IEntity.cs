@@ -64,11 +64,6 @@ namespace Robust.Shared.GameObjects
 
         #region Components
 
-        public void RemoveComponent<T>()
-        {
-            IoCManager.Resolve<IEntityManager>().RemoveComponent<T>(Uid);
-        }
-
         public bool HasComponent<T>()
         {
             return IoCManager.Resolve<IEntityManager>().HasComponent<T>(Uid);

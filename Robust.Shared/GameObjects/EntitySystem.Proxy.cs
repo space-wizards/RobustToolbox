@@ -479,14 +479,14 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void Delete(EntityUid uid)
+    public void Del(EntityUid uid)
     {
         EntityManager.DeleteEntity(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void QueueDelete(EntityUid uid)
+    public void QDel(EntityUid uid)
     {
         EntityManager.QueueDeleteEntity(uid);
     }

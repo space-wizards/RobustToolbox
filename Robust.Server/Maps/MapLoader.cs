@@ -980,6 +980,11 @@ namespace Robust.Server.Maps
                 bool skipHook,
                 ISerializationContext? context)
             {
+                if (node.Value == "null")
+                {
+                    return new DeserializedValue<EntityUid>(EntityUid.Invalid);
+                }
+
                 var val = int.Parse(node.Value);
 
                 if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrNull(e => e == UidEntityMap[val], out var entity))

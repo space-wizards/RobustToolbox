@@ -486,7 +486,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void QDel(EntityUid uid)
+    public void QueueDel(EntityUid uid)
     {
         EntityManager.QueueDeleteEntity(uid);
     }

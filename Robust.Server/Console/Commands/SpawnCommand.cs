@@ -1,3 +1,4 @@
+using System.Globalization;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Console;
@@ -32,8 +33,10 @@ namespace Robust.Server.Console.Commands
             }
             else if (player?.AttachedEntity != null)
             {
-                var coords = new MapCoordinates(float.Parse(args[1]),
-                    float.Parse(args[2]), player.AttachedEntity.Transform.MapID);
+                var coords = new MapCoordinates(
+                    float.Parse(args[1], CultureInfo.InvariantCulture),
+                    float.Parse(args[2], CultureInfo.InvariantCulture),
+                    player.AttachedEntity.Transform.MapID);
                 ent.SpawnEntity(args[0], coords);
             }
         }

@@ -81,7 +81,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var rectangle in rectangles)
             {
-                var bounds = rectangle.Translated(origin);
+                var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(-PhysicsConstants.PolygonRadius);
                 var poly = new PolygonShape();
 
                 vertices[0] = bounds.BottomLeft;

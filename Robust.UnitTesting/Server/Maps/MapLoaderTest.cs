@@ -116,7 +116,7 @@ entities:
 
             Assert.That(grid, NUnit.Framework.Is.Not.Null);
 
-            var entity = entMan.GetComponent<TransformComponent>(grid.GridEntityId).Children.Single().Owner;
+            var entity = entMan.GetComponent<TransformComponent>(grid!.GridEntityId).Children.Single().Owner;
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));

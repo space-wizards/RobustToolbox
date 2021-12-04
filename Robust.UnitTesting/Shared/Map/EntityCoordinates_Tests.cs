@@ -213,14 +213,14 @@ namespace Robust.UnitTesting.Shared.Map
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(mapEnt).Coordinates.GetMapId(entityManager), Is.EqualTo(mapId));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).Coordinates.GetGridId(entityManager), Is.EqualTo(grid.Index));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(newEnt));
+            Assert.That(entityManager.GetComponent<TransformComponent>(mapEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
+            Assert.That(entityManager.GetComponent<TransformComponent>(gridEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
+            Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(gridEnt));
 
             // Reparenting the entity should return correct results.
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).AttachParent(mapEnt);
+            entityManager.GetComponent<TransformComponent>(newEnt).AttachParent(mapEnt);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEnt).Coordinates.GetMapId(entityManager).Value, Is.EqualTo(mapId.Value));
+            Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
         }
 
         [Test]
@@ -234,25 +234,36 @@ namespace Robust.UnitTesting.Shared.Map
             var mapEnt = mapManager.GetMapEntityId(mapId);
             var gridEnt = entityManager.GetEntity(grid.GridEntityId);
             var newEnt = entityManager.CreateEntityUninitialized("dummy", new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
-            
-            Assert.That(entityManager.GetComponent<TransformComponent>(mapEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(gridEnt).Coordinates.EntityId, Is.EqualTo(gridEnt));
+            var mapCoords = entityManager.GetComponent<TransformComponent>(mapEnt).Coordinates;
+            Assert.That(mapCoords.IsValid(entityManager), Is.EqualTo(true));
+            Assert.That(mapCoords.EntityId, Is.EqualTo(mapEnt));
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(gridEnt));
+            var gridCoords = entityManager.GetComponent<TransformComponent>(mapEnt).Coordinates;
+            Assert.That(gridCoords.IsValid(entityManager), Is.EqualTo(true));
+            Assert.That(gridCoords.EntityId, Is.EqualTo(mapEnt));
+
+            var newEntTransform = entityManager.GetComponent<TransformComponent>(newEnt);
+            var newEntCoords = newEntTransform.Coordinates;
+            Assert.That(newEntCoords.IsValid(entityManager), Is.EqualTo(true));
+            Assert.That(newEntCoords.EntityId, Is.EqualTo(gridEnt));
 
             // Reparenting the entity should return correct results.
-            entityManager.GetComponent<TransformComponent>(newEnt).AttachParent(mapEnt);
+            newEntTransform.AttachParent(mapEnt);
+            var newEntCoords2 = newEntTransform.Coordinates;
 
-            Assert.That(entityManager.GetComponent<TransformComponent>(newEnt).Coordinates.EntityId, Is.EqualTo(mapEnt));
+            Assert.That(newEntCoords2.IsValid(entityManager), Is.EqualTo(true));
+            Assert.That(newEntCoords2.EntityId, Is.EqualTo(mapEnt));
 
             // Deleting the parent should make TryGetParent return false.
-            IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) mapEnt);
+            entityManager.DeleteEntity((EntityUid)mapEnt);
 
             // These shouldn't be valid anymore.
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(newEnt) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(newEnt).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(gridEnt) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(gridEnt).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(mapEnt!) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(mapEnt!).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!entityManager.EntityExists(newEnt) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(newEnt).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!entityManager.EntityExists(gridEnt) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(gridEnt).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+
+            Assert.That((!entityManager.EntityExists(newEntCoords.EntityId) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(newEntCoords.EntityId).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!entityManager.EntityExists(gridCoords.EntityId) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(gridCoords.EntityId).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
         }
 
         [Test]

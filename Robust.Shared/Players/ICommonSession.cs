@@ -28,7 +28,7 @@ namespace Robust.Shared.Players
         /// <summary>
         /// Current name of this player.
         /// </summary>
-         string Name { get; internal set; }
+        string Name { get; internal set; }
 
         /// <summary>
         /// Current connection latency of this session from the server to their client.

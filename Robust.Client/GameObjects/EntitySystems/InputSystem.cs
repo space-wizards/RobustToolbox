@@ -107,9 +107,9 @@ namespace Robust.Client.GameObjects
 
         private void OnAttachedEntityChanged(PlayerAttachSysMessage message)
         {
-            if (message.AttachedEntity != null) // attach
+            if (message.AttachedEntity != default) // attach
             {
-                SetEntityContextActive(_inputManager, message.AttachedEntity.Value);
+                SetEntityContextActive(_inputManager, message.AttachedEntity);
             }
             else // detach
             {
@@ -162,13 +162,13 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public EntityUid AttachedEntity { get; }
+        public EntityUid? AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(EntityUid attachedEntity)
+        public PlayerAttachSysMessage(EntityUid? attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }

@@ -88,11 +88,11 @@ namespace Robust.Client.Player
             var previous = ControlledEntity;
             if (previous != default && entMan.EntityExists(previous))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous).Current = false;
+                entMan.GetComponent<EyeComponent>(previous).Current = false;
 
                 // notify ECS Systems
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous, new PlayerDetachedEvent(previous));
+                entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
+                entMan.EventBus.RaiseLocalEvent(previous, new PlayerDetachedEvent(previous));
             }
 
             ControlledEntity = default;

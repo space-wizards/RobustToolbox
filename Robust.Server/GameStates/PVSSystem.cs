@@ -56,9 +56,9 @@ internal partial class PVSSystem : EntitySystem
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 
-    private PVSCollection<EntityUid, EntityUid> _entityPvsCollection = default!;
-    public PVSCollection<EntityUid, EntityUid> EntityPVSCollection => _entityPvsCollection;
-    private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
+    private PVSCollection<EntityUid> _entityPvsCollection = default!;
+    public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
+    private readonly List<IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
         new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
@@ -72,7 +72,7 @@ internal partial class PVSSystem : EntitySystem
     {
         base.Initialize();
 
-        _entityPvsCollection = RegisterPVSCollection<EntityUid, EntityUid>(EntityManager.GetEntity);
+        _entityPvsCollection = RegisterPVSCollection<EntityUid>();
         _mapManager.MapCreated += OnMapCreated;
         _mapManager.MapDestroyed += OnMapDestroyed;
         _mapManager.OnGridCreated += OnGridCreated;
@@ -124,7 +124,7 @@ internal partial class PVSSystem : EntitySystem
 
     public void ProcessCollections()
     {
-        foreach (var (_, collection) in _pvsCollections)
+        foreach (var collection in _pvsCollections)
         {
             collection.Process();
         }
@@ -144,17 +144,15 @@ internal partial class PVSSystem : EntitySystem
 
     #region PVSCollection methods to maybe make public someday:tm:
 
-    private PVSCollection<TIndex, TElement> RegisterPVSCollection<TIndex, TElement>(Func<TIndex, TElement> getElementDelegate) where TIndex : IComparable<TIndex>, IEquatable<TIndex>
+    private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex, TElement>(getElementDelegate);
-        _pvsCollections.Add(typeof(TElement), collection);
+        var collection = new PVSCollection<TIndex>();
+        _pvsCollections.Add(collection);
         return collection;
     }
 
-    private bool UnregisterPVSCollection<TIndex, TElement>(PVSCollection<TIndex, TElement> pvsCollection) where TIndex : IComparable<TIndex>, IEquatable<TIndex> =>
-        _pvsCollections.Remove(typeof(TElement));
-
-    private bool UnregisterPVSCollection<TElement>() => _pvsCollections.Remove(typeof(TElement));
+    private bool UnregisterPVSCollection<TIndex>(PVSCollection<TIndex> pvsCollection) where TIndex : IComparable<TIndex>, IEquatable<TIndex> =>
+        _pvsCollections.Remove(pvsCollection);
 
     #endregion
 
@@ -196,7 +194,7 @@ internal partial class PVSSystem : EntitySystem
         if (e.NewStatus == SessionStatus.InGame)
         {
             _playerVisibleSets.Add(e.Session, _visSetPool.Get());
-            foreach (var (_, pvsCollection) in _pvsCollections)
+            foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.AddPlayer(e.Session);
             }
@@ -205,7 +203,7 @@ internal partial class PVSSystem : EntitySystem
         {
             _visSetPool.Return(_playerVisibleSets[e.Session]);
             _playerVisibleSets.Remove(e.Session);
-            foreach (var (_, pvsCollection) in _pvsCollections)
+            foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.RemovePlayer(e.Session);
             }
@@ -214,7 +212,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnGridRemoved(MapId mapId, GridId gridId)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.RemoveGrid(gridId);
         }
@@ -222,7 +220,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnGridCreated(MapId mapId, GridId gridId)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddGrid(gridId);
         }
@@ -233,7 +231,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnMapDestroyed(object? sender, MapEventArgs e)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.RemoveMap(e.Map);
         }
@@ -241,7 +239,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnMapCreated(object? sender, MapEventArgs e)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddMap(e.Map);
         }
@@ -581,8 +579,8 @@ internal partial class PVSSystem : EntitySystem
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
-        if (session.AttachedEntity.Valid)
-            viewers.Add(session.AttachedEntity);
+        if (session.AttachedEntity.HasValue)
+            viewers.Add(session.AttachedEntity.Value);
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.
         if (session is IPlayerSession playerSession)

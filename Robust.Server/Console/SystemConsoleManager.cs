@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -47,6 +49,13 @@ namespace Robust.Server.Console
 
         public void Dispose()
         {
+            if (_rdLine != null)
+            {
+                _rdLine.Value.cts.Cancel();
+                _rdLine.Value.cts.Dispose();
+                _rdLine.Value.task.Dispose();
+            }
+
             if (Environment.UserInteractive)
             {
                 Con.CancelKeyPress -= CancelKeyHandler;
@@ -102,17 +111,39 @@ namespace Robust.Server.Console
             return bps;
         }
 
+        private (Task task, CancellationTokenSource cts)? _rdLine = null;
+
         public void UpdateInput()
         {
-            if (!_userInteractive)
+            if (_userInteractive)
             {
-                var str = Con.ReadLine();
-                if (str != null)
-                    _conShell.ExecuteCommand(str);
+                HandleKeyboard();
                 return;
             }
 
-            HandleKeyboard();
+            if (_rdLine != null) // Already running.
+                return;
+
+            // Set up the new thread & thread accessories
+            var rlc = new CancellationTokenSource();
+            _rdLine = (
+                task: Task.Run(
+                    async () =>
+                    {
+                        while (!rlc.IsCancellationRequested)
+                        {
+                            var str = await Con.In
+                                .ReadLineAsync()
+                                .WaitAsync(TimeSpan.FromSeconds(2.0), rlc.Token);
+
+                            if (str != null)
+                                _conShell.ExecuteCommand(str);
+                        }
+                    },
+                    rlc.Token
+                ),
+                cts: rlc
+            );
         }
 
         public void HandleKeyboard()

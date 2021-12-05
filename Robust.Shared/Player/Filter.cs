@@ -130,7 +130,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddWhereAttachedEntity(Predicate<EntityUid> predicate)
         {
-            return AddWhere(session => session.AttachedEntityUid is { } uid && predicate(uid));
+            return AddWhere(session => session.AttachedEntity is { } uid && predicate(uid));
         }
 
         /// <summary>
@@ -155,8 +155,8 @@ namespace Robust.Shared.Player
         public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null)
         {
             return AddWhere(session =>
-                session.AttachedEntityUid != null &&
-                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntityUid!.Value).MapPosition, range), playerMan);
+                session.AttachedEntity.Valid &&
+                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity).MapPosition, range), playerMan);
         }
 
         /// <summary>
@@ -165,8 +165,8 @@ namespace Robust.Shared.Player
         public Filter RemoveByVisibility(uint flag)
         {
             return RemoveWhere(session =>
-                session.AttachedEntityUid == null
-                || !IoCManager.Resolve<IEntityManager>().TryGetComponent(session.AttachedEntityUid!.Value, out SharedEyeComponent? eye)
+                session.AttachedEntity.Valid
+                || !IoCManager.Resolve<IEntityManager>().TryGetComponent(session.AttachedEntity, out SharedEyeComponent? eye)
                 || (eye.VisibilityMask & flag) == 0);
         }
 
@@ -194,7 +194,7 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter RemoveWhereAttachedEntity(Predicate<EntityUid> predicate)
         {
-            _recipients.RemoveWhere(session => session.AttachedEntityUid is { } uid && predicate(uid));
+            _recipients.RemoveWhere(session => session.AttachedEntity is { } uid && predicate(uid));
             return this;
         }
 
@@ -204,8 +204,8 @@ namespace Robust.Shared.Player
         public Filter RemoveInRange(MapCoordinates position, float range)
         {
             return RemoveWhere(session =>
-                session.AttachedEntityUid != null &&
-                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntityUid.Value!).MapPosition, range));
+                session.AttachedEntity.Valid &&
+                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity).MapPosition, range));
         }
 
         /// <summary>

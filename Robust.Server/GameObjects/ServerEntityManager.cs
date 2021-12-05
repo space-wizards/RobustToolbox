@@ -43,7 +43,7 @@ namespace Robust.Server.GameObjects
             base.Initialize();
         }
 
-        EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid? uid)
+        EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
         {
             return AllocEntity(prototypeName, uid);
         }
@@ -63,7 +63,7 @@ namespace Robust.Server.GameObjects
             StartEntity(entity);
         }
 
-        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
         {
             var entity = base.CreateEntity(prototypeName, uid);
 
@@ -162,7 +162,7 @@ namespace Robust.Server.GameObjects
             if (reg.NetID is not {} netId)
                 return;
 
-            var uid = e.OwnerUid;
+            var uid = e.Owner;
 
             if (!_componentDeletionHistory.TryGetValue(uid, out var list))
             {

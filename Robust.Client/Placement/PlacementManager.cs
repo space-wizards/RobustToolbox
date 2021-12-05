@@ -15,7 +15,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
@@ -242,7 +241,7 @@ namespace Robust.Client.Placement
                                 return false;
                             }
 
-                            HandleDeletion(EntityManager.GetEntity(uid));
+                            HandleDeletion(uid);
                         }
                         else
                         {
@@ -494,9 +493,9 @@ namespace Robust.Client.Placement
             // Try to get current map.
             var map = MapId.Nullspace;
             var ent = PlayerManager.LocalPlayer!.ControlledEntity;
-            if (ent != null)
+            if (ent != default)
             {
-                map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Value).MapID;
+                map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -512,14 +511,14 @@ namespace Robust.Client.Placement
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
             var ent = PlayerManager.LocalPlayer?.ControlledEntity;
-            if (ent == null)
+            if (ent == default)
             {
                 coordinates = new EntityCoordinates();
                 return false;
             }
             else
             {
-                var map = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent.Value).MapID;
+                var map = EntityManager.GetComponent<TransformComponent>(ent.Value).MapID;
                 if (map == MapId.Nullspace || !Eraser)
                 {
                     coordinates = new EntityCoordinates();
@@ -638,7 +637,7 @@ namespace Robust.Client.Placement
                 || PlayerManager.LocalPlayer?.ControlledEntity == null)
                 return;
 
-            var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(PlayerManager.LocalPlayer.ControlledEntity.Value).WorldPosition;
+            var worldPos = EntityManager.GetComponent<TransformComponent>(PlayerManager.LocalPlayer.ControlledEntity).WorldPosition;
 
             handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }

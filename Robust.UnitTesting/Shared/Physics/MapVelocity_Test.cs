@@ -54,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 // Check that the newly parented entity's velocity is correct
                 // it should retain its previous velocity despite new parent
                 var grid2 = mapManager.CreateGrid(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).AttachParent(entityManager.GetEntity(grid2.GridEntityId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).AttachParent(grid2.GridEntityId);
 
                 Assert.That(body.MapLinearVelocity, Is.EqualTo(Vector2.One));
             });

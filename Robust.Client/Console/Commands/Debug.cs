@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
-using Robust.Client.Input;
 using Robust.Client.Debugging;
 using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -23,10 +22,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using static Robust.Client.UserInterface.Controls.BoxContainer;
@@ -43,7 +40,7 @@ namespace Robust.Client.Console.Commands
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (var e in entityManager.GetEntities().OrderBy(e => (EntityUid) e))
+            foreach (var e in entityManager.GetEntities().OrderBy(e => e))
             {
                 shell.WriteLine($"entity {e}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(e).Coordinates}.");
             }
@@ -240,15 +237,15 @@ namespace Robust.Client.Console.Commands
 
             var uid = EntityUid.Parse(args[0]);
             var entmgr = IoCManager.Resolve<IEntityManager>();
-            if (!entmgr.TryGetEntity(uid, out var entity))
+            if (!entmgr.EntityExists(uid))
             {
                 shell.WriteError("That entity does not exist. Sorry lad.");
                 return;
             }
-            var meta = entmgr.GetComponent<MetaDataComponent>(entity.Value);
-            shell.WriteLine($"{entity}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
-            shell.WriteLine($"init/del/lmt: {(!entmgr.EntityExists(entity.Value) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Initialized}/{(!entmgr.EntityExists(entity.Value) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Deleted}/{meta.EntityLastModifiedTick}");
-            foreach (var component in entmgr.GetComponents(entity.Value))
+            var meta = entmgr.GetComponent<MetaDataComponent>(uid);
+            shell.WriteLine($"{uid}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
+            shell.WriteLine($"init/del/lmt: {(!entmgr.EntityExists(uid) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Initialized}/{(!entmgr.EntityExists(uid) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Deleted}/{meta.EntityLastModifiedTick}");
+            foreach (var component in entmgr.GetComponents(uid))
             {
                 shell.WriteLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -13,14 +12,11 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
@@ -34,6 +30,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
+        [Dependency] private readonly IEntityManager entities = default!;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -47,7 +44,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -303,7 +300,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -1506,7 +1503,7 @@ namespace Robust.Client.GameObjects
             // Look this was an easy way to get bounds checks for layer updates.
             // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
             EntityUid tempQualifier = Owner;
-            if ((tempQualifier != null ? IoCManager.Resolve<IEntityManager>() : null)?.EventBus != null)
+            if ((tempQualifier != default ? entities : null)?.EventBus != null)
                 UpdateBounds();
 
             if (_inertUpdateQueued)
@@ -1516,7 +1513,7 @@ namespace Robust.Client.GameObjects
             // Yes that null check is valid because of that stupid fucking dummy IEntity.
             // Who thought that was a good idea.
             EntityUid tempQualifier1 = Owner;
-            (tempQualifier1 != null ? IoCManager.Resolve<IEntityManager>() : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            (tempQualifier1 != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()
@@ -1603,7 +1600,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldRotation),
+                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, entities.GetComponent<TransformComponent>(Owner).WorldRotation),
                 DirectionOverride
             );
 
@@ -1657,7 +1654,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
+            entities.EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
         }
 
         /// <summary>

@@ -58,7 +58,7 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void Play(EntityUid uid, Animation animation, string key)
         {
-            var component = EntityManager.EnsureComponent<AnimationPlayerComponent>(EntityManager.GetEntity(uid));
+            var component = EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
             Play(component, animation, key);
         }
 

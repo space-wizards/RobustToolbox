@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Containers;
@@ -7,8 +6,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Prototypes;
 using Robust.UnitTesting.Server;
+
+// ReSharper disable AccessToStaticMemberViaDerivedType
 
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {
@@ -168,7 +168,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             Assert.That(grid.GetAnchoredEntities(tileIndices).First(), Is.EqualTo(ent1));
             Assert.That(grid.GetTileRef(tileIndices).Tile, Is.Not.EqualTo(Tile.Empty));
             Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(ent1), Is.False);
-            var tempQualifier = entMan.GetEntity(grid.GridEntityId);
+            var tempQualifier = grid.GridEntityId;
             Assert.That(IoCManager.Resolve<IEntityManager>().HasComponent<PhysicsComponent>(tempQualifier), Is.True);
         }
 
@@ -308,8 +308,8 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Anchored = true;
 
             // Act
-            var gridEnt = entMan.GetEntity(grid.GridEntityId); // we purposefully use the grid as container so parent stays the same, reparent will unanchor
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(gridEnt);
+            // We purposefully use the grid as container so parent stays the same, reparent will unanchor
+            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.GridEntityId);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 
@@ -427,8 +427,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             var tileIndices = grid.TileIndicesFor(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ent1).Coordinates);
             grid.SetTile(tileIndices, new Tile(1));
 
-            var gridEnt = entMan.GetEntity(grid.GridEntityId);
-            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(gridEnt);
+            var containerMan = IoCManager.Resolve<IEntityManager>().AddComponent<ContainerManagerComponent>(grid.GridEntityId);
             var container = containerMan.MakeContainer<Container>("TestContainer");
             container.Insert(ent1);
 

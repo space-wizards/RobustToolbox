@@ -241,7 +241,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
                 public void Reset()
                 {
-                    ((IEnumerator) _enumerator).Reset();
+                    _enumerator.Reset();
                 }
 
                 public Control Current => _enumerator.Current;

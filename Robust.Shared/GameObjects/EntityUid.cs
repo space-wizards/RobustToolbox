@@ -36,6 +36,8 @@ namespace Robust.Shared.GameObjects
             _uid = uid;
         }
 
+        public bool Valid => IsValid();
+
         /// <summary>
         ///     Creates an entity UID by parsing a string number.
         /// </summary>

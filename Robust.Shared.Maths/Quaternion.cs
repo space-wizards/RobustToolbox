@@ -666,7 +666,7 @@ namespace Robust.Shared.Maths
             var quaternion = new Quaternion();
             if (num8 > 0f)
             {
-                var num = (float) MathF.Sqrt(num8 + 1f);
+                var num = MathF.Sqrt(num8 + 1f);
                 quaternion.w = num * 0.5f;
                 num = 0.5f / num;
                 quaternion.X = (m12 - m21) * num;
@@ -677,7 +677,7 @@ namespace Robust.Shared.Maths
 
             if (m00 >= m11 && m00 >= m22)
             {
-                var num7 = (float) MathF.Sqrt(1f + m00 - m11 - m22);
+                var num7 = MathF.Sqrt(1f + m00 - m11 - m22);
                 var num4 = 0.5f / num7;
                 quaternion.X = 0.5f * num7;
                 quaternion.Y = (m01 + m10) * num4;
@@ -688,7 +688,7 @@ namespace Robust.Shared.Maths
 
             if (m11 > m22)
             {
-                var num6 = (float) MathF.Sqrt(1f + m11 - m00 - m22);
+                var num6 = MathF.Sqrt(1f + m11 - m00 - m22);
                 var num3 = 0.5f / num6;
                 quaternion.X = (m10 + m01) * num3;
                 quaternion.Y = 0.5f * num6;
@@ -697,7 +697,7 @@ namespace Robust.Shared.Maths
                 return quaternion;
             }
 
-            var num5 = (float) MathF.Sqrt(1f + m22 - m00 - m11);
+            var num5 = MathF.Sqrt(1f + m22 - m00 - m11);
             var num2 = 0.5f / num5;
             quaternion.X = (m20 + m02) * num2;
             quaternion.Y = (m21 + m12) * num2;
@@ -725,7 +725,7 @@ namespace Robust.Shared.Maths
             if (test > 0.4995f * unit)
             {
                 // singularity at north pole
-                v.Y = (float) (2f * MathF.Atan2(rotation.y, rotation.x));
+                v.Y = 2f * MathF.Atan2(rotation.y, rotation.x);
                 v.X = (float) (Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
@@ -734,16 +734,16 @@ namespace Robust.Shared.Maths
             if (test < -0.4995f * unit)
             {
                 // singularity at south pole
-                v.Y = (float) (-2f * MathF.Atan2(rotation.y, rotation.x));
+                v.Y = -2f * MathF.Atan2(rotation.y, rotation.x);
                 v.X = (float) (-Math.PI / 2);
                 v.Z = 0;
                 return NormalizeAngles(v * RadToDeg);
             }
 
             var q = new Quaternion(rotation.w, rotation.z, rotation.x, rotation.y);
-            v.Y = (float) MathF.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
-            v.X = (float) MathF.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
-            v.Z = (float) MathF.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
+            v.Y = MathF.Atan2(2f * q.x * q.w + 2f * q.y * q.z, 1 - 2f * (q.z * q.z + q.w * q.w)); // Yaw
+            v.X = MathF.Asin(2f * (q.x * q.z - q.w * q.y)); // Pitch
+            v.Z = MathF.Atan2(2f * q.x * q.y + 2f * q.z * q.w, 1 - 2f * (q.y * q.y + q.z * q.z)); // Roll
             return NormalizeAngles(v * RadToDeg);
         }
 

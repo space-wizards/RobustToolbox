@@ -3,22 +3,21 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
-#if EXCEPTION_TOLERANCE
-using Robust.Shared.Exceptions;
-#endif
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
-using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+#if EXCEPTION_TOLERANCE
+using Robust.Shared.Exceptions;
+#endif
 
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     public partial class EntityManager
     {
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
+        [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [IoC.Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -124,7 +123,7 @@ namespace Robust.Shared.GameObjects
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             metadata.EntityLifeStage = EntityLifeStage.Initialized;
-            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(GetEntity(uid)));
+            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
         }
 
         public void StartComponents(EntityUid uid)

@@ -272,12 +272,12 @@ namespace Robust.Shared.GameObjects
             {
                 _subscriptionLock = true;
 
-                AddComponent(e.OwnerUid, e.Component.GetType());
+                AddComponent(e.Owner, e.Component.GetType());
             }
 
             private void OnComponentRemoved(object? sender, ComponentEventArgs e)
             {
-                RemoveComponent(e.OwnerUid, e.Component.GetType());
+                RemoveComponent(e.Owner, e.Component.GetType());
             }
 
             private void AddSubscription(Type compType, Type eventType, DirectedRegistration registration)

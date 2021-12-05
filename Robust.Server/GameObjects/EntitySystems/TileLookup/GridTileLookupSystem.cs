@@ -7,7 +7,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects
 {
@@ -244,7 +243,7 @@ namespace Robust.Server.GameObjects
 #if DEBUG
         private void HandleRequest(RequestGridTileLookupMessage message, EntitySessionEventArgs args)
         {
-            var entities = GetEntitiesIntersecting(message.GridId, message.Indices).Select(e => (EntityUid) e).ToList();
+            var entities = GetEntitiesIntersecting(message.GridId, message.Indices).Select(e => e).ToList();
             RaiseNetworkEvent(new SendGridTileLookupMessage(message.GridId, message.Indices, entities), args.SenderSession.ConnectedClient);
         }
 #endif

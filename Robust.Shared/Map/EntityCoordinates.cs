@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -122,9 +121,7 @@ namespace Robust.Shared.Map
         /// <exception cref="InvalidOperationException">If <see cref="entityUid"/> is not on the same map as the <see cref="coordinates"/>.</exception>
         public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
         {
-            var entity = entityManager.GetEntity(entityUid);
-
-            return FromMap(entity, coordinates);
+            return FromMap(entityUid, coordinates);
         }
 
         /// <summary>

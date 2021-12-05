@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleGridInit(GridInitializeEvent ev)
         {
-            EntityManager.GetEntity(ev.EntityUid).EnsureComponent<OccluderTreeComponent>();
+            EntityManager.EnsureComponent<OccluderTreeComponent>(ev.EntityUid);
         }
 
         private OccluderTreeComponent? GetOccluderTree(OccluderComponent component)

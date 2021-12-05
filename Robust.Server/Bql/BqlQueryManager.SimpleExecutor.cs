@@ -18,7 +18,7 @@ namespace Robust.Server.Bql
                 var selectors = parsed.Value.Item1.ToArray();
                 if (selectors.Length == 0)
                 {
-                    return (entityManager.GetEntityUids(), parsed.Value.Item2);
+                    return (entityManager.GetEntities(), parsed.Value.Item2);
                 }
 
                 var entities = _queriesByToken[selectors[0].Token]

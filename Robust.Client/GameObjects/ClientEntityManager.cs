@@ -33,7 +33,7 @@ namespace Robust.Client.GameObjects
             base.Initialize();
         }
 
-        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid? uid)
+        EntityUid IClientEntityManagerInternal.CreateEntity(string? prototypeName, EntityUid uid)
         {
             return base.CreateEntity(prototypeName, uid);
         }

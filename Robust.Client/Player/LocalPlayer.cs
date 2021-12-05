@@ -25,10 +25,10 @@ namespace Robust.Client.Player
         public event Action<EntityDetachedEventArgs>? EntityDetached;
 
         /// <summary>
-        ///     Game entity that the local player is controlling. If this is null, the player is not attached to any
+        ///     Game entity that the local player is controlling. If this is default, the player is not attached to any
         ///     entity at all.
         /// </summary>
-        [ViewVariables] public EntityUid? ControlledEntity { get; private set; }
+        [ViewVariables] public EntityUid ControlledEntity { get; private set; }
 
         [ViewVariables] public NetUserId UserId { get; set; }
 
@@ -61,7 +61,7 @@ namespace Robust.Client.Player
             DetachEntity();
 
             ControlledEntity = entity;
-            InternalSession.AttachedEntityUid = entity;
+            InternalSession.AttachedEntity = entity;
 
             var entMan = IoCManager.Resolve<IEntityManager>();
 
@@ -86,20 +86,20 @@ namespace Robust.Client.Player
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
             var previous = ControlledEntity;
-            if (previous != null && entMan.EntityExists(previous.Value))
+            if (previous != default && entMan.EntityExists(previous))
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous.Value).Current = false;
+                IoCManager.Resolve<IEntityManager>().GetComponent<EyeComponent>(previous).Current = false;
 
                 // notify ECS Systems
                 IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(null));
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(previous, new PlayerDetachedEvent(previous));
             }
 
-            ControlledEntity = null;
+            ControlledEntity = default;
 
-            if (previous != null)
+            if (previous != default)
             {
-                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous.Value));
+                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous));
             }
         }
 

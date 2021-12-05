@@ -21,19 +21,19 @@ namespace Robust.Server.Console.Commands
 
             var ent = IoCManager.Resolve<IServerEntityManager>();
 
-            if (!EntityUid.TryParse(args[0], out var uid))
+            if (!EntityUid.TryParse(args[0], out var entity))
             {
                 shell.WriteLine("Invalid entity UID.");
                 return;
             }
 
-            if (!ent.TryGetEntity(uid, out var entity))
+            if (!ent.EntityExists(entity))
             {
                 shell.WriteLine("That entity does not exist.");
                 return;
             }
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity((EntityUid) entity);
+            IoCManager.Resolve<IEntityManager>().DeleteEntity(entity);
         }
     }
 }

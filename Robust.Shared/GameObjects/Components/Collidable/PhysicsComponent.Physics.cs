@@ -33,7 +33,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Physics.Dynamics.Contacts;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -982,8 +981,8 @@ namespace Robust.Shared.GameObjects
             if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out JointComponent? jointComponentA) &&
                 IoCManager.Resolve<IEntityManager>().TryGetComponent(other.Owner, out JointComponent? jointComponentB))
             {
-                var aUid = (EntityUid) jointComponentA.Owner;
-                var bUid = (EntityUid) jointComponentB.Owner;
+                var aUid = jointComponentA.Owner;
+                var bUid = jointComponentB.Owner;
 
                 foreach (var (_, joint) in jointComponentA.Joints)
                 {

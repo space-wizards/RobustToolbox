@@ -6,10 +6,8 @@ using System.Runtime.InteropServices;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.GameObjects;
 using Robust.Client.Utility;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Color = Robust.Shared.Maths.Color;
 using TKStencilOp = OpenToolkit.Graphics.OpenGL4.StencilOp;
 
 namespace Robust.Client.Graphics.Clyde
@@ -449,7 +447,7 @@ namespace Robust.Client.Graphics.Clyde
                         //function! If passing in textures as uniforms ever stops working it might be since someone made it use all the way up to Texture6 too.
                         //Might change this in the future?
                         TextureUnit cTarget = TextureUnit.Texture6 + textureUnitVal;
-                        SetTexture(cTarget, ((ClydeTexture) clydeTexture).TextureId);
+                        SetTexture(cTarget, clydeTexture.TextureId);
                         program.SetUniformTexture(name, cTarget);
                         textureUnitVal++;
                         break;

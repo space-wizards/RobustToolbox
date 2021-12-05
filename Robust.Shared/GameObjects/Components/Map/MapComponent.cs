@@ -2,7 +2,6 @@ using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -65,7 +64,7 @@ namespace Robust.Shared.GameObjects
             _mapIndex = state.MapId;
             LightingEnabled = state.LightingEnabled;
 
-            ((TransformComponent) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner)).ChangeMapId(_mapIndex);
+            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).ChangeMapId(_mapIndex);
         }
     }
 

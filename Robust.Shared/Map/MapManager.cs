@@ -88,11 +88,11 @@ namespace Robust.Shared.Map
             }
             else if (_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId))
             {
-                var mapEnt = _entityManager.GetEntity(mapEntId);
+                var mapEnt = mapEntId;
 
                 foreach (var childTransform in _entityManager.GetComponent<TransformComponent>(mapEnt).Children.ToArray())
                 {
-                    _entityManager.DeleteEntity((EntityUid) childTransform.Owner);
+                    _entityManager.DeleteEntity(childTransform.Owner);
                 }
             }
 
@@ -137,11 +137,8 @@ namespace Robust.Shared.Map
 
             if (_mapEntities.TryGetValue(MapId.Nullspace, out var entId))
             {
-                if (_entityManager.TryGetEntity(entId, out var entity))
-                {
-                    Logger.InfoS("map", $"Deleting map entity {entId}");
-                    _entityManager.DeleteEntity((EntityUid) entity);
-                }
+                Logger.InfoS("map", $"Deleting map entity {entId}");
+                _entityManager.DeleteEntity(entId);
 
                 if (_mapEntities.Remove(MapId.Nullspace))
                     Logger.InfoS("map", "Removing nullspace map entity.");
@@ -207,9 +204,7 @@ namespace Robust.Shared.Map
 
             if (_mapEntities.TryGetValue(mapID, out var ent))
             {
-                if (_entityManager.TryGetEntity(ent, out var mapEnt))
-                    _entityManager.DeleteEntity((EntityUid) mapEnt);
-
+                _entityManager.DeleteEntity(ent);
                 _mapEntities.Remove(mapID);
             }
 
@@ -218,10 +213,10 @@ namespace Robust.Shared.Map
 
         public MapId CreateMap(MapId? mapID = null)
         {
-            return CreateMap(mapID, null);
+            return CreateMap(mapID, default);
         }
 
-        public MapId CreateMap(MapId? mapID, EntityUid? entityUid)
+        public MapId CreateMap(MapId? mapID, EntityUid entityUid)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
@@ -332,8 +327,7 @@ namespace Robust.Shared.Map
             if (_mapEntities.TryGetValue(mapId, out var oldEntId))
             {
                 //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
-                var oldMapEnt = _entityManager.GetEntity(oldEntId);
-                _entityManager.DeleteEntity(oldMapEnt);
+                _entityManager.DeleteEntity(oldEntId);
             }
             else
             {
@@ -392,7 +386,7 @@ namespace Robust.Shared.Map
 
         public IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, true, null);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, true, default);
         }
 
         public IMapGrid CreateGrid(MapId currentMapID, GridId gridID, ushort chunkSize, EntityUid euid)
@@ -401,7 +395,7 @@ namespace Robust.Shared.Map
         }
 
         private IMapGridInternal CreateGridImpl(MapId currentMapID, GridId? gridID, ushort chunkSize, bool createEntity,
-            EntityUid? euid)
+            EntityUid euid)
         {
 #if DEBUG
             DebugTools.Assert(_dbgGuardRunning);
@@ -483,7 +477,7 @@ namespace Robust.Shared.Map
 
         public IMapGridInternal CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16)
         {
-            return CreateGridImpl(currentMapID, gridID, chunkSize, false, null);
+            return CreateGridImpl(currentMapID, gridID, chunkSize, false, default);
         }
 
         public IMapGrid GetGrid(GridId gridID)
@@ -538,8 +532,7 @@ namespace Robust.Shared.Map
                 // (though now we need some extra calcs up front).
 
                 // Doesn't use WorldBounds because it's just an AABB.
-                var gridEnt = _entityManager.GetEntity(mapGrid.GridEntityId);
-                var matrix = _entityManager.GetComponent<TransformComponent>(gridEnt).InvWorldMatrix;
+                var matrix = _entityManager.GetComponent<TransformComponent>(mapGrid.GridEntityId).InvWorldMatrix;
                 var localPos = matrix.Transform(worldPos);
 
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));

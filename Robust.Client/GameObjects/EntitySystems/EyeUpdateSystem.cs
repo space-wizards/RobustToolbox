@@ -9,7 +9,6 @@ using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 #nullable enable
 
@@ -77,9 +76,16 @@ namespace Robust.Client.GameObjects
 
             var gridId = playerTransform.GridID;
 
-            var parent = gridId != GridId.Invalid && EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEnt) ?
-                EntityManager.GetComponent<TransformComponent>(gridEnt!.Value)
-                : EntityManager.GetComponent<TransformComponent>(_mapManager.GetMapEntityId(playerTransform.MapID));
+            TransformComponent parent;
+            if (gridId != GridId.Invalid &&
+                _mapManager.GetGrid(gridId).GridEntityId is var gridEnt &&
+                EntityManager.EntityExists(gridEnt))
+                parent = EntityManager.GetComponent<TransformComponent>(gridEnt);
+            else
+            {
+                parent = EntityManager.GetComponent<TransformComponent>(
+                    _mapManager.GetMapEntityId(playerTransform.MapID));
+            }
 
             // Make sure that we don't fire the vomit carousel when we spawn in
             if (_lastParent is null)

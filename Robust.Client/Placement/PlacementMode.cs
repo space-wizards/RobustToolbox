@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
@@ -88,9 +84,9 @@ namespace Robust.Client.Placement
         public virtual void Render(DrawingHandleWorld handle)
         {
             var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce == null || (!IoCManager.Resolve<IEntityManager>().EntityExists(sce.Value) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(sce.Value).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if (sce == null || (!pManager.EntityManager.EntityExists(sce.Value) ? EntityLifeStage.Deleted : pManager.EntityManager.GetComponent<MetaDataComponent>(sce.Value).EntityLifeStage) >= EntityLifeStage.Deleted)
                 return;
-            var sc = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(sce!.Value);
+            var sc = pManager.EntityManager.GetComponent<SpriteComponent>(sce!.Value);
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -115,7 +111,7 @@ namespace Robust.Client.Placement
                 if (!coordinate.IsValid(pManager.EntityManager))
                     return; // Just some paranoia just in case
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var worldRot = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
+                var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
                 sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 sc.Render(handle, pManager.eyeManager.CurrentEye.Rotation, worldRot, worldPos);
@@ -199,13 +195,13 @@ namespace Robust.Client.Placement
             if (!RangeRequired)
                 return true;
 
-            if (pManager.PlayerManager.LocalPlayer?.ControlledEntity == null)
+            if (pManager.PlayerManager.LocalPlayer?.ControlledEntity == default)
             {
                 return false;
             }
 
             var range = pManager.CurrentPermission!.Range;
-            if (range > 0 && !IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(pManager.PlayerManager.LocalPlayer.ControlledEntity.Value).Coordinates.InRange(pManager.EntityManager, coordinates, range))
+            if (range > 0 && !pManager.EntityManager.GetComponent<TransformComponent>(pManager.PlayerManager.LocalPlayer.ControlledEntity).Coordinates.InRange(pManager.EntityManager, coordinates, range))
                 return false;
             return true;
         }

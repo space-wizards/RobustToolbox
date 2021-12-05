@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using JetBrains.Annotations;
 using Robust.Client.Audio;
 using Robust.Client.Graphics;
@@ -123,15 +122,15 @@ namespace Robust.Client.GameObjects
                             continue;
                         }
                     }
-                    else if (stream.TrackingEntity != null)
+                    else if (stream.TrackingEntity != default)
                     {
-                        if ((!IoCManager.Resolve<IEntityManager>().EntityExists(stream.TrackingEntity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(stream.TrackingEntity).EntityLifeStage) >= EntityLifeStage.Deleted)
+                        if ((!EntityManager.EntityExists(stream.TrackingEntity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(stream.TrackingEntity).EntityLifeStage) >= EntityLifeStage.Deleted)
                         {
                             StreamDone(stream);
                             continue;
                         }
 
-                        mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(stream.TrackingEntity).MapPosition;
+                        mapPos = EntityManager.GetComponent<TransformComponent>(stream.TrackingEntity).MapPosition;
                     }
 
                     // TODO Remove when coordinates can't be NaN
@@ -211,7 +210,7 @@ namespace Robust.Client.GameObjects
                             }
                         }
 
-                        if (stream.TrackingEntity != null)
+                        if (stream.TrackingEntity != default)
                         {
                             stream.Source.SetVelocity(stream.TrackingEntity.GlobalLinearVelocity());
                         }
@@ -304,7 +303,7 @@ namespace Robust.Client.GameObjects
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
-            if (!source.SetPosition(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).WorldPosition))
+            if (!source.SetPosition(EntityManager.GetComponent<TransformComponent>(entity).WorldPosition))
             {
                 return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
             }
@@ -452,7 +451,7 @@ namespace Robust.Client.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid entity, AudioParams? audioParams = null)
         {
-            return Play(filename, entity, GetFallbackCoordinates(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapPosition), audioParams);
+            return Play(filename, entity, GetFallbackCoordinates(EntityManager.GetComponent<TransformComponent>(entity).MapPosition), audioParams);
         }
 
         /// <inheritdoc />

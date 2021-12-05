@@ -16,14 +16,14 @@ namespace Robust.Client.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = IoCManager.Resolve<IPlayerManager>().LocalPlayer;
-            if (player?.ControlledEntity == null)
+            if (player?.ControlledEntity == default)
             {
                 shell.WriteLine("You don't have an attached entity.");
                 return;
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            entityManager.SpawnEntity(args[0], entityManager.GetComponent<TransformComponent>(player.ControlledEntity.Value).Coordinates);
+            entityManager.SpawnEntity(args[0], entityManager.GetComponent<TransformComponent>(player.ControlledEntity).Coordinates);
         }
     }
 }

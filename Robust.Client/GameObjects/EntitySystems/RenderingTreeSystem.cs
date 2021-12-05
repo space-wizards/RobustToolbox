@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
 using Robust.Shared;
@@ -11,7 +9,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -30,7 +27,7 @@ namespace Robust.Client.GameObjects
         private readonly List<SpriteComponent> _spriteQueue = new();
         private readonly List<PointLightComponent> _lightQueue = new();
 
-        private HashSet<EntityUid> _checkedChildren = new();
+        private readonly HashSet<EntityUid> _checkedChildren = new();
 
         /// <summary>
         /// <see cref="CVars.MaxLightRadius"/>
@@ -246,7 +243,7 @@ namespace Robust.Client.GameObjects
 
         private void MapManagerOnGridCreated(MapId mapId, GridId gridId)
         {
-            EntityManager.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).EnsureComponent<RenderingTreeComponent>();
+            _mapManager.GetGrid(gridId).GridEntityId.EnsureComponent<RenderingTreeComponent>();
         }
 
         internal static RenderingTreeComponent? GetRenderTree(EntityUid entity)

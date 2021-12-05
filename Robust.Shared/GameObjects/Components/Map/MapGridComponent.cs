@@ -2,9 +2,7 @@ using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -70,7 +68,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool AnchorEntity(TransformComponent transform)
         {
-            var xform = (TransformComponent) transform;
+            var xform = transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
             var result = Grid.AddToSnapGridCell(tileIndices, ((IComponent) transform).Owner);
 
@@ -100,7 +98,7 @@ namespace Robust.Shared.GameObjects
             if(GridIndex == GridId.Invalid)
                 return;
 
-            var xform = (TransformComponent)transform;
+            var xform = transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
             Grid.RemoveFromSnapGridCell(tileIndices, ((IComponent) transform).Owner);
             xform.SetAnchored(false);

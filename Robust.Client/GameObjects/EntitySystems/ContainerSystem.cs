@@ -123,16 +123,16 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                foreach (var entityUid in entityUids)
+                foreach (var entity in entityUids)
                 {
-                    if (!EntityManager.TryGetEntity(entityUid, out var entity))
+                    if (!EntityManager.EntityExists(entity))
                     {
-                        AddExpectedEntity(entityUid, container);
+                        AddExpectedEntity(entity, container);
                         continue;
                     }
 
-                    if (!container.ContainedEntities.Contains(entity.Value))
-                        container.Insert(entity.Value);
+                    if (!container.ContainedEntities.Contains(entity))
+                        container.Insert(entity);
                 }
             }
         }

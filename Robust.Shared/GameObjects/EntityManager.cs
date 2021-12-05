@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -42,11 +40,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, EntityUid> Entities = new();
+        protected readonly HashSet<EntityUid> Entities = new();
 
         private EntityEventBus _eventBus = null!;
 
-        protected virtual int NextEntityUid { get; set; } = (int)EntityUid.FirstUid;
+        protected virtual int NextEntityUid { get; set; } = (int) EntityUid.FirstUid;
 
         /// <inheritdoc />
         public IEventBus EventBus => _eventBus;
@@ -146,7 +144,7 @@ namespace Robust.Shared.GameObjects
 
         #region Entity Management
 
-        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid? euid)
+        public EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid)
         {
             return CreateEntity(prototypeName, euid);
         }
@@ -203,43 +201,11 @@ namespace Robust.Shared.GameObjects
             return entity;
         }
 
-        /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <returns>Entity or throws if the entity doesn't exist</returns>
-        public EntityUid GetEntity(EntityUid uid)
-        {
-            return Entities[uid];
-        }
-
-        /// <summary>
-        /// Attempt to get an entity, returning whether or not an entity was gotten.
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
-        /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out EntityUid? entity)
-        {
-            if (Entities.TryGetValue(uid, out var cEntity) && !((!EntityExists(cEntity) ? EntityLifeStage.Deleted : GetComponent<MetaDataComponent>(cEntity).EntityLifeStage) >= EntityLifeStage.Deleted))
-            {
-                entity = cEntity;
-                return true;
-            }
-
-            // entity might get assigned if it's deleted but still found,
-            // prevent somebody from being "smart".
-            entity = null;
-            return false;
-        }
-
         /// <inheritdoc />
         public int EntityCount => Entities.Count;
 
         /// <inheritdoc />
-        public IEnumerable<EntityUid> GetEntities() => Entities.Values;
-
-        public IEnumerable<EntityUid> GetEntityUids() => Entities.Keys;
+        public IEnumerable<EntityUid> GetEntities() => Entities;
 
         /// <summary>
         /// Marks this entity as dirty so that it will be updated over the network.
@@ -292,7 +258,7 @@ namespace Robust.Shared.GameObjects
             if((!EntityExists(entity) ? EntityLifeStage.Deleted : GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
 
-            var uid = (EntityUid) entity;
+            var uid = entity;
             var transform = GetComponent<TransformComponent>(entity);
             var metadata = GetComponent<MetaDataComponent>(entity);
             GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.Terminating;
@@ -353,7 +319,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(string? prototypeName, EntityUid? uid = null)
+        private protected EntityUid AllocEntity(string? prototypeName, EntityUid uid = default)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -372,38 +338,37 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected EntityUid AllocEntity(EntityUid? uid = null)
+        private protected EntityUid AllocEntity(EntityUid uid = default)
         {
-            if (uid == null)
+            if (uid == default)
             {
                 uid = GenerateEntityUid();
             }
 
-            if (EntityExists(uid.Value))
+            if (EntityExists(uid))
             {
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
             // we want this called before adding components
-            EntityAdded?.Invoke(this, uid.Value);
+            EntityAdded?.Invoke(this, uid);
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
-            var metadata = new MetaDataComponent() { Owner = uid.Value };
-            Entities[uid.Value] = uid.Value;
+            var metadata = new MetaDataComponent { Owner = uid };
+            Entities.Add(uid);
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid.Value, metadata);
+            AddComponentInternal(uid, metadata);
 
             // allocate the required TransformComponent
-            AddComponent<TransformComponent>(uid.Value);
+            AddComponent<TransformComponent>(uid);
 
-
-            return uid.Value;
+            return uid;
         }
 
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected virtual EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);

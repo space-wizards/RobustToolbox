@@ -1,7 +1,7 @@
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Network;
 using Robust.Shared.IoC;
+using Robust.Shared.Network;
 
 namespace Robust.Shared.Players
 {
@@ -18,7 +18,7 @@ namespace Robust.Shared.Players
         /// <summary>
         /// Entity UID that this session is represented by in the world, if any.
         /// </summary>
-        EntityUid? AttachedEntityUid { get; }
+        EntityUid? AttachedEntity { get; }
 
         /// <summary>
         /// The UID of this session.
@@ -45,13 +45,8 @@ namespace Robust.Shared.Players
         INetChannel ConnectedClient { get; }
 
         /// <summary>
-        ///     Porting convenience
-        /// </summary>
-        EntityUid AttachedEntityUidOrInvalid { get => AttachedEntityUid ?? EntityUid.Invalid; }
-
-        /// <summary>
         ///     Porting convenience for admin commands which use such logic as "at the player's feet", etc: the transform component of the attached entity.
         /// </summary>
-        TransformComponent? AttachedEntityTransform { get => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntityUidOrInvalid); }
+        TransformComponent? AttachedEntityTransform => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntity ?? default);
     }
 }

@@ -6,7 +6,6 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -78,7 +77,7 @@ namespace Robust.Shared.Containers
 
                 for (var index = 0; index < container.ContainedEntities.Count; index++)
                 {
-                    var iEntity = container.ContainedEntities[index];
+                    var EntityUid= container.ContainedEntities[index];
                     uidArr[index] = iEntity;
                 }
 

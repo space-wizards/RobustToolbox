@@ -5,10 +5,10 @@ using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Server.Player
 {
@@ -43,7 +43,7 @@ namespace Robust.Server.Player
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
         /// <inheritdoc />
-        [ViewVariables] public EntityUid? AttachedEntityUid { get; set; }
+        [ViewVariables] public EntityUid AttachedEntity { get; set; }
 
         private SessionStatus _status = SessionStatus.Connecting;
 
@@ -136,7 +136,7 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public void DetachFromEntity()
         {
-            if (AttachedEntityUid == null)
+            if (AttachedEntity == null)
                 return;
 
 #if EXCEPTION_TOLERANCE
@@ -151,9 +151,9 @@ namespace Robust.Server.Player
             }
 #endif
 
-            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntityUid.Value))
+            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity))
             {
-                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntityUid}\"! Is it missing an ActorComponent?");
+                Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
         }
 
@@ -177,9 +177,9 @@ namespace Robust.Server.Player
 
         private void SetAttachedEntityName()
         {
-            if (Name != null && AttachedEntityUid != null)
+            if (Name != null && AttachedEntity != default)
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntityUid!.Value).EntityName = Name;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity).EntityName = Name;
             }
         }
 
@@ -198,9 +198,9 @@ namespace Robust.Server.Player
         public LoginType AuthType => ConnectedClient.AuthType;
 
         /// <inheritdoc />
-        void IPlayerSession.SetAttachedEntity(EntityUid? entity)
+        void IPlayerSession.SetAttachedEntity(EntityUid entity)
         {
-            AttachedEntityUid = entity;
+            AttachedEntity = entity;
             UpdatePlayerState();
         }
 
@@ -228,7 +228,7 @@ namespace Robust.Server.Player
         {
             PlayerState.Status = Status;
             PlayerState.Name = Name;
-            PlayerState.ControlledEntity = AttachedEntityUid;
+            PlayerState.ControlledEntity = AttachedEntity;
 
             _playerManager.Dirty();
         }

@@ -148,7 +148,7 @@ namespace Robust.Shared.Containers
             {
                 if ((!entMan.EntityExists(ent) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
                 container.ForceRemove(ent);
-                entMan.DeleteEntity((EntityUid) ent);
+                entMan.DeleteEntity(ent);
             }
         }
 

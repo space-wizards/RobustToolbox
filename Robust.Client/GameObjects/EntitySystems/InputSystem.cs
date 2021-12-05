@@ -7,7 +7,6 @@ using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Players;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -118,14 +117,14 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void SetEntityContextActive(IInputManager inputMan, EntityUid entity)
+        private void SetEntityContextActive(IInputManager inputMan, EntityUid entity)
         {
-            if(entity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(entity))
+            if(entity == default || !EntityManager.EntityExists(entity))
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out InputComponent? inputComp))
+            if (!EntityManager.TryGetComponent(entity, out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -136,7 +135,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity}, entProto={IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
@@ -146,12 +145,12 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void SetEntityContextActive()
         {
-            if (_playerManager.LocalPlayer?.ControlledEntity == null)
+            if (_playerManager.LocalPlayer?.ControlledEntity == default)
             {
                 return;
             }
 
-            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity.Value);
+            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
         }
     }
 
@@ -163,13 +162,13 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public EntityUid? AttachedEntity { get; }
+        public EntityUid AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(EntityUid? attachedEntity)
+        public PlayerAttachSysMessage(EntityUid attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }

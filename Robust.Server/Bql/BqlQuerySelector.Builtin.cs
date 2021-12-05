@@ -307,7 +307,7 @@ namespace Robust.Server.Bql
                 .SelectMany(e =>
                     entityLookup.GetEntitiesInRange(entityManager.GetComponent<TransformComponent>(e).Coordinates,
                         radius))
-                .Select(x => (EntityUid) x) // Sloth's fault.
+                .Select(x => x) // Sloth's fault.
                 .Distinct();
         }
     }

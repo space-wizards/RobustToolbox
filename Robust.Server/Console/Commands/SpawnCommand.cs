@@ -22,7 +22,7 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Incorrect number of arguments. " + Help);
             }
 
-            var pAE = player == null ? EntityUid.Invalid : player.AttachedEntityUidOrInvalid;
+            var pAE = player?.AttachedEntity ?? EntityUid.Invalid;
 
             if (args.Length == 1 && player != null && pAE != EntityUid.Invalid)
             {
@@ -30,7 +30,7 @@ namespace Robust.Server.Console.Commands
             }
             else if (args.Length == 2)
             {
-                var uid = ent.GetEntity(EntityUid.Parse(args[1]));
+                var uid = EntityUid.Parse(args[1]);
                 ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(uid).Coordinates);
             }
             else if (player != null && pAE != EntityUid.Invalid)

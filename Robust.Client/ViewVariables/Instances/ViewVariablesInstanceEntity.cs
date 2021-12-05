@@ -468,8 +468,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             var uid = (EntityUid) _membersBlob.MemberGroups.SelectMany(p => p.Item2).Single(p => p.Name == "Uid").Value;
 
-            var entity = _entityManager.GetEntity(uid);
-            Initialize(window, entity);
+            Initialize(window, uid);
         }
 
         public override void Close()

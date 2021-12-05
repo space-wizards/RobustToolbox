@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
@@ -46,7 +45,7 @@ namespace Robust.Shared.GameObjects
         event EventHandler<EntityUid>? EntityStarted;
         event EventHandler<EntityUid>? EntityDeleted;
 
-        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid? euid);
+        EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
 
         EntityUid CreateEntityUninitialized(string? prototypeName);
 
@@ -71,21 +70,6 @@ namespace Robust.Shared.GameObjects
         EntityUid SpawnEntity(string? protoName, MapCoordinates coordinates);
 
         /// <summary>
-        /// Returns an entity by id
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <returns>Entity or throws if entity id doesn't exist</returns>
-        EntityUid GetEntity(EntityUid uid);
-
-        /// <summary>
-        /// Attempt to get an entity, returning whether or not an entity was gotten.
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <param name="entity">The requested entity or null if the entity couldn't be found.</param>
-        /// <returns>True if a value was returned, false otherwise.</returns>
-        bool TryGetEntity(EntityUid uid, [NotNullWhen(true)] out EntityUid? entity);
-
-        /// <summary>
         /// How many entities are currently active.
         /// </summary>
         int EntityCount { get; }
@@ -95,12 +79,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <returns></returns>
         IEnumerable<EntityUid> GetEntities();
-
-        /// <summary>
-        /// Returns all entities by uid
-        /// </summary>
-        /// <returns></returns>
-        IEnumerable<EntityUid> GetEntityUids();
 
         public void DirtyEntity(EntityUid uid);
 

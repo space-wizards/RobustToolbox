@@ -4,10 +4,8 @@ using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -86,7 +84,7 @@ namespace Robust.Shared.GameObjects
                 _gridId = value;
                 foreach (var transformComponent in Children)
                 {
-                    var child = (TransformComponent) transformComponent;
+                    var child = transformComponent;
                     child.GridID = value;
                 }
             }
@@ -458,7 +456,7 @@ namespace Robust.Shared.GameObjects
                 return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(u);
             });
 
-        [ViewVariables] public IEnumerable<EntityUid> ChildEntityUids => _children;
+        [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
 
         [ViewVariables] public int ChildCount => _children.Count;
 

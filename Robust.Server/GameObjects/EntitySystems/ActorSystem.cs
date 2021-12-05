@@ -114,18 +114,16 @@ namespace Robust.Server.GameObjects
         /// This returns true if the player wasn't attached to any entity.</returns>
         public bool Detach(IPlayerSession player)
         {
-            var uid = player.AttachedEntityUid;
-            return uid == null || Detach(uid.Value);
+            var uid = player.AttachedEntity;
+            return uid == default || Detach(uid);
         }
 
-        private void OnActorShutdown(EntityUid uid, ActorComponent component, ComponentShutdown args)
+        private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
         {
             component.PlayerSession.SetAttachedEntity(null);
 
-            var entity = EntityManager.GetEntity(uid);
-
             // The player is fully detached now that the component has shut down.
-            RaiseLocalEvent(uid, new PlayerDetachedEvent(entity, component.PlayerSession));
+            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession));
         }
     }
 

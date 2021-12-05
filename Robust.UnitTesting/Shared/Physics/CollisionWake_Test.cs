@@ -57,7 +57,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 Assert.That(physics.Awake, Is.EqualTo(false));
                 Assert.That(physics.CanCollide, Is.EqualTo(true));
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(entManager.GetEntity(grid.GridEntityId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(physics.Owner).AttachParent(grid.GridEntityId);
             });
 
             await server.WaitRunTicks(1);

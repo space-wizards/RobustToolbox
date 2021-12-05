@@ -186,7 +186,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleGridInit(GridInitializeEvent ev)
         {
-            _entityManager.GetEntity(ev.EntityUid).EnsureComponent<EntityLookupComponent>();
+            _entityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
         }
 
         private void HandleLookupInit(EntityUid uid, EntityLookupComponent component, ComponentInit args)
@@ -215,14 +215,13 @@ namespace Robust.Shared.GameObjects
 
         private void HandleEntityDeleted(object? sender, EntityUid uid)
         {
-            RemoveFromEntityTrees(_entityManager.GetEntity(uid));
+            RemoveFromEntityTrees(uid);
         }
 
         private void HandleEntityStarted(object? sender, EntityUid uid)
         {
-            var entity = _entityManager.GetEntity(uid);
-            if (_entityManager.GetComponent<TransformComponent>(entity).Anchored) return;
-            UpdateEntityTree(entity);
+            if (_entityManager.GetComponent<TransformComponent>(uid).Anchored) return;
+            UpdateEntityTree(uid);
         }
 
         private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
@@ -806,11 +805,11 @@ namespace Robust.Shared.GameObjects
 
             if (!_entityManager.HasComponent<EntityLookupComponent>(entity))
             {
-                foreach (var childTx in _entityManager.GetComponent<TransformComponent>(entity).ChildEntityUids)
+                foreach (var childTx in _entityManager.GetComponent<TransformComponent>(entity).ChildEntities)
                 {
                     if (!_handledThisTick.Add(childTx)) continue;
 
-                    if (UpdateEntityTree(_entityManager.GetEntity(childTx)))
+                    if (UpdateEntityTree(childTx))
                     {
                         ++necessary;
                     }

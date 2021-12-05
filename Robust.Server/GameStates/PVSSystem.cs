@@ -1,21 +1,15 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -191,7 +185,7 @@ internal partial class PVSSystem : EntitySystem
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
-        foreach (var componentChild in transformComponent.ChildEntityUids)
+        foreach (var componentChild in transformComponent.ChildEntities)
         {
             UpdateEntityRecursive(componentChild);
         }
@@ -587,11 +581,11 @@ internal partial class PVSSystem : EntitySystem
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
-        if(session.AttachedEntityUid.HasValue)
-            viewers.Add(session.AttachedEntityUid.Value);
+        if (session.AttachedEntity.Valid)
+            viewers.Add(session.AttachedEntity);
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.
-        if (session is  IPlayerSession playerSession)
+        if (session is IPlayerSession playerSession)
         {
             foreach (var uid in playerSession.ViewSubscriptions)
             {

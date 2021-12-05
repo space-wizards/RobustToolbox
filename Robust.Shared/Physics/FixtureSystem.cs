@@ -5,7 +5,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
@@ -79,7 +78,7 @@ namespace Robust.Shared.Physics
             /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else
             {
-                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {EntityManager.GetEntity(uid)}");
+                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponuid)}"
             }
             */
         }

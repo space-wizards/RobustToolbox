@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -31,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Map
             {
                 var mapId = mapMan.CreateMap();
                 var grid = mapMan.CreateGrid(mapId);
-                var gridEnt = entMan.GetEntity(grid.GridEntityId);
+                var gridEnt = grid.GridEntityId;
                 var coordinates = new EntityCoordinates(gridEnt, new Vector2(10, 0));
 
                 // if no rotation and 0,0 position should just be the same coordinate.
@@ -69,7 +68,7 @@ namespace Robust.UnitTesting.Shared.Map
             {
                 var mapId = mapMan.CreateMap();
                 var grid = mapMan.CreateGrid(mapId);
-                var gridEnt = entMan.GetEntity(grid.GridEntityId);
+                var gridEnt = grid.GridEntityId;
                 var gridInternal = (IMapGridInternal) grid;
 
                 /* Test for map chunk rotations */

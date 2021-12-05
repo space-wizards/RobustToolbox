@@ -77,11 +77,11 @@ namespace Robust.Client.GameObjects
 
             for (var i = 0; i < message.Entities.Count; i++)
             {
-                var uid = message.Entities[i];
+                var entity = message.Entities[i];
 
-                if (!EntityManager.TryGetEntity(uid, out var entity)) continue;
+                if (!EntityManager.EntityExists(entity)) continue;
 
-                text.AppendLine((string) EntityManager.ToPrettyString(entity.Value));
+                text.AppendLine((string) EntityManager.ToPrettyString(entity));
             }
 
             _label.Text = text.ToString();

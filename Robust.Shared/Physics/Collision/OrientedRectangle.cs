@@ -87,7 +87,7 @@ namespace Robust.Shared.Physics.Collision
             var NH = MathF.Abs(WX * SF) + MathF.Abs(WY * CF);  //boundrect half-height
             var NW = MathF.Abs(WX * CF) + MathF.Abs(WY * SF);  //boundrect half-width
 
-            return new Box2((float)(CX - NW), (float)(CY - NH), (float)(CX + NW), (float)(CY + NH)); //draw bound rectangle
+            return new Box2(CX - NW, CY - NH, CX + NW, CY + NH); //draw bound rectangle
         }
 
         /// <summary>

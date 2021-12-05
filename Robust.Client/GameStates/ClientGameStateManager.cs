@@ -565,7 +565,7 @@ namespace Robust.Client.GameStates
             EntityState? nextState)
         {
             var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
-            var entityUid = (EntityUid) entity;
+            var entityUid = entity;
 
             if (curState != null)
             {
@@ -616,7 +616,7 @@ namespace Robust.Client.GameStates
 
             foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (_entityManager.TryGetComponent(entityUid, (ushort) netId, out var component))
+                if (_entityManager.TryGetComponent(entityUid, netId, out var component))
                 {
                     try
                     {

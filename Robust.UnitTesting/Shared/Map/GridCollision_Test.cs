@@ -33,8 +33,8 @@ namespace Robust.UnitTesting.Shared.Map
                 mapId = mapManager.CreateMap();
                 gridId1 = mapManager.CreateGrid(mapId);
                 gridId2 = mapManager.CreateGrid(mapId);
-                gridEnt1 = entManager.GetEntity(gridId1.GridEntityId);
-                gridEnt2 = entManager.GetEntity(gridId2.GridEntityId);
+                gridEnt1 = gridId1.GridEntityId;
+                gridEnt2 = gridId2.GridEntityId;
                 physics1 = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(gridEnt1.Value);
                 physics2 = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(gridEnt2.Value);
                 // Can't collide static bodies and grids (at time of this writing) start as static

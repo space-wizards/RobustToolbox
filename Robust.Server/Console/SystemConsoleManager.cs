@@ -38,7 +38,7 @@ namespace Robust.Server.Console
         // This is ridiculously expensive to fetch for some reason.
         // I'm gonna just assume that this can't change during the lifetime of the process. I hope.
         // I want this ridiculous 0.1% CPU usage off my profiler.
-        private readonly bool _userInteractive = Environment.UserInteractive;
+        private readonly bool _userInteractive = Environment.UserInteractive && !System.Console.IsInputRedirected;
 
         private TimeSpan _lastTitleUpdate;
         private long _lastReceivedBytes;
@@ -71,10 +71,8 @@ namespace Robust.Server.Console
         /// </summary>
         private void UpdateTitle()
         {
-            if (!_userInteractive || System.Console.IsInputRedirected)
-            {
+            if (!_userInteractive)
                 return;
-            }
 
             // every 1 second update stats in the console window title
             if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
@@ -106,11 +104,19 @@ namespace Robust.Server.Console
 
         public void UpdateInput()
         {
-            if (Con.IsInputRedirected)
+            if (!_userInteractive)
             {
+                var str = Con.ReadLine();
+                if (str != null)
+                    _conShell.ExecuteCommand(str);
                 return;
             }
 
+            HandleKeyboard();
+        }
+
+        public void HandleKeyboard()
+        {
             // Process keyboard input
             while (Con.KeyAvailable)
             {

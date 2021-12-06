@@ -381,6 +381,15 @@ public partial class EntitySystem
         return EntityManager.GetComponentOrNull<T>(uid);
     }
 
+    /// <summary>
+    ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public T? CompOrNull<T>(EntityUid? uid) where T : class, IComponent
+    {
+        return uid.HasValue ? EntityManager.GetComponentOrNull<T>(uid.Value) : null;
+    }
+
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp)

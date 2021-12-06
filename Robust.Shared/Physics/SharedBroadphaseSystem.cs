@@ -446,7 +446,7 @@ namespace Robust.Shared.Physics
         internal void RemoveBody(PhysicsComponent body, FixturesComponent? manager = null)
         {
             // TODO: Would reaaalllyy like for this to not be false in future
-            if (!Resolve(((IComponent) body).Owner, ref manager, false))
+            if (!Resolve(body.Owner, ref manager, false))
             {
                 return;
             }

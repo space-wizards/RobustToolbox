@@ -579,8 +579,8 @@ internal partial class PVSSystem : EntitySystem
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
-        if (session.AttachedEntity.HasValue)
-            viewers.Add(session.AttachedEntity.Value);
+        if (session.AttachedEntity != EntityUid.Invalid)
+            viewers.Add(session.AttachedEntity);
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.
         if (session is IPlayerSession playerSession)

@@ -510,15 +510,15 @@ namespace Robust.Client.Placement
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
-            var ent = PlayerManager.LocalPlayer?.ControlledEntity;
-            if (ent == default)
+            var ent = PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (ent == EntityUid.Invalid)
             {
                 coordinates = new EntityCoordinates();
                 return false;
             }
             else
             {
-                var map = EntityManager.GetComponent<TransformComponent>(ent.Value).MapID;
+                var map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
                 if (map == MapId.Nullspace || !Eraser)
                 {
                     coordinates = new EntityCoordinates();

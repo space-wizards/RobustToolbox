@@ -90,17 +90,18 @@ Mouse Pos:
                 tile, controlHovered);
 
             stringBuilder.AppendLine("\nAttached Entity:");
-            if (_playerManager.LocalPlayer?.ControlledEntity == default)
+            var controlledEntity = _playerManager?.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (controlledEntity == EntityUid.Invalid)
             {
                 stringBuilder.AppendLine("No attached entity.");
             }
             else
             {
-                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity);
+                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(controlledEntity);
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(_playerManager.LocalPlayer.ControlledEntity).Coordinates;
+                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(controlledEntity).Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}

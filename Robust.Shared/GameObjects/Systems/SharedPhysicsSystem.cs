@@ -142,15 +142,15 @@ namespace Robust.Shared.GameObjects
         {
             var entity = args.Entity;
 
-            if (!((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized) ||
-                !IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out PhysicsComponent? body) ||
+            if (!((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Initialized) ||
+                !EntityManager.TryGetComponent(entity, out PhysicsComponent? body) ||
                 entity.IsInContainer()) return;
 
             var oldParent = args.OldParent;
             var linearVelocityDiff = Vector2.Zero;
             var angularVelocityDiff = 0f;
 
-            if (oldParent != null && IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParent!.Value, out PhysicsComponent? oldBody))
+            if (oldParent != null && EntityManager.TryGetComponent(oldParent!.Value, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
@@ -158,9 +158,9 @@ namespace Robust.Shared.GameObjects
                 angularVelocityDiff += angular;
             }
 
-            var newParent = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).ParentUid;
+            var newParent = EntityManager.GetComponent<TransformComponent>(entity).ParentUid;
 
-            if (newParent != EntityUid.Invalid && IoCManager.Resolve<IEntityManager>().TryGetComponent(newParent, out PhysicsComponent? newBody))
+            if (newParent != EntityUid.Invalid && EntityManager.TryGetComponent(newParent, out PhysicsComponent? newBody))
             {
                 var (linear, angular) = newBody.MapVelocities;
 
@@ -234,7 +234,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapChange(EntMapIdChangedMessage message)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent))
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent))
                 return;
 
             Get<SharedJointSystem>().ClearJoints(physicsComponent);
@@ -242,20 +242,20 @@ namespace Robust.Shared.GameObjects
             if (oldMapId != MapId.Nullspace)
             {
                 EntityUid tempQualifier = MapManager.GetMapEntityId(oldMapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
             }
 
-            var newMapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Entity).MapID;
+            var newMapId = EntityManager.GetComponent<TransformComponent>(message.Entity).MapID;
             if (newMapId != MapId.Nullspace)
             {
                 EntityUid tempQualifier = MapManager.GetMapEntityId(newMapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }
 
         private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
         {
-            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Component.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Component.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
@@ -263,42 +263,42 @@ namespace Robust.Shared.GameObjects
             if (message.Component.Deleted || !message.Component.CanCollide)
             {
                 EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(message.Component);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(message.Component);
             }
             else
             {
                 EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(message.Component);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(message.Component);
             }
         }
 
         private void HandleWakeMessage(PhysicsWakeMessage message)
         {
-            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(message.Body);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(message.Body);
         }
 
         private void HandleSleepMessage(PhysicsSleepMessage message)
         {
-            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(message.Body);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(message.Body);
         }
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
 
-            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Container.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Container.Owner).MapID;
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
@@ -307,20 +307,20 @@ namespace Robust.Shared.GameObjects
             if (mapId != MapId.Nullspace)
             {
                 EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
             }
         }
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
 
-            var mapId = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(message.Container.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Container.Owner).MapID;
 
             if (mapId != MapId.Nullspace)
             {
                 EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }
 

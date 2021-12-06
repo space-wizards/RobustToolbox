@@ -194,14 +194,14 @@ namespace Robust.Client.Placement
         {
             if (!RangeRequired)
                 return true;
-
-            if (pManager.PlayerManager.LocalPlayer?.ControlledEntity == default)
+            var controlled = pManager.PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (controlled == EntityUid.Invalid)
             {
                 return false;
             }
 
             var range = pManager.CurrentPermission!.Range;
-            if (range > 0 && !pManager.EntityManager.GetComponent<TransformComponent>(pManager.PlayerManager.LocalPlayer.ControlledEntity).Coordinates.InRange(pManager.EntityManager, coordinates, range))
+            if (range > 0 && !pManager.EntityManager.GetComponent<TransformComponent>(controlled).Coordinates.InRange(pManager.EntityManager, coordinates, range))
                 return false;
             return true;
         }

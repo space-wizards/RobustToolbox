@@ -579,7 +579,7 @@ internal partial class PVSSystem : EntitySystem
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
-        if (session.AttachedEntity != default)
+        if (session.AttachedEntity != EntityUid.Invalid)
             viewers.Add(session.AttachedEntity);
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.

@@ -69,8 +69,8 @@ namespace Robust.Client.GameObjects
 
             // TODO: Content should have its own way of handling this. We should have a default behavior that they can overwrite.
 
-            EntityUid? tempQualifier = _playerManager.LocalPlayer?.ControlledEntity;
-            var playerTransform = (tempQualifier != null ? EntityManager.GetComponent<TransformComponent>(tempQualifier.Value) : null);
+            EntityUid tempQualifier = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var playerTransform = (tempQualifier != EntityUid.Invalid ? EntityManager.GetComponent<TransformComponent>(tempQualifier) : null);
 
             if (playerTransform == null) return;
 

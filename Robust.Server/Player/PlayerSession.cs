@@ -43,7 +43,7 @@ namespace Robust.Server.Player
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
         /// <inheritdoc />
-        [ViewVariables] public EntityUid AttachedEntity { get; set; }
+        [ViewVariables] public EntityUid? AttachedEntity { get; set; }
 
         private SessionStatus _status = SessionStatus.Connecting;
 
@@ -151,7 +151,7 @@ namespace Robust.Server.Player
             }
 #endif
 
-            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity))
+            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity.Value))
             {
                 Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
@@ -177,9 +177,9 @@ namespace Robust.Server.Player
 
         private void SetAttachedEntityName()
         {
-            if (Name != null && AttachedEntity != default)
+            if (Name != null && AttachedEntity != null)
             {
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity).EntityName = Name;
+                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity.Value).EntityName = Name;
             }
         }
 

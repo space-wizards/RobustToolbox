@@ -115,7 +115,7 @@ namespace Robust.Server.GameObjects
         public bool Detach(IPlayerSession player)
         {
             var uid = player.AttachedEntity;
-            return uid == default || Detach(uid);
+            return uid == null || Detach(uid.Value);
         }
 
         private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)

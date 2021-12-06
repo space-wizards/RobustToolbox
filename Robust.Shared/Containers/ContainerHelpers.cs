@@ -23,8 +23,7 @@ namespace Robust.Shared.Containers
         public static bool IsInContainer(this EntityUid entity)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
@@ -46,8 +45,7 @@ namespace Robust.Shared.Containers
         public static bool TryGetContainerMan(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             var parentTransform = entMan.GetComponent<TransformComponent>(entity).Parent;
             if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager) && manager.ContainsEntity(entity))
@@ -66,8 +64,7 @@ namespace Robust.Shared.Containers
         public static bool TryGetContainer(this EntityUid entity, [NotNullWhen(true)] out IContainer? container)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             if (TryGetContainerMan(entity, out var manager))
                 return manager.TryGetContainer(entity, out container);
@@ -86,8 +83,7 @@ namespace Robust.Shared.Containers
         public static bool TryRemoveFromContainer(this EntityUid entity, bool force, out bool wasInContainer)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             if (TryGetContainer(entity, out var container))
             {
@@ -175,8 +171,7 @@ namespace Robust.Shared.Containers
         private static bool TryGetManagerComp(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted));
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             if (entMan.TryGetComponent(entity, out manager))
                 return true;
@@ -190,9 +185,6 @@ namespace Robust.Shared.Containers
 
         public static bool IsInSameOrNoContainer(this EntityUid user, EntityUid other)
         {
-            DebugTools.AssertNotNull(user);
-            DebugTools.AssertNotNull(other);
-
             var isUserContained = TryGetContainer(user, out var userContainer);
             var isOtherContained = TryGetContainer(other, out var otherContainer);
 
@@ -208,9 +200,6 @@ namespace Robust.Shared.Containers
 
         public static bool IsInSameOrParentContainer(this EntityUid user, EntityUid other)
         {
-            DebugTools.AssertNotNull(user);
-            DebugTools.AssertNotNull(other);
-
             var isUserContained = TryGetContainer(user, out var userContainer);
             var isOtherContained = TryGetContainer(other, out var otherContainer);
 

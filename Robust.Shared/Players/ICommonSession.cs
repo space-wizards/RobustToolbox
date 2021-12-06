@@ -18,7 +18,7 @@ namespace Robust.Shared.Players
         /// <summary>
         /// Entity UID that this session is represented by in the world, if any.
         /// </summary>
-        EntityUid AttachedEntity { get; }
+        EntityUid? AttachedEntity { get; }
 
         /// <summary>
         /// The UID of this session.

@@ -18,7 +18,7 @@ namespace Robust.Shared.Players
         /// <summary>
         /// Entity UID that this session is represented by in the world, if any.
         /// </summary>
-        EntityUid? AttachedEntity { get; }
+        EntityUid AttachedEntity { get; }
 
         /// <summary>
         /// The UID of this session.
@@ -47,6 +47,6 @@ namespace Robust.Shared.Players
         /// <summary>
         ///     Porting convenience for admin commands which use such logic as "at the player's feet", etc: the transform component of the attached entity.
         /// </summary>
-        TransformComponent? AttachedEntityTransform => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntity ?? default);
+        TransformComponent? AttachedEntityTransform => IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(AttachedEntity);
     }
 }

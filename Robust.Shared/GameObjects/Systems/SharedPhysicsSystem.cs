@@ -177,8 +177,8 @@ namespace Robust.Shared.GameObjects
                 //
                 // https://cwzx.wordpress.com/2014/03/25/the-dynamics-of-a-transform-hierarchy/
                 var w = new Matrix3(
-                    0, oldBody.MapAngularVelocity, 0,
-                    -oldBody.MapAngularVelocity, 0, 0,
+                    0, angular, 0,
+                    -angular, 0, 0,
                     0, 0, 0
                 );
 
@@ -201,8 +201,8 @@ namespace Robust.Shared.GameObjects
                 v *= o;
 
                 var w = new Matrix3(
-                    0, newBody.MapAngularVelocity, 0,
-                    -newBody.MapAngularVelocity, 0, 0,
+                    0, angular, 0,
+                    -angular, 0, 0,
                     0, 0, 0
                 );
 

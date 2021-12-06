@@ -67,6 +67,7 @@ entities:
             var physics = new PhysicsSystem();
             var gridFixtures = new GridFixtureSystem();
             var fixtures = new FixtureSystem();
+
             // MOCKS WHY
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
@@ -75,6 +76,11 @@ entities:
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
             //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
+
+            // Mocking moment...
+            IoCManager.BuildGraph();
+            IoCManager.RegisterInstance<SharedBroadphaseSystem>(broady);
+            IoCManager.InjectDependencies(fixtures);
         }
 
 

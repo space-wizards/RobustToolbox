@@ -10,5 +10,14 @@
 
             return null;
         }
+
+        public static T? GetComponentOrNull<T>(this IEntityManager entityManager, EntityUid? entityUid)
+            where T : class, IComponent
+        {
+            if (entityUid.HasValue && entityManager.TryGetComponent(entityUid.Value, out T? component))
+                return component;
+
+            return null;
+        }
     }
 }

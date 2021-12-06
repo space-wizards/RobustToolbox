@@ -18,9 +18,10 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp">The component type to resolve.</typeparam>
         /// <returns>True if the component is not null or was resolved correctly, false if the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        protected bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component, bool logMissing = true)
+        public bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component, bool logMissing = true)
             where TComp : IComponent
         {
+            DebugTools.Assert(Exists(uid), "Specified Entity does not exist!");
             DebugTools.Assert(component == null || uid == component.Owner.Uid, "Specified Entity is not the component's Owner!");
 
             if (component != null)
@@ -45,7 +46,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp2">The component type to resolve.</typeparam>
         /// <returns>True if the components are not null or were resolved correctly, false if any of the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        protected bool Resolve<TComp1, TComp2>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, bool logMissing = true)
+        public bool Resolve<TComp1, TComp2>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, bool logMissing = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
         {
@@ -65,7 +66,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp3">The component type to resolve.</typeparam>
         /// <returns>True if the components are not null or were resolved correctly, false if any of the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        protected bool Resolve<TComp1, TComp2, TComp3>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, [NotNullWhen(true)] ref TComp3? comp3, bool logMissing = true)
+        public bool Resolve<TComp1, TComp2, TComp3>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, [NotNullWhen(true)] ref TComp3? comp3, bool logMissing = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
@@ -88,7 +89,7 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="TComp4">The component type to resolve.</typeparam>
         /// <returns>True if the components are not null or were resolved correctly, false if any of the component couldn't be resolved.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        protected bool Resolve<TComp1, TComp2, TComp3, TComp4>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, [NotNullWhen(true)] ref TComp3? comp3, [NotNullWhen(true)] ref TComp4? comp4, bool logMissing = true)
+        public bool Resolve<TComp1, TComp2, TComp3, TComp4>(EntityUid uid, [NotNullWhen(true)] ref TComp1? comp1, [NotNullWhen(true)] ref TComp2? comp2, [NotNullWhen(true)] ref TComp3? comp3, [NotNullWhen(true)] ref TComp4? comp4, bool logMissing = true)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent

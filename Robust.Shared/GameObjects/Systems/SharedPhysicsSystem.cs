@@ -150,8 +150,8 @@ namespace Robust.Shared.GameObjects
             var angularVelocityDiff = 0f;
             var linearVelocityDiff = Vector2.Zero;
 
-            var worldPos = entity.Transform.WorldPosition;
-            var R = Matrix3.CreateRotation(entity.Transform.WorldRotation);
+            var (worldPos, worldRot) = entity.Transform.GetWorldPositionRotation();
+            var R = Matrix3.CreateRotation(worldRot);
             R.Transpose(out var nRT);
             nRT.Multiply(-1f);
 

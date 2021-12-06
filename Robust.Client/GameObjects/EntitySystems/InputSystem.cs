@@ -145,12 +145,13 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void SetEntityContextActive()
         {
-            if (_playerManager.LocalPlayer?.ControlledEntity == default)
+            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (controlled == EntityUid.Invalid)
             {
                 return;
             }
 
-            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
+            SetEntityContextActive(_inputManager, controlled);
         }
     }
 
@@ -162,13 +163,13 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public EntityUid? AttachedEntity { get; }
+        public EntityUid AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(EntityUid? attachedEntity)
+        public PlayerAttachSysMessage(EntityUid attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }

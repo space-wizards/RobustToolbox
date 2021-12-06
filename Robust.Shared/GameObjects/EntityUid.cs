@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.Serialization;
 
@@ -6,7 +6,7 @@ namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     This type contains a network identification number of an entity.
-    ///     This can be used by the EntityManager to reference an IEntity.
+    ///     This can be used by the EntityManager to access an entity
     /// </summary>
     [Serializable, NetSerializable]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>

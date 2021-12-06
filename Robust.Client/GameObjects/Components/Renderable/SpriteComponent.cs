@@ -1502,8 +1502,7 @@ namespace Robust.Client.GameObjects
         {
             // Look this was an easy way to get bounds checks for layer updates.
             // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            EntityUid tempQualifier = Owner;
-            if ((tempQualifier != default ? entities : null)?.EventBus != null)
+            if ((Owner != default ? entities : null)?.EventBus != null)
                 UpdateBounds();
 
             if (_inertUpdateQueued)
@@ -1512,8 +1511,7 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueued = true;
             // Yes that null check is valid because of that stupid fucking dummy IEntity.
             // Who thought that was a good idea.
-            EntityUid tempQualifier1 = Owner;
-            (tempQualifier1 != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()

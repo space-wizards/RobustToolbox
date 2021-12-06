@@ -25,10 +25,10 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <param name="component">The relevant component</param>
         /// <param name="Owner">EntityUid of the entity this component belongs to.</param>
-        protected ComponentEventArgs(IComponent component, EntityUid Owner)
+        protected ComponentEventArgs(IComponent component, EntityUid owner)
         {
             Component = component;
-            Owner = Owner;
+            Owner = owner;
         }
     }
 

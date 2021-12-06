@@ -344,13 +344,15 @@ namespace Robust.Client.GameObjects
 
                 var worldHandle = args.WorldHandle;
                 ShaderInstance? currentShader = null;
-                var player = _playerManager.LocalPlayer?.ControlledEntity;
+
+                if (_playerManager.LocalPlayer?.ControlledEntity is not {} playerEnt)
+                    return;
 
                 foreach (var effect in _owner._Effects)
                 {
-                    var tempQualifier = effect.AttachedEntityUid;
-                    if(_entityManager.GetComponent<TransformComponent>(tempQualifier!.Value).MapID != _entityManager.GetComponent<TransformComponent>(player!.Value).MapID
-                        && effect.Coordinates.GetMapId(_entityManager) != map)
+                    if(effect.AttachedEntityUid is {} attached
+                    && _entityManager.GetComponent<TransformComponent>(attached).MapID != _entityManager.GetComponent<TransformComponent>(playerEnt).MapID
+                       && effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }
@@ -367,7 +369,7 @@ namespace Robust.Client.GameObjects
                     var effectSprite = effect.EffectSprite;
 
                     var tempQualifier1 = effect.AttachedEntityUid;
-                    var coordinates = 
+                    var coordinates =
                         (tempQualifier1 != null ? _entityManager.GetComponent<TransformComponent>(tempQualifier1.Value).Coordinates : effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 

@@ -54,7 +54,7 @@ namespace Robust.Server.Player
         ///     Do NOT use this unless you know what you're doing, you probably want <see cref="AttachToEntity"/>
         ///     and <see cref="DetachFromEntity"/> instead.
         /// </summary>
-        internal void SetAttachedEntity(EntityUid entity);
+        internal void SetAttachedEntity(EntityUid? entity);
 
         /// <summary>
         ///     Internal method to add an entity Uid to <see cref="ViewSubscriptions"/>.

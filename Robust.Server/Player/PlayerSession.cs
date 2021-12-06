@@ -145,7 +145,7 @@ namespace Robust.Server.Player
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.
                 // Work around it.
-                AttachedEntityUid = null;
+                AttachedEntity = null;
                 UpdatePlayerState();
                 return;
             }
@@ -198,7 +198,7 @@ namespace Robust.Server.Player
         public LoginType AuthType => ConnectedClient.AuthType;
 
         /// <inheritdoc />
-        void IPlayerSession.SetAttachedEntity(EntityUid entity)
+        void IPlayerSession.SetAttachedEntity(EntityUid? entity)
         {
             AttachedEntity = entity;
             UpdatePlayerState();

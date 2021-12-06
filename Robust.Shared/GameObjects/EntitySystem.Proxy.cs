@@ -388,6 +388,19 @@ public partial class EntitySystem
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+    public bool TryComp<T>(EntityUid? uid, [NotNullWhen(true)] out T? comp)
+    {
+        if (!uid.HasValue)
+        {
+            comp = default;
+            return false;
+        }
+
+        return EntityManager.TryGetComponent(uid.Value, out comp);
+    }
+
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public IEnumerable<IComponent> AllComps(EntityUid uid)

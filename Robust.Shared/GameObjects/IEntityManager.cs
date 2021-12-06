@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Prometheus;
 using Robust.Shared.Map;
@@ -94,6 +95,11 @@ namespace Robust.Shared.GameObjects
         /// Checks whether an entity with the specified ID exists.
         /// </summary>
         bool EntityExists(EntityUid uid);
+
+        /// <summary>
+        /// Checks whether an entity with the specified ID exists.
+        /// </summary>
+        bool EntityExists([NotNullWhen(true)] EntityUid? uid);
 
         /// <summary>
         /// Returns a string representation of an entity with various information regarding it.

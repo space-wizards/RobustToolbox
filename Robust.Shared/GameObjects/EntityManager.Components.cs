@@ -429,6 +429,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent<T>(EntityUid? uid)
+        {
+            return uid.HasValue && HasComponent(uid.Value, typeof(T));
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, Type type)
         {
             var dict = _entTraitDict[type];
@@ -437,9 +444,35 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent(EntityUid? uid, Type type)
+        {
+            if (!uid.HasValue)
+            {
+                return false;
+            }
+
+            var dict = _entTraitDict[type];
+            return dict.TryGetValue(uid.Value, out var comp) && !comp.Deleted;
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, ushort netId)
         {
             return _netComponents.TryGetValue(uid, out var netSet)
+                   && netSet.ContainsKey(netId);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent(EntityUid? uid, ushort netId)
+        {
+            if (!uid.HasValue)
+            {
+                return false;
+            }
+
+            return _netComponents.TryGetValue(uid.Value, out var netSet)
                    && netSet.ContainsKey(netId);
         }
 
@@ -498,6 +531,28 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T component)
+        {
+            if (!uid.HasValue)
+            {
+                component = default!;
+                return false;
+            }
+
+            if (TryGetComponent(uid.Value, typeof(T), out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = (T)comp;
+                    return true;
+                }
+            }
+
+            component = default!;
+            return false;
+        }
+
+        /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component)
         {
             var dict = _entTraitDict[type];
@@ -515,9 +570,52 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? component)
+        {
+            if (!uid.HasValue)
+            {
+                component = null;
+                return false;
+            }
+
+            var dict = _entTraitDict[type];
+            if (dict.TryGetValue(uid.Value, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
+        }
+
+        /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
         {
             if (_netComponents.TryGetValue(uid, out var netSet)
+                && netSet.TryGetValue(netId, out var comp))
+            {
+                component = comp;
+                return true;
+            }
+
+            component = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
+        {
+            if (!uid.HasValue)
+            {
+                component = default;
+                return false;
+            }
+
+            if (_netComponents.TryGetValue(uid.Value, out var netSet)
                 && netSet.TryGetValue(netId, out var comp))
             {
                 component = comp;

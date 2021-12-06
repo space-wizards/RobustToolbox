@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects
@@ -105,10 +104,26 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Checks if the entity has a component type.
         /// </summary>
+        /// <typeparam name="T">Component reference type to check for.</typeparam>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <returns>True if the entity has the component type, otherwise false.</returns>
+        bool HasComponent<T>(EntityUid? uid);
+
+        /// <summary>
+        ///     Checks if the entity has a component type.
+        /// </summary>
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <returns>True if the entity has the component type, otherwise false.</returns>
         bool HasComponent(EntityUid uid, Type type);
+
+        /// <summary>
+        ///     Checks if the entity has a component type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <returns>True if the entity has the component type, otherwise false.</returns>
+        bool HasComponent(EntityUid ?uid, Type type);
 
         /// <summary>
         ///     Checks if the entity has a component with a given network ID. This does not check
@@ -118,6 +133,15 @@ namespace Robust.Shared.GameObjects
         /// <param name="netId">Network ID to check for.</param>
         /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
         bool HasComponent(EntityUid uid, ushort netId);
+
+        /// <summary>
+        ///     Checks if the entity has a component with a given network ID. This does not check
+        ///     if the component is deleted.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="netId">Network ID to check for.</param>
+        /// <returns>True if the entity has a component with the given network ID, otherwise false.</returns>
+        bool HasComponent(EntityUid? uid, ushort netId);
 
         /// <summary>
         ///     This method will always return a component for a certain entity, adding it if it's not there already.
@@ -164,11 +188,29 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
+        /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T component);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
         /// <param name="uid">Entity UID to check.</param>
         /// <param name="type">A trait or component type to check for.</param>
         /// <param name="component">Component of the specified type (if exists).</param>
         /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent(EntityUid uid, Type type, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Returns the component of a specific type.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="type">A trait or component type to check for.</param>
+        /// <param name="component">Component of the specified type (if exists).</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns the component with a specified network ID. This does not check
@@ -179,6 +221,16 @@ namespace Robust.Shared.GameObjects
         /// <param name="component">Component with the specified network id.</param>
         /// <returns>If the component existed in the entity.</returns>
         bool TryGetComponent(EntityUid uid, ushort netId, [NotNullWhen(true)] out IComponent? component);
+
+        /// <summary>
+        ///     Returns the component with a specified network ID. This does not check
+        ///     if the component is deleted.
+        /// </summary>
+        /// <param name="uid">Entity UID to check.</param>
+        /// <param name="netId">Component Network ID to check for.</param>
+        /// <param name="component">Component with the specified network id.</param>
+        /// <returns>If the component existed in the entity.</returns>
+        bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance

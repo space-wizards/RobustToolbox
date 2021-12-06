@@ -305,6 +305,11 @@ namespace Robust.Shared.GameObjects
             return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
         }
 
+        public bool EntityExists(EntityUid? uid)
+        {
+            return uid.HasValue && EntityExists(uid.Value);
+        }
+
         /// <summary>
         /// Disposes all entities and clears all lists.
         /// </summary>

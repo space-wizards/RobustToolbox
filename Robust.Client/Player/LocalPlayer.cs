@@ -28,7 +28,7 @@ namespace Robust.Client.Player
         ///     Game entity that the local player is controlling. If this is default, the player is not attached to any
         ///     entity at all.
         /// </summary>
-        [ViewVariables] public EntityUid ControlledEntity { get; private set; }
+        [ViewVariables] public EntityUid? ControlledEntity { get; private set; }
 
         [ViewVariables] public NetUserId UserId { get; set; }
 
@@ -86,20 +86,22 @@ namespace Robust.Client.Player
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
             var previous = ControlledEntity;
-            if (previous != default && entMan.EntityExists(previous))
+            if (entMan.TryGetComponent(previous, out MetaDataComponent? metaData) &&
+                metaData.EntityInitialized &&
+                !metaData.EntityDeleted)
             {
-                entMan.GetComponent<EyeComponent>(previous).Current = false;
+                entMan.GetComponent<EyeComponent>(previous.Value).Current = false;
 
                 // notify ECS Systems
                 entMan.EventBus.RaiseEvent(EventSource.Local, new PlayerAttachSysMessage(default));
-                entMan.EventBus.RaiseLocalEvent(previous, new PlayerDetachedEvent(previous));
+                entMan.EventBus.RaiseLocalEvent(previous.Value, new PlayerDetachedEvent(previous.Value));
             }
 
             ControlledEntity = default;
 
-            if (previous != default)
+            if (previous != null)
             {
-                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous));
+                EntityDetached?.Invoke(new EntityDetachedEventArgs(previous.Value));
             }
         }
 

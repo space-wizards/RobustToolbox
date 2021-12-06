@@ -521,14 +521,14 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates).Uid;
+        return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
     /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public EntityUid Spawn(string? prototype, MapCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates).Uid;
+        return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
     #endregion

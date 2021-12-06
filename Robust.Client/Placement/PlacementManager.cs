@@ -492,8 +492,7 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            var ent = PlayerManager.LocalPlayer!.ControlledEntity;
-            if (ent != default)
+            if (PlayerManager.LocalPlayer!.ControlledEntity is {Valid: true} ent)
             {
                 map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
             }
@@ -633,11 +632,12 @@ namespace Robust.Client.Placement
 
             CurrentMode.Render(handle);
 
-            if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired
-                || PlayerManager.LocalPlayer?.ControlledEntity == null)
+            if (CurrentPermission is not {Range: > 0} ||
+                !CurrentMode.RangeRequired ||
+                PlayerManager.LocalPlayer?.ControlledEntity is not {Valid: true} controlled)
                 return;
 
-            var worldPos = EntityManager.GetComponent<TransformComponent>(PlayerManager.LocalPlayer.ControlledEntity).WorldPosition;
+            var worldPos = EntityManager.GetComponent<TransformComponent>(controlled).WorldPosition;
 
             handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }

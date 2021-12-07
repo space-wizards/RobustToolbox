@@ -70,12 +70,12 @@ namespace Robust.Client.GameObjects
         private void HandleDirtyEvent(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
-            if (IoCManager.Resolve<IEntityManager>().EntityExists(sender) &&
-                IoCManager.Resolve<IEntityManager>().TryGetComponent(sender, out ClientOccluderComponent? iconSmooth)
+            if (EntityManager.EntityExists(sender) &&
+                EntityManager.TryGetComponent(sender, out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {
-                var grid1 = _mapManager.GetGrid(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sender).GridID);
-                var coords = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(sender).Coordinates;
+                var grid1 = _mapManager.GetGrid(EntityManager.GetComponent<TransformComponent>(sender).GridID);
+                var coords = EntityManager.GetComponent<TransformComponent>(sender).Coordinates;
 
                 _dirtyEntities.Enqueue(sender);
                 AddValidEntities(grid1.GetInDir(coords, Direction.North));

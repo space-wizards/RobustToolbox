@@ -23,7 +23,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IOverlayManager overlayManager = default!;
         [Dependency] private readonly IPrototypeManager prototypeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private readonly List<Effect> _Effects = new();
@@ -35,7 +34,7 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<EffectSystemMessage>(CreateEffect);
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
-            var overlay = new EffectOverlay(this, prototypeManager, _playerManager, _entityManager);
+            var overlay = new EffectOverlay(this, prototypeManager, _playerManager, EntityManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -65,7 +64,7 @@ namespace Robust.Client.GameObjects
             }
 
             //Create effect from creation message
-            var effect = new Effect(message, resourceCache, _mapManager, _entityManager);
+            var effect = new Effect(message, resourceCache, _mapManager, EntityManager);
             effect.Deathtime = gameTiming.CurTime + message.LifeTime;
 
             _Effects.Add(effect);

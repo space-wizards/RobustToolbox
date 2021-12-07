@@ -111,7 +111,7 @@ namespace Robust.Client.GameStates
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
                     var uid = netEnt.Id;
-                    var position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(uid).MapPosition;
+                    var position = _entityManager.GetComponent<TransformComponent>(uid).MapPosition;
                     netEnt.InPVS =  !pvsEnabled || (pvsBox.Contains(position.Position) && position.MapId == pvsCenter.MapId);
                     _netEnts[i] = netEnt; // copy struct back
                     continue;
@@ -179,7 +179,7 @@ namespace Robust.Client.GameStates
 
                 var xPos = 100;
                 var yPos = 10 + _lineHeight * i;
-                var name = $"({netEnt.Id}) {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID}";
+                var name = $"({netEnt.Id}) {_entityManager.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID}";
                 var color = CalcTextColor(ref netEnt);
                 screenHandle.DrawString(_font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
                 DrawTrafficBox(screenHandle, ref netEnt, xPos, yPos);

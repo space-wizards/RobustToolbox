@@ -13,6 +13,8 @@ namespace Robust.Client.GameObjects
     [ComponentReference(typeof(SharedPointLightComponent))]
     public class PointLightComponent : SharedPointLightComponent, ISerializationHooks
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -32,7 +34,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_enabled == value) return;
                 base.Enabled = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
             }
         }
 
@@ -45,7 +47,7 @@ namespace Robust.Client.GameObjects
                 if (_containerOccluded == value) return;
 
                 _containerOccluded = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
             }
         }
 
@@ -152,7 +154,7 @@ namespace Robust.Client.GameObjects
                 if (MathHelper.CloseToPercent(value, _radius)) return;
 
                 base.Radius = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
+                _entityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
         }
 

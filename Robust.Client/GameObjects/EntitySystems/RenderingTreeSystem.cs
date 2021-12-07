@@ -114,7 +114,7 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMoved(ref MoveEvent args)
         {
-            AnythingMovedSubHandler(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(args.Sender));
+            AnythingMovedSubHandler(EntityManager.GetComponent<TransformComponent>(args.Sender));
         }
 
         private void AnythingMovedSubHandler(TransformComponent sender)

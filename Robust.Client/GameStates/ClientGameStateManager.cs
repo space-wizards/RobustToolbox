@@ -143,8 +143,7 @@ namespace Robust.Client.GameStates
             message.InputSequence = _nextInputCmdSeq;
             _pendingInputs.Enqueue(message);
 
-            var inputMan = IoCManager.Resolve<IInputManager>();
-            inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
+            _inputManager.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
             Logger.DebugS(CVars.NetPredict.Name,
                 $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
@@ -341,7 +340,7 @@ namespace Robust.Client.GameStates
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
-                if (entity.IsClientSide() || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick < curTick)
+                if (entity.IsClientSide() || _entityManager.GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick < curTick)
                 {
                     continue;
                 }

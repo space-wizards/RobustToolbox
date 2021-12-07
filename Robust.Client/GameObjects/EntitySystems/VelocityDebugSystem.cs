@@ -35,13 +35,13 @@ namespace Robust.Client.GameObjects
 
             var player = _playerManager.LocalPlayer?.ControlledEntity;
 
-            if (player == null || !IoCManager.Resolve<IEntityManager>().TryGetComponent(player.Value, out PhysicsComponent? body))
+            if (player == null || !EntityManager.TryGetComponent(player.Value, out PhysicsComponent? body))
             {
                 _label.Visible = false;
                 return;
             }
 
-            var screenPos = _eyeManager.WorldToScreen(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(player.Value).WorldPosition);
+            var screenPos = _eyeManager.WorldToScreen(EntityManager.GetComponent<TransformComponent>(player.Value).WorldPosition);
             LayoutContainer.SetPosition(_label, screenPos + new Vector2(0, 50));
             _label.Visible = true;
 

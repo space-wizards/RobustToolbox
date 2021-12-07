@@ -35,7 +35,7 @@ namespace Robust.Client.GameStates
             foreach (var boundingBox in _entityManager.EntityQuery<IPhysBody>(true))
             {
                 // all entities have a TransformComponent
-                var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(boundingBox.Owner);
+                var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);
 
                 // if not on the same map, continue
                 if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer())

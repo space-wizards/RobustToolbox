@@ -172,7 +172,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var toUpdate in _updateQueue)
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(toUpdate) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(toUpdate).EntityLifeStage) >= EntityLifeStage.Deleted)
+                if ((!EntityManager.EntityExists(toUpdate) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(toUpdate).EntityLifeStage) >= EntityLifeStage.Deleted)
                 {
                     continue;
                 }
@@ -183,22 +183,22 @@ namespace Robust.Client.GameObjects
             _updateQueue.Clear();
         }
 
-        private static void UpdateEntityRecursively(EntityUid entity)
+        private void UpdateEntityRecursively(EntityUid entity)
         {
             // TODO: Since we are recursing down,
             // we could cache ShowContents data here to speed it up for children.
             // Am lazy though.
             UpdateEntity(entity);
 
-            foreach (var child in IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).Children)
+            foreach (var child in EntityManager.GetComponent<TransformComponent>(entity).Children)
             {
                 UpdateEntityRecursively(child.Owner);
             }
         }
 
-        private static void UpdateEntity(EntityUid entity)
+        private void UpdateEntity(EntityUid entity)
         {
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out SpriteComponent? sprite))
+            if (EntityManager.TryGetComponent(entity, out SpriteComponent? sprite))
             {
                 sprite.ContainerOccluded = false;
 
@@ -216,7 +216,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out PointLightComponent? light))
+            if (EntityManager.TryGetComponent(entity, out PointLightComponent? light))
             {
                 light.ContainerOccluded = false;
 

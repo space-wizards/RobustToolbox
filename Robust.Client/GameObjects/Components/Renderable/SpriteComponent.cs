@@ -44,7 +44,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                entities.EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -300,7 +300,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                entities.EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -1652,7 +1652,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            entities.EventBus.RaiseLocalEvent(((IComponent) this).Owner, new SpriteUpdateEvent());
+            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
         }
 
         /// <summary>

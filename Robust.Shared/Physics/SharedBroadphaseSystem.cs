@@ -641,6 +641,9 @@ namespace Robust.Shared.Physics
 
         private void AddToMoveBuffer(MapId mapId, FixtureProxy proxy, Box2 aabb)
         {
+            if(mapId == MapId.Nullspace)
+                return;
+
             _moveBuffer[mapId][proxy] = aabb;
         }
 

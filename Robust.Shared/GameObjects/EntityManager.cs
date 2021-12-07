@@ -43,7 +43,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     All entities currently stored in the manager.
         /// </summary>
-        protected readonly Dictionary<EntityUid, Entity> Entities = new();
+        protected readonly Dictionary<EntityUid, IEntity> Entities = new();
 
         private EntityEventBus _eventBus = null!;
 
@@ -192,7 +192,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Tried to spawn entity {protoName} on invalid coordinates {coordinates}.");
 
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity, coordinates.GetMapId(this));
+            InitializeAndStartEntity(entity, coordinates.GetMapId(this));
             return entity;
         }
 
@@ -200,7 +200,7 @@ namespace Robust.Shared.GameObjects
         public virtual IEntity SpawnEntity(string? protoName, MapCoordinates coordinates)
         {
             var entity = CreateEntityUninitialized(protoName, coordinates);
-            InitializeAndStartEntity((Entity) entity, coordinates.MapId);
+            InitializeAndStartEntity(entity, coordinates.MapId);
             return entity;
         }
 
@@ -293,10 +293,10 @@ namespace Robust.Shared.GameObjects
             if(entity.Deleted) //TODO: Why was this still a child if it was already deleted?
                 return;
 
+            var uid = entity.Uid;
             var transform = entity.Transform;
             var metadata = entity.MetaData;
             entity.LifeStage = EntityLifeStage.Terminating;
-
             EventBus.RaiseLocalEvent(entity.Uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
@@ -306,8 +306,12 @@ namespace Robust.Shared.GameObjects
                 RecursiveDeleteEntity(childTransform.Owner);
             }
 
-            // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(entity.Uid);
+            // Shut down all components.
+            foreach (var component in InSafeOrder(_entCompIndex[uid]))
+            {
+                if(component.Running)
+                    component.LifeShutdown();
+            }
 
             // map does not have a parent node, everything else needs to be detached
             if (transform.ParentUid != EntityUid.Invalid)
@@ -315,6 +319,9 @@ namespace Robust.Shared.GameObjects
                 // Detach from my parent, if any
                 transform.DetachParentToNull();
             }
+
+            // Dispose all my components, in a safe order so transform is available
+            DisposeComponents(entity.Uid);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
             EntityDeleted?.Invoke(this, entity.Uid);
@@ -343,7 +350,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return TryGetEntity(uid, out _);
+            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
         }
 
         /// <summary>
@@ -360,7 +367,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(string? prototypeName, EntityUid? uid = null)
+        private protected IEntity AllocEntity(string? prototypeName, EntityUid? uid = null)
         {
             EntityPrototype? prototype = null;
             if (!string.IsNullOrWhiteSpace(prototypeName))
@@ -379,7 +386,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and stores it but does not load components or do initialization.
         /// </summary>
-        private protected Entity AllocEntity(EntityUid? uid = null)
+        private protected IEntity AllocEntity(EntityUid? uid = null)
         {
             if (uid == null)
             {
@@ -391,8 +398,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
 
-            var entity = new Entity(this, uid.Value);
-
+            var entity = new IEntity(uid.Value);
 
             // we want this called before adding components
             EntityAdded?.Invoke(this, entity.Uid);
@@ -402,7 +408,6 @@ namespace Robust.Shared.GameObjects
 
             // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
             var metadata = new MetaDataComponent() { Owner = entity };
-            entity.MetaData = metadata;
 
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid.Value, metadata);
@@ -417,7 +422,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Allocates an entity and loads components but does not do initialization.
         /// </summary>
-        private protected virtual Entity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected virtual IEntity CreateEntity(string? prototypeName, EntityUid? uid = null)
         {
             if (prototypeName == null)
                 return AllocEntity(uid);
@@ -437,12 +442,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private protected void LoadEntity(Entity entity, IEntityLoadContext? context)
+        private protected void LoadEntity(IEntity entity, IEntityLoadContext? context)
         {
             EntityPrototype.LoadEntity(entity.Prototype, entity, ComponentFactory, context);
         }
 
-        private void InitializeAndStartEntity(Entity entity, MapId mapId)
+        private void InitializeAndStartEntity(IEntity entity, MapId mapId)
         {
             try
             {
@@ -460,28 +465,28 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        protected void InitializeEntity(Entity entity)
+        protected void InitializeEntity(IEntity entity)
         {
             InitializeComponents(entity.Uid);
             EntityInitialized?.Invoke(this, entity.Uid);
         }
 
-        protected void StartEntity(Entity entity)
+        protected void StartEntity(IEntity entity)
         {
             StartComponents(entity.Uid);
             EntityStarted?.Invoke(this, entity.Uid);
         }
 
         /// <inheritdoc />
-        public virtual string ToPrettyString(EntityUid uid)
+        public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
             if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
-                return $"{uid}D";
+                return new EntityStringRepresentation(uid, true);
 
-            var metaData = (MetaDataComponent) component;
+            var metadata = (MetaDataComponent) component;
 
-            return $"{metaData.EntityName} ({uid}, {metaData.EntityPrototype?.ID}){(metaData.EntityDeleted ? "D" : "")}";
+            return new EntityStringRepresentation(uid, metadata.EntityDeleted, metadata.EntityName, metadata.EntityPrototype?.ID);
         }
 
 #endregion Entity Management

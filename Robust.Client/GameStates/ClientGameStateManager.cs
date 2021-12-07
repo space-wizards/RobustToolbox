@@ -428,7 +428,7 @@ namespace Robust.Client.GameStates
             ReadOnlySpan<EntityState> nextEntStates)
         {
             var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
-            var toInitialize = new List<Entity>();
+            var toInitialize = new List<IEntity>();
             var created = new List<EntityUid>();
             var toHide = new List<EntityUid>();
             var toShow = new List<EntityUid>();
@@ -453,7 +453,7 @@ namespace Robust.Client.GameStates
                         throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
                     }
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] CREATE {es.Uid} {metaState.PrototypeId}");
-                    var newEntity = (Entity)_entities.CreateEntity(metaState.PrototypeId, es.Uid);
+                    var newEntity = _entities.CreateEntity(metaState.PrototypeId, es.Uid);
                     toApply.Add(newEntity, (es, null));
                     toInitialize.Add(newEntity);
                     created.Add(newEntity.Uid);
@@ -482,7 +482,7 @@ namespace Robust.Client.GameStates
             foreach (var kvStates in toApply)
             {
                 var ent = kvStates.Key;
-                var entity = (Entity) ent;
+                var entity = ent;
                 HandleEntityState(entity, _entities.EventBus, kvStates.Value.Item1,
                     kvStates.Value.Item2);
             }
@@ -494,7 +494,7 @@ namespace Robust.Client.GameStates
             }
 
 #if EXCEPTION_TOLERANCE
-            HashSet<Entity> brokenEnts = new HashSet<Entity>();
+            HashSet<IEntity> brokenEnts = new HashSet<IEntity>();
 #endif
 
             foreach (var entity in toInitialize)

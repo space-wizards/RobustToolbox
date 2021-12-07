@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
         public void QueueDeleteEntity(EntityUid uid);
 
         /// <summary>
-        /// Shuts-down and removes given <see cref="IEntity"/>. This is also broadcast to all clients.
+        /// Shuts-down and removes given <see cref="Robust.Shared.GameObjects.IEntity"/>. This is also broadcast to all clients.
         /// </summary>
         /// <param name="e">Entity to remove</param>
         void DeleteEntity(IEntity e);
@@ -126,9 +126,9 @@ namespace Robust.Shared.GameObjects
         bool EntityExists(EntityUid uid);
 
         /// <summary>
-        /// Returns a string with various information regarding an entity.
+        /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
-        string ToPrettyString(EntityUid uid);
+        EntityStringRepresentation ToPrettyString(EntityUid uid);
 
         #endregion Entity Management
     }

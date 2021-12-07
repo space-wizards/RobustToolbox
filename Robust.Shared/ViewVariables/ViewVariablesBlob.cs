@@ -172,7 +172,7 @@ namespace Robust.Shared.ViewVariables
     }
 
     /// <summary>
-    ///     Contains the type names of the components of a remote <see cref="IEntity"/>.
+    ///     Contains the type names of the components of a remote <see cref="Robust.Shared.GameObjects.IEntity"/>.
     ///     Requested by <see cref="ViewVariablesRequestEntityComponents"/>.
     /// </summary>
     [Serializable, NetSerializable]
@@ -198,7 +198,7 @@ namespace Robust.Shared.ViewVariables
     }
 
     /// <summary>
-    ///     Contains a list of server-side component that can be added to a remote <see cref="IEntity"/>.
+    ///     Contains a list of server-side component that can be added to a remote <see cref="Robust.Shared.GameObjects.IEntity"/>.
     ///     Requested by <see cref="ViewVariablesRequestAllValidComponents"/>.
     /// </summary>
     [Serializable, NetSerializable]

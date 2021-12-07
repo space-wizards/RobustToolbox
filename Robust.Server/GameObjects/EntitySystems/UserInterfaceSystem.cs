@@ -81,7 +81,7 @@ namespace Robust.Server.GameObjects
             _sessionCache.Clear();
             _sessionCache.AddRange(ui.SubscribedSessions);
 
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(ui.Owner.Owner);
+            var transform = EntityManager.GetComponent<TransformComponent>(ui.Owner.Owner);
 
             var uiPos = transform.WorldPosition;
             var uiMap = transform.MapID;

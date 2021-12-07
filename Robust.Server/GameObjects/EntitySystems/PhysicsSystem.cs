@@ -41,7 +41,7 @@ namespace Robust.Server.GameObjects
         {
             if (eventArgs.Map == MapId.Nullspace) return;
             var mapUid = MapManager.GetMapEntityIdOrThrow(eventArgs.Map);
-            IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsMapComponent>(mapUid);
+            EntityManager.AddComponent<PhysicsMapComponent>(mapUid);
         }
 
         /// <inheritdoc />

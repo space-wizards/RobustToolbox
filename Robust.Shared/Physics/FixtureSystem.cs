@@ -88,7 +88,7 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(((IComponent) body).Owner, ref manager, ref xform))
+            if (!Resolve(body.Owner, ref manager, ref xform))
             {
                 DebugTools.Assert(false);
                 return;
@@ -145,7 +145,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
-            if (!Resolve(((IComponent) body).Owner, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return null;
             }
@@ -184,7 +184,7 @@ namespace Robust.Shared.Physics
         /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
         public void DestroyFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
-            if (!Resolve(((IComponent) body).Owner, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return;
             }
@@ -366,7 +366,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
         {
-            if (!Resolve(((IComponent) component).Owner, ref body))
+            if (!Resolve(component.Owner, ref body))
             {
                 return;
             }

@@ -183,7 +183,7 @@ namespace Robust.Shared.GameObjects
                     return;
                 }
 
-                if (_anchored && ((IComponent) value).Owner != _parent)
+                if (_anchored && (value).Owner != _parent)
                 {
                     Anchored = false;
                 }
@@ -685,14 +685,14 @@ namespace Robust.Shared.GameObjects
             //NOTE: This function must be callable from before initialize
 
             // don't attach to something we're already attached to
-            if (ParentUid == ((IComponent) newParent).Owner)
+            if (ParentUid == newParent.Owner)
                 return;
 
             DebugTools.Assert(newParent != this,
                 $"Can't parent a {nameof(TransformComponent)} to itself.");
 
             // offset position from world to parent, and set
-            Coordinates = new EntityCoordinates(((IComponent) newParent).Owner, newParent.InvWorldMatrix.Transform(WorldPosition));
+            Coordinates = new EntityCoordinates(newParent.Owner, newParent.InvWorldMatrix.Transform(WorldPosition));
         }
 
         internal void ChangeMapId(MapId newMapId)

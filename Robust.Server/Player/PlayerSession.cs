@@ -140,7 +140,7 @@ namespace Robust.Server.Player
                 return;
 
 #if EXCEPTION_TOLERANCE
-            if (!IoCManager.Resolve<IEntityManager>().EntityExists(AttachedEntityUid!.Value))
+            if (!IoCManager.Resolve<IEntityManager>().EntityExists(AttachedEntity!.Value))
             {
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.

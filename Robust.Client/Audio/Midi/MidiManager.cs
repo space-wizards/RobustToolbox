@@ -322,10 +322,10 @@ namespace Robust.Client.Audio.Midi
                                     sourceRelative.Normalized,
                                     OcclusionCollisionMask),
                                 sourceRelative.Length,
-                                renderer?.TrackingEntity);
+                                renderer.TrackingEntity);
                         }
 
-                        renderer!.Source.SetOcclusion(occlusion);
+                        renderer.Source.SetOcclusion(occlusion);
                     }
 
                     if (renderer.Source.SetPosition(pos.Position))

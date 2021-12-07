@@ -4,6 +4,7 @@ using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log; //Needed for release build, do not remove
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
@@ -859,18 +860,19 @@ namespace Robust.Shared.GameObjects
                         }
                         else
                         {
-                            if (!IoCManager.Resolve<IEntityManager>().EntityExists(newParentId))
+                            var entManager = IoCManager.Resolve<IEntityManager>();
+                            if (!entManager.EntityExists(newParentId))
                             {
 #if !EXCEPTION_TOLERANCE
                                 throw new InvalidOperationException($"Unable to find new parent {newParentId}! This probably means the server never sent it.");
 #else
                                 Logger.ErrorS("transform", $"Unable to find new parent {newParentId}! Deleting {Owner}");
-                                Owner.QueueDelete();
+                                entManager.QueueDeleteEntity(Owner);
                                 return;
 #endif
                             }
 
-                            AttachParent(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newParentId));
+                            AttachParent(entManager.GetComponent<TransformComponent>(newParentId));
                         }
                     }
 

@@ -265,7 +265,9 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB());
+                var (worldPos, worldRot) = transform.GetWorldPositionRotation();
+
+                transform.RunDeferred(physics.GetWorldAABB(worldPos, worldRot));
             }
 
             _deferredUpdates.Clear();

@@ -83,7 +83,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseToPercent(value, _friction)) return;
 
                 _friction = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) Body).Owner), Body);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
         }
 
@@ -103,7 +103,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseTo(value, _restitution)) return;
 
                 _restitution = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) Body).Owner), Body);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
         }
 
@@ -128,7 +128,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 _hard = value;
                 Body.Awake = true;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) Body).Owner), Body);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
         }
 
@@ -155,7 +155,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseToPercent(value, _mass)) return;
 
                 _mass = MathF.Max(0f, value);
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) Body).Owner), Body);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
                 Body.ResetMassData();
             }
         }
@@ -176,7 +176,7 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _collisionLayer = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) Body).Owner), Body);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
@@ -197,7 +197,7 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _collisionMask = value;
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) Body).Owner), Body);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }

@@ -164,7 +164,7 @@ namespace Robust.Shared.GameObjects
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (((IComponent) component).Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
             AddComponentInternal(uid, component, overwrite);
         }
@@ -397,7 +397,7 @@ namespace Robust.Shared.GameObjects
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
-            var entityUid = ((IComponent) component).Owner;
+            var entityUid = component.Owner;
 
             // ReSharper disable once InvertIf
             if (reg.NetID != null)

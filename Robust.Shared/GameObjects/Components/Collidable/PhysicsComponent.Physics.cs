@@ -75,9 +75,9 @@ namespace Robust.Shared.GameObjects
         // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
         // on physics bodies for massive shuttle perf savings.
         [Obsolete("Use FixturesComponent instead.")]
-        public IReadOnlyList<Fixture> Fixtures => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) this).Owner).Fixtures.Values.ToList();
+        public IReadOnlyList<Fixture> Fixtures => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures.Values.ToList();
 
-        public int FixtureCount => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(((IComponent) this).Owner).Fixtures.Count;
+        public int FixtureCount => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
         [ViewVariables]
         public int ContactCount
@@ -151,7 +151,7 @@ namespace Robust.Shared.GameObjects
 
                 EntitySystem.Get<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
             }
         }
 
@@ -194,11 +194,11 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new PhysicsWakeMessage(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsWakeMessage(this));
             }
             else
             {
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new PhysicsSleepMessage(this));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsSleepMessage(this));
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -333,7 +333,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _canCollide = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, ((IComponent) this).Owner, _canCollide));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
                 IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
@@ -760,7 +760,7 @@ namespace Robust.Shared.GameObjects
 
         public Vector2 GetLocalVector2(Vector2 worldVector)
         {
-            return Transform.MulT(new Quaternion2D((float) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(((IComponent) this).Owner).WorldRotation.Theta), worldVector);
+            return Transform.MulT(new Quaternion2D((float) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldRotation.Theta), worldVector);
         }
 
         public Transform GetTransform()
@@ -873,8 +873,8 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new CollisionChangeMessage(this, Owner, _canCollide));
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(((IComponent) this).Owner, new PhysicsUpdateMessage(this));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new CollisionChangeMessage(this, Owner, _canCollide));
+                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsUpdateMessage(this));
                 }
             }
             else

@@ -108,7 +108,7 @@ namespace Robust.Shared.Map
                 if (GridExists(gridIndex))
                 {
                     Logger.DebugS("map",
-                        $"Entity {((IComponent) comp).Owner} removed grid component, removing bound grid {gridIndex}");
+                        $"Entity {comp.Owner} removed grid component, removing bound grid {gridIndex}");
                     DeleteGrid(gridIndex);
                 }
             }

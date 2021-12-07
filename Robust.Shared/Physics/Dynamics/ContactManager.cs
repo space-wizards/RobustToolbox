@@ -383,8 +383,8 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                _physicsManager.EnsureTransform(((IComponent) bodyA).Owner);
-                _physicsManager.EnsureTransform(((IComponent) bodyB).Owner);
+                _physicsManager.EnsureTransform(bodyA.Owner);
+                _physicsManager.EnsureTransform(bodyB.Owner);
             }
 
             // Update contacts all at once.

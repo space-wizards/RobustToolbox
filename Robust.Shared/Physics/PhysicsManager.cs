@@ -47,7 +47,7 @@ namespace Robust.Shared.Physics
 
         public Transform EnsureTransform(PhysicsComponent body)
         {
-            return EnsureTransform(((IComponent) body).Owner);
+            return EnsureTransform((body).Owner);
         }
 
         public Transform EnsureTransform(EntityUid uid)

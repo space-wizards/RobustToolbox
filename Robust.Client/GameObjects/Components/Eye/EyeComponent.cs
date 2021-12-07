@@ -3,8 +3,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
@@ -14,6 +12,7 @@ namespace Robust.Client.GameObjects
     public class EyeComponent : SharedEyeComponent
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <inheritdoc />
         public override string Name => "Eye";
@@ -118,7 +117,7 @@ namespace Robust.Client.GameObjects
 
             _eye = new Eye
             {
-                Position = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapPosition,
+                Position = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition,
                 Zoom = _setZoomOnInitialize,
                 DrawFov = _setDrawFovOnInitialize
             };
@@ -166,7 +165,7 @@ namespace Robust.Client.GameObjects
         public void UpdateEyePosition()
         {
             if (_eye == null) return;
-            var mapPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapPosition;
+            var mapPos = _entityManager.GetComponent<TransformComponent>(Owner).MapPosition;
             _eye.Position = new MapCoordinates(mapPos.Position, mapPos.MapId);
         }
     }

@@ -79,13 +79,13 @@ namespace Robust.Client.Debugging
 
             foreach (var ent in grid.GetAnchoredEntities(spot))
             {
-                if (!EntityManager.EntityExists(ent))
+                if (EntityManager.TryGetComponent<MetaDataComponent>(ent, out var meta))
                 {
-                    text.AppendLine($"uid: {ent}, invalid");
+                    text.AppendLine($"uid: {ent}, {meta.EntityName}");
                 }
                 else
                 {
-                    text.AppendLine($"uid: {ent}, {EntityManager.GetComponent<MetaDataComponent>(ent).EntityName}");
+                    text.AppendLine($"uid: {ent}, invalid");
                 }
             }
 

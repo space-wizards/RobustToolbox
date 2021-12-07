@@ -42,7 +42,7 @@ namespace Robust.Client.Console.Commands
 
             foreach (var e in entityManager.GetEntities().OrderBy(e => e))
             {
-                shell.WriteLine($"entity {e}, {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(e).Coordinates}.");
+                shell.WriteLine($"entity {e}, {entityManager.GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {entityManager.GetComponent<TransformComponent>(e).Coordinates}.");
             }
         }
     }
@@ -244,7 +244,7 @@ namespace Robust.Client.Console.Commands
             }
             var meta = entmgr.GetComponent<MetaDataComponent>(uid);
             shell.WriteLine($"{uid}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
-            shell.WriteLine($"init/del/lmt: {(!entmgr.EntityExists(uid) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Initialized}/{(!entmgr.EntityExists(uid) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Deleted}/{meta.EntityLastModifiedTick}");
+            shell.WriteLine($"init/del/lmt: {meta.EntityLifeStage >= EntityLifeStage.Initialized}/{(!entmgr.EntityExists(uid) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Deleted}/{meta.EntityLastModifiedTick}");
             foreach (var component in entmgr.GetComponents(uid))
             {
                 shell.WriteLine(component.ToString() ?? "");

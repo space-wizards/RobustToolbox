@@ -201,7 +201,7 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
 
                     var xform = physBody.GetTransform();
 
@@ -246,7 +246,7 @@ namespace Robust.Client.Debugging
                     const float Alpha = 0.25f;
                     float size;
 
-                    if (IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(physBody.Owner))
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner))
                     {
                         color = Color.Orange.WithAlpha(Alpha);
                         size = 1f;
@@ -267,7 +267,7 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
 
                     var xform = physBody.GetTransform();
 
@@ -350,7 +350,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
-                    if (IoCManager.Resolve<IEntityManager>().HasComponent<MapGridComponent>(physBody.Owner)) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
                     hoverBodies.Add(physBody);
                 }
 

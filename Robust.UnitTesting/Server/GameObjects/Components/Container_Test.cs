@@ -290,17 +290,17 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toinsert)
+            protected override void InternalInsert(EntityUid toinsert, IEntityManager? entMan = null)
             {
                 _containerList.Add(toinsert);
-                base.InternalInsert(toinsert);
+                base.InternalInsert(toinsert, entMan);
             }
 
             /// <inheritdoc />
-            protected override void InternalRemove(EntityUid toremove)
+            protected override void InternalRemove(EntityUid toremove, IEntityManager? entMan = null)
             {
                 _containerList.Remove(toremove);
-                base.InternalRemove(toremove);
+                base.InternalRemove(toremove, entMan);
             }
 
             /// <inheritdoc />
@@ -314,15 +314,19 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             {
                 base.Shutdown();
 
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
                 foreach (var entity in _containerList)
                 {
-                    IoCManager.Resolve<IEntityManager>().DeleteEntity(entity);
+                    entMan.DeleteEntity(entity);
                 }
             }
 
-            public override bool CanInsert(EntityUid toinsert)
+            public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
             {
-                return IoCManager.Resolve<IEntityManager>().TryGetComponent(toinsert, out IContainerManager? _);
+                IoCManager.Resolve(ref entMan);
+
+                return entMan.TryGetComponent(toinsert, out IContainerManager? _);
             }
         }
     }

@@ -51,11 +51,11 @@ namespace Robust.Shared.Containers
         public override string ContainerType => ClassName;
 
         /// <inheritdoc />
-        public override bool CanInsert(EntityUid toinsert)
+        public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
         {
             if (ContainedEntity != null)
                 return false;
-            return base.CanInsert(toinsert);
+            return base.CanInsert(toinsert, entMan);
         }
 
         /// <inheritdoc />
@@ -67,17 +67,17 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toinsert)
+        protected override void InternalInsert(EntityUid toinsert, IEntityManager? entMan = null)
         {
             ContainedEntity = toinsert;
-            base.InternalInsert(toinsert);
+            base.InternalInsert(toinsert, entMan);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(EntityUid toremove)
+        protected override void InternalRemove(EntityUid toremove, IEntityManager? entMan = null)
         {
             ContainedEntity = null;
-            base.InternalRemove(toremove);
+            base.InternalRemove(toremove, entMan);
         }
 
         /// <inheritdoc />

@@ -45,6 +45,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
 
@@ -75,9 +77,9 @@ namespace Robust.Shared.GameObjects
         // TODO: Placeholder; look it's disgusting but my main concern is stopping fixtures being serialized every tick
         // on physics bodies for massive shuttle perf savings.
         [Obsolete("Use FixturesComponent instead.")]
-        public IReadOnlyList<Fixture> Fixtures => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures.Values.ToList();
+        public IReadOnlyList<Fixture> Fixtures => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values.ToList();
 
-        public int FixtureCount => IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner).Fixtures.Count;
+        public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
         [ViewVariables]
         public int ContactCount
@@ -151,7 +153,7 @@ namespace Robust.Shared.GameObjects
 
                 EntitySystem.Get<SharedBroadphaseSystem>().RegenerateContacts(this);
 
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
+                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
             }
         }
 
@@ -167,7 +169,7 @@ namespace Robust.Shared.GameObjects
             if (_awake || _bodyType == BodyType.Static) return;
 
             _awake = true;
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+            _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
         }
 
         // We'll also block Static bodies from ever being awake given they don't need to move.
@@ -194,11 +196,11 @@ namespace Robust.Shared.GameObjects
             if (value)
             {
                 _sleepTime = 0.0f;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsWakeMessage(this));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsWakeMessage(this));
             }
             else
             {
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsSleepMessage(this));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsSleepMessage(this));
                 ResetDynamics();
                 _sleepTime = 0.0f;
             }
@@ -298,8 +300,8 @@ namespace Robust.Shared.GameObjects
 
         public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            worldPos ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldPosition;
-            worldRot ??= IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldRotation;
+            worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
+            worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
             var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
             var bounds = new Box2(transform.Position, transform.Position);
@@ -333,8 +335,8 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _canCollide = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
+                _entMan.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
+                _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
         }
@@ -563,7 +565,7 @@ namespace Robust.Shared.GameObjects
             {
                 var linearVelocity = _linVelocity;
                 var angularVelocity = _angVelocity;
-                var entMan = IoCManager.Resolve<IEntityManager>();
+                var entMan = _entMan;
                 var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
                 while (parent != null)
@@ -620,7 +622,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _linVelocity;
-                var entMan = IoCManager.Resolve<IEntityManager>();
+                var entMan = _entMan;
                 var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
                 while (parent != null)
@@ -676,7 +678,7 @@ namespace Robust.Shared.GameObjects
             get
             {
                 var velocity = _angVelocity;
-                var entMan = IoCManager.Resolve<IEntityManager>();
+                var entMan = _entMan;
                 var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
                 while (parent != null)
@@ -731,7 +733,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
+            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(_entMan.GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -760,12 +762,12 @@ namespace Robust.Shared.GameObjects
 
         public Vector2 GetLocalVector2(Vector2 worldVector)
         {
-            return Transform.MulT(new Quaternion2D((float) IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).WorldRotation.Theta), worldVector);
+            return Transform.MulT(new Quaternion2D((float) _entMan.GetComponent<TransformComponent>(Owner).WorldRotation.Theta), worldVector);
         }
 
         public Transform GetTransform()
         {
-            var (worldPos, worldRot) = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
+            var (worldPos, worldRot) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
 
             var xf = new Transform(worldPos, (float) worldRot.Theta);
             // xf.Position -= Transform.Mul(xf.Quaternion2D, LocalCenter);
@@ -843,12 +845,12 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner);
+            var transform = _entMan.GetComponent<TransformComponent>(Owner);
             var mapId = transform.MapID;
             if (mapId != MapId.Nullspace)
             {
                 EntityUid tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntityId(mapId);
-                PhysicsMap = IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier);
+                PhysicsMap = _entMan.GetComponent<SharedPhysicsMapComponent>(tempQualifier);
             }
 
             Dirty();
@@ -859,11 +861,11 @@ namespace Robust.Shared.GameObjects
             {
                 if (!Awake)
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                    _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
                 }
                 else
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                    _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
                 }
 
                 if (Owner.IsInContainer())
@@ -873,8 +875,8 @@ namespace Robust.Shared.GameObjects
                 else
                 {
                     // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new CollisionChangeMessage(this, Owner, _canCollide));
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PhysicsUpdateMessage(this));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new CollisionChangeMessage(this, Owner, _canCollide));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsUpdateMessage(this));
                 }
             }
             else
@@ -883,7 +885,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var startup = new PhysicsInitializedEvent(Owner);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, ref startup);
+            _entMan.EventBus.RaiseLocalEvent(Owner, ref startup);
 
             ResetMassData();
         }
@@ -978,8 +980,8 @@ namespace Robust.Shared.GameObjects
             // Does a joint prevent collision?
             // if one of them doesn't have jointcomp then they can't share a common joint.
             // otherwise, only need to iterate over the joints of one component as they both store the same joint.
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out JointComponent? jointComponentA) &&
-                IoCManager.Resolve<IEntityManager>().TryGetComponent(other.Owner, out JointComponent? jointComponentB))
+            if (_entMan.TryGetComponent(Owner, out JointComponent? jointComponentA) &&
+                _entMan.TryGetComponent(other.Owner, out JointComponent? jointComponentB))
             {
                 var aUid = jointComponentA.Owner;
                 var bUid = jointComponentB.Owner;
@@ -996,12 +998,12 @@ namespace Robust.Shared.GameObjects
             }
 
             var preventCollideMessage = new PreventCollideEvent(this, other);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(Owner, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 
             preventCollideMessage = new PreventCollideEvent(other, this);
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage);
+            _entMan.EventBus.RaiseLocalEvent(other.Owner, preventCollideMessage);
 
             if (preventCollideMessage.Cancelled) return false;
 

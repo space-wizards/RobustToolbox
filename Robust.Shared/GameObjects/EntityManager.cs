@@ -310,6 +310,16 @@ namespace Robust.Shared.GameObjects
             return uid.HasValue && EntityExists(uid.Value);
         }
 
+        public bool Deleted(EntityUid uid)
+        {
+            return !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+        }
+
+        public bool Deleted(EntityUid? uid)
+        {
+            return !uid.HasValue || !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+        }
+
         /// <summary>
         /// Disposes all entities and clears all lists.
         /// </summary>

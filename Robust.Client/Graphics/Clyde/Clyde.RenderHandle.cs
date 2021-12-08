@@ -125,12 +125,14 @@ namespace Robust.Client.Graphics.Clyde
 
             public void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted)
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                if (entMan.Deleted(entity))
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }
 
-                var sprite = IoCManager.Resolve<IEntityManager>().GetComponent<SpriteComponent>(entity);
+                var sprite = entMan.GetComponent<SpriteComponent>(entity);
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
@@ -163,7 +165,7 @@ namespace Robust.Client.Graphics.Clyde
                     DrawingHandleWorld,
                     Angle.Zero,
                     overrideDirection == null
-                        ? IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).WorldRotation
+                        ? entMan.GetComponent<TransformComponent>(entity).WorldRotation
                         : Angle.Zero,
                     overrideDirection);
 

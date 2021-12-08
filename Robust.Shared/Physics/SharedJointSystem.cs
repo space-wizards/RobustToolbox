@@ -215,10 +215,10 @@ namespace Robust.Shared.Physics
             var bodyB = joint.BodyB;
 
             // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
-            var mapidA = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyA.Owner).MapID;
+            var mapidA = EntityManager.GetComponent<TransformComponent>(bodyA.Owner).MapID;
 
             if (mapidA == MapId.Nullspace ||
-                mapidA != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyB.Owner).MapID)
+                mapidA != EntityManager.GetComponent<TransformComponent>(bodyB.Owner).MapID)
             {
                 Logger.ErrorS("physics", $"Tried to add joint to ineligible bodies");
                 return;
@@ -283,7 +283,7 @@ namespace Robust.Shared.Physics
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!IoCManager.Resolve<IEntityManager>().HasComponent<JointComponent>(body.Owner)) return;
+            if (!EntityManager.HasComponent<JointComponent>(body.Owner)) return;
 
             EntityManager.RemoveComponent<JointComponent>(body.Owner);
         }

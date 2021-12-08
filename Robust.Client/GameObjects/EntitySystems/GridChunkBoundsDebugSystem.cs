@@ -28,7 +28,7 @@ namespace Robust.Client.GameObjects
                 {
                     DebugTools.Assert(_overlay == null);
                     _overlay = new GridChunkBoundsOverlay(
-                        IoCManager.Resolve<IEntityManager>(),
+                        EntityManager,
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>());
 

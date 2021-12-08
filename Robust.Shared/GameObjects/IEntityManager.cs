@@ -102,6 +102,16 @@ namespace Robust.Shared.GameObjects
         bool EntityExists([NotNullWhen(true)] EntityUid? uid);
 
         /// <summary>
+        /// Checks whether an entity with the specified ID has been deleted or is nonexistent.
+        /// </summary>
+        bool Deleted(EntityUid uid);
+
+        /// <summary>
+        /// Checks whether an entity with the specified ID has been deleted or is nonexistent.
+        /// </summary>
+        bool Deleted([NotNullWhen(false)] EntityUid? uid);
+
+        /// <summary>
         /// Returns a string representation of an entity with various information regarding it.
         /// </summary>
         EntityStringRepresentation ToPrettyString(EntityUid uid);

@@ -126,14 +126,14 @@ namespace Robust.Shared.Containers
         #endregion
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        private static void HandleParentChanged(ref EntParentChangedMessage message)
+        private void HandleParentChanged(ref EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 
-            if (oldParentEntity == null || !IoCManager.Resolve<IEntityManager>().EntityExists(oldParentEntity!.Value))
+            if (oldParentEntity == null || !EntityManager.EntityExists(oldParentEntity!.Value))
                 return;
 
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
+            if (EntityManager.TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
                 containerManager.ForceRemove(message.Entity);
         }
     }

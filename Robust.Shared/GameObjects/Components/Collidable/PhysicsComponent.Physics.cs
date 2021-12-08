@@ -615,21 +615,30 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
         /// </remarks>
+        [ViewVariables]
         public Vector2 MapLinearVelocity
         {
             get
             {
-                var velocity = _linVelocity;
-                var parent = Owner.Transform.Parent?.Owner;
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                var physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
+                var xform = entManager.GetComponent<TransformComponent>(OwnerUid);
+                var parent = xform.ParentUid;
+                var localPos = xform.LocalPosition;
 
-                while (parent != null)
+                var velocity = _linVelocity;
+
+                while (parent.IsValid())
                 {
-                    if (parent.TryGetComponent(out PhysicsComponent? body))
+                    var parentXform = entManager.GetComponent<TransformComponent>(parent);
+
+                    if (entManager.TryGetComponent(parent, out PhysicsComponent? body))
                     {
-                        velocity += body.LinearVelocity;
+                        velocity += physicsSystem.GetLinearVelocityFromLocalPoint(body, localPos);
                     }
 
-                    parent = parent.Transform.Parent?.Owner;
+                    velocity = parentXform.LocalRotation.RotateVec(velocity);
+                    parent = parentXform.ParentUid;
                 }
 
                 return velocity;
@@ -670,6 +679,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
         /// </remarks>
+        [ViewVariables]
         public float MapAngularVelocity
         {
             get

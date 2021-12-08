@@ -121,7 +121,7 @@ namespace Robust.Server.Placement
             {
                 var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();
+                _entityManager.GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();
             }
             else
             {
@@ -212,9 +212,9 @@ namespace Robust.Server.Placement
             foreach (EntityUid entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(entity) || IoCManager.Resolve<IEntityManager>().HasComponent<ActorComponent>(entity))
+                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<IMapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
-                IoCManager.Resolve<IEntityManager>().DeleteEntity(entity);
+                _entityManager.DeleteEntity(entity);
             }
         }
 
@@ -223,7 +223,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBegin(EntityUid mob, int range, string objectType, string alignOption)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob, out var actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -244,7 +244,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementBeginTile(EntityUid mob, int range, string tileType, string alignOption)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob, out var actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -265,7 +265,7 @@ namespace Robust.Server.Placement
         /// </summary>
         public void SendPlacementCancel(EntityUid mob)
         {
-            if (!IoCManager.Resolve<IEntityManager>().TryGetComponent<ActorComponent?>(mob, out var actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;

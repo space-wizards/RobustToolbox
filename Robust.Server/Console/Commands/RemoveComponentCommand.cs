@@ -37,7 +37,6 @@ namespace Robust.Server.Console.Commands
 
             var componentName = args[1];
 
-            var entManager = IoCManager.Resolve<IEntityManager>();
             var compFactory = IoCManager.Resolve<IComponentFactory>();
 
             if (!compFactory.TryGetRegistration(componentName, out var registration, true))
@@ -46,15 +45,15 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (!entManager.HasComponent(uid, registration.Type))
+            if (!entityManager.HasComponent(uid, registration.Type))
             {
-                shell.WriteLine($"No {componentName} component found on entity {entManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+                shell.WriteLine($"No {componentName} component found on entity {entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
                 return;
             }
 
-            entManager.RemoveComponent(uid, registration.Type);
+            entityManager.RemoveComponent(uid, registration.Type);
 
-            shell.WriteLine($"Removed {componentName} component from entity {entManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
+            shell.WriteLine($"Removed {componentName} component from entity {entityManager.GetComponent<MetaDataComponent>(uid).EntityName}.");
         }
     }
 }

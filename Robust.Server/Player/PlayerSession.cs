@@ -4,7 +4,6 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
@@ -140,7 +139,7 @@ namespace Robust.Server.Player
                 return;
 
 #if EXCEPTION_TOLERANCE
-            if (!IoCManager.Resolve<IEntityManager>().EntityExists(AttachedEntity!.Value))
+            if (!IoCManager.Resolve<IEntityManager>().Deleted(AttachedEntity!.Value))
             {
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.
@@ -173,14 +172,6 @@ namespace Robust.Server.Player
             UnsubscribeAllViews();
             DetachFromEntity();
             UpdatePlayerState();
-        }
-
-        private void SetAttachedEntityName()
-        {
-            if (Name != null && AttachedEntity != null)
-            {
-                IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(AttachedEntity.Value).EntityName = Name;
-            }
         }
 
         /// <summary>

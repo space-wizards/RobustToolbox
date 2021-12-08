@@ -108,7 +108,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (IoCManager.Resolve<IEntityManager>().TryGetComponent(_entity, out ISpriteComponent? sprite))
+                if (_entityManager.TryGetComponent(_entity, out ISpriteComponent? sprite))
                 {
                     var hBox = new BoxContainer
                     {
@@ -202,7 +202,7 @@ namespace Robust.Client.ViewVariables.Instances
             _clientComponentsAddButton.OnPressed += OnClientComponentsAddButtonPressed;
             _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
 
-            var componentList = IoCManager.Resolve<IEntityManager>().GetComponents(_entity).OrderBy(c => c.GetType().ToString());
+            var componentList = _entityManager.GetComponents(_entity).OrderBy(c => c.GetType().ToString());
 
             foreach (var component in componentList)
             {
@@ -392,7 +392,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var type in componentFactory.AllRegisteredTypes)
             {
-                if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity, type))
+                if (_entityManager.HasComponent(_entity, type))
                     continue;
 
                 yield return (componentFactory.GetRegistration(type).Name);

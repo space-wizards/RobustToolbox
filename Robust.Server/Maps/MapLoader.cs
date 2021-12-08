@@ -137,7 +137,7 @@ namespace Robust.Server.Maps
                 {
                     foreach (var entity in context.Entities)
                     {
-                        IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPaused = true;
+                        _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
                     }
                 }
             }
@@ -435,7 +435,7 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
-                var entManager = IoCManager.Resolve<IEntityManager>();
+                var entManager = _serverEntityManager;
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
                 var fixtureSystem = EntitySystem.Get<FixtureSystem>();
 
@@ -444,7 +444,7 @@ namespace Robust.Server.Maps
                     var gridInternal = (IMapGridInternal) grid;
                     var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
                     var mapUid = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
-                    body.Broadphase = IoCManager.Resolve<IEntityManager>().GetComponent<BroadphaseComponent>(mapUid);
+                    body.Broadphase = entManager.GetComponent<BroadphaseComponent>(mapUid);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
 
@@ -504,7 +504,7 @@ namespace Robust.Server.Maps
                 var pvs = EntitySystem.Get<PVSSystem>();
                 foreach (var entity in Entities)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out IMapGridComponent? grid))
+                    if (_serverEntityManager.TryGetComponent(entity, out IMapGridComponent? grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity;
@@ -609,7 +609,7 @@ namespace Robust.Server.Maps
 
                     if (_loadOptions!.StoreMapUids)
                     {
-                        var comp = IoCManager.Resolve<IEntityManager>().AddComponent<MapSaveIdComponent>(entity);
+                        var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
                         comp.Uid = uid;
                     }
                 }
@@ -730,7 +730,7 @@ namespace Robust.Server.Maps
                     if (IsMapSavable(entity))
                     {
                         Entities.Add(entity);
-                        if (IoCManager.Resolve<IEntityManager>().TryGetComponent(entity, out MapSaveIdComponent? mapSaveId))
+                        if (_serverEntityManager.TryGetComponent(entity, out MapSaveIdComponent? mapSaveId))
                         {
                             withUid.Add(mapSaveId);
                         }
@@ -802,7 +802,7 @@ namespace Robust.Server.Maps
 
                     var components = new YamlSequenceNode();
                     // See engine#636 for why the Distinct() call.
-                    foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(entity))
+                    foreach (var component in _serverEntityManager.GetComponents(entity))
                     {
                         if (component is MapSaveIdComponent)
                             continue;
@@ -870,17 +870,17 @@ namespace Robust.Server.Maps
 
             private bool IsMapSavable(EntityUid entity)
             {
-                if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID))
+                if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(_serverEntityManager.GetComponent<TransformComponent>(entity).GridID))
                 {
                     return false;
                 }
 
                 // Don't serialize things parented to un savable things.
                 // For example clothes inside a person.
-                var current = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
+                var current = _serverEntityManager.GetComponent<TransformComponent>(entity);
                 while (current.Parent != null)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(current.Parent.Owner).EntityPrototype?.MapSavable == false)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(current.Parent.Owner).EntityPrototype?.MapSavable == false)
                     {
                         return false;
                     }

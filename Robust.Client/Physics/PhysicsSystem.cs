@@ -36,7 +36,7 @@ namespace Robust.Client.Physics
         {
             if (eventArgs.Map == MapId.Nullspace) return;
             var mapUid = MapManager.GetMapEntityId(eventArgs.Map);
-            IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsMapComponent>(mapUid);
+            EntityManager.AddComponent<PhysicsMapComponent>(mapUid);
         }
     }
 }

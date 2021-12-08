@@ -119,9 +119,9 @@ namespace Robust.Server.GameObjects
 
         private HashSet<GridTileLookupNode> GetOrCreateNodes(EntityUid entity)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if (Deleted(entity))
             {
-                throw new InvalidOperationException($"Can't get nodes for deleted entity {IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityName}!");
+                throw new InvalidOperationException($"Can't get nodes for deleted entity {EntityManager.GetComponent<MetaDataComponent>(entity).EntityName}!");
             }
 
             if (_lastKnownNodes.TryGetValue(entity, out var nodes))
@@ -182,7 +182,7 @@ namespace Robust.Server.GameObjects
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<Vector2i>>();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID, GetEntityBox(entity)))
+            foreach (var grid in _mapManager.FindGridsIntersecting(EntityManager.GetComponent<TransformComponent>(entity).MapID, GetEntityBox(entity)))
             {
                 var indices = new List<Vector2i>();
 
@@ -279,7 +279,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var (entity, _) in _lastKnownNodes)
             {
-                if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID == gridId)
+                if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || EntityManager.GetComponent<TransformComponent>(entity).GridID == gridId)
                     toRemove.Add(entity);
             }
 
@@ -298,7 +298,7 @@ namespace Robust.Server.GameObjects
         /// <param name="entity"></param>
         private void HandleEntityAdd(EntityUid entity)
         {
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID == GridId.Invalid)
+            if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || EntityManager.GetComponent<TransformComponent>(entity).GridID == GridId.Invalid)
             {
                 return;
             }
@@ -349,7 +349,7 @@ namespace Robust.Server.GameObjects
             // TODO: When Acruid does TileEntities we may actually be able to delete this system if tile lookups become fast enough
             var gridId = moveEvent.NewPosition.GetGridId(EntityManager);
 
-            if ((!IoCManager.Resolve<IEntityManager>().EntityExists(moveEvent.Sender) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(moveEvent.Sender).EntityLifeStage) >= EntityLifeStage.Deleted ||
+            if ((!EntityManager.EntityExists(moveEvent.Sender) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(moveEvent.Sender).EntityLifeStage) >= EntityLifeStage.Deleted ||
                 gridId == GridId.Invalid ||
                 !moveEvent.NewPosition.IsValid(EntityManager))
             {
@@ -364,7 +364,7 @@ namespace Robust.Server.GameObjects
 
             // Memory leak protection
             var gridBounds = _mapManager.GetGrid(gridId).WorldBounds;
-            if (!gridBounds.Contains(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(moveEvent.Sender).WorldPosition))
+            if (!gridBounds.Contains(EntityManager.GetComponent<TransformComponent>(moveEvent.Sender).WorldPosition))
             {
                 HandleEntityRemove(moveEvent.Sender);
                 return;

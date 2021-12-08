@@ -97,11 +97,11 @@ Mouse Pos:
             }
             else
             {
-                var entityTransform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(controlledEntity);
+                var entityTransform = _entityManager.GetComponent<TransformComponent>(controlledEntity);
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(controlledEntity).Coordinates;
+                var playerCoordinates = entityTransform.Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}

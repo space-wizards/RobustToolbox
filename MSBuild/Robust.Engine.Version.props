@@ -1,4 +1,4 @@
 <Project>
     <!-- This file automatically reset by Tools/version.py -->
-    <PropertyGroup><Version>0.7.21</Version></PropertyGroup>
+    <PropertyGroup><Version>0.7.22</Version></PropertyGroup>
 </Project>

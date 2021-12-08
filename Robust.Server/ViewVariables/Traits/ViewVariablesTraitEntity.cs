@@ -21,6 +21,15 @@ namespace Robust.Server.ViewVariables.Traits
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
 
+            if (viewVariablesRequest is ViewVariablesRequestMembers)
+            {
+                var blob = new ViewVariablesBlobMembers();
+
+                // TODO VV: Fill blob with info about this entity.
+
+                return blob;
+            }
+
             if (viewVariablesRequest is ViewVariablesRequestEntityComponents)
             {
                 var list = new List<ViewVariablesBlobEntityComponents.Entry>();

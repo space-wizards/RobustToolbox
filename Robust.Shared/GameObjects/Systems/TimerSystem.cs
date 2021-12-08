@@ -18,8 +18,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var timer in timers)
             {
-                if (!timer.Deleted && !((!IoCManager.Resolve<IEntityManager>().EntityExists(timer.Owner) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(timer.Owner).EntityLifeStage) >= EntityLifeStage.Deleted) && timer.RemoveOnEmpty && timer.TimerCount == 0)
-                {
+                if (!timer.Deleted && !EntityManager.Deleted(timer.Owner) && timer.RemoveOnEmpty && timer.TimerCount == 0)                {
                     EntityManager.RemoveComponent<TimerComponent>(timer.Owner);
                 }
             }

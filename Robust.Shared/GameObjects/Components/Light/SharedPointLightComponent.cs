@@ -11,6 +11,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract class SharedPointLightComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         public override string Name => "PointLight";
 
         [DataField("enabled")]
@@ -39,7 +41,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled));
                 Dirty();
             }
         }

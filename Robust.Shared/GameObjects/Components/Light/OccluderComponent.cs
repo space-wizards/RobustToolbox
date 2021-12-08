@@ -12,6 +12,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public class OccluderComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         public sealed override string Name => "Occluder";
 
         [DataField("enabled")]
@@ -29,7 +31,7 @@ namespace Robust.Shared.GameObjects
             {
                 _boundingBox = value;
                 Dirty();
-                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderUpdateEvent(this));
             }
         }
 
@@ -45,11 +47,11 @@ namespace Robust.Shared.GameObjects
                 _enabled = value;
                 if (_enabled)
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderAddEvent(this));
                 }
                 else
                 {
-                    IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new OccluderRemoveEvent(this));
                 }
 
                 Dirty();

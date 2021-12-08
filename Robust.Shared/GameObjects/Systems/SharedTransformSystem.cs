@@ -66,7 +66,7 @@ namespace Robust.Shared.GameObjects
 
         public void DeferMoveEvent(ref MoveEvent moveEvent)
         {
-            if (IoCManager.Resolve<IEntityManager>().HasComponent<IMapGridComponent>(moveEvent.Sender))
+            if (EntityManager.HasComponent<IMapGridComponent>(moveEvent.Sender))
                 _gridMoves.Enqueue(moveEvent);
             else
                 _otherMoves.Enqueue(moveEvent);
@@ -84,8 +84,10 @@ namespace Robust.Shared.GameObjects
             {
                 while (queue.TryDequeue(out var ev))
                 {
-                    if ((!IoCManager.Resolve<IEntityManager>().EntityExists(ev.Sender) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(ev.Sender).EntityLifeStage) >= EntityLifeStage.Deleted)
+                    if (EntityManager.Deleted(ev.Sender))
+                    {
                         continue;
+                    }
 
                     // Hopefully we can remove this when PVS gets updated to not use NaNs
                     if (!ev.NewPosition.IsValid(EntityManager))

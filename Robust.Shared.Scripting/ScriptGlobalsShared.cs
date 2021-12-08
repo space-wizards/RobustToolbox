@@ -48,7 +48,7 @@ namespace Robust.Shared.Scripting
 
         public T gcm<T>(int i)
         {
-            return IoCManager.Resolve<IEntityManager>().GetComponent<T>(eid(i));
+            return ent.GetComponent<T>(eid(i));
         }
 
         public IMapGrid getgrid(int i)

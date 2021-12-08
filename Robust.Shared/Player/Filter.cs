@@ -136,37 +136,43 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Add all players whose entity is on a certain grid.
         /// </summary>
-        public Filter AddInGrid(GridId gridId)
+        public Filter AddInGrid(GridId gridId, IEntityManager? entMan = null)
         {
-            return AddWhereAttachedEntity(entity => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).GridID == gridId);
+            IoCManager.Resolve(ref entMan);
+            return AddWhereAttachedEntity(entity => entMan.GetComponent<TransformComponent>(entity).GridID == gridId);
         }
 
         /// <summary>
         ///     Add all players whose entity is on a certain map.
         /// </summary>
-        public Filter AddInMap(MapId mapId)
+        public Filter AddInMap(MapId mapId, IEntityManager? entMan = null)
         {
-            return AddWhereAttachedEntity(entity => IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity).MapID == mapId);
+            IoCManager.Resolve(ref entMan);
+            return AddWhereAttachedEntity(entity => entMan.GetComponent<TransformComponent>(entity).MapID == mapId);
         }
 
         /// <summary>
         ///     Adds all players in range of a position.
         /// </summary>
-        public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null)
+        public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+
             return AddWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range), playerMan);
+                position.InRange(entMan.GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range), playerMan);
         }
 
         /// <summary>
         ///     Removes all players without the specified visibility flag.
         /// </summary>
-        public Filter RemoveByVisibility(uint flag)
+        public Filter RemoveByVisibility(uint flag, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+
             return RemoveWhere(session =>
                 session.AttachedEntity == null
-                || !IoCManager.Resolve<IEntityManager>().TryGetComponent(session.AttachedEntity, out SharedEyeComponent? eye)
+                || !entMan.TryGetComponent(session.AttachedEntity, out SharedEyeComponent? eye)
                 || (eye.VisibilityMask & flag) == 0);
         }
 
@@ -201,11 +207,13 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Removes all players in range of a position.
         /// </summary>
-        public Filter RemoveInRange(MapCoordinates position, float range)
+        public Filter RemoveInRange(MapCoordinates position, float range, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+
             return RemoveWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range));
+                position.InRange(entMan.GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range));
         }
 
         /// <summary>

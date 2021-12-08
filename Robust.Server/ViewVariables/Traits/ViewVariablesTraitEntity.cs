@@ -19,11 +19,13 @@ namespace Robust.Server.ViewVariables.Traits
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
             if (viewVariablesRequest is ViewVariablesRequestEntityComponents)
             {
                 var list = new List<ViewVariablesBlobEntityComponents.Entry>();
                 // See engine#636 for why the Distinct() call.
-                foreach (var component in IoCManager.Resolve<IEntityManager>().GetComponents(_entity))
+                foreach (var component in entMan.GetComponents(_entity))
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
@@ -44,7 +46,7 @@ namespace Robust.Server.ViewVariables.Traits
 
                 foreach (var type in componentFactory.AllRegisteredTypes)
                 {
-                    if (IoCManager.Resolve<IEntityManager>().HasComponent(_entity, type))
+                    if (entMan.HasComponent(_entity, type))
                         continue;
 
                     list.Add(componentFactory.GetRegistration(type).Name);

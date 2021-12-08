@@ -178,7 +178,8 @@ namespace Robust.Shared.Prototypes
         public void UpdateEntity(EntityUid entity)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            if (ID != entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID)
+            var metaData = entityManager.GetComponent<MetaDataComponent>(entity);
+            if (ID != metaData.EntityPrototype?.ID)
             {
                 Logger.Error(
                     $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
@@ -186,7 +187,7 @@ namespace Robust.Shared.Prototypes
             }
 
             var factory = IoCManager.Resolve<IComponentFactory>();
-            var oldPrototype = entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype;
+            var oldPrototype = metaData.EntityPrototype;
 
             var oldPrototypeComponents = oldPrototype?.Components.Keys
                 .Where(n => n != "Transform" && n != "MetaData")
@@ -227,7 +228,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // Update entity metadata
-            entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype = this;
+            metaData.EntityPrototype = this;
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, EntityUid entity, IComponentFactory factory,

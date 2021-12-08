@@ -23,6 +23,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public class MapComponent : Component, IMapComponent
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
@@ -64,7 +66,7 @@ namespace Robust.Shared.GameObjects
             _mapIndex = state.MapId;
             LightingEnabled = state.LightingEnabled;
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(Owner).ChangeMapId(_mapIndex);
+            _entMan.GetComponent<TransformComponent>(Owner).ChangeMapId(_mapIndex);
         }
     }
 

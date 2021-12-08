@@ -16,6 +16,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public sealed class CollisionWakeComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         public override string Name => "CollisionWake";
 
         [DataField("enabled")]
@@ -37,13 +39,15 @@ namespace Robust.Shared.GameObjects
 
         internal void RaiseStateChange()
         {
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new CollisionWakeStateMessage(), false);
+            _entMan.EventBus.RaiseLocalEvent(Owner, new CollisionWakeStateMessage(), false);
         }
 
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out IPhysBody? body) && (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityLifeStage) < EntityLifeStage.Terminating)
+            if (_entMan.TryGetComponent(Owner, out IPhysBody? body)
+                && _entMan.TryGetComponent<MetaDataComponent>(Owner, out var metaData)
+                && metaData.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 body.CanCollide = true;
             }

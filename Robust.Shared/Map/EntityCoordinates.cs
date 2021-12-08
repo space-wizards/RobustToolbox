@@ -101,9 +101,10 @@ namespace Robust.Shared.Map
         /// <param name="coordinates"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates)
+        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, IEntityManager? entMan = null)
         {
-            var transform = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entity);
+            IoCManager.Resolve(ref entMan);
+            var transform = entMan.GetComponent<TransformComponent>(entity);
             if(transform.MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
@@ -190,15 +191,15 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entity">The entity that the new coordinates will be local to</param>
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
-        public EntityCoordinates WithEntityId(EntityUid entity)
+        public EntityCoordinates WithEntityId(EntityUid entity, IEntityManager? entMan = null)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var mapPos = ToMap(entityManager);
+            IoCManager.Resolve(ref entMan);
+            var mapPos = ToMap(entMan);
 
-            if(!IsValid(entityManager) || entityManager.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
+            if(!IsValid(entMan) || entMan.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
                 return new EntityCoordinates(entity, Vector2.Zero);
 
-            var localPos = entityManager.GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
+            var localPos = entMan.GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
             return new EntityCoordinates(entity, localPos);
         }
 

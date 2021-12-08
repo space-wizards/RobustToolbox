@@ -41,7 +41,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Paused => (!IoCManager.Resolve<IEntityManager>().EntityExists(Owner) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityLifeStage) >= EntityLifeStage.Deleted || IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Owner).EntityPaused;
+        public bool Paused => !IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out MetaDataComponent? metaData) || metaData.EntityPaused;
 
         /// <inheritdoc />
         [ViewVariables]

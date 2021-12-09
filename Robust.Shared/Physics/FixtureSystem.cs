@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -76,7 +77,12 @@ namespace Robust.Shared.Physics
 
                 // Make sure all the right stuff is set on the body
                 FixtureUpdate(component);
-                _broadphaseSystem.AddBody(body, component);
+
+                if (body.CanCollide)
+                {
+                    DebugTools.Assert(!Get<SharedContainerSystem>().IsEntityInContainer(uid));
+                    _broadphaseSystem.AddBody(body, component);
+                }
             }
             /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else

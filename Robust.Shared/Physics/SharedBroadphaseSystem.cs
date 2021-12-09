@@ -61,8 +61,8 @@ namespace Robust.Shared.Physics
             base.Initialize();
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
-            SubscribeLocalEvent<BroadphaseComponent, ComponentInit>(HandleBroadphaseInit);
-            SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
+            SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
+            SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
@@ -325,8 +325,11 @@ namespace Robust.Shared.Physics
 
         private void OnParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
         {
-            if (!component.CanCollide || EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage <
-                EntityLifeStage.Initialized) return;
+            if (!component.CanCollide) return;
+
+            var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+
+            if (lifestage is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized) return;
 
             UpdateBroadphase(component);
         }
@@ -335,12 +338,12 @@ namespace Robust.Shared.Physics
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
         /// <param name="body"></param>
-        private void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null)
+        private void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager)) return;
+            if (!Resolve(body.OwnerUid, ref manager, ref xform)) return;
 
             var oldBroadphase = body.Broadphase;
-            var newBroadphase = GetBroadphase(body);
+            var newBroadphase = GetBroadphase(xform);
 
             if (oldBroadphase == newBroadphase) return;
 
@@ -637,7 +640,7 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var broadphase = GetBroadphase(body);
+            var broadphase = GetBroadphase(xform);
 
             if (broadphase == null)
             {
@@ -784,12 +787,12 @@ namespace Robust.Shared.Physics
             _movedGrids.Remove(e.Map);
         }
 
-        private void HandleGridInit(GridInitializeEvent ev)
+        private void OnGridAdd(GridAddEvent ev)
         {
             EntityManager.EnsureComponent<BroadphaseComponent>(ev.EntityUid);
         }
 
-        private void HandleBroadphaseInit(EntityUid uid, BroadphaseComponent component, ComponentInit args)
+        private void OnBroadphaseAdd(EntityUid uid, BroadphaseComponent component, ComponentAdd args)
         {
             var capacity = (int) Math.Max(MinimumBroadphaseCapacity, Math.Ceiling(component.Owner.Transform.ChildCount / (float) MinimumBroadphaseCapacity) * MinimumBroadphaseCapacity);
             component.Tree = new DynamicTreeBroadPhase(capacity);
@@ -797,39 +800,27 @@ namespace Robust.Shared.Physics
 
         #endregion
 
-        internal BroadphaseComponent? GetBroadphase(PhysicsComponent body)
-        {
-            return GetBroadphase(body.Owner);
-        }
-
         /// <summary>
         /// Attempt to get the relevant broadphase for this entity.
         /// Can return null if it's the map entity.
         /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
-        private BroadphaseComponent? GetBroadphase(IEntity entity)
+        private BroadphaseComponent? GetBroadphase(TransformComponent xform)
         {
-            if (entity.Transform.MapID == MapId.Nullspace)
-            {
-                return null;
-            }
+            if (xform.MapID == MapId.Nullspace) return null;
+
+            var parent = xform.ParentUid;
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (entity.HasComponent<BroadphaseComponent>() &&
-                entity.Transform.Parent == null)
+            if (EntityManager.HasComponent<BroadphaseComponent>(xform.OwnerUid) &&
+                !parent.IsValid())
             {
                 return null;
             }
 
-            var parent = entity.Transform.Parent?.Owner;
-
-            while (true)
+            while (parent.IsValid())
             {
-                if (parent == null) break;
-
-                if (parent.TryGetComponent(out BroadphaseComponent? comp)) return comp;
-                parent = parent.Transform.Parent?.Owner;
+                if (EntityManager.TryGetComponent(parent, out BroadphaseComponent? comp)) return comp;
+                parent = EntityManager.GetComponent<TransformComponent>(parent).ParentUid;
             }
 
             return null;

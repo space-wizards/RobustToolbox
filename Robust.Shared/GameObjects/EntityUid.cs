@@ -1,6 +1,11 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
@@ -142,5 +147,36 @@ namespace Robust.Shared.GameObjects
         {
             return _uid.CompareTo(other._uid);
         }
+
+        #region VV
+
+
+        [ViewVariables]
+        private string Name => IoCManager.Resolve<IEntityManager>().ToPrettyString(this);
+
+        [ViewVariables]
+        private string Description => MetaData?.EntityDescription ?? string.Empty;
+
+        [ViewVariables]
+        private EntityPrototype? Prototype => MetaData?.EntityPrototype;
+
+        [ViewVariables]
+        private GameTick LastModifiedTick => MetaData?.EntityLastModifiedTick ?? GameTick.Zero;
+
+        [ViewVariables]
+        private bool Paused => MetaData?.EntityPaused ?? false;
+
+        [ViewVariables]
+        private EntityLifeStage LifeStage => MetaData?.EntityLifeStage ?? EntityLifeStage.Deleted;
+
+        [ViewVariables]
+        private MetaDataComponent? MetaData =>
+            IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(this);
+
+        [ViewVariables]
+        private TransformComponent? Transform =>
+            IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(this);
+
+        #endregion
     }
 }

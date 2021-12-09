@@ -51,7 +51,7 @@ namespace Robust.Server.GameObjects
             forceKicked = null;
 
             // Cannot attach to a deleted/nonexisting entity.
-            if (!EntityManager.EntityExists(uid))
+            if (!EntityManager.Deleted(uid))
             {
                 return false;
             }

@@ -50,8 +50,6 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public class MetaDataComponent : Component
     {
-        [Dependency] private readonly IEntityManager _entMan = default!;
-
         [DataField("name")]
         private string? _entityName;
         [DataField("desc")]
@@ -145,11 +143,13 @@ namespace Robust.Shared.GameObjects
             get => _entityPaused;
             set
             {
-                if (_entityPaused == value || value && _entMan.HasComponent<IgnorePauseComponent>(Owner))
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                if (_entityPaused == value || value && entMan.HasComponent<IgnorePauseComponent>(Owner))
                     return;
 
                 _entityPaused = value;
-                _entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
+                entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 

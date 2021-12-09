@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -368,8 +369,8 @@ namespace Robust.Shared.GameObjects
             // we want this called before adding components
             EntityAdded?.Invoke(this, uid);
 
-            // Create the MetaDataComponent and set it directly on the Entity to avoid a stack overflow in DEBUG.
             var metadata = new MetaDataComponent { Owner = uid };
+
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
             AddComponentInternal(uid, metadata);

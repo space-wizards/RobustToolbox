@@ -22,7 +22,7 @@ public abstract partial class SharedPhysicsSystem
 
         // TODO: Ordering fuckery need a new PR to fix some of this stuff
         if (xform.MapID != MapId.Nullspace)
-            component.PhysicsMap = _mapManager.GetMapEntity(xform.MapID).GetComponent<SharedPhysicsMapComponent>();
+            component.PhysicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(_mapManager.GetMapEntityId(xform.MapID));
 
         Dirty(uid);
         // Yeah yeah TODO Combine these

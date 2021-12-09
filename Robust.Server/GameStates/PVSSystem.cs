@@ -65,7 +65,7 @@ internal partial class PVSSystem : EntitySystem
             new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly ConcurrentDictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
+    private readonly ConcurrentDictionary<EntityUid, EntityState> _cachedStates = new();
     private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
@@ -103,6 +103,7 @@ internal partial class PVSSystem : EntitySystem
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetPVSEntityBudget, OnEntityBudgetChanged);
 
         ShutdownDirty();
     }
@@ -130,7 +131,6 @@ internal partial class PVSSystem : EntitySystem
         }
     }
 
-    //todo paul investigate
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
@@ -383,10 +383,7 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
-        if (!_cachedPackets.TryGetValue(uid, out var packet))
-        {
-            _cachedPackets[uid] = packet = new PVSEntityPacket(EntityManager, uid);
-        }
+        var packet = _cachedPackets.GetOrAdd(uid, (i) => new PVSEntityPacket(EntityManager, i));
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
         if (visMask != null && packet.VisibilityComponent != null)
@@ -529,48 +526,52 @@ internal partial class PVSSystem : EntitySystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick)
     {
-        var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
-        if (_cachedStates.TryGetValue((entityUid, fromTick), out var cachedState)) return cachedState;
-
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        return _cachedStates.GetOrAdd(entityUid, _ =>
         {
-            DebugTools.Assert(component.Initialized);
+            var bus = EntityManager.EventBus;
+            var changed = new List<ComponentChange>();
 
-            // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
-            // "not different from entity creation".
-            // i.e. when the client spawns the entity and loads the entity prototype,
-            // the data it deserializes from the prototype SHOULD be equal
-            // to what the component state / ComponentChange would send.
-            // As such, we can avoid sending this data in this case since the client "already has it".
-
-            DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
-
-            if (!EntityManager.CanGetComponentState(bus, component, player))
-                continue;
-
-            if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+            foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
             {
-                ComponentState? state = null;
-                if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
-                    state = EntityManager.GetComponentState(bus, component);
+                DebugTools.Assert(component.Initialized);
 
-                // Can't be null since it's returned by GetNetComponents
-                // ReSharper disable once PossibleInvalidOperationException
-                changed.Add(ComponentChange.Added(netId, state));
+                // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
+                // "not different from entity creation".
+                // i.e. when the client spawns the entity and loads the entity prototype,
+                // the data it deserializes from the prototype SHOULD be equal
+                // to what the component state / ComponentChange would send.
+                // As such, we can avoid sending this data in this case since the client "already has it".
+
+                DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
+
+                if (!EntityManager.CanGetComponentState(bus, component, player))
+                    continue;
+
+                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+                {
+                    ComponentState? state = null;
+                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                        component.LastModifiedTick >= fromTick)
+                        state = EntityManager.GetComponentState(bus, component);
+
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChange.Added(netId, state));
+                }
+                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                         component.LastModifiedTick >= fromTick)
+                {
+                    changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
+                }
             }
-            else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+
+            foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
             {
-                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
+                changed.Add(ComponentChange.Removed(netId));
             }
-        }
 
-        foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
-        {
-            changed.Add(ComponentChange.Removed(netId));
-        }
-
-        return _cachedStates[(entityUid, fromTick)] = new EntityState(entityUid, changed.ToArray());
+            return new EntityState(entityUid, changed.ToArray());
+        });
     }
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)

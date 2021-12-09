@@ -226,8 +226,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             if (contact.IsTouching)
             {
-                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
-                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
+                _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB));
+                _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA));
             }
 
             // Remove from the world
@@ -351,10 +351,10 @@ namespace Robust.Shared.Physics.Dynamics
                     else
                     {
                         // These should really be destroyed before map changes.
-                        DebugTools.Assert(broadphaseA.Owner.Transform.MapID == broadphaseB.Owner.Transform.MapID);
+                        DebugTools.Assert(_entityManager.GetComponent<TransformComponent>(broadphaseA.Owner).MapID == _entityManager.GetComponent<TransformComponent>(broadphaseB.Owner).MapID);
 
-                        var proxyAWorldAABB = broadphaseA.Owner.Transform.WorldMatrix.TransformBox(proxyA.AABB);
-                        var proxyBWorldAABB = broadphaseB.Owner.Transform.WorldMatrix.TransformBox(proxyB.AABB);
+                        var proxyAWorldAABB = _entityManager.GetComponent<TransformComponent>(broadphaseA.Owner).WorldMatrix.TransformBox(proxyA.AABB);
+                        var proxyBWorldAABB = _entityManager.GetComponent<TransformComponent>(broadphaseB.Owner).WorldMatrix.TransformBox(proxyB.AABB);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }
@@ -383,8 +383,8 @@ namespace Robust.Shared.Physics.Dynamics
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;
 
-                _physicsManager.EnsureTransform(bodyA.OwnerUid);
-                _physicsManager.EnsureTransform(bodyB.OwnerUid);
+                _physicsManager.EnsureTransform(bodyA.Owner);
+                _physicsManager.EnsureTransform(bodyB.Owner);
             }
 
             // Update contacts all at once.
@@ -407,8 +407,8 @@ namespace Robust.Shared.Physics.Dynamics
                         var bodyB = fixtureB.Body;
                         var worldPoint = Transform.Mul(_physicsManager.EnsureTransform(bodyA), contact.Manifold.LocalPoint);
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new StartCollideEvent(fixtureA, fixtureB, worldPoint));
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new StartCollideEvent(fixtureB, fixtureA, worldPoint));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new StartCollideEvent(fixtureA, fixtureB, worldPoint));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new StartCollideEvent(fixtureB, fixtureA, worldPoint));
                         break;
                     }
                     case ContactStatus.Touching:
@@ -425,8 +425,8 @@ namespace Robust.Shared.Physics.Dynamics
                         var bodyA = fixtureA.Body;
                         var bodyB = fixtureB.Body;
 
-                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, new EndCollideEvent(fixtureA, fixtureB));
-                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, new EndCollideEvent(fixtureB, fixtureA));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyA.Owner, new EndCollideEvent(fixtureA, fixtureB));
+                        _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA));
                         break;
                     }
                     case ContactStatus.NoContact:

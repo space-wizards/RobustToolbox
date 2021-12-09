@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
@@ -36,15 +37,11 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public IEntity Owner { get; set; } = default!;
+        public EntityUid Owner { get; set; } = EntityUid.Invalid;
 
         /// <inheritdoc />
         [ViewVariables]
-        public EntityUid OwnerUid => Owner.Uid;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public bool Paused => Owner.Paused;
+        public bool Paused => !IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out MetaDataComponent? metaData) || metaData.EntityPaused;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -183,7 +180,7 @@ namespace Robust.Shared.GameObjects
             // ReSharper disable once RedundantAssertionStatement
             DebugTools.AssertNotNull(Owner);
 
-            return Owner.EntityManager.EventBus;
+            return IoCManager.Resolve<IEntityManager>().EventBus;
         }
 
         /// <summary>
@@ -191,7 +188,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected virtual void OnAdd()
         {
-            CreationTick = Owner.EntityManager.CurrentTick;
+            CreationTick = IoCManager.Resolve<IEntityManager>().CurrentTick;
             GetBus().RaiseComponentEvent(this, CompAddInstance);
             LifeStage = ComponentLifeStage.Added;
         }
@@ -243,11 +240,11 @@ namespace Robust.Shared.GameObjects
         {
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner is null || LifeStage >= ComponentLifeStage.Removing)
+            if(Owner == EntityUid.Invalid || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
-            var entManager = Owner.EntityManager;
-            entManager.DirtyEntity(OwnerUid);
+            var entManager = IoCManager.Resolve<IEntityManager>();
+            entManager.DirtyEntity(Owner);
             LastModifiedTick = entManager.CurrentTick;
         }
 
@@ -259,7 +256,12 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendMessage(ComponentMessage message)
         {
-            Owner.SendMessage(this, message);
+            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner);
+            foreach (var component in components)
+            {
+                if (this != component)
+                    component.HandleMessage(message, this);
+            }
         }
 
         /// <summary>
@@ -271,7 +273,7 @@ namespace Robust.Shared.GameObjects
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
         protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
         {
-            Owner.SendNetworkMessage(this, message, channel);
+            IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, Owner, this, message);
         }
 
         /// <inheritdoc />

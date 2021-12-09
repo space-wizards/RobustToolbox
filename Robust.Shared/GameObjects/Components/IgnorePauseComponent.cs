@@ -6,20 +6,22 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent]
     public class IgnorePauseComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         public override string Name => "IgnorePause";
 
         protected override void OnAdd()
         {
             base.OnAdd();
-            Owner.Paused = false;
+            _entMan.GetComponent<MetaDataComponent>(Owner).EntityPaused = false;
         }
 
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(Owner.Transform.MapID))
+            if (IoCManager.Resolve<IPauseManager>().IsMapPaused(_entMan.GetComponent<TransformComponent>(Owner).MapID))
             {
-                Owner.Paused = true;
+                _entMan.GetComponent<MetaDataComponent>(Owner).EntityPaused = true;
             }
         }
     }

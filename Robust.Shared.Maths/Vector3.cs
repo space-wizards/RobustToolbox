@@ -956,7 +956,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float CalculateAngle(Vector3 first, Vector3 second)
         {
-            return (float) MathF.Acos(Dot(first, second) / (first.Length * second.Length));
+            return MathF.Acos(Dot(first, second) / (first.Length * second.Length));
         }
 
         /// <summary>Calculates the angle (in radians) between two vectors.</summary>
@@ -968,7 +968,7 @@ namespace Robust.Shared.Maths
         public static void CalculateAngle(ref Vector3 first, ref Vector3 second, out float result)
         {
             Dot(ref first, ref second, out var temp);
-            result = (float) MathF.Acos(temp / (first.Length * second.Length));
+            result = MathF.Acos(temp / (first.Length * second.Length));
         }
 
         #endregion

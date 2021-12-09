@@ -181,9 +181,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // This dummy should have all of its dependencies resolved.
             var dummyOne = entityManager.CreateEntityUninitialized("dummyOne");
 
-            Assert.That(dummyOne, Is.Not.Null);
+            //Assert.That(dummyOne, Is.Not.Null);
 
-            var dummyComp = dummyOne.GetComponent<TestOneComponent>();
+            var dummyComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestOneComponent>(dummyOne);
 
             Assert.That(dummyComp.TestTwo, Is.Not.Null);
             Assert.That(dummyComp.TestThree, Is.Not.Null);
@@ -194,7 +194,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Test two's dependency on Transform should be correct.
             Assert.That(dummyComp.TestTwo!.Transform, Is.Not.Null);
-            Assert.That(dummyComp.TestTwo!.Transform, Is.EqualTo(dummyOne.Transform));
+            Assert.That(dummyComp.TestTwo!.Transform, Is.EqualTo(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummyOne)));
 
             // Test three's dependency on test one should be correct.
             Assert.That(dummyComp.TestThree!.TestOne, Is.Not.Null);
@@ -203,9 +203,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Dummy with only TestTwo.
             var dummyTwo = entityManager.CreateEntityUninitialized("dummyTwo");
 
-            Assert.That(dummyTwo, Is.Not.Null);
+            //Assert.That(dummyTwo, Is.Not.Null);
 
-            var dummyTwoComp = dummyTwo.GetComponent<TestTwoComponent>();
+            var dummyTwoComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestTwoComponent>(dummyTwo);
 
             // This dependency should be resolved.
             Assert.That(dummyTwoComp.TestTwo, Is.Not.Null);
@@ -214,9 +214,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Dummy with only TestThree.
             var dummyThree = entityManager.CreateEntityUninitialized("dummyThree");
 
-            Assert.That(dummyThree, Is.Not.Null);
+            //Assert.That(dummyThree, Is.Not.Null);
 
-            var dummyThreeComp = dummyThree.GetComponent<TestThreeComponent>();
+            var dummyThreeComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestThreeComponent>(dummyThree);
 
             // This dependency should be unresolved.
             Assert.That(dummyThreeComp.TestOne, Is.Null);
@@ -224,9 +224,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Dummy with TestInterface and TestFour.
             var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
 
-            Assert.That(dummyFour, Is.Not.Null);
+            //Assert.That(dummyFour, Is.Not.Null);
 
-            var dummyFourComp = dummyFour.GetComponent<TestFourComponent>();
+            var dummyFourComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestFourComponent>(dummyFour);
 
             // This dependency should be resolved.
             Assert.That(dummyFourComp.TestInterface, Is.Not.Null);
@@ -240,15 +240,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Dummy with only TestThree.
             var dummyThree = entityManager.CreateEntityUninitialized("dummyThree");
 
-            Assert.That(dummyThree, Is.Not.Null);
+            //Assert.That(dummyThree, Is.Not.Null);
 
-            var dummyThreeComp = dummyThree.GetComponent<TestThreeComponent>();
+            var dummyThreeComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestThreeComponent>(dummyThree);
 
             // This dependency should be unresolved at first.
             Assert.That(dummyThreeComp.TestOne, Is.Null);
 
             // We add the TestOne component...
-            dummyThree.AddComponent<TestOneComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<TestOneComponent>(dummyThree);
 
             // This dependency should be resolved now!
             Assert.That(dummyThreeComp.TestOne, Is.Not.Null);
@@ -261,7 +261,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // This dependency should still be unresolved.
             Assert.That(dummyOneComp.TestTwo, Is.Null);
 
-            dummyThree.AddComponent<TestTwoComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<TestTwoComponent>(dummyThree);
 
             // And now it is resolved!
             Assert.That(dummyOneComp.TestTwo, Is.Not.Null);
@@ -269,14 +269,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // TestFour should not be resolved.
             Assert.That(dummyOneComp.TestFour, Is.Null);
 
-            dummyThree.AddComponent<TestFourComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<TestFourComponent>(dummyThree);
 
             // TestFour should now be resolved
             Assert.That(dummyOneComp.TestFour, Is.Not.Null);
 
             var dummyFourComp = dummyOneComp.TestFour;
 
-            dummyThree.AddComponent<TestInterfaceComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<TestInterfaceComponent>(dummyThree);
 
             // This dependency should now be resolved.
             Assert.That(dummyFourComp!.TestInterface, Is.Not.Null);
@@ -290,16 +290,16 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // This dummy should have all of its dependencies resolved.
             var dummyOne = entityManager.CreateEntityUninitialized("dummyOne");
 
-            Assert.That(dummyOne, Is.Not.Null);
+            //Assert.That(dummyOne, Is.Not.Null);
 
-            var dummyComp = dummyOne.GetComponent<TestOneComponent>();
+            var dummyComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestOneComponent>(dummyOne);
 
             // They must be resolved.
             Assert.That(dummyComp.TestTwo, Is.Not.Null);
             Assert.That(dummyComp.TestThree, Is.Not.Null);
 
             // And now, we remove TestTwo.
-            dummyOne.RemoveComponent<TestTwoComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestTwoComponent>(dummyOne);
 
             // It has become null!
             Assert.That(dummyComp.TestTwo, Is.Null);
@@ -308,7 +308,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(dummyComp.TestThree, Is.Not.Null);
 
             // But not for long.
-            dummyOne.RemoveComponent<TestThreeComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestThreeComponent>(dummyOne);
 
             // It should now be null!
             Assert.That(dummyComp.TestThree, Is.Null);
@@ -318,14 +318,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(dummyComp.TestFour!.TestInterface, Is.Not.Null);
 
             // Remove the interface.
-            dummyOne.RemoveComponent<TestInterfaceComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestInterfaceComponent>(dummyOne);
 
             // TestInterface should now be null, but TestFour should not be.
             Assert.That(dummyComp.TestFour, Is.Not.Null);
             Assert.That(dummyComp.TestFour.TestInterface, Is.Null);
 
             // Remove TestFour.
-            dummyOne.RemoveComponent<TestFourComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestFourComponent>(dummyOne);
 
             // TestFour should now be null.
             Assert.That(dummyComp.TestFour, Is.Null);
@@ -340,14 +340,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var dummy = entityManager.CreateEntityUninitialized("dummy");
 
             // First we add test one.
-            var testOne = dummy.AddComponent<TestOneComponent>();
+            var testOne = IoCManager.Resolve<IEntityManager>().AddComponent<TestOneComponent>(dummy);
 
             // We check the dependencies are null.
             Assert.That(testOne.TestTwo, Is.Null);
             Assert.That(testOne.TestThree, Is.Null);
 
             // We add test two.
-            var testTwo = dummy.AddComponent<TestTwoComponent>();
+            var testTwo = IoCManager.Resolve<IEntityManager>().AddComponent<TestTwoComponent>(dummy);
 
             // Check that everything is in order.
             Assert.That(testOne.TestTwo, Is.Not.Null);
@@ -355,13 +355,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Remove test two...
             testTwo = null;
-            dummy.RemoveComponent<TestTwoComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestTwoComponent>(dummy);
 
             // The dependency should be null now.
             Assert.That(testOne.TestTwo, Is.Null);
 
             // We add test three.
-            var testThree = dummy.AddComponent<TestThreeComponent>();
+            var testThree = IoCManager.Resolve<IEntityManager>().AddComponent<TestThreeComponent>(dummy);
 
             // All should be in order again.
             Assert.That(testOne.TestThree, Is.Not.Null);
@@ -372,17 +372,17 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             // Remove test one.
             testOne = null;
-            dummy.RemoveComponent<TestOneComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestOneComponent>(dummy);
 
             // Now the dependency is null.
             Assert.That(testThree.TestOne, Is.Null);
 
             // Let's actually remove the removed components first.
-            dummy.EntityManager.CullRemovedComponents();
+            IoCManager.Resolve<IEntityManager>().CullRemovedComponents();
 
             // Re-add test one and two.
-            testOne = dummy.AddComponent<TestOneComponent>();
-            testTwo = dummy.AddComponent<TestTwoComponent>();
+            testOne = IoCManager.Resolve<IEntityManager>().AddComponent<TestOneComponent>(dummy);
+            testTwo = IoCManager.Resolve<IEntityManager>().AddComponent<TestTwoComponent>(dummy);
 
             // All should be fine again!
             Assert.That(testThree.TestOne, Is.Not.Null);
@@ -395,14 +395,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(testTwo.TestTwo, Is.EqualTo(testTwo));
 
             // Add test four.
-            dummy.AddComponent<TestFourComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<TestFourComponent>(dummy);
 
             // TestFour should not be null, but TestInterface should be.
             Assert.That(testOne.TestFour, Is.Not.Null);
             Assert.That(testOne.TestFour!.TestInterface, Is.Null);
 
             // Remove test four
-            dummy.RemoveComponent<TestFourComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestFourComponent>(dummy);
 
             // Now the dependency is null.
             Assert.That(testOne.TestFour, Is.Null);
@@ -416,9 +416,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // An entity with TestFour.
             var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
 
-            Assert.That(dummyFour, Is.Not.Null);
+            //Assert.That(dummyFour, Is.Not.Null);
 
-            var dummyComp = dummyFour.GetComponent<TestFourComponent>();
+            var dummyComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestFourComponent>(dummyFour);
 
             // TestInterface must be resolved.
             Assert.That(dummyComp.TestInterface, Is.Not.Null);
@@ -435,15 +435,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // An entity with TestFour.
             var dummyFour = entityManager.CreateEntityUninitialized("dummyFour");
 
-            Assert.That(dummyFour, Is.Not.Null);
+            //Assert.That(dummyFour, Is.Not.Null);
 
-            var dummyComp = dummyFour.GetComponent<TestFourComponent>();
+            var dummyComp = IoCManager.Resolve<IEntityManager>().GetComponent<TestFourComponent>(dummyFour);
 
             // TestInterface must be resolved.
             Assert.That(dummyComp.TestInterface, Is.Not.Null);
 
             // Remove TestInterface through its referenced interface.
-            dummyFour.RemoveComponent<ITestInterfaceInterface>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<ITestInterfaceInterface>(dummyFour);
 
             // TestInterface must be null.
             Assert.That(dummyComp.TestInterface, Is.Null);
@@ -482,15 +482,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var entity = entityManager.CreateEntityUninitialized("dummy");
-            var t1Comp = entity.AddComponent<TestOneComponent>();
+            var t1Comp = IoCManager.Resolve<IEntityManager>().AddComponent<TestOneComponent>(entity);
 
             Assert.That(t1Comp.TestTwoIsAdded, Is.False);
 
-            entity.AddComponent<TestTwoComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<TestTwoComponent>(entity);
 
             Assert.That(t1Comp.TestTwoIsAdded, Is.True);
 
-            entity.RemoveComponent<TestTwoComponent>();
+            IoCManager.Resolve<IEntityManager>().RemoveComponent<TestTwoComponent>(entity);
 
             Assert.That(t1Comp.TestTwoIsAdded, Is.False);
         }
@@ -502,7 +502,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entity = entityManager.CreateEntityUninitialized("dummy");
             try
             {
-                var t7Comp = entity.AddComponent<TestSevenComponent>();
+                var t7Comp = IoCManager.Resolve<IEntityManager>().AddComponent<TestSevenComponent>(entity);
             }
             catch (ComponentDependencyInvalidMethodNameException invEx)
             {

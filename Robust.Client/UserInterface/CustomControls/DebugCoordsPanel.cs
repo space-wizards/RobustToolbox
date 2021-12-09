@@ -1,12 +1,12 @@
-﻿using System.Text;
+using System.Text;
 using Robust.Client.Graphics;
-using Robust.Client.UserInterface.Controls;
-using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.UserInterface.Controls;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
@@ -90,23 +90,24 @@ Mouse Pos:
                 tile, controlHovered);
 
             stringBuilder.AppendLine("\nAttached Entity:");
-            if (_playerManager.LocalPlayer?.ControlledEntity == null)
+            var controlledEntity = _playerManager?.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (controlledEntity == EntityUid.Invalid)
             {
                 stringBuilder.AppendLine("No attached entity.");
             }
             else
             {
-                var entityTransform = _playerManager.LocalPlayer.ControlledEntity.Transform;
+                var entityTransform = _entityManager.GetComponent<TransformComponent>(controlledEntity);
                 var playerWorldOffset = entityTransform.MapPosition;
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
-                var playerCoordinates = _playerManager.LocalPlayer.ControlledEntity.Transform.Coordinates;
+                var playerCoordinates = entityTransform.Coordinates;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
     EntId: {3}
-    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner.Uid,
+    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner,
                     entityTransform.GridID);
             }
 

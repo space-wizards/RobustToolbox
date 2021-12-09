@@ -12,6 +12,7 @@ namespace Robust.Client.Debugging
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityLookup _lookup = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private bool _debugPositions;
 
@@ -30,7 +31,7 @@ namespace Robust.Client.Debugging
 
                 if (value && !_overlayManager.HasOverlay<EntityPositionOverlay>())
                 {
-                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, _eyeManager));
+                    _overlayManager.AddOverlay(new EntityPositionOverlay(_lookup, _eyeManager, _entityManager));
                 }
                 else
                 {
@@ -43,13 +44,15 @@ namespace Robust.Client.Debugging
         {
             private readonly IEntityLookup _lookup;
             private readonly IEyeManager _eyeManager;
+            private readonly IEntityManager _entityManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(IEntityLookup lookup, IEyeManager eyeManager)
+            public EntityPositionOverlay(IEntityLookup lookup, IEyeManager eyeManager, IEntityManager entityManager)
             {
                 _lookup = lookup;
                 _eyeManager = eyeManager;
+                _entityManager = entityManager;
             }
 
             protected internal override void Draw(in OverlayDrawArgs args)
@@ -61,7 +64,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var entity in _lookup.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
                 {
-                    var transform = entity.Transform;
+                    var transform = _entityManager.GetComponent<TransformComponent>(entity);
 
                     var center = transform.WorldPosition;
                     var worldRotation = transform.WorldRotation;

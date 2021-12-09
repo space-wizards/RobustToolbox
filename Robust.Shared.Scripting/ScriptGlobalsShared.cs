@@ -46,19 +46,9 @@ namespace Robust.Shared.Scripting
             return new(i);
         }
 
-        public IEntity getent(int i)
-        {
-            return getent(eid(i));
-        }
-
         public T gcm<T>(int i)
         {
-            return getent(i).GetComponent<T>();
-        }
-
-        public IEntity getent(EntityUid uid)
-        {
-            return ent.GetEntity(uid);
+            return ent.GetComponent<T>(eid(i));
         }
 
         public IMapGrid getgrid(int i)
@@ -71,7 +61,7 @@ namespace Robust.Shared.Scripting
             return map.GetGrid(mapId);
         }
 
-        public IEntity spawn(string prototype, EntityCoordinates position)
+        public EntityUid spawn(string prototype, EntityCoordinates position)
         {
             return ent.SpawnEntity(prototype, position);
         }

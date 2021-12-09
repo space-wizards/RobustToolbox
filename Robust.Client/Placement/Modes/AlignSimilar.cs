@@ -4,6 +4,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Placement.Modes
 {
@@ -31,8 +32,8 @@ namespace Robust.Client.Placement.Modes
             var mapId = MouseCoords.GetMapId(pManager.EntityManager);
 
             var snapToEntities = IoCManager.Resolve<IEntityLookup>().GetEntitiesInRange(MouseCoords, SnapToRange)
-                .Where(entity => entity.Prototype == pManager.CurrentPrototype && entity.Transform.MapID == mapId)
-                .OrderBy(entity => (entity.Transform.WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
+                .Where(entity => pManager.EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && pManager.EntityManager.GetComponent<TransformComponent>(entity).MapID == mapId)
+                .OrderBy(entity => (pManager.EntityManager.GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();
 
             if (snapToEntities.Count == 0)
@@ -41,7 +42,8 @@ namespace Robust.Client.Placement.Modes
             }
 
             var closestEntity = snapToEntities[0];
-            if (!closestEntity.TryGetComponent<ISpriteComponent>(out var component) || component.BaseRSI == null)
+            var closestTransform = pManager.EntityManager.GetComponent<TransformComponent>(closestEntity);
+            if (!pManager.EntityManager.TryGetComponent<ISpriteComponent?>(closestEntity, out var component) || component.BaseRSI == null)
             {
                 return;
             }
@@ -50,8 +52,8 @@ namespace Robust.Client.Placement.Modes
 
             var closestRect =
                 Box2.FromDimensions(
-                    closestEntity.Transform.WorldPosition.X - closestBounds.X / 2f,
-                    closestEntity.Transform.WorldPosition.Y - closestBounds.Y / 2f,
+                    closestTransform.WorldPosition.X - closestBounds.X / 2f,
+                    closestTransform.WorldPosition.Y - closestBounds.Y / 2f,
                     closestBounds.X, closestBounds.Y);
 
             var sides = new[]

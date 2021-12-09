@@ -7,7 +7,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 
 namespace Robust.Server.GameObjects
 {
@@ -26,7 +25,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         ///     Need to store the nodes for each entity because if the entity is deleted its transform is no longer valid.
         /// </summary>
-        private readonly Dictionary<IEntity, HashSet<GridTileLookupNode>> _lastKnownNodes =
+        private readonly Dictionary<EntityUid, HashSet<GridTileLookupNode>> _lastKnownNodes =
                      new();
 
         /// <summary>
@@ -34,7 +33,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        public IEnumerable<IEntity> GetEntitiesIntersecting(IEntity entity)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entity)
         {
             foreach (var node in GetOrCreateNodes(entity))
             {
@@ -51,7 +50,7 @@ namespace Robust.Server.GameObjects
         /// <param name="gridId"></param>
         /// <param name="gridIndices"></param>
         /// <returns></returns>
-        public IEnumerable<IEntity> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices)
+        public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices)
         {
             if (gridId == GridId.Invalid)
             {
@@ -75,7 +74,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        public List<Vector2i> GetIndices(IEntity entity)
+        public List<Vector2i> GetIndices(EntityUid entity)
         {
             var results = new List<Vector2i>();
 
@@ -118,11 +117,11 @@ namespace Robust.Server.GameObjects
                 (int) (Math.Floor((float) indices.Y / GridTileLookupChunk.ChunkSize) * GridTileLookupChunk.ChunkSize));
         }
 
-        private HashSet<GridTileLookupNode> GetOrCreateNodes(IEntity entity)
+        private HashSet<GridTileLookupNode> GetOrCreateNodes(EntityUid entity)
         {
-            if (entity.Deleted)
+            if (Deleted(entity))
             {
-                throw new InvalidOperationException($"Can't get nodes for deleted entity {entity.Name}!");
+                throw new InvalidOperationException($"Can't get nodes for deleted entity {EntityManager.GetComponent<MetaDataComponent>(entity).EntityName}!");
             }
 
             if (_lastKnownNodes.TryGetValue(entity, out var nodes))
@@ -178,12 +177,12 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="entity"></param>
         /// <returns></returns>
-        private Dictionary<GridId, List<Vector2i>> GetEntityIndices(IEntity entity)
+        private Dictionary<GridId, List<Vector2i>> GetEntityIndices(EntityUid entity)
         {
             var entityBounds = GetEntityBox(entity);
             var results = new Dictionary<GridId, List<Vector2i>>();
 
-            foreach (var grid in _mapManager.FindGridsIntersecting(entity.Transform.MapID, GetEntityBox(entity)))
+            foreach (var grid in _mapManager.FindGridsIntersecting(EntityManager.GetComponent<TransformComponent>(entity).MapID, GetEntityBox(entity)))
             {
                 var indices = new List<Vector2i>();
 
@@ -198,7 +197,7 @@ namespace Robust.Server.GameObjects
             return results;
         }
 
-        private Box2 GetEntityBox(IEntity entity)
+        private Box2 GetEntityBox(EntityUid entity)
         {
             var aabb = _lookup.GetWorldAabbFromEntity(entity);
 
@@ -244,7 +243,7 @@ namespace Robust.Server.GameObjects
 #if DEBUG
         private void HandleRequest(RequestGridTileLookupMessage message, EntitySessionEventArgs args)
         {
-            var entities = GetEntitiesIntersecting(message.GridId, message.Indices).Select(e => e.Uid).ToList();
+            var entities = GetEntitiesIntersecting(message.GridId, message.Indices).Select(e => e).ToList();
             RaiseNetworkEvent(new SendGridTileLookupMessage(message.GridId, message.Indices, entities), args.SenderSession.ConnectedClient);
         }
 #endif
@@ -276,11 +275,11 @@ namespace Robust.Server.GameObjects
 
         private void HandleGridRemoval(MapId mapId, GridId gridId)
         {
-            var toRemove = new List<IEntity>();
+            var toRemove = new List<EntityUid>();
 
             foreach (var (entity, _) in _lastKnownNodes)
             {
-                if (entity.Deleted || entity.Transform.GridID == gridId)
+                if (EntityManager.Deleted(entity) || EntityManager.GetComponent<TransformComponent>(entity).GridID == gridId)
                     toRemove.Add(entity);
             }
 
@@ -297,9 +296,9 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// The node will filter it to the correct category (if possible)
         /// <param name="entity"></param>
-        private void HandleEntityAdd(IEntity entity)
+        private void HandleEntityAdd(EntityUid entity)
         {
-            if (entity.Deleted || entity.Transform.GridID == GridId.Invalid)
+            if (Deleted(entity) || Transform(entity).GridID == GridId.Invalid)
             {
                 return;
             }
@@ -327,7 +326,7 @@ namespace Robust.Server.GameObjects
         ///     Removes this entity from all of the applicable nodes.
         /// </summary>
         /// <param name="entity"></param>
-        private void HandleEntityRemove(IEntity entity)
+        private void HandleEntityRemove(EntityUid entity)
         {
             if (_lastKnownNodes.TryGetValue(entity, out var nodes))
             {
@@ -350,7 +349,7 @@ namespace Robust.Server.GameObjects
             // TODO: When Acruid does TileEntities we may actually be able to delete this system if tile lookups become fast enough
             var gridId = moveEvent.NewPosition.GetGridId(EntityManager);
 
-            if (moveEvent.Sender.Deleted ||
+            if (EntityManager.Deleted(moveEvent.Sender) ||
                 gridId == GridId.Invalid ||
                 !moveEvent.NewPosition.IsValid(EntityManager))
             {
@@ -365,7 +364,7 @@ namespace Robust.Server.GameObjects
 
             // Memory leak protection
             var gridBounds = _mapManager.GetGrid(gridId).WorldBounds;
-            if (!gridBounds.Contains(moveEvent.Sender.Transform.WorldPosition))
+            if (!gridBounds.Contains(EntityManager.GetComponent<TransformComponent>(moveEvent.Sender).WorldPosition))
             {
                 HandleEntityRemove(moveEvent.Sender);
                 return;

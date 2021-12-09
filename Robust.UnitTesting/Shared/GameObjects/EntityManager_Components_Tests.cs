@@ -2,6 +2,7 @@ using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.UnitTesting.Server;
@@ -29,7 +30,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entMan.AddComponent(entity, component);
 
             // Assert
-            var result = entMan.GetComponent<DummyComponent>(entity.Uid);
+            var result = entMan.GetComponent<DummyComponent>(entity);
             Assert.That(result, Is.EqualTo(component));
         }
 
@@ -49,7 +50,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             entMan.AddComponent(entity, component, true);
 
             // Assert
-            var result = entMan.GetComponent<DummyComponent>(entity.Uid);
+            var result = entMan.GetComponent<DummyComponent>(entity);
             Assert.That(result, Is.EqualTo(component));
         }
 
@@ -62,14 +63,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var entity = entMan.SpawnEntity(null, DefaultCoords);
             var firstComp = new DummyComponent {Owner = entity};
             entMan.AddComponent(entity, firstComp);
-            entMan.RemoveComponent<DummyComponent>(entity.Uid);
+            entMan.RemoveComponent<DummyComponent>(entity);
             var secondComp = new DummyComponent { Owner = entity };
 
             // Act
             entMan.AddComponent(entity, secondComp);
 
             // Assert
-            var result = entMan.GetComponent<DummyComponent>(entity.Uid);
+            var result = entMan.GetComponent<DummyComponent>(entity);
             Assert.That(result, Is.EqualTo(secondComp));
         }
 
@@ -80,10 +81,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            entity.AddComponent<DummyComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.HasComponent<DummyComponent>(entity.Uid);
+            var result = entMan.HasComponent<DummyComponent>(entity);
 
             // Assert
             Assert.That(result, Is.True);
@@ -100,10 +101,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            entity.AddComponent<DummyComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.HasComponent(entity.Uid, netId.Value);
+            var result = entMan.HasComponent(entity, netId.Value);
 
             // Assert
             Assert.That(result, Is.True);
@@ -120,10 +121,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.GetComponent(entity.Uid, netId.Value);
+            var result = entMan.GetComponent(entity, netId.Value);
 
             // Assert
             Assert.That(result, Is.EqualTo(component));
@@ -136,10 +137,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.TryGetComponent<DummyComponent>(entity.Uid, out var comp);
+            var result = entMan.TryGetComponent<DummyComponent>(entity, out var comp);
 
             // Assert
             Assert.That(result, Is.True);
@@ -157,10 +158,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.TryGetComponent(entity.Uid, netId.Value, out var comp);
+            var result = entMan.TryGetComponent(entity, netId.Value, out var comp);
 
             // Assert
             Assert.That(result, Is.True);
@@ -174,14 +175,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            entMan.RemoveComponent<DummyComponent>(entity.Uid);
+            entMan.RemoveComponent<DummyComponent>(entity);
             entMan.CullRemovedComponents();
 
             // Assert
-            Assert.That(entMan.HasComponent(entity.Uid, component.GetType()), Is.False);
+            Assert.That(entMan.HasComponent(entity, component.GetType()), Is.False);
         }
 
         [Test]
@@ -195,14 +196,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            entMan.RemoveComponent(entity.Uid, netId.Value);
+            entMan.RemoveComponent(entity, netId.Value);
             entMan.CullRemovedComponents();
 
             // Assert
-            Assert.That(entMan.HasComponent(entity.Uid, component.GetType()), Is.False);
+            Assert.That(entMan.HasComponent(entity, component.GetType()), Is.False);
         }
 
         [Test]
@@ -212,10 +213,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.GetComponents<DummyComponent>(entity.Uid);
+            var result = entMan.GetComponents<DummyComponent>(entity);
 
             // Assert
             var list = result.ToList();
@@ -230,7 +231,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
             var result = entMan.EntityQuery<DummyComponent>(true);
@@ -248,10 +249,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var entity = entMan.SpawnEntity(null, DefaultCoords);
-            var component = entity.AddComponent<DummyComponent>();
+            var component = IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act
-            var result = entMan.GetComponents(entity.Uid);
+            var result = entMan.GetComponents(entity);
 
             // Assert
             var list = result.Where(c=>c.Name == "Dummy").ToList();

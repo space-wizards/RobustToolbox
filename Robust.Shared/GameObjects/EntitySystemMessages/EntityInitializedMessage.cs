@@ -2,9 +2,9 @@ namespace Robust.Shared.GameObjects
 {
     public sealed class EntityInitializedMessage : EntityEventArgs
     {
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
         
-        public EntityInitializedMessage(IEntity entity)
+        public EntityInitializedMessage(EntityUid entity)
         {
             Entity = entity;
         }

@@ -185,7 +185,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private bool _awake = true;
+        internal bool _awake = true;
 
         private void SetAwake(bool value)
         {
@@ -340,8 +340,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [DataField("canCollide")]
-        private bool _canCollide = true;
+        [DataField("canCollide")] internal bool _canCollide = true;
 
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
@@ -828,57 +827,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
         {
             return EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
-        }
-
-        /// <inheritdoc />
-        protected override void Initialize()
-        {
-            base.Initialize();
-
-            if (BodyType == BodyType.Static)
-            {
-                _awake = false;
-            }
-
-            // TODO: Ordering fuckery need a new PR to fix some of this stuff
-            if (Owner.Transform.MapID != MapId.Nullspace)
-                PhysicsMap = IoCManager.Resolve<IMapManager>().GetMapEntity(Owner.Transform.MapID).GetComponent<SharedPhysicsMapComponent>();
-
-            Dirty();
-            // Yeah yeah TODO Combine these
-            // Implicitly assume that stuff doesn't cover if a non-collidable is initialized.
-
-            if (CanCollide)
-            {
-                if (!Awake)
-                {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
-                }
-                else
-                {
-                    Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
-                }
-
-                if (Owner.IsInContainer())
-                {
-                    _canCollide = false;
-                }
-                else
-                {
-                    // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new CollisionChangeMessage(this, Owner.Uid, _canCollide));
-                    Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new PhysicsUpdateMessage(this));
-                }
-            }
-            else
-            {
-                _awake = false;
-            }
-
-            var startup = new PhysicsInitializedEvent(Owner.Uid);
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, ref startup);
-
-            ResetMassData();
         }
 
         public void ResetMassData()

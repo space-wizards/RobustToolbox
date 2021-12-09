@@ -76,6 +76,7 @@ namespace Robust.Shared.Physics
 
                 // Make sure all the right stuff is set on the body
                 FixtureUpdate(component);
+                _broadphaseSystem.AddBody(body, component);
             }
             /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else
@@ -104,11 +105,10 @@ namespace Robust.Shared.Physics
             // Should only happen for nullspace / initializing entities
             if (body.Broadphase != null)
             {
-                var worldPos = xform.WorldPosition;
-                var worldRot = xform.WorldRotation;
+                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
                 _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
-                _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot, false);
+                _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot);
             }
 
             // Supposed to be wrapped in density but eh

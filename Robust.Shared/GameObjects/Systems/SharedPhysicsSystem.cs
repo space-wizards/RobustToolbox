@@ -97,6 +97,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
+            SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
 
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
@@ -175,7 +176,8 @@ namespace Robust.Shared.GameObjects
         private void HandleGridInit(GridInitializeEvent ev)
         {
             if (!EntityManager.TryGetEntity(ev.EntityUid, out var gridEntity)) return;
-            var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
+            EntityManager.EnsureComponent<FixturesComponent>(gridEntity.Uid);
+            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(gridEntity.Uid);
             collideComp.BodyType = BodyType.Static;
         }
 

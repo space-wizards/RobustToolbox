@@ -146,16 +146,15 @@ namespace Robust.Shared.GameObjects
                 !EntityManager.TryGetComponent(entity, out PhysicsComponent? body) ||
                 entity.IsInContainer()) return;
 
-            var oldParent = args.OldParent;
             var angularVelocityDiff = 0f;
             var linearVelocityDiff = Vector2.Zero;
 
-            var (worldPos, worldRot) = entity.Transform.GetWorldPositionRotation();
+            var (worldPos, worldRot) = Transform(entity).GetWorldPositionRotation();
             var R = Matrix3.CreateRotation(worldRot);
             R.Transpose(out var nRT);
             nRT.Multiply(-1f);
 
-            if (oldParent != null && EntityManager.TryGetComponent(oldParent!.Value, out PhysicsComponent? oldBody))
+            if (args.OldParent is {} oldParent && EntityManager.TryGetComponent(oldParent, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
@@ -163,7 +162,7 @@ namespace Robust.Shared.GameObjects
                 var o = -angular;
 
                 // Get the vector between the parent and the entity leaving
-                var r = oldParent.Transform.WorldMatrix.Transform(oldBody.LocalCenter) -
+                var r = Transform(oldParent).WorldMatrix.Transform(oldBody.LocalCenter) -
                     worldPos; // TODO: Use entity's LocalCenter/center of mass somehow
 
                 // Get the tangent of r by rotating it π/2 rad (90°)
@@ -196,7 +195,7 @@ namespace Robust.Shared.GameObjects
                 // See above for commentary.
                 var angular = newBody.AngularVelocity;
                 var o = -angular;
-                var r = newParent.Transform.WorldMatrix.Transform(newBody.LocalCenter) - worldPos;
+                var r = Transform(newParent).WorldMatrix.Transform(newBody.LocalCenter) - worldPos;
                 var v = new Angle(MathHelper.PiOver2).RotateVec(r);
                 v *= o;
 

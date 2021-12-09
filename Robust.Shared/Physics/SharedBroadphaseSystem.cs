@@ -45,8 +45,6 @@ namespace Robust.Shared.Physics
         private HashSet<EntityUid> _broadphases = new(8);
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
-
-        // Caching for Synchronize
         private Dictionary<BroadphaseComponent, (Vector2 Position, float Rotation)> _broadphaseTransforms = new();
 
         /// <summary>
@@ -71,8 +69,8 @@ namespace Robust.Shared.Physics
             // Shouldn't need to listen to mapchanges as parent changes should handle it...
             SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
 
-            SubscribeLocalEvent<PhysicsComponent, MoveEvent>(HandleMove);
-            SubscribeLocalEvent<PhysicsComponent, RotateEvent>(HandleRotate);
+            SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
+            SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
 
             SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
             SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
@@ -374,10 +372,10 @@ namespace Robust.Shared.Physics
 
         private void OnPhysicsUpdate(PhysicsUpdateMessage ev)
         {
-            var lifestage = EntityManager.GetComponent<MetaDataComponent>(ev.Component.OwnerUid).EntityLifeStage;
+            var lifestage = ev.Component.LifeStage;
 
             // Oh god kill it with fire.
-            if (lifestage is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized) return;
+            if (lifestage != ComponentLifeStage.Initialized) return;
 
             if (ev.Component.CanCollide)
             {
@@ -522,16 +520,16 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void HandleMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
+        private void OnMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
         {
-            if (!component.CanCollide) return;
+            if (!component.CanCollide || !EntityManager.TryGetComponent(uid, out FixturesComponent? manager)) return;
 
             var worldRot = EntityManager.GetComponent<TransformComponent>(uid).WorldRotation;
 
-            SynchronizeFixtures(component, args.NewPosition.ToMapPos(EntityManager), (float) worldRot.Theta);
+            SynchronizeFixtures(component, args.NewPosition.ToMapPos(EntityManager), (float) worldRot.Theta, manager);
         }
 
-        private void HandleRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
+        private void OnRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
         {
             if (!component.CanCollide) return;
 
@@ -540,8 +538,13 @@ namespace Robust.Shared.Physics
             SynchronizeFixtures(component, worldPos, (float) args.NewRotation.Theta);
         }
 
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot)
+        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)
         {
+            if (!Resolve(body.OwnerUid, ref manager))
+            {
+                return;
+            }
+
             // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
             // Don't cache this as controllers may change it freely before we run physics!
             var xf = new Transform(worldPos, worldRot);
@@ -553,7 +556,7 @@ namespace Robust.Shared.Physics
                 // Otherwise, use the slightly faster one.
 
                 // For now we'll just use the normal one as no TOI support
-                foreach (var fixture in body.Fixtures)
+                foreach (var (_, fixture) in manager.Fixtures)
                 {
                     if (fixture.ProxyCount == 0) continue;
 
@@ -564,20 +567,12 @@ namespace Robust.Shared.Physics
             }
             else
             {
-                foreach (var fixture in body.Fixtures)
+                foreach (var (_, fixture) in manager.Fixtures)
                 {
                     if (fixture.ProxyCount == 0) continue;
 
                     Synchronize(fixture, xf);
                 }
-            }
-
-            // Ensure cache remains up to date if the broadphase is moving.
-            var uid = body.OwnerUid;
-
-            if (EntityManager.TryGetComponent(uid, out BroadphaseComponent? broadphase))
-            {
-                UpdateBroadphaseCache(broadphase);
             }
         }
 

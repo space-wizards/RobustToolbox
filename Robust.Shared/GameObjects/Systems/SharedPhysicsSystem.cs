@@ -176,9 +176,10 @@ namespace Robust.Shared.GameObjects
         private void HandleGridInit(GridInitializeEvent ev)
         {
             if (!EntityManager.TryGetEntity(ev.EntityUid, out var gridEntity)) return;
-            EntityManager.EnsureComponent<FixturesComponent>(gridEntity.Uid);
+            // Yes this ordering matters
             var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(gridEntity.Uid);
             collideComp.BodyType = BodyType.Static;
+            EntityManager.EnsureComponent<FixturesComponent>(gridEntity.Uid);
         }
 
         private void BuildControllers()

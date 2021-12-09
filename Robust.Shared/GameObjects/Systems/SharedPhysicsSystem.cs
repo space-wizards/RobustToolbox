@@ -147,25 +147,66 @@ namespace Robust.Shared.GameObjects
                 entity.IsInContainer()) return;
 
             var oldParent = args.OldParent;
-            var linearVelocityDiff = Vector2.Zero;
             var angularVelocityDiff = 0f;
+            var linearVelocityDiff = Vector2.Zero;
+
+            var (worldPos, worldRot) = entity.Transform.GetWorldPositionRotation();
+            var R = Matrix3.CreateRotation(worldRot);
+            R.Transpose(out var nRT);
+            nRT.Multiply(-1f);
 
             if (oldParent != null && EntityManager.TryGetComponent(oldParent!.Value, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
-                linearVelocityDiff += linear;
-                angularVelocityDiff += angular;
+                // Our rotation system is backwards; invert the angular velocity
+                var o = -angular;
+
+                // Get the vector between the parent and the entity leaving
+                var r = oldParent.Transform.WorldMatrix.Transform(oldBody.LocalCenter) -
+                    worldPos; // TODO: Use entity's LocalCenter/center of mass somehow
+
+                // Get the tangent of r by rotating it π/2 rad (90°)
+                var v = new Angle(MathHelper.PiOver2).RotateVec(r);
+
+                // Scale the new vector by the angular velocity
+                v *= o;
+
+                // Makes the shit spin right when dropped near the center of mass of a spinning body.
+                // I have no clue how it works, but this guy does/did:
+                //
+                // https://cwzx.wordpress.com/2014/03/25/the-dynamics-of-a-transform-hierarchy/
+                var w = new Matrix3(
+                    0, angular, 0,
+                    -angular, 0, 0,
+                    0, 0, 0
+                );
+
+                linearVelocityDiff += linear + v;
+                angularVelocityDiff += (nRT * w * R).R1C0;
             }
 
             var newParent = EntityManager.GetComponent<TransformComponent>(entity).ParentUid;
 
             if (newParent != EntityUid.Invalid && EntityManager.TryGetComponent(newParent, out PhysicsComponent? newBody))
             {
-                var (linear, angular) = newBody.MapVelocities;
+                // TODO: Apply child's linear as angular on the parent?
+                linearVelocityDiff -= newBody.MapLinearVelocity;
 
-                linearVelocityDiff -= linear;
-                angularVelocityDiff -= angular;
+                // See above for commentary.
+                var angular = newBody.AngularVelocity;
+                var o = -angular;
+                var r = newParent.Transform.WorldMatrix.Transform(newBody.LocalCenter) - worldPos;
+                var v = new Angle(MathHelper.PiOver2).RotateVec(r);
+                v *= o;
+
+                var w = new Matrix3(
+                    0, angular, 0,
+                    -angular, 0, 0,
+                    0, 0, 0
+                );
+
+                angularVelocityDiff -= (nRT * w * R).R1C0;
             }
 
             body.LinearVelocity += linearVelocityDiff;

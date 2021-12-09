@@ -84,7 +84,7 @@ namespace Robust.Client.Placement
         public virtual void Render(DrawingHandleWorld handle)
         {
             var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce == null || (!pManager.EntityManager.EntityExists(sce.Value) ? EntityLifeStage.Deleted : pManager.EntityManager.GetComponent<MetaDataComponent>(sce.Value).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if (sce is not {} scent || pManager.EntityManager.Deleted(scent))
                 return;
             var sc = pManager.EntityManager.GetComponent<SpriteComponent>(sce!.Value);
 

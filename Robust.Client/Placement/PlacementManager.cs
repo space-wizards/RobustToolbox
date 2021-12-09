@@ -660,8 +660,8 @@ namespace Robust.Client.Placement
         {
             if (CurrentPlacementOverlayEntity != null)
             {
-                if (!((!EntityManager.EntityExists(CurrentPlacementOverlayEntity.Value) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(CurrentPlacementOverlayEntity.Value).EntityLifeStage) >= EntityLifeStage.Deleted))
-                    EntityManager.DeleteEntity((EntityUid) CurrentPlacementOverlayEntity);
+                if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
+                    EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
                 CurrentPlacementOverlayEntity = null;
             }
         }

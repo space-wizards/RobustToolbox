@@ -124,7 +124,7 @@ namespace Robust.Client.GameObjects
                     }
                     else if (stream.TrackingEntity != default)
                     {
-                        if ((!EntityManager.EntityExists(stream.TrackingEntity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(stream.TrackingEntity).EntityLifeStage) >= EntityLifeStage.Deleted)
+                        if (EntityManager.Deleted(stream.TrackingEntity))
                         {
                             StreamDone(stream);
                             continue;

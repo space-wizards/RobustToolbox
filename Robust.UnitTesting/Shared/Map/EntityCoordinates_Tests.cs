@@ -258,11 +258,11 @@ namespace Robust.UnitTesting.Shared.Map
             entityManager.DeleteEntity(mapEnt);
 
             // These shouldn't be valid anymore.
-            Assert.That((!entityManager.EntityExists(newEnt) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(newEnt).EntityLifeStage), Is.GreaterThanOrEqualTo(EntityLifeStage.Deleted));
-            Assert.That((!entityManager.EntityExists(gridEnt) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(gridEnt).EntityLifeStage), Is.GreaterThanOrEqualTo(EntityLifeStage.Deleted));
+            Assert.That(entityManager.Deleted(newEnt), Is.True);
+            Assert.That(entityManager.Deleted(gridEnt), Is.True);
 
-            Assert.That((!entityManager.EntityExists(newEntCoords.EntityId) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(newEntCoords.EntityId).EntityLifeStage), Is.GreaterThanOrEqualTo(EntityLifeStage.Deleted));
-            Assert.That((!entityManager.EntityExists(gridCoords.EntityId) ? EntityLifeStage.Deleted : entityManager.GetComponent<MetaDataComponent>(gridCoords.EntityId).EntityLifeStage), Is.GreaterThanOrEqualTo(EntityLifeStage.Deleted));
+            Assert.That(entityManager.Deleted(newEntCoords.EntityId), Is.True);
+            Assert.That(entityManager.Deleted(gridCoords.EntityId), Is.True);
         }
 
         [Test]

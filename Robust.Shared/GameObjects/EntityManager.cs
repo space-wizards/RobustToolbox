@@ -241,10 +241,11 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if ((!EntityExists(e) ? EntityLifeStage.Deleted : GetComponent<MetaDataComponent>(e).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(e, out var comp)
+                || comp is not MetaDataComponent meta || meta.EntityDeleted)
                 return;
 
-            if ((!EntityExists(e) ? EntityLifeStage.Deleted : GetComponent<MetaDataComponent>(e).EntityLifeStage) >= EntityLifeStage.Terminating)
+            if (meta.EntityLifeStage == EntityLifeStage.Terminating)
 #if !EXCEPTION_TOLERANCE
                 throw new InvalidOperationException("Called Delete on an entity already being deleted.");
 #else
@@ -254,16 +255,15 @@ namespace Robust.Shared.GameObjects
             RecursiveDeleteEntity(e);
         }
 
-        private void RecursiveDeleteEntity(EntityUid entity)
+        private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if((!EntityExists(entity) ? EntityLifeStage.Deleted : GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) //TODO: Why was this still a child if it was already deleted?
+            if(Deleted(uid)) //TODO: Why was this still a child if it was already deleted?
                 return;
 
-            var uid = entity;
-            var transform = GetComponent<TransformComponent>(entity);
-            var metadata = GetComponent<MetaDataComponent>(entity);
-            GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.Terminating;
-            EventBus.RaiseLocalEvent(entity, new EntityTerminatingEvent(), false);
+            var transform = GetComponent<TransformComponent>(uid);
+            var metadata = GetComponent<MetaDataComponent>(uid);
+            GetComponent<MetaDataComponent>(uid).EntityLifeStage = EntityLifeStage.Terminating;
+            EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var childTransform in transform.Children.ToArray())
@@ -287,12 +287,12 @@ namespace Robust.Shared.GameObjects
             }
 
             // Dispose all my components, in a safe order so transform is available
-            DisposeComponents(entity);
+            DisposeComponents(uid);
 
             metadata.EntityLifeStage = EntityLifeStage.Deleted;
-            EntityDeleted?.Invoke(this, entity);
-            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(entity));
-            Entities.Remove(entity);
+            EntityDeleted?.Invoke(this, uid);
+            EventBus.RaiseEvent(EventSource.Local, new EntityDeletedMessage(uid));
+            Entities.Remove(uid);
         }
 
         public void QueueDeleteEntity(EntityUid uid)

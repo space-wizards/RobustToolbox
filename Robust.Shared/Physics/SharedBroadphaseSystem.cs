@@ -133,7 +133,7 @@ namespace Robust.Shared.Physics
             // Body update may not necessarily handle this (unless the thing's deleted) so we'll still do this work regardless.
             while (_queuedParents.TryDequeue(out var parent))
             {
-                if ((!_entityManager.EntityExists(parent.Entity) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(parent.Entity).EntityLifeStage) >= EntityLifeStage.Deleted ||
+                if (Deleted(parent.Entity) ||
                     !_entityManager.TryGetComponent(parent.Entity, out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
@@ -143,7 +143,7 @@ namespace Robust.Shared.Physics
 
             while (_queuedMoves.TryDequeue(out var move))
             {
-                if ((!_entityManager.EntityExists(move.Sender) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(move.Sender).EntityLifeStage) >= EntityLifeStage.Deleted ||
+                if (_entityManager.Deleted(move.Sender) ||
                     !_entityManager.TryGetComponent(move.Sender, out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
@@ -155,8 +155,7 @@ namespace Robust.Shared.Physics
 
             while (_queuedRotates.TryDequeue(out var rotate))
             {
-                if (!_handledThisTick.Add(rotate.Sender) ||
-                    (!_entityManager.EntityExists(rotate.Sender) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(rotate.Sender).EntityLifeStage) >= EntityLifeStage.Deleted ||
+                if (!_handledThisTick.Add(rotate.Sender) || Deleted(rotate.Sender) ||
                     !_entityManager.TryGetComponent(rotate.Sender, out PhysicsComponent? body) ||
                     !body.CanCollide) continue;
 
@@ -799,7 +798,7 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
         {
-            if ((!_entityManager.EntityExists(ev.Entity) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(ev.Entity).EntityLifeStage) >= EntityLifeStage.Deleted || !_entityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent)) return;
+            if (Deleted(ev.Entity) || !_entityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent)) return;
 
             physicsComponent.CanCollide = true;
             physicsComponent.Awake = true;

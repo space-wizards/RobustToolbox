@@ -279,7 +279,7 @@ namespace Robust.Server.GameObjects
 
             foreach (var (entity, _) in _lastKnownNodes)
             {
-                if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || EntityManager.GetComponent<TransformComponent>(entity).GridID == gridId)
+                if (EntityManager.Deleted(entity) || EntityManager.GetComponent<TransformComponent>(entity).GridID == gridId)
                     toRemove.Add(entity);
             }
 
@@ -298,7 +298,7 @@ namespace Robust.Server.GameObjects
         /// <param name="entity"></param>
         private void HandleEntityAdd(EntityUid entity)
         {
-            if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || EntityManager.GetComponent<TransformComponent>(entity).GridID == GridId.Invalid)
+            if (Deleted(entity) || Transform(entity).GridID == GridId.Invalid)
             {
                 return;
             }
@@ -349,7 +349,7 @@ namespace Robust.Server.GameObjects
             // TODO: When Acruid does TileEntities we may actually be able to delete this system if tile lookups become fast enough
             var gridId = moveEvent.NewPosition.GetGridId(EntityManager);
 
-            if ((!EntityManager.EntityExists(moveEvent.Sender) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(moveEvent.Sender).EntityLifeStage) >= EntityLifeStage.Deleted ||
+            if (EntityManager.Deleted(moveEvent.Sender) ||
                 gridId == GridId.Invalid ||
                 !moveEvent.NewPosition.IsValid(EntityManager))
             {

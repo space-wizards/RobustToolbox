@@ -140,21 +140,23 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var container2 = entityTwo.CreateContainer<ContainerOnlyContainer>("dummy");
             var container3 = entityThree.CreateContainer<Container>("dummy");
 
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
             Assert.That(container.Insert(entityTwo), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityTwo).Parent!.Owner, Is.EqualTo(entityOne));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityTwo).Parent!.Owner, Is.EqualTo(entityOne));
 
             Assert.That(container2.Insert(entityThree), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityThree).Parent!.Owner, Is.EqualTo(entityTwo));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityThree).Parent!.Owner, Is.EqualTo(entityTwo));
 
             Assert.That(container3.Insert(entityItem), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityThree));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityThree));
 
             Assert.That(container3.Remove(entityItem), Is.True);
             Assert.That(container.Contains(entityItem), Is.True);
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityOne));
+            Assert.That(entMan.GetComponent<TransformComponent>(entityItem).Parent!.Owner, Is.EqualTo(entityOne));
 
-            IoCManager.Resolve<IEntityManager>().DeleteEntity(entityOne);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entityTwo) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entityTwo).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            entMan.DeleteEntity(entityOne);
+            Assert.That(entMan.Deleted(entityOne), Is.True);
         }
 
         [Test]

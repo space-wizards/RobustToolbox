@@ -244,7 +244,7 @@ namespace Robust.Client.Console.Commands
             }
             var meta = entmgr.GetComponent<MetaDataComponent>(uid);
             shell.WriteLine($"{uid}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
-            shell.WriteLine($"init/del/lmt: {meta.EntityLifeStage >= EntityLifeStage.Initialized}/{(!entmgr.EntityExists(uid) ? EntityLifeStage.Deleted : meta.EntityLifeStage) >= EntityLifeStage.Deleted}/{meta.EntityLastModifiedTick}");
+            shell.WriteLine($"init/del/lmt: {meta.EntityInitialized}/{meta.EntityDeleted}/{meta.EntityLastModifiedTick}");
             foreach (var component in entmgr.GetComponents(uid))
             {
                 shell.WriteLine(component.ToString() ?? "");

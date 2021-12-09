@@ -28,8 +28,9 @@ namespace Robust.Shared.GameObjects
         public static void RunMapInit(this EntityUid entity)
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
-            DebugTools.Assert((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) == EntityLifeStage.Initialized);
-            entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.MapInitialized;
+            var meta = entMan.GetComponent<MetaDataComponent>(entity);
+            DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
+            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
 
             entMan.EventBus.RaiseLocalEvent(entity, MapInit, false);
             foreach (var init in entMan.GetComponents<IMapInit>(entity))

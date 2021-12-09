@@ -52,7 +52,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool Deleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        if (!Resolve(uid, ref metaData))
+        if (!Resolve(uid, ref metaData, false))
             return true;
 
         return metaData.EntityDeleted;

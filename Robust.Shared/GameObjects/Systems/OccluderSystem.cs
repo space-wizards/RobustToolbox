@@ -72,7 +72,7 @@ namespace Robust.Shared.GameObjects
         {
             var entity = component.Owner;
 
-            if ((!EntityManager.EntityExists(entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted || EntityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace) return null;
+            if (EntityManager.Deleted(entity) || EntityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace) return null;
 
             var parent = EntityManager.GetComponent<TransformComponent>(entity).Parent;
 

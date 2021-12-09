@@ -119,7 +119,8 @@ namespace Robust.Shared.Containers
             var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var entity in container.ContainedEntities.ToArray())
             {
-                if ((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if (entMan.Deleted(entity))
+                    continue;
 
                 if (force)
                     container.ForceRemove(entity);
@@ -142,7 +143,7 @@ namespace Robust.Shared.Containers
             var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var ent in container.ContainedEntities.ToArray())
             {
-                if ((!entMan.EntityExists(ent) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(ent).EntityLifeStage) >= EntityLifeStage.Deleted) continue;
+                if (entMan.Deleted(ent)) continue;
                 container.ForceRemove(ent);
                 entMan.DeleteEntity(ent);
             }

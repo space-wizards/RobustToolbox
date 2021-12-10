@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -299,7 +299,7 @@ namespace Robust.Client.Audio.Midi
                 }
                 else if (renderer.TrackingEntity != null)
                 {
-                    mapPos = renderer.TrackingEntity.Transform.MapPosition;
+                    mapPos = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity.Value).MapPosition;
                 }
 
                 if (mapPos != null)
@@ -335,7 +335,7 @@ namespace Robust.Client.Audio.Midi
 
                     if (renderer.TrackingEntity != null)
                     {
-                        renderer.Source.SetVelocity(renderer.TrackingEntity.GlobalLinearVelocity());
+                        renderer.Source.SetVelocity(renderer.TrackingEntity.Value.GlobalLinearVelocity());
                     }
 
                     if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))

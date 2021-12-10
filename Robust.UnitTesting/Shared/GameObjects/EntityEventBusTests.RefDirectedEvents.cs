@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
@@ -25,12 +26,12 @@ namespace Robust.UnitTesting.Shared.GameObjects
             simulation.AddMap(map);
 
             var entity = simulation.SpawnEntity(null, new MapCoordinates(0, 0, map));
-            entity.AddComponent<DummyComponent>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<DummyComponent>(entity);
 
             // Act.
             var testEvent = new TestStructEvent {TestNumber = 5};
             var eventBus = simulation.Resolve<IEntityManager>().EventBus;
-            eventBus.RaiseLocalEvent(entity.Uid, ref testEvent);
+            eventBus.RaiseLocalEvent(entity, ref testEvent);
 
             // Check that the entity system changed the value correctly
             Assert.That(testEvent.TestNumber, Is.EqualTo(10));
@@ -107,14 +108,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
             simulation.AddMap(map);
 
             var entity = simulation.SpawnEntity(null, new MapCoordinates(0, 0, map));
-            entity.AddComponent<OrderComponentA>();
-            entity.AddComponent<OrderComponentB>();
-            entity.AddComponent<OrderComponentC>();
+            IoCManager.Resolve<IEntityManager>().AddComponent<OrderComponentA>(entity);
+            IoCManager.Resolve<IEntityManager>().AddComponent<OrderComponentB>(entity);
+            IoCManager.Resolve<IEntityManager>().AddComponent<OrderComponentC>(entity);
 
             // Act.
             var testEvent = new TestStructEvent {TestNumber = 5};
             var eventBus = simulation.Resolve<IEntityManager>().EventBus;
-            eventBus.RaiseLocalEvent(entity.Uid, ref testEvent);
+            eventBus.RaiseLocalEvent(entity, ref testEvent);
 
             // Check that the entity systems changed the value correctly
             Assert.That(testEvent.TestNumber, Is.EqualTo(15));

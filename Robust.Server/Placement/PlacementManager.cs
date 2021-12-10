@@ -79,7 +79,7 @@ namespace Robust.Server.Placement
             var dirRcv = msg.DirRcv;
 
             var session = _playerManager.GetSessionByChannel(msg.MsgChannel);
-            var plyEntity = session.AttachedEntity;
+            var plyEntity = session.AttachedEntityTransform;
 
             // Don't have an entity, don't get to place.
             if (plyEntity == null)
@@ -121,7 +121,7 @@ namespace Robust.Server.Placement
             {
                 var created = _entityManager.SpawnEntity(entityTemplateName, coordinates);
 
-                created.Transform.LocalRotation = dirRcv.ToAngle();
+                _entityManager.GetComponent<TransformComponent>(created).LocalRotation = dirRcv.ToAngle();
             }
             else
             {
@@ -201,29 +201,29 @@ namespace Robust.Server.Placement
         private void HandleEntRemoveReq(EntityUid entityUid)
         {
             //TODO: Some form of admin check
-            if (_entityManager.TryGetEntity(entityUid, out var entity))
-                _entityManager.DeleteEntity(entity);
+            if (_entityManager.EntityExists(entityUid))
+                _entityManager.DeleteEntity(entityUid);
         }
 
         private void HandleRectRemoveReq(MsgPlacement msg)
         {
             EntityCoordinates start = msg.EntityCoordinates;
             Vector2 rectSize = msg.RectSize;
-            foreach (IEntity entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
+            foreach (EntityUid entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesIntersecting(start.GetMapId(_entityManager),
                 new Box2(start.Position, start.Position + rectSize)))
             {
-                if (entity.Deleted || entity.HasComponent<IMapGridComponent>() || entity.HasComponent<ActorComponent>())
+                if (_entityManager.Deleted(entity) || _entityManager.HasComponent<IMapGridComponent>(entity) || _entityManager.HasComponent<ActorComponent>(entity))
                     continue;
-                entity.Delete();
+                _entityManager.DeleteEntity(entity);
             }
         }
 
         /// <summary>
         ///  Places mob in entity placement mode with given settings.
         /// </summary>
-        public void SendPlacementBegin(IEntity mob, int range, string objectType, string alignOption)
+        public void SendPlacementBegin(EntityUid mob, int range, string objectType, string alignOption)
         {
-            if (!mob.TryGetComponent<ActorComponent>(out var actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -242,9 +242,9 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Places mob in tile placement mode with given settings.
         /// </summary>
-        public void SendPlacementBeginTile(IEntity mob, int range, string tileType, string alignOption)
+        public void SendPlacementBeginTile(EntityUid mob, int range, string tileType, string alignOption)
         {
-            if (!mob.TryGetComponent<ActorComponent>(out var actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -263,9 +263,9 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Cancels object placement mode for given mob.
         /// </summary>
-        public void SendPlacementCancel(IEntity mob)
+        public void SendPlacementCancel(EntityUid mob)
         {
-            if (!mob.TryGetComponent<ActorComponent>(out var actor))
+            if (!_entityManager.TryGetComponent<ActorComponent?>(mob, out var actor))
                 return;
 
             var playerConnection = actor.PlayerSession.ConnectedClient;
@@ -280,7 +280,7 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Gives Mob permission to place entity and places it in object placement mode.
         /// </summary>
-        public void StartBuilding(IEntity mob, int range, string objectType, string alignOption)
+        public void StartBuilding(EntityUid mob, int range, string objectType, string alignOption)
         {
             AssignBuildPermission(mob, range, objectType, alignOption);
             SendPlacementBegin(mob, range, objectType, alignOption);
@@ -289,7 +289,7 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Gives Mob permission to place tile and places it in object placement mode.
         /// </summary>
-        public void StartBuildingTile(IEntity mob, int range, string tileType, string alignOption)
+        public void StartBuildingTile(EntityUid mob, int range, string tileType, string alignOption)
         {
             AssignBuildPermission(mob, range, tileType, alignOption);
             SendPlacementBeginTile(mob, range, tileType, alignOption);
@@ -298,7 +298,7 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Revokes open placement Permission and cancels object placement mode.
         /// </summary>
-        public void CancelBuilding(IEntity mob)
+        public void CancelBuilding(EntityUid mob)
         {
             RevokeAllBuildPermissions(mob);
             SendPlacementCancel(mob);
@@ -307,11 +307,11 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Entity.
         /// </summary>
-        public void AssignBuildPermission(IEntity mob, int range, string objectType, string alignOption)
+        public void AssignBuildPermission(EntityUid mob, int range, string objectType, string alignOption)
         {
             var newPermission = new PlacementInformation
             {
-                MobUid = mob.Uid,
+                MobUid = mob,
                 Range = range,
                 IsTile = false,
                 EntityType = objectType,
@@ -319,7 +319,7 @@ namespace Robust.Server.Placement
             };
 
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
-                                                               where permission.MobUid == mob.Uid
+                                                               where permission.MobUid == mob
                                                                select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -336,11 +336,11 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Gives a mob a permission to place a given Tile.
         /// </summary>
-        public void AssignBuildPermissionTile(IEntity mob, int range, string tileType, string alignOption)
+        public void AssignBuildPermissionTile(EntityUid mob, int range, string tileType, string alignOption)
         {
             var newPermission = new PlacementInformation
             {
-                MobUid = mob.Uid,
+                MobUid = mob,
                 Range = range,
                 IsTile = true,
                 TileType = _tileDefinitionManager[tileType].TileId,
@@ -348,7 +348,7 @@ namespace Robust.Server.Placement
             };
 
             IEnumerable<PlacementInformation> mobPermissions = from PlacementInformation permission in BuildPermissions
-                                                               where permission.MobUid == mob.Uid
+                                                               where permission.MobUid == mob
                                                                select permission;
 
             if (mobPermissions.Any()) //Already has one? Revoke the old one and add this one.
@@ -365,10 +365,10 @@ namespace Robust.Server.Placement
         /// <summary>
         ///  Removes all building Permissions for given mob.
         /// </summary>
-        public void RevokeAllBuildPermissions(IEntity mob)
+        public void RevokeAllBuildPermissions(EntityUid mob)
         {
             var mobPermissions = BuildPermissions
-                .Where(permission => permission.MobUid == mob.Uid)
+                .Where(permission => permission.MobUid == mob)
                 .ToList();
 
             if (mobPermissions.Count != 0)

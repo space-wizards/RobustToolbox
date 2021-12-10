@@ -1,7 +1,7 @@
 using System;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -23,6 +23,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public class MapComponent : Component, IMapComponent
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
@@ -64,7 +66,7 @@ namespace Robust.Shared.GameObjects
             _mapIndex = state.MapId;
             LightingEnabled = state.LightingEnabled;
 
-            ((TransformComponent) Owner.Transform).ChangeMapId(_mapIndex);
+            _entMan.GetComponent<TransformComponent>(Owner).ChangeMapId(_mapIndex);
         }
     }
 

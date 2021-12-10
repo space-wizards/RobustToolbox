@@ -101,7 +101,7 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            _eventTables.DispatchComponent<TEvent>(component.OwnerUid, component, ref unitRef, false);
+            _eventTables.DispatchComponent<TEvent>(component.Owner, component, ref unitRef, false);
         }
 
         /// <inheritdoc />
@@ -109,7 +109,7 @@ namespace Robust.Shared.GameObjects
         {
             ref var unitRef = ref Unsafe.As<TEvent, Unit>(ref args);
 
-            _eventTables.DispatchComponent<TEvent>(component.OwnerUid, component, ref unitRef, true);
+            _eventTables.DispatchComponent<TEvent>(component.Owner, component, ref unitRef, true);
         }
 
         /// <inheritdoc />
@@ -272,12 +272,12 @@ namespace Robust.Shared.GameObjects
             {
                 _subscriptionLock = true;
 
-                AddComponent(e.OwnerUid, e.Component.GetType());
+                AddComponent(e.Owner, e.Component.GetType());
             }
 
             private void OnComponentRemoved(object? sender, ComponentEventArgs e)
             {
-                RemoveComponent(e.OwnerUid, e.Component.GetType());
+                RemoveComponent(e.Owner, e.Component.GetType());
             }
 
             private void AddSubscription(Type compType, Type eventType, DirectedRegistration registration)

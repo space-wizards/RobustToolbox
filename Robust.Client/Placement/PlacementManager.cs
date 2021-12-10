@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.GameObjects;
@@ -15,7 +15,6 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
-using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
@@ -99,7 +98,7 @@ namespace Robust.Client.Placement
         /// Colour of this gets swapped around in PlacementMode.
         /// This entity needs to stay in nullspace.
         /// </summary>
-        public IEntity? CurrentPlacementOverlayEntity { get; set; }
+        public EntityUid? CurrentPlacementOverlayEntity { get; set; }
 
         /// <summary>
         /// A BAD way to explicitly control the icons used!!!
@@ -242,7 +241,7 @@ namespace Robust.Client.Placement
                                 return false;
                             }
 
-                            HandleDeletion(EntityManager.GetEntity(uid));
+                            HandleDeletion(uid);
                         }
                         else
                         {
@@ -414,14 +413,14 @@ namespace Robust.Client.Placement
             return false;
         }
 
-        public void HandleDeletion(IEntity entity)
+        public void HandleDeletion(EntityUid entity)
         {
             if (!IsActive || !Eraser) return;
             if (Hijack != null && Hijack.HijackDeletion(entity)) return;
 
             var msg = NetworkManager.CreateNetMessage<MsgPlacement>();
             msg.PlaceType = PlacementManagerMessage.RequestEntRemove;
-            msg.EntityUid = entity.Uid;
+            msg.EntityUid = entity;
             NetworkManager.ClientSendMessage(msg);
         }
 
@@ -493,10 +492,9 @@ namespace Robust.Client.Placement
         {
             // Try to get current map.
             var map = MapId.Nullspace;
-            var ent = PlayerManager.LocalPlayer!.ControlledEntity;
-            if (ent != null)
+            if (PlayerManager.LocalPlayer!.ControlledEntity is {Valid: true} ent)
             {
-                map = ent.Transform.MapID;
+                map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
             }
 
             if (map == MapId.Nullspace || CurrentPermission == null || CurrentMode == null)
@@ -511,15 +509,15 @@ namespace Robust.Client.Placement
 
         private bool CurrentEraserMouseCoordinates(out EntityCoordinates coordinates)
         {
-            var ent = PlayerManager.LocalPlayer?.ControlledEntity;
-            if (ent == null)
+            var ent = PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (ent == EntityUid.Invalid)
             {
                 coordinates = new EntityCoordinates();
                 return false;
             }
             else
             {
-                var map = ent.Transform.MapID;
+                var map = EntityManager.GetComponent<TransformComponent>(ent).MapID;
                 if (map == MapId.Nullspace || !Eraser)
                 {
                     coordinates = new EntityCoordinates();
@@ -634,11 +632,12 @@ namespace Robust.Client.Placement
 
             CurrentMode.Render(handle);
 
-            if (CurrentPermission == null || CurrentPermission.Range <= 0 || !CurrentMode.RangeRequired
-                || PlayerManager.LocalPlayer?.ControlledEntity == null)
+            if (CurrentPermission is not {Range: > 0} ||
+                !CurrentMode.RangeRequired ||
+                PlayerManager.LocalPlayer?.ControlledEntity is not {Valid: true} controlled)
                 return;
 
-            var worldPos = PlayerManager.LocalPlayer.ControlledEntity.Transform.WorldPosition;
+            var worldPos = EntityManager.GetComponent<TransformComponent>(controlled).WorldPosition;
 
             handle.DrawCircle(worldPos, CurrentPermission.Range, new Color(1, 1, 1, 0.25f));
         }
@@ -661,8 +660,8 @@ namespace Robust.Client.Placement
         {
             if (CurrentPlacementOverlayEntity != null)
             {
-                if (!CurrentPlacementOverlayEntity.Deleted)
-                    CurrentPlacementOverlayEntity.Delete();
+                if (!EntityManager.Deleted(CurrentPlacementOverlayEntity))
+                    EntityManager.DeleteEntity(CurrentPlacementOverlayEntity.Value);
                 CurrentPlacementOverlayEntity = null;
             }
         }
@@ -671,7 +670,7 @@ namespace Robust.Client.Placement
         {
             EnsureNoPlacementOverlayEntity();
             CurrentPlacementOverlayEntity = EntityManager.SpawnEntity(null, MapCoordinates.Nullspace);
-            return CurrentPlacementOverlayEntity.EnsureComponent<SpriteComponent>();
+            return EntityManager.EnsureComponent<SpriteComponent>(CurrentPlacementOverlayEntity.Value);
         }
 
         private void PreparePlacement(string templateName)

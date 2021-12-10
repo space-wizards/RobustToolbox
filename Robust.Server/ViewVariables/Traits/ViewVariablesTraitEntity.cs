@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -9,20 +10,31 @@ namespace Robust.Server.ViewVariables.Traits
 {
     internal sealed class ViewVariablesTraitEntity : ViewVariablesTrait
     {
-        private readonly IEntity _entity;
+        private readonly EntityUid _entity;
 
         public ViewVariablesTraitEntity(IViewVariablesSession session) : base(session)
         {
-            _entity = (IEntity) Session.Object;
+            _entity = (EntityUid) Session.Object;
         }
 
         public override ViewVariablesBlob? DataRequest(ViewVariablesRequest viewVariablesRequest)
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
+
+            if (viewVariablesRequest is ViewVariablesRequestMembers)
+            {
+                var blob = new ViewVariablesBlobMembers();
+
+                // TODO VV: Fill blob with info about this entity.
+
+                return blob;
+            }
+
             if (viewVariablesRequest is ViewVariablesRequestEntityComponents)
             {
                 var list = new List<ViewVariablesBlobEntityComponents.Entry>();
                 // See engine#636 for why the Distinct() call.
-                foreach (var component in _entity.GetAllComponents())
+                foreach (var component in entMan.GetComponents(_entity))
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
@@ -43,7 +55,7 @@ namespace Robust.Server.ViewVariables.Traits
 
                 foreach (var type in componentFactory.AllRegisteredTypes)
                 {
-                    if (_entity.HasComponent(type))
+                    if (entMan.HasComponent(_entity, type))
                         continue;
 
                     list.Add(componentFactory.GetRegistration(type).Name);

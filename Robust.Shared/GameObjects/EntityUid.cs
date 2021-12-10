@@ -1,12 +1,17 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
+using Robust.Shared.IoC;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
+using Robust.Shared.Timing;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
     /// <summary>
     ///     This type contains a network identification number of an entity.
-    ///     This can be used by the EntityManager to reference an IEntity.
+    ///     This can be used by the EntityManager to access an entity
     /// </summary>
     [Serializable, NetSerializable]
     public readonly struct EntityUid : IEquatable<EntityUid>, IComparable<EntityUid>
@@ -35,6 +40,8 @@ namespace Robust.Shared.GameObjects
         {
             _uid = uid;
         }
+
+        public bool Valid => IsValid();
 
         /// <summary>
         ///     Creates an entity UID by parsing a string number.
@@ -140,5 +147,36 @@ namespace Robust.Shared.GameObjects
         {
             return _uid.CompareTo(other._uid);
         }
+
+        #region VV
+
+
+        [ViewVariables]
+        private string Name => IoCManager.Resolve<IEntityManager>().ToPrettyString(this);
+
+        [ViewVariables]
+        private string Description => MetaData?.EntityDescription ?? string.Empty;
+
+        [ViewVariables]
+        private EntityPrototype? Prototype => MetaData?.EntityPrototype;
+
+        [ViewVariables]
+        private GameTick LastModifiedTick => MetaData?.EntityLastModifiedTick ?? GameTick.Zero;
+
+        [ViewVariables]
+        private bool Paused => MetaData?.EntityPaused ?? false;
+
+        [ViewVariables]
+        private EntityLifeStage LifeStage => MetaData?.EntityLifeStage ?? EntityLifeStage.Deleted;
+
+        [ViewVariables]
+        private MetaDataComponent? MetaData =>
+            IoCManager.Resolve<IEntityManager>().GetComponentOrNull<MetaDataComponent>(this);
+
+        [ViewVariables]
+        private TransformComponent? Transform =>
+            IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(this);
+
+        #endregion
     }
 }

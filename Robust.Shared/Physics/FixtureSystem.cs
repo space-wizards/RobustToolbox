@@ -5,7 +5,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
@@ -59,7 +58,8 @@ namespace Robust.Shared.Physics
 
                 if (component.Fixtures.TryAdd(fixture.ID, fixture)) continue;
 
-                Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
+                // This can happen on stuff like grids that save their fixtures to the map file.
+                // Logger.DebugS("physics", $"Tried to deserialize fixture {fixture.ID} on {uid} which already exists.");
             }
 
             component.SerializedFixtures.Clear();
@@ -79,7 +79,7 @@ namespace Robust.Shared.Physics
             /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else
             {
-                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {EntityManager.GetEntity(uid)}");
+                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponuid)}"
             }
             */
         }
@@ -88,7 +88,7 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager, ref xform))
+            if (!Resolve(body.Owner, ref manager, ref xform))
             {
                 DebugTools.Assert(false);
                 return;
@@ -145,7 +145,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return null;
             }
@@ -184,7 +184,7 @@ namespace Robust.Shared.Physics
         /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
         public void DestroyFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return;
             }
@@ -366,7 +366,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
         {
-            if (!Resolve(component.OwnerUid, ref body))
+            if (!Resolve(component.Owner, ref body))
             {
                 return;
             }

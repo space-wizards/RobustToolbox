@@ -23,6 +23,11 @@ namespace Robust.Client.GameObjects
 
     public sealed class SpriteBoundsSystem : EntitySystem
     {
+        [Dependency] private readonly IEyeManager _eye = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+        [Dependency] private readonly RenderingTreeSystem _renderingTree = default!;
+
         private SpriteBoundsOverlay? _overlay;
 
         public bool Enabled
@@ -37,15 +42,13 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     DebugTools.AssertNull(_overlay);
-                    var overlayManager = IoCManager.Resolve<IOverlayManager>();
-                    _overlay = new SpriteBoundsOverlay(EntitySystem.Get<RenderingTreeSystem>(), IoCManager.Resolve<IEyeManager>());
-                    overlayManager.AddOverlay(_overlay);
+                    _overlay = new SpriteBoundsOverlay(_renderingTree, _eye, _entityManager);
+                    _overlayManager.AddOverlay(_overlay);
                 }
                 else
                 {
                     if (_overlay == null) return;
-                    var overlayManager = IoCManager.Resolve<IOverlayManager>();
-                    overlayManager.RemoveOverlay(_overlay);
+                    _overlayManager.RemoveOverlay(_overlay);
                     _overlay = null;
                 }
             }
@@ -58,13 +61,15 @@ namespace Robust.Client.GameObjects
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-        private readonly IEyeManager _eyeManager = default!;
+        private readonly IEyeManager _eyeManager;
+        private readonly IEntityManager _entityManager;
         private RenderingTreeSystem _renderTree;
 
-        public SpriteBoundsOverlay(RenderingTreeSystem renderTree, IEyeManager eyeManager)
+        public SpriteBoundsOverlay(RenderingTreeSystem renderTree, IEyeManager eyeManager, IEntityManager entityManager)
         {
             _renderTree = renderTree;
             _eyeManager = eyeManager;
+            _entityManager = entityManager;
         }
 
         protected internal override void Draw(in OverlayDrawArgs args)
@@ -75,11 +80,11 @@ namespace Robust.Client.GameObjects
 
             foreach (var comp in _renderTree.GetRenderTrees(currentMap, viewport))
             {
-                var localAABB = comp.Owner.Transform.InvWorldMatrix.TransformBox(viewport);
+                var localAABB = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(viewport);
 
                 foreach (var sprite in comp.SpriteTree.QueryAabb(localAABB))
                 {
-                    var worldPos = sprite.Owner.Transform.WorldPosition;
+                    var worldPos = _entityManager.GetComponent<TransformComponent>(sprite.Owner).WorldPosition;
                     var bounds = sprite.CalculateBoundingBox(worldPos);
                     handle.DrawRect(bounds, Color.Red.WithAlpha(0.2f));
                     handle.DrawRect(bounds.Scale(0.2f).Translated(-new Vector2(0f, bounds.Extents.Y)), Color.Blue.WithAlpha(0.5f));

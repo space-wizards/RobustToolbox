@@ -27,6 +27,7 @@ namespace Robust.Shared.Localization
         [Dependency] private readonly IResourceManager _res = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IPrototypeManager _prototype = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         private ISawmill _logSawmill = default!;
         private readonly Dictionary<CultureInfo, FluentBundle> _contexts = new();

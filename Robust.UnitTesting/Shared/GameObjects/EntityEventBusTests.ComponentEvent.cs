@@ -116,11 +116,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             // Arrange
             var entUid = new EntityUid(7);
             var compInstance = new MetaDataComponent();
-            var mockEnt = new Mock<IEntity>();
-            mockEnt.SetupGet(m => m.Uid).Returns(entUid);
-            compInstance.Owner = mockEnt.Object;
 
             var entManMock = new Mock<IEntityManager>();
+
+            compInstance.Owner = entUid;
 
             var compRegistration = new Mock<IComponentRegistration>();
 

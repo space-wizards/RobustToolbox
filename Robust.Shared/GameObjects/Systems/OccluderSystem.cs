@@ -38,10 +38,10 @@ namespace Robust.Shared.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<OccluderTreeComponent>();
+                yield return EntityManager.GetComponent<OccluderTreeComponent>(grid.GridEntityId);
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<OccluderTreeComponent>();
+            yield return EntityManager.GetComponent<OccluderTreeComponent>(_mapManager.GetMapEntityId(mapId));
         }
 
         private void HandleOccluderInit(EntityUid uid, OccluderComponent component, ComponentInit args)
@@ -58,30 +58,30 @@ namespace Robust.Shared.GameObjects
 
         private void HandleOccluderTreeInit(EntityUid uid, OccluderTreeComponent component, ComponentInit args)
         {
-            var capacity = (int) Math.Min(256, Math.Ceiling(component.Owner.Transform.ChildCount / TreeGrowthRate) * TreeGrowthRate);
+            var capacity = (int) Math.Min(256, Math.Ceiling(EntityManager.GetComponent<TransformComponent>(component.Owner).ChildCount / TreeGrowthRate) * TreeGrowthRate);
 
             component.Tree = new DynamicTree<OccluderComponent>(ExtractAabbFunc, capacity: capacity);
         }
 
         private void HandleGridInit(GridInitializeEvent ev)
         {
-            EntityManager.GetEntity(ev.EntityUid).EnsureComponent<OccluderTreeComponent>();
+            EntityManager.EnsureComponent<OccluderTreeComponent>(ev.EntityUid);
         }
 
         private OccluderTreeComponent? GetOccluderTree(OccluderComponent component)
         {
             var entity = component.Owner;
 
-            if (entity.Transform.MapID == MapId.Nullspace) return null;
+            if (EntityManager.Deleted(entity) || EntityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace) return null;
 
-            var parent = entity.Transform.Parent?.Owner;
+            var parent = EntityManager.GetComponent<TransformComponent>(entity).Parent;
 
             while (true)
             {
                 if (parent == null) break;
 
-                if (parent.TryGetComponent(out OccluderTreeComponent? comp)) return comp;
-                parent = parent.Transform.Parent?.Owner;
+                if (EntityManager.TryGetComponent(parent.Owner, out OccluderTreeComponent? comp)) return comp;
+                parent = parent.Parent;
             }
 
             return null;
@@ -158,16 +158,16 @@ namespace Robust.Shared.GameObjects
         {
             if (e.Map == MapId.Nullspace) return;
 
-            _mapManager.GetMapEntity(e.Map).EnsureComponent<OccluderTreeComponent>();
+            _mapManager.GetMapEntityId(e.Map).EnsureComponent<OccluderTreeComponent>();
         }
 
-        private static Box2 ExtractAabbFunc(in OccluderComponent o)
+        private Box2 ExtractAabbFunc(in OccluderComponent o)
         {
-            return o.BoundingBox.Translated(o.Owner.Transform.LocalPosition);
+            return o.BoundingBox.Translated(EntityManager.GetComponent<TransformComponent>(o.Owner).LocalPosition);
         }
 
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
-            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
+            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
             var list = new List<RayCastResults>();
@@ -177,7 +177,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
-                var transform = comp.Owner.Transform;
+                var transform = EntityManager.GetComponent<TransformComponent>(comp.Owner);
                 var matrix = transform.InvWorldMatrix;
                 var treeRot = transform.WorldRotation;
 

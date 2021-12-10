@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
             var broadphase = body.Broadphase;
-            if (broadphase == null || !EntityManager.TryGetComponent(body.OwnerUid, out FixturesComponent? manager))
+            if (broadphase == null || !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager))
             {
                 return Array.Empty<PhysicsComponent>();
             }
@@ -154,12 +154,12 @@ namespace Robust.Shared.GameObjects
             var mapId = EntityManager.GetComponent<TransformComponent>(body.Owner).MapID;
 
             if (mapId == MapId.Nullspace ||
-                !EntityManager.TryGetComponent(body.OwnerUid, out FixturesComponent? manager) ||
+                !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager) ||
                 manager.FixtureCount == 0) return Array.Empty<PhysicsComponent>();
 
             var bodies = new HashSet<PhysicsComponent>();
 
-            var (worldPos, worldRot) = EntityManager.GetComponent<TransformComponent>(body.OwnerUid).GetWorldPositionRotation();
+            var (worldPos, worldRot) = Transform(body.Owner).GetWorldPositionRotation();
             var worldAABB = body.GetWorldAABB(worldPos, worldRot);
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
@@ -228,7 +228,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var (_, rot, matrix, invMatrix) = broadphase.Owner.Transform.GetWorldPositionRotationMatrixWithInv();
+                var (_, rot, matrix, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
 
                 var position = invMatrix.Transform(ray.Position);
                 var gridRot = new Angle(-rot.Theta);
@@ -306,7 +306,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var (_, rot, invMatrix) = EntityManager.Get<TransformComponent>(broadphase.Owner).GetWorldPositionRotationInvMatrix();
+                var (_, rot, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationInvMatrix();
 
                 var position = invMatrix.Transform(ray.Position);
                 var gridRot = new Angle(-rot.Theta);

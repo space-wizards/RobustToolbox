@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -36,7 +37,7 @@ namespace Robust.UnitTesting.Shared.Physics
             await _server.WaitAssertion(() =>
             {
                 var boxEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
-                var box = boxEnt.AddComponent<PhysicsComponent>();
+                var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
                 var fixture = fixtureSystem.CreateFixture(box, poly);

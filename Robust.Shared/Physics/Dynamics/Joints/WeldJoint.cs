@@ -1,5 +1,6 @@
 using System;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -60,11 +61,11 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         public float ReferenceAngle;
 
-        public WeldJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+        public WeldJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
         {
             LocalAnchorA = bodyA.GetLocalPoint(anchor);
             LocalAnchorB = bodyB.GetLocalPoint(anchor);
-            ReferenceAngle = (float) (bodyB.Owner.Transform.WorldRotation - bodyA.Owner.Transform.WorldRotation).Theta;
+            ReferenceAngle = (float) (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyB.Owner).WorldRotation - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyA.Owner).WorldRotation).Theta;
         }
 
         public WeldJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}

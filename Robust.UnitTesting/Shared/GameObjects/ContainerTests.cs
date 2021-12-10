@@ -1,14 +1,3 @@
-using System.Linq;
-using System.Threading.Tasks;
-using NUnit.Framework;
-using Robust.Client.GameObjects;
-using Robust.Server.Player;
-using Robust.Shared.Containers;
-using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
-using Robust.Shared.Map;
-using Robust.Shared.Network;
-
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     public class ContainerTests : RobustIntegrationTest
@@ -76,7 +65,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var item = entMan.SpawnEntity(null, mapPos);
                  item.Name = "Item";
                  itemUid = item.Uid;
-                 Assert.That(entMan.TryGetEntity(entityUid, out var entity));
+                 Assert.That(entMan.EntityExists(entityUid);
                  var container = entity!.EnsureContainer<Container>("dummy");
                  container.Insert(item);
 
@@ -91,7 +80,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await client.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetEntity(entityUid, out var entity)
+                 if (!entMan.EntityExists(entityUid)
                      || !entity.TryGetComponent<ContainerManagerComponent>(out var containerManagerComp))
                  {
                      Assert.Fail();
@@ -122,7 +111,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await client.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetEntity(entityUid, out var entity)
+                 if (!entMan.EntityExists(entityUid)
                      || !entity.TryGetComponent<ContainerManagerComponent>(out var containerManagerComp))
                  {
                      Assert.Fail();
@@ -202,7 +191,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  var item = entMan.SpawnEntity(null, mapPos);
                  item.Name = "Item";
                  itemUid = item.Uid;
-                 Assert.That(entMan.TryGetEntity(entityUid, out var entity));
+                 Assert.That(entMan.EntityExists(entityUid);
                  var container = entity!.EnsureContainer<Container>("dummy");
                  container.Insert(item);
 
@@ -217,7 +206,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await client.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetEntity(entityUid, out var entity)
+                 if (!entMan.EntityExists(entityUid)
                      || !entity.TryGetComponent<ContainerManagerComponent>(out var containerManagerComp))
                  {
                      Assert.Fail();
@@ -239,7 +228,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
                  // If possible it'd be best to only have the DeleteEntity, but right now
                  // the entity deleted event is not played on the client if the entity does not exist on the client.
-                 if (entMan.TryGetEntity(itemUid, out var item)
+                 if (entMan.EntityExists(itemUid)
                      && ContainerHelpers.TryGetContainer(item, out var container))
                      container.ForceRemove(item);
                  entMan.DeleteEntity(itemUid);
@@ -251,7 +240,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
              await client.WaitAssertion(() =>
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
-                 if (!entMan.TryGetEntity(entityUid, out var entity)
+                 if (!entMan.EntityExists(entityUid)
                      || !entity.TryGetComponent<ContainerManagerComponent>(out var containerManagerComp))
                  {
                      Assert.Fail();

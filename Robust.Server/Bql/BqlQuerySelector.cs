@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 
 namespace Robust.Server.Bql
 {
@@ -55,7 +54,7 @@ namespace Robust.Server.Bql
         /// <returns></returns>
         public virtual IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return DoSelection(entityManager.GetEntityUids(), arguments, isInverted, entityManager);
+            return DoSelection(entityManager.GetEntities(), arguments, isInverted, entityManager);
         }
 
         [UsedImplicitly]

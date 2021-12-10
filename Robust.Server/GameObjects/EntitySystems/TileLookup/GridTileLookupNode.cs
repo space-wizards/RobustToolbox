@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Server.GameObjects
@@ -11,18 +12,22 @@ namespace Robust.Server.GameObjects
 
         internal Vector2i Indices { get; }
 
-        internal IEnumerable<IEntity> Entities
+        internal IEnumerable<EntityUid> Entities
         {
             get
             {
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
                 foreach (var entity in _entities)
                 {
-                    if (!entity.Deleted)
+                    if (!entMan.Deleted(entity))
                     {
                         yield return entity;
                     }
 
-                    if (!entity.TryGetComponent(out ContainerManagerComponent? containerManager)) continue;
+                    if (!entMan.TryGetComponent(entity, out ContainerManagerComponent? containerManager))
+                        continue;
+
                     foreach (var container in containerManager.GetAllContainers())
                     {
                         foreach (var child in container.ContainedEntities)
@@ -34,7 +39,7 @@ namespace Robust.Server.GameObjects
             }
         }
 
-        private readonly HashSet<IEntity> _entities = new();
+        private readonly HashSet<EntityUid> _entities = new();
 
         internal GridTileLookupNode(GridTileLookupChunk parentChunk, Vector2i indices)
         {
@@ -42,12 +47,12 @@ namespace Robust.Server.GameObjects
             Indices = indices;
         }
 
-        internal void AddEntity(IEntity entity)
+        internal void AddEntity(EntityUid entity)
         {
             _entities.Add(entity);
         }
 
-        internal void RemoveEntity(IEntity entity)
+        internal void RemoveEntity(EntityUid entity)
         {
             _entities.Remove(entity);
         }

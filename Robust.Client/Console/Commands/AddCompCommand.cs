@@ -21,13 +21,12 @@ namespace Robust.Client.Console.Commands
                 return;
             }
 
-            var entityUid = EntityUid.Parse(args[0]);
+            var entity = EntityUid.Parse(args[0]);
             var componentName = args[1];
 
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            var entity = entityManager.GetEntity(entityUid);
             var component = (Component) compFactory.GetComponent(componentName);
 
             component.Owner = entity;

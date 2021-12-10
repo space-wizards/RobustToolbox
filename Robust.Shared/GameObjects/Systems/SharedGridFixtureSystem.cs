@@ -49,17 +49,19 @@ namespace Robust.Shared.GameObjects
             if (!_enabled) return;
 
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
-                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
+                !EntityManager.EntityExists(grid.GridEntityId)) return;
+
+            var gridEnt = grid.GridEntityId;
 
             DebugTools.Assert(chunk.ValidTiles > 0);
 
-            if (!gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent))
+            if (!EntityManager.TryGetComponent(gridEnt, out PhysicsComponent? physicsComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
-            if (!gridEnt.TryGetComponent(out FixturesComponent? fixturesComponent))
+            if (!EntityManager.TryGetComponent(gridEnt, out FixturesComponent? fixturesComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(fixturesComponent)}");
                 return;
@@ -156,7 +158,7 @@ namespace Robust.Shared.GameObjects
             if (updated)
             {
                 _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-                EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+                EntityManager.EventBus.RaiseLocalEvent(gridEnt,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
             }
         }
     }

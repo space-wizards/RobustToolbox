@@ -70,14 +70,14 @@ namespace Robust.Client.GameObjects
         private void HandleDirtyEvent(OccluderDirtyEvent ev)
         {
             var sender = ev.Sender;
-            if (sender.IsValid() &&
-                sender.TryGetComponent(out ClientOccluderComponent? iconSmooth)
+            if (EntityManager.EntityExists(sender) &&
+                EntityManager.TryGetComponent(sender, out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Running)
             {
-                var grid1 = _mapManager.GetGrid(sender.Transform.GridID);
-                var coords = sender.Transform.Coordinates;
+                var grid1 = _mapManager.GetGrid(EntityManager.GetComponent<TransformComponent>(sender).GridID);
+                var coords = EntityManager.GetComponent<TransformComponent>(sender).Coordinates;
 
-                _dirtyEntities.Enqueue(sender.Uid);
+                _dirtyEntities.Enqueue(sender);
                 AddValidEntities(grid1.GetInDir(coords, Direction.North));
                 AddValidEntities(grid1.GetInDir(coords, Direction.South));
                 AddValidEntities(grid1.GetInDir(coords, Direction.East));
@@ -113,13 +113,13 @@ namespace Robust.Client.GameObjects
     /// </summary>
     internal sealed class OccluderDirtyEvent : EntityEventArgs
     {
-        public OccluderDirtyEvent(IEntity sender, (GridId grid, Vector2i pos)? lastPosition)
+        public OccluderDirtyEvent(EntityUid sender, (GridId grid, Vector2i pos)? lastPosition)
         {
             LastPosition = lastPosition;
             Sender = sender;
         }
 
         public (GridId grid, Vector2i pos)? LastPosition { get; }
-        public IEntity Sender { get; }
+        public EntityUid Sender { get; }
     }
 }

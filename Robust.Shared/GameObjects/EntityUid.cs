@@ -148,14 +148,33 @@ namespace Robust.Shared.GameObjects
             return _uid.CompareTo(other._uid);
         }
 
-        #region VV
+        #region ViewVariables
 
 
         [ViewVariables]
-        private string Name => IoCManager.Resolve<IEntityManager>().ToPrettyString(this);
+        private string Representation => IoCManager.Resolve<IEntityManager>().ToPrettyString(this);
 
-        [ViewVariables]
-        private string Description => MetaData?.EntityDescription ?? string.Empty;
+        [ViewVariables(VVAccess.ReadWrite)]
+        private string Name
+        {
+            get => MetaData?.EntityName ?? string.Empty;
+            set
+            {
+                if (MetaData is {} metaData)
+                    metaData.EntityName = value;
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        private string Description
+        {
+            get => MetaData?.EntityDescription ?? string.Empty;
+            set
+            {
+                if (MetaData is {} metaData)
+                    metaData.EntityName = value;
+            }
+        }
 
         [ViewVariables]
         private EntityPrototype? Prototype => MetaData?.EntityPrototype;

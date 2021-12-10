@@ -57,9 +57,9 @@ namespace Robust.Server.GameObjects
 
         private void HandleGridEmpty(EntityUid uid, MapGridComponent component, EmptyGridEvent args)
         {
-            if (!_deleteEmptyGrids ||
-                !EntityManager.TryGetEntity(uid, out var gridEnt) ||
-                gridEnt.LifeStage >= EntityLifeStage.Terminating) return;
+            if (!_deleteEmptyGrids) return;
+            if (!EntityManager.EntityExists(uid)) return;
+            if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
             MapManager.DeleteGrid(args.GridId);
         }

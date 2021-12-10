@@ -47,12 +47,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Retrieves whether the entity is deleted. Throws if the entity does not exist.
+    ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool Deleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        return LifeStage(uid, metaData) >= EntityLifeStage.Deleted;
+        if (!Resolve(uid, ref metaData, false))
+            return true;
+
+        return metaData.EntityDeleted;
     }
 
     /// <inheritdoc cref="MetaDataComponent.EntityLifeStage" />
@@ -113,23 +116,6 @@ public partial class EntitySystem
         }
 
         terminating = lifeStage == EntityLifeStage.Terminating;
-        return true;
-    }
-
-    /// <summary>
-    ///     Attempts to retrieve whether the entity is deleted.
-    /// </summary>
-    /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryDeleted(EntityUid uid, [NotNullWhen(true)] out bool? deleted, MetaDataComponent? metaData = null)
-    {
-        if (!TryLifeStage(uid, out var lifeStage, metaData))
-        {
-            deleted = null;
-            return false;
-        }
-
-        deleted = lifeStage >= EntityLifeStage.Deleted;
         return true;
     }
 
@@ -521,14 +507,14 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates).Uid;
+        return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
     /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates)" />
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public EntityUid Spawn(string? prototype, MapCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates).Uid;
+        return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
     #endregion

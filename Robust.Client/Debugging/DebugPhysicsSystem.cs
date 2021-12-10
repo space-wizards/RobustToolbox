@@ -201,7 +201,7 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
 
                     var xform = physBody.GetTransform();
 
@@ -246,7 +246,7 @@ namespace Robust.Client.Debugging
                     const float Alpha = 0.25f;
                     float size;
 
-                    if (physBody.Owner.HasComponent<MapGridComponent>())
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner))
                     {
                         color = Color.Orange.WithAlpha(Alpha);
                         size = 1f;
@@ -267,7 +267,7 @@ namespace Robust.Client.Debugging
             {
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, viewBounds))
                 {
-                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
 
                     var xform = physBody.GetTransform();
 
@@ -296,7 +296,7 @@ namespace Robust.Client.Debugging
                 foreach (var jointComponent in _entityManager.EntityQuery<JointComponent>(true))
                 {
                     if (jointComponent.JointCount == 0 ||
-                        !_entityManager.TryGetComponent(jointComponent.Owner.Uid, out TransformComponent? xf1) ||
+                        !_entityManager.TryGetComponent(jointComponent.Owner, out TransformComponent? xf1) ||
                         !viewAABB.Contains(xf1.WorldPosition)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
@@ -350,7 +350,7 @@ namespace Robust.Client.Debugging
 
                 foreach (var physBody in _physicsSystem.GetCollidingEntities(mapId, bounds))
                 {
-                    if (physBody.Owner.HasComponent<MapGridComponent>()) continue;
+                    if (_entityManager.HasComponent<MapGridComponent>(physBody.Owner)) continue;
                     hoverBodies.Add(physBody);
                 }
 

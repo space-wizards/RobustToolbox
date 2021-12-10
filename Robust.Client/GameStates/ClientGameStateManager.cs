@@ -143,8 +143,7 @@ namespace Robust.Client.GameStates
             message.InputSequence = _nextInputCmdSeq;
             _pendingInputs.Enqueue(message);
 
-            var inputMan = IoCManager.Resolve<IInputManager>();
-            inputMan.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
+            _inputManager.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
             Logger.DebugS(CVars.NetPredict.Name,
                 $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
@@ -341,21 +340,21 @@ namespace Robust.Client.GameStates
             foreach (var entity in _entities.GetEntities())
             {
                 // TODO: 99% there's an off-by-one here.
-                if (entity.Uid.IsClientSide() || entity.LastModifiedTick < curTick)
+                if (entity.IsClientSide() || _entityManager.GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick < curTick)
                 {
                     continue;
                 }
 
-                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity.Uid} was made dirty.");
+                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity} was made dirty.");
 
-                if (!_processor.TryGetLastServerStates(entity.Uid, out var last))
+                if (!_processor.TryGetLastServerStates(entity, out var last))
                 {
                     // Entity was probably deleted on the server so do nothing.
                     continue;
                 }
 
                 // TODO: handle component deletions/creations.
-                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity.Uid))
+                foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
                     DebugTools.AssertNotNull(netId);
 
@@ -427,22 +426,22 @@ namespace Robust.Client.GameStates
         private List<EntityUid> ApplyEntityStates(ReadOnlySpan<EntityState> curEntStates, ReadOnlySpan<EntityUid> deletions,
             ReadOnlySpan<EntityState> nextEntStates)
         {
-            var toApply = new Dictionary<IEntity, (EntityState?, EntityState?)>();
-            var toInitialize = new List<IEntity>();
+            var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>();
+            var toInitialize = new List<EntityUid>();
             var created = new List<EntityUid>();
             var toHide = new List<EntityUid>();
             var toShow = new List<EntityUid>();
 
             foreach (var es in curEntStates)
             {
-                EntityUid uid;
+                var uid = es.Uid;
                 //Known entities
-                if (_entities.TryGetEntity(es.Uid, out var entity))
+                if (_entities.EntityExists(uid))
                 {
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] MOD {es.Uid}");
-                    toApply.Add(entity, (es, null));
-                    if(_hiddenEntities.ContainsKey(es.Uid))
-                        toShow.Add(es.Uid);
+                    toApply.Add(uid, (es, null));
+                    if(_hiddenEntities.ContainsKey(uid))
+                        toShow.Add(uid);
                     uid = es.Uid;
                 }
                 else //Unknown entities
@@ -450,14 +449,14 @@ namespace Robust.Client.GameStates
                     var metaState = (MetaDataComponentState?) es.ComponentChanges.Value?.FirstOrDefault(c => c.NetID == _metaCompNetId).State;
                     if (metaState == null)
                     {
-                        throw new InvalidOperationException($"Server sent new entity state for {es.Uid} without metadata component!");
+                        throw new InvalidOperationException($"Server sent new entity state for {uid} without metadata component!");
                     }
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] CREATE {es.Uid} {metaState.PrototypeId}");
-                    var newEntity = _entities.CreateEntity(metaState.PrototypeId, es.Uid);
+                    var newEntity = _entities.CreateEntity(metaState.PrototypeId, uid);
                     toApply.Add(newEntity, (es, null));
                     toInitialize.Add(newEntity);
-                    created.Add(newEntity.Uid);
-                    uid = newEntity.Uid;
+                    created.Add(newEntity);
+                    uid = newEntity;
                 }
                 if(es.Hide)
                     toHide.Add(uid);
@@ -465,15 +464,17 @@ namespace Robust.Client.GameStates
 
             foreach (var es in nextEntStates)
             {
-                if (_entities.TryGetEntity(es.Uid, out var entity))
+                var uid = es.Uid;
+
+                if (_entities.EntityExists(uid))
                 {
-                    if (toApply.TryGetValue(entity, out var state))
+                    if (toApply.TryGetValue(uid, out var state))
                     {
-                        toApply[entity] = (state.Item1, es);
+                        toApply[uid] = (state.Item1, es);
                     }
                     else
                     {
-                        toApply[entity] = (null, es);
+                        toApply[uid] = (null, es);
                     }
                 }
             }
@@ -494,7 +495,7 @@ namespace Robust.Client.GameStates
             }
 
 #if EXCEPTION_TOLERANCE
-            HashSet<IEntity> brokenEnts = new HashSet<IEntity>();
+            HashSet<EntityUid> brokenEnts = new HashSet<EntityUid>();
 #endif
 
             foreach (var entity in toInitialize)
@@ -508,7 +509,7 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("state", $"Server entity threw in Init: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    Logger.ErrorS("state", $"Server entity threw in Init: ent={_entityManager.ToPrettyString(entity)}\n{e}");
                     brokenEnts.Add(entity);
                 }
 #endif
@@ -528,7 +529,7 @@ namespace Robust.Client.GameStates
                 }
                 catch (Exception e)
                 {
-                    Logger.ErrorS("state", $"Server entity threw in Start: uid={entity.Uid}, proto={entity.Prototype}\n{e}");
+                    Logger.ErrorS("state", $"Server entity threw in Start: ent={_entityManager.ToPrettyString(entity)}\n{e}");
                     brokenEnts.Add(entity);
                 }
 #endif
@@ -537,7 +538,7 @@ namespace Robust.Client.GameStates
 #if EXCEPTION_TOLERANCE
             foreach (var entity in brokenEnts)
             {
-                entity.Delete();
+                _entityManager.DeleteEntity(entity);
             }
 #endif
 
@@ -559,11 +560,11 @@ namespace Robust.Client.GameStates
             return created;
         }
 
-        private void HandleEntityState(IEntity entity, IEventBus bus, EntityState? curState,
+        private void HandleEntityState(EntityUid entity, IEventBus bus, EntityState? curState,
             EntityState? nextState)
         {
             var compStateWork = new Dictionary<ushort, (ComponentState? curState, ComponentState? nextState)>();
-            var entityUid = entity.Uid;
+            var entityUid = entity;
 
             if (curState != null)
             {
@@ -614,7 +615,7 @@ namespace Robust.Client.GameStates
 
             foreach (var (netId, (cur, next)) in compStateWork)
             {
-                if (_entityManager.TryGetComponent(entityUid, (ushort) netId, out var component))
+                if (_entityManager.TryGetComponent(entityUid, netId, out var component))
                 {
                     try
                     {

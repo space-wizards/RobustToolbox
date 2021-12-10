@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -57,27 +52,27 @@ internal partial class PVSSystem : EntitySystem
     private float _viewSize;
 
     /// <summary>
-    /// All <see cref="EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
+    /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
 
-    private PVSCollection<EntityUid, IEntity> _entityPvsCollection = default!;
-    public PVSCollection<EntityUid, IEntity> EntityPVSCollection => _entityPvsCollection;
-    private readonly Dictionary<Type, IPVSCollection> _pvsCollections = new();
+    private PVSCollection<EntityUid> _entityPvsCollection = default!;
+    public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
+    private readonly List<IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
         new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
             new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly ConcurrentDictionary<(EntityUid, GameTick), EntityState> _cachedStates = new();
+    private readonly ConcurrentDictionary<EntityUid, EntityState> _cachedStates = new();
     private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
     {
         base.Initialize();
 
-        _entityPvsCollection = RegisterPVSCollection<EntityUid, IEntity>(EntityManager.GetEntity);
+        _entityPvsCollection = RegisterPVSCollection<EntityUid>();
         _mapManager.MapCreated += OnMapCreated;
         _mapManager.MapDestroyed += OnMapDestroyed;
         _mapManager.OnGridCreated += OnGridCreated;
@@ -108,6 +103,7 @@ internal partial class PVSSystem : EntitySystem
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetPVSEntityBudget, OnEntityBudgetChanged);
 
         ShutdownDirty();
     }
@@ -129,13 +125,12 @@ internal partial class PVSSystem : EntitySystem
 
     public void ProcessCollections()
     {
-        foreach (var (_, collection) in _pvsCollections)
+        foreach (var collection in _pvsCollections)
         {
             collection.Process();
         }
     }
 
-    //todo paul investigate
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
@@ -149,17 +144,15 @@ internal partial class PVSSystem : EntitySystem
 
     #region PVSCollection methods to maybe make public someday:tm:
 
-    private PVSCollection<TIndex, TElement> RegisterPVSCollection<TIndex, TElement>(Func<TIndex, TElement> getElementDelegate) where TIndex : IComparable<TIndex>, IEquatable<TIndex>
+    private PVSCollection<TIndex> RegisterPVSCollection<TIndex>() where TIndex : IComparable<TIndex>, IEquatable<TIndex>
     {
-        var collection = new PVSCollection<TIndex, TElement>(getElementDelegate);
-        _pvsCollections.Add(typeof(TElement), collection);
+        var collection = new PVSCollection<TIndex>();
+        _pvsCollections.Add(collection);
         return collection;
     }
 
-    private bool UnregisterPVSCollection<TIndex, TElement>(PVSCollection<TIndex, TElement> pvsCollection) where TIndex : IComparable<TIndex>, IEquatable<TIndex> =>
-        _pvsCollections.Remove(typeof(TElement));
-
-    private bool UnregisterPVSCollection<TElement>() => _pvsCollections.Remove(typeof(TElement));
+    private bool UnregisterPVSCollection<TIndex>(PVSCollection<TIndex> pvsCollection) where TIndex : IComparable<TIndex>, IEquatable<TIndex> =>
+        _pvsCollections.Remove(pvsCollection);
 
     #endregion
 
@@ -172,7 +165,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        UpdateEntityRecursive(ev.Sender.Uid, ev.Component);
+        UpdateEntityRecursive(ev.Sender, ev.Component);
     }
 
     private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
@@ -190,7 +183,7 @@ internal partial class PVSSystem : EntitySystem
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
-        foreach (var componentChild in transformComponent.ChildEntityUids)
+        foreach (var componentChild in transformComponent.ChildEntities)
         {
             UpdateEntityRecursive(componentChild);
         }
@@ -201,7 +194,7 @@ internal partial class PVSSystem : EntitySystem
         if (e.NewStatus == SessionStatus.InGame)
         {
             _playerVisibleSets.Add(e.Session, _visSetPool.Get());
-            foreach (var (_, pvsCollection) in _pvsCollections)
+            foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.AddPlayer(e.Session);
             }
@@ -210,7 +203,7 @@ internal partial class PVSSystem : EntitySystem
         {
             _visSetPool.Return(_playerVisibleSets[e.Session]);
             _playerVisibleSets.Remove(e.Session);
-            foreach (var (_, pvsCollection) in _pvsCollections)
+            foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.RemovePlayer(e.Session);
             }
@@ -219,7 +212,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnGridRemoved(MapId mapId, GridId gridId)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.RemoveGrid(gridId);
         }
@@ -227,7 +220,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnGridCreated(MapId mapId, GridId gridId)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddGrid(gridId);
         }
@@ -238,7 +231,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnMapDestroyed(object? sender, MapEventArgs e)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.RemoveMap(e.Map);
         }
@@ -246,7 +239,7 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnMapCreated(object? sender, MapEventArgs e)
     {
-        foreach (var (_, pvsCollection) in _pvsCollections)
+        foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddMap(e.Map);
         }
@@ -390,10 +383,7 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
-        if (!_cachedPackets.TryGetValue(uid, out var packet))
-        {
-            _cachedPackets[uid] = packet = new PVSEntityPacket(EntityManager, uid);
-        }
+        var packet = _cachedPackets.GetOrAdd(uid, (i) => new PVSEntityPacket(EntityManager, i));
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
         if (visMask != null && packet.VisibilityComponent != null)
@@ -432,7 +422,7 @@ internal partial class PVSSystem : EntitySystem
             {
                 foreach (var containedEntity in container.ContainedEntities)
                 {
-                    TryAddToVisibleEnts(containedEntity.Uid, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
+                    TryAddToVisibleEnts(containedEntity, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
                         true, true);
                 }
             }
@@ -472,24 +462,34 @@ internal partial class PVSSystem : EntitySystem
 
             foreach (var uid in add)
             {
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
+                if (!seenEnts.Add(uid)) continue;
+                if (!EntityManager.EntityExists(uid)) continue;
 
-                DebugTools.Assert(entity.Initialized);
+                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
+                var ls = md.EntityLifeStage;
+                if (ls >= EntityLifeStage.Deleted) continue;
 
-                if (entity.LastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, entity.Uid, GameTick.Zero));
+                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+
+                if (md.EntityLastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
             }
 
             foreach (var uid in dirty)
             {
                 DebugTools.Assert(!add.Contains(uid));
 
-                if (!seenEnts.Add(uid) || !EntityManager.TryGetEntity(uid, out var entity) || entity.Deleted) continue;
+                if (!seenEnts.Add(uid)) continue;
+                if (!EntityManager.EntityExists(uid)) continue;
 
-                DebugTools.Assert(entity.Initialized);
+                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
+                var ls = md.EntityLifeStage;
+                if (ls >= EntityLifeStage.Deleted) continue;
 
-                if (entity.LastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
+                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+
+                if (md.EntityLastModifiedTick >= fromTick)
+                    stateEntities.Add(GetEntityState(player, uid, fromTick));
             }
         }
 
@@ -502,15 +502,15 @@ internal partial class PVSSystem : EntitySystem
 
         foreach (var entity in EntityManager.GetEntities())
         {
-            if (entity.Deleted)
-            {
-                continue;
-            }
+            if (!EntityManager.EntityExists(entity)) continue;
+            var md = EntityManager.GetComponent<MetaDataComponent>(entity);
+            var ls = md.EntityLifeStage;
+            if (ls >= EntityLifeStage.Deleted) continue;
 
-            DebugTools.Assert(entity.Initialized);
+            DebugTools.Assert(ls >= EntityLifeStage.Initialized);
 
-            if (entity.LastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, entity.Uid, fromTick));
+            if (md.EntityLastModifiedTick >= fromTick)
+                stateEntities.Add(GetEntityState(player, entity, fromTick));
         }
 
         // no point sending an empty collection
@@ -526,48 +526,52 @@ internal partial class PVSSystem : EntitySystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick)
     {
-        var bus = EntityManager.EventBus;
-        var changed = new List<ComponentChange>();
-        if (_cachedStates.TryGetValue((entityUid, fromTick), out var cachedState)) return cachedState;
-
-        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+        return _cachedStates.GetOrAdd(entityUid, _ =>
         {
-            DebugTools.Assert(component.Initialized);
+            var bus = EntityManager.EventBus;
+            var changed = new List<ComponentChange>();
 
-            // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
-            // "not different from entity creation".
-            // i.e. when the client spawns the entity and loads the entity prototype,
-            // the data it deserializes from the prototype SHOULD be equal
-            // to what the component state / ComponentChange would send.
-            // As such, we can avoid sending this data in this case since the client "already has it".
-
-            DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
-
-            if (!EntityManager.CanGetComponentState(bus, component, player))
-                continue;
-
-            if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+            foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
             {
-                ComponentState? state = null;
-                if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
-                    state = EntityManager.GetComponentState(bus, component);
+                DebugTools.Assert(component.Initialized);
 
-                // Can't be null since it's returned by GetNetComponents
-                // ReSharper disable once PossibleInvalidOperationException
-                changed.Add(ComponentChange.Added(netId, state));
+                // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
+                // "not different from entity creation".
+                // i.e. when the client spawns the entity and loads the entity prototype,
+                // the data it deserializes from the prototype SHOULD be equal
+                // to what the component state / ComponentChange would send.
+                // As such, we can avoid sending this data in this case since the client "already has it".
+
+                DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
+
+                if (!EntityManager.CanGetComponentState(bus, component, player))
+                    continue;
+
+                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+                {
+                    ComponentState? state = null;
+                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                        component.LastModifiedTick >= fromTick)
+                        state = EntityManager.GetComponentState(bus, component);
+
+                    // Can't be null since it's returned by GetNetComponents
+                    // ReSharper disable once PossibleInvalidOperationException
+                    changed.Add(ComponentChange.Added(netId, state));
+                }
+                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                         component.LastModifiedTick >= fromTick)
+                {
+                    changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
+                }
             }
-            else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+
+            foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
             {
-                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
+                changed.Add(ComponentChange.Removed(netId));
             }
-        }
 
-        foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
-        {
-            changed.Add(ComponentChange.Removed(netId));
-        }
-
-        return _cachedStates[(entityUid, fromTick)] = new EntityState(entityUid, changed.ToArray());
+            return new EntityState(entityUid, changed.ToArray());
+        });
     }
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
@@ -576,11 +580,11 @@ internal partial class PVSSystem : EntitySystem
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
-        if(session.AttachedEntityUid.HasValue)
-            viewers.Add(session.AttachedEntityUid.Value);
+        if (session.AttachedEntity != null)
+            viewers.Add(session.AttachedEntity.Value);
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.
-        if (session is  IPlayerSession playerSession)
+        if (session is IPlayerSession playerSession)
         {
             foreach (var uid in playerSession.ViewSubscriptions)
             {

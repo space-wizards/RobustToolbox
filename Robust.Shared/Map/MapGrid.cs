@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -107,12 +108,15 @@ namespace Robust.Shared.Map
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition;
+                {
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldPosition;
+                }
+
                 return Vector2.Zero;
             }
             set
             {
-                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldPosition = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -125,12 +129,15 @@ namespace Robust.Shared.Map
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
+                {
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldRotation;
+                }
+
                 return Angle.Zero;
             }
             set
             {
-                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldRotation = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }

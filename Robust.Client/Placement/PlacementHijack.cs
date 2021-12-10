@@ -18,7 +18,7 @@ namespace Robust.Client.Placement
             return false;
         }
 
-        public virtual bool HijackDeletion(IEntity entity)
+        public virtual bool HijackDeletion(EntityUid entity)
         {
             return false;
         }

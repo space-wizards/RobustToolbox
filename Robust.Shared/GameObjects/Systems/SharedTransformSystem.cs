@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects
 
             if (anchoredEnts.Count == 0) return;
 
-            var mapEnt = _mapManager.GetMapEntity(grid.ParentMapId);
+            var mapEnt = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
 
             foreach (var ent in anchoredEnts) // changing anchored modifies this set
             {
@@ -66,7 +66,7 @@ namespace Robust.Shared.GameObjects
 
         public void DeferMoveEvent(ref MoveEvent moveEvent)
         {
-            if (moveEvent.Sender.HasComponent<IMapGridComponent>())
+            if (EntityManager.HasComponent<IMapGridComponent>(moveEvent.Sender))
                 _gridMoves.Enqueue(moveEvent);
             else
                 _otherMoves.Enqueue(moveEvent);
@@ -84,8 +84,10 @@ namespace Robust.Shared.GameObjects
             {
                 while (queue.TryDequeue(out var ev))
                 {
-                    if (ev.Sender.Deleted)
+                    if (EntityManager.Deleted(ev.Sender))
+                    {
                         continue;
+                    }
 
                     // Hopefully we can remove this when PVS gets updated to not use NaNs
                     if (!ev.NewPosition.IsValid(EntityManager))
@@ -93,7 +95,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    RaiseLocalEvent(ev.Sender.Uid, ref ev);
+                    RaiseLocalEvent(ev.Sender, ref ev);
                 }
             }
         }

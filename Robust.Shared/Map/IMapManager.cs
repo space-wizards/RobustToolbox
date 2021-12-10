@@ -57,7 +57,7 @@ namespace Robust.Shared.Map
         /// Creates a new entity, then sets it as the map entity.
         /// </summary>
         /// <returns>Newly created entity.</returns>
-        IEntity CreateNewMapEntity(MapId mapId);
+        EntityUid CreateNewMapEntity(MapId mapId);
 
         /// <summary>
         /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
@@ -66,13 +66,14 @@ namespace Robust.Shared.Map
         void SetMapEntity(MapId mapId, EntityUid newMapEntityId);
 
         /// <summary>
-        /// Sets the MapEntity(root node) for a given map. If an entity is already set, it will be deleted
-        /// before the new one is set.
+        /// Returns the map entity ID for a given map.
         /// </summary>
-        void SetMapEntity(MapId mapId, IEntity newMapEntity);
-
         EntityUid GetMapEntityId(MapId mapId);
-        IEntity GetMapEntity(MapId mapId);
+
+        /// <summary>
+        /// Replaces GetMapEntity()'s throw-on-failure semantics.
+        /// </summary>
+        EntityUid GetMapEntityIdOrThrow(MapId mapId);
 
         IEnumerable<MapId> GetAllMapIds();
 

@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 
@@ -19,17 +20,17 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <returns>If the entity is inside of a container.</returns>
-        public static bool IsInContainer(this IEntity entity)
+        public static bool IsInContainer(this EntityUid entity)
         {
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!entity.Deleted);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             // Notice the recursion starts at the Owner of the passed in entity, this
             // allows containers inside containers (toolboxes in lockers).
-            if (entity.Transform.Parent == null)
+            if (entMan.GetComponent<TransformComponent>(entity).Parent == null)
                 return false;
 
-            if (TryGetManagerComp(entity.Transform.Parent.Owner, out var containerComp))
+            if (TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).ParentUid, out var containerComp))
                 return containerComp.ContainsEntity(entity);
 
             return false;
@@ -41,12 +42,12 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="manager">The container manager that this entity is inside of.</param>
         /// <returns>If a container manager was found.</returns>
-        public static bool TryGetContainerMan(this IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
+        public static bool TryGetContainerMan(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!entity.Deleted);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            DebugTools.Assert(entMan.EntityExists(entity));
 
-            var parentTransform = entity.Transform.Parent;
+            var parentTransform = entMan.GetComponent<TransformComponent>(entity).Parent;
             if (parentTransform != null && TryGetManagerComp(parentTransform.Owner, out manager) && manager.ContainsEntity(entity))
                 return true;
 
@@ -60,10 +61,10 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="container">The container that this entity is inside of.</param>
         /// <returns>If a container was found.</returns>
-        public static bool TryGetContainer(this IEntity entity, [NotNullWhen(true)] out IContainer? container)
+        public static bool TryGetContainer(this EntityUid entity, [NotNullWhen(true)] out IContainer? container)
         {
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!entity.Deleted);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             if (TryGetContainerMan(entity, out var manager))
                 return manager.TryGetContainer(entity, out container);
@@ -79,10 +80,10 @@ namespace Robust.Shared.Containers
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
         /// <param name="wasInContainer">Whether the entity was actually inside a container or not.</param>
         /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
-        public static bool TryRemoveFromContainer(this IEntity entity, bool force, out bool wasInContainer)
+        public static bool TryRemoveFromContainer(this EntityUid entity, bool force, out bool wasInContainer)
         {
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!entity.Deleted);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            DebugTools.Assert(entMan.EntityExists(entity));
 
             if (TryGetContainer(entity, out var container))
             {
@@ -105,7 +106,7 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="force">Whether to forcibly remove the entity from the container.</param>
         /// <returns>If the entity could be removed. Also returns false if it wasn't inside a container.</returns>
-        public static bool TryRemoveFromContainer(this IEntity entity, bool force = false)
+        public static bool TryRemoveFromContainer(this EntityUid entity, bool force = false)
         {
             return TryRemoveFromContainer(entity, force, out _);
         }
@@ -115,9 +116,11 @@ namespace Robust.Shared.Containers
         /// </summary>
         public static void EmptyContainer(this IContainer container, bool force = false, EntityCoordinates? moveTo = null, bool attachToGridOrMap = false)
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var entity in container.ContainedEntities.ToArray())
             {
-                if (entity.Deleted) continue;
+                if (entMan.Deleted(entity))
+                    continue;
 
                 if (force)
                     container.ForceRemove(entity);
@@ -125,10 +128,10 @@ namespace Robust.Shared.Containers
                     container.Remove(entity);
 
                 if (moveTo.HasValue)
-                    entity.Transform.Coordinates = moveTo.Value;
+                    entMan.GetComponent<TransformComponent>(entity).Coordinates = moveTo.Value;
 
                 if(attachToGridOrMap)
-                    entity.Transform.AttachToGridOrMap();
+                    entMan.GetComponent<TransformComponent>(entity).AttachToGridOrMap();
             }
         }
 
@@ -137,11 +140,12 @@ namespace Robust.Shared.Containers
         /// </summary>
         public static void CleanContainer(this IContainer container)
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var ent in container.ContainedEntities.ToArray())
             {
-                if (ent.Deleted) continue;
+                if (entMan.Deleted(ent)) continue;
                 container.ForceRemove(ent);
-                ent.Delete();
+                entMan.DeleteEntity(ent);
             }
         }
 
@@ -157,33 +161,31 @@ namespace Robust.Shared.Containers
         {
             if (container.Insert(transform.Owner)) return true;
 
-            if (container.Owner.Transform.Parent != null
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            if (entMan.GetComponent<TransformComponent>(container.Owner).Parent != null
                 && TryGetContainer(container.Owner, out var newContainer))
                 return TryInsertIntoContainer(transform, newContainer);
 
             return false;
         }
 
-        private static bool TryGetManagerComp(this IEntity entity, [NotNullWhen(true)] out IContainerManager? manager)
+        private static bool TryGetManagerComp(this EntityUid entity, [NotNullWhen(true)] out IContainerManager? manager)
         {
-            DebugTools.AssertNotNull(entity);
-            DebugTools.Assert(!entity.Deleted);
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            DebugTools.Assert(entMan.EntityExists(entity));
 
-            if (entity.TryGetComponent(out manager))
+            if (entMan.TryGetComponent(entity, out manager))
                 return true;
 
             // RECURSION ALERT
-            if (entity.Transform.Parent != null)
-                return TryGetManagerComp(entity.Transform.Parent.Owner, out manager);
+            if (entMan.GetComponent<TransformComponent>(entity).Parent != null)
+                return TryGetManagerComp(entMan.GetComponent<TransformComponent>(entity).ParentUid, out manager);
 
             return false;
         }
 
-        public static bool IsInSameOrNoContainer(this IEntity user, IEntity other)
+        public static bool IsInSameOrNoContainer(this EntityUid user, EntityUid other)
         {
-            DebugTools.AssertNotNull(user);
-            DebugTools.AssertNotNull(other);
-
             var isUserContained = TryGetContainer(user, out var userContainer);
             var isOtherContained = TryGetContainer(other, out var otherContainer);
 
@@ -197,11 +199,8 @@ namespace Robust.Shared.Containers
             return userContainer == otherContainer;
         }
 
-        public static bool IsInSameOrParentContainer(this IEntity user, IEntity other)
+        public static bool IsInSameOrParentContainer(this EntityUid user, EntityUid other)
         {
-            DebugTools.AssertNotNull(user);
-            DebugTools.AssertNotNull(other);
-
             var isUserContained = TryGetContainer(user, out var userContainer);
             var isOtherContained = TryGetContainer(other, out var otherContainer);
 
@@ -228,7 +227,7 @@ namespace Robust.Shared.Containers
         ///     see the locker and other items in that locker, but the human cannot see their own organs.  Note that
         ///     this means that the two entity arguments are NOT interchangeable.
         /// </remarks>
-        public static bool IsInSameOrTransparentContainer(this IEntity user, IEntity other, bool userSeeInsideSelf = false)
+        public static bool IsInSameOrTransparentContainer(this EntityUid user, EntityUid other, bool userSeeInsideSelf = false)
         {
             DebugTools.AssertNotNull(user);
             DebugTools.AssertNotNull(other);
@@ -268,22 +267,23 @@ namespace Robust.Shared.Containers
         /// <returns>The new container.</returns>
         /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
         /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
-        public static T CreateContainer<T>(this IEntity entity, string containerId)
+        public static T CreateContainer<T>(this EntityUid entity, string containerId)
             where T : IContainer
         {
-            if (!entity.TryGetComponent<IContainerManager>(out var containermanager))
-                containermanager = entity.AddComponent<ContainerManagerComponent>();
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            if (!entMan.TryGetComponent<IContainerManager?>(entity, out var containermanager))
+                containermanager = entMan.AddComponent<ContainerManagerComponent>(entity);
 
             return containermanager.MakeContainer<T>(containerId);
         }
 
-        public static T EnsureContainer<T>(this IEntity entity, string containerId)
+        public static T EnsureContainer<T>(this EntityUid entity, string containerId)
             where T : IContainer
         {
             return EnsureContainer<T>(entity, containerId, out _);
         }
 
-        public static T EnsureContainer<T>(this IEntity entity, string containerId, out bool alreadyExisted)
+        public static T EnsureContainer<T>(this EntityUid entity, string containerId, out bool alreadyExisted)
             where T : IContainer
         {
             var containerManager = entity.EnsureComponent<ContainerManagerComponent>();

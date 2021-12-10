@@ -29,7 +29,7 @@ namespace Robust.Shared.ViewVariables
                     traits.Add(ViewVariablesTraits.Enumerable);
                 }
 
-                if (typeof(IEntity).IsAssignableFrom(type))
+                if (typeof(EntityUid).IsAssignableFrom(type))
                 {
                     traits.Add(ViewVariablesTraits.Entity);
                 }

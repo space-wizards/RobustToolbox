@@ -4,6 +4,7 @@ using System.Globalization;
 using JetBrains.Annotations;
 using Linguini.Bundle;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Localization
 {
@@ -170,11 +171,11 @@ namespace Robust.Shared.Localization
         }
     }
 
-    public sealed record LocValueEntity(IEntity Value) : LocValue<IEntity>(Value)
+    public sealed record LocValueEntity(EntityUid Value) : LocValue<EntityUid>(Value)
     {
         public override string Format(LocContext ctx)
         {
-            return Value.Name;
+            return IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(Value).EntityName;
         }
     }
 

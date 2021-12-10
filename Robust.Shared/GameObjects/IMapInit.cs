@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Robust.Shared.IoC;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -23,13 +25,15 @@ namespace Robust.Shared.GameObjects
     {
         private static readonly MapInitEvent MapInit = new MapInitEvent();
 
-        public static void RunMapInit(this IEntity entity)
+        public static void RunMapInit(this EntityUid entity)
         {
-            DebugTools.Assert(entity.LifeStage == EntityLifeStage.Initialized);
-            entity.LifeStage = EntityLifeStage.MapInitialized;
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var meta = entMan.GetComponent<MetaDataComponent>(entity);
+            DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
+            meta.EntityLifeStage = EntityLifeStage.MapInitialized;
 
-            entity.EntityManager.EventBus.RaiseLocalEvent(entity.Uid, MapInit, false);
-            foreach (var init in entity.GetAllComponents<IMapInit>())
+            entMan.EventBus.RaiseLocalEvent(entity, MapInit, false);
+            foreach (var init in entMan.GetComponents<IMapInit>(entity))
             {
                 init.MapInit();
             }

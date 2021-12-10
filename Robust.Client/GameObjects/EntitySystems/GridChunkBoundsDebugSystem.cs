@@ -28,7 +28,7 @@ namespace Robust.Client.GameObjects
                 {
                     DebugTools.Assert(_overlay == null);
                     _overlay = new GridChunkBoundsOverlay(
-                        IoCManager.Resolve<IEntityManager>(),
+                        EntityManager,
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>());
 
@@ -68,10 +68,8 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))
             {
-                var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
-
                 var gridInternal = (IMapGridInternal)grid;
-                var worldMatrix = _entityManager.GetComponent<TransformComponent>(gridEnt.Uid).WorldMatrix;
+                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId).WorldMatrix;
                 worldHandle.SetTransform(worldMatrix);
                 var transform = new Transform(Vector2.Zero, Angle.Zero);
 

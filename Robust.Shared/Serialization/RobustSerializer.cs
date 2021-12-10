@@ -80,7 +80,7 @@ namespace Robust.Shared.Serialization
 
             var settings = new Settings
             {
-                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer, new IEntitySerializer()}
+                CustomTypeSerializers = new[] {_mappedStringSerializer.TypeSerializer}
             };
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);

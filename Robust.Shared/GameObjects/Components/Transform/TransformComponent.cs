@@ -902,6 +902,7 @@ namespace Robust.Shared.GameObjects
                 _prevRotation = newState.Rotation;
 
                 Anchored = newState.Anchored;
+                _noLocalRotation = newState.NoLocalRotation;
 
                 // This is not possible, because client entities don't exist on the server, so the parent HAS to be a shared entity.
                 // If this assert fails, the code above that sets the parent is broken.

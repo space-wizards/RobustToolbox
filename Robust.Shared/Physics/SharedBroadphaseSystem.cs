@@ -340,7 +340,7 @@ namespace Robust.Shared.Physics
         /// <param name="body"></param>
         private void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager, ref xform)) return;
+            if (!Resolve(body.Owner, ref manager, ref xform)) return;
 
             var oldBroadphase = body.Broadphase;
             var newBroadphase = GetBroadphase(xform);
@@ -397,7 +397,7 @@ namespace Robust.Shared.Physics
             //
             if (body.Broadphase != null) return;
 
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return;
             }
@@ -542,7 +542,7 @@ namespace Robust.Shared.Physics
 
         private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return;
             }
@@ -587,7 +587,7 @@ namespace Robust.Shared.Physics
             var broadphase = fixture.Body.Broadphase!;
             var proxyCount = fixture.ProxyCount;
 
-            var broadphaseXform = EntityManager.GetComponent<TransformComponent>(broadphase.OwnerUid);
+            var broadphaseXform = EntityManager.GetComponent<TransformComponent>(broadphase.Owner);
 
             var broadphaseMapId = broadphaseXform.MapID;
             var (broadphaseWorldPos, broadphaseWorldRot, broadphaseInvMatrix) = broadphaseXform.GetWorldPositionRotationInvMatrix();
@@ -626,7 +626,7 @@ namespace Robust.Shared.Physics
         /// <param name="useCache">Whether we should use cached broadphase data. This is only valid during the physics step.</param>
         private void CreateProxies(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager, ref xform) ||
+            if (!Resolve(body.Owner, ref manager, ref xform) ||
                 xform.MapID == MapId.Nullspace) return;
 
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
@@ -695,7 +695,7 @@ namespace Robust.Shared.Physics
             Array.Resize(ref proxies, proxyCount);
             fixture.Proxies = proxies;
 
-            var broadphaseXform = EntityManager.GetComponent<TransformComponent>(broadphase.OwnerUid);
+            var broadphaseXform = EntityManager.GetComponent<TransformComponent>(broadphase.Owner);
 
             var (broadphaseWorldPosition, broadphaseWorldRotation, broadphaseInvMatrix) = broadphaseXform.GetWorldPositionRotationInvMatrix();
 
@@ -808,7 +808,7 @@ namespace Robust.Shared.Physics
             var parent = xform.ParentUid;
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (EntityManager.HasComponent<BroadphaseComponent>(xform.OwnerUid) &&
+            if (EntityManager.HasComponent<BroadphaseComponent>(xform.Owner) &&
                 !parent.IsValid())
             {
                 return null;

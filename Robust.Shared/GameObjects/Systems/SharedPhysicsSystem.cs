@@ -217,9 +217,9 @@ namespace Robust.Shared.GameObjects
         {
             if (!EntityManager.EntityExists(ev.EntityUid)) return;
             // Yes this ordering matters
-            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(gridEntity.Uid);
+            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
             collideComp.BodyType = BodyType.Static;
-            EntityManager.EnsureComponent<FixturesComponent>(gridEntity.Uid);
+            EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 
         private void BuildControllers()
@@ -345,7 +345,7 @@ namespace Robust.Shared.GameObjects
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
-		      	Get<SharedJointSystem>().ClearJoints(physicsComponent);
+            Get<SharedJointSystem>().ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
             {

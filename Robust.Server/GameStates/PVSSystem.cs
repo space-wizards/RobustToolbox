@@ -65,7 +65,6 @@ internal partial class PVSSystem : EntitySystem
             new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly ConcurrentDictionary<EntityUid, EntityState> _cachedStates = new();
     private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
@@ -134,7 +133,7 @@ internal partial class PVSSystem : EntitySystem
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
-        _cachedStates.Clear();
+        _cachedPackets.Clear();
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -526,52 +525,49 @@ internal partial class PVSSystem : EntitySystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick)
     {
-        return _cachedStates.GetOrAdd(entityUid, _ =>
+        var bus = EntityManager.EventBus;
+        var changed = new List<ComponentChange>();
+
+        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
-            var bus = EntityManager.EventBus;
-            var changed = new List<ComponentChange>();
+            DebugTools.Assert(component.Initialized);
 
-            foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+            // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
+            // "not different from entity creation".
+            // i.e. when the client spawns the entity and loads the entity prototype,
+            // the data it deserializes from the prototype SHOULD be equal
+            // to what the component state / ComponentChange would send.
+            // As such, we can avoid sending this data in this case since the client "already has it".
+
+            DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
+
+            if (!EntityManager.CanGetComponentState(bus, component, player))
+                continue;
+
+            if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
             {
-                DebugTools.Assert(component.Initialized);
+                ComponentState? state = null;
+                if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                    component.LastModifiedTick >= fromTick)
+                    state = EntityManager.GetComponentState(bus, component);
 
-                // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
-                // "not different from entity creation".
-                // i.e. when the client spawns the entity and loads the entity prototype,
-                // the data it deserializes from the prototype SHOULD be equal
-                // to what the component state / ComponentChange would send.
-                // As such, we can avoid sending this data in this case since the client "already has it".
-
-                DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
-
-                if (!EntityManager.CanGetComponentState(bus, component, player))
-                    continue;
-
-                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
-                {
-                    ComponentState? state = null;
-                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
-                        component.LastModifiedTick >= fromTick)
-                        state = EntityManager.GetComponentState(bus, component);
-
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Added(netId, state));
-                }
-                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
-                         component.LastModifiedTick >= fromTick)
-                {
-                    changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
-                }
+                // Can't be null since it's returned by GetNetComponents
+                // ReSharper disable once PossibleInvalidOperationException
+                changed.Add(ComponentChange.Added(netId, state));
             }
-
-            foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
+            else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                     component.LastModifiedTick >= fromTick)
             {
-                changed.Add(ComponentChange.Removed(netId));
+                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
             }
+        }
 
-            return new EntityState(entityUid, changed.ToArray());
-        });
+        foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
+        {
+            changed.Add(ComponentChange.Removed(netId));
+        }
+
+        return new EntityState(entityUid, changed.ToArray());
     }
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)

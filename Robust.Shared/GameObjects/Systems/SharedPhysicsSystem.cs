@@ -71,6 +71,7 @@ namespace Robust.Shared.GameObjects
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
+        [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -111,7 +112,7 @@ namespace Robust.Shared.GameObjects
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
             IoCManager.InjectDependencies(component);
-            component.BroadphaseSystem = Get<SharedBroadphaseSystem>();
+            component.BroadphaseSystem = _broadphaseSystem;
             component.PhysicsSystem = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
@@ -280,7 +281,7 @@ namespace Robust.Shared.GameObjects
             if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent))
                 return;
 
-            Get<SharedJointSystem>().ClearJoints(physicsComponent);
+            _joints.ClearJoints(physicsComponent);
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
@@ -345,7 +346,7 @@ namespace Robust.Shared.GameObjects
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
-            Get<SharedJointSystem>().ClearJoints(physicsComponent);
+            _joints.ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
             {

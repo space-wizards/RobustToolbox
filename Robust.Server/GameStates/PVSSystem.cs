@@ -494,11 +494,8 @@ internal partial class PVSSystem : EntitySystem
                 if (!seenEnts.Add(uid)) continue;
                 // This is essentially the same as IEntityManager.EntityExists, but returning MetaDataComponent.
                 if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
-
-                var ls = md.EntityLifeStage;
-                if (ls >= EntityLifeStage.Deleted) continue;
-
-                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+                
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
@@ -511,10 +508,7 @@ internal partial class PVSSystem : EntitySystem
                 if (!seenEnts.Add(uid)) continue;
                 if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
 
-                var ls = md.EntityLifeStage;
-                if (ls >= EntityLifeStage.Deleted) continue;
-
-                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, uid, fromTick));

@@ -42,6 +42,8 @@ namespace Robust.Server.GameStates
 
         private ISawmill _logger = default!;
 
+        public ushort TransformNetId { get; set; }
+
         public void PostInject()
         {
             _logger = Logger.GetSawmill("PVS");

@@ -13,34 +13,27 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
-            SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
-            SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
-            SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
-            SubscribeLocalEvent<MapGridComponent, ComponentRemove>(OnGridRemove);
+            SubscribeLocalEvent<MapGridComponent, ComponentRemove>(RemoveHandler);
+            SubscribeLocalEvent<MapGridComponent, ComponentInit>(HandleGridInitialize);
+            SubscribeLocalEvent<MapGridComponent, ComponentStartup>(HandleGridStartup);
         }
 
-        private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
-        {
-            var msg = new GridAddEvent(uid, component.GridIndex);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
-        }
-
-        private void OnGridInit(EntityUid uid, MapGridComponent component, ComponentInit args)
-        {
-            var msg = new GridInitializeEvent(uid, component.GridIndex);
-            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
-        }
-
-        private void OnGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
+        private void HandleGridStartup(EntityUid uid, MapGridComponent component, ComponentStartup args)
         {
             var msg = new GridStartupEvent(uid, component.GridIndex);
             EntityManager.EventBus.RaiseLocalEvent(uid, msg);
         }
 
-        private void OnGridRemove(EntityUid uid, MapGridComponent component, ComponentRemove args)
+        private void RemoveHandler(EntityUid uid, MapGridComponent component, ComponentRemove args)
         {
             EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex));
             MapManager.OnComponentRemoved(component);
+        }
+
+        private void HandleGridInitialize(EntityUid uid, MapGridComponent component, ComponentInit args)
+        {
+            var msg = new GridInitializeEvent(uid, component.GridIndex);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
         }
     }
 
@@ -77,21 +70,6 @@ namespace Robust.Shared.GameObjects
         public GridId GridId { get; }
 
         public GridInitializeEvent(EntityUid uid, GridId gridId)
-        {
-            EntityUid = uid;
-            GridId = gridId;
-        }
-    }
-
-    /// <summary>
-    /// Raised whenever a grid is Added
-    /// </summary>
-    public sealed class GridAddEvent : EntityEventArgs
-    {
-        public EntityUid EntityUid { get; }
-        public GridId GridId { get; }
-
-        public GridAddEvent(EntityUid uid, GridId gridId)
         {
             EntityUid = uid;
             GridId = gridId;

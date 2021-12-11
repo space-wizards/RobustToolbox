@@ -71,7 +71,6 @@ namespace Robust.Shared.GameObjects
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -98,7 +97,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
-            SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
 
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
@@ -112,7 +110,7 @@ namespace Robust.Shared.GameObjects
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
             IoCManager.InjectDependencies(component);
-            component.BroadphaseSystem = _broadphaseSystem;
+            component.BroadphaseSystem = Get<SharedBroadphaseSystem>();
             component.PhysicsSystem = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
@@ -217,10 +215,8 @@ namespace Robust.Shared.GameObjects
         private void HandleGridInit(GridInitializeEvent ev)
         {
             if (!EntityManager.EntityExists(ev.EntityUid)) return;
-            // Yes this ordering matters
-            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
+            var collideComp = ev.EntityUid.EnsureComponent<PhysicsComponent>();
             collideComp.BodyType = BodyType.Static;
-            EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 
         private void BuildControllers()
@@ -281,7 +277,7 @@ namespace Robust.Shared.GameObjects
             if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent))
                 return;
 
-            _joints.ClearJoints(physicsComponent);
+            Get<SharedJointSystem>().ClearJoints(physicsComponent);
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
@@ -346,7 +342,7 @@ namespace Robust.Shared.GameObjects
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
-            _joints.ClearJoints(physicsComponent);
+			Get<SharedJointSystem>().ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
             {

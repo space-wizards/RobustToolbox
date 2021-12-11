@@ -4,7 +4,6 @@ using System.Reflection;
 using JetBrains.Annotations;
 using Moq;
 using Robust.Server;
-using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
 using Robust.Server.Reflection;
@@ -250,7 +249,6 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
-            entitySystemMan.LoadExtraSystemType<ContainerSystem>();
             entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();

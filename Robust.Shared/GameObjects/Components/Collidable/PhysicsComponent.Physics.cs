@@ -186,7 +186,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal bool _awake = true;
+        private bool _awake = true;
 
         private void SetAwake(bool value)
         {
@@ -341,7 +341,8 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        [DataField("canCollide")] internal bool _canCollide = true;
+        [DataField("canCollide")]
+        private bool _canCollide = true;
 
         /// <summary>
         ///     Non-hard physics bodies will not cause action collision (e.g. blocking of movement)
@@ -832,7 +833,63 @@ namespace Robust.Shared.GameObjects
         {
             return EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
         }
-        
+
+        /// <inheritdoc />
+        protected override void Initialize()
+        {
+            base.Initialize();
+
+            if (BodyType == BodyType.Static)
+            {
+                _awake = false;
+            }
+
+            // TODO: Ordering fuckery need a new PR to fix some of this stuff
+            var transform = _entMan.GetComponent<TransformComponent>(Owner);
+            var mapId = transform.MapID;
+            if (mapId != MapId.Nullspace)
+            {
+                EntityUid tempQualifier = IoCManager.Resolve<IMapManager>().GetMapEntityId(mapId);
+                PhysicsMap = _entMan.GetComponent<SharedPhysicsMapComponent>(tempQualifier);
+            }
+
+            Dirty();
+            // Yeah yeah TODO Combine these
+            // Implicitly assume that stuff doesn't cover if a non-collidable is initialized.
+
+            if (CanCollide)
+            {
+                if (!Awake)
+                {
+                    _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(this));
+                }
+                else
+                {
+                    _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(this));
+                }
+
+                if (Owner.IsInContainer())
+                {
+                    _canCollide = false;
+                }
+                else
+                {
+                    // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new CollisionChangeMessage(this, Owner, _canCollide));
+                    _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsUpdateMessage(this));
+                }
+            }
+            else
+            {
+                _awake = false;
+            }
+
+            var startup = new PhysicsInitializedEvent(Owner);
+            _entMan.EventBus.RaiseLocalEvent(Owner, ref startup);
+
+            ResetMassData();
+        }
+
         public void ResetMassData()
         {
             _mass = 0.0f;

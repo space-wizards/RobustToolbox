@@ -668,10 +668,10 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+            _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             RebuildMatrices();

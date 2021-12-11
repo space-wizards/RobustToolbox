@@ -14,10 +14,10 @@ using Robust.Shared.Exceptions;
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
-    public partial class EntityManager
+    public class ComponentCollection : IComponentCollection
     {
-        [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [IoC.Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
+        [IoC.Dependency] public readonly IComponentFactory _componentFactory = default!;
+        [IoC.Dependency] public readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [IoC.Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -33,12 +33,12 @@ namespace Robust.Shared.GameObjects
         private readonly Dictionary<EntityUid, Dictionary<ushort, Component>> _netComponents
             = new(EntityCapacity);
 
-        private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
+        protected readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
             = new();
 
         private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
 
-        private UniqueIndexHkm<EntityUid, Component> _entCompIndex =
+        protected UniqueIndexHkm<EntityUid, Component> _entCompIndex =
             new(ComponentCollectionCapacity);
 
         /// <inheritdoc />
@@ -49,16 +49,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public event EventHandler<ComponentEventArgs>? ComponentDeleted;
-
-        public void InitializeComponents()
-        {
-            if (Initialized)
-                throw new InvalidOperationException("Already initialized.");
-
-            FillComponentDict();
-            _componentFactory.ComponentAdded += OnComponentAdded;
-            _componentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
-        }
 
         /// <summary>
         ///     Instantly clears all components from the manager. This will NOT shut them down gracefully.
@@ -74,57 +64,17 @@ namespace Robust.Shared.GameObjects
             FillComponentDict();
         }
 
-        private void OnComponentAdded(IComponentRegistration obj)
+        internal void OnComponentAdded(IComponentRegistration obj)
         {
             _entTraitDict.Add(obj.Type, new Dictionary<EntityUid, Component>());
         }
 
-        private void OnComponentReferenceAdded((IComponentRegistration, Type) obj)
+        internal void OnComponentReferenceAdded((IComponentRegistration, Type) obj)
         {
             _entTraitDict.Add(obj.Item2, new Dictionary<EntityUid, Component>());
         }
 
         #region Component Management
-
-        public void InitializeComponents(EntityUid uid)
-        {
-            var metadata = GetComponent<MetaDataComponent>(uid);
-            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
-            metadata.EntityLifeStage = EntityLifeStage.Initializing;
-
-            // Initialize() can modify the collection of components.
-            var components = GetComponents(uid)
-                .OrderBy(x => x switch
-                {
-                    TransformComponent _ => 0,
-                    IPhysBody _ => 1,
-                    _ => int.MaxValue
-                });
-
-            foreach (var component in components)
-            {
-                var comp = (Component) component;
-                if (comp.Initialized)
-                    continue;
-
-                comp.LifeInitialize();
-            }
-
-#if DEBUG
-            // Second integrity check in case of.
-            foreach (var t in GetComponents(uid))
-            {
-                if (!t.Initialized)
-                {
-                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
-                }
-            }
-
-#endif
-            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
-            metadata.EntityLifeStage = EntityLifeStage.Initialized;
-            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
-        }
 
         public void StartComponents(EntityUid uid)
         {
@@ -169,7 +119,7 @@ namespace Robust.Shared.GameObjects
             AddComponentInternal(uid, component, overwrite);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+        protected void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
         {
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
@@ -266,7 +216,7 @@ namespace Robust.Shared.GameObjects
             RemoveComponentImmediate((Component)component, uid, false);
         }
 
-        private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
+        protected static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)
         {
             static int Sequence(IComponent x)
                 => x switch
@@ -418,6 +368,11 @@ namespace Robust.Shared.GameObjects
 
             _entCompIndex.Remove(entityUid, component);
             ComponentDeleted?.Invoke(this, new DeletedComponentEventArgs(component, entityUid));
+        }
+
+        public virtual void DirtyEntity(EntityUid uid)
+        {
+
         }
 
         /// <inheritdoc />
@@ -782,13 +737,18 @@ namespace Robust.Shared.GameObjects
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FillComponentDict()
+        public void FillComponentDict()
         {
             _entTraitDict.Clear();
             foreach (var refType in _componentFactory.GetAllRefTypes())
             {
                 _entTraitDict.Add(refType, new Dictionary<EntityUid, Component>());
             }
+        }
+
+        public bool EntityExists(EntityUid uid)
+        {
+            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
         }
     }
 

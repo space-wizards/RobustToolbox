@@ -12,7 +12,7 @@ namespace Robust.Shared.GameObjects
     ///     Holds a collection of entities and the components attached to them.
     /// </summary>
     [PublicAPI]
-    public partial interface IEntityManager
+    public interface IEntityManager : IComponentCollection
     {
         /// <summary>
         ///     The current simulation tick being processed.
@@ -84,6 +84,12 @@ namespace Robust.Shared.GameObjects
         public void DirtyEntity(EntityUid uid);
 
         public void QueueDeleteEntity(EntityUid uid);
+
+        /// <summary>
+        ///     Calls Initialize() on all registered components of the entity.
+        /// </summary>
+        void InitializeComponents(EntityUid uid);
+
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

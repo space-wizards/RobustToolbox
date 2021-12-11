@@ -5,7 +5,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects
 {
-    public partial interface IEntityManager
+    public interface IComponentCollection
     {
         /// <summary>
         ///     A component was added to the manager.
@@ -22,11 +22,6 @@ namespace Robust.Shared.GameObjects
         ///     Usually you will want to subscribe to <see cref="ComponentRemoved"/>.
         /// </summary>
         event EventHandler<ComponentEventArgs>? ComponentDeleted;
-
-        /// <summary>
-        ///     Calls Initialize() on all registered components of the entity.
-        /// </summary>
-        void InitializeComponents(EntityUid uid);
 
         /// <summary>
         ///     Calls Startup() on all registered components of the entity.

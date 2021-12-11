@@ -2,27 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
-    /// <inheritdoc />
-    public partial class EntityManager : IEntityManager
+    /// <inheritdoc cref="IEntityManager" />
+    public class EntityManager : ComponentCollection,  IEntityManager
     {
-        #region Dependencies
-
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
         [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
         [IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
-
-        #endregion Dependencies
 
         /// <inheritdoc />
         public GameTick CurrentTick => _gameTiming.CurTick;
@@ -72,7 +69,9 @@ namespace Robust.Shared.GameObjects
 
             _eventBus = new EntityEventBus(this);
 
-            InitializeComponents();
+            FillComponentDict();
+            ComponentFactory.ComponentAdded += OnComponentAdded;
+            ComponentFactory.ComponentReferenceAdded += OnComponentReferenceAdded;
 
             Initialized = true;
         }
@@ -214,7 +213,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Calling Dirty on a component will call this directly.
         /// </remarks>
-        public void DirtyEntity(EntityUid uid)
+        public override void DirtyEntity(EntityUid uid)
         {
             var currentTick = CurrentTick;
 
@@ -301,14 +300,9 @@ namespace Robust.Shared.GameObjects
                 QueuedDeletions.Enqueue(uid);
         }
 
-        public bool EntityExists(EntityUid uid)
-        {
-            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
-        }
-
         public bool EntityExists(EntityUid? uid)
         {
-            return uid.HasValue && EntityExists(uid.Value);
+            return uid.HasValue && base.EntityExists(uid.Value);
         }
 
         public bool Deleted(EntityUid uid)
@@ -361,7 +355,7 @@ namespace Robust.Shared.GameObjects
                 uid = GenerateEntityUid();
             }
 
-            if (EntityExists(uid))
+            if (base.EntityExists(uid))
             {
                 throw new InvalidOperationException($"UID already taken: {uid}");
             }
@@ -484,6 +478,46 @@ namespace Robust.Shared.GameObjects
         protected virtual EntityUid GenerateEntityUid()
         {
             return new(NextEntityUid++);
+        }
+
+        public void InitializeComponents(EntityUid uid)
+        {
+            var metadata = GetComponent<MetaDataComponent>(uid);
+            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.PreInit);
+            metadata.EntityLifeStage = EntityLifeStage.Initializing;
+
+            // Initialize() can modify the collection of components.
+            var components = GetComponents(uid)
+                .OrderBy(x => x switch
+                {
+                    TransformComponent _ => 0,
+                    IPhysBody _ => 1,
+                    _ => int.MaxValue
+                });
+
+            foreach (var component in components)
+            {
+                var comp = (Component) component;
+                if (comp.Initialized)
+                    continue;
+
+                comp.LifeInitialize();
+            }
+
+#if DEBUG
+            // Second integrity check in case of.
+            foreach (var t in GetComponents(uid))
+            {
+                if (!t.Initialized)
+                {
+                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(EntityManager.InitializeComponents)}.");
+                }
+            }
+
+#endif
+            DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
+            metadata.EntityLifeStage = EntityLifeStage.Initialized;
+            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
         }
     }
 

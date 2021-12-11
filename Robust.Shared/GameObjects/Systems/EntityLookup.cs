@@ -421,7 +421,7 @@ namespace Robust.Shared.GameObjects
 
                 lookup.Tree.QueryAabb(ref list, (ref List<EntityUid> list, in EntityUid ent) =>
                 {
-                    if (!((!_entityManager.EntityExists(ent) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(ent).EntityLifeStage) >= EntityLifeStage.Deleted))
+                    if (!_entityManager.Deleted(ent))
                     {
                         list.Add(ent);
                     }

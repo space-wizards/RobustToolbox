@@ -429,8 +429,6 @@ namespace Robust.Client.GameStates
             var toApply = new Dictionary<EntityUid, (EntityState?, EntityState?)>();
             var toInitialize = new List<EntityUid>();
             var created = new List<EntityUid>();
-            var toHide = new List<EntityUid>();
-            var toShow = new List<EntityUid>();
 
             foreach (var es in curEntStates)
             {
@@ -440,9 +438,6 @@ namespace Robust.Client.GameStates
                 {
                     // Logger.Debug($"[{IGameTiming.TickStampStatic}] MOD {es.Uid}");
                     toApply.Add(uid, (es, null));
-                    if(_hiddenEntities.ContainsKey(uid))
-                        toShow.Add(uid);
-                    uid = es.Uid;
                 }
                 else //Unknown entities
                 {
@@ -456,10 +451,7 @@ namespace Robust.Client.GameStates
                     toApply.Add(newEntity, (es, null));
                     toInitialize.Add(newEntity);
                     created.Add(newEntity);
-                    uid = newEntity;
                 }
-                if(es.Hide)
-                    toHide.Add(uid);
             }
 
             foreach (var es in nextEntStates)
@@ -541,21 +533,6 @@ namespace Robust.Client.GameStates
                 _entityManager.DeleteEntity(entity);
             }
 #endif
-
-            foreach (var entityUid in toHide)
-            {
-                if(_entityManager.HasComponent<MapGridComponent>(entityUid)) continue;
-
-                var xform = _entityManager.GetComponent<TransformComponent>(entityUid);
-                _hiddenEntities.Add(entityUid, xform.MapID);
-                xform.ChangeMapId(MapId.Nullspace);
-            }
-
-            foreach (var entityUid in toShow)
-            {
-                _entityManager.GetComponent<TransformComponent>(entityUid).ChangeMapId(_hiddenEntities[entityUid]);
-                _hiddenEntities.Remove(entityUid);
-            }
 
             return created;
         }

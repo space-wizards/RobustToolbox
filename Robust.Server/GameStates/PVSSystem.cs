@@ -23,6 +23,7 @@ internal partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
 
     public const float ChunkSize = 8;
 
@@ -30,11 +31,6 @@ internal partial class PVSSystem : EntitySystem
     /// Maximum number of pooled objects
     /// </summary>
     private const int MaxVisPoolSize = 1024;
-
-    /// <summary>
-    /// Starting number of entities that are in view
-    /// </summary>
-    private const int ViewSetCapacity = 256;
 
     /// <summary>
     /// Is view culling enabled, or will we send the whole map?
@@ -47,6 +43,11 @@ internal partial class PVSSystem : EntitySystem
     private int _newEntityBudget;
 
     /// <summary>
+    /// How many entered entities can be sent per tick.
+    /// </summary>
+    private int _entityBudget;
+
+    /// <summary>
     /// Size of the side of the view bounds square.
     /// </summary>
     private float _viewSize;
@@ -55,6 +56,7 @@ internal partial class PVSSystem : EntitySystem
     /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
+    private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerSeenSets = new();
 
     private PVSCollection<EntityUid> _entityPvsCollection = default!;
     public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
@@ -65,7 +67,6 @@ internal partial class PVSSystem : EntitySystem
             new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly ConcurrentDictionary<EntityUid, EntityState> _cachedStates = new();
     private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
@@ -84,9 +85,15 @@ internal partial class PVSSystem : EntitySystem
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetPVSNewEntityBudget, OnNewEntityBudgetChanged, true);
         _configManager.OnValueChanged(CVars.NetPVSEntityBudget, OnEntityBudgetChanged, true);
 
         InitializeDirty();
+    }
+
+    private void OnEntityBudgetChanged(int obj)
+    {
+        _entityBudget = obj;
     }
 
     public override void Shutdown()
@@ -118,7 +125,7 @@ internal partial class PVSSystem : EntitySystem
         _cullingEnabled = value;
     }
 
-    private void OnEntityBudgetChanged(int obj)
+    private void OnNewEntityBudgetChanged(int obj)
     {
         _newEntityBudget = obj;
     }
@@ -134,7 +141,7 @@ internal partial class PVSSystem : EntitySystem
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
-        _cachedStates.Clear();
+        _cachedPackets.Clear();
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -194,6 +201,7 @@ internal partial class PVSSystem : EntitySystem
         if (e.NewStatus == SessionStatus.InGame)
         {
             _playerVisibleSets.Add(e.Session, _visSetPool.Get());
+            _playerSeenSets.Add(e.Session, new HashSet<EntityUid>());
             foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.AddPlayer(e.Session);
@@ -203,6 +211,7 @@ internal partial class PVSSystem : EntitySystem
         {
             _visSetPool.Return(_playerVisibleSets[e.Session]);
             _playerVisibleSets.Remove(e.Session);
+            _playerSeenSets.Remove(e.Session);
             foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.RemovePlayer(e.Session);
@@ -251,12 +260,12 @@ internal partial class PVSSystem : EntitySystem
 
     #endregion
 
-    //todo make this actually use toTick in non-all-sending
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(ICommonSession session,
         GameTick fromTick, GameTick toTick)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntitiesSent = 0;
+        var entitiesSent = 0;
 
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
         if (!_cullingEnabled)
@@ -267,23 +276,25 @@ internal partial class PVSSystem : EntitySystem
 
         var playerVisibleSet = _playerVisibleSets[session];
         var visibleEnts = _visSetPool.Get();
+        var seenSet = _playerSeenSets[session];
+
         visibleEnts.Clear();
 
         foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
         {
-            TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
+            TryAddToVisibleEnts(entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
         }
 
         foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
         {
-            TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
+            TryAddToVisibleEnts(entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
         }
 
         var expandEvent = new ExpandPvsEvent((IPlayerSession) session, new List<EntityUid>());
         RaiseLocalEvent(ref expandEvent);
         foreach (var entityUid in expandEvent.Entities)
         {
-            TryAddToVisibleEnts(entityUid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent);
+            TryAddToVisibleEnts(entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
         }
 
         var viewers = GetSessionViewers(session);
@@ -297,7 +308,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             //todo at some point just register the viewerentities as localoverrides
-            TryAddToVisibleEnts(eyeEuid, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, visMask);
+            TryAddToVisibleEnts(eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -307,7 +318,7 @@ internal partial class PVSSystem : EntitySystem
                 {
                     foreach (var index in chunk)
                     {
-                        TryAddToVisibleEnts(index, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, visMask);
+                        TryAddToVisibleEnts(index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
                     }
                 }
             }
@@ -324,7 +335,7 @@ internal partial class PVSSystem : EntitySystem
                     {
                         foreach (var index in chunk)
                         {
-                            TryAddToVisibleEnts(index, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, visMask);
+                            TryAddToVisibleEnts(index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
                         }
                     }
                 }
@@ -361,8 +372,10 @@ internal partial class PVSSystem : EntitySystem
             if (!EntityManager.EntityExists(entityUid))
                 continue;
 
-            //create a state indicating it should be hidden
-            entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(), true));
+            entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
+            {
+                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+            }), true));
         }
 
         _playerVisibleSets[session] = visibleEnts;
@@ -374,7 +387,7 @@ internal partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool TryAddToVisibleEnts(EntityUid uid, Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
+    private bool TryAddToVisibleEnts(EntityUid uid, HashSet<EntityUid> seenSet, Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, ref int totalEnteredEntities, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
     {
         //are we valid yet?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -397,22 +410,32 @@ internal partial class PVSSystem : EntitySystem
         if (!trustParent && //do we have it on good authority the parent exists?
             parent.IsValid() && //is it not a worldentity?
             !toSend.ContainsKey(parent) && //was the parent not yet added to toSend?
-            !TryAddToVisibleEnts(parent, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, visMask)) //did we just fail to add the parent?
+            !TryAddToVisibleEnts(parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, visMask)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
         //did we already get added through the parent call?
         if (toSend.ContainsKey(uid)) return true;
 
-        //did the previous tick see us?
-        var @new = !previousVisibleEnts.Remove(uid);
+        //are we new?
+        var @new = !seenSet.Contains(uid);
+        var entered = @new | !previousVisibleEnts.Remove(uid);
+
+        if (entered)
+        {
+            if (!dontSkip && totalEnteredEntities >= _entityBudget)
+                return false;
+
+            totalEnteredEntities++;
+        }
 
         if (@new)
         {
             //we just entered pvs, do we still have enough budget to send us?
-            if(!dontSkip && newEntitiesSent > _newEntityBudget)
+            if(!dontSkip && newEntitiesSent >= _newEntityBudget)
                 return false;
 
             newEntitiesSent++;
+            seenSet.Add(uid);
         }
 
         //we *need* to send out contained entities too as part of the intial state
@@ -422,13 +445,19 @@ internal partial class PVSSystem : EntitySystem
             {
                 foreach (var containedEntity in container.ContainedEntities)
                 {
-                    TryAddToVisibleEnts(containedEntity, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, null,
+                    TryAddToVisibleEnts(containedEntity, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, null,
                         true, true);
                 }
             }
         }
 
-        if (!@new && packet.MetaDataComponent.EntityLastModifiedTick < fromTick)
+        if (entered)
+        {
+            toSend.Add(uid, PVSEntityVisiblity.Entered);
+            return true;
+        }
+
+        if (packet.MetaDataComponent.EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);
@@ -436,7 +465,7 @@ internal partial class PVSSystem : EntitySystem
         }
 
         //add us
-        toSend.Add(uid, @new ? PVSEntityVisiblity.Entered : PVSEntityVisiblity.StayedChanged);
+        toSend.Add(uid, PVSEntityVisiblity.StayedChanged);
         return true;
     }
 
@@ -463,13 +492,10 @@ internal partial class PVSSystem : EntitySystem
             foreach (var uid in add)
             {
                 if (!seenEnts.Add(uid)) continue;
-                if (!EntityManager.EntityExists(uid)) continue;
-
-                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
-                var ls = md.EntityLifeStage;
-                if (ls >= EntityLifeStage.Deleted) continue;
-
-                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+                // This is essentially the same as IEntityManager.EntityExists, but returning MetaDataComponent.
+                if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
+                
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
@@ -480,13 +506,9 @@ internal partial class PVSSystem : EntitySystem
                 DebugTools.Assert(!add.Contains(uid));
 
                 if (!seenEnts.Add(uid)) continue;
-                if (!EntityManager.EntityExists(uid)) continue;
+                if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
 
-                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
-                var ls = md.EntityLifeStage;
-                if (ls >= EntityLifeStage.Deleted) continue;
-
-                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, uid, fromTick));
@@ -500,17 +522,13 @@ internal partial class PVSSystem : EntitySystem
 
         stateEntities = new List<EntityState>(EntityManager.EntityCount);
 
-        foreach (var entity in EntityManager.GetEntities())
+        // This is the same as iterating every existing entity.
+        foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
         {
-            if (!EntityManager.EntityExists(entity)) continue;
-            var md = EntityManager.GetComponent<MetaDataComponent>(entity);
-            var ls = md.EntityLifeStage;
-            if (ls >= EntityLifeStage.Deleted) continue;
-
-            DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+            DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
             if (md.EntityLastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, entity, fromTick));
+                stateEntities.Add(GetEntityState(player, md.Owner, fromTick));
         }
 
         // no point sending an empty collection
@@ -526,52 +544,49 @@ internal partial class PVSSystem : EntitySystem
     /// <returns>New entity State for the given entity.</returns>
     private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick)
     {
-        return _cachedStates.GetOrAdd(entityUid, _ =>
+        var bus = EntityManager.EventBus;
+        var changed = new List<ComponentChange>();
+
+        foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
-            var bus = EntityManager.EventBus;
-            var changed = new List<ComponentChange>();
+            DebugTools.Assert(component.Initialized);
 
-            foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
+            // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
+            // "not different from entity creation".
+            // i.e. when the client spawns the entity and loads the entity prototype,
+            // the data it deserializes from the prototype SHOULD be equal
+            // to what the component state / ComponentChange would send.
+            // As such, we can avoid sending this data in this case since the client "already has it".
+
+            DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
+
+            if (!EntityManager.CanGetComponentState(bus, component, player))
+                continue;
+
+            if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
             {
-                DebugTools.Assert(component.Initialized);
+                ComponentState? state = null;
+                if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                    component.LastModifiedTick >= fromTick)
+                    state = EntityManager.GetComponentState(bus, component);
 
-                // NOTE: When LastModifiedTick or CreationTick are 0 it means that the relevant data is
-                // "not different from entity creation".
-                // i.e. when the client spawns the entity and loads the entity prototype,
-                // the data it deserializes from the prototype SHOULD be equal
-                // to what the component state / ComponentChange would send.
-                // As such, we can avoid sending this data in this case since the client "already has it".
-
-                DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
-
-                if (!EntityManager.CanGetComponentState(bus, component, player))
-                    continue;
-
-                if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
-                {
-                    ComponentState? state = null;
-                    if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
-                        component.LastModifiedTick >= fromTick)
-                        state = EntityManager.GetComponentState(bus, component);
-
-                    // Can't be null since it's returned by GetNetComponents
-                    // ReSharper disable once PossibleInvalidOperationException
-                    changed.Add(ComponentChange.Added(netId, state));
-                }
-                else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
-                         component.LastModifiedTick >= fromTick)
-                {
-                    changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
-                }
+                // Can't be null since it's returned by GetNetComponents
+                // ReSharper disable once PossibleInvalidOperationException
+                changed.Add(ComponentChange.Added(netId, state));
             }
-
-            foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
+            else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
+                     component.LastModifiedTick >= fromTick)
             {
-                changed.Add(ComponentChange.Removed(netId));
+                changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
             }
+        }
 
-            return new EntityState(entityUid, changed.ToArray());
-        });
+        foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
+        {
+            changed.Add(ComponentChange.Removed(netId));
+        }
+
+        return new EntityState(entityUid, changed.ToArray());
     }
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)

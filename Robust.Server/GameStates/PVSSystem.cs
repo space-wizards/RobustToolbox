@@ -531,10 +531,7 @@ internal partial class PVSSystem : EntitySystem
         // This is the same as iterating every existing entity.
         foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
         {
-            var ls = md.EntityLifeStage;
-            if (ls >= EntityLifeStage.Deleted) continue;
-
-            DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+            DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
             if (md.EntityLastModifiedTick >= fromTick)
                 stateEntities.Add(GetEntityState(player, md.Owner, fromTick));

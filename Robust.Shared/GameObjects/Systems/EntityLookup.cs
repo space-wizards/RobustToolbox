@@ -556,15 +556,17 @@ namespace Robust.Shared.GameObjects
 
         private Box2 GetLookupBounds(EntityUid uid, EntityLookupComponent lookup, Vector2 worldPos, Angle worldRot, float enlarged)
         {
-            var localPos = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.Transform(worldPos);
-            var localRot = worldRot - _entityManager.GetComponent<TransformComponent>(lookup.Owner).WorldRotation;
+            var (_, lookupRot, lookupInvWorldMatrix) = _entityManager.GetComponent<TransformComponent>(lookup.Owner).GetWorldPositionRotationInvMatrix();
+            
+            var localPos = lookupInvWorldMatrix.Transform(worldPos);
+            var localRot = worldRot - lookupRot;
 
-            if (_entityManager.TryGetComponent(uid, out PhysicsComponent? body))
+            if (_entityManager.TryGetComponent(uid, out FixturesComponent? body))
             {
                 var transform = new Transform(localPos, localRot);
                 Box2? aabb = null;
 
-                foreach (var fixture in body.Fixtures)
+                foreach (var (_, fixture) in body.Fixtures)
                 {
                     if (!fixture.Hard) continue;
                     for (var i = 0; i < fixture.Shape.ChildCount; i++)

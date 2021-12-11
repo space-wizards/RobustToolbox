@@ -26,9 +26,9 @@ namespace Robust.Client.Console
             return _implementation?.CanCommand(cmdName) ?? true;
         }
 
-        public bool CanViewVar()
+        public bool CanViewVar(bool write)
         {
-            return _implementation?.CanViewVar() ?? false;
+            return _implementation?.CanViewVar(write) ?? false;
         }
 
         public bool CanAdminPlace()

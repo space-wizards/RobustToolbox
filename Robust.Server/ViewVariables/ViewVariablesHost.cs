@@ -56,8 +56,10 @@ namespace Robust.Server.ViewVariables
 
         private void _msgModifyRemote(MsgViewVariablesModifyRemote message)
         {
+            var player = _playerManager.GetSessionByChannel(message.MsgChannel);
             if (!_sessions.TryGetValue(message.SessionId, out var session)
-                || session.PlayerUser != message.MsgChannel.UserId)
+                || session.PlayerUser != message.MsgChannel.UserId
+                || !_groupController.CanViewVar(player, true))
             {
                 // TODO: logging?
                 return;
@@ -108,7 +110,7 @@ namespace Robust.Server.ViewVariables
             }
 
             var player = _playerManager.GetSessionByChannel(message.MsgChannel);
-            if (!_groupController.CanViewVar(player))
+            if (!_groupController.CanViewVar(player, false))
             {
                 Deny(DenyReason.NoAccess);
                 return;

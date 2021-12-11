@@ -492,13 +492,10 @@ internal partial class PVSSystem : EntitySystem
             foreach (var uid in add)
             {
                 if (!seenEnts.Add(uid)) continue;
-                if (!EntityManager.EntityExists(uid)) continue;
-
-                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
-                var ls = md.EntityLifeStage;
-                if (ls >= EntityLifeStage.Deleted) continue;
-
-                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+                // This is essentially the same as IEntityManager.EntityExists, but returning MetaDataComponent.
+                if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
+                
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
@@ -509,13 +506,9 @@ internal partial class PVSSystem : EntitySystem
                 DebugTools.Assert(!add.Contains(uid));
 
                 if (!seenEnts.Add(uid)) continue;
-                if (!EntityManager.EntityExists(uid)) continue;
+                if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
 
-                var md = EntityManager.GetComponent<MetaDataComponent>(uid);
-                var ls = md.EntityLifeStage;
-                if (ls >= EntityLifeStage.Deleted) continue;
-
-                DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+                DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
                     stateEntities.Add(GetEntityState(player, uid, fromTick));
@@ -529,17 +522,13 @@ internal partial class PVSSystem : EntitySystem
 
         stateEntities = new List<EntityState>(EntityManager.EntityCount);
 
-        foreach (var entity in EntityManager.GetEntities())
+        // This is the same as iterating every existing entity.
+        foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
         {
-            if (!EntityManager.EntityExists(entity)) continue;
-            var md = EntityManager.GetComponent<MetaDataComponent>(entity);
-            var ls = md.EntityLifeStage;
-            if (ls >= EntityLifeStage.Deleted) continue;
-
-            DebugTools.Assert(ls >= EntityLifeStage.Initialized);
+            DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
             if (md.EntityLastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, entity, fromTick));
+                stateEntities.Add(GetEntityState(player, md.Owner, fromTick));
         }
 
         // no point sending an empty collection

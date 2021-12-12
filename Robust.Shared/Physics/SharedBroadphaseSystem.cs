@@ -376,7 +376,7 @@ namespace Robust.Shared.Physics
             var lifestage = ev.Component.LifeStage;
 
             // Oh god kill it with fire.
-            if (lifestage != ComponentLifeStage.Initialized) return;
+            if (lifestage is < ComponentLifeStage.Initialized or > ComponentLifeStage.Running) return;
 
             if (ev.Component.CanCollide)
             {

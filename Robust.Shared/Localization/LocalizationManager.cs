@@ -261,5 +261,46 @@ namespace Robust.Shared.Localization
                 _logSawmill.Warning("Error extracting `{locId}`\n{e1}", locId, err);
             }
         }
+
+        public CommandLocData GetCommandData(string command)
+        {
+            var locId = $"cmd-{command}";
+
+            string? desc = null;
+            string? help = null;
+
+            // get message from Fluent
+            if (TryGetMessage(locId, out var bundle, out var message))
+            {
+                // loop through attributes to find help attribute
+                foreach (var (attrId, pattern) in message.Attributes)
+                {
+                    var attrib = attrId.ToString();
+                    if (attrib.Equals("help"))
+                    {
+                        // get string from attribute pattern
+                        help = bundle.FormatPattern(pattern, null, out var errors);
+                        WriteWarningForErrs(errors, locId);
+
+                        break;
+                    } else
+                    {
+                        continue;
+                    }
+                }
+
+                if (message.Value != null)
+                {
+                    // get string from pattern
+                    desc = bundle.FormatPattern(message.Value, null, out var errors);
+                    WriteWarningForErrs(errors, locId);
+                }
+            }
+
+            return new CommandLocData(
+                desc ?? "",
+                help ?? ""
+            );
+        }
     }
 }

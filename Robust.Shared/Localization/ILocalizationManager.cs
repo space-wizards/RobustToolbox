@@ -83,6 +83,12 @@ namespace Robust.Shared.Localization
         ///     Gets localization data for an entity prototype.
         /// </summary>
         EntityLocData GetEntityData(string prototypeId);
+
+        /// <summary>
+        ///     Gets localization data for a console command.
+        /// </summary>
+        /// <param name="command">The command to get localization for, as a string.</param>
+        CommandLocData GetCommandData(string command);
     }
 
     internal interface ILocalizationManagerInternal : ILocalizationManager

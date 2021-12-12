@@ -64,6 +64,7 @@ namespace Robust.Client
             IoCManager.Register<IClientNetManager, NetManager>();
             IoCManager.Register<IClientEntityManager, ClientEntityManager>();
             IoCManager.Register<IClientEntityManagerInternal, ClientEntityManager>();
+            IoCManager.Register<IEntitySystemManager, ClientEntityManager>();
             IoCManager.Register<IEntityNetworkManager, ClientEntityManager>();
             IoCManager.Register<IClientGameStateManager, ClientGameStateManager>();
             IoCManager.Register<IBaseClient, BaseClient>();

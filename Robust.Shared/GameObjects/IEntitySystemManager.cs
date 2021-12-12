@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.IoC.Exceptions;
 
@@ -19,9 +18,12 @@ namespace Robust.Shared.GameObjects
     /// Periodically ticks <see cref="IEntitySystem"/> instances.
     /// </remarks>
     /// <seealso cref="IEntitySystem"/>
-    public interface IEntitySystemManager
+    public interface IEntitySystemManager : IEntityCollection
     {
         bool MetricsEnabled { get; set; }
+        IEntitySystemManager EntitySysManager { get; }
+
+        void SetupSystems();
 
         /// <summary>
         /// A new entity system has been loaded into the manager.
@@ -85,29 +87,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="entitySystem">instance matching the specified type (if exists).</param>
         /// <returns>If an instance of the specified entity system type exists.</returns>
         bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem) where T : IEntitySystem;
-
-        /// <summary>
-        /// Initialize, discover systems and initialize them through <see cref="IEntitySystem.Initialize"/>.
-        /// </summary>
-        /// <seealso cref="IEntitySystem.Initialize"/>
-        void Initialize();
-
-        /// <summary>
-        /// Clean up, shut down all systems through <see cref="IEntitySystem.Shutdown"/> and remove them.
-        /// </summary>
-        /// <seealso cref="IEntitySystem.Shutdown"/>
-        void Shutdown();
-
-        void Clear();
-
-        /// <summary>
-        /// Update all systems.
-        /// </summary>
-        /// <param name="frameTime">Time since the last frame was rendered.</param>
-        /// <seealso cref="IEntitySystem.Update(float)"/>
-        void TickUpdate(float frameTime);
-        void FrameUpdate(float frameTime);
-
+        
         /// <summary>
         ///     Adds an extra entity system type that otherwise would not be loaded automatically, useful for testing.
         /// </summary>

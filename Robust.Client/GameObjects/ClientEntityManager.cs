@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
-    public sealed class ClientEntityManager : EntityManager, IClientEntityManagerInternal
+    internal class ClientEntityManager : EntityManager, IClientEntityManagerInternal
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientNetManager _networkManager = default!;
@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
         public event EventHandler<object>? ReceivedSystemMessage;
 
         private readonly PriorityQueue<(uint seq, MsgEntity msg)> _queue = new(new MessageTickComparer());
-        private uint _incomingMsgSequence = 0;
+        private uint _incomingMsgSequence;
 
         /// <inheritdoc />
         public void SetupNetworking()

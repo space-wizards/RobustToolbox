@@ -9,7 +9,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    [TestFixture, Parallelizable ,TestOf(typeof(EntityManager))]
+    [TestFixture, Parallelizable ,TestOf(typeof(EntityCollection))]
     public class EntityManager_Components_Tests
     {
         private static readonly EntityCoordinates DefaultCoords = new(new EntityUid(1), Vector2.Zero);

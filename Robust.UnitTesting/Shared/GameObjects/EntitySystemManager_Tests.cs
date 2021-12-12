@@ -48,7 +48,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IEntitySystemManager>().Initialize();
+            IoCManager.Resolve<IEntityManager>().Initialize();
+            IoCManager.Resolve<IEntityManager>().SetupSystems();
         }
 
         [Test]

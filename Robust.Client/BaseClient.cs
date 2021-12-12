@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
@@ -212,6 +212,7 @@ namespace Robust.Client
         private void GameStartedSetup()
         {
             _entityManager.Startup();
+            _entityManager.SetupSystems();
             _mapManager.Startup();
             _entityLookup.Startup();
 

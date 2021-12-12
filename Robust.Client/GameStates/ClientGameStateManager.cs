@@ -53,7 +53,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IClientMapManager _mapManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
-        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IEntityManager _entitySystemManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
         [Dependency] private readonly IInputManager _inputManager = default!;
 #if EXCEPTION_TOLERANCE

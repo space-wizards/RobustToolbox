@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -58,7 +58,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager">Entity Manager containing the entity Id.</param>
         /// <returns><see langword="true" /> if this set of coordinates can be currently resolved to a location, otherwise <see langword="false" />.</returns>
-        public bool IsValid(IEntityManager entityManager)
+        public bool IsValid(IEntityCollection entityManager)
         {
             if (!EntityId.IsValid() || !entityManager.EntityExists(EntityId))
                 return false;
@@ -220,7 +220,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entityManager"></param>
         /// <returns>Map Id these coordinates are on or <see cref="MapId.Nullspace"/></returns>
-        public MapId GetMapId(IEntityManager entityManager)
+        public MapId GetMapId(IEntityCollection entityManager)
         {
             return !IsValid(entityManager) ? MapId.Nullspace : entityManager.GetComponent<TransformComponent>(EntityId).MapID;
         }

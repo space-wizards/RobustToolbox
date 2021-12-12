@@ -14,10 +14,10 @@ using Robust.Shared.Exceptions;
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
-    public class ComponentCollection : IComponentCollection
+    internal class ComponentCollection : IComponentCollection
     {
-        [IoC.Dependency] public readonly IComponentFactory _componentFactory = default!;
-        [IoC.Dependency] public readonly IComponentDependencyManager _componentDependencyManager = default!;
+        [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [IoC.Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [IoC.Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -132,8 +132,10 @@ namespace Robust.Shared.GameObjects
                     continue;
 
                 if (!overwrite && !duplicate.Deleted)
+                {
                     throw new InvalidOperationException(
                         $"Component reference type {type} already occupied by {duplicate}");
+                }
 
                 // these two components are required on all entities and cannot be overwritten.
                 if (duplicate is TransformComponent || duplicate is MetaDataComponent)
@@ -210,7 +212,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.Owner != uid)
+            if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             RemoveComponentImmediate((Component)component, uid, false);

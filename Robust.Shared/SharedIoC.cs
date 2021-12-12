@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Asynchronous;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -28,7 +28,6 @@ namespace Robust.Shared
             IoCManager.Register<IConfigurationManagerInternal, NetConfigurationManager>();
             IoCManager.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             IoCManager.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
-            IoCManager.Register<IEntitySystemManager, EntitySystemManager>();
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
             IoCManager.Register<ILocalizationManagerInternal, LocalizationManager>();
             IoCManager.Register<ILogManager, LogManager>();

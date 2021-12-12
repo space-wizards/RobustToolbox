@@ -13,10 +13,9 @@ namespace Robust.Shared.GameObjects
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
     /// <inheritdoc cref="IEntityManager" />
-    public class EntityManager : ComponentCollection,  IEntityManager
+    internal class EntityCollection : ComponentCollection,  IEntityCollection
     {
         [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
         [IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
@@ -24,10 +23,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public GameTick CurrentTick => _gameTiming.CurTick;
 
-        IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
-
-        /// <inheritdoc />
-        public IEntitySystemManager EntitySysManager => EntitySystemManager;
+        IComponentFactory IEntityCollection.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
@@ -55,13 +51,6 @@ namespace Robust.Shared.GameObjects
         public bool Started { get; protected set; }
         public bool Initialized { get; protected set; }
 
-        /// <summary>
-        /// Constructs a new instance of <see cref="EntityManager"/>.
-        /// </summary>
-        public EntityManager()
-        {
-        }
-
         public virtual void Initialize()
         {
             if (Initialized)
@@ -81,7 +70,6 @@ namespace Robust.Shared.GameObjects
             if (Started)
                 throw new InvalidOperationException("Startup() called multiple times");
 
-            EntitySystemManager.Initialize();
             Started = true;
         }
 
@@ -89,7 +77,6 @@ namespace Robust.Shared.GameObjects
         {
             FlushEntities();
             _eventBus.ClearEventTables();
-            EntitySystemManager.Shutdown();
             ClearComponents();
             Initialized = false;
             Started = false;
@@ -99,7 +86,6 @@ namespace Robust.Shared.GameObjects
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
-            EntitySystemManager.Clear();
             Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
@@ -111,11 +97,6 @@ namespace Robust.Shared.GameObjects
 
         public virtual void TickUpdate(float frameTime, Histogram? histogram)
         {
-            using (histogram?.WithLabels("EntitySystems").NewTimer())
-            {
-                EntitySystemManager.TickUpdate(frameTime);
-            }
-
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
             {
                 _eventBus.ProcessEventQueue();
@@ -137,10 +118,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public virtual void FrameUpdate(float frameTime)
-        {
-            EntitySystemManager.FrameUpdate(frameTime);
-        }
+        public virtual void FrameUpdate(float frameTime) { }
 
         #region Entity Management
 
@@ -315,10 +293,7 @@ namespace Robust.Shared.GameObjects
             return !uid.HasValue || !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
-        /// <summary>
-        /// Disposes all entities and clears all lists.
-        /// </summary>
-        public void FlushEntities()
+        private void FlushEntities()
         {
             foreach (var e in GetEntities())
             {
@@ -474,7 +449,6 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
-        /// <inheritdoc />
         protected virtual EntityUid GenerateEntityUid()
         {
             return new(NextEntityUid++);
@@ -510,7 +484,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (!t.Initialized)
                 {
-                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(EntityManager.InitializeComponents)}.");
+                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(EntityCollection.InitializeComponents)}.");
                 }
             }
 

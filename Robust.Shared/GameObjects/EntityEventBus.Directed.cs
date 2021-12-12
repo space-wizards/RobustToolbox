@@ -83,14 +83,14 @@ namespace Robust.Shared.GameObjects
         private delegate void DirectedEventHandler<TEvent>(EntityUid uid, IComponent comp, ref TEvent args)
             where TEvent : notnull;
 
-        private IEntityManager _entMan;
+        private IEntityCollection _entMan;
         private EventTables _eventTables;
 
         /// <summary>
         /// Constructs a new instance of <see cref="EntityEventBus"/>.
         /// </summary>
         /// <param name="entMan">The entity manager to watch for entity/component events.</param>
-        public EntityEventBus(IEntityManager entMan)
+        public EntityEventBus(IEntityCollection entMan)
         {
             _entMan = entMan;
             _eventTables = new EventTables(_entMan);
@@ -226,7 +226,7 @@ namespace Robust.Shared.GameObjects
             private const string ValueDispatchError = "Tried to dispatch a value event to a by-reference subscription.";
             private const string RefDispatchError = "Tried to dispatch a ref event to a by-value subscription.";
 
-            private IEntityManager _entMan;
+            private IEntityCollection _entMan;
             private IComponentFactory _comFac;
 
             // eUid -> EventType -> { CompType1, ... CompTypeN }
@@ -241,7 +241,7 @@ namespace Robust.Shared.GameObjects
             // prevents shitcode, get your subscriptions figured out before you start spawning entities
             private bool _subscriptionLock;
 
-            public EventTables(IEntityManager entMan)
+            public EventTables(IEntityCollection entMan)
             {
                 _entMan = entMan;
                 _comFac = entMan.ComponentFactory;
@@ -547,16 +547,16 @@ namespace Robust.Shared.GameObjects
                 private HashSet<Type>.Enumerator _enumerator;
                 private readonly IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> _subscriptions;
                 private readonly EntityUid _uid;
-                private readonly IEntityManager _entityManager;
+                private readonly IComponentCollection _components;
 
                 public SubscriptionsEnumerator(Type eventType, HashSet<Type>.Enumerator enumerator,
                     IReadOnlyDictionary<Type, Dictionary<Type, DirectedRegistration>> subscriptions, EntityUid uid,
-                    IEntityManager entityManager)
+                    IComponentCollection components)
                 {
                     _eventType = eventType;
                     _enumerator = enumerator;
                     _subscriptions = subscriptions;
-                    _entityManager = entityManager;
+                    _components = components;
                     _uid = uid;
                 }
 
@@ -586,7 +586,7 @@ namespace Robust.Shared.GameObjects
                         return false;
                     }
 
-                    tuple = (_entityManager.GetComponent(_uid, compType), registration);
+                    tuple = (_components.GetComponent(_uid, compType), registration);
                     return true;
                 }
 

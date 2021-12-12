@@ -70,7 +70,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             deps.Register<IDynamicTypeFactory, DynamicTypeFactory>();
             deps.Register<IDynamicTypeFactoryInternal, DynamicTypeFactory>();
             deps.RegisterInstance<IModLoader>(new Mock<IModLoader>().Object);
-            deps.Register<IEntitySystemManager, EntitySystemManager>();
+            deps.Register<IEntityManager, EntityManager>();
             deps.RegisterInstance<IEntityManager>(new Mock<IEntityManager>().Object);
 
             var reflectionMock = new Mock<IReflectionManager>();
@@ -89,8 +89,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             IoCManager.InitThread(deps, true);
 
-            var systems = deps.Resolve<IEntitySystemManager>();
+            var systems = deps.Resolve<IEntityManager>();
             systems.Initialize();
+            systems.SetupSystems();
 
             var counter = new Counter();
 

@@ -198,13 +198,13 @@ namespace Robust.UnitTesting.Server
             //Tier 2: Simulation
             container.RegisterInstance<IConsoleHost>(new Mock<IConsoleHost>().Object); //Console is technically a frontend, we want to run headless
             container.Register<IEntityManager, EntityManager>();
+            container.Register<IEntitySystemManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
             container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IComponentDependencyManager, ComponentDependencyManager>();
-            container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IIslandManager, IslandManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
@@ -260,6 +260,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
+            entitySystemMan.SetupSystems();
 
             var mapManager = container.Resolve<IMapManager>();
             mapManager.Initialize();

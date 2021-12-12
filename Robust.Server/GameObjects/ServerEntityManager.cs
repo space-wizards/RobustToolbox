@@ -21,7 +21,7 @@ namespace Robust.Server.GameObjects
     /// Manager for entities -- controls things like template loading and instantiation
     /// </summary>
     [UsedImplicitly] // DI Container
-    public sealed class ServerEntityManager : EntityManager, IServerEntityManagerInternal
+    internal class ServerEntityManager : EntityManager, IServerEntityManagerInternal
     {
         private static readonly Gauge EntitiesCount = Metrics.CreateGauge(
             "robust_entities_count",
@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var (netId, component) in GetNetComponents(entity))
+                foreach (var (_, component) in GetNetComponents(entity))
                 {
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
@@ -127,7 +127,7 @@ namespace Robust.Server.GameObjects
             _configurationManager.OnValueChanged(CVars.NetLogLateMsg, b => _logLateMsgs = b, true);
         }
 
-        /// <inheritdoc />
+        /// <inheritdoc cref="IEntityManager" />
         public override void TickUpdate(float frameTime, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())

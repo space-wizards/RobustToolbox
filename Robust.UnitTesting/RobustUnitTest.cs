@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -73,16 +73,13 @@ namespace Robust.UnitTesting
 
             configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
 
-            // Required systems
-            var systems = IoCManager.Resolve<IEntitySystemManager>();
-            systems.Initialize();
-
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             if(entMan.EventBus == null)
             {
                 entMan.Initialize();
                 entMan.Startup();
+                entMan.SetupSystems();
             }
 
             IoCManager.Resolve<IEntityLookup>().Startup();

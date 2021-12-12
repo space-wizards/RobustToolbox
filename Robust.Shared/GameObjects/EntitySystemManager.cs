@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -19,7 +19,7 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    public class EntitySystemManager : IEntitySystemManager
+    internal class EntitySystemManager : EntityCollection, IEntitySystemManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -31,7 +31,7 @@ namespace Robust.Shared.GameObjects
         private DependencyCollection _systemDependencyCollection = default!;
         private List<Type> _systemTypes = new();
 
-        private static readonly Histogram _tickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
+        private static readonly Histogram TickUsageHistogram = Metrics.CreateHistogram("robust_entity_systems_update_usage",
             "Amount of time spent processing each entity system", new HistogramConfiguration
             {
                 LabelNames = new[] {"system"},
@@ -49,6 +49,10 @@ namespace Robust.Shared.GameObjects
         [ViewVariables] private IEntitySystem[] _frameUpdateOrder = Array.Empty<IEntitySystem>();
 
         public bool MetricsEnabled { get; set; }
+
+        /// <inheritdoc />
+        [Obsolete("Inline me!")]
+        public IEntitySystemManager EntitySysManager => this;
 
         /// <inheritdoc />
         public event EventHandler<SystemChangedArgs>? SystemLoaded;
@@ -101,12 +105,19 @@ namespace Robust.Shared.GameObjects
         public bool TryGetEntitySystem<T>([NotNullWhen(true)] out T? entitySystem)
             where T : IEntitySystem
         {
-            return _systemDependencyCollection.TryResolveType<T>(out entitySystem);
+            return _systemDependencyCollection.TryResolveType(out entitySystem);
         }
 
         /// <inheritdoc />
-        public void Initialize()
+        public override void Initialize()
         {
+            base.Initialize();
+
+        }
+
+        public void SetupSystems()
+        {
+            _initialized = true;
             var excludedTypes = new HashSet<Type>();
 
             _systemDependencyCollection = new(IoCManager.Instance!);
@@ -133,7 +144,8 @@ namespace Robust.Shared.GameObjects
                     // already known that there are multiple subtype systems of this type,
                     // so don't register under the supertype because it would be unclear
                     // which instance to return if we retrieved it by the supertype
-                    if (excludedTypes.Contains(baseType)) continue;
+                    if (excludedTypes.Contains(baseType))
+                        continue;
 
                     if (subTypes.ContainsKey(baseType))
                     {
@@ -157,7 +169,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var systemType in _systemTypes)
             {
-                var system = (IEntitySystem)_systemDependencyCollection.ResolveType(systemType);
+                var system = (IEntitySystem) _systemDependencyCollection.ResolveType(systemType);
                 system.Initialize();
                 SystemLoaded?.Invoke(this, new SystemChangedArgs(system));
             }
@@ -170,11 +182,9 @@ namespace Robust.Shared.GameObjects
                 .Select(s => new UpdateReg
                 {
                     System = s,
-                    Monitor = _tickUsageHistogram.WithLabels(s.GetType().Name)
+                    Monitor = TickUsageHistogram.WithLabels(s.GetType().Name)
                 })
                 .ToArray();
-
-            _initialized = true;
         }
 
         private static (IEnumerable<IEntitySystem> frameUpd, IEnumerable<IEntitySystem> upd)
@@ -229,13 +239,15 @@ namespace Robust.Shared.GameObjects
 
             return Enumerable.Repeat(type.BaseType, 1)
                 .Concat(type.GetInterfaces())
-                .Concat(type.GetInterfaces().SelectMany<Type, Type>(GetBaseTypes))
+                .Concat(type.GetInterfaces().SelectMany(GetBaseTypes))
                 .Concat(GetBaseTypes(type.BaseType));
         }
 
         /// <inheritdoc />
-        public void Shutdown()
+        public override void Shutdown()
         {
+            base.Shutdown();
+
             // System.Values is modified by RemoveSystem
             foreach (var systemType in _systemTypes)
             {
@@ -246,27 +258,25 @@ namespace Robust.Shared.GameObjects
                 _entityManager.EventBus.UnsubscribeEvents(system);
             }
 
-            Clear();
-        }
-
-        public void Clear()
-        {
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();
             _initialized = false;
             _systemDependencyCollection?.Clear();
+
         }
 
         /// <inheritdoc />
-        public void TickUpdate(float frameTime)
+        public override void TickUpdate(float frameTime, Histogram? histogram)
         {
-            foreach (var updReg in _updateOrder)
+            using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                if (MetricsEnabled)
+                foreach (var updReg in _updateOrder)
                 {
-                    _stopwatch.Restart();
-                }
+                    if (MetricsEnabled)
+                    {
+                        _stopwatch.Restart();
+                    }
 #if EXCEPTION_TOLERANCE
                 try
                 {
@@ -280,16 +290,20 @@ namespace Robust.Shared.GameObjects
                 }
 #endif
 
-                if (MetricsEnabled)
-                {
-                    updReg.Monitor.Observe(_stopwatch.Elapsed.TotalSeconds);
+                    if (MetricsEnabled)
+                    {
+                        updReg.Monitor.Observe(_stopwatch.Elapsed.TotalSeconds);
+                    }
                 }
             }
+
+            base.TickUpdate(frameTime, histogram);
         }
 
-        /// <inheritdoc />
-        public void FrameUpdate(float frameTime)
+        public override void FrameUpdate(float frameTime)
         {
+            base.FrameUpdate(frameTime);
+
             foreach (var system in _frameUpdateOrder)
             {
 #if EXCEPTION_TOLERANCE

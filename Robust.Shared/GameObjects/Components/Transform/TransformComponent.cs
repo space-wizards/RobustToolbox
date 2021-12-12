@@ -791,6 +791,15 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix()
         {
+            var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv();
+            return (worldPos, worldRot, invWorldMatrix);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
+        {
             var parent = _parent;
             var worldRot = _localRotation;
             var invMatrix = GetLocalMatrixInv();
@@ -801,6 +810,7 @@ namespace Robust.Shared.GameObjects
             {
                 var xform = _entMan.GetComponent<TransformComponent>(parent);
                 worldRot += xform.LocalRotation;
+
                 var parentMatrix = xform.GetLocalMatrix();
                 Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
                 worldMatrix = result;
@@ -814,7 +824,7 @@ namespace Robust.Shared.GameObjects
 
             var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
 
-            return (worldPosition, worldRot, invMatrix);
+            return (worldPosition, worldRot, worldMatrix, invMatrix);
         }
 
         /// <summary>

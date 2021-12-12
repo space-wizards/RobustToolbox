@@ -237,7 +237,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)
         {
-            RemoveComponent(uid, typeof(T));
+            RemoveComponent(uid, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
@@ -424,14 +424,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
-            return HasComponent(uid, typeof(T));
+            return HasComponent(uid, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid? uid)
         {
-            return uid.HasValue && HasComponent(uid.Value, typeof(T));
+            return uid.HasValue && HasComponent(uid.Value, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
@@ -489,7 +489,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
-            return (T)GetComponent(uid, typeof(T));
+            return (T)GetComponent(uid, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
@@ -517,7 +517,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
         {
-            if (TryGetComponent(uid, typeof(T), out var comp))
+            if (TryGetComponent(uid, ComponentTypeCache<T>.Type, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -539,7 +539,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (TryGetComponent(uid.Value, typeof(T), out var comp))
+            if (TryGetComponent(uid.Value, ComponentTypeCache<T>.Type, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -661,7 +661,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false)
         {
-            var comps = _entTraitDict[typeof(T)];
+            var comps = _entTraitDict[ComponentTypeCache<T>.Type];
             foreach (var comp in comps.Values)
             {
                 if (comp.Deleted || !includePaused && comp.Paused) continue;
@@ -676,8 +676,8 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
         {
             // this would prob be faster if trait1 was a list (or an array of structs hue).
-            var trait1 = _entTraitDict[typeof(TComp1)];
-            var trait2 = _entTraitDict[typeof(TComp2)];
+            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
+            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
 
             // you really want trait1 to be the smaller set of components
             foreach (var kvComp in trait1)
@@ -697,9 +697,9 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitDict[typeof(TComp1)];
-            var trait2 = _entTraitDict[typeof(TComp2)];
-            var trait3 = _entTraitDict[typeof(TComp3)];
+            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
+            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
+            var trait3 = _entTraitDict[ComponentTypeCache<TComp3>.Type];
 
             foreach (var kvComp in trait1)
             {
@@ -724,10 +724,10 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitDict[typeof(TComp1)];
-            var trait2 = _entTraitDict[typeof(TComp2)];
-            var trait3 = _entTraitDict[typeof(TComp3)];
-            var trait4 = _entTraitDict[typeof(TComp4)];
+            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
+            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
+            var trait3 = _entTraitDict[ComponentTypeCache<TComp3>.Type];
+            var trait4 = _entTraitDict[ComponentTypeCache<TComp4>.Type];
 
             foreach (var kvComp in trait1)
             {

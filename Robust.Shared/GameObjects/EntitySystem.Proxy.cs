@@ -539,7 +539,7 @@ public partial class EntitySystem
     ///     Utility static method to create an exception to be thrown when an entity doesn't have a specific component.
     /// </summary>
     private static KeyNotFoundException CompNotFound<T>(EntityUid uid)
-        => throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
+        => throw new KeyNotFoundException($"Entity {uid} does not have a component of type {ComponentTypeCache<T>.Type}");
 
     #endregion
 }

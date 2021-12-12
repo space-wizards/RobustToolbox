@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Channels;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -53,7 +54,15 @@ namespace Robust.Server.Console
             {
                 _rdLine.Value.cts.Cancel();
                 _rdLine.Value.cts.Dispose();
-                _rdLine.Value.task.Dispose();
+
+                try
+                {
+                    _rdLine.Value.task.Dispose();
+                }
+                catch
+                {
+                    // Don't care LOL
+                }
             }
 
             if (Environment.UserInteractive)
@@ -111,7 +120,7 @@ namespace Robust.Server.Console
             return bps;
         }
 
-        private (Task task, CancellationTokenSource cts)? _rdLine = null;
+        private (Task task, CancellationTokenSource cts, Channel<string> chan)? _rdLine = null;
 
         public void UpdateInput()
         {
@@ -121,11 +130,23 @@ namespace Robust.Server.Console
                 return;
             }
 
-            if (_rdLine != null) // Already running.
+            if (_rdLine.HasValue) // Already running, check the channel.
+            {
+                if (_rdLine.Value.chan.Reader.TryRead(out var cmd))
+                    _conShell.ExecuteCommand(cmd);
+
                 return;
+            }
 
             // Set up the new thread & thread accessories
             var rlc = new CancellationTokenSource();
+            var chan = Channel.CreateBounded<string>(new BoundedChannelOptions(capacity: 32)
+                {
+                    FullMode=BoundedChannelFullMode.Wait,
+                    SingleReader=true,
+                }
+            );
+
             _rdLine = (
                 task: Task.Run(
                     async () =>
@@ -136,13 +157,13 @@ namespace Robust.Server.Console
                                 .ReadLineAsync()
                                 .WaitAsync(TimeSpan.FromSeconds(2.0), rlc.Token);
 
-                            if (str != null)
-                                _conShell.ExecuteCommand(str);
+                            await chan.Writer.WriteAsync(str!, rlc.Token);
                         }
                     },
                     rlc.Token
                 ),
-                cts: rlc
+                cts: rlc,
+                chan: chan
             );
         }
 

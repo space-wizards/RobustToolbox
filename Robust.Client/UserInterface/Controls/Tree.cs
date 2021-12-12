@@ -284,9 +284,10 @@ namespace Robust.Client.UserInterface.Controls
 
         private Font? _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
+            TryGetStyleProperty<FontClass>("font", out var font);
+            if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
             {
-                return font;
+                return flib.StartFont(font).Current;
             }
 
             return null;

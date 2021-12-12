@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared.Map;
@@ -31,7 +32,7 @@ namespace Robust.Client.Graphics
         event Action<WindowRequestClosedEventArgs> CloseWindow;
         event Action<WindowDestroyedEventArgs> DestroyWindow;
 
-        ClydeHandle LoadShader(ParsedShader shader, string? name = null);
+        ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null);
 
         void ReloadShader(ClydeHandle handle, ParsedShader newShader);
 

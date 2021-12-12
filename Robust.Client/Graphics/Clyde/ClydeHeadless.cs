@@ -221,7 +221,7 @@ namespace Robust.Client.Graphics.Clyde
             return window;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
         {
             return default;
         }

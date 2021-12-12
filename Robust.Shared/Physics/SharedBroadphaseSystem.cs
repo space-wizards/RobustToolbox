@@ -217,8 +217,7 @@ namespace Robust.Shared.Physics
 
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
-            EntityUid tempQualifier = _mapManager.GetMapEntityIdOrThrow(mapId);
-            var contactManager = _entityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).ContactManager;
+            var contactManager = _entityManager.GetComponent<SharedPhysicsMapComponent>(_mapManager.GetMapEntityIdOrThrow(mapId)).ContactManager;
 
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
@@ -287,11 +286,16 @@ namespace Robust.Shared.Physics
 
             foreach (var (proxyA, proxies) in _pairBuffer)
             {
-                if (proxyA.Fixture.Body.Deleted) continue;
+                var proxyABody = proxyA.Fixture.Body;
+
+                // TODO Why are we checking deleted what
+                if (proxyABody.Deleted) continue;
 
                 foreach (var other in proxies)
                 {
-                    if (other.Fixture.Body.Deleted) continue;
+                    var otherBody = other.Fixture.Body;
+
+                    if (otherBody.Deleted) continue;
 
                     // Because we may be colliding with something asleep (due to the way grid movement works) need
                     // to make sure the contact doesn't fail.
@@ -299,8 +303,8 @@ namespace Robust.Shared.Physics
                     // moving locally but are moving in world-terms.
                     if (proxyA.Fixture.Hard && other.Fixture.Hard)
                     {
-                        proxyA.Fixture.Body.WakeBody();
-                        other.Fixture.Body.WakeBody();
+                        proxyABody.WakeBody();
+                        otherBody.WakeBody();
                     }
 
                     contactManager.AddPair(proxyA, other);
@@ -308,7 +312,7 @@ namespace Robust.Shared.Physics
             }
 
             _pairBuffer.Clear();
-            _moveBuffer[mapId].Clear();
+            moveBuffer.Clear();
             _gridMoveBuffer.Clear();
         }
 

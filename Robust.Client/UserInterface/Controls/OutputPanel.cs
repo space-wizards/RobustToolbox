@@ -17,7 +17,6 @@ namespace Robust.Client.UserInterface.Controls
         private bool _isAtBottom = true;
 
         private int _totalContentHeight;
-        private bool _firstLine = true;
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
 
@@ -50,7 +49,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Clear()
         {
-            _firstLine = true;
             _entries.Clear();
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
@@ -60,7 +58,6 @@ namespace Robust.Client.UserInterface.Controls
 
         public void RemoveEntry(Index index)
         {
-            var entry = _entries[index];
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
             if (_entries.Count == 0)
@@ -82,9 +79,6 @@ namespace Robust.Client.UserInterface.Controls
 
             _entries.Add(entry);
 
-            if (_firstLine)
-                _firstLine = false;
-
             _invalidateEntries();
             if (_isAtBottom && ScrollFollowing)
             {
@@ -104,7 +98,6 @@ namespace Robust.Client.UserInterface.Controls
 
             var style = _getStyleBox();
             var flib = _getFontLib();
-            var font = _getFont();
             style?.Draw(handle, PixelSizeBox);
             var contentBox = _getContentBox();
 

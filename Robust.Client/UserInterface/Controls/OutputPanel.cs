@@ -55,6 +55,7 @@ namespace Robust.Client.UserInterface.Controls
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _scrollBar.Value = 0;
+            _invalidateEntries();
         }
 
         public void RemoveEntry(Index index)
@@ -62,14 +63,10 @@ namespace Robust.Client.UserInterface.Controls
             var entry = _entries[index];
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
-            var font = _getFont();
-            _totalContentHeight -= entry.Height + font.GetLineSeparation(UIScale);
             if (_entries.Count == 0)
-            {
                 Clear();
-            }
 
-            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            _invalidateEntries();
         }
 
         public void AddText(string text)
@@ -83,21 +80,12 @@ namespace Robust.Client.UserInterface.Controls
         {
             var entry = new RichTextEntry(message);
 
-            entry.Update(_getFontLib(), _getContentBox().Width, UIScale);
-
             _entries.Add(entry);
-            var font = _getFont();
-            _totalContentHeight += entry.Height;
-            if (_firstLine)
-            {
-                _firstLine = false;
-            }
-            else
-            {
-                _totalContentHeight += font.GetLineSeparation(UIScale);
-            }
 
-            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            if (_firstLine)
+                _firstLine = false;
+
+            _invalidateEntries();
             if (_isAtBottom && ScrollFollowing)
             {
                 _scrollBar.MoveToEnd();
@@ -126,7 +114,7 @@ namespace Robust.Client.UserInterface.Controls
             {
                 if (entryOffset + entry.Height < 0)
                 {
-                    entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                    entryOffset += entry.Height;
                     continue;
                 }
 
@@ -137,7 +125,7 @@ namespace Robust.Client.UserInterface.Controls
 
                 entry.Draw(handle, flib, contentBox, entryOffset, UIScale, _getFontColor());
 
-                entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                entryOffset += entry.Height;
             }
         }
 

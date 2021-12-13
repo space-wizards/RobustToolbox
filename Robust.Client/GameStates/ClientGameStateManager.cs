@@ -337,10 +337,12 @@ namespace Robust.Client.GameStates
 
         private void ResetPredictedEntities(GameTick curTick)
         {
-            foreach (var entity in _entities.GetEntities())
+            foreach (var meta in _entityManager.EntityQuery<MetaDataComponent>(true))
             {
+                var entity = meta.Owner;
+
                 // TODO: 99% there's an off-by-one here.
-                if (entity.IsClientSide() || _entityManager.GetComponent<MetaDataComponent>(entity).EntityLastModifiedTick < curTick)
+                if (entity.IsClientSide() || meta.EntityLastModifiedTick < curTick)
                 {
                     continue;
                 }

@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface
         // Last maxSizeX, used to detect resizing.
         private int _lmsx = 0;
         // Layout data, which needs to be refreshed when resized.
-        private ImmutableArray<TextLayout.Offset> _ld = default;
+        private ImmutableArray<TextLayout.Offset>? _ld = default;
 
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
@@ -43,7 +43,7 @@ namespace Robust.Client.UserInterface
         /// <param name="uiScale"></param>
         public void Update(IFontLibrary font, float maxSizeX, float uiScale)
         {
-            if ((int) maxSizeX != _lmsx)
+            if ((int) maxSizeX != _lmsx || _ld is null)
             {
                 _ld = TextLayout.Layout(Message, (int) maxSizeX, font, scale: uiScale);
                 Height = 0;
@@ -65,6 +65,9 @@ namespace Robust.Client.UserInterface
             float uiScale,
             Color defColor)
         {
+            if (_ld is null)
+                return;
+
             var flib = font.StartFont();
             foreach (var wd in _ld)
             {

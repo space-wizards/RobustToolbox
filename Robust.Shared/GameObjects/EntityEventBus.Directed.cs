@@ -171,7 +171,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, args);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, null, false);
+            _eventTables.Subscribe<TEvent>(ComponentTypeCache<TComp>.Type, typeof(TEvent), EventHandler, null, false);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(
@@ -187,7 +187,7 @@ namespace Robust.Shared.GameObjects
 
             var orderData = new OrderingData(orderType, before, after);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, orderData, false);
+            _eventTables.Subscribe<TEvent>(ComponentTypeCache<TComp>.Type, typeof(TEvent), EventHandler, orderData, false);
             HandleOrderRegistration(typeof(TEvent), orderData);
         }
 
@@ -197,7 +197,7 @@ namespace Robust.Shared.GameObjects
             void EventHandler(EntityUid uid, IComponent comp, ref TEvent args)
                 => handler(uid, (TComp)comp, ref args);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, null, true);
+            _eventTables.Subscribe<TEvent>(ComponentTypeCache<TComp>.Type, typeof(TEvent), EventHandler, null, true);
         }
 
         public void SubscribeLocalEvent<TComp, TEvent>(ComponentEventRefHandler<TComp, TEvent> handler, Type orderType,
@@ -209,7 +209,7 @@ namespace Robust.Shared.GameObjects
 
             var orderData = new OrderingData(orderType, before, after);
 
-            _eventTables.Subscribe<TEvent>(typeof(TComp), typeof(TEvent), EventHandler, orderData, true);
+            _eventTables.Subscribe<TEvent>(ComponentTypeCache<TComp>.Type, typeof(TEvent), EventHandler, orderData, true);
             HandleOrderRegistration(typeof(TEvent), orderData);
         }
 
@@ -218,7 +218,7 @@ namespace Robust.Shared.GameObjects
             where TComp : IComponent
             where TEvent : notnull
         {
-            _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
+            _eventTables.Unsubscribe(ComponentTypeCache<TComp>.Type, typeof(TEvent));
         }
 
         private class EventTables : IDisposable

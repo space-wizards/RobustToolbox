@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -382,6 +382,11 @@ namespace Robust.Client.Graphics.Clyde
             public override void SetSubImage<T>(Vector2i topLeft, Vector2i size, ReadOnlySpan<T> buffer)
             {
                 // Just do nothing on mutate.
+            }
+
+            public override Color GetPixel(int x, int y)
+            {
+                return Color.Black;
             }
         }
 

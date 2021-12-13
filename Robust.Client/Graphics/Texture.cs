@@ -7,6 +7,7 @@ using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using YamlDotNet.RepresentationModel;
+using Color = Robust.Shared.Maths.Color;
 
 namespace Robust.Client.Graphics
 {
@@ -30,6 +31,8 @@ namespace Robust.Client.Graphics
         ///     The size of the texture, in pixels.
         /// </summary>
         public Vector2i Size { get; /*protected set;*/ }
+
+        public Color this[int x, int y] => this.GetPixel(x, y);
 
         protected Texture(Vector2i size)
         {
@@ -104,6 +107,8 @@ namespace Robust.Client.Graphics
 
             return this;
         }
+
+        public abstract Color GetPixel(int x, int y);
     }
 
     /// <summary>

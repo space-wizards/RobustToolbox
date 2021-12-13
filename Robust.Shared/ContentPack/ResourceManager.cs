@@ -93,7 +93,7 @@ namespace Robust.Shared.ContentPack
             AddRoot(prefix, loader);
         }
 
-        protected void AddRoot(ResourcePath prefix, IContentRoot loader)
+        public void AddRoot(ResourcePath prefix, IContentRoot loader)
         {
             loader.Mount();
             _contentRootsLock.EnterWriteLock();

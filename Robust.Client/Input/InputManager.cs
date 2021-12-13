@@ -154,7 +154,7 @@ namespace Robust.Client.Input
             mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
-            using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
+            using var writer = _resourceMan.UserData.OpenWriteText(path);
             var stream = new YamlStream {new(mapping.ToYaml())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }

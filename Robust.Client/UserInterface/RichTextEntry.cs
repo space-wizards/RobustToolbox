@@ -32,6 +32,10 @@ namespace Robust.Client.UserInterface
 
         // Last maxSizeX, used to detect resizing.
         private int _lmsx = 0;
+
+        // Same as above, but for the UI scale.
+        private float _lUiScale = 0f;
+
         // Layout data, which needs to be refreshed when resized.
         private ImmutableArray<TextLayout.Offset>? _ld = default;
 
@@ -43,7 +47,7 @@ namespace Robust.Client.UserInterface
         /// <param name="uiScale"></param>
         public void Update(IFontLibrary font, float maxSizeX, float uiScale)
         {
-            if ((int) maxSizeX != _lmsx || _ld is null)
+            if ((int) maxSizeX != _lmsx || uiScale != _lUiScale || _ld is null)
             {
                 _ld = TextLayout.Layout(Message, (int) maxSizeX, font, scale: uiScale);
                 Height = 0;
@@ -54,6 +58,7 @@ namespace Robust.Client.UserInterface
                     if (w.y + w.h > Height) Height = w.y;
                 }
                 _lmsx = (int) maxSizeX;
+                _lUiScale = uiScale;
             }
         }
 

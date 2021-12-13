@@ -49,13 +49,15 @@ namespace Robust.Shared.GameObjects
 
             if (EntityManager.Deleted(entity) ||
                 EntityManager.HasComponent<IMapComponent>(entity) ||
-                EntityManager.HasComponent<IMapGridComponent>(entity) ||
-                _containers.IsEntityInContainer(entity))
+                EntityManager.HasComponent<IMapGridComponent>(entity))
             {
                 return;
             }
 
             var transform = Transform(entity);
+
+            if (_containers.IsEntityInContainer(entity, transform)) return;
+
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
             // Change parent if necessary

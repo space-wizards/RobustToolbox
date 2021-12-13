@@ -399,9 +399,9 @@ internal partial class PVSSystem : EntitySystem
         var packet = _cachedPackets.GetOrAdd(uid, (i) => new PVSEntityPacket(EntityManager, i));
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null && packet.VisibilityComponent != null)
+        if (visMask != null)
         {
-            if ((visMask & packet.VisibilityComponent.Layer) == 0)
+            if ((visMask & packet.MetaDataComponent.VisibilityMask) == 0)
                 return false;
         }
 
@@ -494,7 +494,7 @@ internal partial class PVSSystem : EntitySystem
                 if (!seenEnts.Add(uid)) continue;
                 // This is essentially the same as IEntityManager.EntityExists, but returning MetaDataComponent.
                 if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
-                
+
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)

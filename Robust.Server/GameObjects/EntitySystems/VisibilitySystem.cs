@@ -23,7 +23,7 @@ namespace Robust.Server.GameObjects
             component.Layer |= layer;
 
             if (refresh)
-                RefreshVisibility(component.Owner.Uid);
+                RefreshVisibility(component.Owner);
         }
 
         public void RemoveLayer(VisibilityComponent component, int layer, bool refresh = true)
@@ -32,7 +32,7 @@ namespace Robust.Server.GameObjects
             component.Layer &= ~layer;
 
             if (refresh)
-                RefreshVisibility(component.Owner.Uid);
+                RefreshVisibility(component.Owner);
         }
 
         public void SetLayer(VisibilityComponent component, int layer, bool refresh = true)
@@ -41,12 +41,12 @@ namespace Robust.Server.GameObjects
             component.Layer = layer;
 
             if (refresh)
-                RefreshVisibility(component.Owner.Uid);
+                RefreshVisibility(component.Owner);
         }
 
         private void OnParentChange(ref EntParentChangedMessage ev)
         {
-            RefreshVisibility(ev.Entity.Uid);
+            RefreshVisibility(ev.Entity);
         }
 
         private void OnEntityInit(object? sender, EntityUid uid)
@@ -68,7 +68,7 @@ namespace Robust.Server.GameObjects
 
         public void RefreshVisibility(VisibilityComponent visibilityComponent)
         {
-            RefreshVisibility(visibilityComponent.Owner.Uid);
+            RefreshVisibility(visibilityComponent.Owner);
         }
 
         private int GetVisibilityMask(EntityUid uid, ref int visMask)

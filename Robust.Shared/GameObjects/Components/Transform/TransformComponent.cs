@@ -562,7 +562,7 @@ namespace Robust.Shared.GameObjects
                 return Parent!.GridID;
             }
 
-            return _mapManager.TryFindGridAt(MapID, WorldPosition, out var mapgrid) ? mapgrid.Index : GridId.Invalid;
+            return _mapManager.TryFindGridAt(Coordinates, out var mapGrid) ? mapGrid.Index : GridId.Invalid;
         }
 
         protected override void Startup()

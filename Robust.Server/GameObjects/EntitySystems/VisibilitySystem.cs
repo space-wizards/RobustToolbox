@@ -23,7 +23,7 @@ namespace Robust.Server.GameObjects
             component.Layer |= layer;
 
             if (refresh)
-                RefreshVisibility(component.Owner);
+                RefreshVisibility(component.Owner, visibilityComponent: component);
         }
 
         public void RemoveLayer(VisibilityComponent component, int layer, bool refresh = true)
@@ -32,7 +32,7 @@ namespace Robust.Server.GameObjects
             component.Layer &= ~layer;
 
             if (refresh)
-                RefreshVisibility(component.Owner);
+                RefreshVisibility(component.Owner, visibilityComponent: component);
         }
 
         public void SetLayer(VisibilityComponent component, int layer, bool refresh = true)
@@ -41,7 +41,7 @@ namespace Robust.Server.GameObjects
             component.Layer = layer;
 
             if (refresh)
-                RefreshVisibility(component.Owner);
+                RefreshVisibility(component.Owner, visibilityComponent: component);
         }
 
         private void OnParentChange(ref EntParentChangedMessage ev)
@@ -54,16 +54,16 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(uid);
         }
 
-        public void RefreshVisibility(EntityUid uid)
+        public void RefreshVisibility(EntityUid uid, MetaDataComponent? metaDataComponent = null, VisibilityComponent? visibilityComponent = null)
         {
-            if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? metaDataComponent))
+            if (!Resolve(uid, ref metaDataComponent, false))
             {
                 // This means it's deleting or some shit; I'd love to make it a GetComponent<T> in future.
                 return;
             }
 
             var visMask = 1;
-            metaDataComponent.VisibilityMask = GetVisibilityMask(uid, ref visMask);
+            metaDataComponent.VisibilityMask = GetVisibilityMask(uid, ref visMask, visibilityComponent);
         }
 
         public void RefreshVisibility(VisibilityComponent visibilityComponent)
@@ -71,15 +71,14 @@ namespace Robust.Server.GameObjects
             RefreshVisibility(visibilityComponent.Owner);
         }
 
-        private int GetVisibilityMask(EntityUid uid, ref int visMask)
+        private int GetVisibilityMask(EntityUid uid, ref int visMask, VisibilityComponent? visibilityComponent = null, TransformComponent? xform = null)
         {
-            if (EntityManager.TryGetComponent(uid, out VisibilityComponent visibilityComponent))
+            if (Resolve(uid, ref visibilityComponent, false))
             {
                 visMask |= visibilityComponent.Layer;
             }
 
-            var xform = EntityManager.GetComponent<TransformComponent>(uid);
-            if (xform.ParentUid.IsValid())
+            if (Resolve(uid, ref xform) && xform.ParentUid.IsValid())
             {
                 GetVisibilityMask(xform.ParentUid, ref visMask);
             }

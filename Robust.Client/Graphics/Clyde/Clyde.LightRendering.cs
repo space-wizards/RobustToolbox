@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
@@ -6,6 +6,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -329,7 +330,8 @@ namespace Robust.Client.Graphics.Clyde
             var mapId = eye.Position.MapId;
 
             // If this map has lighting disabled, return
-            if (!_mapManager.GetMapEntity(mapId).GetComponent<IMapComponent>().LightingEnabled)
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            if (!_entityManager.GetComponent<IMapComponent>(mapUid).LightingEnabled)
             {
                 return;
             }
@@ -413,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var (component, lightPos, _) = lights[i];
 
-                var transform = component.Owner.Transform;
+                var transform = _entityManager.GetComponent<TransformComponent>(component.Owner);
 
                 Texture? mask = null;
                 var rotation = Angle.Zero;
@@ -516,7 +518,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count) state, in PointLightComponent light) =>
                 {
@@ -526,7 +528,7 @@ namespace Robust.Client.Graphics.Clyde
                         return false;
                     }
 
-                    var transform = light.Owner.Transform;
+                    var transform = _entityManager.GetComponent<TransformComponent>(light.Owner);
 
                     if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
 
@@ -871,12 +873,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    var treeBounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
                         var occluder = (ClientOccluderComponent)sOccluder;
-                        var transform = occluder.Owner.Transform;
+                        var transform = _entityManager.GetComponent<TransformComponent>(occluder.Owner);
                         if (!occluder.Enabled)
                         {
                             return true;

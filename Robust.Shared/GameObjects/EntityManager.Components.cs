@@ -2,26 +2,25 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Runtime.CompilerServices;
-#if EXCEPTION_TOLERANCE
-using Robust.Shared.Exceptions;
-#endif
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
-using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
+using System.Runtime.CompilerServices;
+#if EXCEPTION_TOLERANCE
+using Robust.Shared.Exceptions;
+#endif
 
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
     public partial class EntityManager
     {
-        [Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
+        [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
+        [IoC.Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
-        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
+        [IoC.Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
         public IComponentFactory ComponentFactory => _componentFactory;
@@ -124,7 +123,7 @@ namespace Robust.Shared.GameObjects
 #endif
             DebugTools.Assert(metadata.EntityLifeStage == EntityLifeStage.Initializing);
             metadata.EntityLifeStage = EntityLifeStage.Initialized;
-            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(GetEntity(uid)));
+            EventBus.RaiseEvent(EventSource.Local, new EntityInitializedMessage(uid));
         }
 
         public void StartComponents(EntityUid uid)
@@ -150,29 +149,12 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public T AddComponent<T>(IEntity entity) where T : Component, new()
-        {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-            var newComponent = _componentFactory.GetComponent<T>();
-
-            newComponent.Owner = entity;
-
-            AddComponent(entity, newComponent);
-
-            return newComponent;
-        }
-
         public T AddComponent<T>(EntityUid uid) where T : Component, new()
         {
-            if (!TryGetEntity(uid, out var entity)) throw new ArgumentException("Entity is not valid or deleted.", nameof(uid));
-
-            return AddComponent<T>(entity);
-        }
-
-        public void AddComponent<T>(IEntity entity, T component, bool overwrite = false) where T : Component
-        {
-            AddComponent(entity.Uid, component, overwrite);
+            var newComponent = _componentFactory.GetComponent<T>();
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+            return newComponent;
         }
 
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
@@ -182,7 +164,7 @@ namespace Robust.Shared.GameObjects
 
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.OwnerUid != uid) throw new InvalidOperationException("Component is not owned by entity.");
+            if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
             AddComponentInternal(uid, component, overwrite);
         }
@@ -255,7 +237,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)
         {
-            RemoveComponent(uid, typeof(T));
+            RemoveComponent(uid, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
@@ -278,7 +260,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.OwnerUid != uid)
+            if (component.Owner == null || component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             RemoveComponentImmediate((Component)component, uid, false);
@@ -415,7 +397,7 @@ namespace Robust.Shared.GameObjects
         {
             var reg = _componentFactory.GetRegistration(component.GetType());
 
-            var entityUid = component.OwnerUid;
+            var entityUid = component.Owner;
 
             // ReSharper disable once InvertIf
             if (reg.NetID != null)
@@ -442,7 +424,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
-            return HasComponent(uid, typeof(T));
+            return HasComponent(uid, ComponentTypeCache<T>.Type);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent<T>(EntityUid? uid)
+        {
+            return uid.HasValue && HasComponent(uid.Value, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
@@ -455,21 +444,36 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent(EntityUid? uid, Type type)
+        {
+            if (!uid.HasValue)
+            {
+                return false;
+            }
+
+            var dict = _entTraitDict[type];
+            return dict.TryGetValue(uid.Value, out var comp) && !comp.Deleted;
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid uid, ushort netId)
         {
             return _netComponents.TryGetValue(uid, out var netSet)
                    && netSet.ContainsKey(netId);
         }
 
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T EnsureComponent<T>(IEntity entity) where T : Component, new()
+        public bool HasComponent(EntityUid? uid, ushort netId)
         {
-            if (TryGetComponent<T>(entity.Uid, out var component))
+            if (!uid.HasValue)
             {
-                return component;
+                return false;
             }
 
-            return AddComponent<T>(entity);
+            return _netComponents.TryGetValue(uid.Value, out var netSet)
+                   && netSet.ContainsKey(netId);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -485,7 +489,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
-            return (T)GetComponent(uid, typeof(T));
+            return (T)GetComponent(uid, ComponentTypeCache<T>.Type);
         }
 
         /// <inheritdoc />
@@ -513,7 +517,29 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
         {
-            if (TryGetComponent(uid, typeof(T), out var comp))
+            if (TryGetComponent(uid, ComponentTypeCache<T>.Type, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = (T)comp;
+                    return true;
+                }
+            }
+
+            component = default!;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T component)
+        {
+            if (!uid.HasValue)
+            {
+                component = default!;
+                return false;
+            }
+
+            if (TryGetComponent(uid.Value, ComponentTypeCache<T>.Type, out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -544,9 +570,52 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? component)
+        {
+            if (!uid.HasValue)
+            {
+                component = null;
+                return false;
+            }
+
+            var dict = _entTraitDict[type];
+            if (dict.TryGetValue(uid.Value, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
+            return false;
+        }
+
+        /// <inheritdoc />
         public bool TryGetComponent(EntityUid uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
         {
             if (_netComponents.TryGetValue(uid, out var netSet)
+                && netSet.TryGetValue(netId, out var comp))
+            {
+                component = comp;
+                return true;
+            }
+
+            component = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
+        {
+            if (!uid.HasValue)
+            {
+                component = default;
+                return false;
+            }
+
+            if (_netComponents.TryGetValue(uid.Value, out var netSet)
                 && netSet.TryGetValue(netId, out var comp))
             {
                 component = comp;
@@ -592,7 +661,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false)
         {
-            var comps = _entTraitDict[typeof(T)];
+            var comps = _entTraitDict[ComponentTypeCache<T>.Type];
             foreach (var comp in comps.Values)
             {
                 if (comp.Deleted || !includePaused && comp.Paused) continue;
@@ -607,8 +676,8 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
         {
             // this would prob be faster if trait1 was a list (or an array of structs hue).
-            var trait1 = _entTraitDict[typeof(TComp1)];
-            var trait2 = _entTraitDict[typeof(TComp2)];
+            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
+            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
 
             // you really want trait1 to be the smaller set of components
             foreach (var kvComp in trait1)
@@ -628,9 +697,9 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitDict[typeof(TComp1)];
-            var trait2 = _entTraitDict[typeof(TComp2)];
-            var trait3 = _entTraitDict[typeof(TComp3)];
+            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
+            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
+            var trait3 = _entTraitDict[ComponentTypeCache<TComp3>.Type];
 
             foreach (var kvComp in trait1)
             {
@@ -655,10 +724,10 @@ namespace Robust.Shared.GameObjects
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitDict[typeof(TComp1)];
-            var trait2 = _entTraitDict[typeof(TComp2)];
-            var trait3 = _entTraitDict[typeof(TComp3)];
-            var trait4 = _entTraitDict[typeof(TComp4)];
+            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
+            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
+            var trait3 = _entTraitDict[ComponentTypeCache<TComp3>.Type];
+            var trait4 = _entTraitDict[ComponentTypeCache<TComp4>.Type];
 
             foreach (var kvComp in trait1)
             {
@@ -695,12 +764,19 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public ComponentState GetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+        public ComponentState GetComponentState(IEventBus eventBus, IComponent component)
         {
-            var getState = new ComponentGetState(player);
+            var getState = new ComponentGetState();
             eventBus.RaiseComponentEvent(component, ref getState);
 
-            return getState.State ?? component.GetComponentState(player);
+            return getState.State ?? component.GetComponentState();
+        }
+
+        public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
+        {
+            var attempt = new ComponentGetStateAttemptEvent(player);
+            eventBus.RaiseComponentEvent(component, attempt);
+            return !attempt.Cancelled;
         }
 
         #endregion

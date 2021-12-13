@@ -33,7 +33,7 @@ namespace Robust.Client.Serialization
                 throw new InvalidMappingException(
                     $"Invalid type {typeValueDataNode.Value} specified for AppearanceVisualizer!");
 
-            var newNode = (MappingDataNode)node.Copy();
+            var newNode = node.Copy();
             newNode.Remove("type");
             return serializationManager.Read(type, newNode, context, skipHook);
         }

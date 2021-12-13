@@ -143,11 +143,13 @@ namespace Robust.Shared.GameObjects
             get => _entityPaused;
             set
             {
-                if (_entityPaused == value || value && Owner.HasComponent<IgnorePauseComponent>())
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                if (_entityPaused == value || value && entMan.HasComponent<IgnorePauseComponent>(Owner))
                     return;
 
                 _entityPaused = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntityPausedEvent(Owner.Uid, value));
+                entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 
@@ -156,7 +158,7 @@ namespace Robust.Shared.GameObjects
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
         }

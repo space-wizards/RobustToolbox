@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
@@ -107,12 +108,15 @@ namespace Robust.Shared.Map
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition;
+                {
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldPosition;
+                }
+
                 return Vector2.Zero;
             }
             set
             {
-                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldPosition = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldPosition = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -125,12 +129,15 @@ namespace Robust.Shared.Map
             {
                 //TODO: Make grids real parents of entities.
                 if(GridEntityId.IsValid())
-                    return _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation;
+                {
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldRotation;
+                }
+
                 return Angle.Zero;
             }
             set
             {
-                _mapManager.EntityManager.GetEntity(GridEntityId).Transform.WorldRotation = value;
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).WorldRotation = value;
                 LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             }
         }
@@ -530,13 +537,7 @@ namespace Robust.Shared.Map
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
 
-            Vector2 local;
-            if (coords.EntityId == GridEntityId)
-                local = coords.Position;
-            else
-                local = WorldToLocal(coords.ToMapPos(_entityManager));
-
-            return SnapGridLocalCellFor(local);
+            return SnapGridLocalCellFor(LocalToGrid(coords));
         }
 
         /// <inheritdoc />
@@ -741,12 +742,7 @@ namespace Robust.Shared.Map
         public Vector2i CoordinatesToTile(EntityCoordinates coords)
         {
             DebugTools.Assert(ParentMapId == coords.GetMapId(_entityManager));
-            Vector2 local;
-
-            if (coords.EntityId == GridEntityId)
-                local = coords.Position;
-            else
-                local = WorldToLocal(coords.ToMapPos(_entityManager));
+            var local = LocalToGrid(coords);
 
             var x = (int)Math.Floor(local.X / TileSize);
             var y = (int)Math.Floor(local.Y / TileSize);
@@ -756,16 +752,16 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public Vector2i LocalToChunkIndices(EntityCoordinates gridPos)
         {
-            Vector2 local;
-
-            if (gridPos.EntityId == GridEntityId)
-                local = gridPos.Position;
-            else
-                local = WorldToLocal(gridPos.ToMapPos(_entityManager));
+            var local = LocalToGrid(gridPos);
 
             var x = (int)Math.Floor(local.X / (TileSize * ChunkSize));
             var y = (int)Math.Floor(local.Y / (TileSize * ChunkSize));
             return new Vector2i(x, y);
+        }
+
+        public Vector2 LocalToGrid(EntityCoordinates position)
+        {
+            return position.EntityId == GridEntityId ? position.Position : WorldToLocal(position.ToMapPos(_entityManager));
         }
 
         public bool CollidesWithGrid(Vector2i indices)
@@ -776,11 +772,6 @@ namespace Robust.Shared.Map
 
             var cTileIndices = chunk.GridTileToChunkTile(indices);
             return chunk.CollidesWithChunk(cTileIndices);
-        }
-
-        public bool CollidesWithGrid(Box2 aabb)
-        {
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc />

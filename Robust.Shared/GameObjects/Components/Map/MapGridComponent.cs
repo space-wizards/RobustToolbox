@@ -2,9 +2,7 @@ using System;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
@@ -31,6 +29,7 @@ namespace Robust.Shared.GameObjects
     internal class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entMan = default!;
 
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
@@ -59,31 +58,31 @@ namespace Robust.Shared.GameObjects
         protected override void Initialize()
         {
             base.Initialize();
-            var mapId = Owner.Transform.MapID;
+            var mapId = _entMan.GetComponent<TransformComponent>(Owner).MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                Owner.Transform.AttachParent(_mapManager.GetMapEntity(mapId));
+                _entMan.GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
         }
 
         /// <inheritdoc />
         public bool AnchorEntity(TransformComponent transform)
         {
-            var xform = (TransformComponent) transform;
+            var xform = transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            var result = Grid.AddToSnapGridCell(tileIndices, transform.OwnerUid);
+            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner);
 
             if (result)
             {
-                xform.Parent = Owner.Transform;
+                xform.Parent = _entMan.GetComponent<TransformComponent>(Owner);
 
                 // anchor snapping
                 xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;
 
                 xform.SetAnchored(result);
 
-                if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+                if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
                 {
                     physicsComponent.BodyType = BodyType.Static;
                 }
@@ -100,11 +99,11 @@ namespace Robust.Shared.GameObjects
             if(GridIndex == GridId.Invalid)
                 return;
 
-            var xform = (TransformComponent)transform;
+            var xform = transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            Grid.RemoveFromSnapGridCell(tileIndices, transform.OwnerUid);
+            Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner);
             xform.SetAnchored(false);
-            if (xform.Owner.TryGetComponent<PhysicsComponent>(out var physicsComponent))
+            if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
             {
                 physicsComponent.BodyType = BodyType.Dynamic;
             }
@@ -120,9 +119,8 @@ namespace Robust.Shared.GameObjects
             grid.AnchoredEntDirty(grid.TileIndicesFor(transform.Coordinates));
         }
 
-        /// <param name="player"></param>
         /// <inheritdoc />
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new MapGridComponentState(_gridIndex);
         }

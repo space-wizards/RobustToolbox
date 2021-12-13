@@ -18,17 +18,17 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// EntityUid of the entity this component belongs to.
         /// </summary>
-        public EntityUid OwnerUid { get; }
+        public EntityUid Owner { get; }
 
         /// <summary>
         /// Constructs a new instance of <see cref="ComponentEventArgs"/>.
         /// </summary>
         /// <param name="component">The relevant component</param>
-        /// <param name="ownerUid">EntityUid of the entity this component belongs to.</param>
-        protected ComponentEventArgs(IComponent component, EntityUid ownerUid)
+        /// <param name="Owner">EntityUid of the entity this component belongs to.</param>
+        protected ComponentEventArgs(IComponent component, EntityUid owner)
         {
             Component = component;
-            OwnerUid = ownerUid;
+            Owner = owner;
         }
     }
 

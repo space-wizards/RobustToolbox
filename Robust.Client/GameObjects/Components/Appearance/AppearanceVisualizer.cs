@@ -14,7 +14,7 @@ public abstract class AppearanceVisualizer
     ///     Initializes an entity to be managed by this appearance controller.
     ///     DO NOT assume this is your only entity. Visualizers are shared.
     /// </summary>
-    public virtual void InitializeEntity(IEntity entity)
+    public virtual void InitializeEntity(EntityUid entity)
     {
     }
 

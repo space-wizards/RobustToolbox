@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -13,6 +14,8 @@ namespace Robust.Server.GameStates
     /// </summary>
     internal partial class PVSSystem
     {
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+
         private const int DirtyBufferSize = 4;
 
         /// <summary>
@@ -29,6 +32,13 @@ namespace Robust.Server.GameStates
                 _addEntities[i] = new HashSet<EntityUid>(32);
                 _dirtyEntities[i] = new HashSet<EntityUid>(32);
             }
+            EntityManager.EntityAdded += OnEntityAdd;
+            SubscribeLocalEvent<EntityDirtyEvent>(OnDirty);
+        }
+
+        private void ShutdownDirty()
+        {
+            EntityManager.EntityAdded -= OnEntityAdd;
         }
 
         private void OnEntityAdd(object? sender, EntityUid e)
@@ -51,21 +61,6 @@ namespace Robust.Server.GameStates
             _currentIndex = ((int) _gameTiming.CurTick.Value + 1) % DirtyBufferSize;
             _addEntities[_currentIndex].Clear();
             _dirtyEntities[_currentIndex].Clear();
-
-            if (!CullingEnabled)
-            {
-                foreach (var player in sessions)
-                {
-                    if (player.Status != SessionStatus.InGame)
-                    {
-                        _oldPlayers.Remove(player);
-                    }
-                    else
-                    {
-                        _oldPlayers.Add(player);
-                    }
-                }
-            }
         }
 
         private bool TryGetTick(GameTick tick, [NotNullWhen(true)] out HashSet<EntityUid>? addEntities, [NotNullWhen(true)] out HashSet<EntityUid>? dirtyEntities)

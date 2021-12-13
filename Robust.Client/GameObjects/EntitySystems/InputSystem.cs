@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
@@ -107,7 +107,7 @@ namespace Robust.Client.GameObjects
 
         private void OnAttachedEntityChanged(PlayerAttachSysMessage message)
         {
-            if (message.AttachedEntity != null) // attach
+            if (message.AttachedEntity != default) // attach
             {
                 SetEntityContextActive(_inputManager, message.AttachedEntity);
             }
@@ -117,14 +117,14 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private static void SetEntityContextActive(IInputManager inputMan, IEntity entity)
+        private void SetEntityContextActive(IInputManager inputMan, EntityUid entity)
         {
-            if(entity == null || !entity.IsValid())
+            if(entity == default || !EntityManager.EntityExists(entity))
                 throw new ArgumentNullException(nameof(entity));
 
-            if (!entity.TryGetComponent(out InputComponent? inputComp))
+            if (!EntityManager.TryGetComponent(entity, out InputComponent? inputComp))
             {
-                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity.Uid}, entProto={entity.Prototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                Logger.DebugS("input.context", $"AttachedEnt has no InputComponent: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}. Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
                 return;
             }
@@ -135,7 +135,7 @@ namespace Robust.Client.GameObjects
             }
             else
             {
-                Logger.ErrorS("input.context", $"Unknown context: entId={entity.Uid}, entProto={entity.Prototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
+                Logger.ErrorS("input.context", $"Unknown context: entId={entity}, entProto={EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype}, context={inputComp.ContextName}. . Setting default \"{InputContextContainer.DefaultContextName}\" context...");
                 inputMan.Contexts.SetActiveContext(InputContextContainer.DefaultContextName);
             }
         }
@@ -145,12 +145,13 @@ namespace Robust.Client.GameObjects
         /// </summary>
         public void SetEntityContextActive()
         {
-            if (_playerManager.LocalPlayer?.ControlledEntity == null)
+            var controlled = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (controlled == EntityUid.Invalid)
             {
                 return;
             }
 
-            SetEntityContextActive(_inputManager, _playerManager.LocalPlayer.ControlledEntity);
+            SetEntityContextActive(_inputManager, controlled);
         }
     }
 
@@ -162,13 +163,13 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     New entity the player is attached to.
         /// </summary>
-        public IEntity? AttachedEntity { get; }
+        public EntityUid AttachedEntity { get; }
 
         /// <summary>
         ///     Creates a new instance of <see cref="PlayerAttachSysMessage"/>.
         /// </summary>
         /// <param name="attachedEntity">New entity the player is attached to.</param>
-        public PlayerAttachSysMessage(IEntity? attachedEntity)
+        public PlayerAttachSysMessage(EntityUid attachedEntity)
         {
             AttachedEntity = attachedEntity;
         }
@@ -176,21 +177,21 @@ namespace Robust.Client.GameObjects
 
     public class PlayerAttachedEvent : EntityEventArgs
     {
-        public PlayerAttachedEvent(IEntity entity)
+        public PlayerAttachedEvent(EntityUid entity)
         {
             Entity = entity;
         }
 
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
     }
 
     public class PlayerDetachedEvent : EntityEventArgs
     {
-        public PlayerDetachedEvent(IEntity entity)
+        public PlayerDetachedEvent(EntityUid entity)
         {
             Entity = entity;
         }
 
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
     }
 }

@@ -23,7 +23,7 @@ namespace Robust.Client.Log
             if (sawmillName == "CON")
                 return;
 
-            var formatted = new FormattedMessage(8);
+            var formatted = new FormattedMessage.Builder();
             var robustLevel = message.Level.ToRobust();
             formatted.PushColor(Color.DarkGray);
             formatted.AddText("[");
@@ -32,13 +32,15 @@ namespace Robust.Client.Log
             formatted.Pop();
             formatted.AddText($"] {sawmillName}: ");
             formatted.Pop();
+            formatted.PushColor(Color.LightGray);
             formatted.AddText(message.RenderMessage());
+            formatted.Pop();
             if (message.Exception != null)
             {
                 formatted.AddText("\n");
                 formatted.AddText(message.Exception.ToString());
             }
-            Console.AddFormattedLine(formatted);
+            Console.AddFormattedLine(formatted.Build());
         }
 
         private static Color LogLevelToColor(LogLevel level)

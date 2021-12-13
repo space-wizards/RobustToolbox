@@ -23,7 +23,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IOverlayManager overlayManager = default!;
         [Dependency] private readonly IPrototypeManager prototypeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
         private readonly List<Effect> _Effects = new();
@@ -35,7 +34,7 @@ namespace Robust.Client.GameObjects
             SubscribeNetworkEvent<EffectSystemMessage>(CreateEffect);
             SubscribeLocalEvent<EffectSystemMessage>(CreateEffect);
 
-            var overlay = new EffectOverlay(this, prototypeManager, _mapManager, _playerManager, _entityManager);
+            var overlay = new EffectOverlay(this, prototypeManager, _playerManager, EntityManager);
             overlayManager.AddOverlay(overlay);
         }
 
@@ -65,13 +64,8 @@ namespace Robust.Client.GameObjects
             }
 
             //Create effect from creation message
-            var effect = new Effect(message, resourceCache, _mapManager, _entityManager);
+            var effect = new Effect(message, resourceCache, _mapManager, EntityManager);
             effect.Deathtime = gameTiming.CurTime + message.LifeTime;
-            if (effect.AttachedEntityUid != null
-                && _entityManager.TryGetEntity(effect.AttachedEntityUid.Value, out var attachedEntity))
-            {
-                effect.AttachedEntity = attachedEntity;
-            }
 
             _Effects.Add(effect);
         }
@@ -119,8 +113,6 @@ namespace Robust.Client.GameObjects
             /// <summary>
             /// Entity that the effect is attached to
             /// </summary>
-            public IEntity? AttachedEntity { get; set; }
-
             public EntityUid? AttachedEntityUid { get; }
 
             /// <summary>
@@ -335,14 +327,12 @@ namespace Robust.Client.GameObjects
 
             private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;
-            private readonly IMapManager _mapManager;
             private readonly IEntityManager _entityManager;
 
-            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IMapManager mapMan, IPlayerManager playerMan, IEntityManager entityManager)
+            public EffectOverlay(EffectSystem owner, IPrototypeManager protoMan, IPlayerManager playerMan, IEntityManager entityManager)
             {
                 _owner = owner;
                 _unshadedShader = protoMan.Index<ShaderPrototype>("unshaded").Instance();
-                _mapManager = mapMan;
                 _playerManager = playerMan;
                 _entityManager = entityManager;
             }
@@ -353,12 +343,15 @@ namespace Robust.Client.GameObjects
 
                 var worldHandle = args.WorldHandle;
                 ShaderInstance? currentShader = null;
-                var player = _playerManager.LocalPlayer?.ControlledEntity;
+
+                if (_playerManager.LocalPlayer?.ControlledEntity is not {} playerEnt)
+                    return;
 
                 foreach (var effect in _owner._Effects)
                 {
-                    if (effect.AttachedEntity?.Transform.MapID != player?.Transform.MapID &&
-                        effect.Coordinates.GetMapId(_entityManager) != map)
+                    if(effect.AttachedEntityUid is {} attached
+                    && _entityManager.GetComponent<TransformComponent>(attached).MapID != _entityManager.GetComponent<TransformComponent>(playerEnt).MapID
+                       && effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }
@@ -371,13 +364,19 @@ namespace Robust.Client.GameObjects
                         currentShader = newShader;
                     }
 
+                    // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
-                    var effectOrigin = effect.AttachedEntity?.Transform.MapPosition.Position + effect.AttachedOffset ??
-                                               effect.Coordinates.ToMapPos(_entityManager);
+
+                    var tempQualifier1 = effect.AttachedEntityUid;
+                    var coordinates =
+                        (tempQualifier1 != null ? _entityManager.GetComponent<TransformComponent>(tempQualifier1.Value).Coordinates : effect.Coordinates)
+                        .Offset(effect.AttachedOffset);
+
+                    var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
+                    var effectOrigin = coordinates.ToMapPos(_entityManager);
 
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
-
-                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation, effectOrigin);
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation - rotation, effectOrigin);
 
                     worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }

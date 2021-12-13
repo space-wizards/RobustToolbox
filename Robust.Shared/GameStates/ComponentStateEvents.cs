@@ -21,19 +21,21 @@ namespace Robust.Shared.GameStates
     public struct ComponentGetState
     {
         /// <summary>
-        ///     Input parameter. The player the state is being generated for.
-        /// </summary>
-        public readonly ICommonSession Player;
-
-        /// <summary>
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
         public ComponentState? State { get; set; }
+    }
 
-        public ComponentGetState(ICommonSession player)
+    public class ComponentGetStateAttemptEvent : CancellableEntityEventArgs
+    {
+        /// <summary>
+        ///     Input parameter. The player the state is being sent to.
+        /// </summary>
+        public readonly ICommonSession Player;
+
+        public ComponentGetStateAttemptEvent(ICommonSession player)
         {
             Player = player;
-            State = null;
         }
     }
 }

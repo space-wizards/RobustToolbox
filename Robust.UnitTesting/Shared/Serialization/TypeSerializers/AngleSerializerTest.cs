@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Globalization;
+using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -18,7 +19,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var degrees = 75d;
             var angle = Angle.FromDegrees(degrees);
             var node = Serialization.WriteValueAs<ValueDataNode>(angle);
-            var serializedValue = $"{MathHelper.DegreesToRadians(degrees)} rad";
+            var serializedValue = $"{MathHelper.DegreesToRadians(degrees).ToString(CultureInfo.InvariantCulture)} rad";
 
             Assert.That(node.Value, Is.EqualTo(serializedValue));
         }

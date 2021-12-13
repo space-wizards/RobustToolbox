@@ -1,5 +1,7 @@
 using System;
 using System.Reflection;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Utility
 {
@@ -55,7 +57,11 @@ namespace Robust.Shared.Utility
             if (value.GetType().GetMethod("ToString", new Type[0], new ParameterModifier[0])!.DeclaringType == typeof(Object)) {
                 stringRep = TypeAbbreviation.Abbreviate(value.GetType());
                 typeRep = string.Empty;
-            } else {
+            } else if (value is EntityUid uid)
+            {
+                stringRep = IoCManager.Resolve<IEntityManager>().ToPrettyString(uid);
+                typeRep = TypeAbbreviation.Abbreviate(value.GetType());
+            }else {
                 stringRep = value.ToString();
                 typeRep = TypeAbbreviation.Abbreviate(value.GetType());
             }

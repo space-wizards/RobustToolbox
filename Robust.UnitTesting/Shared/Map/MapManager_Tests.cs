@@ -1,4 +1,4 @@
-﻿using Moq;
+using Moq;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
@@ -87,14 +87,14 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
-            var oldEntity = (Entity)entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
-            entMan.InitializeComponents(oldEntity.Uid);
+            var oldEntity = entMan.CreateEntityUninitialized(null, MapCoordinates.Nullspace);
+            entMan.InitializeComponents(oldEntity);
 
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
             Assert.That(mapMan.GridExists(GridId.Invalid), Is.False);
-            Assert.That(oldEntity.Deleted, Is.True);
+            Assert.That(entMan.Deleted(oldEntity), Is.True);
 
         }
 
@@ -111,17 +111,17 @@ namespace Robust.UnitTesting.Shared.Map
 
             mapMan.CreateMap(new MapId(7));
             mapMan.CreateMap(mapID);
-            var oldMapEntity = mapMan.GetMapEntity(mapID);
+            var oldMapEntity = mapMan.GetMapEntityId(mapID);
             var newMapEntity = entMan.CreateEntityUninitialized(null, new MapCoordinates(Vector2.Zero, new MapId(7)));
 
             // Act
             mapMan.SetMapEntity(mapID, newMapEntity);
 
             // Assert
-            Assert.That(oldMapEntity.Deleted);
-            Assert.That(newMapEntity.HasComponent<IMapComponent>());
+            Assert.That(entMan.Deleted(oldMapEntity));
+            Assert.That(entMan.HasComponent<IMapComponent>(newMapEntity));
 
-            var mapComp = newMapEntity.GetComponent<IMapComponent>();
+            var mapComp = entMan.GetComponent<IMapComponent>(newMapEntity);
             Assert.That(mapComp.WorldMap == mapID);
         }
 
@@ -141,7 +141,7 @@ namespace Robust.UnitTesting.Shared.Map
             var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             // Assert
-            Assert.That(newEntity.Transform.MapID, Is.EqualTo(MapId.Nullspace));
+            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).MapID, Is.EqualTo(MapId.Nullspace));
         }
 
         [Test]
@@ -154,7 +154,7 @@ namespace Robust.UnitTesting.Shared.Map
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That(entity.Deleted, Is.True);
+            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
             Assert.That(mapMan.GetMapEntityId(MapId.Nullspace), Is.EqualTo(EntityUid.Invalid));
         }
     }

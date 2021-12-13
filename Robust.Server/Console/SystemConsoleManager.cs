@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Threading.Channels;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -38,7 +41,7 @@ namespace Robust.Server.Console
         // This is ridiculously expensive to fetch for some reason.
         // I'm gonna just assume that this can't change during the lifetime of the process. I hope.
         // I want this ridiculous 0.1% CPU usage off my profiler.
-        private readonly bool _userInteractive = Environment.UserInteractive;
+        private readonly bool _userInteractive = Environment.UserInteractive && !System.Console.IsInputRedirected;
 
         private TimeSpan _lastTitleUpdate;
         private long _lastReceivedBytes;
@@ -47,6 +50,21 @@ namespace Robust.Server.Console
 
         public void Dispose()
         {
+            if (_rdLine != null)
+            {
+                _rdLine.Value.cts.Cancel();
+                _rdLine.Value.cts.Dispose();
+
+                try
+                {
+                    _rdLine.Value.task.Dispose();
+                }
+                catch
+                {
+                    // Don't care LOL
+                }
+            }
+
             if (Environment.UserInteractive)
             {
                 Con.CancelKeyPress -= CancelKeyHandler;
@@ -71,10 +89,8 @@ namespace Robust.Server.Console
         /// </summary>
         private void UpdateTitle()
         {
-            if (!_userInteractive || System.Console.IsInputRedirected)
-            {
+            if (!_userInteractive)
                 return;
-            }
 
             // every 1 second update stats in the console window title
             if ((_time.RealTime - _lastTitleUpdate).TotalSeconds < 1.0)
@@ -104,13 +120,55 @@ namespace Robust.Server.Console
             return bps;
         }
 
+        private (Task task, CancellationTokenSource cts, Channel<string> chan)? _rdLine = null;
+
         public void UpdateInput()
         {
-            if (Con.IsInputRedirected)
+            if (_userInteractive)
             {
+                HandleKeyboard();
                 return;
             }
 
+            if (_rdLine.HasValue) // Already running, check the channel.
+            {
+                if (_rdLine.Value.chan.Reader.TryRead(out var cmd))
+                    _conShell.ExecuteCommand(cmd);
+
+                return;
+            }
+
+            // Set up the new thread & thread accessories
+            var rlc = new CancellationTokenSource();
+            var chan = Channel.CreateBounded<string>(new BoundedChannelOptions(capacity: 32)
+                {
+                    FullMode=BoundedChannelFullMode.Wait,
+                    SingleReader=true,
+                }
+            );
+
+            _rdLine = (
+                task: Task.Run(
+                    async () =>
+                    {
+                        while (!rlc.IsCancellationRequested)
+                        {
+                            var str = await Con.In
+                                .ReadLineAsync()
+                                .WaitAsync(TimeSpan.FromSeconds(2.0), rlc.Token);
+
+                            await chan.Writer.WriteAsync(str!, rlc.Token);
+                        }
+                    },
+                    rlc.Token
+                ),
+                cts: rlc,
+                chan: chan
+            );
+        }
+
+        public void HandleKeyboard()
+        {
             // Process keyboard input
             while (Con.KeyAvailable)
             {

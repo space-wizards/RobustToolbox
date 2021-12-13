@@ -83,14 +83,14 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetPVS =
             CVarDef.Create("net.pvs", true, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
-        public static readonly CVarDef<float> StreamedTilesPerSecond =
-            CVarDef.Create("net.stream_tps", 500f, CVar.ARCHIVE | CVar.SERVER);
-
-        public static readonly CVarDef<float> StreamedTileRange =
-            CVarDef.Create("net.stream_range", 15f, CVar.ARCHIVE | CVar.SERVER);
-
         public static readonly CVarDef<float> NetMaxUpdateRange =
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        public static readonly CVarDef<int> NetPVSNewEntityBudget =
+            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+
+        public static readonly CVarDef<int> NetPVSEntityBudget =
+            CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         public static readonly CVarDef<bool> NetLogLateMsg =
             CVarDef.Create("net.log_late_msg", true);
@@ -367,14 +367,14 @@ namespace Robust.Shared
         /// On Windows, use ANGLE as OpenGL implementation.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngle =
-            CVarDef.Create("display.angle", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Use a custom swap chain when using ANGLE.
         /// Should improve performance and fixes main window sRGB handling with ANGLE.
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
-            CVarDef.Create("display.angle_custom_swap_chain", false, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
 
         /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
@@ -387,6 +387,19 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<string> DisplayAdapter =
             CVarDef.Create("display.adapter", "", CVar.CLIENTONLY);
+
+        /// <summary>
+        /// What type of GPU to prefer when creating a graphics context, for things such as hybrid GPU laptops.
+        /// </summary>
+        /// <remarks>
+        /// This setting is not always respect depending on platform and rendering API used.
+        /// Values are:
+        /// 0 = unspecified (DXGI_GPU_PREFERENCE_UNSPECIFIED)
+        /// 1 = minimum power (DXGI_GPU_PREFERENCE_MINIMUM_POWER)
+        /// 2 = high performance (DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE)
+        /// </remarks>
+        public static readonly CVarDef<int> DisplayGpuPreference =
+            CVarDef.Create("display.gpu_preference", 2, CVar.CLIENTONLY);
 
         /// <summary>
         /// Use EGL to create GL context instead of GLFW, if possible.

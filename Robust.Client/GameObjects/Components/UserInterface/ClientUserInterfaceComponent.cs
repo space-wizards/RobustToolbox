@@ -15,6 +15,8 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+        [Dependency] private readonly IPlayerManager _playerManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private readonly Dictionary<object, BoundUserInterface> _openInterfaces =
             new();
@@ -87,15 +89,15 @@ namespace Robust.Client.GameObjects
             _openInterfaces.Remove(uiKey);
             boundUserInterface.Dispose();
 
-            var playerSession = IoCManager.Resolve<IPlayerManager>().LocalPlayer?.Session;
+            var playerSession = _playerManager.LocalPlayer?.Session;
             if(playerSession != null)
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new BoundUIClosedEvent(uiKey, Owner.Uid, playerSession));
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIClosedEvent(uiKey, Owner, playerSession));
         }
 
         internal void SendMessage(BoundUserInterfaceMessage message, object uiKey)
         {
             EntitySystem.Get<UserInterfaceSystem>()
-                .Send(new BoundUIWrapMessage(Owner.Uid, message, uiKey));
+                .Send(new BoundUIWrapMessage(Owner, message, uiKey));
         }
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -23,7 +24,7 @@ public abstract class AppearanceComponent : Component
     [ViewVariables]
     private Dictionary<object, object> _appearanceData = new();
 
-    public override ComponentState GetComponentState(ICommonSession player)
+    public override ComponentState GetComponentState()
     {
         return new AppearanceComponentState(_appearanceData);
     }

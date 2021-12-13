@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
+using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 
 namespace Robust.Shared.Localization
@@ -21,21 +22,21 @@ namespace Robust.Shared.Localization
             _entityCache.Clear();
         }
 
-        private bool TryGetEntityLocAttrib(IEntity entity, string attribute, [NotNullWhen(true)] out string? value)
+        private bool TryGetEntityLocAttrib(EntityUid entity, string attribute, [NotNullWhen(true)] out string? value)
         {
-            if (entity.TryGetComponent<GrammarComponent>(out var grammar) &&
+            if (_entMan.TryGetComponent<GrammarComponent?>(entity, out var grammar) &&
                 grammar.Attributes.TryGetValue(attribute, out value))
             {
                 return true;
             }
 
-            if (entity.Prototype == null)
+            if (_entMan.GetComponent<MetaDataComponent>(entity).EntityPrototype is not {} prototype)
             {
                 value = null;
                 return false;
             }
 
-            var data = GetEntityData(entity.Prototype.ID);
+            var data = GetEntityData(prototype.ID);
             return data.Attributes.TryGetValue(attribute, out value);
         }
 

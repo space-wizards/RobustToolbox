@@ -25,7 +25,7 @@ namespace Robust.Client.Animations
         public override (int KeyFrameIndex, float FramePlayingTime)
             AdvancePlayback(object context, int prevKeyFrameIndex, float prevPlayingTime, float frameTime)
         {
-            var entity = (IEntity) context;
+            var entity = (EntityUid) context;
 
             var playingTime = prevPlayingTime + frameTime;
             var keyFrameIndex = prevKeyFrameIndex;

@@ -13,10 +13,9 @@ namespace Robust.Shared.GameObjects
 
         public bool Empty => ComponentChanges.Value is null or { Count: 0 };
 
-        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents)
+        public EntityState(EntityUid uid, NetListAsArray<ComponentChange> changedComponents, bool hide = false)
         {
             Uid = uid;
-
             ComponentChanges = changedComponents;
         }
     }

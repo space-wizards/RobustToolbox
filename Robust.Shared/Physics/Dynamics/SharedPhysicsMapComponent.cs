@@ -36,6 +36,7 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public abstract class SharedPhysicsMapComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
@@ -119,7 +120,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private float _invDt0;
 
-        public MapId MapId => Owner.Transform.MapID;
+        public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
         public void AddAwakeBody(PhysicsComponent body)
@@ -265,7 +266,9 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB());
+                var (worldPos, worldRot) = transform.GetWorldPositionRotation();
+
+                transform.RunDeferred(physics.GetWorldAABB(worldPos, worldRot));
             }
 
             _deferredUpdates.Clear();
@@ -360,7 +363,7 @@ namespace Robust.Shared.Physics.Dynamics
                         other.Island = true;
                     }
 
-                    if (!Owner.EntityManager.TryGetComponent(body.OwnerUid, out JointComponent? jointComponent)) continue;
+                    if (!_entityManager.TryGetComponent(body.Owner, out JointComponent? jointComponent)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {

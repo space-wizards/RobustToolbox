@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -420,7 +421,7 @@ namespace Robust.Shared.Configuration
 
             if (type == typeof(float))
             {
-                return float.Parse(value);
+                return float.Parse(value, CultureInfo.InvariantCulture);
             }
 
             if (type?.IsEnum ?? false)

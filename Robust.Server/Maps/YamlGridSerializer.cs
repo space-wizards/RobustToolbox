@@ -94,7 +94,7 @@ namespace Robust.Server.Maps
                 else if (key == "tilesize")
                     tsz = ushort.Parse(val);
                 else if (key == "snapsize")
-                    sgsz = float.Parse(val);
+                    sgsz = float.Parse(val, CultureInfo.InvariantCulture);
             }
 
             var grid = mapMan.CreateGridNoEntity(mapId, gridId);

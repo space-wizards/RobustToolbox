@@ -330,7 +330,7 @@ namespace Robust.Shared.Configuration
                 if (_netManager.IsClient && (cVar.Flags & CVar.SERVER) != 0)
                     continue;
 
-                nwVars.Add((cVar.Name, cVar.Value ?? cVar.DefaultValue));
+                nwVars.Add((cVar.Name, GetConfigVarValue(cVar)));
 
                 Logger.DebugS("cfg", $"name={cVar.Name}, val={(cVar.Value ?? cVar.DefaultValue)}");
             }

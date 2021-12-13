@@ -5,6 +5,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -58,6 +59,10 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public override string Name => "MetaData";
+
+        // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
+        [ViewVariables]
+        public GameTick EntityLastModifiedTick { get; internal set; } = new(1);
 
         /// <summary>
         ///     The in-game name of this entity.
@@ -145,11 +150,13 @@ namespace Robust.Shared.GameObjects
             get => _entityPaused;
             set
             {
-                if (_entityPaused == value || value && Owner.HasComponent<IgnorePauseComponent>())
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                if (_entityPaused == value || value && entMan.HasComponent<IgnorePauseComponent>(Owner))
                     return;
 
                 _entityPaused = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntityPausedEvent(Owner.Uid, value));
+                entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 
@@ -158,7 +165,7 @@ namespace Robust.Shared.GameObjects
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
 
-        public override ComponentState GetComponentState(ICommonSession player)
+        public override ComponentState GetComponentState()
         {
             return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
         }

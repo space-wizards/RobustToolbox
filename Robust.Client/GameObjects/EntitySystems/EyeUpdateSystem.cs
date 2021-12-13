@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.Physics;
@@ -9,7 +9,6 @@ using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 #nullable enable
 
@@ -25,8 +24,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private ITransformComponent? _lastParent;
-        private ITransformComponent? _lerpTo;
+        private TransformComponent? _lastParent;
+        private TransformComponent? _lerpTo;
         private Angle LerpStartRotation;
         private float _accumulator;
 
@@ -70,15 +69,23 @@ namespace Robust.Client.GameObjects
 
             // TODO: Content should have its own way of handling this. We should have a default behavior that they can overwrite.
 
-            var playerTransform = _playerManager.LocalPlayer?.ControlledEntity?.Transform;
+            EntityUid tempQualifier = _playerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            var playerTransform = (tempQualifier != EntityUid.Invalid ? EntityManager.GetComponent<TransformComponent>(tempQualifier) : null);
 
             if (playerTransform == null) return;
 
             var gridId = playerTransform.GridID;
 
-            var parent = gridId != GridId.Invalid && EntityManager.TryGetEntity(_mapManager.GetGrid(gridId).GridEntityId, out var gridEnt) ?
-                gridEnt.Transform
-                : _mapManager.GetMapEntity(playerTransform.MapID).Transform;
+            TransformComponent parent;
+            if (gridId != GridId.Invalid &&
+                _mapManager.GetGrid(gridId).GridEntityId is var gridEnt &&
+                EntityManager.EntityExists(gridEnt))
+                parent = EntityManager.GetComponent<TransformComponent>(gridEnt);
+            else
+            {
+                parent = EntityManager.GetComponent<TransformComponent>(
+                    _mapManager.GetMapEntityId(playerTransform.MapID));
+            }
 
             // Make sure that we don't fire the vomit carousel when we spawn in
             if (_lastParent is null)

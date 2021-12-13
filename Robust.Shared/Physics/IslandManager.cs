@@ -99,8 +99,6 @@ namespace Robust.Shared.Physics
             CfgVar(CVars.TimeToSleep, value => _islandCfg.TimeToSleep = value);
             CfgVar(CVars.VelocityThreshold, value => _islandCfg.VelocityThreshold = value);
             CfgVar(CVars.Baumgarte, value => _islandCfg.Baumgarte = value);
-            CfgVar(CVars.LinearSlop, value => _islandCfg.LinearSlop = value);
-            CfgVar(CVars.AngularSlop, value => _islandCfg.AngularSlop = value);
             CfgVar(CVars.MaxLinearCorrection, value => _islandCfg.MaxLinearCorrection = value);
             CfgVar(CVars.MaxAngularCorrection, value => _islandCfg.MaxAngularCorrection = value);
             CfgVar(CVars.VelocityConstraintsPerThread, value => _islandCfg.VelocityConstraintsPerThread = value);

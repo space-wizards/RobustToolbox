@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Buffers;
 using OpenToolkit.Graphics.OpenGL4;
@@ -6,6 +6,7 @@ using Robust.Client.GameObjects;
 using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -329,13 +330,14 @@ namespace Robust.Client.Graphics.Clyde
             var mapId = eye.Position.MapId;
 
             // If this map has lighting disabled, return
-            if (!_mapManager.GetMapEntity(mapId).GetComponent<IMapComponent>().LightingEnabled)
+            var mapUid = _mapManager.GetMapEntityId(mapId);
+            if (!_entityManager.GetComponent<IMapComponent>(mapUid).LightingEnabled)
             {
                 return;
             }
 
             var (lights, count, expandedBounds) = GetLightsToRender(mapId, worldBounds, worldAABB);
-            eye.GetViewMatrix(out var eyeTransform, eye.Scale);
+            eye.GetViewMatrixNoOffset(out var eyeTransform, eye.Scale);
 
             UpdateOcclusionGeometry(mapId, expandedBounds, eyeTransform);
 
@@ -413,7 +415,7 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var (component, lightPos, _) = lights[i];
 
-                var transform = component.Owner.Transform;
+                var transform = _entityManager.GetComponent<TransformComponent>(component.Owner);
 
                 Texture? mask = null;
                 var rotation = Angle.Zero;
@@ -516,7 +518,7 @@ namespace Robust.Client.Graphics.Clyde
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count) state, in PointLightComponent light) =>
                 {
@@ -526,7 +528,7 @@ namespace Robust.Client.Graphics.Clyde
                         return false;
                     }
 
-                    var transform = light.Owner.Transform;
+                    var transform = _entityManager.GetComponent<TransformComponent>(light.Owner);
 
                     if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
 
@@ -871,12 +873,12 @@ namespace Robust.Client.Graphics.Clyde
 
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    var treeBounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
                         var occluder = (ClientOccluderComponent)sOccluder;
-                        var transform = occluder.Owner.Transform;
+                        var transform = _entityManager.GetComponent<TransformComponent>(occluder.Owner);
                         if (!occluder.Enabled)
                         {
                             return true;
@@ -927,10 +929,10 @@ namespace Robust.Client.Graphics.Clyde
                         //
 
                         // Calculate delta positions from camera.
-                        var (dTlX, dTlY) = eyeTransform.Transform(tl);
-                        var (dTrX, dTrY) = eyeTransform.Transform(tr);
-                        var (dBlX, dBlY) = eyeTransform.Transform(bl);
-                        var (dBrX, dBrY) = eyeTransform.Transform(br);
+                        var dTl = eyeTransform.Transform(tl);
+                        var dTr = eyeTransform.Transform(tr);
+                        var dBl = eyeTransform.Transform(bl);
+                        var dBr = eyeTransform.Transform(br);
 
                         // Get which neighbors are occluding.
                         var no = (occluder.Occluding & OccluderDir.North) != 0;
@@ -939,10 +941,26 @@ namespace Robust.Client.Graphics.Clyde
                         var wo = (occluder.Occluding & OccluderDir.West) != 0;
 
                         // Do visibility tests for occluders (described above).
-                        var tlV = dTlX > 0 && !wo || dTlY < 0 && !no;
-                        var trV = dTrX < 0 && !eo || dTrY < 0 && !no;
-                        var blV = dBlX > 0 && !wo || dBlY > 0 && !so;
-                        var brV = dBrX < 0 && !eo || dBrY > 0 && !so;
+                        bool CheckFaceEyeVis(Vector2 a, Vector2 b)
+                        {
+                            // get normal
+                            var alongNormal = b - a;
+                            var normal = alongNormal.Rotated90DegreesAnticlockwiseWorld.Normalized;
+                            // determine which side of the plane the face is on
+                            // the plane is at the origin of this coordinate system, which is also the eye
+                            // the normal of the plane is that of the face
+                            // therefore, if the dot <= 0, the face is facing the camera
+                            // I don't like this, but rotated occluders started happening
+                            return Vector2.Dot(normal, a) <= 0;
+                        }
+                        var nV = ((!no) && CheckFaceEyeVis(dTl, dTr));
+                        var sV = ((!so) && CheckFaceEyeVis(dBr, dBl));
+                        var eV = ((!eo) && CheckFaceEyeVis(dTr, dBr));
+                        var wV = ((!wo) && CheckFaceEyeVis(dBl, dTl));
+                        var tlV = nV || wV;
+                        var trV = nV || eV;
+                        var blV = sV || wV;
+                        var brV = sV || eV;
 
                         // Handle faces, rules described above.
                         // Note that "from above" it should be clockwise.

@@ -19,8 +19,7 @@ namespace Robust.Shared.Map
         public static EntityCoordinates AlignWithClosestGridTile(this EntityCoordinates coordinates, float searchBoxSize = 1.5f, IEntityManager? entityManager = null, IMapManager? mapManager = null)
         {
             var coords = coordinates;
-            entityManager ??= IoCManager.Resolve<IEntityManager>();
-            mapManager ??= IoCManager.Resolve<IMapManager>();
+            IoCManager.Resolve(ref entityManager, ref mapManager);
 
             var gridId = coords.GetGridId(entityManager);
 

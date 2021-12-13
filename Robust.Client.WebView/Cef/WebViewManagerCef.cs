@@ -3,6 +3,7 @@ using System.IO;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Prototypes;
 using Xilium.CefGlue;
 
 namespace Robust.Client.WebView.Cef
@@ -12,6 +13,7 @@ namespace Robust.Client.WebView.Cef
         private CefApp _app = default!;
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
+        [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public void Initialize()
         {
@@ -26,6 +28,12 @@ namespace Robust.Client.WebView.Cef
                 throw new NotSupportedException("Unsupported platform for CEF!");
 
             var subProcessPath = PathHelpers.ExecutableRelativeFile(subProcessName);
+            var cefResourcesPath = LocateCefResources();
+
+            // System.Console.WriteLine(AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
+
+            if (cefResourcesPath == null)
+                throw new InvalidOperationException("Unable to locate cef_resources directory!");
 
             var settings = new CefSettings()
             {
@@ -33,22 +41,12 @@ namespace Robust.Client.WebView.Cef
                 ExternalMessagePump = false, // Unsure, honestly. TODO CEF: Research this?
                 NoSandbox = true, // Not disabling the sandbox crashes CEF.
                 BrowserSubprocessPath = subProcessPath,
-                LocalesDirPath = Path.Combine(PathHelpers.GetExecutableDirectory(), "locales"),
-                ResourcesDirPath = PathHelpers.GetExecutableDirectory(),
-                RemoteDebuggingPort = 9222
+                LocalesDirPath = Path.Combine(cefResourcesPath, "locales"),
+                ResourcesDirPath = cefResourcesPath,
+                RemoteDebuggingPort = 9222,
             };
 
             Logger.Info($"CEF Version: {CefRuntime.ChromeVersion}");
-
-            // --------------------------- README --------------------------------------------------
-            // By the way! You're gonna need the CEF binaries in your client's bin folder.
-            // More specifically, version cef_binary_94.4.1+g4b61a8c+chromium-94.0.4606.54
-            // Windows: https://cef-builds.spotifycdn.com/cef_binary_94.4.1%2Bg4b61a8c%2Bchromium-94.0.4606.54_windows64_minimal.tar.bz2
-            // Linux: https://cef-builds.spotifycdn.com/cef_binary_94.4.1%2Bg4b61a8c%2Bchromium-94.0.4606.54_linux64_minimal.tar.bz2
-            // Here's how to get it to work:
-            // 1. Copy all the contents of "Release" to the bin/Content.Client folder.
-            // 2. Copy all the contents of "Resources" to the bin/Content.Client folder.
-            // -------------------------------------------------------------------------------------
 
             _app = new RobustCefApp();
 
@@ -58,6 +56,37 @@ namespace Robust.Client.WebView.Cef
             // TODO CEF: After this point, debugging breaks. No, literally. My client crashes but ONLY with the debugger.
             // I have tried using the DEBUG and RELEASE versions of libcef.so, stripped or non-stripped...
             // And nothing seemed to work. Odd.
+        }
+
+        private static string? LocateCefResources()
+        {
+            if (ProbeDir(PathHelpers.GetExecutableDirectory(), out var path))
+                return path;
+
+
+            foreach (var searchDir in NativeDllSearchDirectories())
+            {
+                if (ProbeDir(searchDir, out path))
+                    return path;
+            }
+
+            return null;
+
+            static bool ProbeDir(string dir, out string path)
+            {
+                path = Path.Combine(dir, "cef_resources");
+                return Directory.Exists(path);
+            }
+        }
+
+        internal static string[] NativeDllSearchDirectories()
+        {
+            var sepChar = OperatingSystem.IsWindows() ? ';' : ':';
+
+            var searchDirectories = ((string)AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES")!)
+                .Split(sepChar, StringSplitOptions.RemoveEmptyEntries);
+
+            return searchDirectories;
         }
 
         public void Update()

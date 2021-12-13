@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -12,6 +11,7 @@ namespace Robust.Client.GameObjects
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         [ViewVariables] private (GridId, Vector2i) _lastPosition;
         [ViewVariables] internal OccluderDir Occluding { get; private set; }
@@ -32,7 +32,7 @@ namespace Robust.Client.GameObjects
         {
             base.Startup();
 
-            if (Owner.Transform.Anchored)
+            if (_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
             {
                 AnchorStateChanged();
             }
@@ -42,11 +42,11 @@ namespace Robust.Client.GameObjects
         {
             SendDirty();
 
-            if(!Owner.Transform.Anchored)
+            if(!_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(Owner.Transform.GridID);
-            _lastPosition = (Owner.Transform.GridID, grid.TileIndicesFor(Owner.Transform.Coordinates));
+            var grid = _mapManager.GetGrid(_entityManager.GetComponent<TransformComponent>(Owner).GridID);
+            _lastPosition = (_entityManager.GetComponent<TransformComponent>(Owner).GridID, grid.TileIndicesFor(_entityManager.GetComponent<TransformComponent>(Owner).Coordinates));
         }
 
         protected override void Shutdown()
@@ -58,9 +58,9 @@ namespace Robust.Client.GameObjects
 
         private void SendDirty()
         {
-            if (Owner.Transform.Anchored)
+            if (_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
             {
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local,
+                _entityManager.EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));
             }
         }
@@ -69,18 +69,18 @@ namespace Robust.Client.GameObjects
         {
             Occluding = OccluderDir.None;
 
-            if (Deleted || !Owner.Transform.Anchored)
+            if (Deleted || !_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
             {
                 return;
             }
 
+            var grid = _mapManager.GetGrid(_entityManager.GetComponent<TransformComponent>(Owner).GridID);
+            var position = _entityManager.GetComponent<TransformComponent>(Owner).Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
-                var grid = _mapManager.GetGrid(Owner.Transform.GridID);
-                var position = Owner.Transform.Coordinates;
                 foreach (var neighbor in grid.GetInDir(position, dir))
                 {
-                    if (Owner.EntityManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
+                    if (_entityManager.TryGetComponent(neighbor, out ClientOccluderComponent? comp) && comp.Enabled)
                     {
                         Occluding |= oclDir;
                         break;
@@ -88,10 +88,20 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            CheckDir(Direction.North, OccluderDir.North);
-            CheckDir(Direction.East, OccluderDir.East);
-            CheckDir(Direction.South, OccluderDir.South);
-            CheckDir(Direction.West, OccluderDir.West);
+            var angle = _entityManager.GetComponent<TransformComponent>(Owner).LocalRotation;
+            var dirRolling = angle.GetCardinalDir();
+            // dirRolling starts at effective south
+
+            CheckDir(dirRolling, OccluderDir.South);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.West);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.North);
+            dirRolling = dirRolling.GetClockwise90Degrees();
+
+            CheckDir(dirRolling, OccluderDir.East);
         }
 
         [Flags]

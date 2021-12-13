@@ -44,8 +44,6 @@ namespace Robust.Shared.Physics
 
     public abstract class SharedJointSystem : EntitySystem
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
         private HashSet<JointComponent> _dirtyJoints = new();
@@ -55,42 +53,6 @@ namespace Robust.Shared.Physics
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
             SubscribeLocalEvent<JointComponent, ComponentShutdown>(HandleShutdown);
-
-            _configManager.OnValueChanged(CVars.WarmStarting, SetWarmStarting);
-            _configManager.OnValueChanged(CVars.LinearSlop, SetLinearSlop);
-        }
-
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _configManager.UnsubValueChanged(CVars.WarmStarting, SetWarmStarting);
-            _configManager.UnsubValueChanged(CVars.LinearSlop, SetLinearSlop);
-        }
-
-        private void SetWarmStarting(bool value)
-        {
-            foreach (var joint in GetAllJoints())
-            {
-                switch (joint)
-                {
-                    case DistanceJoint distance:
-                        distance.WarmStarting = value;
-                        break;
-                }
-            }
-        }
-
-        private void SetLinearSlop(float value)
-        {
-            foreach (var joint in GetAllJoints())
-            {
-                switch (joint)
-                {
-                    case DistanceJoint distance:
-                        distance.LinearSlop = value;
-                        break;
-                }
-            }
         }
 
         private IEnumerable<Joint> GetAllJoints()
@@ -119,7 +81,7 @@ namespace Robust.Shared.Physics
             foreach (var joint in _dirtyJoints)
             {
                 if (joint.Deleted || joint.JointCount != 0) continue;
-                EntityManager.RemoveComponent<JointComponent>(joint.Owner.Uid);
+                EntityManager.RemoveComponent<JointComponent>(joint.Owner);
             }
 
             _dirtyJoints.Clear();
@@ -141,11 +103,27 @@ namespace Robust.Shared.Physics
             anchorA ??= Vector2.Zero;
             anchorB ??= Vector2.Zero;
 
-            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value)
-            {
-                WarmStarting = _configManager.GetCVar(CVars.WarmStarting),
-                LinearSlop = _configManager.GetCVar(CVars.LinearSlop)
-            };
+            var joint = new DistanceJoint(bodyA, bodyB, anchorA.Value, anchorB.Value);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
+        public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            var joint = new PrismaticJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
+        public PrismaticJoint CreatePrismaticJoint(EntityUid bodyA, EntityUid bodyB, Vector2 worldAnchor, Vector2 worldAxis, string? id = null)
+        {
+            var joint = new PrismaticJoint(bodyA, bodyB, worldAnchor, worldAxis, EntityManager);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
@@ -163,18 +141,25 @@ namespace Robust.Shared.Physics
             return joint;
         }
 
+        public WeldJoint CreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            var joint = new WeldJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
         #endregion
 
         public static void LinearStiffness(
             float frequencyHertz,
             float dampingRatio,
-            PhysicsComponent bodyA,
-            PhysicsComponent bodyB,
+            float massA,
+            float massB,
             out float stiffness, out float damping)
         {
-            var massA = bodyA.Mass;
-            var massB = bodyB.Mass;
-
             float mass;
             if (massA > 0.0f && massB > 0.0f)
             {
@@ -230,10 +215,10 @@ namespace Robust.Shared.Physics
             var bodyB = joint.BodyB;
 
             // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
-            var mapidA = bodyA.Owner.Transform.MapID;
+            var mapidA = EntityManager.GetComponent<TransformComponent>(bodyA.Owner).MapID;
 
             if (mapidA == MapId.Nullspace ||
-                mapidA != bodyB.Owner.Transform.MapID)
+                mapidA != EntityManager.GetComponent<TransformComponent>(bodyB.Owner).MapID)
             {
                 Logger.ErrorS("physics", $"Tried to add joint to ineligible bodies");
                 return;
@@ -290,17 +275,17 @@ namespace Robust.Shared.Physics
 
             // Raise broadcast last so we can do both sides of directed first.
             var vera = new JointAddedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
             var smug = new JointAddedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!body.Owner.HasComponent<JointComponent>()) return;
+            if (!EntityManager.HasComponent<JointComponent>(body.Owner)) return;
 
-            EntityManager.RemoveComponent<JointComponent>(body.Owner.Uid);
+            EntityManager.RemoveComponent<JointComponent>(body.Owner);
         }
 
         public void RemoveJoint(Joint joint)
@@ -363,9 +348,9 @@ namespace Robust.Shared.Physics
             }
 
             var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
             var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
             // We can't just check up front due to how prediction works.

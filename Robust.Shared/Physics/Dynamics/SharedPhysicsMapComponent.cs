@@ -36,6 +36,7 @@ namespace Robust.Shared.Physics.Dynamics
 {
     public abstract class SharedPhysicsMapComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
@@ -72,7 +73,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<(ITransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
+        private List<(TransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -119,7 +120,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private float _invDt0;
 
-        public MapId MapId => Owner.Transform.MapID;
+        public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
         public void AddAwakeBody(PhysicsComponent body)
@@ -222,7 +223,7 @@ namespace Robust.Shared.Physics.Dynamics
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
-            BroadphaseSystem.FindNewContacts(MapId, prediction);
+            BroadphaseSystem.FindNewContacts(MapId);
 
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
@@ -265,7 +266,9 @@ namespace Robust.Shared.Physics.Dynamics
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                transform.RunDeferred(physics.GetWorldAABB());
+                var (worldPos, worldRot) = transform.GetWorldPositionRotation();
+
+                transform.RunDeferred(physics.GetWorldAABB(worldPos, worldRot));
             }
 
             _deferredUpdates.Clear();
@@ -360,7 +363,7 @@ namespace Robust.Shared.Physics.Dynamics
                         other.Island = true;
                     }
 
-                    if (!body.Owner.TryGetComponent(out JointComponent? jointComponent)) continue;
+                    if (!_entityManager.TryGetComponent(body.Owner, out JointComponent? jointComponent)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {

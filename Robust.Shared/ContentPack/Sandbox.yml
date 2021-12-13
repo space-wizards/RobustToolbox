@@ -453,11 +453,15 @@ Types:
     AsyncValueTaskMethodBuilder: { All: True }
     AsyncValueTaskMethodBuilder`1: { All: True }
     AsyncVoidMethodBuilder: { All: True }
+    CallerArgumentExpressionAttribute: { All: True }
     CompilationRelaxationsAttribute: { All: True }
     CompilerGeneratedAttribute: { All: True }
+    DefaultInterpolatedStringHandler: { All: True }
     ExtensionAttribute: { All: True }
     IAsyncStateMachine: { All: True }
     InternalsVisibleToAttribute: { All: True }
+    InterpolatedStringHandlerAttribute: { All: True }
+    IsByRefLikeAttribute: { All: True }
     IsExternalInit: { All: True }
     IsReadOnlyAttribute: { All: True }
     IteratorStateMachineAttribute: { All: True }
@@ -472,6 +476,9 @@ Types:
   System.Runtime.ExceptionServices:
     ExceptionDispatchInfo: { All: True }
   System.Runtime.InteropServices:
+    CollectionsMarshal:
+      Methods:
+        - "System.Span`1<!!0> AsSpan<>(System.Collections.Generic.List`1<!!0>)"
     InAttribute: { All: True }
     UnmanagedType: { } # `unmanaged` constraint in C# modreqs with this.
   System.Runtime.Versioning:
@@ -612,6 +619,7 @@ Types:
       - "System.Text.StringBuilder Append(System.Decimal)"
       - "System.Text.StringBuilder Append(System.ReadOnlyMemory`2<char>)"
       - "System.Text.StringBuilder Append(System.ReadOnlySpan`2<char>)"
+      - "System.Text.StringBuilder Append(ref System.Text.StringBuilder/AppendInterpolatedStringHandler)"
       - "System.Text.StringBuilder Append(System.Text.StringBuilder)"
       - "System.Text.StringBuilder Append(System.Text.StringBuilder, int, int)"
       - "System.Text.StringBuilder Append(uint)"
@@ -668,6 +676,7 @@ Types:
       - "void CopyTo(int, System.Span`1<char>, int)"
       NestedTypes:
         ChunkEnumerator: { All: True }
+        AppendInterpolatedStringHandler: { All: True }
     StringRuneEnumerator: { All: True }
   System.Threading.Tasks:
     Task: { All: True }
@@ -1019,6 +1028,7 @@ Types:
       - "bool Contains(char)"
       - "bool Contains(char, System.StringComparison)"
       - "bool Contains(string)"
+      - "bool Contains(string, System.StringComparison)"
       - "bool EndsWith(char)"
       - "bool EndsWith(string)"
       - "bool EndsWith(string, bool, System.Globalization.CultureInfo)"

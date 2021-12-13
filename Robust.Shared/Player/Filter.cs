@@ -41,8 +41,8 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddPlayersByPvs(EntityUid origin, float rangeMultiplier = 2f, IEntityManager? entityManager = null)
         {
-            entityManager ??= IoCManager.Resolve<IEntityManager>();
-            var transform = entityManager.GetComponent<ITransformComponent>(origin);
+            IoCManager.Resolve(ref entityManager);
+            var transform = entityManager.GetComponent<TransformComponent>(origin);
             return AddPlayersByPvs(transform.MapPosition, rangeMultiplier);
         }
 
@@ -50,16 +50,7 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(IEntity origin, float rangeMultiplier = 2f)
-        {
-            return AddPlayersByPvs(origin.Transform.MapPosition, rangeMultiplier);
-        }
-
-        /// <summary>
-        ///     Adds all players inside an entity's PVS.
-        ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
-        /// </summary>
-        public Filter AddPlayersByPvs(ITransformComponent origin, float rangeMultiplier = 2f)
+        public Filter AddPlayersByPvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
             return AddPlayersByPvs(origin.MapPosition, rangeMultiplier);
         }
@@ -68,19 +59,19 @@ namespace Robust.Shared.Player
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f)
+        public Filter AddPlayersByPvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
-            var entityMan = IoCManager.Resolve<IEntityManager>();
-            return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier);
+            IoCManager.Resolve(ref entityMan, ref playerMan);
+            return AddPlayersByPvs(origin.ToMap(entityMan), rangeMultiplier, playerMan);
         }
 
         /// <summary>
         ///     Adds all players inside an entity's PVS.
         ///     The current PVS range will be multiplied by <see cref="rangeMultiplier"/>.
         /// </summary>
-        public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f)
+        public Filter AddPlayersByPvs(MapCoordinates origin, float rangeMultiplier = 2f, ISharedPlayerManager? playerMan = null, IConfigurationManager? cfgMan = null)
         {
-            var cfgMan = IoCManager.Resolve<IConfigurationManager>();
+            IoCManager.Resolve(ref playerMan, ref cfgMan);
 
             // If PVS is disabled, we simply return all players.
             if (!cfgMan.GetCVar(CVars.NetPVS))
@@ -88,7 +79,7 @@ namespace Robust.Shared.Player
 
             var pvsRange = cfgMan.GetCVar(CVars.NetMaxUpdateRange) * rangeMultiplier;
 
-            return AddInRange(origin, pvsRange);
+            return AddInRange(origin, pvsRange, playerMan);
         }
 
         /// <summary>
@@ -107,9 +98,9 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Adds all players to the filter.
         /// </summary>
-        public Filter AddAllPlayers()
+        public Filter AddAllPlayers(ISharedPlayerManager? playerMan = null)
         {
-            var playerMan = IoCManager.Resolve<ISharedPlayerManager>();
+            IoCManager.Resolve(ref playerMan);
 
             _recipients = new HashSet<ICommonSession>(playerMan.NetworkedSessions);
 
@@ -119,9 +110,9 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     Adds all players that match a predicate.
         /// </summary>
-        public Filter AddWhere(Predicate<ICommonSession> predicate)
+        public Filter AddWhere(Predicate<ICommonSession> predicate, ISharedPlayerManager? playerMan = null)
         {
-            var playerMan = IoCManager.Resolve<ISharedPlayerManager>();
+            IoCManager.Resolve(ref playerMan);
             foreach (var player in playerMan.NetworkedSessions)
             {
                 if (predicate(player))
@@ -139,52 +130,49 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter AddWhereAttachedEntity(Predicate<EntityUid> predicate)
         {
-            return AddWhere(session => session.AttachedEntityUid is { } uid && predicate(uid));
-        }
-
-        /// <summary>
-        ///     Add all players whose attached entity match a predicate.
-        ///     Doesn't consider players without an attached entity.
-        /// </summary>
-        public Filter AddWhereAttachedEntity(Predicate<IEntity> predicate)
-        {
-            return AddWhere(session => session.AttachedEntity is { } entity && predicate(entity));
+            return AddWhere(session => session.AttachedEntity is { } uid && predicate(uid));
         }
 
         /// <summary>
         ///     Add all players whose entity is on a certain grid.
         /// </summary>
-        public Filter AddInGrid(GridId gridId)
+        public Filter AddInGrid(GridId gridId, IEntityManager? entMan = null)
         {
-            return AddWhereAttachedEntity(entity => entity.Transform.GridID == gridId);
+            IoCManager.Resolve(ref entMan);
+            return AddWhereAttachedEntity(entity => entMan.GetComponent<TransformComponent>(entity).GridID == gridId);
         }
 
         /// <summary>
         ///     Add all players whose entity is on a certain map.
         /// </summary>
-        public Filter AddInMap(MapId mapId)
+        public Filter AddInMap(MapId mapId, IEntityManager? entMan = null)
         {
-            return AddWhereAttachedEntity(entity => entity.Transform.MapID == mapId);
+            IoCManager.Resolve(ref entMan);
+            return AddWhereAttachedEntity(entity => entMan.GetComponent<TransformComponent>(entity).MapID == mapId);
         }
 
         /// <summary>
         ///     Adds all players in range of a position.
         /// </summary>
-        public Filter AddInRange(MapCoordinates position, float range)
+        public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+
             return AddWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(session.AttachedEntity.Transform.MapPosition, range));
+                position.InRange(entMan.GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range), playerMan);
         }
 
         /// <summary>
         ///     Removes all players without the specified visibility flag.
         /// </summary>
-        public Filter RemoveByVisibility(uint flag)
+        public Filter RemoveByVisibility(uint flag, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+
             return RemoveWhere(session =>
                 session.AttachedEntity == null
-                || !session.AttachedEntity.TryGetComponent(out SharedEyeComponent? eye)
+                || !entMan.TryGetComponent(session.AttachedEntity, out SharedEyeComponent? eye)
                 || (eye.VisibilityMask & flag) == 0);
         }
 
@@ -212,28 +200,20 @@ namespace Robust.Shared.Player
         /// </summary>
         public Filter RemoveWhereAttachedEntity(Predicate<EntityUid> predicate)
         {
-            _recipients.RemoveWhere(session => session.AttachedEntityUid is { } uid && predicate(uid));
-            return this;
-        }
-
-        /// <summary>
-        ///     Removes all players whose attached entity match a predicate.
-        ///     Doesn't consider players without an attached entity.
-        /// </summary>
-        public Filter RemoveWhereAttachedEntity(Predicate<IEntity> predicate)
-        {
-            _recipients.RemoveWhere(session => session.AttachedEntity is { } entity && predicate(entity));
+            _recipients.RemoveWhere(session => session.AttachedEntity is { } uid && predicate(uid));
             return this;
         }
 
         /// <summary>
         ///     Removes all players in range of a position.
         /// </summary>
-        public Filter RemoveInRange(MapCoordinates position, float range)
+        public Filter RemoveInRange(MapCoordinates position, float range, IEntityManager? entMan = null)
         {
+            IoCManager.Resolve(ref entMan);
+
             return RemoveWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(session.AttachedEntity.Transform.MapPosition, range));
+                position.InRange(entMan.GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range));
         }
 
         /// <summary>
@@ -336,9 +316,9 @@ namespace Robust.Shared.Player
         }
 
         /// <summary>
-        ///     A filter with every player who's PVS overlaps this entity.
+        ///     A filter with every player who's PVS overlaps this point.
         /// </summary>
-        public static Filter Pvs(IEntity origin, float rangeMultiplier = 2f)
+        public static Filter Pvs(TransformComponent origin, float rangeMultiplier = 2f)
         {
             return Empty().AddPlayersByPvs(origin, rangeMultiplier);
         }
@@ -346,17 +326,9 @@ namespace Robust.Shared.Player
         /// <summary>
         ///     A filter with every player who's PVS overlaps this point.
         /// </summary>
-        public static Filter Pvs(ITransformComponent origin, float rangeMultiplier = 2f)
+        public static Filter Pvs(EntityCoordinates origin, float rangeMultiplier = 2f, IEntityManager? entityMan = null, ISharedPlayerManager? playerMan = null)
         {
-            return Empty().AddPlayersByPvs(origin, rangeMultiplier);
-        }
-
-        /// <summary>
-        ///     A filter with every player who's PVS overlaps this point.
-        /// </summary>
-        public static Filter Pvs(EntityCoordinates origin, float rangeMultiplier = 2f)
-        {
-            return Empty().AddPlayersByPvs(origin, rangeMultiplier);
+            return Empty().AddPlayersByPvs(origin, rangeMultiplier, entityMan, playerMan);
         }
 
         /// <summary>

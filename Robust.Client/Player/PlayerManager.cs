@@ -22,7 +22,6 @@ namespace Robust.Client.Player
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         /// <summary>
         ///     Active sessions of connected clients to the server.
@@ -140,7 +139,7 @@ namespace Robust.Client.Player
         /// <param name="entity">AttachedEntity in the server session.</param>
         private void UpdateAttachedEntity(EntityUid? entity)
         {
-            if (LocalPlayer!.ControlledEntity?.Uid == entity)
+            if (LocalPlayer!.ControlledEntity == entity)
             {
                 return;
             }
@@ -151,7 +150,7 @@ namespace Robust.Client.Player
                 return;
             }
 
-            LocalPlayer.AttachEntity(_entityManager.GetEntity(entity.Value));
+            LocalPlayer.AttachEntity(entity.Value);
         }
 
         /// <summary>

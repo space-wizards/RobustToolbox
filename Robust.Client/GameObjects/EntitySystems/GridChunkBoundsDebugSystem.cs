@@ -1,9 +1,12 @@
+using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -25,7 +28,7 @@ namespace Robust.Client.GameObjects
                 {
                     DebugTools.Assert(_overlay == null);
                     _overlay = new GridChunkBoundsOverlay(
-                        IoCManager.Resolve<IEntityManager>(),
+                        EntityManager,
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>());
 
@@ -61,23 +64,38 @@ namespace Robust.Client.GameObjects
         {
             var currentMap = _eyeManager.CurrentMap;
             var viewport = _eyeManager.GetWorldViewport();
+            var worldHandle = args.WorldHandle;
 
             foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))
             {
-                var gridEnt = _entityManager.GetEntity(grid.GridEntityId);
+                var gridInternal = (IMapGridInternal)grid;
+                var worldMatrix = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId).WorldMatrix;
+                worldHandle.SetTransform(worldMatrix);
+                var transform = new Transform(Vector2.Zero, Angle.Zero);
 
-                if (!_entityManager.TryGetComponent<PhysicsComponent>(gridEnt.Uid, out var body)) continue;
+                gridInternal.GetMapChunks(viewport, out var chunkEnumerator);
 
-                var transform = body.GetTransform();
-
-                foreach (var fixture in body.Fixtures)
+                while (chunkEnumerator.MoveNext(out var chunk))
                 {
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                    foreach (var fixture in chunk.Fixtures)
                     {
-                        var aabb = fixture.Shape.ComputeAABB(transform, i);
+                        var poly = (PolygonShape) fixture.Shape;
 
-                        args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.2f));
-                        args.WorldHandle.DrawRect(aabb, Color.Red.WithAlpha(0.5f), false);
+                        var verts = new Vector2[poly.Vertices.Length];
+
+                        for (var i = 0; i < poly.Vertices.Length; i++)
+                        {
+                            verts[i] = Transform.Mul(transform, poly.Vertices[i]);
+                        }
+
+                        worldHandle.DrawPrimitives(DrawPrimitiveTopology.TriangleFan, verts, Color.Green.WithAlpha(0.2f));
+
+                        for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                        {
+                            var aabb = fixture.Shape.ComputeAABB(transform, i);
+
+                            args.WorldHandle.DrawRect(aabb, Color.Red.WithAlpha(0.5f), false);
+                        }
                     }
                 }
             }

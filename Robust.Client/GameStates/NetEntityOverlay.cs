@@ -9,6 +9,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Network;
+using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
@@ -109,7 +110,8 @@ namespace Robust.Client.GameStates
                 if(_entityManager.EntityExists(netEnt.Id))
                 {
                     //TODO: Whoever is working on PVS remake, change the InPVS detection.
-                    var position = _entityManager.GetEntity(netEnt.Id).Transform.MapPosition;
+                    var uid = netEnt.Id;
+                    var position = _entityManager.GetComponent<TransformComponent>(uid).MapPosition;
                     netEnt.InPVS =  !pvsEnabled || (pvsBox.Contains(position.Position) && position.MapId == pvsCenter.MapId);
                     _netEnts[i] = netEnt; // copy struct back
                     continue;
@@ -166,8 +168,9 @@ namespace Robust.Client.GameStates
             for (int i = 0; i < _netEnts.Count; i++)
             {
                 var netEnt = _netEnts[i];
+                var uid = netEnt.Id;
 
-                if (!_entityManager.TryGetEntity(netEnt.Id, out var ent))
+                if (!_entityManager.EntityExists(uid))
                 {
                     _netEnts.RemoveSwap(i);
                     i--;
@@ -176,7 +179,7 @@ namespace Robust.Client.GameStates
 
                 var xPos = 100;
                 var yPos = 10 + _lineHeight * i;
-                var name = $"({netEnt.Id}) {ent.Prototype?.ID}";
+                var name = $"({netEnt.Id}) {_entityManager.GetComponent<MetaDataComponent>(uid).EntityPrototype?.ID}";
                 var color = CalcTextColor(ref netEnt);
                 screenHandle.DrawString(_font, new Vector2(xPos + (TrafficHistorySize + 4), yPos), name, color);
                 DrawTrafficBox(screenHandle, ref netEnt, xPos, yPos);

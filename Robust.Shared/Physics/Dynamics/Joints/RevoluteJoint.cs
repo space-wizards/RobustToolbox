@@ -60,7 +60,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
             return joint;
         }
-
     }
 
     public class RevoluteJoint : Joint, IEquatable<RevoluteJoint>
@@ -86,18 +85,43 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         // Settable
         public bool EnableLimit;
+
+        /// <summary>
+        /// A flag to enable the joint motor.
+        /// </summary>
         public bool EnableMotor;
+
+        /// <summary>
+        /// The bodyB angle minus bodyA angle in the reference state (radians).
+        /// </summary>
         public float ReferenceAngle;
+
+        /// <summary>
+        /// The lower angle for the joint limit (radians).
+        /// </summary>
         public float LowerAngle;
+
+        /// <summary>
+        /// The upper angle for the joint limit (radians).
+        /// </summary>
         public float UpperAngle;
+
+        /// <summary>
+        /// The desired motor speed. Usually in radians per second.
+        /// </summary>
         public float MotorSpeed;
+
+        /// <summary>
+        /// The maximum motor torque used to achieve the desired motor speed.
+        /// Usually in N-m.
+        /// </summary>
         public float MaxMotorTorque;
 
-        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+        public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
         {
             LocalAnchorA = bodyA.GetLocalPoint(anchor);
             LocalAnchorB = bodyB.GetLocalPoint(anchor);
-            ReferenceAngle = (float) (bodyB.Owner.Transform.WorldRotation - bodyA.Owner.Transform.WorldRotation).Theta;
+            ReferenceAngle = (float) (IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyB.Owner).WorldRotation - IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(bodyA.Owner).WorldRotation).Theta;
         }
 
         public RevoluteJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid) {}
@@ -141,8 +165,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             _indexA = BodyA.IslandIndex[data.IslandIndex];
 	        _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = Vector2.Zero; //BodyA->m_sweep.localCenter;
-            _localCenterB = Vector2.Zero; //BodyB->m_sweep.localCenter;
+            _localCenterA = BodyA.LocalCenter;
+            _localCenterB = BodyB.LocalCenter;
 	        _invMassA = BodyA.InvMass;
 	        _invMassB = BodyB.InvMass;
 	        _invIA = BodyA.InvI;

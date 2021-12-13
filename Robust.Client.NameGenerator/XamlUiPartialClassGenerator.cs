@@ -301,7 +301,7 @@ namespace {nameSpace}
             foreach (var candidateClass in receiver.CandidateClasses)
             {
                 var model = compilation.GetSemanticModel(candidateClass.SyntaxTree);
-                var typeSymbol = (INamedTypeSymbol) model.GetDeclaredSymbol(candidateClass);
+                var typeSymbol = model.GetDeclaredSymbol(candidateClass);
                 var relevantAttribute = typeSymbol.GetAttributes().FirstOrDefault(attr =>
                     attr.AttributeClass != null &&
                     attr.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));

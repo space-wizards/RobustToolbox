@@ -21,42 +21,40 @@ namespace Robust.Server.GameObjects
 
         private void OnActorPlayerAttach(AttachPlayerEvent args)
         {
-            args.Result = Attach(args.Entity, args.Player, args.Force, out var forceKicked);
+            args.Result = Attach(args.Uid, args.Player, args.Force, out var forceKicked);
             args.ForceKicked = forceKicked;
         }
 
         /// <summary>
         ///     Attaches a player session to an entity, optionally kicking any sessions already attached to it.
         /// </summary>
-        /// <param name="entity">The entity to attach the player to</param>
+        /// <param name="uid">The entity to attach the player to</param>
         /// <param name="player">The player to attach to the entity</param>
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(IEntity entity, IPlayerSession player, bool force = false)
+        public bool Attach(EntityUid uid, IPlayerSession player, bool force = false)
         {
-            return Attach(entity, player, false, out _);
+            return Attach(uid, player, false, out _);
         }
 
         /// <summary>
         ///     Attaches a player session to an entity, optionally kicking any sessions already attached to it.
         /// </summary>
-        /// <param name="entity">The entity to attach the player to</param>
+        /// <param name="uid">The entity to attach the player to</param>
         /// <param name="player">The player to attach to the entity</param>
         /// <param name="force">Whether to kick any existing players from the entity</param>
         /// <param name="forceKicked">The player that was forcefully kicked, or null.</param>
         /// <returns>Whether the attach succeeded, or not.</returns>
-        public bool Attach(IEntity entity, IPlayerSession player, bool force, out IPlayerSession? forceKicked)
+        public bool Attach(EntityUid uid, IPlayerSession player, bool force, out IPlayerSession? forceKicked)
         {
             // Null by default.
             forceKicked = null;
 
-            // Cannot attach to a deleted entity.
-            if (entity.Deleted)
+            // Cannot attach to a deleted/nonexisting entity.
+            if (EntityManager.Deleted(uid))
             {
                 return false;
             }
-
-            var uid = entity.Uid;
 
             // Check if there was a player attached to the entity already...
             if (EntityManager.TryGetComponent(uid, out ActorComponent actor))
@@ -76,12 +74,12 @@ namespace Robust.Server.GameObjects
             }
 
             // We add the actor component.
-            actor = EntityManager.AddComponent<ActorComponent>(entity);
+            actor = EntityManager.AddComponent<ActorComponent>(uid);
             actor.PlayerSession = player;
-            player.SetAttachedEntity(entity);
+            player.SetAttachedEntity(actor.Owner);
 
             // The player is fully attached now, raise an event!
-            RaiseLocalEvent(uid, new PlayerAttachedEvent(entity, player, forceKicked));
+            RaiseLocalEvent(uid, new PlayerAttachedEvent(actor.Owner, player, forceKicked));
             return true;
         }
 
@@ -98,13 +96,13 @@ namespace Robust.Server.GameObjects
         /// </summary>
         /// <param name="entity">The entity player sessions will be detached from.</param>
         /// <returns>Whether any player session was detached.</returns>
-        public bool Detach(IEntity entity)
+        public bool Detach(EntityUid entity)
         {
-            if (!entity.HasComponent<ActorComponent>())
+            if (!EntityManager.HasComponent<ActorComponent>(entity))
                 return false;
 
             // Removing the component will call shutdown, and our subscription will handle the rest of the detach logic.
-            entity.RemoveComponent<ActorComponent>();
+            EntityManager.RemoveComponent<ActorComponent>(entity);
             return true;
         }
 
@@ -116,18 +114,16 @@ namespace Robust.Server.GameObjects
         /// This returns true if the player wasn't attached to any entity.</returns>
         public bool Detach(IPlayerSession player)
         {
-            var entity = player.AttachedEntity;
-            return entity == null || Detach(entity);
+            var uid = player.AttachedEntity;
+            return uid == null || Detach(uid.Value);
         }
 
-        private void OnActorShutdown(EntityUid uid, ActorComponent component, ComponentShutdown args)
+        private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
         {
             component.PlayerSession.SetAttachedEntity(null);
 
-            var entity = EntityManager.GetEntity(uid);
-
             // The player is fully detached now that the component has shut down.
-            RaiseLocalEvent(uid, new PlayerDetachedEvent(entity, component.PlayerSession));
+            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession));
         }
     }
 
@@ -146,7 +142,7 @@ namespace Robust.Server.GameObjects
         ///     Entity to attach the player to.
         ///     Input parameter.
         /// </summary>
-        public IEntity Entity { get; }
+        public EntityUid Uid { get; }
 
         /// <summary>
         ///     Whether to force-attach the player,
@@ -168,9 +164,9 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public bool Result { get; set; } = false;
 
-        public AttachPlayerEvent(IEntity entity, IPlayerSession player, bool force = false)
+        public AttachPlayerEvent(EntityUid uid, IPlayerSession player, bool force = false)
         {
-            Entity = entity;
+            Uid = uid;
             Player = player;
             Force = force;
         }
@@ -194,7 +190,7 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class PlayerAttachedEvent : EntityEventArgs
     {
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
         public IPlayerSession Player { get; }
 
         /// <summary>
@@ -202,7 +198,7 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public IPlayerSession? Kicked { get; }
 
-        public PlayerAttachedEvent(IEntity entity, IPlayerSession player, IPlayerSession? kicked = null)
+        public PlayerAttachedEvent(EntityUid entity, IPlayerSession player, IPlayerSession? kicked = null)
         {
             Entity = entity;
             Player = player;
@@ -215,10 +211,10 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class PlayerDetachedEvent : EntityEventArgs
     {
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
         public IPlayerSession Player { get; }
 
-        public PlayerDetachedEvent(IEntity entity, IPlayerSession player)
+        public PlayerDetachedEvent(EntityUid entity, IPlayerSession player)
         {
             Entity = entity;
             Player = player;

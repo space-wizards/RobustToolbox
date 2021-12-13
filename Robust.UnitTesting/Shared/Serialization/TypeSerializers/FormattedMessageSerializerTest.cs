@@ -1,0 +1,36 @@
+﻿using NUnit.Framework;
+using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Markdown.Value;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.Utility;
+using Robust.Shared.Utility.Markup;
+
+// ReSharper disable AccessToStaticMemberViaDerivedType
+
+namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers;
+
+[TestFixture]
+[TestOf(typeof(FormattedMessageSerializer))]
+public class FormattedMessageSerializerTest : SerializationTest
+{
+    [Test]
+    [TestCase("message")]
+    [TestCase("[color=#FF0000FF]message[/color]")]
+    public void SerializationTest(string text)
+    {
+        var message = new Basic();
+        message.AddMarkup(text);
+        var node = Serialization.WriteValueAs<ValueDataNode>(message.Render());
+        Assert.That(node.Value, Is.EqualTo(text));
+    }
+
+    [Test]
+    [TestCase("message")]
+    [TestCase("[color=#FF0000FF]message[/color]")]
+    public void DeserializationTest(string text)
+    {
+        var node = new ValueDataNode(text);
+        var deserializedMessage = Serialization.ReadValueOrThrow<FormattedMessage>(node);
+        Assert.That(deserializedMessage.ToMarkup(), Is.EqualTo(text));
+    }
+}

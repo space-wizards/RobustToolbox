@@ -4,9 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.IoC.Exceptions;
 using Robust.Shared.Utility;
+using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 
 namespace Robust.Shared.IoC
 {
@@ -33,6 +35,7 @@ namespace Robust.Shared.IoC
         private readonly Dictionary<Type, DependencyFactoryDelegate<object>> _resolveFactories = new();
 
         private readonly Queue<Type> _pendingResolves = new();
+        private readonly Queue<object> _newInstances = new();
 
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
@@ -80,11 +83,12 @@ namespace Robust.Shared.IoC
             Register<TInterface, TImplementation>(() =>
             {
                 var objectType  = typeof(TImplementation);
-                var constructors = objectType.GetConstructors();
+                var constructors = objectType.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{typeof(TImplementation).FullName}' requires exactly one constructor.");
 
+                var chosenConstructor = constructors[0];
                 var constructorParams = constructors[0].GetParameters();
                 var parameters = new object[constructorParams.Length];
 
@@ -107,11 +111,9 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return (TImplementation) Activator.CreateInstance(objectType, parameters)!;
+                return (TImplementation) chosenConstructor.Invoke(parameters);
             }, overwrite);
         }
-
-
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
@@ -135,12 +137,13 @@ namespace Robust.Shared.IoC
 
             object DefaultFactory()
             {
-                var constructors = implementation.GetConstructors();
+                var constructors = implementation.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
                 if (constructors.Length != 1)
                     throw new InvalidOperationException($"Dependency '{implementation.FullName}' requires exactly one constructor.");
 
-                var constructorParams = constructors[0].GetParameters();
+                var chosenConstructor = constructors[0];
+                var constructorParams = chosenConstructor.GetParameters();
                 var parameters = new object[constructorParams.Length];
 
                 for (var index = 0; index < constructorParams.Length; index++)
@@ -162,7 +165,7 @@ namespace Robust.Shared.IoC
                     }
                 }
 
-                return Activator.CreateInstance(implementation, parameters)!;
+                return chosenConstructor.Invoke(parameters);
             }
 
             _resolveTypes[interfaceType] = implementation;
@@ -194,13 +197,13 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
-        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
         {
-            RegisterInstance(typeof(TInterface), implementation, overwrite);
+            RegisterInstance(typeof(TInterface), implementation, overwrite, deferInject);
         }
 
         /// <inheritdoc />
-        public void RegisterInstance(Type type, object implementation, bool overwrite = false)
+        public void RegisterInstance(Type type, object implementation, bool overwrite = false, bool deferInject = false)
         {
             if (implementation == null)
                 throw new ArgumentNullException(nameof(implementation));
@@ -211,14 +214,24 @@ namespace Robust.Shared.IoC
 
             CheckRegisterInterface(type, implementation.GetType(), overwrite);
 
-            // do the equivalent of BuildGraph with a single type.
-            _resolveTypes[type] = implementation.GetType();
-            _services[type] = implementation;
+            if(!deferInject)
+            {
+                // do the equivalent of BuildGraph with a single type.
+                _resolveTypes[type] = implementation.GetType();
+                _services[type] = implementation;
 
-            InjectDependencies(implementation, true);
+                InjectDependencies(implementation, true);
 
-            if (implementation is IPostInjectInit init)
-                init.PostInject();
+                if (implementation is IPostInjectInit init)
+                    init.PostInject();
+            }
+            else
+            {
+                _resolveTypes[type] = implementation.GetType();
+                _services[type] = implementation;
+
+                _newInstances.Enqueue(implementation);
+            }
         }
 
         /// <inheritdoc />
@@ -232,6 +245,8 @@ namespace Robust.Shared.IoC
             _services.Clear();
             _resolveTypes.Clear();
             _resolveFactories.Clear();
+            _pendingResolves.Clear();
+            _newInstances.Clear();
             _injectorCache.Clear();
         }
 
@@ -240,6 +255,34 @@ namespace Robust.Shared.IoC
         public T Resolve<T>()
         {
             return (T) ResolveType(typeof(T));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T>([NotNull] ref T? instance)
+        {
+            // Resolve<T>() will either throw or return a concrete instance, therefore we suppress the nullable warning.
+            instance ??= Resolve<T>()!;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2)
+        {
+            Resolve(ref instance1);
+            Resolve(ref instance2);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3)
+        {
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+        public void Resolve<T1, T2, T3, T4>([NotNull] ref T1? instance1, [NotNull] ref T2? instance2, [NotNull] ref T3? instance3, [NotNull] ref T4? instance4)
+        {
+            Resolve(ref instance1, ref instance2);
+            Resolve(ref instance3, ref instance4);
         }
 
         /// <inheritdoc />
@@ -309,6 +352,12 @@ namespace Robust.Shared.IoC
             // Because we only ever construct an instance once per registration, there is no need to keep the factory
             // delegates. Also we need to free the delegates because lambdas capture variables.
             _resolveFactories.Clear();
+
+            // add all the newly registered instances to the inject list
+            while (_newInstances.Count > 0)
+            {
+                injectList.Add(_newInstances.Dequeue());
+            }
 
             // Graph built, go over ones that need injection.
             foreach (var implementation in injectList)

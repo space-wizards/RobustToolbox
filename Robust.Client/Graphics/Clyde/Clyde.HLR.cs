@@ -12,6 +12,8 @@ using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared;
 using Robust.Shared.Enums;
+using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -372,14 +374,14 @@ namespace Robust.Client.Graphics.Clyde
         {
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = comp.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
                     var entity = value.Owner;
-                    var transform = entity.Transform;
+                    var transform = _entityManager.GetComponent<TransformComponent>(entity);
 
                     ref var entry = ref state.AllocAdd();
                     entry.sprite = value;
@@ -406,7 +408,7 @@ namespace Robust.Client.Graphics.Clyde
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
         }
 
-        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color clearColor=default)
+        private void RenderInRenderTarget(RenderTargetBase rt, Action a, Color? clearColor=default)
         {
             // TODO: for the love of god all this state pushing/popping needs to be cleaned up.
 
@@ -420,7 +422,8 @@ namespace Robust.Client.Graphics.Clyde
 
             {
                 BindRenderTargetFull(RtToLoaded(rt));
-                ClearFramebuffer(clearColor);
+                if (clearColor is not null)
+                    ClearFramebuffer(clearColor.Value);
                 SetViewportImmediate(Box2i.FromDimensions(Vector2i.Zero, rt.Size));
                 _updateUniformConstants(rt.Size);
                 CalcScreenMatrices(rt.Size, out var proj, out var view);
@@ -537,7 +540,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private static Box2 GetAABB(IEye eye, Viewport viewport)
         {
-            return Box2.CenteredAround(eye.Position.Position,
+            return Box2.CenteredAround(eye.Position.Position + eye.Offset,
                 viewport.Size / viewport.RenderScale / EyeManager.PixelsPerMeter * eye.Zoom);
         }
 

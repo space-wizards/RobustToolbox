@@ -131,13 +131,13 @@ namespace Robust.Server.ViewVariables
                     break;
                 case ViewVariablesEntitySelector entitySelector:
                 {
-                    if (!_entityManager.TryGetEntity(entitySelector.Entity, out var entity))
+                    if (!_entityManager.EntityExists(entitySelector.Entity))
                     {
                         Deny(DenyReason.NoObject);
                         return;
                     }
 
-                    theObject = entity;
+                    theObject = entitySelector.Entity;
                     break;
                 }
                 case ViewVariablesSessionRelativeSelector sessionRelativeSelector:

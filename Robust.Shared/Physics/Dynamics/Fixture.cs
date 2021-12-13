@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Serialization;
@@ -82,7 +83,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseToPercent(value, _friction)) return;
 
                 _friction = value;
-                Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
         }
 
@@ -99,10 +100,10 @@ namespace Robust.Shared.Physics.Dynamics
             get => _restitution;
             set
             {
-                if (MathHelper.CloseToPercent(value, _restitution)) return;
+                if (MathHelper.CloseTo(value, _restitution)) return;
 
                 _restitution = value;
-                Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
         }
 
@@ -127,7 +128,7 @@ namespace Robust.Shared.Physics.Dynamics
 
                 _hard = value;
                 Body.Awake = true;
-                Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
             }
         }
 
@@ -154,8 +155,7 @@ namespace Robust.Shared.Physics.Dynamics
                 if (MathHelper.CloseToPercent(value, _mass)) return;
 
                 _mass = MathF.Max(0f, value);
-                ComputeProperties();
-                Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
                 Body.ResetMassData();
             }
         }
@@ -176,7 +176,7 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _collisionLayer = value;
-                Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
@@ -197,7 +197,7 @@ namespace Robust.Shared.Physics.Dynamics
                     return;
 
                 _collisionMask = value;
-                Body.FixtureChanged(this);
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
                 EntitySystem.Get<SharedBroadphaseSystem>().Refilter(this);
             }
         }
@@ -273,49 +273,11 @@ namespace Robust.Shared.Physics.Dynamics
             fixture._hard = _hard;
             fixture._collisionLayer = _collisionLayer;
             fixture._collisionMask = _collisionMask;
-        }
-
-        // Moved from Shape because no MassData on Shape anymore (due to serv3 and physics ease-of-use etc etc.)
-        internal void ComputeProperties()
-        {
-            switch (Shape)
-            {
-                case EdgeShape edge:
-                    ComputeEdge(edge);
-                    break;
-                case PhysShapeAabb aabb:
-                    ComputeAABB(aabb);
-                    break;
-                case PhysShapeCircle circle:
-                    ComputeCircle(circle);
-                    break;
-                case PolygonShape poly:
-                    ComputePoly(poly, out _);
-                    break;
-                default:
-                    throw new NotImplementedException();
-            }
+            fixture._mass = _mass;
         }
 
         #region ComputeProperties
-        private void ComputeAABB(PhysShapeAabb aabb)
-        {
-            var area = aabb.LocalBounds.Width * aabb.LocalBounds.Height;
-            float I = 0.0f;
 
-            //The area is too small for the engine to handle.
-            DebugTools.Assert(area > float.Epsilon);
-
-            // Total mass
-            // TODO: Do we need this?
-            var density = area > 0.0f ? Mass / area : 0.0f;
-
-            // Center of mass
-            aabb.Centroid = Vector2.Zero;
-
-            // Inertia tensor relative to the local origin (point s).
-            _inertia = density * I;
-        }
 
         private void ComputePoly(PolygonShape poly, out float area)
         {
@@ -430,7 +392,8 @@ namespace Robust.Shared.Physics.Dynamics
                    _collisionMask == other.CollisionMask &&
                    Shape.Equals(other.Shape) &&
                    Body == other.Body &&
-                   ID.Equals(other.ID);
+                   ID.Equals(other.ID) &&
+                    MathHelper.CloseTo(_mass, other._mass);
         }
     }
 

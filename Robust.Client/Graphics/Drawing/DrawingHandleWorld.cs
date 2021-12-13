@@ -52,6 +52,11 @@ namespace Robust.Client.Graphics
         public abstract void DrawTextureRectRegion(Texture texture, in Box2Rotated quad,
             Color? modulate = null, UIBox2? subRegion = null);
 
+        private Box2 GetQuad(Texture texture, Vector2 position)
+        {
+            return Box2.FromDimensions(position, texture.Size / (float)Ppm);
+        }
+
         /// <summary>
         /// Draws a full texture sprite to the world. The coordinate system is right handed.
         /// Make sure to set <see cref="DrawingHandleBase.SetTransform"/>
@@ -67,7 +72,28 @@ namespace Robust.Client.Graphics
         {
             CheckDisposed();
 
-            DrawTextureRect(texture, Box2.FromDimensions(position, texture.Size / (float) Ppm), modulate);
+            DrawTextureRect(texture, GetQuad(texture, position), modulate);
+        }
+
+        /// <summary>
+        /// Draws a full texture sprite to the world. The coordinate system is right handed.
+        /// Make sure to set <see cref="DrawingHandleBase.SetTransform"/>
+        /// to set the model matrix if needed.
+        /// </summary>
+        /// <param name="texture">Texture to draw.</param>
+        /// <param name="position">The coordinates of the quad in object space (or world if the transform is identity.).</param>
+        /// <param name="angle">The angle of the quad in object space.</param>
+        /// <param name="modulate">A color to multiply the texture by when shading.</param>
+        /// <remarks>
+        /// The sprite will have it's local dimensions calculated so that it has <see cref="EyeManager.PixelsPerMeter"/> texels per meter in the world.
+        /// </remarks>
+        public void DrawTexture(Texture texture, Vector2 position, Angle angle, Color? modulate = null)
+        {
+            CheckDisposed();
+
+            var quad = GetQuad(texture, position);
+
+            DrawTextureRect(texture, new Box2Rotated(quad, angle, quad.Center), modulate);
         }
 
         /// <summary>

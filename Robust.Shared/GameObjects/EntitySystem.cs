@@ -20,8 +20,7 @@ namespace Robust.Shared.GameObjects
     [Reflect(false), PublicAPI]
     public abstract partial class EntitySystem : IEntitySystem
     {
-        [Dependency] protected readonly IEntityManager EntityManager = default!;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] protected readonly IEntityManager EntityManager;
 
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
@@ -29,8 +28,11 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
-        protected EntitySystem()
+        protected EntitySystem() : this(default!) { }
+
+        protected EntitySystem(IEntityManager entityManager)
         {
+            EntityManager = entityManager;
             Subs = new Subscriptions(this);
         }
 
@@ -49,12 +51,16 @@ namespace Robust.Shared.GameObjects
             ShutdownSubscriptions();
         }
 
-
         #region Event Proxy
 
         protected void RaiseLocalEvent<T>(T message) where T : notnull
         {
             EntityManager.EventBus.RaiseEvent(EventSource.Local, message);
+        }
+
+        protected void RaiseLocalEvent<T>(ref T message) where T : notnull
+        {
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, ref message);
         }
 
         protected void RaiseLocalEvent(object message)

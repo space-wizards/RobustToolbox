@@ -9,6 +9,6 @@ namespace Robust.Shared.Containers
     [PublicAPI]
     public sealed class EntInsertedIntoContainerMessage : ContainerModifiedMessage
     {
-        public EntInsertedIntoContainerMessage(IEntity entity, IContainer container) : base(entity, container) { }
+        public EntInsertedIntoContainerMessage(EntityUid entity, IContainer container) : base(entity, container) { }
     }
 }

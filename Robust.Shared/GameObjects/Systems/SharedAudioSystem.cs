@@ -7,6 +7,11 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
+        /// <summary>
+        /// Default max range at which the sound can be heard.
+        /// </summary>
+        public const int DefaultSoundRange = 25;
+
         protected EntityCoordinates GetFallbackCoordinates(MapCoordinates mapCoordinates)
         {
             if (_mapManager.TryFindGridAt(mapCoordinates, out var mapGrid))

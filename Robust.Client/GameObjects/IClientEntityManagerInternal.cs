@@ -6,10 +6,10 @@ namespace Robust.Client.GameObjects
     {
         // These methods are used by the Game State Manager.
 
-        IEntity CreateEntity(string? prototypeName, EntityUid? uid = null);
+        EntityUid CreateEntity(string? prototypeName, EntityUid uid = default);
 
-        void InitializeEntity(IEntity entity);
+        void InitializeEntity(EntityUid entity);
 
-        void StartEntity(IEntity entity);
+        void StartEntity(EntityUid entity);
     }
 }

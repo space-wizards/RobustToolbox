@@ -66,12 +66,21 @@ entities:
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
             var gridFixtures = new GridFixtureSystem();
+            var fixtures = new FixtureSystem();
+
+            // MOCKS WHY
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
             mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
+            mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
             //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
+
+            // Mocking moment...
+            IoCManager.BuildGraph();
+            IoCManager.RegisterInstance<SharedBroadphaseSystem>(broady);
+            IoCManager.InjectDependencies(fixtures);
         }
 
 
@@ -103,14 +112,18 @@ entities:
             var entMan = IoCManager.Resolve<IEntityManager>();
 
             var mapId = map.CreateMap();
-            map.GetMapEntity(mapId).EnsureComponent<PhysicsMapComponent>();
+            // Yay test bullshit
+            var mapUid = map.GetMapEntityId(mapId);
+            entMan.EnsureComponent<PhysicsMapComponent>(mapUid);
+            entMan.EnsureComponent<BroadphaseComponent>(mapUid);
+
             var mapLoad = IoCManager.Resolve<IMapLoader>();
             var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
 
             Assert.That(grid, NUnit.Framework.Is.Not.Null);
 
-            var entity = entMan.GetEntity(grid!.GridEntityId).Transform.Children.Single().Owner;
-            var c = entity.GetComponent<MapDeserializeTestComponent>();
+            var entity = entMan.GetComponent<TransformComponent>(grid!.GridEntityId).Children.Single().Owner;
+            var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));
             Assert.That(c.Foo, Is.EqualTo(3));

@@ -15,8 +15,6 @@ namespace Robust.Server.GameObjects
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        private const int AudioDistanceRange = 25;
-
         private uint _streamIndex;
 
         private class AudioSourceServer : IPlayingAudioStream
@@ -67,9 +65,6 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public int DefaultSoundRange => AudioDistanceRange;
-
-        /// <inheritdoc />
         public int OcclusionCollisionMask { get; set; }
 
         /// <inheritdoc />
@@ -88,18 +83,9 @@ namespace Robust.Server.GameObjects
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
         }
 
-        /// <inheritdoc />
-        public IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null)
-        {
-            return Play(playerFilter, filename, entity.Uid, audioParams);
-        }
-
         public IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null)
         {
-            //TODO: Calculate this from PAS
-            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
-
-            if(!EntityManager.TryGetComponent<ITransformComponent>(uid, out var transform))
+            if(!EntityManager.TryGetComponent<TransformComponent>(uid, out var transform))
                 return null;
 
             var id = CacheIdentifier();
@@ -116,10 +102,6 @@ namespace Robust.Server.GameObjects
                 Identifier = id,
             };
 
-            // We clone the filter here as to not modify the original instance.
-            if (range > 0.0f)
-                playerFilter = playerFilter.Clone().AddInRange(transform.MapPosition, range);
-
             RaiseNetworkEvent(msg, playerFilter);
 
             return new AudioSourceServer(this, id, playerFilter.Recipients.ToArray());
@@ -128,9 +110,6 @@ namespace Robust.Server.GameObjects
         /// <inheritdoc />
         public IPlayingAudioStream Play(Filter playerFilter, string filename, EntityCoordinates coordinates, AudioParams? audioParams = null)
         {
-            //TODO: Calculate this from PAS
-            var range = audioParams is null || audioParams.Value.MaxDistance <= 0 ? AudioDistanceRange : audioParams.Value.MaxDistance;
-
             var id = CacheIdentifier();
 
             var fallbackCoordinates = GetFallbackCoordinates(coordinates.ToMap(_entityManager));
@@ -143,10 +122,6 @@ namespace Robust.Server.GameObjects
                 AudioParams = audioParams ?? AudioParams.Default,
                 Identifier = id
             };
-
-            // We clone the filter here as to not modify the original instance.
-            if (range > 0.0f)
-                playerFilter = playerFilter.Clone().AddInRange(coordinates.ToMap(EntityManager), range);
 
             RaiseNetworkEvent(msg, playerFilter);
 

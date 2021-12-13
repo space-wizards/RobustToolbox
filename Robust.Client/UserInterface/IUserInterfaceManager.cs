@@ -32,7 +32,7 @@ namespace Robust.Client.UserInterface
         /// (such as by pressing a different mouse button down over a different control) or when the keyup event
         /// happens. When focus is lost on a control, it always fires Control.ControlFocusExited.
         /// </summary>
-        Control? ControlFocused { get; }
+        Control? ControlFocused { get; set; }
 
         ViewportContainer MainViewport { get; }
 
@@ -53,8 +53,7 @@ namespace Robust.Client.UserInterface
         float DefaultUIScale { get; }
 
         /// <summary>
-        ///     The "root" control to which all other controls are parented,
-        ///     potentially indirectly.
+        ///     The root control for the main game window.
         /// </summary>
         WindowRoot RootControl { get; }
 

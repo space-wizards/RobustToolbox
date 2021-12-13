@@ -23,7 +23,15 @@ namespace Robust.Server.Player
         ///     Do not call this directly for most content code.
         /// </summary>
         /// <param name="entity">The entity to attach to.</param>
-        void AttachToEntity(IEntity? entity);
+        void AttachToEntity(EntityUid? entity);
+
+        /// <summary>
+        ///     Attaches this player to an entity.
+        ///     NOTE: The content pack almost certainly has an alternative for this.
+        ///     Do not call this directly for most content code.
+        /// </summary>
+        /// <param name="uid">The entity to attach to.</param>
+        void AttachToEntity(EntityUid uid);
 
         /// <summary>
         ///     Detaches this player from an entity.
@@ -46,7 +54,7 @@ namespace Robust.Server.Player
         ///     Do NOT use this unless you know what you're doing, you probably want <see cref="AttachToEntity"/>
         ///     and <see cref="DetachFromEntity"/> instead.
         /// </summary>
-        internal void SetAttachedEntity(IEntity? entity);
+        internal void SetAttachedEntity(EntityUid? entity);
 
         /// <summary>
         ///     Internal method to add an entity Uid to <see cref="ViewSubscriptions"/>.

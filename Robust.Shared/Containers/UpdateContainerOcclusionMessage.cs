@@ -4,9 +4,9 @@ namespace Robust.Shared.Containers
 {
     public readonly struct UpdateContainerOcclusionMessage
     {
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
 
-        public UpdateContainerOcclusionMessage(IEntity entity)
+        public UpdateContainerOcclusionMessage(EntityUid entity)
         {
             Entity = entity;
         }

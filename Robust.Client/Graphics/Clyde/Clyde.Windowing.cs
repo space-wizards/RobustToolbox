@@ -218,7 +218,8 @@ namespace Robust.Client.Graphics.Clyde
                 return false;
             }
 
-            InitOpenGL();
+            if (!_earlyGLInit)
+                InitOpenGL();
 
             _sawmillOgl.Debug("Setting viewport and rendering splash...");
 
@@ -458,6 +459,7 @@ namespace Robust.Client.Graphics.Clyde
             public RenderWindow RenderTarget = default!;
             public Action<WindowRequestClosedEventArgs>? RequestClosed;
             public Action<WindowDestroyedEventArgs>? Closed;
+            public Action<WindowResizedEventArgs>? Resized;
         }
 
         private sealed class WindowHandle : IClydeWindowInternal
@@ -521,6 +523,12 @@ namespace Robust.Client.Graphics.Clyde
             {
                 add => Reg.Closed += value;
                 remove => Reg.Closed -= value;
+            }
+
+            public event Action<WindowResizedEventArgs>? Resized
+            {
+                add => Reg.Resized += value;
+                remove => Reg.Resized -= value;
             }
 
             public nint? WindowsHWnd => _clyde._windowing!.WindowGetWin32Window(Reg);

@@ -134,7 +134,7 @@ namespace Robust.Client.UserInterface
                         return false;
                     }
 
-                    if (parent == UserInterfaceManager.RootControl)
+                    if (parent is UIRoot)
                     {
                         return true;
                     }

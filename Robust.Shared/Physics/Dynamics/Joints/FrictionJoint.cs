@@ -52,8 +52,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public override Joint GetJoint()
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var bodyA = entityManager.GetEntity(UidA).GetComponent<PhysicsComponent>();
-            var bodyB = entityManager.GetEntity(UidB).GetComponent<PhysicsComponent>();
+            var bodyA = entityManager.GetComponent<PhysicsComponent>(UidA);
+            var bodyB = entityManager.GetComponent<PhysicsComponent>(UidB);
 
             var joint = new FrictionJoint(bodyA, bodyB)
             {
@@ -113,7 +113,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// <param name="anchor"></param>
         /// <param name="useWorldCoordinates">Set to true if you are using world coordinates as anchors.</param>
         public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor, bool useWorldCoordinates = false)
-            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+            : base(bodyA.Owner, bodyB.Owner)
         {
             if (useWorldCoordinates)
             {
@@ -128,7 +128,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         }
 
         public FrictionJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, bool useWorldCoordinates = false)
-            : base(bodyA.Owner.Uid, bodyB.Owner.Uid)
+            : base(bodyA.Owner, bodyB.Owner)
         {
             if (useWorldCoordinates)
             {
@@ -173,8 +173,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         {
             _indexA = BodyA.IslandIndex[data.IslandIndex];
             _indexB = BodyB.IslandIndex[data.IslandIndex];
-            _localCenterA = Vector2.Zero; // BodyA._sweep.LocalCenter;
-            _localCenterB = Vector2.Zero; //BodyB._sweep.LocalCenter;
+            _localCenterA = BodyA.LocalCenter;
+            _localCenterB = BodyB.LocalCenter;
             _invMassA = BodyA.InvMass;
             _invMassB = BodyB.InvMass;
             _invIA = BodyA.InvI;

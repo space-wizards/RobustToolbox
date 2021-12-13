@@ -153,6 +153,9 @@ namespace Robust.Client.UserInterface.CustomControls
             this.placementManager.PlacementChanged += OnPlacementCanceled;
             this.placementManager.DirectionChanged += OnDirectionChanged;
             UpdateDirectionLabel();
+
+            OnClose += OnWindowClosed;
+
             SearchBar.GrabKeyboardFocus();
         }
 
@@ -162,7 +165,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             if (!disposing) return;
 
-            if(EraseButton.Pressed)
+            if (EraseButton.Pressed)
                 placementManager.Clear();
 
             placementManager.PlacementChanged -= OnPlacementCanceled;
@@ -171,6 +174,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
         {
+            placementManager.Clear();
             BuildEntityList(args.Text);
             ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
         }
@@ -196,13 +200,17 @@ namespace Robust.Client.UserInterface.CustomControls
 
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
+            placementManager.Clear();
             SearchBar.Clear();
             BuildEntityList("");
         }
 
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
+            placementManager.Clear();
             placementManager.ToggleEraser();
+            // clearing will toggle the erase button off...
+            args.Button.Pressed = args.Pressed;
             OverrideMenu.Disabled = args.Pressed;
         }
 
@@ -503,6 +511,16 @@ namespace Robust.Client.UserInterface.CustomControls
                     }
                 });
             }
+        }
+
+        private void OnWindowClosed()
+        {
+            if (SelectedButton != null)
+            {
+                SelectedButton.ActualButton.Pressed = false;
+                SelectedButton = null;
+            }
+            placementManager.Clear();
         }
 
         private void OnPlacementCanceled(object? sender, EventArgs e)

@@ -2,7 +2,6 @@
 
 namespace Robust.Shared.Maths
 {
-    [Flags]
     public enum Direction : sbyte
     {
         Invalid = -1,
@@ -16,12 +15,77 @@ namespace Robust.Shared.Maths
         SouthWest = 7,
     }
 
+    [Flags]
+    public enum DirectionFlag : sbyte
+    {
+        None = 0,
+        South = 1 << 0,
+        East = 1 << 1,
+        North = 1 << 2,
+        West = 1 << 3,
+
+        SouthEast = South | East,
+        NorthEast = North | East,
+        NorthWest = North | West,
+        SouthWest = South | West,
+    }
+
     /// <summary>
     /// Extension methods for Direction enum.
     /// </summary>
     public static class DirectionExtensions
     {
         private const double Segment = 2 * Math.PI / 8.0; // Cut the circle into 8 pieces
+
+        public static Direction AsDir(this DirectionFlag directionFlag)
+        {
+            switch (directionFlag)
+            {
+                case DirectionFlag.South:
+                    return Direction.South;
+                case DirectionFlag.SouthEast:
+                    return Direction.SouthEast;
+                case DirectionFlag.East:
+                    return Direction.East;
+                case DirectionFlag.NorthEast:
+                    return Direction.NorthEast;
+                case DirectionFlag.North:
+                    return Direction.North;
+                case DirectionFlag.NorthWest:
+                    return Direction.NorthWest;
+                case DirectionFlag.West:
+                    return Direction.West;
+                case DirectionFlag.SouthWest:
+                    return Direction.SouthWest;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        public static DirectionFlag AsFlag(this Direction direction)
+        {
+            switch (direction)
+            {
+                case Direction.South:
+                    return DirectionFlag.South;
+                case Direction.SouthEast:
+                    return DirectionFlag.SouthEast;
+                case Direction.East:
+                    return DirectionFlag.East;
+                case Direction.NorthEast:
+                    return DirectionFlag.NorthEast;
+                case Direction.North:
+                    return DirectionFlag.North;
+                case Direction.NorthWest:
+                    return DirectionFlag.NorthWest;
+                case Direction.West:
+                    return DirectionFlag.West;
+                case Direction.SouthWest:
+                    return DirectionFlag.SouthWest;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
 
         /// <summary>
         /// Converts a direction vector to the closest Direction enum.
@@ -69,6 +133,22 @@ namespace Robust.Shared.Maths
             };
         }
 
+        public static Direction GetClockwise90Degrees(this Direction direction)
+        {
+            return direction switch
+            {
+                Direction.East => Direction.South,
+                Direction.West => Direction.North,
+                Direction.North => Direction.East,
+                Direction.South => Direction.West,
+                Direction.NorthEast => Direction.SouthEast,
+                Direction.SouthWest => Direction.NorthWest,
+                Direction.NorthWest => Direction.NorthEast,
+                Direction.SouthEast => Direction.SouthWest,
+                _ => throw new ArgumentOutOfRangeException(nameof(direction))
+            };
+        }
+
         /// <summary>
         /// Converts a direction to an angle, where angle is -PI to +PI.
         /// </summary>
@@ -94,7 +174,7 @@ namespace Robust.Shared.Maths
             new (-1, 0),
             new Vector2(-1, -1).Normalized
         };
-        
+
         private static readonly Vector2i[] IntDirectionVectors = {
             new (0, -1),
             new (1, -1),
@@ -105,7 +185,7 @@ namespace Robust.Shared.Maths
             new (-1, 0),
             new (-1, -1)
         };
-        
+
         /// <summary>
         /// Converts a Direction to a normalized Direction vector.
         /// </summary>

@@ -39,7 +39,5 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// Calculate the AABB of the shape.
         /// </summary>
         Box2 ComputeAABB(Transform transform, int childIndex);
-
-        void ApplyState();
     }
 }

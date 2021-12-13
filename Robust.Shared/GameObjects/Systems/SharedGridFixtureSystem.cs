@@ -16,7 +16,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly FixtureSystem _fixtures = default!;
 
         private bool _enabled;
 
@@ -49,13 +49,21 @@ namespace Robust.Shared.GameObjects
             if (!_enabled) return;
 
             if (!_mapManager.TryGetGrid(chunk.GridId, out var grid) ||
-                !EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt)) return;
+                !EntityManager.EntityExists(grid.GridEntityId)) return;
+
+            var gridEnt = grid.GridEntityId;
 
             DebugTools.Assert(chunk.ValidTiles > 0);
 
-            if (!gridEnt.TryGetComponent(out PhysicsComponent? physicsComponent))
+            if (!EntityManager.TryGetComponent(gridEnt, out PhysicsComponent? physicsComponent))
             {
                 Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(physicsComponent)}");
+                return;
+            }
+
+            if (!EntityManager.TryGetComponent(gridEnt, out FixturesComponent? fixturesComponent))
+            {
+                Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEnt} that doesn't have {nameof(fixturesComponent)}");
                 return;
             }
 
@@ -123,7 +131,7 @@ namespace Robust.Shared.GameObjects
             foreach (var fixture in toRemove)
             {
                 chunk.Fixtures.Remove(fixture);
-                _broadphase.DestroyFixture(fixture);
+                _fixtures.DestroyFixture(fixture, false, fixturesComponent);
             }
 
             if (newFixtures.Count > 0 || toRemove.List?.Count > 0)
@@ -134,7 +142,7 @@ namespace Robust.Shared.GameObjects
             // Anything remaining is a new fixture (or at least, may have not serialized onto the chunk yet).
             foreach (var fixture in newFixtures)
             {
-                var existingFixture = physicsComponent.GetFixture(fixture.ID);
+                var existingFixture = _fixtures.GetFixtureOrNull(physicsComponent, fixture.ID);
                 // Check if it's the same (otherwise remove anyway).
                 if (existingFixture?.Shape is PolygonShape poly &&
                     poly.EqualsApprox((PolygonShape) fixture.Shape))
@@ -144,11 +152,14 @@ namespace Robust.Shared.GameObjects
                 }
 
                 chunk.Fixtures.Add(fixture);
-                _broadphase.CreateFixture(physicsComponent, fixture);
+                _fixtures.CreateFixture(physicsComponent, fixture, false, fixturesComponent);
             }
 
             if (updated)
-                EntityManager.EventBus.RaiseLocalEvent(gridEnt.Uid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+            {
+                _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
+                EntityManager.EventBus.RaiseLocalEvent(gridEnt,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+            }
         }
     }
 

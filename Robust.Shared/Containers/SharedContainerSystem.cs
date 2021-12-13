@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Containers
 {
@@ -67,8 +68,8 @@ namespace Robust.Shared.Containers
 
         public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null)
         {
-            if (Resolve(uid, ref containerManager, false) && EntityManager.TryGetEntity(containedUid, out var containedEntity))
-                return containerManager.TryGetContainer(containedEntity, out container);
+            if (Resolve(uid, ref containerManager, false) && EntityManager.EntityExists(containedUid))
+                return containerManager.TryGetContainer(containedUid, out container);
 
             container = null;
             return false;
@@ -76,21 +77,21 @@ namespace Robust.Shared.Containers
 
         public bool ContainsEntity(EntityUid uid, EntityUid containedUid, ContainerManagerComponent? containerManager = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.TryGetEntity(containedUid, out var containedEntity))
+            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
                 return false;
 
-            return containerManager.ContainsEntity(containedEntity);
+            return containerManager.ContainsEntity(containedUid);
         }
 
         public void RemoveEntity(EntityUid uid, EntityUid containedUid, bool force = false, ContainerManagerComponent? containerManager = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.TryGetEntity(containedUid, out var containedEntity))
+            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
                 return;
 
             if (force)
-                containerManager.ForceRemove(containedEntity);
+                containerManager.ForceRemove(containedUid);
             else
-                containerManager.Remove(containedEntity);
+                containerManager.Remove(containedUid);
         }
 
         public ContainerManagerComponent.AllContainersEnumerable GetAllContainers(EntityUid uid, ContainerManagerComponent? containerManager = null)
@@ -105,7 +106,7 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, ITransformComponent? transform = null)
+        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, TransformComponent? transform = null)
         {
             container = null;
             if (!Resolve(uid, ref transform, false))
@@ -117,7 +118,7 @@ namespace Robust.Shared.Containers
             return TryGetContainingContainer(transform.ParentUid, uid, out container);
         }
 
-        public bool IsEntityInContainer(EntityUid uid, ITransformComponent? transform = null)
+        public bool IsEntityInContainer(EntityUid uid, TransformComponent? transform = null)
         {
             return TryGetContainingContainer(uid, out _, transform);
         }
@@ -125,14 +126,14 @@ namespace Robust.Shared.Containers
         #endregion
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        private static void HandleParentChanged(ref EntParentChangedMessage message)
+        private void HandleParentChanged(ref EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 
-            if (oldParentEntity == null || !oldParentEntity.IsValid())
+            if (oldParentEntity == null || !EntityManager.EntityExists(oldParentEntity!.Value))
                 return;
 
-            if (oldParentEntity.TryGetComponent(out IContainerManager? containerManager))
+            if (EntityManager.TryGetComponent(oldParentEntity!.Value, out IContainerManager? containerManager))
                 containerManager.ForceRemove(message.Entity);
         }
     }

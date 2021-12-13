@@ -29,6 +29,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Shared.Physics.Collision.Shapes
 {
@@ -127,51 +128,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 Normals[i] = temp.Normalized;
             }
 
-            Centroid = ComputeCentroid(Vertices);
-
-            // Compute the polygon mass data
-            // TODO: Update fixture. Maybe use events for it? Who tf knows.
-            // If we get grid polys then we'll actually need runtime updating of bbs.
-        }
-
-        private Vector2 ComputeCentroid(Vector2[] vertices)
-        {
-            var count = vertices.Length;
-
-            DebugTools.Assert(count >= 3);
-
-            var c = new Vector2(0.0f, 0.0f);
-            float area = 0.0f;
-
-            // Get a reference point for forming triangles.
-            // Use the first vertex to reduce round-off errors.
-            var s = vertices[0];
-
-            const float inv3 = 1.0f / 3.0f;
-
-            for (var i = 0; i < count; ++i)
-            {
-                // Triangle vertices.
-                var p1 = vertices[0] - s;
-                var p2 = vertices[i] - s;
-                var p3 = i + 1 < count ? vertices[i+1] - s : vertices[0] - s;
-
-                var e1 = p2 - p1;
-                var e2 = p3 - p1;
-
-                float D = Vector2.Cross(e1, e2);
-
-                float triangleArea = 0.5f * D;
-                area += triangleArea;
-
-                // Area weighted centroid
-                c += (p1 + p2 + p3) * triangleArea * inv3;
-            }
-
-            // Centroid
-            DebugTools.Assert(area > float.Epsilon);
-            c = c * (1.0f / area) + s;
-            return c;
+            // TODO: Updates (network etc)
         }
 
         public ShapeType ShapeType => ShapeType.Polygon;
@@ -286,11 +243,6 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
             var r = new Vector2(_radius, _radius);
             return new Box2(lower - r, upper + r);
-        }
-
-        public void ApplyState()
-        {
-            return;
         }
 
         public static explicit operator PolygonShape(PhysShapeAabb aabb)

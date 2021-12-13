@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Physics;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
@@ -60,16 +61,11 @@ namespace Robust.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Create(resPath))
-            {
-                using (var writer = new StreamWriter(file))
-                {
-                    var stream = new YamlStream();
+            using var writer = _resMan.UserData.OpenWriteText(resPath);
 
-                    stream.Add(document);
-                    stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-                }
-            }
+            var stream = new YamlStream();
+            stream.Add(document);
+            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
         /// <inheritdoc />
@@ -101,8 +97,7 @@ namespace Robust.Server.Maps
             }
             else
             {
-                var file = _resMan.UserData.OpenRead(resPath);
-                reader = new StreamReader(file);
+                reader = _resMan.UserData.OpenText(resPath);
             }
 
             IMapGrid grid;
@@ -136,7 +131,7 @@ namespace Robust.Server.Maps
                 {
                     foreach (var entity in context.Entities)
                     {
-                        entity.Paused = true;
+                        _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
                     }
                 }
             }
@@ -159,16 +154,11 @@ namespace Robust.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Create(resPath))
-            {
-                using (var writer = new StreamWriter(file))
-                {
-                    var stream = new YamlStream();
+            using var writer = _resMan.UserData.OpenWriteText(resPath);
 
-                    stream.Add(document);
-                    stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-                }
-            }
+            var stream = new YamlStream();
+            stream.Add(document);
+            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
 
             Logger.InfoS("map", "Save completed!");
         }
@@ -201,8 +191,7 @@ namespace Robust.Server.Maps
             }
             else
             {
-                var file = _resMan.UserData.OpenRead(resPath);
-                reader = new StreamReader(file);
+                reader = _resMan.UserData.OpenText(resPath);
             }
 
             using (reader)
@@ -233,7 +222,7 @@ namespace Robust.Server.Maps
         private class MapContext : ISerializationContext, IEntityLoadContext,
             ITypeSerializer<GridId, ValueDataNode>,
             ITypeSerializer<EntityUid, ValueDataNode>,
-            ITypeReaderWriter<IEntity, ValueDataNode>
+            ITypeReaderWriter<EntityUid, ValueDataNode>
         {
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
@@ -247,9 +236,9 @@ namespace Robust.Server.Maps
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
             private readonly Dictionary<int, EntityUid> UidEntityMap = new();
-            public readonly List<IEntity> Entities = new();
+            public readonly List<EntityUid> Entities = new();
 
-            private readonly List<(IEntity, YamlMappingNode)> _entitiesToDeserialize
+            private readonly List<(EntityUid, YamlMappingNode)> _entitiesToDeserialize
                 = new();
 
             private bool IsBlueprintMode => GridIDMap.Count == 1;
@@ -260,7 +249,7 @@ namespace Robust.Server.Maps
             private Dictionary<string, YamlMappingNode>? CurrentReadingEntityComponents;
 
             private string? CurrentWritingComponent;
-            private IEntity? CurrentWritingEntity;
+            private EntityUid? CurrentWritingEntity;
 
             private Dictionary<ushort, string>? _tileMap;
 
@@ -283,13 +272,11 @@ namespace Robust.Server.Maps
                 RootNode = new YamlMappingNode();
                 TypeWriters = new Dictionary<Type, object>()
                 {
-                    {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
                 TypeReaders = new Dictionary<(Type, Type), object>()
                 {
-                    {(typeof(IEntity), typeof(ValueDataNode)), this},
                     {(typeof(GridId), typeof(ValueDataNode)), this},
                     {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
@@ -311,13 +298,11 @@ namespace Robust.Server.Maps
                 _prototypeManager = prototypeManager;
                 TypeWriters = new Dictionary<Type, object>()
                 {
-                    {typeof(IEntity), this},
                     {typeof(GridId), this},
                     {typeof(EntityUid), this}
                 };
                 TypeReaders = new Dictionary<(Type, Type), object>()
                 {
-                    {(typeof(IEntity), typeof(ValueDataNode)), this},
                     {(typeof(GridId), typeof(ValueDataNode)), this},
                     {(typeof(EntityUid), typeof(ValueDataNode)), this}
                 };
@@ -402,18 +387,18 @@ namespace Robust.Server.Maps
                         continue;
                     }
 
-                    if (entity.Prototype == null)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype is not {} prototype)
                     {
                         continue;
                     }
 
-                    foreach (var (netId, component) in _serverEntityManager.GetNetComponents(entity.Uid))
+                    foreach (var (netId, component) in _serverEntityManager.GetNetComponents(entity))
                     {
                         var castComp = (Component) component;
 
                         if (componentList.Any(p => p["type"].AsString() == component.Name))
                         {
-                            if (entity.Prototype.Components.ContainsKey(component.Name))
+                            if (prototype.Components.ContainsKey(component.Name))
                             {
                                 // This component is modified by the map so we have to send state.
                                 // Though it's still in the prototype itself so creation doesn't need to be sent.
@@ -438,21 +423,24 @@ namespace Robust.Server.Maps
             /// </summary>
             private void ApplyGridFixtures()
             {
-                var entManager = IoCManager.Resolve<IEntityManager>();
+                var entManager = _serverEntityManager;
                 var gridFixtures = EntitySystem.Get<GridFixtureSystem>();
-                var broadphaseSystem = EntitySystem.Get<SharedBroadphaseSystem>();
+                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
 
                 foreach (var grid in Grids)
                 {
                     var gridInternal = (IMapGridInternal) grid;
-                    var body = entManager.EnsureComponent<PhysicsComponent>(entManager.GetEntity(grid.GridEntityId));
+                    var body = entManager.EnsureComponent<PhysicsComponent>(grid.GridEntityId);
+                    var mapUid = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
+                    body.Broadphase = entManager.GetComponent<BroadphaseComponent>(mapUid);
+                    var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
 
                     // Need to go through and double-check we don't have any hanging-on fixtures that
                     // no longer apply (e.g. due to an update in GridFixtureSystem)
-                    var toRemove = new List<Fixture>();
+                    var toRemove = new RemQueue<Fixture>();
 
-                    foreach (var fixture in body.Fixtures)
+                    foreach (var (_, fixture) in fixtures.Fixtures)
                     {
                         var found = false;
 
@@ -476,35 +464,39 @@ namespace Robust.Server.Maps
 
                     foreach (var fixture in toRemove)
                     {
-                        broadphaseSystem.DestroyFixture(fixture);
+                        fixtureSystem.DestroyFixture(body, fixture, false, fixtures);
                     }
+
+                    fixtureSystem.FixtureUpdate(fixtures, body);
                 }
             }
 
             private void AttachMapEntities()
             {
-                var mapEntity = _mapManager.GetMapEntity(TargetMap);
+                var mapEntity = _mapManager.GetMapEntityIdOrThrow(TargetMap);
 
                 foreach (var grid in Grids)
                 {
-                    var entity = _serverEntityManager.GetEntity(grid.GridEntityId);
-                    if (entity.Transform.Parent != null)
+                    var transform = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                    if (transform.Parent != null)
                         continue;
 
-                    var mapOffset = entity.Transform.LocalPosition;
-                    entity.Transform.AttachParent(mapEntity);
-                    entity.Transform.WorldPosition = mapOffset;
+                    var mapOffset = transform.LocalPosition;
+                    transform.AttachParent(mapEntity);
+                    transform.WorldPosition = mapOffset;
                 }
             }
 
             private void FixMapEntities()
             {
+                var pvs = EntitySystem.Get<PVSSystem>();
                 foreach (var entity in Entities)
                 {
-                    if (entity.TryGetComponent(out IMapGridComponent? grid))
+                    if (_serverEntityManager.TryGetComponent(entity, out IMapGridComponent? grid))
                     {
                         var castGrid = (MapGrid) grid.Grid;
-                        castGrid.GridEntityId = entity.Uid;
+                        castGrid.GridEntityId = entity;
+                        pvs?.EntityPVSCollection.UpdateIndex(entity);
                     }
                 }
             }
@@ -600,12 +592,12 @@ namespace Robust.Server.Maps
 
                     var entity = _serverEntityManager.AllocEntity(type);
                     Entities.Add(entity);
-                    UidEntityMap.Add(uid, entity.Uid);
+                    UidEntityMap.Add(uid, entity);
                     _entitiesToDeserialize.Add((entity, entityDef));
 
                     if (_loadOptions!.StoreMapUids)
                     {
-                        var comp = entity.AddComponent<MapSaveIdComponent>();
+                        var comp = _serverEntityManager.AddComponent<MapSaveIdComponent>(entity);
                         comp.Uid = uid;
                     }
                 }
@@ -718,7 +710,7 @@ namespace Robust.Server.Maps
             private void PopulateEntityList()
             {
                 var withUid = new List<MapSaveIdComponent>();
-                var withoutUid = new List<IEntity>();
+                var withoutUid = new List<EntityUid>();
                 var takenIds = new HashSet<int>();
 
                 foreach (var entity in _serverEntityManager.GetEntities())
@@ -726,7 +718,7 @@ namespace Robust.Server.Maps
                     if (IsMapSavable(entity))
                     {
                         Entities.Add(entity);
-                        if (entity.TryGetComponent(out MapSaveIdComponent? mapSaveId))
+                        if (_serverEntityManager.TryGetComponent(entity, out MapSaveIdComponent? mapSaveId))
                         {
                             withUid.Add(mapSaveId);
                         }
@@ -749,7 +741,7 @@ namespace Robust.Server.Maps
                     }
                     else
                     {
-                        EntityUidMap.Add(mapIdComp.Owner.Uid, uid);
+                        EntityUidMap.Add(mapIdComp.Owner, uid);
                         takenIds.Add(uid);
                     }
                 }
@@ -763,7 +755,7 @@ namespace Robust.Server.Maps
                         uidCounter += 1;
                     }
 
-                    EntityUidMap.Add(entity.Uid, uidCounter);
+                    EntityUidMap.Add(entity, uidCounter);
                     takenIds.Add(uidCounter);
                 }
             }
@@ -775,30 +767,30 @@ namespace Robust.Server.Maps
                 RootNode.Add("entities", entities);
 
                 var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
-                foreach (var entity in Entities.OrderBy(e => EntityUidMap[e.Uid]))
+                foreach (var entity in Entities.OrderBy(e => EntityUidMap[e]))
                 {
                     CurrentWritingEntity = entity;
                     var mapping = new YamlMappingNode
                     {
-                        {"uid", EntityUidMap[entity.Uid].ToString(CultureInfo.InvariantCulture)}
+                        {"uid", EntityUidMap[entity].ToString(CultureInfo.InvariantCulture)}
                     };
 
-                    if (entity.Prototype != null)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype is {} prototype)
                     {
-                        mapping.Add("type", entity.Prototype.ID);
-                        if (!prototypeCompCache.ContainsKey(entity.Prototype.ID))
+                        mapping.Add("type", prototype.ID);
+                        if (!prototypeCompCache.ContainsKey(prototype.ID))
                         {
-                            prototypeCompCache[entity.Prototype.ID] = new Dictionary<string, MappingDataNode>();
-                            foreach (var (compType, comp) in entity.Prototype.Components)
+                            prototypeCompCache[prototype.ID] = new Dictionary<string, MappingDataNode>();
+                            foreach (var (compType, comp) in prototype.Components)
                             {
-                                prototypeCompCache[entity.Prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                                prototypeCompCache[prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
                             }
                         }
                     }
 
                     var components = new YamlSequenceNode();
                     // See engine#636 for why the Distinct() call.
-                    foreach (var component in entity.GetAllComponents())
+                    foreach (var component in _serverEntityManager.GetComponents(entity))
                     {
                         if (component is MapSaveIdComponent)
                             continue;
@@ -806,7 +798,8 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = component.Name;
                         var compMapping = serializationManager.WriteValueAs<MappingDataNode>(component.GetType(), component, context: this);
 
-                        if (entity.Prototype != null && prototypeCompCache[entity.Prototype.ID].TryGetValue(component.Name, out var protMapping))
+                        var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
+                        if (md.EntityPrototype != null && prototypeCompCache[md.EntityPrototype.ID].TryGetValue(component.Name, out var protMapping))
                         {
                             compMapping = compMapping.Except(protMapping);
                             if(compMapping == null) continue;
@@ -863,19 +856,19 @@ namespace Robust.Server.Maps
                 return CurrentReadingEntityComponents!.Keys;
             }
 
-            private bool IsMapSavable(IEntity entity)
+            private bool IsMapSavable(EntityUid entity)
             {
-                if (entity.Prototype?.MapSavable == false || !GridIDMap.ContainsKey(entity.Transform.GridID))
+                if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(_serverEntityManager.GetComponent<TransformComponent>(entity).GridID))
                 {
                     return false;
                 }
 
                 // Don't serialize things parented to un savable things.
                 // For example clothes inside a person.
-                var current = entity.Transform;
+                var current = _serverEntityManager.GetComponent<TransformComponent>(entity);
                 while (current.Parent != null)
                 {
-                    if (current.Parent.Owner.Prototype?.MapSavable == false)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(current.Parent.Owner).EntityPrototype?.MapSavable == false)
                     {
                         return false;
                     }
@@ -904,17 +897,6 @@ namespace Robust.Server.Maps
                 }
 
                 return new DeserializedValue<GridId>(GridId.Invalid);
-            }
-
-            ValidationNode ITypeValidator<IEntity, ValueDataNode>.Validate(ISerializationManager serializationManager,
-                ValueDataNode node, IDependencyCollection dependencies, ISerializationContext? context)
-            {
-                if (!int.TryParse(node.Value, out var val) || !UidEntityMap.ContainsKey(val))
-                {
-                    return new ErrorNode(node, "Invalid EntityUid", true);
-                }
-
-                return new ValidatedValueNode(node);
             }
 
             ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -946,19 +928,13 @@ namespace Robust.Server.Maps
                 return new ValidatedValueNode(node);
             }
 
-            public DataNode Write(ISerializationManager serializationManager, IEntity value, bool alwaysWrite = false,
-                ISerializationContext? context = null)
-            {
-                return Write(serializationManager, value.Uid, alwaysWrite, context);
-            }
-
             public DataNode Write(ISerializationManager serializationManager, EntityUid value, bool alwaysWrite = false,
                 ISerializationContext? context = null)
             {
                 if (!EntityUidMap.TryGetValue(value, out var entityUidMapped))
                 {
                     // Terrible hack to mute this warning on the grids themselves when serializing blueprints.
-                    if (!IsBlueprintMode || !CurrentWritingEntity!.HasComponent<MapGridComponent>() ||
+                    if (!IsBlueprintMode || !_serverEntityManager.HasComponent<MapGridComponent>(CurrentWritingEntity!.Value) ||
                         CurrentWritingComponent != "Transform")
                     {
                         Logger.WarningS("map", "Cannot write entity UID '{0}'.", value);
@@ -998,34 +974,15 @@ namespace Robust.Server.Maps
                 }
 
                 var val = int.Parse(node.Value);
-                if (val >= Entities.Count)
-                {
-                    Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
-                }
-                else
-                {
-                    return new DeserializedValue<EntityUid>(UidEntityMap[val]);
-                }
 
-                return new DeserializedValue<EntityUid>(EntityUid.Invalid);
-            }
-
-            DeserializationResult ITypeReader<IEntity, ValueDataNode>.Read(ISerializationManager serializationManager,
-                ValueDataNode node,
-                IDependencyCollection dependencies,
-                bool skipHook,
-                ISerializationContext? context)
-            {
-                var val = int.Parse(node.Value);
-
-                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrDefault(e => e.Uid == UidEntityMap[val], out var entity))
+                if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrNull(e => e == UidEntityMap[val], out var entity))
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
                     return null!;
                 }
                 else
                 {
-                    return new DeserializedValue<IEntity>(entity);
+                    return new DeserializedValue<EntityUid>(entity!.Value);
                 }
             }
 

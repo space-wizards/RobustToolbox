@@ -83,7 +83,7 @@ namespace Robust.Client.Console
             {
                 MouseFilter = MouseFilterMode.Stop;
                 Result = result;
-                var compl = new FormattedMessage();
+                var compl = new FormattedMessage.Builder();
                 var dim = Color.FromHsl((0f, 0f, 0.8f, 1f));
 
                 // warning: ew ahead
@@ -120,7 +120,7 @@ namespace Robust.Client.Console
                     compl.PushColor(Color.LightSlateGray);
                     compl.AddText(Result.InlineDescription);
                 }
-                SetMessage(compl);
+                SetMessage(compl.Build());
             }
         }
     }

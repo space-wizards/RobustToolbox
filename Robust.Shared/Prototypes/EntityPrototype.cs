@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -174,23 +175,24 @@ namespace Robust.Shared.Prototypes
             return true;
         }
 
-        public void UpdateEntity(Entity entity)
+        public void UpdateEntity(EntityUid entity)
         {
-            if (ID != entity.Prototype?.ID)
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var metaData = entityManager.GetComponent<MetaDataComponent>(entity);
+            if (ID != metaData.EntityPrototype?.ID)
             {
                 Logger.Error(
-                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entity.Prototype?.ID}'");
+                    $"Reloaded prototype used to update entity did not match entity's existing prototype: Expected '{ID}', got '{entityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.ID}'");
                 return;
             }
 
             var factory = IoCManager.Resolve<IComponentFactory>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
-            var oldPrototype = entity.Prototype;
+            var oldPrototype = metaData.EntityPrototype;
 
-            var oldPrototypeComponents = oldPrototype.Components.Keys
+            var oldPrototypeComponents = oldPrototype?.Components.Keys
                 .Where(n => n != "Transform" && n != "MetaData")
                 .Select(name => (name, factory.GetRegistration(name).Type))
-                .ToList();
+                .ToList() ?? new List<(string name, Type Type)>();
             var newPrototypeComponents = Components.Keys
                 .Where(n => n != "Transform" && n != "MetaData")
                 .Select(name => (name, factory.GetRegistration(name).Type))
@@ -207,7 +209,7 @@ namespace Robust.Shared.Prototypes
                     continue;
                 }
 
-                entityManager.RemoveComponent(entity.Uid, type);
+                entityManager.RemoveComponent(entity, type);
             }
 
             entityManager.CullRemovedComponents();
@@ -221,15 +223,15 @@ namespace Robust.Shared.Prototypes
                 var data = Components[name];
                 var component = (Component) factory.GetComponent(name);
                 component.Owner = entity;
-                componentDependencyManager.OnComponentAdd(entity.Uid, component);
-                entity.AddComponent(component);
+                componentDependencyManager.OnComponentAdd(entity, component);
+                entityManager.AddComponent(entity, component);
             }
 
             // Update entity metadata
-            entity.MetaData.EntityPrototype = this;
+            metaData.EntityPrototype = this;
         }
 
-        internal static void LoadEntity(EntityPrototype? prototype, Entity entity, IComponentFactory factory,
+        internal static void LoadEntity(EntityPrototype? prototype, EntityUid entity, IComponentFactory factory,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             /*YamlObjectSerializer.Context? defaultContext = null;
@@ -271,16 +273,17 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(Entity entity, IComponentFactory factory, string compName,
+        private static void EnsureCompExistsAndDeserialize(EntityUid entity, IComponentFactory factory, string compName,
             IComponent data, ISerializationContext? context)
         {
+            var entityManager = IoCManager.Resolve<IEntityManager>();
             var compType = factory.GetRegistration(compName).Type;
 
-            if (!entity.TryGetComponent(compType, out var component))
+            if (!entityManager.TryGetComponent(entity, compType, out var component))
             {
                 var newComponent = (Component) factory.GetComponent(compName);
                 newComponent.Owner = entity;
-                entity.AddComponent(newComponent);
+                entityManager.AddComponent(entity, newComponent);
                 component = newComponent;
             }
 

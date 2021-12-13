@@ -1,6 +1,4 @@
-﻿// Commented out because I can't be bothered to figure out trimming for TerraFX.
-/*
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,13 +8,18 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using TerraFX.Interop;
+using TerraFX.Interop.DirectX;
+using TerraFX.Interop.Windows;
 using static Robust.Client.Graphics.Clyde.Egl;
-using static TerraFX.Interop.D3D_DRIVER_TYPE;
-using static TerraFX.Interop.D3D_FEATURE_LEVEL;
-using static TerraFX.Interop.DXGI_FORMAT;
-using static TerraFX.Interop.DXGI_SWAP_EFFECT;
-using static TerraFX.Interop.Windows;
+using static TerraFX.Interop.DirectX.D3D_DRIVER_TYPE;
+using static TerraFX.Interop.DirectX.D3D_FEATURE_LEVEL;
+using static TerraFX.Interop.DirectX.DXGI_FORMAT;
+using static TerraFX.Interop.DirectX.DXGI_SWAP_EFFECT;
+using static TerraFX.Interop.Windows.Windows;
+using static TerraFX.Interop.DirectX.DirectX;
+using static TerraFX.Interop.DirectX.D3D11;
+using static TerraFX.Interop.DirectX.DXGI;
+using GL = OpenToolkit.Graphics.OpenGL4.GL;
 
 
 namespace Robust.Client.Graphics.Clyde
@@ -77,7 +80,7 @@ namespace Robust.Client.Graphics.Clyde
                 };
                 _windowData[reg.Id] = data;
 
-                var hWnd = Clyde._windowing!.WindowGetWin32Window(reg)!.Value;
+                var hWnd = (HWND) Clyde._windowing!.WindowGetWin32Window(reg)!.Value;
 
                 // todo: exception management.
                 CreateSwapChain1(hWnd, data);
@@ -98,7 +101,8 @@ namespace Robust.Client.Graphics.Clyde
             {
                 if (data.EglBackbuffer != null)
                 {
-                    eglMakeCurrent(_eglDisplay, null, null, null);
+                    if (data.Reg.IsMainWindow)
+                        eglMakeCurrent(_eglDisplay, null, null, null);
                     eglDestroySurface(_eglDisplay, data.EglBackbuffer);
 
                     data.EglBackbuffer = null;
@@ -115,8 +119,7 @@ namespace Robust.Client.Graphics.Clyde
 
                 fixed (ID3D11Texture2D** texPtr = &data.Backbuffer)
                 {
-                    var iid = IID_ID3D11Texture2D;
-                    ThrowIfFailed("GetBuffer", data.SwapChain->GetBuffer(0, &iid, (void**) texPtr));
+                    ThrowIfFailed("GetBuffer", data.SwapChain->GetBuffer(0, __uuidof<ID3D11Texture2D>(), (void**) texPtr));
                 }
 
                 var attributes = stackalloc int[]
@@ -134,7 +137,7 @@ namespace Robust.Client.Graphics.Clyde
                     attributes);
             }
 
-            private void CreateSwapChain1(nint hWnd, WindowData data)
+            private void CreateSwapChain1(HWND hWnd, WindowData data)
             {
                 var desc = new DXGI_SWAP_CHAIN_DESC
                 {
@@ -199,6 +202,7 @@ namespace Robust.Client.Graphics.Clyde
                 // and so that we can know _hasGLSrgb in window creation.
                 eglMakeCurrent(_eglDisplay, null, null, _eglContext);
                 Clyde.InitOpenGL();
+                Clyde._earlyGLInit = true;
             }
 
             private void TryInitializeCore()
@@ -294,11 +298,9 @@ namespace Robust.Client.Graphics.Clyde
 
                 try
                 {
-                    var iid = IID_IDXGIFactory1;
-
                     fixed (IDXGIFactory1** ptr = &_factory)
                     {
-                        ThrowIfFailed(nameof(CreateDXGIFactory1), CreateDXGIFactory1(&iid, (void**) ptr));
+                        ThrowIfFailed(nameof(CreateDXGIFactory1), CreateDXGIFactory1(__uuidof<IDXGIFactory1>(), (void**) ptr));
                     }
 
                     // Try to find the correct adapter if specified.
@@ -316,6 +318,38 @@ namespace Robust.Client.Graphics.Clyde
 
                         Logger.DebugS("clyde.ogl.angle", $"Found display adapter with name: {adapterName}");
                     }
+
+#pragma warning disable CA1416
+                    IDXGIFactory6* factory6;
+                    if (_adapter == null && _factory->QueryInterface(__uuidof<IDXGIFactory6>(), (void**) &factory6) == 0)
+                    {
+                        var gpuPref = (DXGI_GPU_PREFERENCE) Clyde._cfg.GetCVar(CVars.DisplayGpuPreference);
+                        IDXGIAdapter1* adapter;
+                        for (var adapterIndex = 0u;
+                             factory6->EnumAdapterByGpuPreference(
+                                 adapterIndex,
+                                 gpuPref,
+                                 __uuidof<IDXGIAdapter1>(),
+                                 (void**)&adapter) != DXGI_ERROR_NOT_FOUND;
+                             adapterIndex++)
+                        {
+                            /*
+                            DXGI_ADAPTER_DESC1 aDesc;
+                            ThrowIfFailed("GetDesc1", adapter->GetDesc1(&aDesc));
+
+                            var aDescName = new ReadOnlySpan<char>(aDesc.Description, 128);
+
+                            Logger.DebugS("clyde.ogl.angle", aDescName.ToString());
+
+                            adapter->Release();
+                            */
+                            _adapter = adapter;
+                            break;
+                        }
+
+                        factory6->Release();
+                    }
+#pragma warning restore CA1416
 
                     Span<D3D_FEATURE_LEVEL> featureLevels = stackalloc D3D_FEATURE_LEVEL[]
                     {
@@ -335,7 +369,7 @@ namespace Robust.Client.Graphics.Clyde
                         ThrowIfFailed("D3D11CreateDevice", D3D11CreateDevice(
                             (IDXGIAdapter*) _adapter,
                             _adapter == null ? D3D_DRIVER_TYPE_HARDWARE : D3D_DRIVER_TYPE_UNKNOWN,
-                            IntPtr.Zero,
+                            HMODULE.NULL,
                             0,
                             fl,
                             (uint) featureLevels.Length,
@@ -348,13 +382,11 @@ namespace Robust.Client.Graphics.Clyde
 
                     // Get adapter from the device.
 
-                    iid = IID_IDXGIDevice1;
-                    ThrowIfFailed("QueryInterface", _device->QueryInterface(&iid, (void**) &dxgiDevice));
+                    ThrowIfFailed("QueryInterface", _device->QueryInterface(__uuidof<IDXGIDevice1>(), (void**) &dxgiDevice));
 
                     fixed (IDXGIAdapter1** ptrAdapter = &_adapter)
                     {
-                        iid = IID_IDXGIAdapter1;
-                        ThrowIfFailed("GetParent", dxgiDevice->GetParent(&iid, (void**) ptrAdapter));
+                        ThrowIfFailed("GetParent", dxgiDevice->GetParent(__uuidof<IDXGIAdapter1>(), (void**) ptrAdapter));
                     }
 
                     _deviceFl = _device->GetFeatureLevel();
@@ -527,4 +559,3 @@ namespace Robust.Client.Graphics.Clyde
         }
     }
 }
-*/

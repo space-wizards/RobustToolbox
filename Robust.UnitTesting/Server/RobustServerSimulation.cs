@@ -26,7 +26,6 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.TypeSerializers.Implementations;
 using Robust.Shared.Timing;
 
 namespace Robust.UnitTesting.Server
@@ -56,8 +55,8 @@ namespace Robust.UnitTesting.Server
         /// </summary>
         EntityUid AddMap(int mapId);
         EntityUid AddMap(MapId mapId);
-        IEntity SpawnEntity(string? protoId, EntityCoordinates coordinates);
-        IEntity SpawnEntity(string? protoId, MapCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
     internal delegate void DiContainerDelegate(IDependencyCollection diContainer);
@@ -96,13 +95,13 @@ namespace Robust.UnitTesting.Server
             return mapMan.GetMapEntityId(mapId);
         }
 
-        public IEntity SpawnEntity(string? protoId, EntityCoordinates coordinates)
+        public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
         {
             var entMan = Collection.Resolve<IEntityManager>();
             return entMan.SpawnEntity(protoId, coordinates);
         }
 
-        public IEntity SpawnEntity(string? protoId, MapCoordinates coordinates)
+        public EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates)
         {
             var entMan = Collection.Resolve<IEntityManager>();
             return entMan.SpawnEntity(protoId, coordinates);
@@ -214,15 +213,16 @@ namespace Robust.UnitTesting.Server
             _diFactory?.Invoke(container);
             container.BuildGraph();
 
-            var logMan = container.Resolve<ILogManager>();
-            logMan.RootSawmill.AddHandler(new TestLogHandler("SIM"));
-
             // Because of CVarDef, we have to load every one through reflection
             // just in case a system needs one of them.
             var configMan = container.Resolve<IConfigurationManagerInternal>();
             configMan.Initialize(true);
             configMan.LoadCVarsFromAssembly(typeof(Program).Assembly); // Server
             configMan.LoadCVarsFromAssembly(typeof(ProgramShared).Assembly); // Shared
+            configMan.LoadCVarsFromAssembly(typeof(RobustServerSimulation).Assembly); // Tests
+
+            var logMan = container.Resolve<ILogManager>();
+            logMan.RootSawmill.AddHandler(new TestLogHandler(configMan, "SIM"));
 
             var compFactory = container.Resolve<IComponentFactory>();
 
@@ -231,10 +231,12 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<PhysicsMapComponent>();
+            compFactory.RegisterClass<FixturesComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -247,9 +249,11 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+            entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
 

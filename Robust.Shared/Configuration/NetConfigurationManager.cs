@@ -73,6 +73,16 @@ namespace Robust.Shared.Configuration
         public event EventHandler? ReceivedInitialNwVars;
         private bool _receivedInitialNwVars;
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            FlushMessages();
+            _replicatedCVars.Clear();
+            ReceivedInitialNwVars = null;
+            _receivedInitialNwVars = false;
+        }
+
         /// <inheritdoc />
         public void SetupNetworking()
         {
@@ -320,7 +330,7 @@ namespace Robust.Shared.Configuration
                 if (_netManager.IsClient && (cVar.Flags & CVar.SERVER) != 0)
                     continue;
 
-                nwVars.Add((cVar.Name, cVar.Value ?? cVar.DefaultValue));
+                nwVars.Add((cVar.Name, GetConfigVarValue(cVar)));
 
                 Logger.DebugS("cfg", $"name={cVar.Name}, val={(cVar.Value ?? cVar.DefaultValue)}");
             }

@@ -139,6 +139,8 @@ namespace Robust.Shared.Prototypes
 
         List<IPrototype> LoadString(string str, bool overwrite = false);
 
+        void RemoveString(string prototypes);
+
         /// <summary>
         /// Clear out all prototypes and reset to a blank slate.
         /// </summary>
@@ -359,10 +361,13 @@ namespace Robust.Shared.Prototypes
 
             foreach (var prototype in pushed[typeof(EntityPrototype)])
             {
-                foreach (var entity in _entityManager.GetEntities()
-                    .Where(e => e.Prototype != null && e.Prototype.ID == prototype))
+                foreach (var entity in _entityManager.GetEntities())
                 {
-                    ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity((Entity) entity);
+                    var metaData = _entityManager.GetComponent<MetaDataComponent>(entity);
+                    if (metaData.EntityPrototype != null && metaData.EntityPrototype.ID == prototype)
+                    {
+                        ((EntityPrototype) entityPrototypes[prototype]).UpdateEntity(entity);
+                    }
                 }
             }
 #endif
@@ -602,6 +607,33 @@ namespace Robust.Shared.Prototypes
         public List<IPrototype> LoadString(string str, bool overwrite = false)
         {
             return LoadFromStream(new StringReader(str), overwrite);
+        }
+
+        public void RemoveString(string prototypes)
+        {
+            var reader = new StringReader(prototypes);
+            var yaml = new YamlStream();
+
+            yaml.Load(reader);
+
+            foreach (var document in yaml.Documents)
+            {
+                var root = (YamlSequenceNode) document.RootNode;
+                foreach (var node in root.Cast<YamlMappingNode>())
+                {
+                    var typeString = node.GetNode("type").AsString();
+                    var type = _prototypeTypes[typeString];
+
+                    var id = node.GetNode("id").AsString();
+
+                    if (_inheritanceTrees.TryGetValue(type, out var tree))
+                    {
+                        tree.RemoveId(id);
+                    }
+
+                    _prototypes[type].Remove(id);
+                }
+            }
         }
 
         #endregion IPrototypeManager members

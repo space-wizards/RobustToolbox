@@ -25,7 +25,6 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Maths;
-using Proxy = Robust.Shared.Physics.DynamicTree.Proxy;
 
 namespace Robust.Shared.Physics
 {
@@ -47,10 +46,7 @@ namespace Robust.Shared.Physics
             GrowthFunc = growthFunc ?? DefaultGrowthFunc;
         }
 
-        // box2d grows by *2, here we're being somewhat more linear
-        private static int DefaultGrowthFunc(int x)
-            => x + 256;
-
+        private static int DefaultGrowthFunc(int x) => x * 2;
     }
 
     [PublicAPI]
@@ -71,7 +67,7 @@ namespace Robust.Shared.Physics
         private readonly ExtractAabbDelegate _extractAabb;
 
         // avoids "Collection was modified; enumeration operation may not execute."
-        private Dictionary<T, Proxy> _nodeLookup;
+        private Dictionary<T, DynamicTree.Proxy> _nodeLookup;
         public readonly B2DynamicTree<T> _b2Tree;
 
         public DynamicTree(ExtractAabbDelegate extractAabbFunc, IEqualityComparer<T>? comparer = null, float aabbExtendSize = 1f / 32, int capacity = 256, Func<int, int>? growthFunc = null)
@@ -80,7 +76,7 @@ namespace Robust.Shared.Physics
 
             _extractAabb = extractAabbFunc;
             _equalityComparer = comparer ?? EqualityComparer<T>.Default;
-            _nodeLookup = new Dictionary<T, Proxy>(_equalityComparer);
+            _nodeLookup = new Dictionary<T, DynamicTree.Proxy>(_equalityComparer);
             _b2Tree = new B2DynamicTree<T>(aabbExtendSize, capacity, growthFunc);
         }
 
@@ -136,7 +132,7 @@ namespace Robust.Shared.Physics
 
             if (CheckNaNs(aabb.Value))
             {
-                _nodeLookup[item] = Proxy.Free;
+                _nodeLookup[item] = DynamicTree.Proxy.Free;
                 return true;
             }
 
@@ -147,18 +143,18 @@ namespace Robust.Shared.Physics
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool TryGetProxy(in T item, out Proxy proxy)
+        private bool TryGetProxy(in T item, out DynamicTree.Proxy proxy)
             => _nodeLookup.TryGetValue(item, out proxy);
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2? GetNodeBounds(T item)
-            => TryGetProxy(item, out var proxy) ? _b2Tree.GetFatAabb(proxy) : (Box2?) null;
+            => TryGetProxy(item, out var proxy) ? _b2Tree.GetFatAabb(proxy) : null;
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Box2? GetNodeBounds(in T item)
-            => TryGetProxy(item, out var proxy) ? _b2Tree.GetFatAabb(proxy) : (Box2?) null;
+            => TryGetProxy(item, out var proxy) ? _b2Tree.GetFatAabb(proxy) : null;
 
 
         public bool Remove(in T item)
@@ -168,7 +164,7 @@ namespace Robust.Shared.Physics
                 return false;
             }
 
-            if (proxy != Proxy.Free)
+            if (proxy != DynamicTree.Proxy.Free)
             {
                 _b2Tree.DestroyProxy(proxy);
             }
@@ -191,17 +187,17 @@ namespace Robust.Shared.Physics
 
             if (CheckNaNs(newBox.Value))
             {
-                if (proxy == Proxy.Free)
+                if (proxy == DynamicTree.Proxy.Free)
                 {
                     return false;
                 }
 
                 _b2Tree.DestroyProxy(proxy);
-                _nodeLookup[item] = Proxy.Free;
+                _nodeLookup[item] = DynamicTree.Proxy.Free;
                 return true;
             }
 
-            if (proxy == Proxy.Free)
+            if (proxy == DynamicTree.Proxy.Free)
             {
                 _nodeLookup[item] = _b2Tree.CreateProxy(newBox.Value, item);
                 return true;
@@ -245,7 +241,7 @@ namespace Robust.Shared.Physics
             var tuple = (state, _b2Tree, callback, point, approx, _extractAabb);
             _b2Tree.Query(ref tuple,
                 (ref (TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Vector2 point, bool approx, ExtractAabbDelegate extract) tuple,
-                    Proxy proxy) =>
+                    DynamicTree.Proxy proxy) =>
                 {
                     var item = tuple.tree.GetUserData(proxy)!;
 
@@ -286,7 +282,7 @@ namespace Robust.Shared.Physics
             state = tuple.state;
         }
 
-        private static bool AabbQueryStateCallback<TState>(ref (TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, ExtractAabbDelegate extract) tuple, Proxy proxy)
+        private static bool AabbQueryStateCallback<TState>(ref (TState state, B2DynamicTree<T> tree, QueryCallbackDelegate<TState> callback, Box2 aabb, bool approx, ExtractAabbDelegate extract) tuple, DynamicTree.Proxy proxy)
         {
             var item = tuple.tree.GetUserData(proxy)!;
             if (!tuple.approx)
@@ -301,7 +297,7 @@ namespace Robust.Shared.Physics
             return tuple.callback(ref tuple.state, item);
         }
 
-        private static bool RayQueryStateCallback<TState>(ref (TState state, RayQueryCallbackDelegate<TState> callback, B2DynamicTree<T> tree, ExtractAabbDelegate? extract, Ray srcRay) tuple, Proxy proxy, in Vector2 hitPos, float distance)
+        private static bool RayQueryStateCallback<TState>(ref (TState state, RayQueryCallbackDelegate<TState> callback, B2DynamicTree<T> tree, ExtractAabbDelegate? extract, Ray srcRay) tuple, DynamicTree.Proxy proxy, in Vector2 hitPos, float distance)
         {
             var item = tuple.tree.GetUserData(proxy)!;
             var hit = hitPos;

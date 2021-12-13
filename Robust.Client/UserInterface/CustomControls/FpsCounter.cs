@@ -4,7 +4,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal sealed class FpsCounter : Label
+    public sealed class FpsCounter : Label
     {
         private readonly IGameTiming _gameTiming;
 

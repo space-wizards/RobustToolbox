@@ -330,9 +330,6 @@ namespace Robust.Shared.Physics.Collision
 
         private class EPCollider
         {
-            private float _polygonRadius;
-            private float _angularSlop;
-
             private TempPolygon _polygonB;
 
             Transform _xf;
@@ -346,8 +343,6 @@ namespace Robust.Shared.Physics.Collision
 
             internal EPCollider(IConfigurationManager configManager)
             {
-                _polygonRadius = PhysicsConstants.PolygonRadius;
-                _angularSlop = configManager.GetCVar(CVars.AngularSlop);
                 _polygonB = new TempPolygon(configManager);
             }
 
@@ -566,7 +561,7 @@ namespace Robust.Shared.Physics.Collision
                     _polygonB.Normals[i] = Transform.Mul(_xf.Quaternion2D, polygonB.Normals[i]);
                 }
 
-                _radius = 2.0f * _polygonRadius;
+                _radius = PhysicsConstants.PolygonRadius;
 
                 manifold.PointCount = 0;
 
@@ -802,14 +797,14 @@ namespace Robust.Shared.Physics.Collision
                     // Adjacency
                     if (Vector2.Dot(n, perp) >= 0.0f)
                     {
-                        if (Vector2.Dot(n - _upperLimit, _normal) < -_angularSlop)
+                        if (Vector2.Dot(n - _upperLimit, _normal) < -PhysicsConstants.AngularSlop)
                         {
                             continue;
                         }
                     }
                     else
                     {
-                        if (Vector2.Dot(n - _lowerLimit, _normal) < -_angularSlop)
+                        if (Vector2.Dot(n - _lowerLimit, _normal) < -PhysicsConstants.AngularSlop)
                         {
                             continue;
                         }

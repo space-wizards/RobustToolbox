@@ -4,10 +4,11 @@ using Robust.Server.GameObjects;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.ViewVariables;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Server.Player
 {
@@ -41,13 +42,10 @@ namespace Robust.Server.Player
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 
-        [ViewVariables] public IEntity? AttachedEntity { get; set; }
-
-        [ViewVariables] public EntityUid? AttachedEntityUid => AttachedEntity?.Uid;
+        /// <inheritdoc />
+        [ViewVariables] public EntityUid? AttachedEntity { get; set; }
 
         private SessionStatus _status = SessionStatus.Connecting;
-
-        /// <inheritdoc />
 
         [ViewVariables]
         internal string Name { get; set; }
@@ -99,7 +97,6 @@ namespace Robust.Server.Player
         /// <inheritdoc />
         public DateTime ConnectedTime { get; private set; }
 
-        /// <inheritdoc />
         [ViewVariables(VVAccess.ReadWrite)]
         public int VisibilityMask { get; set; } = 1;
 
@@ -115,16 +112,24 @@ namespace Robust.Server.Player
         public event EventHandler<SessionStatusEventArgs>? PlayerStatusChanged;
 
         /// <inheritdoc />
-        public void AttachToEntity(IEntity? entity)
+        public void AttachToEntity(EntityUid? entity)
         {
             DetachFromEntity();
 
             if (entity == null)
                 return;
 
-            if (!EntitySystem.Get<ActorSystem>().Attach(entity, this))
+            AttachToEntity((EntityUid) entity);
+        }
+
+        /// <inheritdoc />
+        public void AttachToEntity(EntityUid uid)
+        {
+            DetachFromEntity();
+
+            if (!EntitySystem.Get<ActorSystem>().Attach(uid, this))
             {
-                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{entity}\"! Did it have a player already attached to it?");
+                Logger.Warning($"Couldn't attach player \"{this}\" to entity \"{uid}\"! Did it have a player already attached to it?");
             }
         }
 
@@ -135,7 +140,7 @@ namespace Robust.Server.Player
                 return;
 
 #if EXCEPTION_TOLERANCE
-            if (AttachedEntity.Deleted)
+            if (IoCManager.Resolve<IEntityManager>().Deleted(AttachedEntity!.Value))
             {
                 Logger.Warning($"Player \"{this}\" was attached to an entity that was deleted. THIS SHOULD NEVER HAPPEN, BUT DOES.");
                 // We can't contact ActorSystem because trying to fire an entity event would crash.
@@ -146,7 +151,7 @@ namespace Robust.Server.Player
             }
 #endif
 
-            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity))
+            if (!EntitySystem.Get<ActorSystem>().Detach(AttachedEntity.Value))
             {
                 Logger.Warning($"Couldn't detach player \"{this}\" from entity \"{AttachedEntity}\"! Is it missing an ActorComponent?");
             }
@@ -170,14 +175,6 @@ namespace Robust.Server.Player
             UpdatePlayerState();
         }
 
-        private void SetAttachedEntityName()
-        {
-            if (Name != null && AttachedEntity != null)
-            {
-                AttachedEntity.Name = Name;
-            }
-        }
-
         /// <summary>
         ///     Causes the session to switch from the lobby to the game.
         /// </summary>
@@ -193,7 +190,7 @@ namespace Robust.Server.Player
         public LoginType AuthType => ConnectedClient.AuthType;
 
         /// <inheritdoc />
-        void IPlayerSession.SetAttachedEntity(IEntity? entity)
+        void IPlayerSession.SetAttachedEntity(EntityUid? entity)
         {
             AttachedEntity = entity;
             UpdatePlayerState();
@@ -223,10 +220,7 @@ namespace Robust.Server.Player
         {
             PlayerState.Status = Status;
             PlayerState.Name = Name;
-            if (AttachedEntity == null)
-                PlayerState.ControlledEntity = null;
-            else
-                PlayerState.ControlledEntity = AttachedEntity.Uid;
+            PlayerState.ControlledEntity = AttachedEntity;
 
             _playerManager.Dirty();
         }

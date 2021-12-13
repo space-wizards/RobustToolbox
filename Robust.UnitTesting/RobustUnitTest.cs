@@ -71,6 +71,8 @@ namespace Robust.UnitTesting
                 configurationManager.LoadCVarsFromAssembly(assembly);
             }
 
+            configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
+
             // Required systems
             var systems = IoCManager.Resolve<IEntitySystemManager>();
             systems.Initialize();
@@ -109,6 +111,16 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(SharedPhysicsMapComponent)))
             {
                 compFactory.RegisterClass<PhysicsMapComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(BroadphaseComponent)))
+            {
+                compFactory.RegisterClass<BroadphaseComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
+            {
+                compFactory.RegisterClass<FixturesComponent>();
             }
 
             if(entMan.EventBus == null)

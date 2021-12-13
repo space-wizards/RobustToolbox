@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -13,14 +12,11 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
@@ -34,6 +30,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
+        [Dependency] private readonly IEntityManager entities = default!;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -47,7 +44,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -213,6 +210,7 @@ namespace Robust.Client.GameObjects
 
                     layer.Color = layerDatum.Color;
                     layer.Rotation = layerDatum.Rotation;
+                    layer._offset = layerDatum.Offset;
                     // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
                     layer.Visible = anyTextureAttempted && layerDatum.Visible;
                     layer.Scale = layerDatum.Scale;
@@ -302,7 +300,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -372,6 +370,7 @@ namespace Robust.Client.GameObjects
 
             if (layerDatums.Count != 0)
             {
+                LayerMap.Clear();
                 LayerDatums = layerDatums;
             }
         }
@@ -1258,7 +1257,7 @@ namespace Robust.Client.GameObjects
             if (worldRotation.Theta < 0)
                 worldRotation = new Angle(worldRotation.Theta + Math.Tau);
 
-            var localMatrix = GetLocalMatrix();
+            var spriteMatrix = GetLocalMatrix();
 
             foreach (var layer in Layers)
             {
@@ -1269,9 +1268,10 @@ namespace Robust.Client.GameObjects
 
                 var numDirs = GetLayerDirectionCount(layer);
                 var layerRotation = worldRotation + layer.Rotation;
+                var layerPosition = worldPosition + layerRotation.RotateVec(layer._offset);
 
-                CalcModelMatrix(numDirs, eyeRotation, layerRotation, worldPosition, out var modelMatrix);
-                Matrix3.Multiply(ref localMatrix, ref modelMatrix, out var transformMatrix);
+                CalcModelMatrix(numDirs, eyeRotation, layerRotation, layerPosition, out var modelMatrix);
+                Matrix3.Multiply(ref spriteMatrix, ref modelMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
                 RenderLayer(drawingHandle, layer, eyeRotation, layerRotation, overrideDirection);
@@ -1289,7 +1289,7 @@ namespace Robust.Client.GameObjects
 
             var layerColor = color * layer.Color;
 
-            var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter) + layer.Offset;
+            var position = -(Vector2)texture.Size / (2f * EyeManager.PixelsPerMeter);
             var textureSize = texture.Size / (float)EyeManager.PixelsPerMeter;
             var quad = Box2.FromDimensions(position, textureSize);
 
@@ -1502,7 +1502,7 @@ namespace Robust.Client.GameObjects
         {
             // Look this was an easy way to get bounds checks for layer updates.
             // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            if (Owner?.EntityManager?.EventBus != null)
+            if ((Owner != default ? entities : null)?.EventBus != null)
                 UpdateBounds();
 
             if (_inertUpdateQueued)
@@ -1511,7 +1511,7 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueued = true;
             // Yes that null check is valid because of that stupid fucking dummy IEntity.
             // Who thought that was a good idea.
-            Owner?.EntityManager?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()
@@ -1598,7 +1598,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation),
+                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, entities.GetComponent<TransformComponent>(Owner).WorldRotation),
                 DirectionOverride
             );
 
@@ -1652,7 +1652,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new SpriteUpdateEvent());
+            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
         }
 
         /// <summary>
@@ -1722,7 +1722,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            private Vector2 _offset;
+            internal Vector2 _offset;
 
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }
@@ -2070,18 +2070,9 @@ namespace Robust.Client.GameObjects
                 return results;
             }
 
-            var dummy = new DummyIconEntity { Prototype = prototype };
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-
-            if (prototype.Components.TryGetValue("Appearance", out _))
-            {
-                var appearanceComponent = dummy.AddComponent<AppearanceComponent>();
-                foreach (var layer in appearanceComponent.Visualizers)
-                {
-                    layer.InitializeEntity(dummy);
-                    layer.OnChangeData(appearanceComponent);
-                }
-            }
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
 
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
@@ -2101,7 +2092,7 @@ namespace Robust.Client.GameObjects
 
             noRot = spriteComponent.NoRotation;
 
-            dummy.Delete();
+            entityManager.DeleteEntity(dummy);
 
             if (!anyTexture)
                 results.Add(resourceCache.GetFallback<TextureResource>().Texture);
@@ -2118,144 +2109,14 @@ namespace Robust.Client.GameObjects
                 return GetFallbackState(resourceCache);
             }
 
-            var dummy = new DummyIconEntity { Prototype = prototype };
-            var spriteComponent = dummy.AddComponent<SpriteComponent>();
-            dummy.Delete();
+            var entityManager = IoCManager.Resolve<IEntityManager>();
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
+            var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
+            var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            entityManager.DeleteEntity(dummy);
 
-            return spriteComponent.Icon ?? GetFallbackState(resourceCache);
+            return result;
         }
-
-        #region DummyIconEntity
-        private class DummyIconEntity : IEntity
-        {
-            GameTick IEntity.LastModifiedTick { get; set; } = GameTick.Zero;
-            public IEntityManager EntityManager { get; } = null!;
-            public string Name { get; set; } = string.Empty;
-            public EntityUid Uid { get; } = EntityUid.Invalid;
-            EntityLifeStage IEntity.LifeStage { get => _lifeStage; set => _lifeStage = value; }
-            public bool Initialized { get; } = false;
-            public bool Initializing { get; } = false;
-            public bool Deleted { get; } = true;
-            public bool Paused { get; set; }
-            public EntityPrototype? Prototype { get; set; }
-
-            public string Description { get; set; } = string.Empty;
-            public bool IsValid()
-            {
-                return false;
-            }
-
-            public ITransformComponent Transform { get; } = null!;
-            public MetaDataComponent MetaData { get; } = null!;
-
-            private Dictionary<Type, IComponent> _components = new();
-            private EntityLifeStage _lifeStage;
-
-            public T AddComponent<T>() where T : Component, new()
-            {
-                var typeFactory = IoCManager.Resolve<IDynamicTypeFactoryInternal>();
-                var serializationManager = IoCManager.Resolve<ISerializationManager>();
-                var comp = (T)typeFactory.CreateInstanceUnchecked(typeof(T));
-                _components[typeof(T)] = comp;
-                comp.Owner = this;
-
-                if (typeof(ISpriteComponent).IsAssignableFrom(typeof(T)))
-                {
-                    _components[typeof(ISpriteComponent)] = comp;
-                }
-
-                if (Prototype != null && Prototype.TryGetComponent<T>(comp.Name, out var node))
-                {
-                    comp = serializationManager.Copy(node, comp)!;
-                }
-
-                return comp;
-            }
-
-            public void RemoveComponent<T>()
-            {
-                _components.Remove(typeof(T));
-            }
-
-            public bool HasComponent<T>()
-            {
-                return _components.ContainsKey(typeof(T));
-            }
-
-            public bool HasComponent(Type type)
-            {
-                return _components.ContainsKey(type);
-            }
-
-            public T GetComponent<T>()
-            {
-                return (T)_components[typeof(T)];
-            }
-
-            public IComponent GetComponent(Type type)
-            {
-                return null!;
-            }
-
-            public bool TryGetComponent<T>([NotNullWhen(true)] out T? component) where T : class
-            {
-                component = null;
-                if (!_components.TryGetValue(typeof(T), out var value)) return false;
-                component = (T)value;
-                return true;
-            }
-
-            public T? GetComponentOrNull<T>() where T : class
-            {
-                return null;
-            }
-
-            public bool TryGetComponent(Type type, [NotNullWhen(true)] out IComponent? component)
-            {
-                component = null;
-                if (!_components.TryGetValue(type, out var value)) return false;
-                component = value;
-                return true;
-            }
-
-            public IComponent? GetComponentOrNull(Type type)
-            {
-                return null;
-            }
-
-            public void QueueDelete()
-            {
-            }
-
-            public void Delete()
-            {
-            }
-
-            public IEnumerable<IComponent> GetAllComponents()
-            {
-                return Enumerable.Empty<IComponent>();
-            }
-
-            public IEnumerable<T> GetAllComponents<T>()
-            {
-                return Enumerable.Empty<T>();
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendMessage(IComponent? owner, ComponentMessage message)
-            {
-            }
-
-            [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-            public void SendNetworkMessage(IComponent owner, ComponentMessage message, INetChannel? channel = null)
-            {
-            }
-
-            public void Dirty()
-            {
-            }
-        }
-        #endregion
     }
 
     internal sealed class SpriteUpdateEvent : EntityEventArgs

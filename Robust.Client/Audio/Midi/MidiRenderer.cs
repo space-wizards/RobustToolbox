@@ -150,7 +150,7 @@ namespace Robust.Client.Audio.Midi
         ///     The entity whose position will be used for positional audio.
         ///     This is only used if <see cref="Mono"/> is set to True.
         /// </summary>
-        IEntity? TrackingEntity { get; set; }
+        EntityUid? TrackingEntity { get; set; }
 
         /// <summary>
         ///     The position that will be used for positional audio.
@@ -297,7 +297,7 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
-                    _player?.SetLoop(value ? -1 : 1);
+                    _player?.SetLoop(value ? -1 : 0);
                 _loopMidi = value;
             }
         }
@@ -306,7 +306,7 @@ namespace Robust.Client.Audio.Midi
         public bool VolumeBoost { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        public IEntity? TrackingEntity { get; set; } = null;
+        public EntityUid? TrackingEntity { get; set; } = null;
 
         [ViewVariables(VVAccess.ReadWrite)]
         public EntityCoordinates? TrackingCoordinates { get; set; } = null;

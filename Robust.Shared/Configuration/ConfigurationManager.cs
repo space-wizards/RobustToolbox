@@ -1,10 +1,11 @@
-using Nett;
-using Robust.Shared.Log;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Nett;
+using Robust.Shared.Log;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Configuration
@@ -29,6 +30,12 @@ namespace Robust.Shared.Configuration
         public void Initialize(bool isServer)
         {
             _isServer = isServer;
+        }
+
+        public virtual void Shutdown()
+        {
+            _configVars.Clear();
+            _configFile = null;
         }
 
         /// <inheritdoc />
@@ -351,7 +358,7 @@ namespace Robust.Shared.Configuration
         {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T) (cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
+                return (T) (GetConfigVarValue(cVar))!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
@@ -370,6 +377,11 @@ namespace Robust.Shared.Configuration
 
             // If it's null it's a string, since the rest is primitives which aren't null.
             return cVar.Value?.GetType() ?? typeof(string);
+        }
+
+        protected static object GetConfigVarValue(ConfigVar cVar)
+        {
+            return cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue;
         }
 
         public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
@@ -409,7 +421,12 @@ namespace Robust.Shared.Configuration
 
             if (type == typeof(float))
             {
-                return float.Parse(value);
+                return float.Parse(value, CultureInfo.InvariantCulture);
+            }
+
+            if (type?.IsEnum ?? false)
+            {
+                return Enum.Parse(type, value);
             }
 
             // Must be a string.

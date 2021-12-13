@@ -558,6 +558,28 @@ namespace Robust.Shared.Map
             return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
         }
 
+        public bool TryFindGridAt(EntityCoordinates coordinates, [NotNullWhen(true)] out IMapGrid? grid)
+        {
+            var parent = coordinates.EntityId;
+
+            if (EntityManager.TryGetComponent(parent, out IMapGridComponent? gridComp))
+            {
+                grid = gridComp.Grid;
+                return true;
+            }
+
+            if (EntityManager.HasComponent<MapComponent>(parent))
+            {
+                grid = null;
+                return false;
+            }
+
+            // Fallback if we're nested further down
+            var mapCoordinates = coordinates.ToMap(EntityManager);
+
+            return TryFindGridAt(mapCoordinates, out grid);
+        }
+
         public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAABB, out FindGridsEnumerator enumerator, bool approx = false)
         {
             enumerator = new FindGridsEnumerator(_entityManager, _grids.GetEnumerator(), mapId, worldAABB, approx);

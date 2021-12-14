@@ -63,7 +63,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent.
     /// </summary>
-    public IReadOnlySet<TIndex> GlobalOverrides => _globalOverrides;
+    public HashSet<TIndex>.Enumerator GlobalOverridesEnumerator => _globalOverrides.GetEnumerator();
 
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent to a certain <see cref="ICommonSession"/>.
@@ -152,7 +152,7 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
     public bool TryGetChunk(GridId gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _gridChunkContents[gridId].TryGetValue(chunkIndices, out indices);
 
-    public IReadOnlySet<TIndex> GetElementsForSession(ICommonSession session) => _localOverrides[session];
+    public HashSet<TIndex>.Enumerator GetElementsForSession(ICommonSession session) => _localOverrides[session].GetEnumerator();
 
     private void AddIndexInternal(TIndex index, IndexLocation location)
     {

@@ -77,7 +77,7 @@ namespace Robust.Shared.Containers
 
         public bool ContainsEntity(EntityUid uid, EntityUid containedUid, ContainerManagerComponent? containerManager = null)
         {
-            if (!Resolve(uid, ref containerManager) || !EntityManager.EntityExists(containedUid))
+            if (!Resolve(uid, ref containerManager, false) || !EntityManager.EntityExists(containedUid))
                 return false;
 
             return containerManager.ContainsEntity(containedUid);

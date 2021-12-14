@@ -660,13 +660,13 @@ namespace Robust.Shared.GameObjects
         #region Join Functions
 
         // Funny struct enumerator equivalent to EntityQuery<T>
-        public struct EntityQueryEnumerator<T> : IDisposable where T : Component
+        public struct EntQueryEnumerator<T> : IDisposable where T : Component
         {
             private readonly bool _includePaused;
             private Dictionary<EntityUid, Component>.Enumerator _comps;
             private Dictionary<EntityUid, Component> _metaData;
 
-            public EntityQueryEnumerator(bool includePaused, Dictionary<EntityUid, Component>.Enumerator comps, Dictionary<EntityUid, Component> metaData)
+            public EntQueryEnumerator(bool includePaused, Dictionary<EntityUid, Component>.Enumerator comps, Dictionary<EntityUid, Component> metaData)
             {
                 _includePaused = includePaused;
                 _comps = comps;
@@ -715,11 +715,11 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public EntityQueryEnumerator<T> EntityQueryEnumeration<T>(bool includePaused = false) where T : Component
+        public EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component
         {
             var comps = _entTraitDict[ComponentTypeCache<T>.Type];
             var meta = _entTraitDict[ComponentTypeCache<MetaDataComponent>.Type];
-            var enumerator = new EntityQueryEnumerator<T>(includePaused, comps.GetEnumerator(), meta);
+            var enumerator = new EntQueryEnumerator<T>(includePaused, comps.GetEnumerator(), meta);
             return enumerator;
         }
 

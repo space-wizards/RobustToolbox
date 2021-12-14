@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -658,8 +659,51 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
+        public struct EntityQueryEnumerator<T> : IDisposable where T : Component
+        {
+            private readonly bool _includePaused;
+            private Dictionary<EntityUid, Component>.Enumerator _comps;
+
+            public EntityQueryEnumerator(bool includePaused, Dictionary<EntityUid, Component>.Enumerator comps)
+            {
+                _includePaused = includePaused;
+                _comps = comps;
+            }
+
+            public bool MoveNext([NotNullWhen(true)] out T? component)
+            {
+                if (!_comps.MoveNext())
+                {
+                    component = null;
+                    _comps.Dispose();
+                    return false;
+                }
+
+                component = (T) _comps.Current.Value;
+
+                if (component.Deleted || !_includePaused && component.Paused)
+                {
+                    return MoveNext(out component);
+                }
+
+                return true;
+            }
+
+            public void Dispose()
+            {
+                _comps.Dispose();
+            }
+        }
+
+        public EntityQueryEnumerator<T> EntityQueryEnumeration<T>(bool includePaused = false) where T : Component
+        {
+            var comps = _entTraitDict[ComponentTypeCache<T>.Type];
+            var enumerator = new EntityQueryEnumerator<T>(includePaused, comps.GetEnumerator());
+            return enumerator;
+        }
+
         /// <inheritdoc />
-        public IEnumerable<T> EntityQuery<T>(bool includePaused = false)
+        public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {
             var comps = _entTraitDict[ComponentTypeCache<T>.Type];
             foreach (var comp in comps.Values)

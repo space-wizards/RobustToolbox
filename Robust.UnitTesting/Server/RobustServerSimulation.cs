@@ -55,8 +55,8 @@ namespace Robust.UnitTesting.Server
         /// </summary>
         EntityUid AddMap(int mapId);
         EntityUid AddMap(MapId mapId);
-        IEntity SpawnEntity(string? protoId, EntityCoordinates coordinates);
-        IEntity SpawnEntity(string? protoId, MapCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates);
+        EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates);
     }
 
     internal delegate void DiContainerDelegate(IDependencyCollection diContainer);
@@ -95,13 +95,13 @@ namespace Robust.UnitTesting.Server
             return mapMan.GetMapEntityId(mapId);
         }
 
-        public IEntity SpawnEntity(string? protoId, EntityCoordinates coordinates)
+        public EntityUid SpawnEntity(string? protoId, EntityCoordinates coordinates)
         {
             var entMan = Collection.Resolve<IEntityManager>();
             return entMan.SpawnEntity(protoId, coordinates);
         }
 
-        public IEntity SpawnEntity(string? protoId, MapCoordinates coordinates)
+        public EntityUid SpawnEntity(string? protoId, MapCoordinates coordinates)
         {
             var entMan = Collection.Resolve<IEntityManager>();
             return entMan.SpawnEntity(protoId, coordinates);
@@ -231,10 +231,12 @@ namespace Robust.UnitTesting.Server
             compFactory.RegisterClass<MapComponent>();
             compFactory.RegisterClass<MapGridComponent>();
             compFactory.RegisterClass<PhysicsComponent>();
+            compFactory.RegisterClass<JointComponent>();
             compFactory.RegisterClass<EntityLookupComponent>();
             compFactory.RegisterClass<BroadphaseComponent>();
             compFactory.RegisterClass<ContainerManagerComponent>();
             compFactory.RegisterClass<PhysicsMapComponent>();
+            compFactory.RegisterClass<FixturesComponent>();
 
             _regDelegate?.Invoke(compFactory);
 
@@ -247,9 +249,11 @@ namespace Robust.UnitTesting.Server
 
             // PhysicsComponent Requires this.
             entitySystemMan.LoadExtraSystemType<PhysicsSystem>();
+            entitySystemMan.LoadExtraSystemType<JointSystem>();
             entitySystemMan.LoadExtraSystemType<MapSystem>();
             entitySystemMan.LoadExtraSystemType<DebugPhysicsSystem>();
             entitySystemMan.LoadExtraSystemType<BroadPhaseSystem>();
+            entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
 

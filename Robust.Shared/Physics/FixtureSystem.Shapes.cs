@@ -6,19 +6,11 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
 {
-    public interface IShapeManager
+    public partial class FixtureSystem
     {
         /// <summary>
-        /// Returns whether a particular point intersects the specified shape.
+        /// Tests whether a particular point is contained in the shape.
         /// </summary>
-        bool TestPoint(IPhysShape shape, Transform xform, Vector2 worldPoint);
-
-        void GetMassData(IPhysShape shape, ref MassData data);
-    }
-
-    public class ShapeManager : IShapeManager
-    {
-        /// <inheritdoc />
         public bool TestPoint(IPhysShape shape, Transform xform, Vector2 worldPoint)
         {
             switch (shape)
@@ -30,11 +22,11 @@ namespace Robust.Shared.Physics
                     var polygon = (PolygonShape) aabb;
                     return TestPoint(polygon, xform, worldPoint);
                 case PhysShapeCircle circle:
-                    var center = xform.Position + Transform.Mul(xform.Quaternion2D, circle.Position);
+                    var center = xform.Position + Physics.Transform.Mul(xform.Quaternion2D, circle.Position);
                     var distance = worldPoint - center;
                     return Vector2.Dot(distance, distance) <= circle.Radius * circle.Radius;
                 case PolygonShape poly:
-                    var pLocal = Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
+                    var pLocal = Physics.Transform.MulT(xform.Quaternion2D, worldPoint - xform.Position);
 
                     for (var i = 0; i < poly.Vertices.Length; i++)
                     {

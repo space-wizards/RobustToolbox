@@ -59,10 +59,10 @@ namespace Robust.UnitTesting.Shared.Prototypes
         {
             _maps.CreateNewMapEntity(new MapId(0));
             var entity = _entities.SpawnEntity(DummyId, MapCoordinates.Nullspace);
-            var entityComponent = entity.GetComponent<HotReloadTestComponentOne>();
+            var entityComponent = IoCManager.Resolve<IEntityManager>().GetComponent<HotReloadTestComponentOne>(entity);
 
             Assert.That(entityComponent.Value, Is.EqualTo(5));
-            Assert.False(entity.HasComponent<HotReloadTestComponentTwo>());
+            Assert.False(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestComponentTwo>(entity));
 
             var reloaded = false;
             _prototypes.PrototypesReloaded += _ => reloaded = true;
@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             reloaded = false;
 
             Assert.That(entityComponent.Value, Is.EqualTo(5));
-            Assert.False(entity.HasComponent<HotReloadTestComponentTwo>());
+            Assert.False(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestComponentTwo>(entity));
 
             var changedPrototypes = _prototypes.LoadString(ReloadedPrototypes, true);
             _prototypes.ReloadPrototypes(changedPrototypes);
@@ -85,7 +85,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(entityComponent.Value, Is.EqualTo(5));
 
             // New components are added
-            Assert.True(entity.HasComponent<HotReloadTestComponentTwo>());
+            Assert.True(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestComponentTwo>(entity));
 
             changedPrototypes = _prototypes.LoadString(InitialPrototypes, true);
             _prototypes.ReloadPrototypes(changedPrototypes);
@@ -97,7 +97,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(entityComponent.Value, Is.EqualTo(5));
 
             // Old components are removed
-            Assert.False(entity.HasComponent<HotReloadTestComponentTwo>());
+            Assert.False(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestComponentTwo>(entity));
         }
     }
 

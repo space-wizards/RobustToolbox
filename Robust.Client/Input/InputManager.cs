@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
-using Robust.Shared.Configuration;
 using Robust.Shared.Console;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Input;
@@ -78,7 +77,7 @@ namespace Robust.Client.Input
 
         public IEnumerable<BoundKeyFunction> DownKeyFunctions => _bindings
             .Where(x => x.State == BoundKeyState.Down)
-            .Select(x => (BoundKeyFunction)x.Function)
+            .Select(x => x.Function)
             .ToList();
 
         public virtual string GetKeyName(Key key)
@@ -155,7 +154,7 @@ namespace Robust.Client.Input
             mapping.Add("leaveEmpty", serializationManager.WriteValue(leaveEmpty));
 
             var path = new ResourcePath(KeybindsPath);
-            using var writer = new StreamWriter(_resourceMan.UserData.Create(path));
+            using var writer = _resourceMan.UserData.OpenWriteText(path);
             var stream = new YamlStream {new(mapping.ToYaml())};
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }

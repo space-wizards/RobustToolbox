@@ -232,11 +232,12 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var player = shell.Player as IPlayerSession;
-            if (player?.AttachedEntity == null)
+            var pt = player?.AttachedEntityTransform;
+            if (pt == null)
                 return;
 
-            var pos = player.AttachedEntity.Transform.Coordinates;
             var entityManager = IoCManager.Resolve<IEntityManager>();
+            var pos = pt.Coordinates;
 
             shell.WriteLine(
                 $"MapID:{pos.GetMapId(entityManager)} GridID:{pos.GetGridId(entityManager)} X:{pos.X:N2} Y:{pos.Y:N2}");
@@ -257,8 +258,8 @@ namespace Robust.Server.Console.Commands
             }
 
             var gridId = new GridId(int.Parse(args[0]));
-            var xpos = float.Parse(args[1]);
-            var ypos = float.Parse(args[2]);
+            var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
+            var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
 

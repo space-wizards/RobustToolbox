@@ -83,9 +83,10 @@ namespace Robust.Client.UserInterface.Controls
                     return FontOverride;
                 }
 
-                if (TryGetStyleProperty<Font>(StylePropertyFont, out var font))
+                TryGetStyleProperty<FontClass>(StylePropertyFont, out var font);
+                if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
                 {
-                    return font;
+                    return flib.StartFont(font).Current;
                 }
 
                 return UserInterfaceManager.ThemeDefaults.LabelFont;

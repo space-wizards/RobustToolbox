@@ -151,19 +151,25 @@ namespace Robust.Shared.IoC
         ///     Registers an interface to an existing instance of an implementation,
         ///     making it accessible to <see cref="IDependencyCollection.Resolve{T}"/>.
         ///     Unlike <see cref="IDependencyCollection.Register{TInterface, TImplementation}"/>,
-        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance.
+        ///     <see cref="IDependencyCollection.BuildGraph"/> does not need to be called after registering an instance
+        ///     if deferredInject is false.
         /// </summary>
         /// <typeparam name="TInterface">The type that will be resolvable.</typeparam>
         /// <param name="implementation">The existing instance to use as the implementation.</param>
         /// <param name="overwrite">
-        /// If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
-        /// replace the current implementation instead.
+        ///     If true, do not throw an <see cref="InvalidOperationException"/> if an interface is already registered,
+        ///     replace the current implementation instead.
         /// </param>
-        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        /// <param name="deferInject">
+        ///     Defer field injection until <see cref="IDependencyCollection.BuildGraph"/> is called.
+        ///     If this is false, dependencies will be immediately injected. If the registered type requires dependencies
+        ///     that don't exist yet because you have not called BuildGraph, set this to true.
+        /// </param>
+        public static void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
         {
             DebugTools.Assert(_container.IsValueCreated, NoContextAssert);
 
-            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite);
+            _container.Value!.RegisterInstance<TInterface>(implementation, overwrite, deferInject);
         }
 
         /// <summary>

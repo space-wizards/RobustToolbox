@@ -81,7 +81,7 @@ namespace Robust.Shared.Physics
             foreach (var joint in _dirtyJoints)
             {
                 if (joint.Deleted || joint.JointCount != 0) continue;
-                EntityManager.RemoveComponent<JointComponent>(joint.Owner.Uid);
+                EntityManager.RemoveComponent<JointComponent>(joint.Owner);
             }
 
             _dirtyJoints.Clear();
@@ -215,10 +215,10 @@ namespace Robust.Shared.Physics
             var bodyB = joint.BodyB;
 
             // Maybe make this method AddOrUpdate so we can have an Add one that explicitly throws if present?
-            var mapidA = bodyA.Owner.Transform.MapID;
+            var mapidA = EntityManager.GetComponent<TransformComponent>(bodyA.Owner).MapID;
 
             if (mapidA == MapId.Nullspace ||
-                mapidA != bodyB.Owner.Transform.MapID)
+                mapidA != EntityManager.GetComponent<TransformComponent>(bodyB.Owner).MapID)
             {
                 Logger.ErrorS("physics", $"Tried to add joint to ineligible bodies");
                 return;
@@ -275,17 +275,17 @@ namespace Robust.Shared.Physics
 
             // Raise broadcast last so we can do both sides of directed first.
             var vera = new JointAddedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
             var smug = new JointAddedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!body.Owner.HasComponent<JointComponent>()) return;
+            if (!EntityManager.HasComponent<JointComponent>(body.Owner)) return;
 
-            EntityManager.RemoveComponent<JointComponent>(body.Owner.Uid);
+            EntityManager.RemoveComponent<JointComponent>(body.Owner);
         }
 
         public void RemoveJoint(Joint joint)
@@ -348,9 +348,9 @@ namespace Robust.Shared.Physics
             }
 
             var vera = new JointRemovedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner.Uid, vera, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
             var smug = new JointRemovedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner.Uid, smug, false);
+            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
             EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
 
             // We can't just check up front due to how prediction works.

@@ -24,11 +24,6 @@ namespace Robust.Shared.GameStates
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
         public ComponentState? State { get; set; }
-
-        public ComponentGetState()
-        {
-            State = null;
-        }
     }
 
     public class ComponentGetStateAttemptEvent : CancellableEntityEventArgs

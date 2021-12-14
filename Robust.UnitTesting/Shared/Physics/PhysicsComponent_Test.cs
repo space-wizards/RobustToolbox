@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -30,16 +31,16 @@ namespace Robust.UnitTesting.Shared.Physics
         {
             await _server.WaitIdleAsync();
             var entManager = _server.ResolveDependency<IEntityManager>();
-            var broadphaseSystem = _server.ResolveDependency<IEntitySystemManager>()
-                .GetEntitySystem<SharedBroadphaseSystem>();
+            var fixtureSystem = _server.ResolveDependency<IEntitySystemManager>()
+                .GetEntitySystem<FixtureSystem>();
 
             await _server.WaitAssertion(() =>
             {
                 var boxEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
-                var box = boxEnt.AddComponent<PhysicsComponent>();
+                var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
-                var fixture = broadphaseSystem.CreateFixture(box, poly);
+                var fixture = fixtureSystem.CreateFixture(box, poly);
                 fixture.Mass = 1f;
                 box.FixedRotation = false;
                 box.BodyType = BodyType.Dynamic;

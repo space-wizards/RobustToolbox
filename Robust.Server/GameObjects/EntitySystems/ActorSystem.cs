@@ -51,7 +51,7 @@ namespace Robust.Server.GameObjects
             forceKicked = null;
 
             // Cannot attach to a deleted/nonexisting entity.
-            if (!EntityManager.EntityExists(uid))
+            if (EntityManager.Deleted(uid))
             {
                 return false;
             }
@@ -114,18 +114,16 @@ namespace Robust.Server.GameObjects
         /// This returns true if the player wasn't attached to any entity.</returns>
         public bool Detach(IPlayerSession player)
         {
-            var uid = player.AttachedEntityUid;
+            var uid = player.AttachedEntity;
             return uid == null || Detach(uid.Value);
         }
 
-        private void OnActorShutdown(EntityUid uid, ActorComponent component, ComponentShutdown args)
+        private void OnActorShutdown(EntityUid entity, ActorComponent component, ComponentShutdown args)
         {
             component.PlayerSession.SetAttachedEntity(null);
 
-            var entity = EntityManager.GetEntity(uid);
-
             // The player is fully detached now that the component has shut down.
-            RaiseLocalEvent(uid, new PlayerDetachedEvent(entity, component.PlayerSession));
+            RaiseLocalEvent(entity, new PlayerDetachedEvent(entity, component.PlayerSession));
         }
     }
 
@@ -192,8 +190,7 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class PlayerAttachedEvent : EntityEventArgs
     {
-        public IEntity Entity { get; }
-        public EntityUid EntityUid { get; }
+        public EntityUid Entity { get; }
         public IPlayerSession Player { get; }
 
         /// <summary>
@@ -201,10 +198,9 @@ namespace Robust.Server.GameObjects
         /// </summary>
         public IPlayerSession? Kicked { get; }
 
-        public PlayerAttachedEvent(IEntity entity, IPlayerSession player, IPlayerSession? kicked = null)
+        public PlayerAttachedEvent(EntityUid entity, IPlayerSession player, IPlayerSession? kicked = null)
         {
             Entity = entity;
-            EntityUid = entity.Uid;
             Player = player;
             Kicked = kicked;
         }
@@ -215,14 +211,12 @@ namespace Robust.Server.GameObjects
     /// </summary>
     public sealed class PlayerDetachedEvent : EntityEventArgs
     {
-        public IEntity Entity { get; }
-        public EntityUid EntityUid { get; }
+        public EntityUid Entity { get; }
         public IPlayerSession Player { get; }
 
-        public PlayerDetachedEvent(IEntity entity, IPlayerSession player)
+        public PlayerDetachedEvent(EntityUid entity, IPlayerSession player)
         {
             Entity = entity;
-            EntityUid = entity.Uid;
             Player = player;
         }
     }

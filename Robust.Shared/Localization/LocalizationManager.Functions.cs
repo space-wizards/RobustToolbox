@@ -8,6 +8,7 @@ using Linguini.Shared.Types.Bundle;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
+using Robust.Shared.IoC;
 
 namespace Robust.Shared.Localization
 {
@@ -65,9 +66,9 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity)entity0.Value;
+                EntityUid entity = (EntityUid)entity0.Value;
 
-                if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.Gender.HasValue)
+                if (_entMan.TryGetComponent<GrammarComponent?>(entity, out var grammar) && grammar.Gender.HasValue)
                 {
                     return new LocValueString(grammar.Gender.Value.ToString().ToLowerInvariant());
                 }
@@ -144,7 +145,7 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity)entity0.Value;
+                EntityUid entity = (EntityUid)entity0.Value;
                 ILocValue attrib0 = args.Args[1];
                 if (TryGetEntityLocAttrib(entity, attrib0.Format(new LocContext(bundle)), out var attrib))
                 {
@@ -165,9 +166,9 @@ namespace Robust.Shared.Localization
             ILocValue entity0 = args.Args[0];
             if (entity0.Value != null)
             {
-                IEntity entity = (IEntity)entity0.Value;
+                EntityUid entity = (EntityUid)entity0.Value;
 
-                if (entity.TryGetComponent<GrammarComponent>(out var grammar) && grammar.ProperNoun.HasValue)
+                if (_entMan.TryGetComponent<GrammarComponent?>(entity, out var grammar) && grammar.ProperNoun.HasValue)
                 {
                     return new LocValueString(grammar.ProperNoun.Value.ToString().ToLowerInvariant());
                 }
@@ -255,7 +256,7 @@ namespace Robust.Shared.Localization
             return obj switch
             {
                 ILocValue wrap => new FluentLocWrapperType(wrap),
-                IEntity entity => new FluentLocWrapperType(new LocValueEntity(entity)),
+                EntityUid entity => new FluentLocWrapperType(new LocValueEntity(entity)),
                 DateTime dateTime => new FluentLocWrapperType(new LocValueDateTime(dateTime)),
                 TimeSpan timeSpan => new FluentLocWrapperType(new LocValueTimeSpan(timeSpan)),
                 bool or Enum => (FluentString)obj.ToString()!.ToLowerInvariant(),

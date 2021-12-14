@@ -113,6 +113,16 @@ namespace Robust.UnitTesting
                 compFactory.RegisterClass<PhysicsMapComponent>();
             }
 
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(BroadphaseComponent)))
+            {
+                compFactory.RegisterClass<BroadphaseComponent>();
+            }
+
+            if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
+            {
+                compFactory.RegisterClass<FixturesComponent>();
+            }
+
             if(entMan.EventBus == null)
             {
                 entMan.Startup();

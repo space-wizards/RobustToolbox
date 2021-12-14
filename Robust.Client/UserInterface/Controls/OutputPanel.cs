@@ -17,7 +17,6 @@ namespace Robust.Client.UserInterface.Controls
         private bool _isAtBottom = true;
 
         private int _totalContentHeight;
-        private bool _firstLine = true;
         private StyleBox? _styleBoxOverride;
         private VScrollBar _scrollBar;
 
@@ -50,54 +49,37 @@ namespace Robust.Client.UserInterface.Controls
 
         public void Clear()
         {
-            _firstLine = true;
             _entries.Clear();
             _totalContentHeight = 0;
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
             _scrollBar.Value = 0;
+            _invalidateEntries();
         }
 
         public void RemoveEntry(Index index)
         {
-            var entry = _entries[index];
             _entries.RemoveAt(index.GetOffset(_entries.Count));
 
-            var font = _getFont();
-            _totalContentHeight -= entry.Height + font.GetLineSeparation(UIScale);
             if (_entries.Count == 0)
-            {
                 Clear();
-            }
 
-            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            _invalidateEntries();
         }
 
         public void AddText(string text)
         {
-            var msg = new FormattedMessage();
+            var msg = new FormattedMessage.Builder();
             msg.AddText(text);
-            AddMessage(msg);
+            AddMessage(msg.Build());
         }
 
         public void AddMessage(FormattedMessage message)
         {
             var entry = new RichTextEntry(message);
 
-            entry.Update(_getFont(), _getContentBox().Width, UIScale);
-
             _entries.Add(entry);
-            var font = _getFont();
-            _totalContentHeight += entry.Height;
-            if (_firstLine)
-            {
-                _firstLine = false;
-            }
-            else
-            {
-                _totalContentHeight += font.GetLineSeparation(UIScale);
-            }
 
-            _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
+            _invalidateEntries();
             if (_isAtBottom && ScrollFollowing)
             {
                 _scrollBar.MoveToEnd();
@@ -115,22 +97,17 @@ namespace Robust.Client.UserInterface.Controls
             base.Draw(handle);
 
             var style = _getStyleBox();
-            var font = _getFont();
+            var flib = _getFontLib();
             style?.Draw(handle, PixelSizeBox);
             var contentBox = _getContentBox();
 
             var entryOffset = -_scrollBar.Value;
 
-            // A stack for format tags.
-            // This stack contains the format tag to RETURN TO when popped off.
-            // So when a new color tag gets hit this stack gets the previous color pushed on.
-            var formatStack = new Stack<FormattedMessage.Tag>(2);
-
             foreach (var entry in _entries)
             {
                 if (entryOffset + entry.Height < 0)
                 {
-                    entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                    entryOffset += entry.Height;
                     continue;
                 }
 
@@ -139,9 +116,9 @@ namespace Robust.Client.UserInterface.Controls
                     break;
                 }
 
-                entry.Draw(handle, font, contentBox, entryOffset, formatStack, UIScale);
+                entry.Draw(handle, flib, contentBox, entryOffset, UIScale, _getFontColor());
 
-                entryOffset += entry.Height + font.GetLineSeparation(UIScale);
+                entryOffset += entry.Height;
             }
         }
 
@@ -175,14 +152,14 @@ namespace Robust.Client.UserInterface.Controls
         private void _invalidateEntries()
         {
             _totalContentHeight = 0;
-            var font = _getFont();
+            var font = _getFontLib();
             var sizeX = _getContentBox().Width;
             for (var i = 0; i < _entries.Count; i++)
             {
                 var entry = _entries[i];
                 entry.Update(font, sizeX, UIScale);
                 _entries[i] = entry;
-                _totalContentHeight += entry.Height + font.GetLineSeparation(UIScale);
+                _totalContentHeight += entry.Height;
             }
 
             _scrollBar.MaxValue = Math.Max(_scrollBar.Page, _totalContentHeight);
@@ -193,14 +170,32 @@ namespace Robust.Client.UserInterface.Controls
         }
 
         [System.Diagnostics.Contracts.Pure]
+        private IFontLibrary _getFontLib()
+        {
+            if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
+                return flib;
+
+            return UserInterfaceManager
+                .ThemeDefaults
+                .DefaultFontLibrary;
+        }
+
+        [System.Diagnostics.Contracts.Pure]
         private Font _getFont()
         {
-            if (TryGetStyleProperty<Font>("font", out var font))
-            {
-                return font;
-            }
+            TryGetStyleProperty<FontClass>("font", out var fclass);
+            return _getFontLib().StartFont(fclass).Current;
+        }
 
-            return UserInterfaceManager.ThemeDefaults.DefaultFont;
+        [System.Diagnostics.Contracts.Pure]
+        private Color _getFontColor()
+        {
+            if (TryGetStyleProperty<Color>("font-color", out var fc))
+                return fc;
+
+            // From Robust.Client/UserInterface/RichTextEntry.cs#L19
+            // at 33008a2bce0cc4755b18b12edfaf5b6f1f87fdd9
+            return new Color(200, 200, 200);
         }
 
         [System.Diagnostics.Contracts.Pure]
@@ -218,8 +213,7 @@ namespace Robust.Client.UserInterface.Controls
         [System.Diagnostics.Contracts.Pure]
         private int _getScrollSpeed()
         {
-            var font = _getFont();
-            return font.GetLineHeight(UIScale) * 2;
+            return _getFont().GetLineHeight(UIScale) * 2;
         }
 
         [System.Diagnostics.Contracts.Pure]

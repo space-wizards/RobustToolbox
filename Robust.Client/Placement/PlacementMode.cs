@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using Robust.Client.Graphics;
 using Robust.Client.GameObjects;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
@@ -87,9 +85,9 @@ namespace Robust.Client.Placement
         public virtual void Render(DrawingHandleWorld handle)
         {
             var sce = pManager.CurrentPlacementOverlayEntity;
-            if (sce == null || sce.Deleted)
+            if (sce is not {} scent || pManager.EntityManager.Deleted(scent))
                 return;
-            var sc = sce.GetComponent<SpriteComponent>();
+            var sc = pManager.EntityManager.GetComponent<SpriteComponent>(sce!.Value);
 
             IEnumerable<EntityCoordinates> locationcollection;
             switch (pManager.PlacementType)
@@ -113,9 +111,8 @@ namespace Robust.Client.Placement
             {
                 if (!coordinate.IsValid(pManager.EntityManager))
                     return; // Just some paranoia just in case
-                var entity = coordinate.GetEntity(pManager.EntityManager);
                 var worldPos = coordinate.ToMapPos(pManager.EntityManager);
-                var worldRot = entity.Transform.WorldRotation + dirAng;
+                var worldRot = pManager.EntityManager.GetComponent<TransformComponent>(coordinate.EntityId).WorldRotation + dirAng;
 
                 sc.Color = IsValidPosition(coordinate) ? ValidPlaceColor : InvalidPlaceColor;
                 sc.Render(handle, pManager.eyeManager.CurrentEye.Rotation, worldRot, worldPos);
@@ -129,7 +126,7 @@ namespace Robust.Client.Placement
 
         public IEnumerable<EntityCoordinates> LineCoordinates()
         {
-            var (x, y) = MouseCoords.ToMapPos(pManager.EntityManager) - pManager.StartPoint.ToMapPos(pManager.EntityManager);
+            var (_, (x, y)) = MouseCoords.WithEntityId(pManager.StartPoint.EntityId) - pManager.StartPoint;
             float iterations;
             Vector2 distance;
             if (Math.Abs(x) > Math.Abs(y))
@@ -152,7 +149,7 @@ namespace Robust.Client.Placement
         // This name is a nice reminder of our origins. Never forget.
         public IEnumerable<EntityCoordinates> GridCoordinates()
         {
-            var placementdiff = MouseCoords.ToMapPos(pManager.EntityManager) - pManager.StartPoint.ToMapPos(pManager.EntityManager);
+            var placementdiff = MouseCoords.WithEntityId(pManager.StartPoint.EntityId) - pManager.StartPoint;
             var distanceX = new Vector2(placementdiff.X > 0 ? 1 : -1, 0) * GridDistancing;
             var distanceY = new Vector2(0, placementdiff.Y > 0 ? 1 : -1) * GridDistancing;
 
@@ -198,14 +195,14 @@ namespace Robust.Client.Placement
         {
             if (!RangeRequired)
                 return true;
-
-            if (pManager.PlayerManager.LocalPlayer?.ControlledEntity == null)
+            var controlled = pManager.PlayerManager.LocalPlayer?.ControlledEntity ?? EntityUid.Invalid;
+            if (controlled == EntityUid.Invalid)
             {
                 return false;
             }
 
             var range = pManager.CurrentPermission!.Range;
-            if (range > 0 && !pManager.PlayerManager.LocalPlayer.ControlledEntity.Transform.Coordinates.InRange(pManager.EntityManager, coordinates, range))
+            if (range > 0 && !pManager.EntityManager.GetComponent<TransformComponent>(controlled).Coordinates.InRange(pManager.EntityManager, coordinates, range))
                 return false;
             return true;
         }

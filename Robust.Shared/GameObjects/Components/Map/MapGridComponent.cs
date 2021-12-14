@@ -20,7 +20,6 @@ namespace Robust.Shared.GameObjects
 
         bool AnchorEntity(TransformComponent transform);
         void UnanchorEntity(TransformComponent transform);
-        void AnchoredEntityDirty(TransformComponent transform);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -107,16 +106,6 @@ namespace Robust.Shared.GameObjects
             {
                 physicsComponent.BodyType = BodyType.Dynamic;
             }
-        }
-
-        /// <inheritdoc />
-        public void AnchoredEntityDirty(TransformComponent transform)
-        {
-            if (!transform.Anchored)
-                return;
-
-            var grid = (IMapGridInternal) _mapManager.GetGrid(transform.GridID);
-            grid.AnchoredEntDirty(grid.TileIndicesFor(transform.Coordinates));
         }
 
         /// <inheritdoc />

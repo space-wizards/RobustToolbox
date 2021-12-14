@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -83,7 +84,7 @@ namespace Robust.Client.Console
             {
                 MouseFilter = MouseFilterMode.Stop;
                 Result = result;
-                var compl = new FormattedMessage.Builder();
+                var compl = new List<Section>();
                 var dim = Color.FromHsl((0f, 0f, 0.8f, 1f));
 
                 // warning: ew ahead
@@ -106,21 +107,26 @@ namespace Robust.Client.Console
                     basen = "field name";
 
                 Color basec = ScriptingColorScheme.ColorScheme[basen];
-                compl.PushColor(basec * dim);
-                compl.AddText(Result.DisplayTextPrefix);
-                compl.PushColor(basec);
-                compl.AddText(Result.DisplayText);
-                compl.PushColor(basec * dim);
-                compl.AddText(Result.DisplayTextSuffix);
-                compl.AddText(" [" + String.Join(", ", Result.Tags) + "]");
+                Color dimmed = basec * dim;
+                compl.AddRange(new []
+                        {
+                            new Section() { Color=dimmed.ToArgb(), Content=Result.DisplayTextPrefix },
+                            new Section() { Color=basec.ToArgb(), Content=Result.DisplayText },
+                            new Section() { Color=dimmed.ToArgb(), Content=Result.DisplayTextSuffix }
+                        }
+                );
+
+                compl.Add(new Section() { Color=dimmed.ToArgb(), Content=" [" + String.Join(", ", Result.Tags) + "]" });
                 if (Result.InlineDescription.Length != 0)
                 {
-                    compl.PushNewline();
-                    compl.AddText(": ");
-                    compl.PushColor(Color.LightSlateGray);
-                    compl.AddText(Result.InlineDescription);
+                    compl.AddRange(new []
+                            {
+                                new Section() { Color=(basec * dim).ToArgb(), Content="\n: " },
+                                new Section() { Color=Color.LightSlateGray.ToArgb(), Content=Result.InlineDescription }
+                            }
+                    );
                 }
-                SetMessage(compl.Build());
+                SetMessage(new FormattedMessage(compl.ToArray()));
             }
         }
     }

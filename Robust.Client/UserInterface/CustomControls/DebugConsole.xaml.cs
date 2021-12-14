@@ -129,14 +129,12 @@ namespace Robust.Client.UserInterface.CustomControls
             _flushHistoryToDisk();
         }
 
-        public void AddLine(string text, Color color)
-        {
-            var formatted = new FormattedMessage.Builder();
-            formatted.PushColor(color);
-            formatted.AddText(text);
-            formatted.Pop();
-            AddFormattedLine(formatted.Build());
-        }
+        public void AddLine(string text, Color color) =>
+            AddFormattedLine(new FormattedMessage(new []
+                {
+                    new Section() { Color=color.ToArgb(), Content=text }
+                }
+            ));
 
         public void AddLine(string text)
         {

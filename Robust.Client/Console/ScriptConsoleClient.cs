@@ -128,12 +128,11 @@ namespace Robust.Client.Console
             newScript.Compile();
 
             // Echo entered script.
-            var echoMessage = new FormattedMessage.Builder();
-            echoMessage.PushColor(Color.FromHex("#D4D4D4"));
-            echoMessage.AddText("> ");
+            var echoMessage = new List<Section>();
+            echoMessage.Add(new Section() { Color=unchecked((int) 0xFFD4D4D4), Content="> " });
             ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, _highlightWorkspace);
 
-            OutputPanel.AddMessage(echoMessage.Build());
+            OutputPanel.AddMessage(new FormattedMessage(echoMessage.ToArray()));
 
             try
             {
@@ -148,17 +147,17 @@ namespace Robust.Client.Console
             }
             catch (CompilationErrorException e)
             {
-                var msg = new FormattedMessage.Builder();
-
-                msg.PushColor(Color.Crimson);
+                var strb = new StringBuilder();
 
                 foreach (var diagnostic in e.Diagnostics)
-                {
-                    msg.AddText(diagnostic.ToString());
-                    msg.AddText("\n");
-                }
+                    strb.Append(diagnostic.ToString() + "\n");
 
-                OutputPanel.AddMessage(msg.Build());
+                OutputPanel.AddMessage(new FormattedMessage(new []
+                        {
+                            new Section() { Color=Color.Crimson.ToArgb(), Content=strb.ToString() }
+                        }
+                ));
+
                 OutputPanel.AddText(">");
 
                 PromptAutoImports(e.Diagnostics, code);
@@ -167,16 +166,19 @@ namespace Robust.Client.Console
 
             if (_state.Exception != null)
             {
-                var msg = new FormattedMessage.Builder();
-                msg.PushColor(Color.Crimson);
-                msg.AddText(CSharpObjectFormatter.Instance.FormatException(_state.Exception));
-                OutputPanel.AddMessage(msg.Build());
+                OutputPanel.AddMessage(new FormattedMessage(new []
+                    {
+                        new Section() { Color=Color.Crimson.ToArgb(), Content=CSharpObjectFormatter.Instance.FormatException(_state.Exception) }
+                    }
+                ));
             }
             else if (ScriptInstanceShared.HasReturnValue(newScript))
             {
-                var msg = new FormattedMessage.Builder();
-                msg.AddText(ScriptInstanceShared.SafeFormat(_state.ReturnValue));
-                OutputPanel.AddMessage(msg.Build());
+                OutputPanel.AddMessage(new FormattedMessage(new []
+                    {
+                        new Section() { Content=ScriptInstanceShared.SafeFormat(_state.ReturnValue) }
+                    }
+                ));
             }
 
             OutputPanel.AddText(">");

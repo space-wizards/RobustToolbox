@@ -184,12 +184,12 @@ namespace Robust.Server.Scripting
             newScript.Compile();
 
             // Echo entered script.
-            var echoMessage = new FormattedMessage.Builder();
+            var echoMessage = new List<Section>();
             ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, instance.HighlightWorkspace);
 
-            replyMessage.Echo = echoMessage.Build();
+            replyMessage.Echo = new FormattedMessage(echoMessage.ToArray());
 
-            var msg = new FormattedMessage.Builder();
+            var msg = new List<Section>();
 
             try
             {
@@ -205,17 +205,15 @@ namespace Robust.Server.Scripting
             }
             catch (CompilationErrorException e)
             {
-                msg.PushColor(Color.Crimson);
+                var s = new Section();
+                s.Color = Color.Crimson.ToArgb();
 
                 foreach (var diagnostic in e.Diagnostics)
-                {
-                    msg.AddText(diagnostic.ToString());
-                    msg.AddText("\n");
-                }
+                    s.Content = diagnostic.ToString() + "\n";
 
-                PromptAutoImports(e.Diagnostics, code, msg, instance);
+                s.Content += PromptAutoImports(e.Diagnostics, code, instance);
 
-                replyMessage.Response = msg.Build();
+                replyMessage.Response = new FormattedMessage(new [] { s });
                 _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
                 return;
             }
@@ -226,21 +224,25 @@ namespace Robust.Server.Scripting
 
             if (instance.OutputBuffer.Length != 0)
             {
-                msg.AddText(instance.OutputBuffer.ToString());
+                msg.Add(new Section() { Content=instance.OutputBuffer.ToString() });
                 instance.OutputBuffer.Clear();
             }
 
             if (instance.State.Exception != null)
             {
-                msg.PushColor(Color.Crimson);
-                msg.AddText(CSharpObjectFormatter.Instance.FormatException(instance.State.Exception));
+                msg.Add(new Section() {
+                        Color=Color.Crimson.ToArgb(),
+                        Content=CSharpObjectFormatter.Instance.FormatException(instance.State.Exception)
+                });
             }
             else if (ScriptInstanceShared.HasReturnValue(newScript))
             {
-                msg.AddText(ScriptInstanceShared.SafeFormat(instance.State.ReturnValue));
+                msg.Add(new Section() {
+                        Content=ScriptInstanceShared.SafeFormat(instance.State.ReturnValue)
+                });
             }
 
-            replyMessage.Response = msg.Build();
+            replyMessage.Response = new FormattedMessage(msg.ToArray());
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
 
@@ -313,18 +315,16 @@ namespace Robust.Server.Scripting
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
 
-        private void PromptAutoImports(
+        private string PromptAutoImports(
             IEnumerable<Diagnostic> diags,
             string code,
-            FormattedMessage.Builder output,
             ScriptInstance instance)
         {
             if (!ScriptInstanceShared.CalcAutoImports(_reflectionManager, diags, out var found))
-                return;
-
-            output.AddText($"Auto-import {string.Join(", ", found)} (enter 'y')?");
+                return String.Empty;
 
             instance.AutoImportRepeatBuffer = (found.ToArray(), code);
+            return $"Auto-import {string.Join(", ", found)} (enter 'y')?" ;
         }
 
 

@@ -17,12 +17,12 @@ namespace Robust.Client.UserInterface.Controls
             InvalidateMeasure();
         }
 
-        public void SetMessage(string message)
-        {
-            var msg = new FormattedMessage.Builder();
-            msg.AddText(message);
-            SetMessage(msg.Build());
-        }
+        public void SetMessage(string message) =>
+            SetMessage(new FormattedMessage(new []
+                {
+                    new Section { Content=message }
+                }
+            ));
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
         {

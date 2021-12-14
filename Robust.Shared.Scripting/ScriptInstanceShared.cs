@@ -77,7 +77,7 @@ namespace Robust.Shared.Scripting
                     "var x = 5 + 5; var y = (object) \"foobar\"; void Foo(object a) { } Foo(y); Foo(x)";
 
                 var script = await CSharpScript.RunAsync(code);
-                var msg = new FormattedMessage.Builder();
+                var msg = new List<Section>();
                 // Even run the syntax highlighter!
                 AddWithSyntaxHighlighting(script.Script, msg, code, new AdhocWorkspace());
             });
@@ -101,7 +101,7 @@ namespace Robust.Shared.Scripting
             return _getDiagnosticArguments(diag);
         }
 
-        public static void AddWithSyntaxHighlighting(Script script, FormattedMessage.Builder msg, string code,
+        public static void AddWithSyntaxHighlighting(Script script, List<Section> msg, string code,
             Workspace workspace)
         {
             var compilation = script.GetCompilation();
@@ -115,7 +115,7 @@ namespace Robust.Shared.Scripting
                 var start = span.TextSpan.Start;
                 if (start > current)
                 {
-                    msg.AddText(code[current..start]);
+                    msg.Add(new Section() { Content=code[current..start] });
                 }
 
                 if (current > start)
@@ -129,13 +129,11 @@ namespace Robust.Shared.Scripting
                 if (!ScriptingColorScheme.ColorScheme.TryGetValue(span.ClassificationType, out var color))
                         color = ScriptingColorScheme.ColorScheme[ScriptingColorScheme.Default];
 
-                msg.PushColor(color);
-                msg.AddText(src);
-                msg.Pop();
+                msg.Add(new Section() { Content=src, Color=color.ToArgb() });
                 current = span.TextSpan.End;
             }
 
-            msg.AddText(code[current..]);
+            msg.Add(new Section() { Content=code[current..] });
         }
 
         private static IEnumerable<Assembly> GetDefaultReferences(IReflectionManager reflectionManager)

@@ -66,12 +66,12 @@ namespace Robust.Client.UserInterface.Controls
             _invalidateEntries();
         }
 
-        public void AddText(string text)
-        {
-            var msg = new FormattedMessage.Builder();
-            msg.AddText(text);
-            AddMessage(msg.Build());
-        }
+        public void AddText(string text) =>
+            AddMessage(new FormattedMessage(new []
+                {
+                    new Section() { Content=text }
+                }
+            ));
 
         public void AddMessage(FormattedMessage message)
         {

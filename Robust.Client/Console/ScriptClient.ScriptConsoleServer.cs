@@ -1,6 +1,5 @@
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Localization;
-using Robust.Shared.Maths;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Utility;
 
@@ -95,11 +94,13 @@ namespace Robust.Client.Console
                 _linesEntered = 0;
 
                 // Echo entered script.
-                var echoMessage = new FormattedMessage.Builder();
-                echoMessage.PushColor(Color.FromHex("#D4D4D4"));
-                echoMessage.AddText("> ");
-                echoMessage.AddMessage(response.Echo);
-                OutputPanel.AddMessage(echoMessage.Build());
+                OutputPanel.AddMessage(new FormattedMessage(new []
+                    {
+                        new Section() { Color=unchecked((int) 0xFFD4D4D4), Content="> " },
+                    }
+                ));
+
+                OutputPanel.AddMessage(response.Echo);
 
                 OutputPanel.AddMessage(response.Response);
 

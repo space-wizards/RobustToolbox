@@ -1,4 +1,5 @@
-﻿using Robust.Client.Console;
+﻿using System.Collections.Generic;
+using Robust.Client.Console;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -23,24 +24,21 @@ namespace Robust.Client.Log
             if (sawmillName == "CON")
                 return;
 
-            var formatted = new FormattedMessage.Builder();
+            var formatted = new List<Section>();
             var robustLevel = message.Level.ToRobust();
-            formatted.PushColor(Color.DarkGray);
-            formatted.AddText("[");
-            formatted.PushColor(LogLevelToColor(robustLevel));
-            formatted.AddText(LogMessage.LogLevelToName(robustLevel));
-            formatted.Pop();
-            formatted.AddText($"] {sawmillName}: ");
-            formatted.Pop();
-            formatted.PushColor(Color.LightGray);
-            formatted.AddText(message.RenderMessage());
-            formatted.Pop();
+            formatted.AddRange(new []
+                    {
+                        new Section() { Color=Color.DarkGray.ToArgb(), Content="[" },
+                        new Section() { Color=LogLevelToColor(robustLevel).ToArgb(), Content=LogMessage.LogLevelToName(robustLevel) },
+                        new Section() { Color=Color.DarkGray.ToArgb(), Content=$"] {sawmillName}: " },
+                        new Section() { Color=Color.LightGray.ToArgb(), Content=message.RenderMessage() }
+                    }
+            );
+
             if (message.Exception != null)
-            {
-                formatted.AddText("\n");
-                formatted.AddText(message.Exception.ToString());
-            }
-            Console.AddFormattedLine(formatted.Build());
+                formatted.Add(new Section() { Content="\n" + message.Exception.ToString() });
+
+            Console.AddFormattedLine(new FormattedMessage(formatted.ToArray()));
         }
 
         private static Color LogLevelToColor(LogLevel level)

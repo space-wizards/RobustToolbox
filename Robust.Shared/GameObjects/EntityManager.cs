@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -262,7 +261,7 @@ namespace Robust.Shared.GameObjects
 
             var transform = GetComponent<TransformComponent>(uid);
             var metadata = GetComponent<MetaDataComponent>(uid);
-            GetComponent<MetaDataComponent>(uid).EntityLifeStage = EntityLifeStage.Terminating;
+            metadata.EntityLifeStage = EntityLifeStage.Terminating;
             EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly

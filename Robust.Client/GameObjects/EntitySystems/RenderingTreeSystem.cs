@@ -114,26 +114,27 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMoved(ref MoveEvent args)
         {
-            AnythingMovedSubHandler(EntityManager.GetComponent<TransformComponent>(args.Sender));
+            AnythingMovedSubHandler(args.Sender);
         }
 
-        private void AnythingMovedSubHandler(TransformComponent sender)
+        private void AnythingMovedSubHandler(EntityUid uid, TransformComponent? xform = null)
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
-            if (!_checkedChildren.Add(sender.Owner) ||
-                EntityManager.HasComponent<RenderingTreeComponent>(sender.Owner)) return;
+            if (!_checkedChildren.Add(uid) || EntityManager.HasComponent<RenderingTreeComponent>(uid)) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             // Ironically this was lagging the GC lolz
-            if (EntityManager.TryGetComponent(sender.Owner, out SpriteComponent? sprite))
+            if (EntityManager.TryGetComponent(uid, out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
 
-            if (EntityManager.TryGetComponent(sender.Owner, out PointLightComponent? light))
+            if (EntityManager.TryGetComponent(uid, out PointLightComponent? light))
                 QueueLightUpdate(light);
 
-            foreach (TransformComponent child in sender.Children)
+            if (!Resolve(uid, ref xform)) return;
+
+            foreach (var child in xform.ChildEntities)
             {
                 AnythingMovedSubHandler(child);
             }

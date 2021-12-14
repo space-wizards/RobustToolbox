@@ -31,7 +31,7 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            _entry.Update(_getFont(), availableSize.X * UIScale, UIScale);
+            _entry.Update(_getFontLibrary(), availableSize.X * UIScale, UIScale, defFont: _getFont());
 
             return (_entry.Width / UIScale, _entry.Height / UIScale);
         }
@@ -45,13 +45,12 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _entry.Draw(handle, _getFont(), SizeBox, 0, UIScale, _getFontColor());
+            _entry.Draw(handle, _getFontLibrary(), SizeBox, 0, UIScale, _getFontColor(), defFont: _getFont());
         }
 
         [Pure]
-        private IFontLibrary _getFont()
+        private IFontLibrary _getFontLibrary()
         {
-            TryGetStyleProperty<FontClass>("font", out var font);
             if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
             {
                 return flib;
@@ -60,6 +59,20 @@ namespace Robust.Client.UserInterface.Controls
             return UserInterfaceManager
                 .ThemeDefaults
                 .DefaultFontLibrary;
+        }
+
+        [Pure]
+        private FontClass _getFont()
+        {
+            if (TryGetStyleProperty<FontClass>("font", out var fclass))
+            {
+                return fclass;
+            }
+
+            return UserInterfaceManager
+                .ThemeDefaults
+                .DefaultFontLibrary
+                .Default;
         }
 
         [Pure]

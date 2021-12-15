@@ -4,6 +4,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -25,10 +26,16 @@ namespace Robust.Shared.GameObjects
         {
             if (!component.Anchored ||
                 !component.ParentUid.IsValid() ||
-                EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Initialized)
+                MetaData(uid).EntityLifeStage < EntityLifeStage.Initialized)
                 return;
 
-            EntityManager.GetComponent<IMapGridComponent>(component.ParentUid).AnchoredEntityDirty(component);
+            // Anchor dirty
+            // May not even need this in future depending what happens with chunk anchoring (paulVS plz).
+            var gridComp = EntityManager.GetComponent<IMapGridComponent>(component.ParentUid);
+
+            var grid = (IMapGridInternal) gridComp.Grid;
+            DebugTools.Assert(component.GridID == gridComp.GridIndex);
+            grid.AnchoredEntDirty(grid.TileIndicesFor(component.Coordinates));
         }
 
         public override void Shutdown()

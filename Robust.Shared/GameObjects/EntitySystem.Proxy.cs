@@ -20,7 +20,7 @@ public partial class EntitySystem
     }
 
     /// <inheritdoc cref="IEntityManager.EntityExists" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool Exists([NotNullWhen(true)] EntityUid? uid)
     {
         return EntityManager.EntityExists(uid);
@@ -68,7 +68,7 @@ public partial class EntitySystem
     /// <summary>
     ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public bool Deleted([NotNullWhen(false)] EntityUid? uid)
     {
         return !uid.HasValue || Deleted(uid.Value);

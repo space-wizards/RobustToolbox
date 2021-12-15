@@ -19,6 +19,13 @@ public partial class EntitySystem
         return EntityManager.EntityExists(uid);
     }
 
+    /// <inheritdoc cref="IEntityManager.EntityExists" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Exists([NotNullWhen(true)] EntityUid? uid)
+    {
+        return EntityManager.EntityExists(uid);
+    }
+
     /// <summary>
     ///     Retrieves whether the entity is initializing. Throws if the entity does not exist.
     /// </summary>
@@ -56,6 +63,15 @@ public partial class EntitySystem
             return true;
 
         return metaData.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity is deleted or is nonexistent.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Deleted([NotNullWhen(false)] EntityUid? uid)
+    {
+        return !uid.HasValue || Deleted(uid.Value);
     }
 
     /// <inheritdoc cref="MetaDataComponent.EntityLifeStage" />

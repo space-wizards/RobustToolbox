@@ -32,8 +32,12 @@ namespace Robust.Client.UserInterface
 
         // Last maxSizeX, used to detect resizing.
         private int _lmsx = 0;
+
+        // Last UI scale
+        private float _lUiScale = 0f;
+
         // Layout data, which needs to be refreshed when resized.
-        private ImmutableArray<TextLayout.Offset> _ld = default;
+        private ImmutableArray<TextLayout.Offset>? _ld = default;
 
         /// <summary>
         ///     Recalculate line dimensions and where it has line breaks for word wrapping.
@@ -41,11 +45,11 @@ namespace Robust.Client.UserInterface
         /// <param name="font">The font being used for display.</param>
         /// <param name="maxSizeX">The maximum horizontal size of the container of this entry.</param>
         /// <param name="uiScale"></param>
-        public void Update(IFontLibrary font, float maxSizeX, float uiScale)
+        public void Update(IFontLibrary font, float maxSizeX, float uiScale, FontClass? defFont = default)
         {
-            if ((int) maxSizeX != _lmsx)
+            if ((int) maxSizeX != _lmsx || uiScale != _lUiScale || _ld is null)
             {
-                _ld = TextLayout.Layout(Message, (int) maxSizeX, font, scale: uiScale);
+                _ld = TextLayout.Layout(Message, (int) maxSizeX, font, scale: uiScale, fclass: defFont);
                 Height = 0;
                 Width = 0;
                 foreach (var w in _ld)
@@ -54,6 +58,7 @@ namespace Robust.Client.UserInterface
                     if (w.y + w.h > Height) Height = w.y;
                 }
                 _lmsx = (int) maxSizeX;
+                _lUiScale = uiScale;
             }
         }
 
@@ -63,9 +68,13 @@ namespace Robust.Client.UserInterface
             UIBox2 drawBox,
             float verticalOffset,
             float uiScale,
-            Color defColor)
+            Color defColor,
+            FontClass? defFont = default)
         {
-            var flib = font.StartFont();
+            if (_ld is null)
+                return;
+
+            var flib = font.StartFont(defFont);
             foreach (var wd in _ld)
             {
                 var s = Message.Sections[wd.section];

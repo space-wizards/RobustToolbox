@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface
         // Last maxSizeX, used to detect resizing.
         private int _lmsx = 0;
 
-        // Same as above, but for the UI scale.
+        // Last UI scale
         private float _lUiScale = 0f;
 
         // Layout data, which needs to be refreshed when resized.

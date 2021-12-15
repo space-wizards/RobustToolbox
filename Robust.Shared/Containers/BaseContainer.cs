@@ -13,6 +13,8 @@ namespace Robust.Shared.Containers
     /// </summary>
     public abstract class BaseContainer : IContainer
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         /// <inheritdoc />
         [ViewVariables]
         public abstract IReadOnlyList<EntityUid> ContainedEntities { get; }
@@ -52,26 +54,28 @@ namespace Robust.Shared.Containers
         /// DO NOT CALL THIS METHOD DIRECTLY!
         /// You want <see cref="IContainerManager.MakeContainer{T}(string)" /> instead.
         /// </summary>
-        protected BaseContainer() { }
+        protected BaseContainer()
+        {
+            IoCManager.InjectDependencies(this);
+        }
 
         /// <inheritdoc />
-        public bool Insert(EntityUid toinsert, IEntityManager? entMan = null)
+        public bool Insert(EntityUid toinsert)
         {
             DebugTools.Assert(!Deleted);
-            IoCManager.Resolve(ref entMan);
 
             //Verify we can insert into this container
-            if (!CanInsert(toinsert, entMan))
+            if (!CanInsert(toinsert))
                 return false;
 
-            var transform = entMan.GetComponent<TransformComponent>(toinsert);
+            var transform = _entityManager.GetComponent<TransformComponent>(toinsert);
 
             // CanInsert already checks nullability of Parent (or container forgot to call base that does)
             if (toinsert.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
                 return false; // Can't remove from existing container, can't insert.
 
             // Attach to parent first so we can check IsInContainer more easily.
-            transform.AttachParent(entMan.GetComponent<TransformComponent>(Owner));
+            transform.AttachParent(_entityManager.GetComponent<TransformComponent>(Owner));
             InternalInsert(toinsert);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
@@ -86,7 +90,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public virtual bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        public virtual bool CanInsert(EntityUid toinsert)
         {
             DebugTools.Assert(!Deleted);
 
@@ -94,42 +98,53 @@ namespace Robust.Shared.Containers
             if (Owner == toinsert)
                 return false;
 
-            IoCManager.Resolve(ref entMan);
-
             // no, you can't put maps or grids into containers
-            if (entMan.HasComponent<IMapComponent>(toinsert) || entMan.HasComponent<IMapGridComponent>(toinsert))
+            if (_entityManager.HasComponent<IMapComponent>(toinsert) || _entityManager.HasComponent<IMapGridComponent>(toinsert))
                 return false;
 
             // Crucial, prevent circular insertion.
-            return !entMan.GetComponent<TransformComponent>(toinsert).ContainsEntity(entMan.GetComponent<TransformComponent>(Owner));
+            if (!_entityManager.GetComponent<TransformComponent>(toinsert)
+                    .ContainsEntity(_entityManager.GetComponent<TransformComponent>(Owner)))
+                return false;
 
             //Improvement: Traverse the entire tree to make sure we are not creating a loop.
-        }
 
-        /// <inheritdoc />
-        public bool Remove(EntityUid toremove, IEntityManager? entMan = null)
-        {
-            DebugTools.Assert(!Deleted);
-            DebugTools.AssertNotNull(Manager);
-            DebugTools.AssertNotNull(toremove);
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(toremove));
+            //raise events
+            var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(this, toinsert);
+            _entityManager.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent);
+            if (insertAttemptEvent.Cancelled)
+                return false;
 
-            if (!CanRemove(toremove)) return false;
-            InternalRemove(toremove);
+            var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(this, toinsert);
+            _entityManager.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent);
+            if (gettingInsertedAttemptEvent.Cancelled)
+                return false;
 
-            entMan.GetComponent<TransformComponent>(toremove).AttachParentToContainerOrGrid();
             return true;
         }
 
         /// <inheritdoc />
-        public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null)
+        public bool Remove(EntityUid toremove)
+        {
+            DebugTools.Assert(!Deleted);
+            DebugTools.AssertNotNull(Manager);
+            DebugTools.AssertNotNull(toremove);
+            DebugTools.Assert(_entityManager.EntityExists(toremove));
+
+            if (!CanRemove(toremove)) return false;
+            InternalRemove(toremove);
+
+            _entityManager.GetComponent<TransformComponent>(toremove).AttachParentToContainerOrGrid();
+            return true;
+        }
+
+        /// <inheritdoc />
+        public void ForceRemove(EntityUid toRemove)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toRemove);
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(toRemove));
+            DebugTools.Assert(_entityManager.EntityExists(toRemove));
 
             InternalRemove(toRemove);
         }
@@ -138,7 +153,22 @@ namespace Robust.Shared.Containers
         public virtual bool CanRemove(EntityUid toremove)
         {
             DebugTools.Assert(!Deleted);
-            return Contains(toremove);
+
+            if (!Contains(toremove))
+                return false;
+
+            //raise events
+            var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toremove);
+            _entityManager.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent);
+            if (removeAttemptEvent.Cancelled)
+                return false;
+
+            var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toremove);
+            _entityManager.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent);
+            if (gettingRemovedAttemptEvent.Cancelled)
+                return false;
+
+            return true;
         }
 
         /// <inheritdoc />
@@ -155,13 +185,12 @@ namespace Robust.Shared.Containers
         /// Implement to store the reference in whatever form you want
         /// </summary>
         /// <param name="toinsert"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        protected virtual void InternalInsert(EntityUid toinsert)
         {
             DebugTools.Assert(!Deleted);
-            IoCManager.Resolve(ref entMan);
 
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
-            entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
+            _entityManager.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
             Manager.Dirty();
         }
 
@@ -169,16 +198,15 @@ namespace Robust.Shared.Containers
         /// Implement to remove the reference you used to store the entity
         /// </summary>
         /// <param name="toremove"></param>
-        protected virtual void InternalRemove(EntityUid toremove, IEntityManager? entMan = null)
+        protected virtual void InternalRemove(EntityUid toremove)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
-            IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(toremove));
+            DebugTools.Assert(_entityManager.EntityExists(toremove));
 
-            entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
-            entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
+            _entityManager.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
             Manager.Dirty();
         }
     }

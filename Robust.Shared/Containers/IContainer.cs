@@ -77,7 +77,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert">The entity to attempt to insert.</param>
         /// <returns>True if the entity can be inserted, false otherwise.</returns>
-        bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null);
+        bool CanInsert(EntityUid toinsert);
 
         /// <summary>
         /// Attempts to insert the entity into this container.
@@ -92,7 +92,7 @@ namespace Robust.Shared.Containers
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(EntityUid toinsert, IEntityManager? entMan = null);
+        bool Insert(EntityUid toinsert);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
@@ -106,14 +106,14 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toremove">The entity to attempt to remove.</param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(EntityUid toremove, IEntityManager? entMan = null);
+        bool Remove(EntityUid toremove);
 
         /// <summary>
         /// Forcefully removes an entity from the container. Normally you would want to use <see cref="Remove" />,
         /// this function should be avoided.
         /// </summary>
         /// <param name="toRemove">The entity to attempt to remove.</param>
-        void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null);
+        void ForceRemove(EntityUid toRemove);
 
         /// <summary>
         /// Checks if the entity is contained in this container.

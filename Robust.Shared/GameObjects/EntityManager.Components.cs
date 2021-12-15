@@ -717,6 +717,7 @@ namespace Robust.Shared.GameObjects
 
         public EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component
         {
+            // Unless you have a profile showing a speed need for the funny struct enumerator just using the IEnumerable is easier.
             var comps = _entTraitDict[ComponentTypeCache<T>.Type];
             var meta = _entTraitDict[ComponentTypeCache<MetaDataComponent>.Type];
             var enumerator = new EntQueryEnumerator<T>(includePaused, comps.GetEnumerator(), meta);

@@ -47,6 +47,7 @@ namespace Robust.Client.UserInterface
         /// <param name="uiScale"></param>
         public void Update(IFontLibrary font, float maxSizeX, float uiScale, FontClass? defFont = default)
         {
+            var flib = font.StartFont(defFont);
             if ((int) maxSizeX != _lmsx || uiScale != _lUiScale || _ld is null)
             {
                 _ld = TextLayout.Layout(Message, (int) maxSizeX, font, scale: uiScale, fclass: defFont);
@@ -57,6 +58,7 @@ namespace Robust.Client.UserInterface
                     if (w.x + w.w > Width) Width = w.x + w.w;
                     if (w.y + w.h > Height) Height = w.y;
                 }
+                Height -= flib.Current.GetLineSeparation(uiScale) * 2;
                 _lmsx = (int) maxSizeX;
                 _lUiScale = uiScale;
             }
@@ -78,7 +80,14 @@ namespace Robust.Client.UserInterface
             foreach (var wd in _ld)
             {
                 var s = Message.Sections[wd.section];
-                var baseLine = drawBox.TopLeft + new Vector2((float) wd.x, verticalOffset + (float) wd.y);
+                var baseLine = drawBox.TopLeft
+                    + new Vector2(
+                            (float) wd.x,
+                            verticalOffset
+                                + (float) wd.y
+                                - (float) flib.Current.GetDescent(uiScale)
+                                - (float) flib.Current.GetLineSeparation(uiScale) * 2
+                    );
 
                 foreach (var rune in s
                         .Content[wd.charOffs..(wd.charOffs+wd.length)]

@@ -109,6 +109,10 @@ namespace Robust.Client.UserInterface
                 LayoutOptions options = LayoutOptions.Default
         )
         {
+            // how about no
+            if (w == 0)
+                return ImmutableArray<Offset>.Empty;
+
             var lw = new WorkQueue<(
                     List<Offset> wds,
                     List<int> gaps,
@@ -153,7 +157,7 @@ namespace Robust.Client.UserInterface
             var flib = fonts.StartFont(fclass);
             int py = flib.Current.GetAscent(scale);
             int lnnum = 0;
-            foreach ((var ln, var gaps, var lnrem, var sptot, var maxPri, var tPri, var lnh) in lw.Done)
+            foreach (var (ln, gaps, lnrem, sptot, maxPri, tPri, lnh) in lw.Done)
             {
                 int px=0, maxlh=0;
 
@@ -291,9 +295,8 @@ namespace Robust.Client.UserInterface
             {
                 var sec = text[s];
 
-                #warning Meta.Localized not yet implemented
                 if (sec.Meta != default)
-                    throw new Exception("Text section with unknown or unimplemented Meta flag");
+                    throw new Exception("Section with unknown or unimplemented Meta flag");
 
                 lsbo = 0;
                 sbo = 0;
@@ -319,6 +322,7 @@ namespace Robust.Client.UserInterface
                     else if (wq.Work.wt != WordType.Normal)
                         wq.Flush();
 
+                    #warning TODO: Check this w/ someone that knows C# string semantics
                     sbo += r.Utf16SequenceLength;
                     var cm = fnt.GetCharMetrics(r, scale, !nofb);
 

@@ -101,7 +101,7 @@ namespace Robust.Shared.Containers
                 return false;
 
             // Crucial, prevent circular insertion.
-            if (!entMan.GetComponent<TransformComponent>(toinsert)
+            if (entMan.GetComponent<TransformComponent>(toinsert)
                     .ContainsEntity(entMan.GetComponent<TransformComponent>(Owner)))
                 return false;
 

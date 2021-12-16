@@ -76,8 +76,9 @@ namespace Robust.Shared.Containers
         /// Checks if the entity can be inserted into this container.
         /// </summary>
         /// <param name="toinsert">The entity to attempt to insert.</param>
+        /// <param name="entMan"></param>
         /// <returns>True if the entity can be inserted, false otherwise.</returns>
-        bool CanInsert(EntityUid toinsert);
+        bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null);
 
         /// <summary>
         /// Attempts to insert the entity into this container.
@@ -87,33 +88,37 @@ namespace Robust.Shared.Containers
         /// container entity, and the inserted entity's local position will be set to the zero vector.
         /// </remarks>
         /// <param name="toinsert">The entity to insert.</param>
+        /// <param name="entMan"></param>
         /// <returns>False if the entity could not be inserted.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(EntityUid toinsert);
+        bool Insert(EntityUid toinsert, IEntityManager? entMan = null);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
         /// </summary>
         /// <param name="toremove">The entity to check.</param>
+        /// <param name="entMan"></param>
         /// <returns>True if the entity can be removed, false otherwise.</returns>
-        bool CanRemove(EntityUid toremove);
+        bool CanRemove(EntityUid toremove, IEntityManager? entMan = null);
 
         /// <summary>
         /// Attempts to remove the entity from this container.
         /// </summary>
         /// <param name="toremove">The entity to attempt to remove.</param>
+        /// <param name="entMan"></param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(EntityUid toremove);
+        bool Remove(EntityUid toremove, IEntityManager? entMan = null);
 
         /// <summary>
         /// Forcefully removes an entity from the container. Normally you would want to use <see cref="Remove" />,
         /// this function should be avoided.
         /// </summary>
         /// <param name="toRemove">The entity to attempt to remove.</param>
-        void ForceRemove(EntityUid toRemove);
+        /// <param name="entMan"></param>
+        void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null);
 
         /// <summary>
         /// Checks if the entity is contained in this container.

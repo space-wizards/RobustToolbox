@@ -43,6 +43,7 @@ namespace Robust.Client.UserInterface
         /// <param name="y">The offset from the base position's y coordinate to render this chunk of text.</param>
         /// <param name="w">The width the word (i.e. the sum of all its <c>Advance</c>'s).</param>
         /// <param name="h">The height of the tallest character's <c>BearingY</c>.</param>
+        /// <param name="ln">The line number that the word is assigned to.</param>
         /// <param name="spw">The width allocated to this word.</param>
         /// <param name="wt">The detected word type.</param>
         public record struct Offset
@@ -54,6 +55,7 @@ namespace Robust.Client.UserInterface
             public int y;
             public int h;
             public int w;
+            public int ln;
             public int spw;
             public WordType wt;
         }
@@ -150,6 +152,7 @@ namespace Robust.Client.UserInterface
 
             var flib = fonts.StartFont(fclass);
             int py = flib.Current.GetAscent(scale);
+            int lnnum = 0;
             foreach ((var ln, var gaps, var lnrem, var sptot, var maxPri, var tPri, var lnh) in lw.Done)
             {
                 int px=0, maxlh=0;
@@ -181,7 +184,8 @@ namespace Robust.Client.UserInterface
                             TextAlign.Subscript => -ln[i].h / 8,  // Technically these should be derived from the font data,
                             TextAlign.Superscript => ln[i].h / 4, // but I'm not gonna bother figuring out how to pull it from them.
                             _ => 0,
-                        }
+                        },
+                        ln = lnnum,
                     };
 
                     if (i < spDist.Length)
@@ -193,6 +197,8 @@ namespace Robust.Client.UserInterface
                     prevDesc = desc;
                 }
                 py += options.HasFlag(LayoutOptions.UseRenderTop) ? lnh : (lineSpacing + maxlh);
+
+                lnnum++;
             }
 
             return lw.Done.SelectMany(e => e.wds).ToImmutableArray();

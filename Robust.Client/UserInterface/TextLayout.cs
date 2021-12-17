@@ -326,8 +326,7 @@ namespace Robust.Client.UserInterface
                             throw new Exception("unable to get character metrics");
                     }
 
-                    // This may be less-than-optimal, since we're ignoring anything below the origin.
-                    wq.Work.h = Math.Max(wq.Work.h, cm.Value.BearingY);
+                    wq.Work.h = Math.Max(wq.Work.h, cm.Value.Height);
                     wq.Work.w += cm.Value.Advance;
                     if (wq.Work.wt == WordType.Normal)
                         wq.Work.spw = runeSpacing;

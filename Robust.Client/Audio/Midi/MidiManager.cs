@@ -293,9 +293,10 @@ namespace Robust.Client.Audio.Midi
                 }
 
                 MapCoordinates? mapPos = null;
-                if (renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity))
+                var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
+                if (trackingEntity)
                 {
-                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity.Value).Coordinates;
+                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
                 }
 
                 if (renderer.TrackingCoordinates != null)
@@ -328,9 +329,9 @@ namespace Robust.Client.Audio.Midi
                         return;
                     }
 
-                    if (renderer.TrackingEntity != null)
+                    if (trackingEntity)
                     {
-                        renderer.Source.SetVelocity(renderer.TrackingEntity.Value.GlobalLinearVelocity());
+                        renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
                     }
                 }
                 else

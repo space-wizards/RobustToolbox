@@ -355,7 +355,6 @@ namespace Robust.Client.UserInterface
                     else if (wq.Work.wt != WordType.Normal)
                         wq.Flush();
 
-                    #warning TODO: Check this w/ someone that knows C# string semantics
                     sbo += r.Utf16SequenceLength;
                     var cm = fnt.GetCharMetrics(r, scale, !nofb);
 

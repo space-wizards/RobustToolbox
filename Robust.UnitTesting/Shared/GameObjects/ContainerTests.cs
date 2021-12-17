@@ -51,14 +51,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  mapId = mapMan.CreateMap();
                  mapPos = new MapCoordinates((0, 0), mapId);
 
-                 var entity = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(entity).EntityName = "Container";
-                 entity.EnsureContainer<Container>("dummy");
+                 entityUid = entMan.SpawnEntity(null, mapPos);
+                 entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
+                 entityUid.EnsureContainer<Container>("dummy");
 
                  // Setup PVS
-                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entity);
+                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
                  var player = playerMan.ServerSessions.First();
-                 player.AttachToEntity(entity);
+                 player.AttachToEntity(entityUid);
                  player.JoinGame();
              });
 
@@ -72,18 +72,18 @@ namespace Robust.UnitTesting.Shared.GameObjects
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
 
-                 var item = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(item).EntityName = "Item";
-                 var container = item.EnsureContainer<Container>("dummy");
-                 container.Insert(item);
+                 itemUid = entMan.SpawnEntity(null, mapPos);
+                 entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
+                 var container = entityUid.EnsureContainer<Container>("dummy");
+                 Assert.That(container.Insert(itemUid));
 
                  // Move item out of PVS so that it doesn't get sent to the client
-                 entMan.GetComponent<TransformComponent>(item).LocalPosition = (100000, 0);
+                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (100000, 0);
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3
-             await server.WaitRunTicks(1);
-             await client.WaitRunTicks(4);
+             await server.WaitRunTicks(10);
+             await client.WaitRunTicks(40);
 
              await client.WaitAssertion(() =>
              {
@@ -171,14 +171,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
                  mapId = mapMan.CreateMap();
                  mapPos = new MapCoordinates((0, 0), mapId);
 
-                 var entity = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(entity).EntityName = "Container";
-                 entity.EnsureContainer<Container>("dummy");
+                 entityUid = entMan.SpawnEntity(null, mapPos);
+                 entMan.GetComponent<MetaDataComponent>(entityUid).EntityName = "Container";
+                 entityUid.EnsureContainer<Container>("dummy");
 
                  // Setup PVS
-                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entity);
+                 entMan.AddComponent<Robust.Server.GameObjects.EyeComponent>(entityUid);
                  var player = playerMan.ServerSessions.First();
-                 player.AttachToEntity(entity);
+                 player.AttachToEntity(entityUid);
                  player.JoinGame();
              });
 
@@ -192,13 +192,13 @@ namespace Robust.UnitTesting.Shared.GameObjects
              {
                  var entMan = IoCManager.Resolve<IEntityManager>();
 
-                 var item = entMan.SpawnEntity(null, mapPos);
-                 entMan.GetComponent<MetaDataComponent>(item).EntityName = "Item";
-                 var container = item.EnsureContainer<Container>("dummy");
-                 container.Insert(item);
+                 itemUid = entMan.SpawnEntity(null, mapPos);
+                 entMan.GetComponent<MetaDataComponent>(itemUid).EntityName = "Item";
+                 var container = entityUid.EnsureContainer<Container>("dummy");
+                 container.Insert(itemUid);
 
                  // Move item out of PVS so that it doesn't get sent to the client
-                 entMan.GetComponent<TransformComponent>(item).LocalPosition = (100000, 0);
+                 entMan.GetComponent<TransformComponent>(itemUid).LocalPosition = (100000, 0);
              });
 
              // Needs minimum 4 to sync to client because buffer size is 3

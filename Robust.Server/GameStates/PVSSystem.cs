@@ -402,7 +402,7 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
-        var packet = _cachedPackets.GetOrAdd(uid, (i) => new PVSEntityPacket(EntityManager, i));
+        var packet = _cachedPackets.GetOrAdd(uid, static (i, entityManager) => new PVSEntityPacket(entityManager, i), EntityManager);
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
         if (visMask != null && packet.VisibilityComponent != null)

@@ -248,7 +248,7 @@ namespace Robust.Shared.Map
 
             if (actualID != MapId.Nullspace) // nullspace isn't bound to an entity
             {
-                var mapComps = _entityManager.EntityQuery<IMapComponent>(true);
+                var mapComps = _entityManager.EntityQuery<MapComponent>(true);
 
                 IMapComponent? result = null;
                 foreach (var mapComp in mapComps)
@@ -431,7 +431,7 @@ namespace Robust.Shared.Map
             {
                 // the entity may already exist from map deserialization
                 IMapGridComponent? result = null;
-                foreach (var comp in _entityManager.EntityQuery<IMapGridComponent>(true))
+                foreach (var comp in _entityManager.EntityQuery<MapGridComponent>(true))
                 {
                     if (comp.GridIndex != actualID)
                         continue;

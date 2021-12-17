@@ -55,7 +55,7 @@ namespace Robust.Shared.Containers
         {
             if (ContainedEntity != null)
                 return false;
-            return base.CanInsert(toinsert);
+            return base.CanInsert(toinsert, entMan);
         }
 
         /// <inheritdoc />

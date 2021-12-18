@@ -34,25 +34,21 @@ public abstract class AppearanceComponent : Component
         if (curState is not AppearanceComponentState actualState)
             return;
 
-        var stateDiff = _appearanceData.Count != actualState.Data.Count;
+        var stateDiff = false;
 
-        if (!stateDiff)
+        // update server-side appearance data without discarding client-side data.
+        foreach (var (key, newValue) in actualState.Data)
         {
-            foreach (var (key, value) in _appearanceData)
+            if (!_appearanceData.TryGetValue(key, out var currentValue) ||
+                !currentValue.Equals(newValue))
             {
-                if (!actualState.Data.TryGetValue(key, out var stateValue) ||
-                    !value.Equals(stateValue))
-                {
-                    stateDiff = true;
-                    break;
-                }
+                stateDiff = true;
+                _appearanceData[key] = newValue;
             }
         }
 
-        if (!stateDiff) return;
-
-        _appearanceData = actualState.Data;
-        MarkDirty();
+        if (stateDiff)
+            MarkDirty();
     }
 
     public void SetData(string key, object value)

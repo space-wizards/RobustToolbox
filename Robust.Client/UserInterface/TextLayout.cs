@@ -46,6 +46,7 @@ namespace Robust.Client.UserInterface
         /// <param name="ln">The line number that the word is assigned to.</param>
         /// <param name="spw">The width allocated to this word.</param>
         /// <param name="wt">The detected word type.</param>
+        /// <param name="rw">The width of each rune.</param>
         public record struct Offset
         {
             public int section;
@@ -58,6 +59,7 @@ namespace Robust.Client.UserInterface
             public int ln;
             public int spw;
             public WordType wt;
+            public int[] rw;
         }
 
         public enum WordType : byte
@@ -121,11 +123,9 @@ namespace Robust.Client.UserInterface
                     int maxPri,
                     int tPri,
                     int lnh
-            )>(postcreate: i => i with
-            {
-                wds = new List<Offset>(),
-                gaps = new List<int>()
-            });
+            )>(
+                blank: () => new () { lnrem = w, maxPri = 1, wds = new List<Offset>(), gaps = new List<int>() }
+            );
 
             var flib = fonts.StartFont(fclass);
             var lastAlign = TextAlign.Left;
@@ -136,53 +136,74 @@ namespace Robust.Client.UserInterface
             // Calculate line boundaries
             for (var i = 0; i < wdq.Count; i++)
             {
+restart:
                 var wd = wdq[i];
                 var sec = src[wd.section];
                 var hz = sec.Alignment.Horizontal();
                 var sf = flib.Update(sec.Style, sec.Size);
                 (int gW, int adv) = TransitionWeights(lastAlign, hz);
+                if (wd.wt == WordType.LineBreak)
+                {
+                    lw.Flush();
+                }
+                else if (lw.Work.lnrem < wd.w)
+                {
+                    // We won't split if we are asked not to, or if the word can fit on one line.
+                    if (!options.HasFlag(LayoutOptions.NoWordSplit) && wd.w > w)
+                    {
+                        var sbo = 0; // section byte offset
+                        var j = 0; // just a rune counter (to index wd.rw)
+                        var swdw = 0; // sub-word width
+
+                        foreach (var r in src[wd.section]
+                                .Content.Substring(wd.charOffs, wd.length)
+                                .EnumerateRunes())
+                        {
+                            if (swdw + wd.rw[j] > lw.Work.lnrem && j > 0)
+                            {
+                                // the half that stays on the current line
+                                var left = wd with {
+                                    length=sbo,
+                                    w=swdw,
+                                    rw=wd.rw[0..j]
+                                };
+
+                                // the half that gets moved down
+                                var right = wd with {
+                                    charOffs=wd.charOffs+left.length,
+                                    length=wd.length-left.length,
+                                    w=wd.w-left.w,
+                                    rw=wd.rw[(j-1)..^1],
+                                };
+
+                                // replace this word with the first half of itself
+                                wdq[i] = left;
+
+                                // and add the new half to the queue
+                                wdq.Insert(i+1, right);
+
+                                // reprocess from the start
+                                goto restart;
+                            }
+
+                            // Advance our various counters
+                            sbo += r.Utf16SequenceLength;
+                            swdw += wd.rw[j];
+                            j++;
+                        }
+                    }
+                    else
+                    {
+                        lw.Flush();
+                    }
+                }
+
                 lastAlign = hz;
 
                 lw.Work.gaps.Add(gW+lw.Work.maxPri);
                 lw.Work.tPri += gW+lw.Work.maxPri;
                 lw.Work.maxPri += adv;
                 lw.Work.lnh = Math.Max(lw.Work.lnh, wd.h);
-
-                if (wd.wt == WordType.LineBreak)
-                {
-                    lw.Flush();
-                    lw.Work.lnrem = w;
-                    lw.Work.maxPri = 1;
-                }
-                else if (lw.Work.lnrem < wd.w)
-                {
-                    lw.Flush();
-                    if (!options.HasFlag(LayoutOptions.NoWordSplit))
-                    {
-
-                        // Chop the current word in half (or more...)
-                        var o = SubWordSplit(
-                            src: src,
-                            text: wd,
-                            maxw: w,
-                            w: lw.Work.lnrem,
-                            font: flib.Current,
-                            scale: scale,
-                            options: options
-                        );
-
-                        // Swap out the Offset we're working on for whatever it spits out
-                        wdq[i] = wd = o[0];
-
-                        // and add any remaining ones.
-                        if (o.Count > 1)
-                            wdq.InsertRange(i+1, o.Skip(1));
-
-                    }
-                    lw.Work.lnrem = w;
-                    lw.Work.maxPri = 1;
-                }
-
                 lw.Work.sptot += wd.spw;
                 lw.Work.lnrem -= wd.w + wd.spw;
                 lw.Work.wds.Add(wd);
@@ -313,16 +334,18 @@ namespace Robust.Client.UserInterface
             var s=0;
             var lsbo=0;
             var sbo=0;
+            var runew = new int[0];
             var wq = new WorkQueue<Offset>(
-                    w =>
+                    conv: w =>
                     {
                         var len = sbo-lsbo;
                         lsbo = sbo;
-                        return w with { length=len };
+                        var o = w with { length=len, rw=runew[w.charOffs..(w.charOffs+len)] };
+                        return o;
                     },
-                    default,
-                    default,
-                    w => w with { section=s, charOffs=sbo }
+                    blank: default,
+                    check: w => w.wt != WordType.Normal || w.length > 0,
+                    postcreate: w => w with { section=s, charOffs=sbo }
             );
 
             var flib = fonts.StartFont(fclass);
@@ -333,11 +356,13 @@ namespace Robust.Client.UserInterface
                 if (sec.Meta != default)
                     throw new Exception("Section with unknown or unimplemented Meta flag");
 
+                runew = new int[sec.Content.EnumerateRunes().Count()];
                 lsbo = 0;
                 sbo = 0;
                 var fnt = flib.Update(sec.Style, sec.Size);
                 wq.Reset();
 
+                var runec=0;
                 foreach (var r in sec.Content.EnumerateRunes())
                 {
                     if (r == (Rune) '\n')
@@ -357,13 +382,15 @@ namespace Robust.Client.UserInterface
                     else if (wq.Work.wt != WordType.Normal)
                         wq.Flush();
 
-                    sbo += r.Utf16SequenceLength;
                     var cm = fnt.GetCharMetrics(r, scale, !nofb);
-
                     if (!cm.HasValue)
                     {
                         if (nofb)
+                        {
+                            runec++;
+                            sbo += r.Utf16SequenceLength;
                             continue;
+                        }
                         else if (fnt is DummyFont)
                             cm = new CharMetrics();
                         else
@@ -371,96 +398,18 @@ namespace Robust.Client.UserInterface
                     }
 
                     wq.Work.h = Math.Max(wq.Work.h, cm.Value.Height);
+                    runew[sbo] = cm.Value.Advance;
                     wq.Work.w += cm.Value.Advance;
+                    sbo += r.Utf16SequenceLength;
+                    runec++;
                     if (wq.Work.wt == WordType.Normal)
                         wq.Work.spw = runeSpacing;
                 }
+
                 wq.Flush(true);
             }
 
-
             return wq.Done;
-        }
-
-        /// <summary>
-        /// SubWordSplit takes the output of <see cref="Split(ISectionable, IFontLibrary, float, int, int, FontClass?, LayoutOptions)"/>
-        /// and splits one <see cref="WordType.Normal"/> <see cref="Offset"/> at the end of the line in to one or more Offsets that do
-        /// not overflow the current line (of width <paramref name="w"/>), and a max line width of <paramref name="maxw"/>.
-        /// </summary>
-        /// <remarks>
-        /// This will spectacularly fail to obey the rules for splitting <see cref="WordType.LineBreak"/> or <see cref="WordType.Space"/>.
-        /// </remarks>
-        public static List<Offset> SubWordSplit(
-                ISectionable src,
-                Offset text,
-                int maxw,
-                int w,
-                Font font,
-                float scale = 1.0f,
-                LayoutOptions options = default
-        )
-        {
-            var sws = new List<Offset>();
-            var nofb = options.HasFlag(LayoutOptions.NoFallback);
-
-            // Section charOffs & length
-            var sco = text.charOffs;
-            var scl = 0;
-
-            // Starting line width
-            var slw = w;
-
-            foreach (var r in src[text.section]
-                    .Content.Substring(text.charOffs, text.length)
-                    .EnumerateRunes())
-            {
-                // Get rune data
-                var cm = font.GetCharMetrics(r, scale, !nofb);
-                var u16l = r.Utf16SequenceLength;
-
-                if (!cm.HasValue)
-                {
-                    // No characer? Ignore it and move on.
-                    if (nofb)
-                    {
-                        scl += u16l;
-                        continue;
-                    }
-                    else if (font is DummyFont)
-                        cm = new CharMetrics();
-                    else
-                        throw new Exception("unable to get character metrics");
-                }
-
-                // Do we overflow the current line?
-                if (w + cm.Value.Advance > maxw)
-                {
-                    // Is there anything we need to save?
-                    if (scl > 0)
-                    {
-                        // Yep, save it and reset the section length.
-                        sws.Add(text with { charOffs=sco, length=scl, w=w-slw });
-                        sco += scl;
-                        scl=0;
-                    }
-
-                    // Reset the line metrics.
-                    slw=0;
-                    w=0;
-                }
-
-                // Include the character in the section
-                scl += u16l;
-
-                // and scoot the X cursor forward
-                w += cm.Value.Advance;
-            }
-
-            // Make sure to add any left-over stuff.
-            if (scl > 0)
-                sws.Add(text with { charOffs=sco, length=scl, w=w-slw });
-
-            return sws;
         }
 
         [Flags]

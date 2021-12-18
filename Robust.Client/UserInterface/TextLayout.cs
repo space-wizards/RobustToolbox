@@ -99,7 +99,7 @@ namespace Robust.Client.UserInterface
         // 6. That space has (fp*fs) pixels.
         public static ImmutableArray<Offset> Layout(
                 ISectionable src,
-                ImmutableArray<Offset> text,
+                List<Offset> text,
                 int w,
                 IFontLibrary fonts,
                 float scale = 1.0f,
@@ -129,7 +129,9 @@ namespace Robust.Client.UserInterface
 
             var flib = fonts.StartFont(fclass);
             var lastAlign = TextAlign.Left;
-            var wdq = new List<Offset>(text);
+
+            // Since we edit this one, we need to make a copy.
+            var wdq = text.ShallowClone();
 
             // Calculate line boundaries
             for (var i = 0; i < wdq.Count; i++)
@@ -173,7 +175,7 @@ namespace Robust.Client.UserInterface
                         wdq[i] = wd = o[0];
 
                         // and add any remaining ones.
-                        if (o.Length > 1)
+                        if (o.Count > 1)
                             wdq.InsertRange(i+1, o.Skip(1));
 
                     }
@@ -296,7 +298,7 @@ namespace Robust.Client.UserInterface
         // Split creates a list of words broken based on their boundaries.
         // Users are encouraged to reuse this for as long as it accurately reflects
         // the content they're trying to display.
-        public static ImmutableArray<Offset> Split(
+        public static List<Offset> Split(
                 ISectionable text,
                 IFontLibrary fonts,
                 float scale,
@@ -377,7 +379,7 @@ namespace Robust.Client.UserInterface
             }
 
 
-            return wq.Done.ToImmutableArray();
+            return wq.Done;
         }
 
         /// <summary>
@@ -388,7 +390,7 @@ namespace Robust.Client.UserInterface
         /// <remarks>
         /// This will spectacularly fail to obey the rules for splitting <see cref="WordType.LineBreak"/> or <see cref="WordType.Space"/>.
         /// </remarks>
-        public static ImmutableArray<Offset> SubWordSplit(
+        public static List<Offset> SubWordSplit(
                 ISectionable src,
                 Offset text,
                 int maxw,
@@ -398,7 +400,7 @@ namespace Robust.Client.UserInterface
                 LayoutOptions options = default
         )
         {
-            var sws = ImmutableArray.CreateBuilder<Offset>();
+            var sws = new List<Offset>();
             var nofb = options.HasFlag(LayoutOptions.NoFallback);
 
             // Section charOffs & length
@@ -458,7 +460,7 @@ namespace Robust.Client.UserInterface
             if (scl > 0)
                 sws.Add(text with { charOffs=sco, length=scl, w=w-slw });
 
-            return sws.ToImmutableArray();
+            return sws;
         }
 
         [Flags]

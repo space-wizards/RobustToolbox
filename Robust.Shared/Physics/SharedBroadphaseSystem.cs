@@ -775,7 +775,7 @@ namespace Robust.Shared.Physics
             }
 
             var proxyCount = fixture.ProxyCount;
-            var moveBuffer = _moveBuffer[_entityManager.GetComponent<TransformComponent>(broadphase.Owner).MapID];
+            var moveBuffer = _moveBuffer[fixture.Body.PhysicsMap!.MapId];
 
             for (var i = 0; i < proxyCount; i++)
             {

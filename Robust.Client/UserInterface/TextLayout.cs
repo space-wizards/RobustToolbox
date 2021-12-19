@@ -84,6 +84,16 @@ namespace Robust.Client.UserInterface
             LineBreak,
         }
 
+        public static WordType Classify(Rune r)
+        {
+            if (r == (Rune) '\n')
+                return WordType.LineBreak;
+            else if (Rune.IsSeparator(r))
+                return WordType.Space;
+
+            return WordType.Normal;
+        }
+
         public static ImmutableArray<Offset> Layout(
                 ISectionable text,
                 int w,

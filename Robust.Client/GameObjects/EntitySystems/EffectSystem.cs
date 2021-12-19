@@ -347,11 +347,16 @@ namespace Robust.Client.GameObjects
                 if (_playerManager.LocalPlayer?.ControlledEntity is not {} playerEnt)
                     return;
 
+                var playerXform = _entityManager.GetComponent<TransformComponent>(playerEnt);
+
                 foreach (var effect in _owner._Effects)
                 {
-                    if(effect.AttachedEntityUid is {} attached
-                    && _entityManager.GetComponent<TransformComponent>(attached).MapID != _entityManager.GetComponent<TransformComponent>(playerEnt).MapID
-                       && effect.Coordinates.GetMapId(_entityManager) != map)
+                    TransformComponent? attachedXform = null;
+
+                    if ((effect.AttachedEntityUid is {} attached &&
+                        _entityManager.TryGetComponent(attached, out attachedXform) &&
+                        attachedXform.MapID != playerXform.MapID) ||
+                        effect.Coordinates.GetMapId(_entityManager) != map)
                     {
                         continue;
                     }
@@ -367,16 +372,15 @@ namespace Robust.Client.GameObjects
                     // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
 
-                    var tempQualifier1 = effect.AttachedEntityUid;
                     var coordinates =
-                        (tempQualifier1 != null ? _entityManager.GetComponent<TransformComponent>(tempQualifier1.Value).Coordinates : effect.Coordinates)
+                        (attachedXform?.Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
                     var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
                     var effectOrigin = coordinates.ToMapPos(_entityManager);
 
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
-                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation - rotation, effectOrigin);
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation + rotation, effectOrigin);
 
                     worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }

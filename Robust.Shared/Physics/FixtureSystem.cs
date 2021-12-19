@@ -19,9 +19,7 @@ namespace Robust.Shared.Physics
     public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
-#if DEBUG
         [Dependency] private readonly SharedContainerSystem _containers = default!;
-#endif
 
         public override void Initialize()
         {

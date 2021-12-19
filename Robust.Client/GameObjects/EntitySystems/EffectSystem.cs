@@ -380,7 +380,7 @@ namespace Robust.Client.GameObjects
                     var effectOrigin = coordinates.ToMapPos(_entityManager);
 
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);
-                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation - rotation, effectOrigin);
+                    var rotatedBox = new Box2Rotated(effectArea, effect.Rotation + rotation, effectOrigin);
 
                     worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
                 }

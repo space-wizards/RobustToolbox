@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Shared.Utility;
@@ -10,16 +11,61 @@ namespace Robust.Client.Graphics;
 /// </summary>
 public record FontVariant (FontStyle Style, FontResource[] Resource)
 {
+
+    private ReaderWriterLockSlim _rwl = new();
+    private byte[] _sizes = new byte[0];
+    private Font[] _fonts = new Font[0];
+
     public virtual Font ToFont(byte size)
     {
-        if (Resource.Length == 1)
-            return new VectorFont(Resource[0], size);
+        Font ret;
+        _rwl.EnterUpgradeableReadLock();
+        try {
+            var idx = Array.BinarySearch(_sizes, size);
+            if (idx >= 0)
+                return _fonts[idx];
 
-        var fs = new Font[Resource.Length];
-        for (var i = 0; i < Resource.Length; i++)
-            fs[i] = new VectorFont(Resource[i], size);
+            _rwl.EnterWriteLock();
+            try {
+                if (Resource.Length == 1)
+                {
+                    ret = new VectorFont(Resource[0], size);
+                }
+                else
+                {
+                    var fs = new Font[Resource.Length];
+                    for (var i = 0; i < Resource.Length; i++)
+                        fs[i] = new VectorFont(Resource[i], size);
 
-        return new StackedFont(fs);
+                    ret = new StackedFont(fs);
+                }
+
+                var newF = new Font[_fonts.Length + 1];
+                var newS = new byte[_sizes.Length + 1];
+                newF[_fonts.Length] = ret;
+                newS[_sizes.Length] = size;
+
+                _fonts = newF;
+                _sizes = newS;
+
+                Array.Sort(_sizes, _fonts);
+            }
+            finally
+            {
+                _rwl.ExitWriteLock();
+            }
+
+            return ret;
+        }
+        finally
+        {
+            _rwl.ExitUpgradeableReadLock();
+        }
+    }
+
+    ~FontVariant()
+    {
+        _rwl.Dispose();
     }
 };
 
@@ -86,6 +132,7 @@ public class FontLibrary : IFontLibrary
     private Dictionary<string, FontVariant[]> _styles = new();
     private Dictionary<FontStyle, (string, FontStyle)> _standardSt = new();
     private Dictionary<FontSize, byte> _standardSz = new();
+    private Dictionary<FontClass, Font> _cache = new();
 
     void IFontLibrary.AddFont(string name, params FontVariant[] variants) =>
         _styles[name] = variants;
@@ -165,6 +212,15 @@ public class FontLibrary : IFontLibrary
 
         Font IFontLibrarian.Update(FontStyle fst, FontSize fsz)
         {
+            // Are we the same style?
+            if (fst == _fst
+                    && !(fsz.HasFlag(FontSize.Special) && fsz.HasFlag(FontSize.RelPlus | FontSize.RelMinus)) // Are we not changing relative font sizes?
+                    && (fsz == _fsz))
+            {
+                // Nothing's changed.
+                return _current;
+            }
+
             var f = _lib.lookup(_id, fst);
 
             byte rsz = (byte) _fsz;

@@ -60,6 +60,21 @@ namespace Robust.Client.UserInterface
             public int spw;
             public WordType wt;
             public int[] rw;
+
+            public string ToArrows()
+            {
+                var sb = new StringBuilder()
+                    .Append(' ', charOffs)
+                    .Append('^');
+
+                if (length > 1)
+                    sb.Append('-', length - 2);
+
+                if (length > 0)
+                    sb.Append('^');
+
+                return sb.ToString();
+            }
         }
 
         public enum WordType : byte

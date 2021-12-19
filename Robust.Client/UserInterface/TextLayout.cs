@@ -407,7 +407,7 @@ restart:
                     }
 
                     wq.Work.h = Math.Max(wq.Work.h, cm.Value.Height);
-                    runew[sbo] = cm.Value.Advance;
+                    runew[runec] = cm.Value.Advance;
                     wq.Work.w += cm.Value.Advance;
                     sbo += r.Utf16SequenceLength;
                     runec++;

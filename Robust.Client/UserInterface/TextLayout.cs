@@ -354,7 +354,7 @@ restart:
                         return o;
                     },
                     blank: default,
-                    check: w => w.wt != WordType.Normal || w.length > 0,
+                    check: w => w.wt != WordType.Normal || sbo > lsbo,
                     postcreate: w => w with { section=s, charOffs=sbo }
             );
 

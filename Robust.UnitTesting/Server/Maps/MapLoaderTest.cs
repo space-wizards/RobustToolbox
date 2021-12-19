@@ -75,8 +75,8 @@ entities:
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
             mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
-            mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
             mock.Setup(m => m.GetEntitySystem<SharedContainerSystem>()).Returns(con);
+            mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
             //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);

@@ -61,16 +61,11 @@ namespace Robust.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Create(resPath))
-            {
-                using (var writer = new StreamWriter(file))
-                {
-                    var stream = new YamlStream();
+            using var writer = _resMan.UserData.OpenWriteText(resPath);
 
-                    stream.Add(document);
-                    stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-                }
-            }
+            var stream = new YamlStream();
+            stream.Add(document);
+            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
         /// <inheritdoc />
@@ -102,8 +97,7 @@ namespace Robust.Server.Maps
             }
             else
             {
-                var file = _resMan.UserData.OpenRead(resPath);
-                reader = new StreamReader(file);
+                reader = _resMan.UserData.OpenText(resPath);
             }
 
             IMapGrid grid;
@@ -160,16 +154,11 @@ namespace Robust.Server.Maps
             var resPath = new ResourcePath(yamlPath).ToRootedPath();
             _resMan.UserData.CreateDir(resPath.Directory);
 
-            using (var file = _resMan.UserData.Create(resPath))
-            {
-                using (var writer = new StreamWriter(file))
-                {
-                    var stream = new YamlStream();
+            using var writer = _resMan.UserData.OpenWriteText(resPath);
 
-                    stream.Add(document);
-                    stream.Save(new YamlMappingFix(new Emitter(writer)), false);
-                }
-            }
+            var stream = new YamlStream();
+            stream.Add(document);
+            stream.Save(new YamlMappingFix(new Emitter(writer)), false);
 
             Logger.InfoS("map", "Save completed!");
         }
@@ -202,8 +191,7 @@ namespace Robust.Server.Maps
             }
             else
             {
-                var file = _resMan.UserData.OpenRead(resPath);
-                reader = new StreamReader(file);
+                reader = _resMan.UserData.OpenText(resPath);
             }
 
             using (reader)

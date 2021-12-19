@@ -196,6 +196,10 @@ namespace Robust.Shared.GameObjects
         private TransformComponent? Transform =>
             IoCManager.Resolve<IEntityManager>().GetComponentOrNull<TransformComponent>(this);
 
+        // This might seem useless, but it allows you to retrieve remote entities that don't exist on the client.
+        [ViewVariables]
+        private EntityUid Uid => this;
+
         #endregion
     }
 }

@@ -92,7 +92,8 @@ namespace Robust.Client.ViewVariables
             var entityManager = IoCManager.Resolve<IEntityManager>();
             if (!entityManager.EntityExists(entity))
             {
-                shell.WriteLine("That entity does not exist.");
+                shell.WriteLine("That entity does not exist locally. Attempting to open remote view...");
+                vvm.OpenVV(new ViewVariablesEntitySelector(entity));
                 return;
             }
 

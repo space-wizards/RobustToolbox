@@ -33,7 +33,7 @@ namespace Robust.Shared.Console.Commands
                 return;
             }
 
-            using var text = new StreamReader(res.UserData.OpenRead(path));
+            using var text = res.UserData.OpenText(path);
             while (true)
             {
                 var line = text.ReadLine();

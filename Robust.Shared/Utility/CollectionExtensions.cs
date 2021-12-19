@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 
 namespace Robust.Shared.Utility
 {
-    public static class Extensions
+    public static partial class Extensions
     {
         public static IList<T> Clone<T>(this IList<T> listToClone) where T : ICloneable
         {

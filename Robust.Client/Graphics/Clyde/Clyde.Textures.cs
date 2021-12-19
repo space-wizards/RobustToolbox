@@ -2,6 +2,7 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -11,6 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using Color = Robust.Shared.Maths.Color;
 using OGLTextureWrapMode = OpenToolkit.Graphics.OpenGL.TextureWrapMode;
 using PIF = OpenToolkit.Graphics.OpenGL4.PixelInternalFormat;
 using PF = OpenToolkit.Graphics.OpenGL4.PixelFormat;
@@ -146,7 +148,7 @@ namespace Robust.Client.Graphics.Clyde
             CheckGlError();
             ApplySampleParameters(loadParams.SampleParameters);
 
-            var (pif, _, _) = PixelEnums<T>(loadParams.Srgb);
+            var (pif, pf, pt) = PixelEnums<T>(loadParams.Srgb);
             var pixelType = typeof(T);
             var texPixType = GetTexturePixelType<T>();
             var isActuallySrgb = false;
@@ -632,6 +634,25 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 return $"ClydeTexture: ({TextureId})";
+            }
+
+            public override Color GetPixel(int x, int y)
+            {
+                if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
+                {
+                    throw new DataException("Texture not found");
+                }
+
+                Span<byte> rgba = stackalloc byte[4];
+                unsafe
+                {
+                    fixed (byte* p = rgba)
+                    {
+                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4, (IntPtr) p);
+                    }
+                }
+
+                return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
             }
         }
 

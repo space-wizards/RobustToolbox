@@ -258,8 +258,8 @@ namespace Robust.Server.Console.Commands
             }
 
             var gridId = new GridId(int.Parse(args[0]));
-            var xpos = float.Parse(args[1]);
-            var ypos = float.Parse(args[2]);
+            var xpos = float.Parse(args[1], CultureInfo.InvariantCulture);
+            var ypos = float.Parse(args[2], CultureInfo.InvariantCulture);
 
             var mapManager = IoCManager.Resolve<IMapManager>();
 

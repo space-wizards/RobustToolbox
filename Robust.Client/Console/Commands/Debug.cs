@@ -449,15 +449,13 @@ namespace Robust.Client.Console.Commands
             var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             var res = IoCManager.Resolve<IResourceManager>();
 
-            using (var stream = res.UserData.Create(new ResourcePath("/guidump.txt")))
-            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
+            using var writer = res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
+
+            foreach (var root in uiMgr.AllRoots)
             {
-                foreach (var root in uiMgr.AllRoots)
-                {
-                    writer.WriteLine($"ROOT: {root}");
-                    _writeNode(root, 0, writer);
-                    writer.WriteLine("---------------");
-                }
+                writer.WriteLine($"ROOT: {root}");
+                _writeNode(root, 0, writer);
+                writer.WriteLine("---------------");
             }
 
             shell.WriteLine("Saved guidump");
@@ -559,12 +557,12 @@ namespace Robust.Client.Console.Commands
             vBox.AddChild(tree);
 
             var rich = new RichTextLabel();
-            var message = new FormattedMessage();
+            var message = new FormattedMessage.Builder();
             message.AddText("Foo\n");
             message.PushColor(Color.Red);
             message.AddText("Bar");
             message.Pop();
-            rich.SetMessage(message);
+            rich.SetMessage(message.Build());
             vBox.AddChild(rich);
 
             var itemList = new ItemList();

@@ -293,60 +293,50 @@ namespace Robust.Client.Audio.Midi
                 }
 
                 MapCoordinates? mapPos = null;
+                var trackingEntity = renderer.TrackingEntity != null && !_entityManager.Deleted(renderer.TrackingEntity);
+                if (trackingEntity)
+                {
+                    renderer.TrackingCoordinates = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity!.Value).Coordinates;
+                }
+
                 if (renderer.TrackingCoordinates != null)
                 {
                     mapPos = renderer.TrackingCoordinates.Value.ToMap(_entityManager);
                 }
-                else if (renderer.TrackingEntity != null)
-                {
-                    mapPos = _entityManager.GetComponent<TransformComponent>(renderer.TrackingEntity.Value).MapPosition;
-                }
 
-                if (mapPos != null)
+                if (mapPos != null && mapPos.Value.MapId == _eyeManager.CurrentMap)
                 {
                     var pos = mapPos.Value;
-                    if (pos.MapId != _eyeManager.CurrentMap)
-                    {
-                        renderer.Source.SetVolume(-10000000);
-                    }
-                    else
-                    {
-                        var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
-                        var occlusion = 0f;
-                        if (sourceRelative.Length > 0)
-                        {
-                            occlusion = _broadPhaseSystem.IntersectRayPenetration(
-                                pos.MapId,
-                                new CollisionRay(
-                                    pos.Position,
-                                    sourceRelative.Normalized,
-                                    OcclusionCollisionMask),
-                                sourceRelative.Length,
-                                renderer.TrackingEntity);
-                        }
 
-                        renderer.Source.SetOcclusion(occlusion);
+                    var sourceRelative = _eyeManager.CurrentEye.Position.Position - pos.Position;
+                    var occlusion = 0f;
+                    if (sourceRelative.Length > 0)
+                    {
+                        occlusion = _broadPhaseSystem.IntersectRayPenetration(
+                            pos.MapId,
+                            new CollisionRay(
+                                pos.Position,
+                                sourceRelative.Normalized,
+                                OcclusionCollisionMask),
+                            sourceRelative.Length,
+                            renderer.TrackingEntity);
                     }
 
-                    if (renderer.Source.SetPosition(pos.Position))
+                    renderer.Source.SetOcclusion(occlusion);
+
+                    if (!renderer.Source.SetPosition(pos.Position))
                     {
-                        continue;
+                        return;
                     }
 
-                    if (renderer.TrackingEntity != null)
+                    if (trackingEntity)
                     {
-                        renderer.Source.SetVelocity(renderer.TrackingEntity.Value.GlobalLinearVelocity());
+                        renderer.Source.SetVelocity(renderer.TrackingEntity!.Value.GlobalLinearVelocity());
                     }
-
-                    if (float.IsNaN(pos.Position.X) || float.IsNaN(pos.Position.Y))
-                    {
-                        // just duck out instead of move to NaN
-                        renderer.Source.SetOcclusion(float.MaxValue);
-                        continue;
-                    }
-
-                    _midiSawmill?.Warning("Interrupting positional audio, can't set position.");
-                    renderer.Source.StopPlaying();
+                }
+                else
+                {
+                    renderer.Source.SetOcclusion(float.MaxValue);
                 }
             }
 

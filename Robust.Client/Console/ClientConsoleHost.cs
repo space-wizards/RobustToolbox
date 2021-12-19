@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Robust.Client.Log;
+using Robust.Client.Player;
 using Robust.Shared.Console;
+using Robust.Shared.Enums;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -40,6 +43,8 @@ namespace Robust.Client.Console
     /// <inheritdoc cref="IClientConsoleHost" />
     internal class ClientConsoleHost : ConsoleHost, IClientConsoleHost
     {
+        [Dependency] private readonly IClientConGroupController _conGroup = default!;
+
         private bool _requestedCommands;
 
         /// <inheritdoc />
@@ -103,6 +108,14 @@ namespace Robust.Client.Console
 
             if (AvailableCommands.ContainsKey(commandName))
             {
+                var playerManager = IoCManager.Resolve<IPlayerManager>();
+
+                if (!_conGroup.CanCommand(commandName) && playerManager.LocalPlayer?.Session.Status > SessionStatus.Connecting)
+                {
+                    WriteError(null, $"Insufficient perms for command: {commandName}");
+                    return;
+                }
+
                 var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
                 var shell = new ConsoleShell(this, null);

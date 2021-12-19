@@ -4,6 +4,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
@@ -223,7 +224,12 @@ namespace Robust.Shared.Physics
             foreach (var (proxy, worldAABB) in moveBuffer)
             {
                 var proxyBody = proxy.Fixture.Body;
-                // if (prediction && !proxyBody.Predict) continue;
+                if (proxyBody.Deleted)
+                {
+                    Logger.ErrorS("physics", $"Deleted body {proxyBody.Owner} made it to FindNewContacts; this should never happen!");
+                    DebugTools.Assert(false);
+                    continue;
+                }
 
                 // Get every broadphase we may be intersecting.
                 foreach (var (broadphase, _) in _broadphaseTransforms)

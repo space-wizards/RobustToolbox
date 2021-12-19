@@ -19,6 +19,9 @@ namespace Robust.Shared.Physics
     public sealed partial class FixtureSystem : EntitySystem
     {
         [Dependency] private readonly SharedBroadphaseSystem _broadphaseSystem = default!;
+#if DEBUG
+        [Dependency] private readonly SharedContainerSystem _containers = default!;
+#endif
 
         public override void Initialize()
         {
@@ -79,7 +82,7 @@ namespace Robust.Shared.Physics
 
                 if (body.CanCollide)
                 {
-                    DebugTools.Assert(!Get<SharedContainerSystem>().IsEntityInContainer(uid));
+                    DebugTools.Assert(!_containers.IsEntityInContainer(uid));
                     _broadphaseSystem.AddBody(body, component);
                 }
             }
@@ -240,8 +243,8 @@ namespace Robust.Shared.Physics
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
-            if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
-            EntityManager.RemoveComponent<FixturesComponent>(uid);
+            if (MetaData(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
+                EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
         private void OnPhysicsInit(ref PhysicsInitializedEvent ev)

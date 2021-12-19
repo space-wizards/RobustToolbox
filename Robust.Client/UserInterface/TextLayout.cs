@@ -149,11 +149,13 @@ namespace Robust.Client.UserInterface
                 blank: () => new () { lnrem = w, maxPri = 1, wds = new List<Offset>(), gaps = new List<int>() }
             );
 
-            var flib = fonts.StartFont(fclass);
             var lastAlign = TextAlign.Left;
 
             // Since we edit this one, we need to make a copy.
             var wdq = text.ShallowClone();
+
+            // forced newline, disables skipping leading spaces
+            var fnl = false;
 
             // Calculate line boundaries
             for (var i = 0; i < wdq.Count; i++)
@@ -162,11 +164,17 @@ restart:
                 var wd = wdq[i];
                 var sec = src[wd.section];
                 var hz = sec.Alignment.Horizontal();
-                var sf = flib.Update(sec.Style, sec.Size);
                 (int gW, int adv) = TransitionWeights(lastAlign, hz);
+
+                if (!fnl && wd.wt == WordType.Space && lw.Work.wds.Count == 0)
+                    continue;
+
+                fnl=false;
+
                 if (wd.wt == WordType.LineBreak)
                 {
                     lw.Flush();
+                    fnl=true;
                 }
                 else if (lw.Work.lnrem < wd.w)
                 {
@@ -217,6 +225,8 @@ restart:
                     else
                     {
                         lw.Flush();
+                        if (wd.wt == WordType.Space)
+                            continue;
                     }
                 }
 
@@ -232,7 +242,7 @@ restart:
             }
             lw.Flush(true);
 
-            flib = fonts.StartFont(fclass);
+            var flib = fonts.StartFont(fclass);
             int py = flib.Current.GetAscent(scale);
             int lnnum = 0;
             foreach (var (ln, gaps, lnrem, sptot, maxPri, tPri, lnh) in lw.Done)
@@ -385,21 +395,14 @@ restart:
                 var runec=0;
                 foreach (var r in sec.Content.EnumerateRunes())
                 {
-                    if (r == (Rune) '\n')
+                    WordType cr = Classify(r);
+                    if (wq.Work.wt != cr || cr == WordType.LineBreak)
                     {
                         wq.Flush();
-                        wq.Work.wt = WordType.LineBreak;
+                        wq.Work.wt = cr;
+                        if (cr == WordType.LineBreak)
+                                wq.Flush();
                     }
-                    else if (Rune.IsSeparator(r))
-                    {
-                        if (wq.Work.wt != WordType.Space)
-                        {
-                            wq.Flush();
-                            wq.Work.wt = WordType.Space;
-                        }
-                    }
-                    else if (wq.Work.wt != WordType.Normal)
-                        wq.Flush();
 
                     var cm = fnt.GetCharMetrics(r, scale, !nofb);
                     if (!cm.HasValue)

@@ -90,17 +90,15 @@ namespace Robust.Client.UserInterface
                 IFontLibrary fonts,
                 float scale = 1.0f,
                 int lineSpacing = 0,
-                int wordSpacing = 0,
-                int runeSpacing = 0,
                 FontClass? fclass = default,
                 LayoutOptions options = LayoutOptions.Default
         ) => Layout(
             text,
-            Split(text, fonts, scale, wordSpacing, runeSpacing, fclass, options),
+            Split(text, fonts, scale, fclass, options),
             w,
             fonts,
             scale,
-            lineSpacing, wordSpacing,
+            lineSpacing,
             fclass,
             options
         );
@@ -121,7 +119,6 @@ namespace Robust.Client.UserInterface
                 IFontLibrary fonts,
                 float scale = 1.0f,
                 int lineSpacing = 0,
-                int wordSpacing = 0,
                 FontClass? fclass = default,
                 LayoutOptions options = LayoutOptions.Default
         )
@@ -338,8 +335,6 @@ restart:
                 ISectionable text,
                 IFontLibrary fonts,
                 float scale,
-                int wordSpacing,
-                int runeSpacing,
                 FontClass? fclass,
                 LayoutOptions options = LayoutOptions.Default
         )
@@ -389,7 +384,6 @@ restart:
                     {
                         if (wq.Work.wt != WordType.Space)
                         {
-                            wq.Work.w += wordSpacing;
                             wq.Flush();
                             wq.Work.wt = WordType.Space;
                         }
@@ -417,8 +411,6 @@ restart:
                     wq.Work.w += cm.Value.Advance;
                     sbo += r.Utf16SequenceLength;
                     runec++;
-                    if (wq.Work.wt == WordType.Normal)
-                        wq.Work.spw = runeSpacing;
                 }
 
                 wq.Flush(true);

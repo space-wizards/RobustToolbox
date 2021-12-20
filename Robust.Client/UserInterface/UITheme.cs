@@ -10,39 +10,19 @@ namespace Robust.Client.UserInterface
     /// </summary>
     public abstract class UITheme
     {
-        public abstract IFontLibrary DefaultFontLibrary { get; }
-        public abstract IFontLibrary LabelFontLibrary { get; }
-        public Font DefaultFont { get => DefaultFontLibrary.StartFont().Current; }
-        public Font LabelFont { get => LabelFontLibrary.StartFont().Current; }
+        public abstract Font DefaultFont { get; }
+        public abstract Font LabelFont { get; }
         public abstract StyleBox PanelPanel { get; }
         public abstract StyleBox ButtonStyle { get; }
         public abstract StyleBox LineEditBox { get; }
     }
 
-
     public sealed class UIThemeDummy : UITheme
     {
-        private static readonly FontClass _defaultFontClass = new FontClass ( Id: "dummy", Size: default, Style: default );
-        public override IFontLibrary DefaultFontLibrary { get; } = new FontLibrary(_defaultFontClass);
-        public override IFontLibrary LabelFontLibrary { get; } = new FontLibrary(_defaultFontClass);
+        public override Font DefaultFont { get; } = new DummyFont();
+        public override Font LabelFont { get; } = new DummyFont();
         public override StyleBox PanelPanel { get; } = new StyleBoxFlat();
         public override StyleBox ButtonStyle { get; } = new StyleBoxFlat();
         public override StyleBox LineEditBox { get; } = new StyleBoxFlat();
-
-        public UIThemeDummy() : base()
-        {
-            DefaultFontLibrary.AddFont("dummy",
-                new []
-                {
-                        new DummyVariant (default)
-                }
-            );
-            LabelFontLibrary.AddFont("dummy",
-                new []
-                {
-                    new DummyVariant (default)
-                }
-            );
-        }
     }
 }

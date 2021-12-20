@@ -8,7 +8,6 @@ using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Markup;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
@@ -19,16 +18,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             ValueDataNode node, IDependencyCollection dependencies, bool skipHook,
             ISerializationContext? context = null)
         {
-            var bParser = new Basic();
-            bParser.AddMarkup(node.Value);
-            return new DeserializedValue<FormattedMessage>(bParser.Render());
+            return new DeserializedValue<FormattedMessage>(FormattedMessage.FromMarkup(node.Value));
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             ISerializationContext? context = null)
         {
-            return Basic.ValidMarkup(node.Value)
+            return FormattedMessage.ValidMarkup(node.Value)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, "Invalid markup in FormattedMessage.");
         }
@@ -44,8 +41,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public FormattedMessage Copy(ISerializationManager serializationManager, FormattedMessage source,
             FormattedMessage target, bool skipHook, ISerializationContext? context = null)
         {
-            // based value types
-            return source;
+            return new(source);
         }
     }
 }

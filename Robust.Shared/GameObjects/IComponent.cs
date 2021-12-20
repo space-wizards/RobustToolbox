@@ -62,7 +62,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Marks the component as dirty so that the network will re-sync it with clients.
         /// </summary>
-        void Dirty();
+        void Dirty(IEntityManager? entManager = null);
 
         /// <summary>
         ///     This is the tick the component was created.

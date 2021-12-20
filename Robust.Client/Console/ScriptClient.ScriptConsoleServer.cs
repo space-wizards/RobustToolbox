@@ -95,11 +95,11 @@ namespace Robust.Client.Console
                 _linesEntered = 0;
 
                 // Echo entered script.
-                var echoMessage = new FormattedMessage.Builder();
+                var echoMessage = new FormattedMessage();
                 echoMessage.PushColor(Color.FromHex("#D4D4D4"));
                 echoMessage.AddText("> ");
                 echoMessage.AddMessage(response.Echo);
-                OutputPanel.AddMessage(echoMessage.Build());
+                OutputPanel.AddMessage(echoMessage);
 
                 OutputPanel.AddMessage(response.Response);
 

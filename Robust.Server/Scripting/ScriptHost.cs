@@ -184,12 +184,12 @@ namespace Robust.Server.Scripting
             newScript.Compile();
 
             // Echo entered script.
-            var echoMessage = new FormattedMessage.Builder();
+            var echoMessage = new FormattedMessage();
             ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, instance.HighlightWorkspace);
 
-            replyMessage.Echo = echoMessage.Build();
+            replyMessage.Echo = echoMessage;
 
-            var msg = new FormattedMessage.Builder();
+            var msg = new FormattedMessage();
 
             try
             {
@@ -215,7 +215,7 @@ namespace Robust.Server.Scripting
 
                 PromptAutoImports(e.Diagnostics, code, msg, instance);
 
-                replyMessage.Response = msg.Build();
+                replyMessage.Response = msg;
                 _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
                 return;
             }
@@ -240,7 +240,7 @@ namespace Robust.Server.Scripting
                 msg.AddText(ScriptInstanceShared.SafeFormat(instance.State.ReturnValue));
             }
 
-            replyMessage.Response = msg.Build();
+            replyMessage.Response = msg;
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
 
@@ -316,7 +316,7 @@ namespace Robust.Server.Scripting
         private void PromptAutoImports(
             IEnumerable<Diagnostic> diags,
             string code,
-            FormattedMessage.Builder output,
+            FormattedMessage output,
             ScriptInstance instance)
         {
             if (!ScriptInstanceShared.CalcAutoImports(_reflectionManager, diags, out var found))

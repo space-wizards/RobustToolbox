@@ -128,12 +128,12 @@ namespace Robust.Client.Console
             newScript.Compile();
 
             // Echo entered script.
-            var echoMessage = new FormattedMessage.Builder();
+            var echoMessage = new FormattedMessage();
             echoMessage.PushColor(Color.FromHex("#D4D4D4"));
             echoMessage.AddText("> ");
             ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, _highlightWorkspace);
 
-            OutputPanel.AddMessage(echoMessage.Build());
+            OutputPanel.AddMessage(echoMessage);
 
             try
             {
@@ -148,7 +148,7 @@ namespace Robust.Client.Console
             }
             catch (CompilationErrorException e)
             {
-                var msg = new FormattedMessage.Builder();
+                var msg = new FormattedMessage();
 
                 msg.PushColor(Color.Crimson);
 
@@ -158,7 +158,7 @@ namespace Robust.Client.Console
                     msg.AddText("\n");
                 }
 
-                OutputPanel.AddMessage(msg.Build());
+                OutputPanel.AddMessage(msg);
                 OutputPanel.AddText(">");
 
                 PromptAutoImports(e.Diagnostics, code);
@@ -167,16 +167,16 @@ namespace Robust.Client.Console
 
             if (_state.Exception != null)
             {
-                var msg = new FormattedMessage.Builder();
+                var msg = new FormattedMessage();
                 msg.PushColor(Color.Crimson);
                 msg.AddText(CSharpObjectFormatter.Instance.FormatException(_state.Exception));
-                OutputPanel.AddMessage(msg.Build());
+                OutputPanel.AddMessage(msg);
             }
             else if (ScriptInstanceShared.HasReturnValue(newScript))
             {
-                var msg = new FormattedMessage.Builder();
+                var msg = new FormattedMessage();
                 msg.AddText(ScriptInstanceShared.SafeFormat(_state.ReturnValue));
-                OutputPanel.AddMessage(msg.Build());
+                OutputPanel.AddMessage(msg);
             }
 
             OutputPanel.AddText(">");

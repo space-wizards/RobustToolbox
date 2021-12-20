@@ -18,7 +18,7 @@ public abstract partial class SharedPhysicsSystem
             component._awake = false;
         }
 
-        var xform = EntityManager.GetComponent<TransformComponent>(uid);
+        var xform = Transform(uid);
 
         // TODO: Ordering fuckery need a new PR to fix some of this stuff
         if (xform.MapID != MapId.Nullspace)

@@ -69,7 +69,10 @@ namespace Robust.Client.UserInterface.Controls
                 return fclass;
             }
 
-            return _getFontLibrary().Default;
+            return UserInterfaceManager
+                .ThemeDefaults
+                .DefaultFontLibrary
+                .Default;
         }
 
         [Pure]

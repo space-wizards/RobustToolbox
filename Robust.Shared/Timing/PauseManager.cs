@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -49,10 +50,13 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId).ToArray())
             {
                 entity.RunMapInit();
-                _entityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = false;
+
+                // MapInit could have deleted this entity.
+                if(_entityManager.TryGetComponent(entity, out MetaDataComponent? meta))
+                    meta.EntityPaused = false;
             }
         }
 

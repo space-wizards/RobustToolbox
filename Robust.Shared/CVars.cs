@@ -5,6 +5,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared
 {
@@ -509,6 +510,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> GenerateGridFixtures =
             CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
+
+        /// <summary>
+        /// How much to enlarge grids when determining their fixture bounds.
+        /// </summary>
+        public static readonly CVarDef<float> GridFixtureEnlargement =
+            CVarDef.Create("physics.grid_fixture_enlargement", -PhysicsConstants.PolygonRadius, CVar.ARCHIVE | CVar.REPLICATED);
 
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =

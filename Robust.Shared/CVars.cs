@@ -650,5 +650,44 @@ namespace Robust.Shared
 
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * HUB
+         * CVars related to public master server hub
+         */
+
+        /// <summary>
+        /// Whether to advertise this server to the public server hub.
+        /// </summary>
+        public static readonly CVarDef<bool> HubAdvertise =
+            CVarDef.Create("hub.advertise", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL of the master hub server to advertise to.
+        /// </summary>
+        public static readonly CVarDef<string> HubMasterUrl =
+            CVarDef.Create("hub.master_url", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL of this server to advertise.
+        /// This is automatically inferred by the hub server based on IP address if left empty,
+        /// but if you want to specify a domain or use <c>ss14://</c> you should specify this manually.
+        /// You also have to set this if you change status.bind.
+        /// </summary>
+        public static readonly CVarDef<string> HubServerUrl =
+            CVarDef.Create("hub.server_url", "", CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL to use to automatically try to detect IPv4 address.
+        /// This is only used if hub.server_url is unset.
+        /// </summary>
+        public static readonly CVarDef<string> HubIpifyUrl =
+            CVarDef.Create("hub.ipify_url", "https://api.ipify.org?format=json", CVar.SERVERONLY);
+
+        /// <summary>
+        /// How long to wait between advertise pings to the hub server.
+        /// </summary>
+        public static readonly CVarDef<int> HubAdvertiseInterval =
+            CVarDef.Create("hub.advertise_interval", 120, CVar.SERVERONLY);
     }
 }

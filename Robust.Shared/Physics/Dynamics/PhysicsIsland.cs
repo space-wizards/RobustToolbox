@@ -421,11 +421,11 @@ stored in a single array since multiple arrays lead to multiple misses.
             // Integrate positions
             for (var i = 0; i < BodyCount; i++)
             {
-                var linearVelocity = _linearVelocities[i];
-                var angularVelocity = _angularVelocities[i];
+                ref var linearVelocity = ref _linearVelocities[i];
+                ref var angularVelocity = ref _angularVelocities[i];
 
-                var position = _positions[i];
-                var angle = _angles[i];
+                ref var position = ref _positions[i];
+                ref var angle = ref _angles[i];
 
                 var translation = linearVelocity * frameTime;
                 if (Vector2.Dot(translation, translation) > _maxLinearVelocity)
@@ -444,12 +444,6 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // Integrate
                 position += linearVelocity * frameTime;
                 angle += angularVelocity * frameTime;
-
-                _linearVelocities[i] = linearVelocity;
-                _angularVelocities[i] = angularVelocity;
-
-                _positions[i] = position;
-                _angles[i] = angle;
             }
 
             _positionSolved = false;
@@ -461,12 +455,12 @@ stored in a single array since multiple arrays lead to multiple misses.
 
                 for (int j = 0; j < JointCount; ++j)
                 {
-                    Joint joint = _joints[j];
+                    var joint = _joints[j];
 
                     if (!joint.Enabled)
                         continue;
 
-                    bool jointOkay = joint.SolvePositionConstraints(SolverData);
+                    var jointOkay = joint.SolvePositionConstraints(SolverData);
 
                     jointsOkay = jointsOkay && jointOkay;
                 }

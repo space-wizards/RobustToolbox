@@ -40,7 +40,6 @@ namespace Robust.Client.Graphics.Clyde
             private IDXGIFactory1* _factory;
             private IDXGIAdapter1* _adapter;
             private ID3D11Device* _device;
-            private ID3D11DeviceContext* _deviceContext;
             private D3D_FEATURE_LEVEL _deviceFl;
             private void* _eglDevice;
             private void* _eglDisplay;

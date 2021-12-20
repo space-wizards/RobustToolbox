@@ -261,7 +261,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.Owner != uid)
+            if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             RemoveComponentImmediate((Component)component, uid, false);

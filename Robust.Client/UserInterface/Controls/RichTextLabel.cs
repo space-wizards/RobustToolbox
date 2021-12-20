@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System.Collections.Generic;
+using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -19,9 +20,9 @@ namespace Robust.Client.UserInterface.Controls
 
         public void SetMessage(string message)
         {
-            var msg = new FormattedMessage.Builder();
+            var msg = new FormattedMessage();
             msg.AddText(message);
-            SetMessage(msg.Build());
+            SetMessage(msg);
         }
 
         protected override Vector2 MeasureOverride(Vector2 availableSize)
@@ -31,7 +32,8 @@ namespace Robust.Client.UserInterface.Controls
                 return Vector2.Zero;
             }
 
-            _entry.Update(_getFontLibrary(), availableSize.X * UIScale, UIScale, defFont: _getFont());
+            var font = _getFont();
+            _entry.Update(font, availableSize.X * UIScale, UIScale);
 
             return (_entry.Width / UIScale, _entry.Height / UIScale);
         }
@@ -45,42 +47,18 @@ namespace Robust.Client.UserInterface.Controls
                 return;
             }
 
-            _entry.Draw(handle, _getFontLibrary(), SizeBox, 0, UIScale, _getFontColor(), defFont: _getFont());
+            _entry.Draw(handle, _getFont(), SizeBox, 0, new Stack<FormattedMessage.Tag>(), UIScale);
         }
 
         [Pure]
-        private IFontLibrary _getFontLibrary()
+        private Font _getFont()
         {
-            if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
+            if (TryGetStyleProperty<Font>("font", out var font))
             {
-                return flib;
+                return font;
             }
 
-            return UserInterfaceManager
-                .ThemeDefaults
-                .DefaultFontLibrary;
-        }
-
-        [Pure]
-        private FontClass _getFont()
-        {
-            if (TryGetStyleProperty<FontClass>("font", out var fclass))
-            {
-                return fclass;
-            }
-
-            return _getFontLibrary().Default;
-        }
-
-        [Pure]
-        private Color _getFontColor()
-        {
-            if (TryGetStyleProperty<Color>("font-color", out var fc))
-                return fc;
-
-            // From Robust.Client/UserInterface/RichTextEntry.cs#L19
-            // at 33008a2bce0cc4755b18b12edfaf5b6f1f87fdd9
-            return new Color(200, 200, 200);
+            return UserInterfaceManager.ThemeDefaults.DefaultFont;
         }
     }
 }

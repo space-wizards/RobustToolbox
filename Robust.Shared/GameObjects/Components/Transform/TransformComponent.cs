@@ -662,7 +662,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // TODO: When ECSing this can just pass it into the anchor setter
-            if (_mapManager.TryGetGrid(GridID, out var grid))
+            if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))
             {
                 if (_entMan.GetComponent<MetaDataComponent>(grid.GridEntityId).EntityLifeStage <=
                     EntityLifeStage.MapInitialized)
@@ -1059,7 +1059,7 @@ namespace Robust.Shared.GameObjects
         internal void SetAnchored(bool value)
         {
             _anchored = value;
-            Dirty();
+            Dirty(_entMan);
 
             var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);

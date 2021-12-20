@@ -655,22 +655,34 @@ namespace Robust.Shared.GameObjects
 
         public void DetachParentToNull()
         {
-            var oldParent = Parent;
-            if (oldParent == null)
+            var oldParent = _parent;
+            if (!oldParent.IsValid())
             {
                 return;
             }
 
-            Anchored = false;
+            // TODO: When ECSing this can just pass it into the anchor setter
+            if (_mapManager.TryGetGrid(GridID, out var grid))
+            {
+                if (_entMan.GetComponent<MetaDataComponent>(grid.GridEntityId).EntityLifeStage <=
+                    EntityLifeStage.MapInitialized)
+                {
+                    Anchored = false;
+                }
+            }
+            else
+            {
+                DebugTools.Assert(!Anchored);
+            }
 
-            var oldConcrete = (TransformComponent) oldParent;
+            var oldConcrete = _entMan.GetComponent<TransformComponent>(oldParent);
             var uid = Owner;
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?

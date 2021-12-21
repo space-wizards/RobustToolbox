@@ -241,7 +241,7 @@ namespace Robust.Shared.Physics
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
             if (MetaData(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
-                EntityManager.RemoveComponent<FixturesComponent>(uid);
+            EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
         private void OnPhysicsInit(ref PhysicsInitializedEvent ev)

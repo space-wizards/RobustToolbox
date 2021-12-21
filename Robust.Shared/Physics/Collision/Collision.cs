@@ -324,14 +324,12 @@ namespace Robust.Shared.Physics.Collision
             PolygonShape polygonB,
             in Transform xfB)
         {
-            EPCollider collider = new(_configManager);
+            EPCollider collider = new();
             collider.Collide(ref manifold, edgeA, xfA, polygonB, xfB);
         }
 
         private class EPCollider
         {
-            private TempPolygon _polygonB;
-
             Transform _xf;
             Vector2 _centroidB;
             Vector2 _v0, _v1, _v2, _v3;
@@ -340,11 +338,6 @@ namespace Robust.Shared.Physics.Collision
             Vector2 _lowerLimit, _upperLimit;
             float _radius;
             bool _front;
-
-            internal EPCollider(IConfigurationManager configManager)
-            {
-                _polygonB = new TempPolygon(configManager);
-            }
 
             public void Collide(ref Manifold manifold, EdgeShape edgeA, in Transform xfA, PolygonShape polygonB,
                 in Transform xfB)
@@ -553,19 +546,22 @@ namespace Robust.Shared.Physics.Collision
                     }
                 }
 
+                var polyBCount = polygonB.Vertices.Length;
+                Span<Vector2> tempPolyVerts = stackalloc Vector2[polyBCount];
+                Span<Vector2> tempPolyNorms = stackalloc Vector2[polyBCount];
+
                 // Get polygonB in frameA
-                _polygonB.Count = polygonB.Vertices.Length;
-                for (var i = 0; i < polygonB.Vertices.Length; ++i)
+                for (var i = 0; i < polyBCount; ++i)
                 {
-                    _polygonB.Vertices[i] = Transform.Mul(_xf, polygonB.Vertices[i]);
-                    _polygonB.Normals[i] = Transform.Mul(_xf.Quaternion2D, polygonB.Normals[i]);
+                    tempPolyVerts[i] = Transform.Mul(_xf, polygonB.Vertices[i]);
+                    tempPolyNorms[i] = Transform.Mul(_xf.Quaternion2D, polygonB.Normals[i]);
                 }
 
                 _radius = PhysicsConstants.PolygonRadius;
 
                 manifold.PointCount = 0;
 
-                EPAxis edgeAxis = ComputeEdgeSeparation();
+                EPAxis edgeAxis = ComputeEdgeSeparation(tempPolyVerts);
 
                 // If no valid normal can be found than this edge should not collide.
                 if (edgeAxis.Type == EPAxisType.Unknown)
@@ -578,7 +574,7 @@ namespace Robust.Shared.Physics.Collision
                     return;
                 }
 
-                EPAxis polygonAxis = ComputePolygonSeparation();
+                EPAxis polygonAxis = ComputePolygonSeparation(tempPolyVerts, tempPolyNorms);
                 if (polygonAxis.Type != EPAxisType.Unknown && polygonAxis.Separation > _radius)
                 {
                     return;
@@ -610,10 +606,10 @@ namespace Robust.Shared.Physics.Collision
 
                     // Search for the polygon normal that is most anti-parallel to the edge normal.
                     int bestIndex = 0;
-                    float bestValue = Vector2.Dot(_normal, _polygonB.Normals[0]);
-                    for (int i = 1; i < _polygonB.Count; ++i)
+                    float bestValue = Vector2.Dot(_normal, tempPolyNorms[0]);
+                    for (int i = 1; i < polyBCount; ++i)
                     {
-                        float value = Vector2.Dot(_normal, _polygonB.Normals[i]);
+                        float value = Vector2.Dot(_normal, tempPolyNorms[i]);
                         if (value < bestValue)
                         {
                             bestValue = value;
@@ -622,17 +618,17 @@ namespace Robust.Shared.Physics.Collision
                     }
 
                     int i1 = bestIndex;
-                    int i2 = i1 + 1 < _polygonB.Count ? i1 + 1 : 0;
+                    int i2 = i1 + 1 < polyBCount ? i1 + 1 : 0;
 
                     ref var c0 = ref ie[0];
-                    c0.V = _polygonB.Vertices[i1];
+                    c0.V = tempPolyVerts[i1];
                     c0.ID.Features.IndexA = 0;
                     c0.ID.Features.IndexB = (byte) i1;
                     c0.ID.Features.TypeA = (byte) ContactFeatureType.Face;
                     c0.ID.Features.TypeB = (byte) ContactFeatureType.Vertex;
 
                     ref var c1 = ref ie[1];
-                    c1.V = _polygonB.Vertices[i2];
+                    c1.V = tempPolyVerts[i2];
                     c1.ID.Features.IndexA = 0;
                     c1.ID.Features.IndexB = (byte) i2;
                     c1.ID.Features.TypeA = (byte) ContactFeatureType.Face;
@@ -673,10 +669,10 @@ namespace Robust.Shared.Physics.Collision
                     c1.ID.Features.TypeB = (byte) ContactFeatureType.Face;
 
                     rf.i1 = primaryAxis.Index;
-                    rf.i2 = rf.i1 + 1 < _polygonB.Count ? rf.i1 + 1 : 0;
-                    rf.v1 = _polygonB.Vertices[rf.i1];
-                    rf.v2 = _polygonB.Vertices[rf.i2];
-                    rf.normal = _polygonB.Normals[rf.i1];
+                    rf.i2 = rf.i1 + 1 < polyBCount ? rf.i1 + 1 : 0;
+                    rf.v1 = tempPolyVerts[rf.i1];
+                    rf.v2 = tempPolyVerts[rf.i2];
+                    rf.normal = tempPolyNorms[rf.i1];
                 }
 
                 rf.sideNormal1 = new Vector2(rf.normal.Y, -rf.normal.X);
@@ -749,16 +745,16 @@ namespace Robust.Shared.Physics.Collision
 
             }
 
-            private EPAxis ComputeEdgeSeparation()
+            private EPAxis ComputeEdgeSeparation(Span<Vector2> tempPolyVerts)
             {
                 EPAxis axis;
                 axis.Type = EPAxisType.EdgeA;
                 axis.Index = _front ? 0 : 1;
                 axis.Separation = float.MaxValue;
 
-                for (int i = 0; i < _polygonB.Count; ++i)
+                for (int i = 0; i < tempPolyVerts.Length; ++i)
                 {
-                    float s = Vector2.Dot(_normal, _polygonB.Vertices[i] - _v1);
+                    float s = Vector2.Dot(_normal, tempPolyVerts[i] - _v1);
                     if (s < axis.Separation)
                     {
                         axis.Separation = s;
@@ -768,7 +764,7 @@ namespace Robust.Shared.Physics.Collision
                 return axis;
             }
 
-            private EPAxis ComputePolygonSeparation()
+            private EPAxis ComputePolygonSeparation(Span<Vector2> tempPolyVerts, Span<Vector2> tempPolyNorms)
             {
                 EPAxis axis;
                 axis.Type = EPAxisType.Unknown;
@@ -777,12 +773,12 @@ namespace Robust.Shared.Physics.Collision
 
                 Vector2 perp = new Vector2(-_normal.Y, _normal.X);
 
-                for (int i = 0; i < _polygonB.Count; ++i)
+                for (int i = 0; i < tempPolyVerts.Length; ++i)
                 {
-                    Vector2 n = -_polygonB.Normals[i];
+                    Vector2 n = -tempPolyNorms[i];
 
-                    float s1 = Vector2.Dot(n, _polygonB.Vertices[i] - _v1);
-                    float s2 = Vector2.Dot(n, _polygonB.Vertices[i] - _v2);
+                    float s1 = Vector2.Dot(n, tempPolyVerts[i] - _v1);
+                    float s2 = Vector2.Dot(n, tempPolyVerts[i] - _v2);
                     float s = Math.Min(s1, s2);
 
                     if (s > _radius)
@@ -904,8 +900,8 @@ namespace Robust.Shared.Physics.Collision
                 float factor = 1f /
                                MathF.Sqrt(manifold.LocalNormal.X * manifold.LocalNormal.X +
                                           manifold.LocalNormal.Y * manifold.LocalNormal.Y);
-                manifold.LocalNormal.X = manifold.LocalNormal.X * factor;
-                manifold.LocalNormal.Y = manifold.LocalNormal.Y * factor;
+                manifold.LocalNormal.X *= factor;
+                manifold.LocalNormal.Y *= factor;
                 manifold.LocalPoint = v1;
 
                 ref var p0b = ref manifold.Points[0];
@@ -928,8 +924,8 @@ namespace Robust.Shared.Physics.Collision
                                (float)
                                Math.Sqrt(manifold.LocalNormal.X * manifold.LocalNormal.X +
                                          manifold.LocalNormal.Y * manifold.LocalNormal.Y);
-                manifold.LocalNormal.X = manifold.LocalNormal.X * factor;
-                manifold.LocalNormal.Y = manifold.LocalNormal.Y * factor;
+                manifold.LocalNormal.X *= factor;
+                manifold.LocalNormal.Y *= factor;
                 manifold.LocalPoint = v2;
 
                 ref var p0c = ref manifold.Points[0];

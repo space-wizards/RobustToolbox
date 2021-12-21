@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
@@ -8,6 +7,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -67,7 +67,6 @@ internal partial class PVSSystem : EntitySystem
             new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
     {
@@ -141,7 +140,6 @@ internal partial class PVSSystem : EntitySystem
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
-        _cachedPackets.Clear();
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -402,16 +400,14 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
-        var packet = _cachedPackets.GetOrAdd(uid, static (i, entityManager) => new PVSEntityPacket(entityManager, i), EntityManager);
-
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null && packet.VisibilityComponent != null)
+        if (visMask != null && EntityManager.TryGetComponent(uid, out VisibilityComponent visibility))
         {
-            if ((visMask & packet.VisibilityComponent.Layer) == 0)
+            if ((visMask & visibility.Layer) == 0)
                 return false;
         }
 
-        var parent = packet.TransformComponent.ParentUid;
+        var parent = Transform(uid).ParentUid;
 
         if (!trustParent && //do we have it on good authority the parent exists?
             parent.IsValid() && //is it not a worldentity?
@@ -445,12 +441,15 @@ internal partial class PVSSystem : EntitySystem
         }
 
         //we *need* to send out contained entities too as part of the intial state
-        if (packet.ContainerManagerComponent != null)
+        if (EntityManager.TryGetComponent(uid, out ContainerManagerComponent? containerManager))
         {
-            foreach (var container in packet.ContainerManagerComponent.GetAllContainers())
+            foreach (var container in containerManager.GetAllContainers())
             {
-                foreach (var containedEntity in container.ContainedEntities)
+                // For loop to avoid allocation.
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (var i = 0; i < container.ContainedEntities.Count; i++)
                 {
+                    var containedEntity = container.ContainedEntities[i];
                     TryAddToVisibleEnts(in containedEntity, seenSet, previousVisibleEnts, toSend, fromTick,
                         ref newEntitiesSent, ref totalEnteredEntities, null,
                         true, true);
@@ -464,7 +463,7 @@ internal partial class PVSSystem : EntitySystem
             return true;
         }
 
-        if (packet.MetaDataComponent.EntityLastModifiedTick < fromTick)
+        if (MetaData(uid).EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);

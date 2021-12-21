@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using OpenToolkit.Graphics.OpenGL4;
 using Robust.Client.Input;
 using Robust.Client.UserInterface;
 using Robust.Shared;
@@ -13,8 +12,9 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using static Robust.Client.Utility.Win32;
+using TerraFX.Interop.Windows;
 using FrameEventArgs = Robust.Shared.Timing.FrameEventArgs;
+using GL = OpenToolkit.Graphics.OpenGL4.GL;
 
 namespace Robust.Client.Graphics.Clyde
 {
@@ -204,10 +204,14 @@ namespace Robust.Client.Graphics.Clyde
                                         "or enable compatibility mode in the launcher if that fails.\n" +
                                         $"The exact error is: {lastError}";
 
-                    MessageBoxW(null,
-                        msgBoxContent,
-                        "Space Station 14: Failed to create window",
-                        MB_OK | MB_ICONERROR);
+                    fixed (char* pText = msgBoxContent)
+                    fixed (char* pCaption = "Space Station 14: Failed to create window")
+                    {
+                        Windows.MessageBoxW(HWND.NULL,
+                            (ushort*) pText,
+                            (ushort*) pCaption,
+                            MB.MB_OK | MB.MB_ICONERROR);
+                    }
                 }
 
                 Logger.FatalS("clyde.win",

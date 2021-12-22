@@ -219,7 +219,7 @@ namespace Robust.Shared.GameObjects
             var currentTick = CurrentTick;
 
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
-            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var component))
                 throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
 
             var metadata = (MetaDataComponent)component;
@@ -241,7 +241,7 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(e, out var comp)
+            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(e, out var comp)
                 || comp is not MetaDataComponent meta || meta.EntityDeleted)
                 return;
 
@@ -303,7 +303,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
+            return _entTraitArray[ArrayIndexFor<MetaDataComponent>()].ContainsKey(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -313,12 +313,12 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
         public bool Deleted(EntityUid? uid)
         {
-            return !uid.HasValue || !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !uid.HasValue || !_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
         /// <summary>
@@ -443,7 +443,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
-            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var component))
                 return new EntityStringRepresentation(uid, true);
 
             var metadata = (MetaDataComponent) component;

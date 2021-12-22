@@ -535,6 +535,9 @@ namespace Robust.Shared.Map
                 var matrix = _entityManager.GetComponent<TransformComponent>(mapGrid.GridEntityId).InvWorldMatrix;
                 var localPos = matrix.Transform(worldPos);
 
+                // NOTE:
+                // If you change this to use fixtures instead (i.e. if you want half-tiles) then you need to make sure
+                // you account for the fact that fixtures are shrunk slightly!
                 var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
                 var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
 
@@ -596,6 +599,7 @@ namespace Robust.Shared.Map
                             {
                                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                                 {
+                                    // TODO: Need to use collisionmanager for overlapsies
                                     if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldAABB)) continue;
 
                                     intersects = true;

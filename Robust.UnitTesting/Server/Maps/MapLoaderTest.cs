@@ -101,6 +101,7 @@ entities:
             protoMan.RegisterType(typeof(EntityPrototype));
 
             protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
+            protoMan.Resync();
         }
 
         [Test]

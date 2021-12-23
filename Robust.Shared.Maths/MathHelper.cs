@@ -112,7 +112,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float NextPowerOfTwo(float n)
         {
-            if (float.IsNaN(n) || float.IsInfinity(n))
+            if (!float.IsFinite(n))
                 throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
             return (float) NextPowerOfTwo((double) n);
@@ -126,7 +126,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NextPowerOfTwo(double n)
         {
-            if (double.IsNaN(n) || double.IsInfinity(n))
+            if (!double.IsFinite(n))
                 throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
 

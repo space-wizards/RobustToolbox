@@ -273,7 +273,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)
         {
-            RemoveComponent(uid, ComponentTypeCache<T>.Type);
+            RemoveComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -585,7 +585,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (TryGetComponent(uid.Value, ComponentTypeCache<T>.Type, out var comp))
+            if (TryGetComponent(uid.Value, typeof(T), out var comp))
             {
                 if (!comp.Deleted)
                 {

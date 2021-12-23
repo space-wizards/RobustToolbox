@@ -242,11 +242,11 @@ namespace Robust.Shared.GameObjects
 
         public T GetComponent<T>() where T : IComponent, new()
         {
-            if (!types.ContainsKey(ComponentTypeCache<T>.Type))
+            if (!types.ContainsKey(typeof(T)))
             {
-                throw new InvalidOperationException($"{ComponentTypeCache<T>.Type} is not a registered component.");
+                throw new InvalidOperationException($"{typeof(T)} is not a registered component.");
             }
-            return _typeFactory.CreateInstanceUnchecked<T>(types[ComponentTypeCache<T>.Type].Type);
+            return _typeFactory.CreateInstanceUnchecked<T>(types[typeof(T)].Type);
         }
 
         public IComponent GetComponent(string componentName, bool ignoreCase = false)
@@ -310,7 +310,7 @@ namespace Robust.Shared.GameObjects
 
         public IComponentRegistration GetRegistration<T>() where T : IComponent, new()
         {
-            return GetRegistration(ComponentTypeCache<T>.Type);
+            return GetRegistration(typeof(T));
         }
 
         public IComponentRegistration GetRegistration(IComponent component)
@@ -349,7 +349,7 @@ namespace Robust.Shared.GameObjects
 
         public bool TryGetRegistration<T>([NotNullWhen(true)] out IComponentRegistration? registration) where T : IComponent, new()
         {
-            return TryGetRegistration(ComponentTypeCache<T>.Type, out registration);
+            return TryGetRegistration(typeof(T), out registration);
         }
 
         public bool TryGetRegistration(ushort netID, [NotNullWhen(true)] out IComponentRegistration? registration)
@@ -381,7 +381,7 @@ namespace Robust.Shared.GameObjects
         public void RegisterClass<T>(bool overwrite = false)
             where T : IComponent, new()
         {
-            RegisterClass(ComponentTypeCache<T>.Type);
+            RegisterClass(typeof(T));
         }
 
         private void RegisterClass(Type type)

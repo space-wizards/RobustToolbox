@@ -114,7 +114,7 @@ namespace Robust.Shared.GameObjects
             if (curLength > index)
                 return;
 
-            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, curLength));
+            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, index));
             Array.Resize(ref _entTraitArray, newLength);
         }
 

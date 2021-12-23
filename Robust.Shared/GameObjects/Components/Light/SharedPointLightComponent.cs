@@ -90,7 +90,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public virtual float Energy
+        public float Energy
         {
             get => _energy;
             set
@@ -107,7 +107,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
         [Animatable]
-        public virtual float Softness
+        public float Softness
         {
             get => _softness;
             set

@@ -12,6 +12,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Maths
@@ -88,7 +89,7 @@ namespace Robust.Shared.Maths
         public static long NextPowerOfTwo(long n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long) NextPowerOfTwo((double) n);
+            return 1L << (BitOperations.Log2((ulong)n) + 1);
         }
 
         /// <summary>
@@ -100,7 +101,7 @@ namespace Robust.Shared.Maths
         public static int NextPowerOfTwo(int n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int) NextPowerOfTwo((double) n);
+            return 1 << (BitOperations.Log2((uint)n) + 1);
         }
 
         /// <summary>

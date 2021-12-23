@@ -356,7 +356,8 @@ namespace Robust.Client.GameObjects
                     if ((effect.AttachedEntityUid is {} attached &&
                         _entityManager.TryGetComponent(attached, out attachedXform) &&
                         attachedXform.MapID != playerXform.MapID) ||
-                        effect.Coordinates.GetMapId(_entityManager) != map)
+                        (effect.AttachedEntityUid == null &&
+                         effect.Coordinates.GetMapId(_entityManager) != map))
                     {
                         continue;
                     }
@@ -376,7 +377,9 @@ namespace Robust.Client.GameObjects
                         (attachedXform?.Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
-                    var rotation = _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
+                    // ???
+                    var rotation = attachedXform?.WorldRotation ?? _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
+
                     var effectOrigin = coordinates.ToMapPos(_entityManager);
 
                     var effectArea = Box2.CenteredAround(effectOrigin, effect.Size);

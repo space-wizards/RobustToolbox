@@ -12,6 +12,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 namespace Robust.Shared.Maths
@@ -88,7 +89,7 @@ namespace Robust.Shared.Maths
         public static long NextPowerOfTwo(long n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (long) NextPowerOfTwo((double) n);
+            return 1L << (BitOperations.Log2((ulong)n) + 1);
         }
 
         /// <summary>
@@ -100,7 +101,7 @@ namespace Robust.Shared.Maths
         public static int NextPowerOfTwo(int n)
         {
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
-            return (int) NextPowerOfTwo((double) n);
+            return 1 << (BitOperations.Log2((uint)n) + 1);
         }
 
         /// <summary>
@@ -111,7 +112,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static float NextPowerOfTwo(float n)
         {
-            if (float.IsNaN(n) || float.IsInfinity(n))
+            if (!float.IsFinite(n))
                 throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
             return (float) NextPowerOfTwo((double) n);
@@ -125,7 +126,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double NextPowerOfTwo(double n)
         {
-            if (double.IsNaN(n) || double.IsInfinity(n))
+            if (!double.IsFinite(n))
                 throw new ArgumentOutOfRangeException(nameof(n), "Must be a number.");
             if (n <= 0) throw new ArgumentOutOfRangeException(nameof(n), "Must be positive.");
 

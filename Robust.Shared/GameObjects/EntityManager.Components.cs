@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
 using System.Reflection;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
@@ -9,6 +10,7 @@ using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using Robust.Shared.Maths;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -112,10 +114,7 @@ namespace Robust.Shared.GameObjects
             if (curLength > index)
                 return;
 
-            var newLength = Math.Max(2, curLength) * 2;
-            DebugTools.Assert(index < newLength,
-                "After resize, _entTraitDictIndex was still too small. " +
-                "This can only happen if EnsureEntTraitIndexCapacity was not called with single increments.");
+            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, index));
             Array.Resize(ref _entTraitArray, newLength);
         }
 
@@ -274,7 +273,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)
         {
-            RemoveComponent(uid, ComponentTypeCache<T>.Type);
+            RemoveComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -586,7 +585,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (TryGetComponent(uid.Value, ComponentTypeCache<T>.Type, out var comp))
+            if (TryGetComponent(uid.Value, typeof(T), out var comp))
             {
                 if (!comp.Deleted)
                 {

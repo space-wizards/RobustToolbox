@@ -543,6 +543,7 @@ namespace Robust.Shared.GameObjects
             }
 
             GridID = GetGridIndex();
+            RebuildMatrices();
         }
 
         private GridId GetGridIndex()
@@ -574,7 +575,6 @@ namespace Robust.Shared.GameObjects
             base.Startup();
 
             // Keep the cached matrices in sync with the fields.
-            RebuildMatrices();
             Dirty();
         }
 

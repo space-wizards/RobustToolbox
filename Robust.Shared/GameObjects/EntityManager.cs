@@ -266,10 +266,10 @@ namespace Robust.Shared.GameObjects
             EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
-            foreach (var childTransform in transform.Children.ToArray())
+            foreach (var child in transform._children.ToArray())
             {
                 // Recursion Alert
-                RecursiveDeleteEntity(childTransform.Owner);
+                RecursiveDeleteEntity(child);
             }
 
             // Shut down all components.

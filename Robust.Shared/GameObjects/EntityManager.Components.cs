@@ -689,7 +689,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            var comps = _entCompIndex[uid];
+            var comps = _entCompIndex[uid].ToArray();
             foreach (var comp in comps)
             {
                 if (comp.Deleted || comp is not T tComp) continue;

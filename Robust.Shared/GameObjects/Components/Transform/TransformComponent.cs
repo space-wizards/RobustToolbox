@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
-        [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
+        [ViewVariables] internal readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 

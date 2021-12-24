@@ -1,11 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
+using System.Text;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Scripting
 {
@@ -103,6 +107,42 @@ namespace Robust.Shared.Scripting
             return m!.Invoke(target, args);
         }
 
+        public void help()
+        {
+            var builder = new StringBuilder();
+
+            foreach (var member in GetType().GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public))
+            {
+                switch (member.MemberType)
+                {
+                    case MemberTypes.Method:
+                        var method = (MethodInfo) member;
+
+                        // Let's not print constructors, property methods, etc.
+                        if (method.IsSpecialName)
+                            continue;
+
+                        builder.Append(method.PrintMethodSignature());
+                        builder.AppendLine(";");
+                        break;
+
+                    case MemberTypes.Property:
+                        builder.Append(((PropertyInfo)member).PrintPropertySignature());
+                        builder.AppendLine(";");
+                        break;
+
+                    default:
+                        continue;
+                }
+
+                builder.AppendLine();
+            }
+
+            // This is slow, so do it all at once.
+            writesyntax(builder.ToString());
+        }
+
+        public abstract void writesyntax(object toString);
         public abstract void write(object toString);
         public abstract void show(object obj);
     }

@@ -224,9 +224,9 @@ namespace Robust.Server.Scripting
                 instance.RunningScript = false;
             }
 
-            if (instance.OutputBuffer.Length != 0)
+            if (!instance.OutputBuffer.IsEmpty)
             {
-                msg.AddText(instance.OutputBuffer.ToString());
+                msg.AddMessage(instance.OutputBuffer);
                 instance.OutputBuffer.Clear();
             }
 
@@ -332,7 +332,7 @@ namespace Robust.Server.Scripting
         {
             public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
             public StringBuilder InputBuffer { get; } = new();
-            public StringBuilder OutputBuffer { get; } = new();
+            public FormattedMessage OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
 
             public ScriptGlobals Globals { get; }
@@ -348,6 +348,8 @@ namespace Robust.Server.Scripting
 
         private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
+            [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+
             private readonly ScriptInstance _scriptInstance;
 
             public ScriptGlobalsImpl(ScriptInstance scriptInstance)
@@ -356,11 +358,26 @@ namespace Robust.Server.Scripting
                 IoCManager.InjectDependencies(this);
             }
 
+            public override void writesyntax(object toString)
+            {
+                if (_scriptInstance.RunningScript && toString?.ToString() is {} code)
+                {
+                    var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
+                    var script = CSharpScript.Create(code, options, typeof(ScriptGlobals));
+                    script.Compile();
+
+                    var syntax = new FormattedMessage();
+                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace);
+
+                    _scriptInstance.OutputBuffer.AddMessage(syntax);
+                }
+            }
+
             public override void write(object toString)
             {
-                if (_scriptInstance.RunningScript)
+                if (_scriptInstance.RunningScript && toString.ToString() is {} value)
                 {
-                    _scriptInstance.OutputBuffer.AppendLine(toString?.ToString());
+                    _scriptInstance.OutputBuffer.AddText(value);
                 }
             }
 

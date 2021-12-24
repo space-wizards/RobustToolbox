@@ -210,6 +210,23 @@ namespace Robust.Client.Console
                 vvm.OpenVV(a);
             }
 
+            public override void writesyntax(object toString)
+            {
+                var code = toString.ToString();
+
+                if (code == null)
+                    return;
+
+                var options = ScriptInstanceShared.GetScriptOptions(_owner._reflectionManager).AddReferences(typeof(Image).Assembly);
+                var script = CSharpScript.Create(code, options, typeof(ScriptGlobals));
+                script.Compile();
+
+                var syntax = new FormattedMessage();
+                ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _owner._highlightWorkspace);
+
+                _owner.OutputPanel.AddMessage(syntax);
+            }
+
             public override void write(object toString)
             {
                 _owner.OutputPanel.AddText(toString?.ToString() ?? "");

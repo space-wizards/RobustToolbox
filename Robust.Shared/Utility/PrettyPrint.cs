@@ -1,5 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Text;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
@@ -68,5 +73,106 @@ namespace Robust.Shared.Utility
 
             return stringRep!;
         }
+
+        public static string PrintTypeSignature(this Type type)
+        {
+            if (TypeShortHand.TryGetValue(type, out var value))
+                return value;
+
+            var nullable = false;
+            if (type.IsNullable(out var underlying))
+            {
+                type = underlying;
+                nullable = true;
+            }
+
+            if (type.IsGenericType)
+            {
+                return $"{type.Name.Split('`')[0]}<{string.Join(", ", type.GetGenericArguments().Select(PrintTypeSignature))}>{(nullable ? "?" : string.Empty)}";
+            }
+
+            return type.Name;
+        }
+
+        public static string PrintParameterSignature(this ParameterInfo parameter)
+        {
+            var builder = new StringBuilder();
+
+            if (parameter.IsIn)
+            {
+                builder.Append($"in ");
+            }
+
+            if (parameter.IsOut)
+            {
+                builder.Append($"out ");
+            }
+            else if (parameter.ParameterType.IsByRef)
+            {
+                builder.Append($"ref ");
+            }
+
+            builder.Append(parameter.ParameterType.PrintTypeSignature());
+
+            if (parameter.Name is { } name)
+            {
+                builder.Append($" {name}");
+            }
+
+            if (parameter.HasDefaultValue)
+            {
+                builder.Append($" = {PrintUserFacing(parameter.DefaultValue)}");
+            }
+
+            return builder.ToString();
+        }
+
+        public static string PrintMethodSignature(this MethodInfo method)
+        {
+            var builder = new StringBuilder();
+
+            if (!method.IsConstructor)
+            {
+                builder.Append($"{method.ReturnType.PrintTypeSignature()} ");
+            }
+
+            builder.Append(method.Name);
+
+            if (method.IsGenericMethod)
+            {
+                builder.Append($"<{string.Join(", ", method.GetGenericArguments().Select(PrintTypeSignature))}>");
+            }
+
+            builder.Append($"({string.Join($", ", method.GetParameters().Select(PrintParameterSignature))})");
+
+            return builder.ToString();
+        }
+
+        public static string PrintPropertySignature(this PropertyInfo property)
+        {
+            return $"{property.PropertyType.PrintTypeSignature()} {property.Name}";
+        }
+
+        private static readonly IReadOnlyDictionary<Type, string> TypeShortHand = new Dictionary<Type, string>()
+        {
+            // ReSharper disable BuiltInTypeReferenceStyle
+            {typeof(void), "void"},
+            {typeof(Object), "object"},
+            {typeof(Boolean), "bool"},
+            {typeof(Byte), "byte"},
+            {typeof(Char), "char"},
+            {typeof(Decimal), "decimal"},
+            {typeof(Double), "double"},
+            {typeof(Single), "float"},
+            {typeof(Int32), "int"},
+            {typeof(Int64), "long"},
+            {typeof(SByte), "sbyte"},
+            {typeof(Int16), "short"},
+            {typeof(String), "string"},
+            {typeof(UInt32), "uint"},
+            {typeof(UInt64), "ulong"},
+            {typeof(UInt16), "ushort"},
+            // ReSharper restore BuiltInTypeReferenceStyle
+        };
     }
 }

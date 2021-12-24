@@ -123,18 +123,17 @@ namespace Robust.Shared.Scripting
                             continue;
 
                         builder.Append(method.PrintMethodSignature());
-                        builder.AppendLine(";");
                         break;
 
                     case MemberTypes.Property:
                         builder.Append(((PropertyInfo)member).PrintPropertySignature());
-                        builder.AppendLine(";");
                         break;
 
                     default:
                         continue;
                 }
 
+                builder.AppendLine(";");
                 builder.AppendLine();
             }
 

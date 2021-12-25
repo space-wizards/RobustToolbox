@@ -141,7 +141,7 @@ namespace Robust.Shared.Scripting
             writesyntax(builder.ToString());
         }
 
-        public abstract void writesyntax(object toString);
+        protected abstract void writesyntax(object toString);
         public abstract void write(object toString);
         public abstract void show(object obj);
     }

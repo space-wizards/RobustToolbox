@@ -210,7 +210,7 @@ namespace Robust.Client.Console
                 vvm.OpenVV(a);
             }
 
-            public override void writesyntax(object toString)
+            protected override void writesyntax(object toString)
             {
                 var code = toString.ToString();
 

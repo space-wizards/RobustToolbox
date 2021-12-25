@@ -155,7 +155,7 @@ namespace Robust.Client.Console
                 IoCManager.InjectDependencies(this);
             }
 
-            public override void writesyntax(object toString)
+            protected override void writesyntax(object toString)
             {
                 // No-op: nothing to write to.
             }

@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    internal abstract class SharedTransformSystem : EntitySystem
+    public abstract class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 

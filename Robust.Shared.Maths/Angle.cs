@@ -229,12 +229,16 @@ namespace Robust.Shared.Maths
         /// </summary>
         public static Angle Lerp(in Angle a, in Angle b, float factor)
         {
-            var degA = MathHelper.RadiansToDegrees(Reduce(a));
-            var degB = MathHelper.RadiansToDegrees(Reduce(b));
-            var delta = MathHelper.Mod((degB - degA), 360);
-            if (delta > 180)
-                delta -= 360;
-            return new Angle(MathHelper.DegreesToRadians(degA + delta * MathHelper.Clamp(factor, 0, 1)));
+            return a + ShortestDistance(a, b) * factor;
+        }
+
+        /// <summary>
+        ///     Returns the shortest distance between two angles.
+        /// </summary>
+        public static Angle ShortestDistance(in Angle a, in Angle b)
+        {
+            var delta = (b - a) % Math.Tau;
+            return 2 * delta % Math.Tau - delta;
         }
 
         /// <summary>

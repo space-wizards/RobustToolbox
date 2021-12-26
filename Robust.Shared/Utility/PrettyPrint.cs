@@ -127,30 +127,117 @@ namespace Robust.Shared.Utility
             return builder.ToString();
         }
 
-        public static string PrintMethodSignature(this MethodInfo method)
+        public static string PrintMethodSignature(this MethodInfo method, bool modifiers = false, bool arguments = true, bool returnType = true, bool name = true)
         {
             var builder = new StringBuilder();
 
-            if (!method.IsConstructor)
+            if (modifiers)
             {
-                builder.Append($"{method.ReturnType.PrintTypeSignature()} ");
+                // Access modifiers.
+                if (method.IsPublic)
+                    builder.Append("public ");
+
+                if (method.IsPrivate)
+                    builder.Append("private ");
+
+                if (method.IsFamilyAndAssembly)
+                    builder.Append("private protected ");
+
+                if (method.IsFamily)
+                    builder.Append("protected ");
+
+                if (method.IsFamilyOrAssembly)
+                    builder.Append("protected internal ");
+
+                if (method.IsAssembly)
+                    builder.Append("internal ");
+
+                if(method.IsStatic)
+                    builder.Append("static ");
+
+                if (method.IsAbstract && method.DeclaringType is {IsAbstract:true, IsInterface:false})
+                    builder.Append("abstract ");
+                else if(method.DeclaringType is {IsInterface:false})
+                {
+                    if (method.IsFinal)
+                        builder.Append("sealed override ");
+                    else if (method.IsVirtual)
+                        builder.Append(method.Equals(method.GetBaseDefinition()) ? "virtual " : "override ");
+                }
             }
 
-            builder.Append(method.Name);
+            if (returnType && !method.IsConstructor)
+                builder.Append($"{method.ReturnType.PrintTypeSignature()} ");
+
+            if(name)
+                builder.Append(method.Name);
+
+            if (!arguments)
+                return builder.ToString();
 
             if (method.IsGenericMethod)
-            {
                 builder.Append($"<{string.Join(", ", method.GetGenericArguments().Select(PrintTypeSignature))}>");
-            }
 
             builder.Append($"({string.Join($", ", method.GetParameters().Select(PrintParameterSignature))})");
 
             return builder.ToString();
         }
 
-        public static string PrintPropertySignature(this PropertyInfo property)
+        public static string PrintPropertySignature(this PropertyInfo property, bool modifiers = false, bool accessors = false)
         {
-            return $"{property.PropertyType.PrintTypeSignature()} {property.Name}";
+            var builder = new StringBuilder();
+
+            builder.Append($"{property.PropertyType.PrintTypeSignature()} {property.Name}");
+
+            if (accessors)
+            {
+                builder.Append(" { ");
+
+                if (property.CanRead)
+                    builder.Append($"{property.GetMethod!.PrintMethodSignature(modifiers, false, false, false)}get; ");
+
+                if (property.CanWrite)
+                    builder.Append($"{property.SetMethod!.PrintMethodSignature(modifiers, false, false, false)}set; ");
+
+                builder.Append('}');
+
+            }
+
+            return builder.ToString();
+        }
+
+        public static string PrintFieldSignature(this FieldInfo field, bool modifiers = false)
+        {
+            var builder = new StringBuilder();
+
+            if (modifiers)
+            {
+                // Access modifiers. Hmm... Déjà vu.
+                if (field.IsPublic)
+                    builder.Append("public ");
+
+                if (field.IsPrivate)
+                    builder.Append("private ");
+
+                if (field.IsFamilyAndAssembly)
+                    builder.Append("private protected ");
+
+                if (field.IsFamily)
+                    builder.Append("protected ");
+
+                if (field.IsFamilyOrAssembly)
+                    builder.Append("protected internal ");
+
+                if (field.IsAssembly)
+                    builder.Append("internal ");
+
+                if(field.IsStatic)
+                    builder.Append("static ");
+            }
+
+            builder.Append($"{field.FieldType.PrintTypeSignature()} {field.Name}");
+
+            return builder.ToString();
         }
 
         private static readonly IReadOnlyDictionary<Type, string> TypeShortHand = new Dictionary<Type, string>()

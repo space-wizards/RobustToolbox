@@ -358,7 +358,7 @@ namespace Robust.Server.Scripting
                 IoCManager.InjectDependencies(this);
             }
 
-            protected override void writesyntax(object toString)
+            protected override void WriteSyntax(object toString)
             {
                 if (_scriptInstance.RunningScript && toString?.ToString() is {} code)
                 {

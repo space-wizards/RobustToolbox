@@ -19,6 +19,9 @@ namespace Robust.Shared.Scripting
     [SuppressMessage("ReSharper", "CA1822")]
     public abstract class ScriptGlobalsShared
     {
+        private const BindingFlags DefaultHelpFlags =
+            BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
         [field: Dependency] public IEntityManager ent { get; } = default!;
         [field: Dependency] public IPrototypeManager prot { get; } = default!;
         [field: Dependency] public IMapManager map { get; } = default!;
@@ -109,39 +112,48 @@ namespace Robust.Shared.Scripting
 
         public void help()
         {
+            help(GetType(), DefaultHelpFlags &~ BindingFlags.NonPublic, false, false);
+        }
+
+        public void help(Type type, BindingFlags flags = DefaultHelpFlags, bool specialNameMethods = true, bool modifiers = true)
+        {
             var builder = new StringBuilder();
 
-            foreach (var member in GetType().GetMembers(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public))
+            foreach (var member in type.GetMembers(flags))
             {
                 switch (member.MemberType)
                 {
                     case MemberTypes.Method:
                         var method = (MethodInfo) member;
 
-                        // Let's not print constructors, property methods, etc.
-                        if (method.IsSpecialName)
-                            continue;
+                        if (!specialNameMethods && method.IsSpecialName)
+                            continue; // Let's not print constructors, property methods, etc.
 
-                        builder.Append(method.PrintMethodSignature());
+                        builder.Append(method.PrintMethodSignature(modifiers));
+                        builder.AppendLine(";");
                         break;
 
                     case MemberTypes.Property:
-                        builder.Append(((PropertyInfo)member).PrintPropertySignature());
+                        builder.AppendLine(((PropertyInfo)member).PrintPropertySignature(modifiers, true));
+                        break;
+
+                    case MemberTypes.Field:
+                        builder.Append(((FieldInfo) member).PrintFieldSignature(modifiers));
+                        builder.AppendLine(";");
                         break;
 
                     default:
                         continue;
                 }
 
-                builder.AppendLine(";");
                 builder.AppendLine();
             }
 
             // This is slow, so do it all at once.
-            writesyntax(builder.ToString());
+            WriteSyntax(builder.ToString());
         }
 
-        protected abstract void writesyntax(object toString);
+        protected abstract void WriteSyntax(object toString);
         public abstract void write(object toString);
         public abstract void show(object obj);
     }

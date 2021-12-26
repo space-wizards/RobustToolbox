@@ -45,7 +45,7 @@ namespace Robust.Client.UserInterface
         /// <param name="h">The height of the tallest character's <c>BearingY</c>.</param>
         /// <param name="ln">The line number that the word is assigned to.</param>
         /// <param name="spw">The width allocated to this word.</param>
-        /// <param name="wt">The detected word type.</param>
+        /// <param name="ot">The detected type of the offset.</param>
         /// <param name="rw">The width of each rune.</param>
         public record struct Offset
         {
@@ -58,9 +58,13 @@ namespace Robust.Client.UserInterface
             public int w;
             public int ln;
             public int spw;
-            public WordType wt;
+            public OffsetType ot;
             public int[] rw;
 
+            /// <summary>
+            /// Draws a little arrow to show the extend of the <see cref="Offset"/>.
+            /// Will need to be modified if the <see cref="Section"/> is long enough to wrap.
+            /// </summary>
             public string ToArrows()
             {
                 var sb = new StringBuilder()
@@ -77,23 +81,39 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        public enum WordType : byte
+        public enum OffsetType : byte
         {
+            /// <summary>
+            /// Plain text that should be rendered contiguously if possible, or split if not.
+            /// </summary>
             Normal,
+
+            /// <summary>
+            /// A boundary upon which other <see cref="Offset"/>s can optionally be split.
+            /// </summary>
             Space,
+
+            /// <summary>
+            /// A location that MUST cause the layout system to render following <see cref="Offset"/>s on a new line.
+            /// </summary>
+            /// <remarks>
+            /// The text layout system expects the contents to be EXACTLY one <c>\n</c>.
+            /// The behavior <see cref="Offset"/>s with <see cref="Offset.length"/> &gt; <c>1</c>, or with other contents is undefined.
+            /// </remarks>
             LineBreak,
         }
 
-        public static WordType Classify(Rune r)
+        public static OffsetType Classify(Rune r)
         {
             if (r == (Rune) '\n')
-                return WordType.LineBreak;
+                return OffsetType.LineBreak;
             else if (Rune.IsSeparator(r))
-                return WordType.Space;
+                return OffsetType.Space;
 
-            return WordType.Normal;
+            return OffsetType.Normal;
         }
 
+        /// <seealso cref="Layout(ISectionable, List{Offset}, int, IFontLibrary, float, int, FontClass?, LayoutOptions)"/>
         public static ImmutableArray<Offset> Layout(
                 ISectionable text,
                 int w,
@@ -113,15 +133,24 @@ namespace Robust.Client.UserInterface
             options
         );
 
-        // Actually produce the layout data.
-        // The algorithm is basically ripped from CSS Flexbox.
-        //
-        // 1. Add up all the space each word takes
-        // 2. Subtract that from the line width (w)
-        // 3. Save that as the free space (fs)
-        // 4. Add up each gap's priority value (Σpri)
-        // 5. Assign each gap a final priority (fp) of ((priMax - pri) / Σpri)
-        // 6. That space has (fp*fs) pixels.
+
+        /// <summary>
+        /// Take <see cref="Offset"/>s from <see cref="Split(ISectionable, IFontLibrary, float, FontClass?, LayoutOptions)"/> and
+        /// lay them out within the constraints of the area given.
+        /// </summary>
+        ///
+        /// <remarks>
+        /// The algorithm is basically ripped from CSS Flexbox.
+        ///
+        /// <list type="number">
+        /// <item><description>Add up all the space each word takes</description></item>
+        /// <item><description>Subtract that from the line width (w)</description></item>
+        /// <item><description>Save that as the free space (fs)</description></item>
+        /// <item><description>Add up each gap's priority value (Σpri)</description></item>
+        /// <item><description>Assign each gap a final priority (fp) of ((priMax - pri) / Σpri)</description></item>
+        /// <item><description>That space has (fp*fs) pixels.</description></item>
+        /// </list>
+        /// </remarks>
         public static ImmutableArray<Offset> Layout(
                 ISectionable src,
                 List<Offset> text,
@@ -166,12 +195,12 @@ restart:
                 var hz = sec.Alignment.Horizontal();
                 (int gW, int adv) = TransitionWeights(lastAlign, hz);
 
-                if (!fnl && wd.wt == WordType.Space && lw.Work.wds.Count == 0)
+                if (!fnl && wd.ot == OffsetType.Space && lw.Work.wds.Count == 0)
                     continue;
 
                 fnl=false;
 
-                if (wd.wt == WordType.LineBreak)
+                if (wd.ot == OffsetType.LineBreak)
                 {
                     lw.Flush();
                     fnl=true;
@@ -225,7 +254,7 @@ restart:
                     else
                     {
                         lw.Flush();
-                        if (wd.wt == WordType.Space)
+                        if (wd.ot == OffsetType.Space)
                             continue;
                     }
                 }
@@ -348,9 +377,13 @@ restart:
             );
         }
 
-        // Split creates a list of words broken based on their boundaries.
-        // Users are encouraged to reuse this for as long as it accurately reflects
-        // the content they're trying to display.
+        /// <summary>
+        /// Create a list of words broken based on their boundaries.
+        /// </summary>
+        /// <remarks>
+        /// Users are encouraged to reuse this for as long as it accurately reflects
+        /// the content they're trying to display.
+        /// </remarks>
         public static List<Offset> Split(
                 ISectionable text,
                 IFontLibrary fonts,
@@ -361,21 +394,24 @@ restart:
         {
             var nofb = options.HasFlag(LayoutOptions.NoFallback);
 
-            var s=0;
-            var lsbo=0;
-            var sbo=0;
-            var runew = new int[0];
+            // ugly stateful stuff
+            var s=0; // what section we're in
+            var lsbo=0; // the Last Section Byte Offset
+            var sbo=0; // the current Section Byte Offset
+            var runew = new int[0]; // the width of the runes in this Offset
+
             var wq = new WorkQueue<Offset>(
                     conv: w =>
                     {
+                        // we do a little cheating and calculate the length here
                         var len = sbo-lsbo;
                         lsbo = sbo;
                         var o = w with { length=len, rw=runew[w.charOffs..(w.charOffs+len)] };
                         return o;
                     },
                     blank: default,
-                    check: w => w.wt != WordType.Normal || sbo > lsbo,
-                    postcreate: w => w with { section=s, charOffs=sbo }
+                    check: w => w.ot != OffsetType.Normal || sbo > lsbo, // if these aren't true, we don't need to bother committing anything
+                    postcreate: w => w with { section=s, charOffs=sbo } // add The Stuff
             );
 
             var flib = fonts.StartFont(fclass);
@@ -386,6 +422,7 @@ restart:
                 if (sec.Meta != default)
                     throw new Exception("Section with unknown or unimplemented Meta flag");
 
+                // reset everything
                 runew = new int[sec.Content.EnumerateRunes().Count()];
                 lsbo = 0;
                 sbo = 0;
@@ -395,12 +432,12 @@ restart:
                 var runec=0;
                 foreach (var r in sec.Content.EnumerateRunes())
                 {
-                    WordType cr = Classify(r);
-                    if (wq.Work.wt != cr || cr == WordType.LineBreak)
+                    OffsetType cr = Classify(r);
+                    if (wq.Work.ot != cr || cr == OffsetType.LineBreak)
                     {
                         wq.Flush();
-                        wq.Work.wt = cr;
-                        if (cr == WordType.LineBreak)
+                        wq.Work.ot = cr;
+                        if (cr == OffsetType.LineBreak)
                                 wq.Flush();
                     }
 
@@ -432,24 +469,45 @@ restart:
             return wq.Done;
         }
 
+        /// <summary>
+        /// Flags that control the operation of <see cref="Layout(ISectionable, List{Offset}, int, IFontLibrary, float, int, FontClass?, LayoutOptions)"/>
+        /// </summary>
         [Flags]
         public enum LayoutOptions : byte
         {
             Default      = 0b0000_0000,
 
-            // Measure the actual height of runes to space lines.
+            /// <summary>Measure the actual height of runes to space lines.</summary>
             UseRenderTop = 0b0000_0001,
 
-            // NoFallback disables the use of the Fallback character.
+            /// <summary>Disables the use of the Fallback character.</summary>
             NoFallback   = 0b0000_0010,
 
-            // NoWordSplit disable splitting words that run over the line boundary.
+            /// <summary>Disable splitting words that run over the line boundary.</summary>
             NoWordSplit  = 0b0000_0100,
         }
 
-        // WorkQueue is probably a misnomer. All it does is streamline a pattern I ended up using
-        // repeatedly where I'd have a list of something and a WIP, then I'd flush the WIP in to
-        // the list.
+        /// <summary>
+        /// An "assembly line" of sorts.
+        /// <list type="number">
+        /// <item><description>A <typeparamref name="TIn"/> (<see cref="WorkQueue{TIn, TOut}.Work"/>) is instantiated by the <see cref="WorkQueue{TIn, TOut}._blank"/> function.</description></item>
+        /// <item><description><see cref="WorkQueue{TIn, TOut}._postcr"/> ("post-create") modifies <see cref="WorkQueue{TIn, TOut}.Work"/> if needed.</description></item>
+        /// <item><description><see cref="WorkQueue{TIn, TOut}.Work"/> is then modified by some outside process.</description></item>
+        /// <item><description>Once finished modifying <see cref="WorkQueue{TIn, TOut}.Work"/>, the outside process calls <see cref="WorkQueue{TIn, TOut}.Flush(bool)"/>.</description></item>
+        /// <item><description><see cref="WorkQueue{TIn, TOut}._check"/> inspects <see cref="WorkQueue{TIn, TOut}.Work"/> to see if it needs to be committed.</description></item>
+        /// <item><description>If so, <see cref="WorkQueue{TIn, TOut}._conv"/> converts it from <typeparamref name="TIn"/> to <typeparamref name="TOut"/></description></item>
+        /// <item><description>If not, no changes are made.</description></item>
+        /// <item><description>The resultant <typeparamref name="TOut"/> is added to <see cref="WorkQueue{TIn, TOut}.Done"/></description></item>
+        /// <item><description><see cref="WorkQueue{TIn, TOut}._blank"/> creates a new instance of <typeparamref name="TIn"/> and the cycle repeats.</description></item>
+        /// <item><description>Eventually, the external process uses the compilation <see cref="WorkQueue{TIn, TOut}.Done"/> to do something else.</description></item>
+        /// </list>
+        /// </summary>
+        ///
+        /// <remarks>
+        /// "WorkQueue" is probably a misnomer. All it does is streamline a pattern I ended up using
+        /// repeatedly where I'd have a list of something and a WIP, then I'd flush the WIP in to
+        /// the list.
+        /// </remarks>
         private class WorkQueue<TIn, TOut>
             where TIn : new()
         {
@@ -495,6 +553,11 @@ restart:
                     Work = _postcr.Invoke(Work);
             }
 
+            /// <summary>
+            /// Convert and commit <see cref="Work"/> to <see cref="Done"/> if <see cref="_check"/> returns true, or <paramref name="force"/> is true.
+            /// Then, create a new instance of <typeparamref name="TIn"/> to replace <see cref="Work"/>.
+            /// Finally, invoke <see cref="_postcr"/> on <see cref="Work"/>.
+            /// </summary>
             public void Flush(bool force = false)
             {
                 if (_check.Invoke(Work) || force)
@@ -507,6 +570,7 @@ restart:
             }
         }
 
+        /// <summary> A special case of <see cref="WorkQueue{TIn, TOut}"/> where both types are the same.</summary>
         private class WorkQueue<T> : WorkQueue<T, T>
             where T : new()
         {

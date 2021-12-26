@@ -8,12 +8,18 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
+    /// <summary>
+    /// A thin wrapper to allow composing behaviors on top of <see cref="NewFormattedMessage"/>s
+    /// </summary>
     public interface ISectionable
     {
         Section this[int i] { get; }
         int Length { get; }
     }
 
+    /// <summary>
+    /// A container for a block of text with identical rendering properties.
+    /// </summary>
     [Serializable, NetSerializable]
     public record struct Section
     {
@@ -25,6 +31,9 @@ namespace Robust.Shared.Utility
         public string Content = string.Empty;
     }
 
+    /// <summary>
+    /// Flags that can be used to alter the behavior of <see cref="Section"/>s.
+    /// </summary>
     [Flags]
     public enum MetaFlags : byte
     {
@@ -33,6 +42,13 @@ namespace Robust.Shared.Utility
         // All other values are reserved.
     }
 
+    /// <summary>
+    /// Flags that identify a specific variation of a font.
+    /// </summary>
+    /// <remarks>
+    /// Can also be used to specify a global font by defining a <see cref="FontStyle.Standard"/> style in the <see cref="Robust.Client.Graphics.IFontLibrary"/>.
+    /// All values not specified are reserved.
+    /// </remarks>
     [Flags]
     public enum FontStyle : byte
     {
@@ -46,49 +62,85 @@ namespace Robust.Shared.Utility
         // Escape value
         Special    = 0b1000_0000,
 
-        // The lower four bits are available for styles to specify.
+        /// <summary>
+        /// Causes renderers to re-use a font from a library.
+        /// </summary>
+        /// <remarks>
+        /// The lower four bits are the identifier of the specific special font.
+        /// </remarks>
         Standard   = 0b0100_0000 | Special,
-
-        // All values not otherwise specified are reserved.
     }
 
+    /// <summary>
+    /// A number that selects a font size (in points), a change in font size, or a "standard" font size.
+    ///
+    /// Format (<see cref="FontSize.Special"/>): <c>0bSNNN_NNNN_NNNN_NNNN</c>
+    /// <list type="table">
+    /// <item><term><c>S</c></term><description>Special flag.</description></item>
+    /// <item><term><c>N</c> (where <c>S == 0</c>)</term> <description>Font size. Unsigned.</description></item>
+    /// <item><term><c>N</c> (where <c>S == 1</c>)</term> <description>Special operation; see below.</description></item>
+    /// </list>
+    /// </summary>
     [Flags]
     public enum FontSize : ushort
     {
-        // Format (Standard): 0bSNNN_NNNN_NNNN_NNNN
-        // S: Special flag.
-        // N (where S == 0): Font size. Unsigned.
-        // N (where S == 1): Special operation; see below.
-
-        // Flag to indicate the TagFontSize is "special".
-        // All values not specified are reserved.
-        // General Format: 0b1PPP_AAAA_AAAA_AAAA
-        // P: Operation.
-        // A: Arguments.
+        /// <summary>
+        /// Flag to indicate the <see cref="FontSize"/> is "special".
+        ///
+        /// General Format: <c>0b1PPP_AAAA_AAAA_AAAA</c>
+        /// <list type="table">
+        /// <item><term><c>P</c></term> <description>Operation.</description></item>
+        /// <item><term><c>A</c></term> <description>Arguments.</description></item>
+        /// </list>
+        ///
+        /// All values not specified are reserved.
+        /// </summary>
         Special  = 0b1000_0000_0000_0000,
 
-        // RELative Plus.
-        // Format: 0b1100_NNNN_NNNN_NNNN
-        // N: Addend to the previous font size. Unsigned.
+        /// <summary>
+        /// RELative Plus.
+        /// 
+        /// Format: <c>0b1100_NNNN_NNNN_NNNN</c>
+        /// <list type="table">
+        /// <item><term><c>N</c></term> <description>Addend to the previous font size. Unsigned.</description></item>
+        /// </list>
+        /// </summary>
         RelPlus  = 0b0100_0000_0000_0000 | Special,
 
-        // RELative Minus.
-        // Format: 0b1010_NNNN_NNNN_NNNN
-        // N: Subtrahend to the previous font size. Unsigned.
+        /// <summary>
+        /// RELative Minus.
+        ///
+        /// Format: <c>0b1010_NNNN_NNNN_NNNN</c>
+        /// <list type="table">
+        /// <item><term><c>N</c></term> <description>Subtrahend to the previous font size. Unsigned.</description></item>
+        /// </list>
+        /// </summary>
         RelMinus = 0b0010_0000_0000_0000 | Special,
 
-        // Selects a font size from the stylesheet.
-        // Format: 0b1110_NNNN_NNNN_NNNN
-        // N: The identifier of the preset font size.
+        /// <summary>
+        /// Selects a font size from the stylesheet.
+        ///
+        /// Format: <c>0b1110_NNNN_NNNN_NNNN</c>
+        /// <list type="table">
+        /// <item><term><c>N</c></term> <description>Subtrahend to the previous font size. Unsigned.</description></item>
+        /// </list>
+        /// </summary>
         Standard = 0b0110_0000_0000_0000 | Special,
     }
 
+    /// <summary>
+    /// Two nibbles (aka "a byte") that select a <see cref="Section"/>'s text alignment.
+    ///
+    /// Format: <c>0bHHHH_VVVV</c>
+    /// <list type="table">
+    /// <item><term><c>H</c></term> <description>Horizontal Alignment</description></item>
+    /// <item><term><c>V</c></term> <description>Vertical Alignment</description></item>
+    /// </list>
+    ///
+    /// All values not specified are reserved.
+    /// </summary>
     public enum TextAlign : byte
     {
-        // Format: 0bHHHH_VVVV
-        // H: Horizontal alignment
-        // V: Vertical alignment.
-        // All values not specified are reserved.
 
         // This seems dumb to point out, but ok
         Default     = Baseline | Left,
@@ -117,6 +169,7 @@ namespace Robust.Shared.Utility
     ///     Represents a formatted message in the form of a list of "tags".
     ///     Does not do any concrete formatting, simply useful as an API surface.
     /// </summary>
+    [Obsolete("Use NewFormattedMessage instead.")]
     [PublicAPI]
     [Serializable, NetSerializable]
     public sealed partial class FormattedMessage

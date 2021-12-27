@@ -322,6 +322,10 @@ namespace Robust.Client
                 Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
 
+            // Load content config
+            if(_resourceCache.TryGetDiskFilePath(new ResourcePath(Options.ContentConfigFileName), out var contentPath))
+                _configurationManager.LoadFromFile(contentPath);
+
             if (_loaderArgs != null)
             {
                 _stringSerializer.EnableCaching = false;

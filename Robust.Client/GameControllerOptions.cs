@@ -26,6 +26,11 @@ namespace Robust.Client
         /// </summary>
         public string ConfigFileName { get; init; } = "client_config.toml";
 
+        /// <summary>
+        ///     Name of the content configuration file in the content resources directory.
+        /// </summary>
+        public string ContentConfigFileName { get; init; } = "content_client.toml";
+
         // TODO: Define engine branding from json file in resources.
         /// <summary>
         ///     Default window title.

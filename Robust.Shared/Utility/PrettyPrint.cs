@@ -1,5 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Text;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
@@ -68,5 +73,193 @@ namespace Robust.Shared.Utility
 
             return stringRep!;
         }
+
+        public static string PrintTypeSignature(this Type type)
+        {
+            if (TypeShortHand.TryGetValue(type, out var value))
+                return value;
+
+            var nullable = false;
+            if (type.IsNullable(out var underlying))
+            {
+                type = underlying;
+                nullable = true;
+            }
+
+            if (type.IsGenericType)
+            {
+                return $"{type.Name.Split('`')[0]}<{string.Join(", ", type.GetGenericArguments().Select(PrintTypeSignature))}>{(nullable ? "?" : string.Empty)}";
+            }
+
+            return type.Name;
+        }
+
+        public static string PrintParameterSignature(this ParameterInfo parameter)
+        {
+            var builder = new StringBuilder();
+
+            if (parameter.IsIn)
+            {
+                builder.Append($"in ");
+            }
+
+            if (parameter.IsOut)
+            {
+                builder.Append($"out ");
+            }
+            else if (parameter.ParameterType.IsByRef)
+            {
+                builder.Append($"ref ");
+            }
+
+            builder.Append(parameter.ParameterType.PrintTypeSignature());
+
+            if (parameter.Name is { } name)
+            {
+                builder.Append($" {name}");
+            }
+
+            if (parameter.HasDefaultValue)
+            {
+                builder.Append($" = {PrintUserFacing(parameter.DefaultValue)}");
+            }
+
+            return builder.ToString();
+        }
+
+        public static string PrintMethodSignature(this MethodInfo method, bool modifiers = false, bool arguments = true, bool returnType = true, bool name = true)
+        {
+            var builder = new StringBuilder();
+
+            if (modifiers)
+            {
+                // Access modifiers.
+                if (method.IsPublic)
+                    builder.Append("public ");
+
+                if (method.IsPrivate)
+                    builder.Append("private ");
+
+                if (method.IsFamilyAndAssembly)
+                    builder.Append("private protected ");
+
+                if (method.IsFamily)
+                    builder.Append("protected ");
+
+                if (method.IsFamilyOrAssembly)
+                    builder.Append("protected internal ");
+
+                if (method.IsAssembly)
+                    builder.Append("internal ");
+
+                if(method.IsStatic)
+                    builder.Append("static ");
+
+                if (method.IsAbstract && method.DeclaringType is {IsAbstract:true, IsInterface:false})
+                    builder.Append("abstract ");
+                else if(method.DeclaringType is {IsInterface:false})
+                {
+                    if (method.IsFinal)
+                        builder.Append("sealed override ");
+                    else if (method.IsVirtual)
+                        builder.Append(method.Equals(method.GetBaseDefinition()) ? "virtual " : "override ");
+                }
+            }
+
+            if (returnType && !method.IsConstructor)
+                builder.Append($"{method.ReturnType.PrintTypeSignature()} ");
+
+            if(name)
+                builder.Append(method.Name);
+
+            if (!arguments)
+                return builder.ToString();
+
+            if (method.IsGenericMethod)
+                builder.Append($"<{string.Join(", ", method.GetGenericArguments().Select(PrintTypeSignature))}>");
+
+            builder.Append($"({string.Join($", ", method.GetParameters().Select(PrintParameterSignature))})");
+
+            return builder.ToString();
+        }
+
+        public static string PrintPropertySignature(this PropertyInfo property, bool modifiers = false, bool accessors = false)
+        {
+            var builder = new StringBuilder();
+
+            builder.Append($"{property.PropertyType.PrintTypeSignature()} {property.Name}");
+
+            if (accessors)
+            {
+                builder.Append(" { ");
+
+                if (property.CanRead)
+                    builder.Append($"{property.GetMethod!.PrintMethodSignature(modifiers, false, false, false)}get; ");
+
+                if (property.CanWrite)
+                    builder.Append($"{property.SetMethod!.PrintMethodSignature(modifiers, false, false, false)}set; ");
+
+                builder.Append('}');
+
+            }
+
+            return builder.ToString();
+        }
+
+        public static string PrintFieldSignature(this FieldInfo field, bool modifiers = false)
+        {
+            var builder = new StringBuilder();
+
+            if (modifiers)
+            {
+                // Access modifiers. Hmm... Déjà vu.
+                if (field.IsPublic)
+                    builder.Append("public ");
+
+                if (field.IsPrivate)
+                    builder.Append("private ");
+
+                if (field.IsFamilyAndAssembly)
+                    builder.Append("private protected ");
+
+                if (field.IsFamily)
+                    builder.Append("protected ");
+
+                if (field.IsFamilyOrAssembly)
+                    builder.Append("protected internal ");
+
+                if (field.IsAssembly)
+                    builder.Append("internal ");
+
+                if(field.IsStatic)
+                    builder.Append("static ");
+            }
+
+            builder.Append($"{field.FieldType.PrintTypeSignature()} {field.Name}");
+
+            return builder.ToString();
+        }
+
+        private static readonly IReadOnlyDictionary<Type, string> TypeShortHand = new Dictionary<Type, string>()
+        {
+            // ReSharper disable BuiltInTypeReferenceStyle
+            {typeof(void), "void"},
+            {typeof(Object), "object"},
+            {typeof(Boolean), "bool"},
+            {typeof(Byte), "byte"},
+            {typeof(Char), "char"},
+            {typeof(Decimal), "decimal"},
+            {typeof(Double), "double"},
+            {typeof(Single), "float"},
+            {typeof(Int32), "int"},
+            {typeof(Int64), "long"},
+            {typeof(SByte), "sbyte"},
+            {typeof(Int16), "short"},
+            {typeof(String), "string"},
+            {typeof(UInt32), "uint"},
+            {typeof(UInt64), "ulong"},
+            {typeof(UInt16), "ushort"},
+            // ReSharper restore BuiltInTypeReferenceStyle
+        };
     }
 }

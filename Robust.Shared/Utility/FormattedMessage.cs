@@ -19,6 +19,8 @@ namespace Robust.Shared.Utility
         public TagList Tags => new(_tags);
         private readonly List<Tag> _tags;
 
+        public bool IsEmpty => _tags.Count == 0;
+
         public FormattedMessage()
         {
             _tags = new List<Tag>();

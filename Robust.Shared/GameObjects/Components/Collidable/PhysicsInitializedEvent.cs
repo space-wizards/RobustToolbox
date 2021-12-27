@@ -1,5 +1,6 @@
 namespace Robust.Shared.GameObjects
 {
+    [ByRefEvent]
     public readonly struct PhysicsInitializedEvent
     {
         public readonly EntityUid Uid;

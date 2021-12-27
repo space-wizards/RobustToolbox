@@ -129,7 +129,6 @@ namespace Robust.Shared.GameObjects
 
         private delegate void RefEventHandler(ref Unit ev);
 
-        private readonly Dictionary<Type, bool> _refEvents = new();
         private readonly Dictionary<Type, List<Registration>> _eventSubscriptions = new();
 
         private readonly Dictionary<IEntityEventSubscriber, Dictionary<Type, Registration>> _inverseEventSubscriptions
@@ -244,15 +243,11 @@ namespace Robust.Shared.GameObjects
 
             var eventType = typeof(T);
 
-            if (!_refEvents.TryGetValue(eventType, out var eventReference))
-            {
-                _refEvents.Add(eventType, byRef);
-                eventReference = byRef;
-            }
+            var eventReference = eventType.HasCustomAttribute<ByRefEventAttribute>();
 
             if (eventReference != byRef)
                 throw new InvalidOperationException(
-                    $"Attempted to subscribe by-ref and by-value to the same broadcast event! event={eventType}");
+                    $"Attempted to subscribe by-ref and by-value to the same broadcast event! event={eventType} eventIsByRef={eventReference} subscriptionIsByRef={byRef}");
 
             var subscriptionTuple = new Registration(source, handler, equalityToken, order, byRef);
 

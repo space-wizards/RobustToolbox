@@ -3,6 +3,7 @@
     /// <summary>
     ///     Raised when an entity parent is changed.
     /// </summary>
+    [ByRefEvent]
     public class EntParentChangedMessage : EntityEventArgs
     {
         /// <summary>

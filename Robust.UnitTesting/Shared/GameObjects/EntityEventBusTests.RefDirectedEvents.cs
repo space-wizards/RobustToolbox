@@ -180,6 +180,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public override string Name => "DummyTwo";
         }
 
+        [ByRefEvent]
         private struct TestStructEvent
         {
             public int TestNumber;

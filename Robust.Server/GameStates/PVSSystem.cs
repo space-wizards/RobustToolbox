@@ -628,6 +628,7 @@ internal partial class PVSSystem : EntitySystem
     }
 }
 
+[ByRefEvent]
 public readonly struct ExpandPvsEvent
 {
     public readonly IPlayerSession Session;

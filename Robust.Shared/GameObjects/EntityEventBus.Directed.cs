@@ -389,6 +389,8 @@ namespace Robust.Shared.GameObjects
                     var (component, reg) = tuple.Value;
                     if (reg.ReferenceEvent != dispatchByReference)
                         ThrowByRefMisMatch();
+                    
+                    if (component.LifeStage >= ComponentLifeStage.Stopping) continue;
 
                     reg.Handler(euid, component, ref args);
                 }

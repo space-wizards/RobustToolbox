@@ -30,7 +30,7 @@ namespace Robust.Client.WebView.Cef
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
 
-            var subProcessPath = Path.Combine(BasePath);
+            var subProcessPath = Path.Combine(BasePath, subProcessName);
             var cefResourcesPath = LocateCefResources();
 
             // System.Console.WriteLine(AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));

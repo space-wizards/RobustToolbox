@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Reflection;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -10,6 +11,8 @@ namespace Robust.Client.WebView.Cef
 {
     internal partial class WebViewManagerCef : IWebViewManagerImpl
     {
+        private static readonly string BasePath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location!)!;
+
         private CefApp _app = default!;
 
         [Dependency] private readonly IDependencyCollection _dependencyCollection = default!;
@@ -27,7 +30,7 @@ namespace Robust.Client.WebView.Cef
             else
                 throw new NotSupportedException("Unsupported platform for CEF!");
 
-            var subProcessPath = PathHelpers.ExecutableRelativeFile(subProcessName);
+            var subProcessPath = Path.Combine(BasePath);
             var cefResourcesPath = LocateCefResources();
 
             // System.Console.WriteLine(AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES"));
@@ -60,7 +63,7 @@ namespace Robust.Client.WebView.Cef
 
         private static string? LocateCefResources()
         {
-            if (ProbeDir(PathHelpers.GetExecutableDirectory(), out var path))
+            if (ProbeDir(BasePath, out var path))
                 return path;
 
 

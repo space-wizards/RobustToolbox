@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Reflection;
+using System.Runtime.Loader;
 using Robust.Client.WebViewHook;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
@@ -32,7 +34,8 @@ namespace Robust.Client
         {
             Logger.Debug("Loading Robust.Client.WebView");
 
-            var assembly = LoadRobustModuleAssembly("Robust.Client.WebView");
+            var alc = CreateModuleLoadContext("Robust.Client.WebView");
+            var assembly = alc.LoadFromAssemblyName(new AssemblyName("Robust.Client.WebView"));
             var attribute = assembly.GetCustomAttribute<WebViewManagerImplAttribute>()!;
             DebugTools.AssertNotNull(attribute);
 
@@ -43,10 +46,35 @@ namespace Robust.Client
             Logger.Debug("Done initializing Robust.Client.WebView");
         }
 
-        private Assembly LoadRobustModuleAssembly(string assemblyName)
+        /// <summary>
+        /// Creates an <see cref="AssemblyLoadContext"/> that loads from an engine module directory.
+        /// </summary>
+        private AssemblyLoadContext CreateModuleLoadContext(string moduleName)
         {
-            // TODO: Launcher distribution and all that stuff.
-            return Assembly.Load(assemblyName);
+            var sawmill = _logManager.GetSawmill("robust.mod");
+
+            var alc = new AssemblyLoadContext(moduleName);
+            var envVarName = $"ROBUST_MODULE_{moduleName.ToUpperInvariant().Replace('.', '_')}";
+            var envVar = Environment.GetEnvironmentVariable(envVarName);
+            if (string.IsNullOrEmpty(envVar))
+            {
+                sawmill.Debug("Module {ModuleName} has no path override specified", moduleName);
+                return alc;
+            }
+
+            sawmill.Debug("Path for module {ModuleName} is {ModulePath}", moduleName, envVar);
+
+            alc.Resolving += (_, name) =>
+            {
+                sawmill.Debug("Loading {AssemblyName} from module {ModuleName}", name.ToString(), moduleName);
+                var assemblyPath = Path.Combine(envVar, $"{name.Name}.dll");
+                if (!File.Exists(assemblyPath))
+                    return null;
+
+                return Assembly.LoadFrom(assemblyPath);
+            };
+
+            return alc;
         }
     }
 }

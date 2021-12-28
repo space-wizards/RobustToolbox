@@ -405,6 +405,7 @@ internal partial class PVSSystem : EntitySystem
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
         if (visMask != null)
         {
+            // TODO: Don't need to know about parents so no longer need to use bool for this method.
             if ((visMask & metadata.VisibilityMask) == 0)
                 return false;
         }

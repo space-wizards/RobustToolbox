@@ -400,10 +400,13 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
+        var metadata = MetaData(uid);
+
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null && EntityManager.TryGetComponent(uid, out VisibilityComponent visibility))
+        if (visMask != null)
         {
-            if ((visMask & visibility.Layer) == 0)
+            // TODO: Don't need to know about parents so no longer need to use bool for this method.
+            if ((visMask & metadata.VisibilityMask) == 0)
                 return false;
         }
 
@@ -463,7 +466,7 @@ internal partial class PVSSystem : EntitySystem
             return true;
         }
 
-        if (MetaData(uid).EntityLastModifiedTick < fromTick)
+        if (metadata.EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);

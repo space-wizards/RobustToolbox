@@ -133,6 +133,7 @@ namespace Robust.Shared.Physics.Dynamics
             Bodies.Remove(body);
             AwakeBodies.Remove(body);
             body.DestroyContacts();
+            body.PhysicsMap = null;
         }
 
         public void RemoveSleepBody(PhysicsComponent body)

@@ -70,6 +70,8 @@ namespace Robust.Shared.ContentPack
 
         Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
 
+        void AddEngineModuleDirectory(string dir);
+
         void Shutdown();
     }
 }

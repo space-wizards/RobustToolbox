@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
@@ -8,6 +7,7 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -67,7 +67,6 @@ internal partial class PVSSystem : EntitySystem
             new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
-    private readonly ConcurrentDictionary<EntityUid, PVSEntityPacket> _cachedPackets = new();
 
     public override void Initialize()
     {
@@ -141,7 +140,6 @@ internal partial class PVSSystem : EntitySystem
     public void Cleanup(IEnumerable<IPlayerSession> sessions)
     {
         CleanupDirty(sessions);
-        _cachedPackets.Clear();
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -280,21 +278,27 @@ internal partial class PVSSystem : EntitySystem
 
         visibleEnts.Clear();
 
-        foreach (var entityUid in _entityPvsCollection.GlobalOverrides)
+        var globalOverridesEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
+        while(globalOverridesEnumerator.MoveNext())
         {
-            TryAddToVisibleEnts(entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
+            var uid = globalOverridesEnumerator.Current;
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
         }
+        globalOverridesEnumerator.Dispose();
 
-        foreach (var entityUid in _entityPvsCollection.GetElementsForSession(session))
+        var localOverridesEnumerator = _entityPvsCollection.GetElementsForSession(session);
+        while (localOverridesEnumerator.MoveNext())
         {
-            TryAddToVisibleEnts(entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
+            var uid = localOverridesEnumerator.Current;
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
         }
+        localOverridesEnumerator.Dispose();
 
         var expandEvent = new ExpandPvsEvent((IPlayerSession) session, new List<EntityUid>());
         RaiseLocalEvent(ref expandEvent);
         foreach (var entityUid in expandEvent.Entities)
         {
-            TryAddToVisibleEnts(entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
+            TryAddToVisibleEnts(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
         }
 
         var viewers = GetSessionViewers(session);
@@ -308,7 +312,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             //todo at some point just register the viewerentities as localoverrides
-            TryAddToVisibleEnts(eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
+            TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -318,7 +322,7 @@ internal partial class PVSSystem : EntitySystem
                 {
                     foreach (var index in chunk)
                     {
-                        TryAddToVisibleEnts(index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
+                        TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
                     }
                 }
             }
@@ -335,7 +339,7 @@ internal partial class PVSSystem : EntitySystem
                     {
                         foreach (var index in chunk)
                         {
-                            TryAddToVisibleEnts(index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
+                            TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
                         }
                     }
                 }
@@ -387,7 +391,7 @@ internal partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool TryAddToVisibleEnts(EntityUid uid, HashSet<EntityUid> seenSet, Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, ref int totalEnteredEntities, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
+    private bool TryAddToVisibleEnts(in EntityUid uid, HashSet<EntityUid> seenSet, Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, ref int totalEnteredEntities, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
     {
         //are we valid yet?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -396,8 +400,6 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
-        var packet = _cachedPackets.GetOrAdd(uid, (i) => new PVSEntityPacket(EntityManager, i));
-
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
         if (visMask != null)
         {
@@ -405,12 +407,12 @@ internal partial class PVSSystem : EntitySystem
                 return false;
         }
 
-        var parent = packet.TransformComponent.ParentUid;
+        var parent = Transform(uid).ParentUid;
 
         if (!trustParent && //do we have it on good authority the parent exists?
             parent.IsValid() && //is it not a worldentity?
             !toSend.ContainsKey(parent) && //was the parent not yet added to toSend?
-            !TryAddToVisibleEnts(parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, visMask)) //did we just fail to add the parent?
+            !TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, visMask)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
         //did we already get added through the parent call?
@@ -439,13 +441,17 @@ internal partial class PVSSystem : EntitySystem
         }
 
         //we *need* to send out contained entities too as part of the intial state
-        if (packet.ContainerManagerComponent != null)
+        if (EntityManager.TryGetComponent(uid, out ContainerManagerComponent? containerManager))
         {
-            foreach (var container in packet.ContainerManagerComponent.GetAllContainers())
+            foreach (var container in containerManager.GetAllContainers())
             {
-                foreach (var containedEntity in container.ContainedEntities)
+                // For loop to avoid allocation.
+                // ReSharper disable once ForCanBeConvertedToForeach
+                for (var i = 0; i < container.ContainedEntities.Count; i++)
                 {
-                    TryAddToVisibleEnts(containedEntity, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, null,
+                    var containedEntity = container.ContainedEntities[i];
+                    TryAddToVisibleEnts(in containedEntity, seenSet, previousVisibleEnts, toSend, fromTick,
+                        ref newEntitiesSent, ref totalEnteredEntities, null,
                         true, true);
                 }
             }
@@ -457,7 +463,7 @@ internal partial class PVSSystem : EntitySystem
             return true;
         }
 
-        if (packet.MetaDataComponent.EntityLastModifiedTick < fromTick)
+        if (MetaData(uid).EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);
@@ -622,6 +628,7 @@ internal partial class PVSSystem : EntitySystem
     }
 }
 
+[ByRefEvent]
 public readonly struct ExpandPvsEvent
 {
     public readonly IPlayerSession Session;

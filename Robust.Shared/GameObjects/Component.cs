@@ -236,14 +236,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void Dirty()
+        public void Dirty(IEntityManager? entManager = null)
         {
             // Deserialization will cause this to be true.
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if(Owner == EntityUid.Invalid || LifeStage >= ComponentLifeStage.Removing)
+            if (!Owner.IsValid() || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
-            var entManager = IoCManager.Resolve<IEntityManager>();
+            IoCManager.Resolve(ref entManager);
             entManager.DirtyEntity(Owner);
             LastModifiedTick = entManager.CurrentTick;
         }

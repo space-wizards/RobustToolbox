@@ -2,11 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Numerics;
+using System.Reflection;
 using Robust.Shared.GameStates;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using Robust.Shared.Maths;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -35,6 +39,9 @@ namespace Robust.Shared.GameObjects
 
         private readonly Dictionary<Type, Dictionary<EntityUid, Component>> _entTraitDict
             = new();
+
+        private Dictionary<EntityUid, Component>[] _entTraitArray
+            = Array.Empty<Dictionary<EntityUid, Component>>();
 
         private readonly HashSet<Component> _deleteSet = new(TypeCapacity);
 
@@ -74,14 +81,41 @@ namespace Robust.Shared.GameObjects
             FillComponentDict();
         }
 
-        private void OnComponentAdded(IComponentRegistration obj)
+        private void AddComponentRefType(Type type)
         {
-            _entTraitDict.Add(obj.Type, new Dictionary<EntityUid, Component>());
+            var dict = new Dictionary<EntityUid, Component>();
+            _entTraitDict.Add(type, dict);
+            var index = GetCompIdIndex(type);
+            EnsureEntTraitIndexCapacity(index);
+            _entTraitArray[index] = dict;
         }
 
-        private void OnComponentReferenceAdded((IComponentRegistration, Type) obj)
+        private void OnComponentAdded(IComponentRegistration obj)
         {
-            _entTraitDict.Add(obj.Item2, new Dictionary<EntityUid, Component>());
+            AddComponentRefType(obj.Type);
+        }
+
+        private void OnComponentReferenceAdded((IComponentRegistration, Type type) obj)
+        {
+            AddComponentRefType(obj.Item2);
+        }
+
+        private static int GetCompIdIndex(Type type)
+        {
+            return (int)typeof(CompArrayIndex<>)
+                .MakeGenericType(type)
+                .GetField(nameof(CompArrayIndex<int>.Index), BindingFlags.Static | BindingFlags.Public)!
+                .GetValue(null)!;
+        }
+
+        private void EnsureEntTraitIndexCapacity(int index)
+        {
+            var curLength = _entTraitArray.Length;
+            if (curLength > index)
+                return;
+
+            var newLength = MathHelper.NextPowerOfTwo(Math.Max(8, index));
+            Array.Resize(ref _entTraitArray, newLength);
         }
 
         #region Component Management
@@ -103,7 +137,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var component in components)
             {
-                var comp = (Component) component;
+                var comp = (Component)component;
                 if (comp.Initialized)
                     continue;
 
@@ -116,7 +150,8 @@ namespace Robust.Shared.GameObjects
             {
                 if (!t.Initialized)
                 {
-                    DebugTools.Assert($"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                    DebugTools.Assert(
+                        $"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
                 }
             }
 
@@ -141,7 +176,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var component in comps)
             {
-                var comp = (Component) component;
+                var comp = (Component)component;
                 if (comp.LifeStage == ComponentLifeStage.Initialized)
                 {
                     comp.LifeStartup();
@@ -210,6 +245,7 @@ namespace Robust.Shared.GameObjects
                     netSet = new Dictionary<ushort, Component>(NetComponentCapacity);
                     _netComponents.Add(uid, netSet);
                 }
+
                 netSet.Add(netId, component);
 
                 // mark the component as dirty for networking
@@ -237,7 +273,7 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent<T>(EntityUid uid)
         {
-            RemoveComponent(uid, ComponentTypeCache<T>.Type);
+            RemoveComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
@@ -424,14 +460,14 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid uid)
         {
-            return HasComponent(uid, ComponentTypeCache<T>.Type);
+            return _entTraitArray[ArrayIndexFor<T>()].TryGetValue(uid, out var comp) && !comp.Deleted;
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent<T>(EntityUid? uid)
         {
-            return uid.HasValue && HasComponent(uid.Value, ComponentTypeCache<T>.Type);
+            return uid.HasValue && HasComponent<T>(uid.Value);
         }
 
         /// <inheritdoc />
@@ -489,7 +525,16 @@ namespace Robust.Shared.GameObjects
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetComponent<T>(EntityUid uid)
         {
-            return (T)GetComponent(uid, ComponentTypeCache<T>.Type);
+            var dict = _entTraitArray[ArrayIndexFor<T>()];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    return (T)(IComponent)comp;
+                }
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
         }
 
         /// <inheritdoc />
@@ -517,11 +562,12 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public bool TryGetComponent<T>(EntityUid uid, [NotNullWhen(true)] out T component)
         {
-            if (TryGetComponent(uid, ComponentTypeCache<T>.Type, out var comp))
+            var dict = _entTraitArray[ArrayIndexFor<T>()];
+            if (dict.TryGetValue(uid, out var comp))
             {
                 if (!comp.Deleted)
                 {
-                    component = (T)comp;
+                    component = (T)(IComponent)comp;
                     return true;
                 }
             }
@@ -539,7 +585,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (TryGetComponent(uid.Value, ComponentTypeCache<T>.Type, out var comp))
+            if (TryGetComponent(uid.Value, typeof(T), out var comp))
             {
                 if (!comp.Deleted)
                 {
@@ -570,7 +616,8 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type, [NotNullWhen(true)] out IComponent? component)
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, Type type,
+            [NotNullWhen(true)] out IComponent? component)
         {
             if (!uid.HasValue)
             {
@@ -607,7 +654,8 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [MaybeNullWhen(false)] out IComponent component)
+        public bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId,
+            [MaybeNullWhen(false)] out IComponent component)
         {
             if (!uid.HasValue)
             {
@@ -641,7 +689,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<T> GetComponents<T>(EntityUid uid)
         {
-            var comps = _entCompIndex[uid];
+            var comps = _entCompIndex[uid].ToArray();
             foreach (var comp in comps)
             {
                 if (comp.Deleted || comp is not T tComp) continue;
@@ -658,15 +706,100 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
-        /// <inheritdoc />
-        public IEnumerable<T> EntityQuery<T>(bool includePaused = false)
+        // Funny struct enumerator equivalent to EntityQuery<T>
+        public struct EntQueryEnumerator<T> : IDisposable where T : Component
         {
-            var comps = _entTraitDict[ComponentTypeCache<T>.Type];
-            foreach (var comp in comps.Values)
-            {
-                if (comp.Deleted || !includePaused && comp.Paused) continue;
+            private readonly bool _includePaused;
+            private Dictionary<EntityUid, Component>.Enumerator _comps;
+            private Dictionary<EntityUid, Component> _metaData;
 
-                yield return (T)(object)comp;
+            public EntQueryEnumerator(bool includePaused, Dictionary<EntityUid, Component>.Enumerator comps,
+                Dictionary<EntityUid, Component> metaData)
+            {
+                _includePaused = includePaused;
+                _comps = comps;
+                _metaData = metaData;
+            }
+
+            public bool MoveNext([NotNullWhen(true)] out T? component)
+            {
+                if (_includePaused)
+                {
+                    while (_comps.MoveNext())
+                    {
+                        component = (T)_comps.Current.Value;
+
+                        if (component.Deleted) continue;
+
+                        return true;
+                    }
+                }
+                else
+                {
+                    while (_comps.MoveNext())
+                    {
+                        component = (T)_comps.Current.Value;
+
+                        if (component.Deleted) continue;
+
+                        if (!_metaData.TryGetValue(component.Owner, out var metaComp)) continue;
+
+                        var meta = (MetaDataComponent)metaComp;
+
+                        if (meta.EntityPaused) continue;
+
+                        return true;
+                    }
+                }
+
+                component = null;
+                Dispose();
+                return false;
+            }
+
+            public void Dispose()
+            {
+                _comps.Dispose();
+            }
+        }
+
+        public EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component
+        {
+            // Unless you have a profile showing a speed need for the funny struct enumerator just using the IEnumerable is easier.
+            var comps = _entTraitArray[ArrayIndexFor<T>()];
+            var meta = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+            var enumerator = new EntQueryEnumerator<T>(includePaused, comps.GetEnumerator(), meta);
+            return enumerator;
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
+        {
+            var comps = _entTraitArray[ArrayIndexFor<T>()];
+
+            if (includePaused)
+            {
+                foreach (var t1Comp in comps.Values)
+                {
+                    if (t1Comp.Deleted) continue;
+
+                    yield return (T)(object)t1Comp;
+                }
+            }
+            else
+            {
+                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+
+                foreach (var t1Comp in comps.Values)
+                {
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+
+                    var meta = (MetaDataComponent)metaComp;
+
+                    if (meta.EntityPaused) continue;
+
+                    yield return (T)(object)t1Comp;
+                }
             }
         }
 
@@ -676,18 +809,42 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
         {
             // this would prob be faster if trait1 was a list (or an array of structs hue).
-            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
-            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
+            var trait1 = _entTraitArray[ArrayIndexFor<TComp1>()];
+            var trait2 = _entTraitArray[ArrayIndexFor<TComp2>()];
 
             // you really want trait1 to be the smaller set of components
-            foreach (var kvComp in trait1)
+            if (includePaused)
             {
-                var uid = kvComp.Key;
+                foreach (var (uid, t1Comp) in trait1)
+                {
+                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                        continue;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
-                    continue;
+                    yield return (
+                        (TComp1)(object)t1Comp,
+                        (TComp2)(object)t2Comp);
+                }
+            }
+            else
+            {
+                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
 
-                yield return ((TComp1)(object)kvComp.Value, (TComp2)(object)t2Comp);
+                foreach (var (uid, t1Comp) in trait1)
+                {
+                    // Check paused last because 90% of the time the component's likely not gonna be paused.
+                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                        continue;
+
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+
+                    var meta = (MetaDataComponent)metaComp;
+
+                    if (meta.EntityPaused) continue;
+
+                    yield return (
+                        (TComp1)(object)t1Comp,
+                        (TComp2)(object)t2Comp);
+                }
             }
         }
 
@@ -697,55 +854,114 @@ namespace Robust.Shared.GameObjects
             where TComp2 : IComponent
             where TComp3 : IComponent
         {
-            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
-            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
-            var trait3 = _entTraitDict[ComponentTypeCache<TComp3>.Type];
+            var trait1 = _entTraitArray[ArrayIndexFor<TComp1>()];
+            var trait2 = _entTraitArray[ArrayIndexFor<TComp2>()];
+            var trait3 = _entTraitArray[ArrayIndexFor<TComp3>()];
 
-            foreach (var kvComp in trait1)
+            if (includePaused)
             {
-                var uid = kvComp.Key;
+                foreach (var (uid, t1Comp) in trait1)
+                {
+                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                        continue;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
-                    continue;
+                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
+                        continue;
 
-                if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
-                    continue;
+                    yield return (
+                        (TComp1)(object)t1Comp,
+                        (TComp2)(object)t2Comp,
+                        (TComp3)(object)t3Comp);
+                }
+            }
+            else
+            {
+                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
 
-                yield return ((TComp1)(object)kvComp.Value,
-                    (TComp2)(object)t2Comp,
-                    (TComp3)(object)t3Comp);
+                foreach (var (uid, t1Comp) in trait1)
+                {
+                    // Check paused last because 90% of the time the component's likely not gonna be paused.
+                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                        continue;
+
+                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
+                        continue;
+
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+
+                    var meta = (MetaDataComponent)metaComp;
+
+                    if (meta.EntityPaused) continue;
+
+                    yield return (
+                        (TComp1)(object)t1Comp,
+                        (TComp2)(object)t2Comp,
+                        (TComp3)(object)t3Comp);
+                }
             }
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
+        public IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(
+            bool includePaused = false)
             where TComp1 : IComponent
             where TComp2 : IComponent
             where TComp3 : IComponent
             where TComp4 : IComponent
         {
-            var trait1 = _entTraitDict[ComponentTypeCache<TComp1>.Type];
-            var trait2 = _entTraitDict[ComponentTypeCache<TComp2>.Type];
-            var trait3 = _entTraitDict[ComponentTypeCache<TComp3>.Type];
-            var trait4 = _entTraitDict[ComponentTypeCache<TComp4>.Type];
+            var trait1 = _entTraitArray[ArrayIndexFor<TComp1>()];
+            var trait2 = _entTraitArray[ArrayIndexFor<TComp2>()];
+            var trait3 = _entTraitArray[ArrayIndexFor<TComp3>()];
+            var trait4 = _entTraitArray[ArrayIndexFor<TComp4>()];
 
-            foreach (var kvComp in trait1)
+            if (includePaused)
             {
-                var uid = kvComp.Key;
+                foreach (var (uid, t1Comp) in trait1)
+                {
+                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                        continue;
 
-                if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted || !includePaused && kvComp.Value.Paused)
-                    continue;
+                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
+                        continue;
 
-                if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
-                    continue;
+                    if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
+                        continue;
 
-                if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
-                    continue;
+                    yield return (
+                        (TComp1)(object)t1Comp,
+                        (TComp2)(object)t2Comp,
+                        (TComp3)(object)t3Comp,
+                        (TComp4)(object)t4Comp);
+                }
+            }
+            else
+            {
+                var metaComps = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
 
-                yield return ((TComp1)(object)kvComp.Value,
-                    (TComp2)(object)t2Comp,
-                    (TComp3)(object)t3Comp,
-                    (TComp4)(object)t4Comp);
+                foreach (var (uid, t1Comp) in trait1)
+                {
+                    // Check paused last because 90% of the time the component's likely not gonna be paused.
+                    if (!trait2.TryGetValue(uid, out var t2Comp) || t2Comp.Deleted)
+                        continue;
+
+                    if (!trait3.TryGetValue(uid, out var t3Comp) || t3Comp.Deleted)
+                        continue;
+
+                    if (!trait4.TryGetValue(uid, out var t4Comp) || t4Comp.Deleted)
+                        continue;
+
+                    if (t1Comp.Deleted || !metaComps.TryGetValue(t1Comp.Owner, out var metaComp)) continue;
+
+                    var meta = (MetaDataComponent)metaComp;
+
+                    if (meta.EntityPaused) continue;
+
+                    yield return (
+                        (TComp1)(object)t1Comp,
+                        (TComp2)(object)t2Comp,
+                        (TComp3)(object)t3Comp,
+                        (TComp4)(object)t4Comp);
+                }
             }
         }
 
@@ -785,10 +1001,22 @@ namespace Robust.Shared.GameObjects
         private void FillComponentDict()
         {
             _entTraitDict.Clear();
+            Array.Fill(_entTraitArray, null);
+
             foreach (var refType in _componentFactory.GetAllRefTypes())
             {
-                _entTraitDict.Add(refType, new Dictionary<EntityUid, Component>());
+                AddComponentRefType(refType);
             }
+        }
+
+        private static int ArrayIndexFor<T>() => CompArrayIndex<T>.Index;
+
+        private static int _compIndexMaster = -1;
+
+        private static class CompArrayIndex<T>
+        {
+            // ReSharper disable once StaticMemberInGenericType
+            public static readonly int Index = Interlocked.Increment(ref _compIndexMaster);
         }
     }
 
@@ -805,8 +1033,11 @@ namespace Robust.Shared.GameObjects
         // DO NOT MAKE THIS READONLY
         private Dictionary<ushort, Component>.Enumerator _dictEnum;
 
-        public NetComponentEnumerator(Dictionary<ushort, Component> dictionary) => _dictEnum = dictionary.GetEnumerator();
+        public NetComponentEnumerator(Dictionary<ushort, Component> dictionary) =>
+            _dictEnum = dictionary.GetEnumerator();
+
         public bool MoveNext() => _dictEnum.MoveNext();
+
         public (ushort netId, IComponent component) Current
         {
             get
@@ -815,6 +1046,5 @@ namespace Robust.Shared.GameObjects
                 return (val.Key, val.Value);
             }
         }
-
     }
 }

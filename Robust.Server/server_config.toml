@@ -43,6 +43,14 @@ welcomemsg = "Welcome to the server!"
 # This literally works by checking if address == 127.0.0.1 || address == ::1
 loginlocal = true
 
+[hub]
+# Set to true to show this server on the public server list
+advertise = false
+# URL of your server. Fill this in if you have a domain name,
+# want to use HTTPS (with a reverse proxy), or other advanced scenarios.
+# Must be in the form of an ss14:// or ss14s:// URI pointing to the status API.
+server_url = ""
+
 [build]
 # *Absolutely all of these can be supplied using a "build.json" file*
 # For further information, see https://github.com/space-wizards/space-station-14/blob/master/Tools/gen_build_info.py

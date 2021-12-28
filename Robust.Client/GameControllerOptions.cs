@@ -35,7 +35,10 @@ namespace Robust.Client
         /// <summary>
         ///     Assemblies with this prefix will be loaded.
         /// </summary>
-        public string ContentModulePrefix { get; init; } = "Content.";
+        /// <remarks>
+        /// Defaults to <c>Content.</c> if unset.
+        /// </remarks>
+        public string? ContentModulePrefix { get; init; }
 
         /// <summary>
         ///     Name of the content build directory, for game pack mounting purposes.

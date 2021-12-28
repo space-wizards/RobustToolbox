@@ -70,6 +70,8 @@ namespace Robust.Client
                 return Assembly.LoadFrom(assemblyPath);
             };
 
+            _modLoader.AddEngineModuleDirectory(envVar);
+
             return alc;
         }
     }

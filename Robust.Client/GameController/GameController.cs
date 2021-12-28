@@ -93,6 +93,11 @@ namespace Robust.Client
             _taskManager.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
 
+            var manifest = LoadResourceManifest();
+
+            // Load optional Robust modules.
+            LoadOptionalRobustModules(displayMode, manifest);
+
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!ContentStart);
@@ -111,9 +116,6 @@ namespace Robust.Client
             }
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
-
-            // Load optional Robust modules.
-            LoadOptionalRobustModules(displayMode);
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -210,7 +212,7 @@ namespace Robust.Client
         {
             // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
             if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return new ResourceManifestData(Array.Empty<string>());
+                return new ResourceManifestData(Array.Empty<string>(), null);
 
             var yamlStream = new YamlStream();
             using (stream)
@@ -236,7 +238,11 @@ namespace Robust.Client
                 }
             }
 
-            return new ResourceManifestData(modules);
+            string? assemblyPrefix = null;
+            if (mapping.TryGetNode("assemblyPrefix", out var prefixNode))
+                assemblyPrefix = prefixNode.AsString();
+
+            return new ResourceManifestData(modules, assemblyPrefix);
         }
 
         internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
@@ -544,6 +550,6 @@ namespace Robust.Client
             _clydeAudio.Shutdown();
         }
 
-        private sealed record ResourceManifestData(string[] Modules);
+        private sealed record ResourceManifestData(string[] Modules, string? AssemblyPrefix);
     }
 }

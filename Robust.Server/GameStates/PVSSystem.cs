@@ -307,7 +307,7 @@ internal partial class PVSSystem : EntitySystem
         {
             var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
 
-            uint visMask = 0;
+            uint visMask = EyeComponent.DefaultVisibilityMask;
             if (EntityManager.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
                 visMask = eyeComp.VisibilityMask;
 

@@ -98,7 +98,8 @@ namespace Robust.Client
             _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
+            var assemblyPrefix = Options.ContentModulePrefix ?? manifest.AssemblyPrefix ?? "Content.";
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, assemblyPrefix))
             {
                 Logger.Fatal("Errors while loading content assemblies.");
                 return false;

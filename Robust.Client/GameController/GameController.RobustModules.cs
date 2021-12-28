@@ -10,12 +10,8 @@ namespace Robust.Client
 {
     internal sealed partial class GameController
     {
-        private void LoadOptionalRobustModules(GameController.DisplayMode mode)
+        private void LoadOptionalRobustModules(DisplayMode mode, ResourceManifestData manifest)
         {
-            // In the future, this manifest should be loaded somewhere else and used for more parts of init.
-            // For now, this is fine.
-            var manifest = LoadResourceManifest();
-
             foreach (var module in manifest.Modules)
             {
                 switch (module)

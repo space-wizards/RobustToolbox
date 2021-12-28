@@ -23,6 +23,8 @@ namespace Robust.Server.ServerStatus
         // Automatic Client Zip
         private AutomaticClientZipInfo? _aczPrepared;
 
+        private (string binFolder, string[] assemblies)? _aczInfo;
+
         private async Task<bool> HandleAutomaticClientZip(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/client.zip")
@@ -111,14 +113,15 @@ namespace Robust.Server.ServerStatus
                 paths[pathTo] = File.ReadAllBytes(res);
                 return true;
             }
-            AttemptPullFromDisk("Assemblies/Content.Shared.dll", "../../bin/Content.Client/Content.Shared.dll");
-            AttemptPullFromDisk("Assemblies/Content.Shared.pdb", "../../bin/Content.Client/Content.Shared.pdb");
-            if (!AttemptPullFromDisk("Assemblies/Content.Client.dll", "../../bin/Content.Client/Content.Client.dll"))
+
+            var (binFolderPath, assemblyNames) =
+                _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
+
+            foreach (var assemblyName in assemblyNames)
             {
-                _httpSawmill.Error($"StatusHost PrepareACZMagic couldn't get client assembly - not continuing");
-                return null;
+                AttemptPullFromDisk($"Assemblies/{assemblyName}.dll", $"../../bin/{binFolderPath}/{assemblyName}.dll");
+                AttemptPullFromDisk($"Assemblies/{assemblyName}.pdb", $"../../bin/{binFolderPath}/{assemblyName}.pdb");
             }
-            AttemptPullFromDisk("Assemblies/Content.Client.pdb", "../../bin/Content.Client/Content.Client.pdb");
 
             var prefix = PathHelpers.ExecutableRelativeFile("../../Resources");
             foreach (var path in PathHelpers.GetFiles(prefix))
@@ -142,6 +145,22 @@ namespace Robust.Server.ServerStatus
             archive.Dispose();
             _httpSawmill.Info($"StatusHost synthesized client zip!");
             return outStream.ToArray();
+        }
+
+        public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)
+        {
+            _aczLock.Wait();
+            try
+            {
+                if (_aczPrepared != null)
+                    throw new InvalidOperationException("ACZ already prepared");
+
+                _aczInfo = (clientBinFolder, clientAssemblyNames);
+            }
+            finally
+            {
+                _aczLock.Release();
+            }
         }
     }
 

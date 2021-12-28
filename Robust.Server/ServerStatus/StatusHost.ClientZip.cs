@@ -124,6 +124,8 @@ namespace Robust.Server.ServerStatus
             foreach (var path in PathHelpers.GetFiles(prefix))
             {
                 var relPath = Path.GetRelativePath(prefix, path);
+                if (OperatingSystem.IsWindows())
+                    relPath = relPath.Replace('\\', '/');
                 AttemptPullFromDisk(relPath, path);
             }
 

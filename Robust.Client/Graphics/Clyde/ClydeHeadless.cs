@@ -545,6 +545,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 

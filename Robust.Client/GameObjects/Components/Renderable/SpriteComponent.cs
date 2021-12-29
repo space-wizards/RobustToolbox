@@ -2074,6 +2074,11 @@ namespace Robust.Client.GameObjects
             var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
 
+            if (entityManager.TryGetComponent(dummy, out ClientAppearanceComponent? appearanceComponent))
+            {
+                EntitySystem.Get<AppearanceSystem>().OnChangeData(appearanceComponent);
+            }
+
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
             {

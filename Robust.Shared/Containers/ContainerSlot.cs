@@ -58,6 +58,18 @@ namespace Robust.Shared.Containers
             return base.CanInsert(toinsert, entMan);
         }
 
+        /// <summary>
+        ///     Performs the same check as <see cref="CanInsert"/> without requiring that the slot has to be empty.
+        /// </summary>
+        /// <remarks>
+        ///     Useful if you need to know whether an item could be inserted into a slot, without having to actually
+        ///     eject the currently contained entity first.
+        /// </remarks>
+        public bool CanInsertIfEmpty(EntityUid toinsert, IEntityManager? entMan = null)
+        {
+            return base.CanInsert(toinsert, entMan);
+        }
+
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)
         {

@@ -7,6 +7,6 @@ namespace Robust.Shared.GameObjects
     {
         public override string Name => "EntityLookup";
 
-        internal DynamicTree<IEntity> Tree = default!;
+        internal DynamicTree<EntityUid> Tree = default!;
     }
 }

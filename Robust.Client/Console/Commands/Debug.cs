@@ -4,13 +4,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
-using Robust.Client.Input;
 using Robust.Client.Debugging;
 using Robust.Client.Graphics;
+using Robust.Client.Input;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface;
 using Robust.Client.UserInterface.Controls;
@@ -41,9 +40,9 @@ namespace Robust.Client.Console.Commands
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
-            foreach (var e in entityManager.GetEntities().OrderBy(e => e.Uid))
+            foreach (var e in entityManager.GetEntities().OrderBy(e => e))
             {
-                shell.WriteLine($"entity {e.Uid}, {e.Prototype?.ID}, {e.Transform.Coordinates}.");
+                shell.WriteLine($"entity {e}, {entityManager.GetComponent<MetaDataComponent>(e).EntityPrototype?.ID}, {entityManager.GetComponent<TransformComponent>(e).Coordinates}.");
             }
         }
     }
@@ -238,15 +237,15 @@ namespace Robust.Client.Console.Commands
 
             var uid = EntityUid.Parse(args[0]);
             var entmgr = IoCManager.Resolve<IEntityManager>();
-            if (!entmgr.TryGetEntity(uid, out var entity))
+            if (!entmgr.EntityExists(uid))
             {
                 shell.WriteError("That entity does not exist. Sorry lad.");
                 return;
             }
-
-            shell.WriteLine($"{entity.Uid}: {entity.Prototype?.ID}/{entity.Name}");
-            shell.WriteLine($"init/del/lmt: {entity.Initialized}/{entity.Deleted}/{entity.LastModifiedTick}");
-            foreach (var component in entity.GetAllComponents())
+            var meta = entmgr.GetComponent<MetaDataComponent>(uid);
+            shell.WriteLine($"{uid}: {meta.EntityPrototype?.ID}/{meta.EntityName}");
+            shell.WriteLine($"init/del/lmt: {meta.EntityInitialized}/{meta.EntityDeleted}/{meta.EntityLastModifiedTick}");
+            foreach (var component in entmgr.GetComponents(uid))
             {
                 shell.WriteLine(component.ToString() ?? "");
                 if (component is IComponentDebug debug)
@@ -450,15 +449,13 @@ namespace Robust.Client.Console.Commands
             var uiMgr = IoCManager.Resolve<IUserInterfaceManager>();
             var res = IoCManager.Resolve<IResourceManager>();
 
-            using (var stream = res.UserData.Create(new ResourcePath("/guidump.txt")))
-            using (var writer = new StreamWriter(stream, EncodingHelpers.UTF8))
+            using var writer = res.UserData.OpenWriteText(new ResourcePath("/guidump.txt"));
+
+            foreach (var root in uiMgr.AllRoots)
             {
-                foreach (var root in uiMgr.AllRoots)
-                {
-                    writer.WriteLine($"ROOT: {root}");
-                    _writeNode(root, 0, writer);
-                    writer.WriteLine("---------------");
-                }
+                writer.WriteLine($"ROOT: {root}");
+                _writeNode(root, 0, writer);
+                writer.WriteLine("---------------");
             }
 
             shell.WriteLine("Saved guidump");

@@ -26,8 +26,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
             var ent1 = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
             var ent2 = entManager.SpawnEntity(null, new MapCoordinates(new Vector2(100f, 0f), mapId));
 
-            var xform1 = entManager.GetComponent<TransformComponent>(ent1.Uid);
-            var xform2 = entManager.GetComponent<TransformComponent>(ent2.Uid);
+            var xform1 = entManager.GetComponent<TransformComponent>(ent1);
+            var xform2 = entManager.GetComponent<TransformComponent>(ent2);
 
             xform2.AttachParent(xform1);
 

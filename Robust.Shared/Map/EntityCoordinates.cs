@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 
@@ -79,7 +79,7 @@ namespace Robust.Shared.Map
             if(!IsValid(entityManager))
                 return MapCoordinates.Nullspace;
 
-            var transform = entityManager.GetEntity(EntityId).Transform;
+            var transform = entityManager.GetComponent<TransformComponent>(EntityId);
             var worldPos = transform.WorldMatrix.Transform(Position);
             return new MapCoordinates(worldPos, transform.MapID);
         }
@@ -101,13 +101,15 @@ namespace Robust.Shared.Map
         /// <param name="coordinates"></param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException">If <see cref="entity"/> is not on the same map as the <see cref="coordinates"/>.</exception>
-        public static EntityCoordinates FromMap(IEntity entity, MapCoordinates coordinates)
+        public static EntityCoordinates FromMap(EntityUid entity, MapCoordinates coordinates, IEntityManager? entMan = null)
         {
-            if(entity.Transform.MapID != coordinates.MapId)
+            IoCManager.Resolve(ref entMan);
+            var transform = entMan.GetComponent<TransformComponent>(entity);
+            if(transform.MapID != coordinates.MapId)
                 throw new InvalidOperationException("Entity is not on the same map!");
 
-            var localPos = entity.Transform.InvWorldMatrix.Transform(coordinates.Position);
-            return new EntityCoordinates(entity.Uid, localPos);
+            var localPos = transform.InvWorldMatrix.Transform(coordinates.Position);
+            return new EntityCoordinates(entity, localPos);
         }
 
         /// <summary>
@@ -120,9 +122,7 @@ namespace Robust.Shared.Map
         /// <exception cref="InvalidOperationException">If <see cref="entityUid"/> is not on the same map as the <see cref="coordinates"/>.</exception>
         public static EntityCoordinates FromMap(IEntityManager entityManager, EntityUid entityUid, MapCoordinates coordinates)
         {
-            var entity = entityManager.GetEntity(entityUid);
-
-            return FromMap(entity, coordinates);
+            return FromMap(entityUid, coordinates);
         }
 
         /// <summary>
@@ -133,9 +133,9 @@ namespace Robust.Shared.Map
         public static EntityCoordinates FromMap(IMapManager mapManager, MapCoordinates coordinates)
         {
             var mapId = coordinates.MapId;
-            var mapEntity = mapManager.GetMapEntity(mapId);
+            var mapEntity = mapManager.GetMapEntityId(mapId);
 
-            return new EntityCoordinates(mapEntity.Uid, coordinates.Position);
+            return new EntityCoordinates(mapEntity, coordinates.Position);
         }
 
         /// <summary>
@@ -180,10 +180,10 @@ namespace Robust.Shared.Map
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
         public EntityCoordinates WithEntityId(IEntityManager entityManager, EntityUid entityId)
         {
-            if(!entityManager.TryGetEntity(entityId, out var entity))
+            if(!entityManager.EntityExists(entityId))
                 return new EntityCoordinates(entityId, Vector2.Zero);
 
-            return WithEntityId(entity);
+            return WithEntityId(entityId);
         }
 
         /// <summary>
@@ -191,16 +191,16 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="entity">The entity that the new coordinates will be local to</param>
         /// <returns>A new set of EntityCoordinates local to a new entity.</returns>
-        public EntityCoordinates WithEntityId(IEntity entity)
+        public EntityCoordinates WithEntityId(EntityUid entity, IEntityManager? entMan = null)
         {
-            var entityManager = entity.EntityManager;
-            var mapPos = ToMap(entity.EntityManager);
+            IoCManager.Resolve(ref entMan);
+            var mapPos = ToMap(entMan);
 
-            if(!IsValid(entityManager) || entity.Transform.MapID != mapPos.MapId)
-                return new EntityCoordinates(entity.Uid, Vector2.Zero);
+            if(!IsValid(entMan) || entMan.GetComponent<TransformComponent>(entity).MapID != mapPos.MapId)
+                return new EntityCoordinates(entity, Vector2.Zero);
 
-            var localPos = entity.Transform.InvWorldMatrix.Transform(mapPos.Position);
-            return new EntityCoordinates(entity.Uid, localPos);
+            var localPos = entMan.GetComponent<TransformComponent>(entity).InvWorldMatrix.Transform(mapPos.Position);
+            return new EntityCoordinates(entity, localPos);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace Robust.Shared.Map
         /// <returns>Grid Id this entity is on or <see cref="GridId.Invalid"/></returns>
         public GridId GetGridId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? GridId.Invalid : GetEntity(entityManager).Transform.GridID;
+            return !IsValid(entityManager) ? GridId.Invalid : entityManager.GetComponent<TransformComponent>(EntityId).GridID;
         }
 
         /// <summary>
@@ -222,29 +222,7 @@ namespace Robust.Shared.Map
         /// <returns>Map Id these coordinates are on or <see cref="MapId.Nullspace"/></returns>
         public MapId GetMapId(IEntityManager entityManager)
         {
-            return !IsValid(entityManager) ? MapId.Nullspace : GetEntity(entityManager).Transform.MapID;
-        }
-
-        /// <summary>
-        ///     Returns a reference to the relative entity.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <returns>Relative entity or throws if entity id doesn't exist</returns>
-        public IEntity GetEntity(IEntityManager entityManager)
-        {
-            return entityManager.GetEntity(EntityId);
-        }
-
-        /// <summary>
-        ///     Attempt to get the relative entity, returning whether or not the entity was gotten.
-        /// </summary>
-        /// <param name="entityManager"></param>
-        /// <param name="entity">The relative entity or null if not valid</param>
-        /// <returns>True if a value was returned, false otherwise.</returns>
-        public bool TryGetEntity(IEntityManager entityManager, [NotNullWhen(true)] out IEntity? entity)
-        {
-            entity = null;
-            return IsValid(entityManager) && entityManager.TryGetEntity(EntityId, out entity);
+            return !IsValid(entityManager) ? MapId.Nullspace : entityManager.GetComponent<TransformComponent>(EntityId).MapID;
         }
 
         /// <summary>

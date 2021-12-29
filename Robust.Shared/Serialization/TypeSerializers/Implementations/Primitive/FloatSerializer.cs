@@ -16,7 +16,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return float.TryParse(node.Value, out _)
+            return float.TryParse(node.Value,NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out _)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"Failed parsing float value: {node.Value}");
         }

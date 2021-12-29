@@ -4,13 +4,13 @@ namespace Robust.Shared.GameObjects
 {
     public class EntMapIdChangedMessage : EntityEventArgs
     {
-        public EntMapIdChangedMessage(IEntity entity, MapId oldMapId)
+        public EntMapIdChangedMessage(EntityUid entity, MapId oldMapId)
         {
             Entity = entity;
             OldMapId = oldMapId;
         }
 
-        public IEntity Entity { get; }
+        public EntityUid Entity { get; }
         public MapId OldMapId { get; }
     }
 }

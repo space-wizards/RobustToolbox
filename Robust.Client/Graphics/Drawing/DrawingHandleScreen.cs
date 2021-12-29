@@ -94,6 +94,6 @@ namespace Robust.Client.Graphics
         public Vector2 DrawString(Font font, Vector2 pos, string str)
             => DrawString(font, pos, str, Color.White);
 
-        public abstract void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
+        public abstract void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection);
     }
 }

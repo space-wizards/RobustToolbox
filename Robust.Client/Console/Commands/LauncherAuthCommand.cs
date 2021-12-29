@@ -1,9 +1,7 @@
 ﻿#if !FULL_RELEASE
 using System;
 using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
+using Microsoft.Data.Sqlite;
 using Robust.Client.Utility;
 using Robust.Shared.Console;
 using Robust.Shared.IoC;
@@ -22,44 +20,38 @@ namespace Robust.Client.Console.Commands
             var wantName = args.Length > 0 ? args[0] : null;
 
             var basePath = Path.GetDirectoryName(UserDataDir.GetUserDataDir())!;
-            var cfgPath = Path.Combine(basePath, "launcher", "launcher_config.json");
+            var dbPath = Path.Combine(basePath, "launcher", "settings.db");
 
-            var data = JsonSerializer.Deserialize<LauncherConfig>(File.ReadAllText(cfgPath))!;
+            using var con = new SqliteConnection($"Data Source={dbPath};Mode=ReadOnly");
+            con.Open();
+            using var cmd = con.CreateCommand();
+            cmd.CommandText = "SELECT UserId, UserName, Token FROM Login WHERE Expires > datetime('NOW')";
 
-            var login = wantName != null
-                ? data.Logins.FirstOrDefault(p => p.Username == wantName)
-                : data.Logins.FirstOrDefault();
+            if (wantName != null)
+            {
+                cmd.CommandText += " AND UserName = @userName";
+                cmd.Parameters.AddWithValue("@userName", wantName);
+            }
 
-            if (login == null)
+            cmd.CommandText += " LIMIT 1;";
+
+            using var reader = cmd.ExecuteReader();
+
+            if (!reader.Read())
             {
                 shell.WriteLine("Unable to find a matching login");
                 return;
             }
 
-            var token = login.Token.Token;
-            var userId = login.UserId;
+            var userId = Guid.Parse(reader.GetString(0));
+            var userName = reader.GetString(1);
+            var token = reader.GetString(2);
 
             var cfg = IoCManager.Resolve<IAuthManager>();
             cfg.Token = token;
-            cfg.UserId = new NetUserId(Guid.Parse(userId));
-        }
+            cfg.UserId = new NetUserId(userId);
 
-        private sealed class LauncherConfig
-        {
-            [JsonInclude] [JsonPropertyName("logins")]
-            public LauncherLogin[] Logins = default!;
-        }
-
-        private sealed class LauncherLogin
-        {
-            [JsonInclude] public string Username = default!;
-            [JsonInclude] public string UserId = default!;
-            [JsonInclude] public LauncherToken Token = default!;
-        }
-
-        private sealed class LauncherToken
-        {
-            [JsonInclude] public string Token = default!;
+            shell.WriteLine($"Logged into account {userName}");
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
@@ -15,6 +16,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public sealed class CollisionWakeComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         public override string Name => "CollisionWake";
 
         [DataField("enabled")]
@@ -36,13 +39,15 @@ namespace Robust.Shared.GameObjects
 
         internal void RaiseStateChange()
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new CollisionWakeStateMessage(), false);
+            _entMan.EventBus.RaiseLocalEvent(Owner, new CollisionWakeStateMessage(), false);
         }
 
         protected override void OnRemove()
         {
             base.OnRemove();
-            if (Owner.TryGetComponent(out IPhysBody? body) && Owner.LifeStage < EntityLifeStage.Terminating)
+            if (_entMan.TryGetComponent(Owner, out IPhysBody? body)
+                && _entMan.TryGetComponent<MetaDataComponent>(Owner, out var metaData)
+                && metaData.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 body.CanCollide = true;
             }

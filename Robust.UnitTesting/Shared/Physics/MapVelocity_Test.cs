@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -45,7 +46,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
                 // Check that map velocity is correct for entity
                 var dummy = entityManager.SpawnEntity(DummyEntity, new EntityCoordinates(grid.GridEntityId, Vector2.Zero));
-                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(dummy.Uid, out var body));
+                Assert.That(entityManager.TryGetComponent<PhysicsComponent>(dummy, out var body));
                 Assert.That(body.LinearVelocity, Is.EqualTo(Vector2.Zero));
 
                 Assert.That(body.MapLinearVelocity, Is.EqualTo(Vector2.One));
@@ -53,7 +54,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 // Check that the newly parented entity's velocity is correct
                 // it should retain its previous velocity despite new parent
                 var grid2 = mapManager.CreateGrid(mapId);
-                dummy.Transform.AttachParent(entityManager.GetEntity(grid2.GridEntityId));
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).AttachParent(grid2.GridEntityId);
 
                 Assert.That(body.MapLinearVelocity, Is.EqualTo(Vector2.One));
             });

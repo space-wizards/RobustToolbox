@@ -27,15 +27,6 @@ namespace Robust.Shared.Audio
         /// </summary>
         /// <param name="playerFilter">The set of players that will hear the sound.</param>
         /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
-        /// <param name="entity">The entity "emitting" the audio.</param>
-        /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
-        IPlayingAudioStream? Play(Filter playerFilter, string filename, IEntity entity, AudioParams? audioParams = null);
-
-        /// <summary>
-        /// Play an audio file following an entity.
-        /// </summary>
-        /// <param name="playerFilter">The set of players that will hear the sound.</param>
-        /// <param name="filename">The resource path to the OGG Vorbis file to play.</param>
         /// <param name="uid">The UID of the entity "emitting" the audio.</param>
         /// <param name="audioParams">Audio parameters to apply when playing the sound.</param>
         IPlayingAudioStream? Play(Filter playerFilter, string filename, EntityUid uid, AudioParams? audioParams = null);

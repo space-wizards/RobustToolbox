@@ -29,7 +29,7 @@ namespace Robust.Server.Bql
             }
 
             return entityManager.GetAllComponents((Type) arguments[0])
-                .Select(x => x.OwnerUid);
+                .Select(x => x.Owner);
         }
     }
 
@@ -319,7 +319,7 @@ namespace Robust.Server.Bql
                 .SelectMany(e =>
                     entityLookup.GetEntitiesInRange(entityManager.GetComponent<TransformComponent>(e).Coordinates,
                         radius))
-                .Select(x => x.Uid) // Sloth's fault.
+                .Select(x => x) // Sloth's fault.
                 .Distinct();
         }
     }

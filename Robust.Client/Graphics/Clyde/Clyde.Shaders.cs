@@ -52,11 +52,11 @@ namespace Robust.Client.Graphics.Clyde
             public StencilParameters Stencil = StencilParameters.Default;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
         {
             var (vertBody, fragBody) = GetShaderCode(shader);
 
-            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name);
+            var program = _compileProgram(vertBody, fragBody, BaseShaderAttribLocations, name, defines: defines);
 
             if (_hasGLUniformBuffers)
             {
@@ -141,7 +141,7 @@ namespace Robust.Client.Graphics.Clyde
         }
 
         private GLShaderProgram _compileProgram(string vertexSource, string fragmentSource,
-            (string, uint)[] attribLocations, string? name = null, bool includeLib=true)
+            (string, uint)[] attribLocations, string? name = null, bool includeLib=true, Dictionary<string,string>? defines=null)
         {
             GLShader? vertexShader = null;
             GLShader? fragmentShader = null;
@@ -184,6 +184,14 @@ namespace Robust.Client.Graphics.Clyde
             if (_hasGLUniformBuffers)
             {
                 versionHeader += "#define HAS_UNIFORM_BUFFERS\n";
+            }
+
+            if (defines is not null)
+            {
+                foreach (var k in defines.Keys)
+                {
+                    versionHeader += $"#define {k} {defines[k]}\n";
+                }
             }
 
             var lib = includeLib ? _shaderLibrary : "";

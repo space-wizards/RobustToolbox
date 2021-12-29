@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
-using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
@@ -76,11 +76,17 @@ namespace Robust.Shared.Physics
 
                 // Make sure all the right stuff is set on the body
                 FixtureUpdate(component);
+
+                if (body.CanCollide)
+                {
+                    DebugTools.Assert(!Get<SharedContainerSystem>().IsEntityInContainer(uid));
+                    _broadphaseSystem.AddBody(body, component);
+                }
             }
             /* TODO: Literally only AllComponentsOneToOneDeleteTest fails on this so fuck it this is what we get.
             else
             {
-                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponent)} attached to {EntityManager.GetEntity(uid)}");
+                Logger.ErrorS("physics", $"Didn't find a {nameof(PhysicsComponuid)}"
             }
             */
         }
@@ -89,7 +95,7 @@ namespace Robust.Shared.Physics
 
         public void CreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager, ref xform))
+            if (!Resolve(body.Owner, ref manager, ref xform))
             {
                 DebugTools.Assert(false);
                 return;
@@ -104,11 +110,10 @@ namespace Robust.Shared.Physics
             // Should only happen for nullspace / initializing entities
             if (body.Broadphase != null)
             {
-                var worldPos = xform.WorldPosition;
-                var worldRot = xform.WorldRotation;
+                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
                 _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
-                _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot, false);
+                _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot);
             }
 
             // Supposed to be wrapped in density but eh
@@ -146,7 +151,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return null;
             }
@@ -185,7 +190,7 @@ namespace Robust.Shared.Physics
         /// <param name="updates">Whether to update mass etc. Set false if you're doing a bulk operation</param>
         public void DestroyFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null)
         {
-            if (!Resolve(body.OwnerUid, ref manager))
+            if (!Resolve(body.Owner, ref manager))
             {
                 return;
             }
@@ -235,7 +240,7 @@ namespace Robust.Shared.Physics
 
         private void OnPhysicsShutdown(EntityUid uid, PhysicsComponent component, ComponentShutdown args)
         {
-            if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
+            if (MetaData(uid).EntityLifeStage > EntityLifeStage.MapInitialized) return;
             EntityManager.RemoveComponent<FixturesComponent>(uid);
         }
 
@@ -367,7 +372,7 @@ namespace Robust.Shared.Physics
         /// </summary>
         public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
         {
-            if (!Resolve(component.OwnerUid, ref body))
+            if (!Resolve(component.Owner, ref body))
             {
                 return;
             }

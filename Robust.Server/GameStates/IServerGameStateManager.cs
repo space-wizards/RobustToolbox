@@ -14,5 +14,7 @@ namespace Robust.Server.GameStates
         /// Create and dispatch game states to all connected sessions.
         /// </summary>
         void SendGameStateUpdate();
+
+        ushort TransformNetId { get; set; }
     }
 }

@@ -71,6 +71,7 @@ namespace Robust.Shared.GameObjects
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
+        [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
@@ -97,6 +98,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
+            SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
 
             BuildControllers();
             Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
@@ -110,7 +112,7 @@ namespace Robust.Shared.GameObjects
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
         {
             IoCManager.InjectDependencies(component);
-            component.BroadphaseSystem = Get<SharedBroadphaseSystem>();
+            component.BroadphaseSystem = _broadphaseSystem;
             component.PhysicsSystem = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
@@ -142,30 +144,70 @@ namespace Robust.Shared.GameObjects
         {
             var entity = args.Entity;
 
-            if (!entity.Initialized ||
-                !entity.TryGetComponent(out PhysicsComponent? body) ||
+            if (!TryInitialized(entity, out var initialized) || !initialized.Value ||
+                !EntityManager.TryGetComponent(entity, out PhysicsComponent? body) ||
                 entity.IsInContainer()) return;
 
-            var oldParent = args.OldParent;
-            var linearVelocityDiff = Vector2.Zero;
             var angularVelocityDiff = 0f;
+            var linearVelocityDiff = Vector2.Zero;
 
-            if (oldParent != null && oldParent.TryGetComponent(out PhysicsComponent? oldBody))
+            var (worldPos, worldRot) = Transform(entity).GetWorldPositionRotation();
+            var R = Matrix3.CreateRotation(worldRot);
+            R.Transpose(out var nRT);
+            nRT.Multiply(-1f);
+
+            if (args.OldParent is {} oldParent && EntityManager.TryGetComponent(oldParent, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
-                linearVelocityDiff += linear;
-                angularVelocityDiff += angular;
+                // Our rotation system is backwards; invert the angular velocity
+                var o = -angular;
+
+                // Get the vector between the parent and the entity leaving
+                var r = Transform(oldParent).WorldMatrix.Transform(oldBody.LocalCenter) -
+                    worldPos; // TODO: Use entity's LocalCenter/center of mass somehow
+
+                // Get the tangent of r by rotating it π/2 rad (90°)
+                var v = new Angle(MathHelper.PiOver2).RotateVec(r);
+
+                // Scale the new vector by the angular velocity
+                v *= o;
+
+                // Makes the shit spin right when dropped near the center of mass of a spinning body.
+                // I have no clue how it works, but this guy does/did:
+                //
+                // https://cwzx.wordpress.com/2014/03/25/the-dynamics-of-a-transform-hierarchy/
+                var w = new Matrix3(
+                    0, angular, 0,
+                    -angular, 0, 0,
+                    0, 0, 0
+                );
+
+                linearVelocityDiff += linear + v;
+                angularVelocityDiff += (nRT * w * R).R1C0;
             }
 
-            var newParent = entity.Transform.Parent?.Owner;
+            var newParent = EntityManager.GetComponent<TransformComponent>(entity).ParentUid;
 
-            if (newParent != null && newParent.TryGetComponent(out PhysicsComponent? newBody))
+            if (newParent != EntityUid.Invalid && EntityManager.TryGetComponent(newParent, out PhysicsComponent? newBody))
             {
-                var (linear, angular) = newBody.MapVelocities;
+                // TODO: Apply child's linear as angular on the parent?
+                linearVelocityDiff -= newBody.MapLinearVelocity;
 
-                linearVelocityDiff -= linear;
-                angularVelocityDiff -= angular;
+                // See above for commentary.
+                var angular = newBody.AngularVelocity;
+                var o = -angular;
+                var r = Transform(newParent).WorldMatrix.Transform(newBody.LocalCenter) - worldPos;
+                var v = new Angle(MathHelper.PiOver2).RotateVec(r);
+                v *= o;
+
+                var w = new Matrix3(
+                    0, angular, 0,
+                    -angular, 0, 0,
+                    0, 0, 0
+                );
+
+                angularVelocityDiff -= (nRT * w * R).R1C0;
             }
 
             body.LinearVelocity += linearVelocityDiff;
@@ -174,9 +216,11 @@ namespace Robust.Shared.GameObjects
 
         private void HandleGridInit(GridInitializeEvent ev)
         {
-            if (!EntityManager.TryGetEntity(ev.EntityUid, out var gridEntity)) return;
-            var collideComp = gridEntity.EnsureComponent<PhysicsComponent>();
+            if (!EntityManager.EntityExists(ev.EntityUid)) return;
+            // Yes this ordering matters
+            var collideComp = EntityManager.EnsureComponent<PhysicsComponent>(ev.EntityUid);
             collideComp.BodyType = BodyType.Static;
+            EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 
         private void BuildControllers()
@@ -234,82 +278,94 @@ namespace Robust.Shared.GameObjects
 
         private void HandleMapChange(EntMapIdChangedMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent))
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent))
                 return;
 
-            Get<SharedJointSystem>().ClearJoints(physicsComponent);
+            _joints.ClearJoints(physicsComponent);
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
-                MapManager.GetMapEntity(oldMapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(oldMapId);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
             }
 
-            var newMapId = message.Entity.Transform.MapID;
+            var newMapId = EntityManager.GetComponent<TransformComponent>(message.Entity).MapID;
             if (newMapId != MapId.Nullspace)
             {
-                MapManager.GetMapEntity(newMapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(newMapId);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }
 
         private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
         {
-            var mapId = message.Component.Owner.Transform.MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Component.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             if (message.Component.Deleted || !message.Component.CanCollide)
             {
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(message.Component);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(message.Component);
             }
             else
             {
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(message.Component);
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(message.Component);
             }
         }
 
         private void HandleWakeMessage(PhysicsWakeMessage message)
         {
-            var mapId = message.Body.Owner.Transform.MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddAwakeBody(message.Body);
+            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(message.Body);
         }
 
         private void HandleSleepMessage(PhysicsSleepMessage message)
         {
-            var mapId = message.Body.Owner.Transform.MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveSleepBody(message.Body);
+            EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(message.Body);
         }
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
 
-            var mapId = message.Container.Owner.Transform.MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Container.Owner).MapID;
 
             physicsComponent.LinearVelocity = Vector2.Zero;
             physicsComponent.AngularVelocity = 0.0f;
-			Get<SharedJointSystem>().ClearJoints(physicsComponent);
+            _joints.ClearJoints(physicsComponent);
 
             if (mapId != MapId.Nullspace)
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().RemoveBody(physicsComponent);
+            {
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
+            }
         }
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
         {
-            if (!message.Entity.TryGetComponent(out PhysicsComponent? physicsComponent)) return;
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
 
-            var mapId = message.Container.Owner.Transform.MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Container.Owner).MapID;
 
             if (mapId != MapId.Nullspace)
-                MapManager.GetMapEntity(mapId).GetComponent<SharedPhysicsMapComponent>().AddBody(physicsComponent);
+            {
+                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
+            }
         }
 
         /// <summary>

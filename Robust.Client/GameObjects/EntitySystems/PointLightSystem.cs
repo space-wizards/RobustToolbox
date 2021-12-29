@@ -23,8 +23,7 @@ namespace Robust.Client.GameObjects
 
         private void HandleRemove(EntityUid uid, PointLightComponent component, ComponentRemove args)
         {
-            var ent = EntityManager.GetEntity(uid);
-            var map = ent.Transform.MapID;
+            var map = EntityManager.GetComponent<TransformComponent>(uid).MapID;
             // TODO: Just make this update the tree directly and not allocate
             if (map != MapId.Nullspace)
             {

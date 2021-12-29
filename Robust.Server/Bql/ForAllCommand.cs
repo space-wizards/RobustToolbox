@@ -22,12 +22,11 @@ namespace Robust.Server.Bql
             }
 
             var queryManager = IoCManager.Resolve<IBqlQueryManager>();
-            var entityManager = IoCManager.Resolve<IEntityManager>();
             var (entities, rest) = queryManager.SimpleParseAndExecute(argStr[6..]);
 
             foreach (var ent in entities.ToList())
             {
-                var cmds = SubstituteEntityDetails(shell, entityManager.GetEntity(ent), rest).Split(";");
+                var cmds = SubstituteEntityDetails(shell, ent, rest).Split(";");
                 foreach (var cmd in cmds)
                 {
                     shell.ExecuteCommand(cmd);
@@ -36,34 +35,38 @@ namespace Robust.Server.Bql
         }
 
         // This will be refactored out soon.
-        private static string SubstituteEntityDetails(IConsoleShell shell, IEntity ent, string ruleString)
+        private static string SubstituteEntityDetails(IConsoleShell shell, EntityUid ent, string ruleString)
         {
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var transform = entMan.GetComponent<TransformComponent>(ent);
+            var metadata = entMan.GetComponent<MetaDataComponent>(ent);
+
             // gross, is there a better way to do this?
-            ruleString = ruleString.Replace("$ID", ent.Uid.ToString());
+            ruleString = ruleString.Replace("$ID", ent.ToString());
             ruleString = ruleString.Replace("$WX",
-                ent.Transform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
+                transform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$WY",
-                ent.Transform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
+                transform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$LX",
-                ent.Transform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
+                transform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
             ruleString = ruleString.Replace("$LY",
-                ent.Transform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
-            ruleString = ruleString.Replace("$NAME", ent.Name);
+                transform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
+            ruleString = ruleString.Replace("$NAME", metadata.EntityName);
 
             if (shell.Player is IPlayerSession player)
             {
-                if (player.AttachedEntity != null)
+                var ptransform = player.AttachedEntityTransform;
+                if (ptransform != null)
                 {
-                    var p = player.AttachedEntity;
-                    ruleString = ruleString.Replace("$PID", ent.Uid.ToString());
+                    ruleString = ruleString.Replace("$PID", ptransform.Owner.ToString());
                     ruleString = ruleString.Replace("$PWX",
-                        p.Transform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
+                        ptransform.WorldPosition.X.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PWY",
-                        p.Transform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
+                        ptransform.WorldPosition.Y.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PLX",
-                        p.Transform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
+                        ptransform.LocalPosition.X.ToString(CultureInfo.InvariantCulture));
                     ruleString = ruleString.Replace("$PLY",
-                        p.Transform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
+                        ptransform.LocalPosition.Y.ToString(CultureInfo.InvariantCulture));
                 }
             }
 

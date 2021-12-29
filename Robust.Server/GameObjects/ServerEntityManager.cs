@@ -43,27 +43,27 @@ namespace Robust.Server.GameObjects
             base.Initialize();
         }
 
-        IEntity IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid? uid)
+        EntityUid IServerEntityManagerInternal.AllocEntity(string? prototypeName, EntityUid uid)
         {
             return AllocEntity(prototypeName, uid);
         }
 
-        void IServerEntityManagerInternal.FinishEntityLoad(IEntity entity, IEntityLoadContext? context)
+        void IServerEntityManagerInternal.FinishEntityLoad(EntityUid entity, IEntityLoadContext? context)
         {
             LoadEntity(entity, context);
         }
 
-        void IServerEntityManagerInternal.FinishEntityInitialization(IEntity entity)
+        void IServerEntityManagerInternal.FinishEntityInitialization(EntityUid entity)
         {
             InitializeEntity(entity);
         }
 
-        void IServerEntityManagerInternal.FinishEntityStartup(IEntity entity)
+        void IServerEntityManagerInternal.FinishEntityStartup(EntityUid entity)
         {
             StartEntity(entity);
         }
 
-        private protected override IEntity CreateEntity(string? prototypeName, EntityUid? uid = null)
+        private protected override EntityUid CreateEntity(string? prototypeName, EntityUid uid = default)
         {
             var entity = base.CreateEntity(prototypeName, uid);
 
@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
                 // As such, we can reset the modified ticks to Zero,
                 // which indicates "not different from client's own deserialization".
                 // So the initial data for the component or even the creation doesn't have to be sent over the wire.
-                foreach (var (netId, component) in GetNetComponents(entity.Uid))
+                foreach (var (netId, component) in GetNetComponents(entity))
                 {
                     // Make sure to ONLY get components that are defined in the prototype.
                     // Others could be instantiated directly by AddComponent (e.g. ContainerManager).
@@ -162,7 +162,7 @@ namespace Robust.Server.GameObjects
             if (reg.NetID is not {} netId)
                 return;
 
-            var uid = e.OwnerUid;
+            var uid = e.Owner;
 
             if (!_componentDeletionHistory.TryGetValue(uid, out var list))
             {
@@ -209,7 +209,7 @@ namespace Robust.Server.GameObjects
 
         /// <inheritdoc />
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public void SendComponentNetworkMessage(INetChannel? channel, IEntity entity, IComponent component,
+        public void SendComponentNetworkMessage(INetChannel? channel, EntityUid entity, IComponent component,
             ComponentMessage message)
         {
             if (_networkManager.IsClient)
@@ -222,7 +222,7 @@ namespace Robust.Server.GameObjects
 
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = entity.Uid;
+            msg.EntityUid = entity;
             msg.NetId = netId.Value;
             msg.ComponentMessage = message;
             msg.SourceTick = _gameTiming.CurTick;

@@ -19,6 +19,13 @@ namespace Robust.Shared.ContentPack
         IWritableDirProvider UserData { get; }
 
         /// <summary>
+        ///     Provides a way to mount a <see cref="IContentRoot"/> implementation to the VFS.
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="loader"></param>
+        void AddRoot(ResourcePath prefix, IContentRoot loader);
+
+        /// <summary>
         ///     Read a file from the mounted content roots.
         /// </summary>
         /// <param name="path">The path to the file in the VFS. Must be rooted.</param>

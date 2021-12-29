@@ -137,17 +137,26 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
+        /// <summary>
+        ///     The sum of our visibility layer and our parent's visibility layers.
+        ///     Server-only.
+        /// </summary>
+        [ViewVariables]
+        public int VisibilityMask { get; internal set; }
+
         [ViewVariables]
         public bool EntityPaused
         {
             get => _entityPaused;
             set
             {
-                if (_entityPaused == value || value && Owner.HasComponent<IgnorePauseComponent>())
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                if (_entityPaused == value || value && entMan.HasComponent<IgnorePauseComponent>(Owner))
                     return;
 
                 _entityPaused = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new EntityPausedEvent(Owner.Uid, value));
+                entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 

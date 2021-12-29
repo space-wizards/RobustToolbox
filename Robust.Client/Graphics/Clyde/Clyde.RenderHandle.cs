@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using Robust.Client.GameObjects;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics.Clyde
@@ -122,14 +123,16 @@ namespace Robust.Client.Graphics.Clyde
                 _clyde.DrawSetScissor(scissorBox);
             }
 
-            public void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+            public void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
             {
-                if (entity.Deleted)
+                var entMan = IoCManager.Resolve<IEntityManager>();
+
+                if (entMan.Deleted(entity))
                 {
                     throw new ArgumentException("Tried to draw an entity has been deleted.", nameof(entity));
                 }
 
-                var sprite = entity.GetComponent<SpriteComponent>();
+                var sprite = entMan.GetComponent<SpriteComponent>(entity);
 
                 var oldProj = _clyde._currentMatrixProj;
                 var oldView = _clyde._currentMatrixView;
@@ -162,7 +165,7 @@ namespace Robust.Client.Graphics.Clyde
                     DrawingHandleWorld,
                     Angle.Zero,
                     overrideDirection == null
-                        ? entity.Transform.WorldRotation
+                        ? entMan.GetComponent<TransformComponent>(entity).WorldRotation
                         : Angle.Zero,
                     overrideDirection);
 
@@ -346,7 +349,7 @@ namespace Robust.Client.Graphics.Clyde
                         rect.BottomLeft, rect.BottomRight, color, subRegion);
                 }
 
-                public override void DrawEntity(IEntity entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
+                public override void DrawEntity(EntityUid entity, Vector2 position, Vector2 scale, Direction? overrideDirection)
                 {
                     _renderHandle.DrawEntity(entity, position, scale, overrideDirection);
                 }

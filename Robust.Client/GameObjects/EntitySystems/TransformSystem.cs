@@ -14,7 +14,7 @@ namespace Robust.Client.GameObjects
     ///     Handles interpolation of transform positions.
     /// </summary>
     [UsedImplicitly]
-    internal sealed class TransformSystem : SharedTransformSystem
+    public sealed class TransformSystem : SharedTransformSystem
     {
         // Max distance per tick how far an entity can move before it is considered teleporting.
         // TODO: Make these values somehow dependent on server TPS.

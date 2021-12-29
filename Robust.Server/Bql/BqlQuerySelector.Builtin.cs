@@ -109,7 +109,7 @@ namespace Robust.Server.Bql
             {
                 if (!entityManager.TryGetComponent(uid, out TransformComponent? xform)) continue;
 
-                foreach (var child in xform.ChildEntityUids)
+                foreach (var child in xform.ChildEntities)
                 {
                     yield return child;
                 }
@@ -133,14 +133,14 @@ namespace Robust.Server.Bql
             {
                 // TODO: Reduce LINQ chaining
                 var doing = toSearch.Where(entityManager.HasComponent<TransformComponent>).Select(entityManager.GetComponent<TransformComponent>).ToArray();
-                var search = doing.SelectMany(x => x.ChildEntityUids);
+                var search = doing.SelectMany(x => x.ChildEntities);
                 if (!search.Any())
                     break;
-                toSearch = doing.SelectMany(x => x.ChildEntityUids).Where(x => x != EntityUid.Invalid);
+                toSearch = doing.SelectMany(x => x.ChildEntities).Where(x => x != EntityUid.Invalid);
 
                 foreach (var xform in doing)
                 {
-                    foreach (var uid in xform.ChildEntityUids)
+                    foreach (var uid in xform.ChildEntities)
                     {
                         // This should never happen anyway
                         if (uid == EntityUid.Invalid) continue;
@@ -166,7 +166,7 @@ namespace Robust.Server.Bql
 
         public override IEnumerable<EntityUid> DoInitialSelection(IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
-            return DoSelection(entityManager.EntityQuery<TransformComponent>(true).Select(x => x.OwnerUid), arguments,
+            return DoSelection(entityManager.EntityQuery<TransformComponent>(true).Select(x => x.Owner), arguments,
                 isInverted, entityManager);
         }
     }

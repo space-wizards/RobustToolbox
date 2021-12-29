@@ -753,7 +753,8 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerInsert(EntInsertedIntoContainerMessage ev)
         {
-            if ((!EntityManager.EntityExists(ev.Entity) ? EntityLifeStage.Deleted : EntityManager.GetComponent<MetaDataComponent>(ev.Entity).EntityLifeStage) >= EntityLifeStage.Deleted || !EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent)) return;
+            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
+                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
 
             physicsComponent.CanCollide = false;
             physicsComponent.Awake = false;
@@ -761,7 +762,8 @@ namespace Robust.Shared.Physics
 
         private void HandleContainerRemove(EntRemovedFromContainerMessage ev)
         {
-            if (Deleted(ev.Entity) || !EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent)) return;
+            if (!EntityManager.TryGetComponent(ev.Entity, out PhysicsComponent? physicsComponent) ||
+                physicsComponent.LifeStage > ComponentLifeStage.Running) return;
 
             physicsComponent.CanCollide = true;
             physicsComponent.Awake = true;

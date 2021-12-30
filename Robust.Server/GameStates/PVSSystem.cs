@@ -312,7 +312,7 @@ internal partial class PVSSystem : EntitySystem
                 visMask = eyeComp.VisibilityMask;
 
             //todo at some point just register the viewerentities as localoverrides
-            TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
+            TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask, dontSkip: true);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 

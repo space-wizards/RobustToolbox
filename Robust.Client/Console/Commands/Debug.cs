@@ -520,7 +520,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = new SS14Window { MinSize = (500, 400)};
+            var window = new DefaultWindow { MinSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();

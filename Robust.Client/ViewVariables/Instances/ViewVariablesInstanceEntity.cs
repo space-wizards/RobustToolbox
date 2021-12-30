@@ -67,7 +67,7 @@ namespace Robust.Client.ViewVariables.Instances
             _entityManager = entityManager;
         }
 
-        public override void Initialize(SS14Window window, object obj)
+        public override void Initialize(DefaultWindow window, object obj)
         {
             _entity = (EntityUid) obj;
 
@@ -209,7 +209,7 @@ namespace Robust.Client.ViewVariables.Instances
                 var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
                 var removeButton = new TextureButton()
                 {
-                    StyleClasses = { SS14Window.StyleClassWindowCloseButton },
+                    StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
                     HorizontalAlignment = HAlignment.Right
                 };
                 button.OnPressed += _ => ViewVariablesManager.OpenVV(component);
@@ -260,7 +260,7 @@ namespace Robust.Client.ViewVariables.Instances
                 var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
                 var removeButton = new TextureButton()
                 {
-                    StyleClasses = { SS14Window.StyleClassWindowCloseButton },
+                    StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
                     HorizontalAlignment = HAlignment.Right
                 };
                 button.OnPressed += _ =>
@@ -456,7 +456,7 @@ namespace Robust.Client.ViewVariables.Instances
             PopulateClientComponents();
         }
 
-        public override async void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
+        public override async void Initialize(DefaultWindow window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             // TODO: this is pretty poorly implemented right now.
             // For example, it assumes a client-side entity exists,

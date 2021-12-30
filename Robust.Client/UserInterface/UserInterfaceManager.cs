@@ -550,7 +550,7 @@ namespace Robust.Client.UserInterface
 
         public void Popup(string contents, string title = "Alert!")
         {
-            var popup = new SS14Window
+            var popup = new DefaultWindow
             {
                 Title = title
             };

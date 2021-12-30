@@ -9,9 +9,15 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
+    /// <summary>
+    /// Simple window implementation that can be resized and has a title bar.
+    /// </summary>
+    /// <remarks>
+    /// Warning: ugly.
+    /// </remarks>
     [GenerateTypedNameReferences]
     // ReSharper disable once InconsistentNaming
-    public partial class SS14Window : BaseWindow
+    public partial class DefaultWindow : BaseWindow
     {
         public const string StyleClassWindowTitle = "windowTitle";
         public const string StyleClassWindowPanel = "windowPanel";
@@ -21,7 +27,7 @@ namespace Robust.Client.UserInterface.CustomControls
         private string? _headerClass;
         private string? _titleClass;
 
-        public SS14Window()
+        public DefaultWindow()
         {
             RobustXamlLoader.Load(this);
             MouseFilter = MouseFilterMode.Stop;
@@ -171,9 +177,9 @@ namespace Robust.Client.UserInterface.CustomControls
 
         public class SS14ContentCollection : ICollection<Control>, IReadOnlyCollection<Control>
         {
-            private readonly SS14Window Owner;
+            private readonly DefaultWindow Owner;
 
-            public SS14ContentCollection(SS14Window owner)
+            public SS14ContentCollection(DefaultWindow owner)
             {
                 Owner = owner;
             }
@@ -229,9 +235,9 @@ namespace Robust.Client.UserInterface.CustomControls
             {
                 private OrderedChildCollection.Enumerator _enumerator;
 
-                internal Enumerator(SS14Window ss14Window)
+                internal Enumerator(DefaultWindow DefaultWindow)
                 {
-                    _enumerator = ss14Window.Contents.Children.GetEnumerator();
+                    _enumerator = DefaultWindow.Contents.Children.GetEnumerator();
                 }
 
                 public bool MoveNext()

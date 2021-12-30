@@ -16,7 +16,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public sealed class EntitySpawnWindow : SS14Window
+    public sealed class EntitySpawnWindow : DefaultWindow
     {
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;

@@ -4,8 +4,6 @@ using Robust.Shared.GameObjects;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Prototypes;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -15,8 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    [ComponentReference(typeof(ISpriteRenderableComponent))]
-    public class SpriteComponent : SharedSpriteComponent, ISpriteRenderableComponent, ISerializationHooks
+    public class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
         const string LayerSerializationCache = "spritelayersrv";
 

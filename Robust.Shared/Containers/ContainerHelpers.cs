@@ -277,6 +277,21 @@ namespace Robust.Shared.Containers
             return containermanager.MakeContainer<T>(containerId);
         }
 
+        /// <summary>
+        /// Shortcut method to make creation of containers easier.
+        /// Creates a new container on the entity and gives it back to you.
+        /// </summary>
+        /// <param name="entity">The entity to create the container for.</param>
+        /// <param name="containerId"></param>
+        /// <returns>The new container.</returns>
+        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
+        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        public static T CreateContainer<T>(IEntityManager entityManager, EntityUid uid, string containerId)
+            where T : IContainer
+        {
+            return entityManager.EnsureComponent<ContainerManagerComponent>(uid).MakeContainer<T>(containerId);
+        }
+
         public static T EnsureContainer<T>(this EntityUid entity, string containerId)
             where T : IContainer
         {

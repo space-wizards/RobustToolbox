@@ -443,23 +443,6 @@ internal partial class PVSSystem : EntitySystem
             seenSet.Add(uid);
         }
 
-        //we *need* to send out contained entities too as part of the intial state
-        if (EntityManager.TryGetComponent(uid, out ContainerManagerComponent? containerManager))
-        {
-            foreach (var container in containerManager.GetAllContainers())
-            {
-                // For loop to avoid allocation.
-                // ReSharper disable once ForCanBeConvertedToForeach
-                for (var i = 0; i < container.ContainedEntities.Count; i++)
-                {
-                    var containedEntity = container.ContainedEntities[i];
-                    TryAddToVisibleEnts(in containedEntity, seenSet, previousVisibleEnts, toSend, fromTick,
-                        ref newEntitiesSent, ref totalEnteredEntities, null,
-                        true, true);
-                }
-            }
-        }
-
         if (entered)
         {
             toSend.Add(uid, PVSEntityVisiblity.Entered);

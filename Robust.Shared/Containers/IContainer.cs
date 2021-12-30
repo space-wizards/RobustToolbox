@@ -76,6 +76,7 @@ namespace Robust.Shared.Containers
         /// Checks if the entity can be inserted into this container.
         /// </summary>
         /// <param name="toinsert">The entity to attempt to insert.</param>
+        /// <param name="entMan"></param>
         /// <returns>True if the entity can be inserted, false otherwise.</returns>
         bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null);
 
@@ -87,6 +88,7 @@ namespace Robust.Shared.Containers
         /// container entity, and the inserted entity's local position will be set to the zero vector.
         /// </remarks>
         /// <param name="toinsert">The entity to insert.</param>
+        /// <param name="entMan"></param>
         /// <returns>False if the entity could not be inserted.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this container is a child of the entity,
@@ -98,13 +100,15 @@ namespace Robust.Shared.Containers
         /// Checks if the entity can be removed from this container.
         /// </summary>
         /// <param name="toremove">The entity to check.</param>
+        /// <param name="entMan"></param>
         /// <returns>True if the entity can be removed, false otherwise.</returns>
-        bool CanRemove(EntityUid toremove);
+        bool CanRemove(EntityUid toremove, IEntityManager? entMan = null);
 
         /// <summary>
         /// Attempts to remove the entity from this container.
         /// </summary>
         /// <param name="toremove">The entity to attempt to remove.</param>
+        /// <param name="entMan"></param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
         bool Remove(EntityUid toremove, IEntityManager? entMan = null);
 
@@ -113,6 +117,7 @@ namespace Robust.Shared.Containers
         /// this function should be avoided.
         /// </summary>
         /// <param name="toRemove">The entity to attempt to remove.</param>
+        /// <param name="entMan"></param>
         void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null);
 
         /// <summary>

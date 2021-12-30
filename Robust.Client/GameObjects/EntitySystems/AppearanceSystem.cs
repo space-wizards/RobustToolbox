@@ -21,13 +21,15 @@ namespace Robust.Client.GameObjects
                 if (appearance.Deleted)
                     return;
 
-                OnChangeData(appearance);
+                OnChangeData(appearance.Owner, appearance);
                 appearance.UnmarkDirty();
             }
         }
 
-        public void OnChangeData(ClientAppearanceComponent appearanceComponent)
+        public void OnChangeData(EntityUid uid, ClientAppearanceComponent? appearanceComponent = null)
         {
+            if (!Resolve(uid, ref appearanceComponent, false)) return;
+
             foreach (var visualizer in appearanceComponent.Visualizers)
             {
                 visualizer.OnChangeData(appearanceComponent);

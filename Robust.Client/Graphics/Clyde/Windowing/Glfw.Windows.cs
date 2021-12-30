@@ -379,8 +379,8 @@ namespace Robust.Client.Graphics.Clyde
                 Window* contextShare,
                 Window* ownerWindow)
             {
-                GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
-                GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
+                GLFW.WindowHint(WindowHintString.X11ClassName, "RobustToolbox");
+                GLFW.WindowHint(WindowHintString.X11InstanceName, "RobustToolbox");
                 GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
 
                 if (spec == null)

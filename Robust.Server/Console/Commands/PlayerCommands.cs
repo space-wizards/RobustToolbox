@@ -77,81 +77,64 @@ namespace Robust.Server.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame)
+            if (args.Length == 0)
                 return;
 
-            if (args.Length == 0)
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var playerMan = IoCManager.Resolve<IPlayerManager>();
+
+            var target = args[^1];
+            if (!playerMan.TryGetSessionByUsername(target, out var targetSession))
             {
-                shell.WriteError(Help);
+                shell.WriteError("Can't find username: " + target);
+                return;
             }
-            else if (args.Length == 1)
+
+            if (!entMan.TryGetComponent(targetSession.AttachedEntity, out TransformComponent targetTransform))
             {
-                var playerAE = player.AttachedEntityTransform;
-                if (playerAE == null)
+                shell.WriteError(target + " does not have an entity.");
+                return;
+            }
+
+            var targetCoords = targetTransform.Coordinates;
+
+            if (args.Length == 1)
+            {
+                var player = shell.Player as IPlayerSession;
+                if (player?.Status != SessionStatus.InGame)
+                {
+                    shell.WriteError("You need to be in game to teleport to an entity.");
+                    return;
+                }
+
+                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent playerTransform))
                 {
                     shell.WriteError("You don't have an entity.");
                     return;
                 }
 
-                var players = IoCManager.Resolve<IPlayerManager>();
-
-                var username = args[0];
-
-                if (!players.TryGetSessionByUsername(username, out var playerSession))
-                {
-                    shell.WriteError("Can't find username: " + username);
-                    return;
-                }
-
-                var targetAE = playerSession.AttachedEntityTransform;
-                if (targetAE == null)
-                {
-                    shell.WriteError(username + " does not have an entity.");
-                    return;
-                }
-
-                playerAE.Coordinates = targetAE.Coordinates;
+                playerTransform.Coordinates = targetCoords;
             }
             else if (args.Length > 1)
             {
-                var players = IoCManager.Resolve<IPlayerManager>();
-
-                var target = args[^1];
-                if (!players.TryGetSessionByUsername(target, out var targetSession))
-                {
-                    shell.WriteError("Can't find username: " + target);
-                    return;
-                }
-
-                var targetAE = targetSession.AttachedEntityTransform;
-                if (targetAE == null)
-                {
-                    shell.WriteError(target + " does not have an entity.");
-                    return;
-                }
-
-                var targetCoords = targetAE.Coordinates;
-
                 foreach (var username in args)
                 {
                     if (username == target)
                         continue;
 
-                    if (!players.TryGetSessionByUsername(username, out var playerSession))
+                    if (!playerMan.TryGetSessionByUsername(username, out var playerSession))
                     {
                         shell.WriteError("Can't find username: " + username);
                         continue;
                     }
 
-                    var victimAE = playerSession.AttachedEntityTransform;
-                    if (victimAE == null)
+                    if (entMan.TryGetComponent(playerSession.AttachedEntity, out TransformComponent victimTransform))
                     {
                         shell.WriteError(username + " does not have an entity.");
                         continue;
                     }
 
-                    victimAE.Coordinates = targetCoords;
+                    victimTransform.Coordinates = targetCoords;
                 }
             }
         }

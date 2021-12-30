@@ -86,6 +86,7 @@ def build_windows(skip_build: bool) -> None:
     base_bin = p("Robust.Client.WebView", "bin", "Release", "net6.0")
 
     if not skip_build:
+        build_client_rid("Windows", "win-x64")
         build_client("Windows")
         if sys.platform != "win32":
             subprocess.run(["Tools/exe_set_subsystem.py", p(base_bin, "Robust.Client.WebView.exe"), "2"])
@@ -108,7 +109,7 @@ def build_windows(skip_build: bool) -> None:
     ]
 
     for f in files_to_copy:
-        client_zip.write(p(base_bin, f), f)
+        client_zip.write(p(base_bin, "win-x64", f), f)
 
     copy_dir_into_zip(p(base_bin, "runtimes", "win-x64", "native"), "", client_zip, {
         "e_sqlite3.dll",
@@ -132,31 +133,64 @@ def build_linux(skip_build: bool) -> None:
     # Run a full build.
     print(Fore.GREEN + "Building project for Linux x64..." + Style.RESET_ALL)
 
-    if not skip_build:
-        publish_client("linux-x64", "Linux")
+    base_bin = p("Robust.Client.WebView", "bin", "Release", "net6.0")
 
-    print(Fore.GREEN + "Packaging Linux x64 client..." + Style.RESET_ALL)
+    if not skip_build:
+        build_client_rid("Linux", "linux-x64")
+        build_client("Linux")
+
+    print(Fore.GREEN + "Packaging linux-x64..." + Style.RESET_ALL)
 
     client_zip = zipfile.ZipFile(
-        p("release", "Robust.Client_linux-x64.zip"), "w",
+        p("release", "Robust.Client.WebView_linux-x64.zip"), "w",
         compression=zipfile.ZIP_DEFLATED)
 
-    copy_dir_into_zip(p("bin", "Client", "linux-x64", "publish"), "", client_zip, IGNORED_FILES_LINUX)
-    copy_resources("Resources", client_zip)
+    files_to_copy = [
+        "Robust.Client.WebView.dll",
+        "Robust.Client.WebView.runtimeconfig.json",
+        "Robust.Client.WebView.pdb",
+        "Robust.Client.WebView",
+        "Robust.Client.WebView.deps.json",
+        "Xilium.CefGlue.dll",
+        "Xilium.CefGlue.pdb",
+    ]
+
+    for f in files_to_copy:
+        client_zip.write(p(base_bin, "linux-x64", f), f)
+
+    copy_dir_into_zip(p(base_bin, "runtimes", "linux-x64", "native"), "", client_zip, {
+        "libglfw.so.3",
+        "libe_sqlite3.so",
+        "libopenal.so",
+        "libswnfd.so",
+    })
+
     # Cool we're done.
     client_zip.close()
-
 
 
 def build_client(target_os: str) -> None:
     # Running a publish will fold all the natives in the runtime directories into one folder.
     # This basically nukes the entire setup.
-    # As bypass, we do an all-platform build and then
+    # As bypass, we do an all-platform build and then copy the natives manually.
     base = [
         "dotnet", "build",
         "-c", "Release",
         f"/p:TargetOS={target_os}",
-        "/p:FullRelease=True"
+        "/p:FullRelease=True",
+        "--no-self-contained",
+    ]
+
+    subprocess.run(base + ["Robust.Client.WebView/Robust.Client.WebView.csproj"], check=True)
+
+def build_client_rid(target_os: str, rid: str) -> None:
+    base = [
+        "dotnet", "build",
+        "-c", "Release",
+        "-r", rid,
+        f"/p:TargetOS={target_os}",
+        "/p:FullRelease=True",
+        "--no-self-contained",
     ]
 
     subprocess.run(base + ["Robust.Client.WebView/Robust.Client.WebView.csproj"], check=True)

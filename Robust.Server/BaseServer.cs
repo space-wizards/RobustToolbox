@@ -615,7 +615,7 @@ namespace Robust.Server
             }
 
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
-            _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, TickUsage);
+            _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false, TickUsage);
 
             _lookup.Update();
 

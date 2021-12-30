@@ -51,6 +51,9 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
+
+            UpdatesOutsidePrediction = true;
+
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
             SubscribeLocalEvent<JointComponent, ComponentShutdown>(HandleShutdown);
         }

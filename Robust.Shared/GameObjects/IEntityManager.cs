@@ -27,7 +27,11 @@ namespace Robust.Shared.GameObjects
         ///     Drops every entity, component and entity system.
         /// </summary>
         void Cleanup();
-        void TickUpdate(float frameTime, Histogram? histogram=null);
+
+        /// <param name="noPredictions">
+        /// Only run systems with <see cref="EntitySystem.UpdatesOutsidePrediction"/> set true.
+        /// </param>
+        void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram=null);
 
         /// <summary>
         ///     Client-specific per-render frame updating.

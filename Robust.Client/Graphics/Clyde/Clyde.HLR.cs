@@ -525,7 +525,7 @@ namespace Robust.Client.Graphics.Clyde
                 RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
 
                 _currentViewport = oldVp;
-            });
+            }, viewport.ClearColor);
         }
 
         private static Box2 CalcWorldAABB(Viewport viewport)

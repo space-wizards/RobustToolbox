@@ -57,6 +57,9 @@ namespace Robust.Shared.Physics
         public override void Initialize()
         {
             base.Initialize();
+
+            UpdatesOutsidePrediction = true;
+
             UpdatesAfter.Add(typeof(SharedTransformSystem));
 
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);

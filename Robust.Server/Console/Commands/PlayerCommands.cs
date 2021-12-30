@@ -72,8 +72,8 @@ namespace Robust.Server.Console.Commands
     public class TeleportToPlayerCommand : IConsoleCommand
     {
         public string Command => "tpto";
-        public string Description => "Teleports the current player or the specified players to the location of last player specified.";
-        public string Help => "tpto <username> [username]...";
+        public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";
+        public string Help => "tpto <username|uid> [username|uid]...";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
@@ -84,16 +84,21 @@ namespace Robust.Server.Console.Commands
             var playerMan = IoCManager.Resolve<IPlayerManager>();
 
             var target = args[^1];
-            if (!playerMan.TryGetSessionByUsername(target, out var targetSession))
-            {
-                shell.WriteError("Can't find username: " + target);
-                return;
-            }
 
-            if (!entMan.TryGetComponent(targetSession.AttachedEntity, out TransformComponent targetTransform))
+            if (!int.TryParse(target, out var targetUid)
+                || !entMan.TryGetComponent(new EntityUid(targetUid), out TransformComponent targetTransform))
             {
-                shell.WriteError(target + " does not have an entity.");
-                return;
+                if (!playerMan.TryGetSessionByUsername(target, out var targetSession))
+                {
+                    shell.WriteError("Can't find username/id: " + target);
+                    return;
+                }
+
+                if (!entMan.TryGetComponent(targetSession.AttachedEntity, out targetTransform))
+                {
+                    shell.WriteError(target + " does not have an entity.");
+                    return;
+                }
             }
 
             var targetCoords = targetTransform.Coordinates;
@@ -117,21 +122,25 @@ namespace Robust.Server.Console.Commands
             }
             else if (args.Length > 1)
             {
-                foreach (var username in args)
+                foreach (var victim in args)
                 {
-                    if (username == target)
+                    if (victim == target)
                         continue;
 
-                    if (!playerMan.TryGetSessionByUsername(username, out var playerSession))
+                    if (!int.TryParse(victim, out var victimUid)
+                        || !entMan.TryGetComponent(new EntityUid(victimUid), out TransformComponent victimTransform))
                     {
-                        shell.WriteError("Can't find username: " + username);
-                        continue;
-                    }
+                        if (!playerMan.TryGetSessionByUsername(victim, out var playerSession))
+                        {
+                            shell.WriteError("Can't find username/id: " + victim);
+                            continue;
+                        }
 
-                    if (entMan.TryGetComponent(playerSession.AttachedEntity, out TransformComponent victimTransform))
-                    {
-                        shell.WriteError(username + " does not have an entity.");
-                        continue;
+                        if (!entMan.TryGetComponent(playerSession.AttachedEntity, out victimTransform))
+                        {
+                            shell.WriteError(victim + " does not have an entity.");
+                            continue;
+                        }
                     }
 
                     victimTransform.Coordinates = targetCoords;

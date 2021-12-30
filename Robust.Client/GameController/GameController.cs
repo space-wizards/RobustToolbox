@@ -438,7 +438,7 @@ namespace Robust.Client
             // In singleplayer, however, we're in full control instead.
             else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
             {
-                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds);
+                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
                 _lookup.Update();
             }
 

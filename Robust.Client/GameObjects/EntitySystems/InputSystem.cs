@@ -2,6 +2,8 @@ using System;
 using Robust.Client.GameStates;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Shared;
+using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
@@ -62,6 +64,9 @@ namespace Robust.Client.GameObjects
             // handle local binds before sending off
             foreach (var handler in BindRegistry.GetHandlers(function))
             {
+                if (!_stateManager.IsPredictionEnabled && !handler.FireOutsidePrediction)
+                    continue;
+
                 // local handlers can block sending over the network.
                 if (handler.HandleCmdMessage(session, message))
                 {

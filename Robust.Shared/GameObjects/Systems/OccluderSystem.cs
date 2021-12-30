@@ -20,6 +20,8 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
+            UpdatesOutsidePrediction = true;
+
             _mapManager.MapCreated += OnMapCreated;
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);

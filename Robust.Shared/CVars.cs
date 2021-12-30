@@ -61,6 +61,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetLogging =
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
+        /// <summary>
+        /// Whether prediction is enabled on the client.
+        /// </summary>
+        /// <remarks>
+        /// If off, simulation input commands will not fire and most entity methods will not run update.
+        /// </remarks>
         public static readonly CVarDef<bool> NetPredict =
             CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
 

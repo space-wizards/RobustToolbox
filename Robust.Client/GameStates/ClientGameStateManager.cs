@@ -69,7 +69,7 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public int CurrentBufferSize => _processor.CalculateBufferSize(CurServerTick);
 
-        public bool Predicting { get; private set; }
+        public bool IsPredictionEnabled { get; private set; }
 
         public int PredictTickBias { get; private set; }
         public float PredictLagBias { get; private set; }
@@ -96,7 +96,7 @@ namespace Robust.Client.GameStates
             _config.OnValueChanged(CVars.NetInterp, b => _processor.Interpolation = b, true);
             _config.OnValueChanged(CVars.NetInterpRatio, i => _processor.InterpRatio = i, true);
             _config.OnValueChanged(CVars.NetLogging, b => _processor.Logging = b, true);
-            _config.OnValueChanged(CVars.NetPredict, b => Predicting = b, true);
+            _config.OnValueChanged(CVars.NetPredict, b => IsPredictionEnabled = b, true);
             _config.OnValueChanged(CVars.NetPredictTickBias, i => PredictTickBias = i, true);
             _config.OnValueChanged(CVars.NetPredictLagBias, i => PredictLagBias = i, true);
             _config.OnValueChanged(CVars.NetStateBufMergeThreshold, i => StateBufferMergeThreshold = i, true);
@@ -104,7 +104,7 @@ namespace Robust.Client.GameStates
             _processor.Interpolation = _config.GetCVar(CVars.NetInterp);
             _processor.InterpRatio = _config.GetCVar(CVars.NetInterpRatio);
             _processor.Logging = _config.GetCVar(CVars.NetLogging);
-            Predicting = _config.GetCVar(CVars.NetPredict);
+            IsPredictionEnabled = _config.GetCVar(CVars.NetPredict);
             PredictTickBias = _config.GetCVar(CVars.NetPredictTickBias);
             PredictLagBias = _config.GetCVar(CVars.NetPredictLagBias);
 
@@ -135,7 +135,7 @@ namespace Robust.Client.GameStates
 
         public void InputCommandDispatched(FullInputCmdMessage message)
         {
-            if (!Predicting)
+            if (!IsPredictionEnabled)
             {
                 return;
             }
@@ -151,7 +151,7 @@ namespace Robust.Client.GameStates
 
         public uint SystemMessageDispatched<T>(T message) where T : EntityEventArgs
         {
-            if (!Predicting)
+            if (!IsPredictionEnabled)
             {
                 return default;
             }
@@ -214,7 +214,7 @@ namespace Robust.Client.GameStates
 
                 // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
                 // this won't run meaning it could potentially get stuck dirty.
-                if (Predicting && i == 0)
+                if (IsPredictionEnabled && i == 0)
                 {
                     // Disable IsFirstTimePredicted while re-running HandleComponentState here.
                     // Helps with debugging.
@@ -268,7 +268,7 @@ namespace Robust.Client.GameStates
 
             DebugTools.Assert(_timing.InSimulation);
 
-            if (Predicting)
+            if (IsPredictionEnabled)
             {
                 using var _ = _timing.StartPastPredictionArea();
 
@@ -324,13 +324,13 @@ namespace Robust.Client.GameStates
                         // Don't run EntitySystemManager.TickUpdate if this is the target tick,
                         // because the rest of the main loop will call into it with the target tick later,
                         // and it won't be a past prediction.
-                        _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
+                        _entitySystemManager.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: false);
                         ((IBroadcastEventBusInternal) _entities.EventBus).ProcessEventQueue();
                     }
                 }
             }
 
-            _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds);
+            _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
 
             _lookup.Update();
         }

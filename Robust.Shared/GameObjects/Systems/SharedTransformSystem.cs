@@ -18,6 +18,9 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+
+            UpdatesOutsidePrediction = true;
+
             _mapManager.TileChanged += MapManagerOnTileChanged;
             SubscribeLocalEvent<TransformComponent, EntityDirtyEvent>(OnTransformDirty);
         }

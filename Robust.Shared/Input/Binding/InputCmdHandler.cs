@@ -8,6 +8,8 @@ namespace Robust.Shared.Input.Binding
 
     public abstract class InputCmdHandler
     {
+        public virtual bool FireOutsidePrediction => false;
+
         public virtual void Enabled(ICommonSession? session)
         {
         }
@@ -25,13 +27,14 @@ namespace Robust.Shared.Input.Binding
         /// <param name="disabled">The delegate to be ran when this command is disabled.</param>
         /// <returns>The new input command.</returns>
         public static InputCmdHandler FromDelegate(StateInputCmdDelegate? enabled = null,
-            StateInputCmdDelegate? disabled = null, bool handle=true)
+            StateInputCmdDelegate? disabled = null, bool handle=true, bool outsidePrediction=false)
         {
             return new StateInputCmdHandler
             {
                 EnabledDelegate = enabled,
                 DisabledDelegate = disabled,
                 Handle = handle,
+                OutsidePrediction = outsidePrediction
             };
         }
 
@@ -40,6 +43,8 @@ namespace Robust.Shared.Input.Binding
             public StateInputCmdDelegate? EnabledDelegate;
             public StateInputCmdDelegate? DisabledDelegate;
             public bool Handle { get; set; }
+            public bool OutsidePrediction;
+            public override bool FireOutsidePrediction => OutsidePrediction;
 
             public override void Enabled(ICommonSession? session)
             {
@@ -81,15 +86,7 @@ namespace Robust.Shared.Input.Binding
         private PointerInputCmdDelegate2 _callback;
         private bool _ignoreUp;
 
-        /// <summary>
-        /// Handler which will handle the command using the indicated callback
-        /// </summary>
-        /// <param name="callback">callback to handle the command</param>
-        /// <param name="ignoreUp">whether keyup actions will be ignored by this handler (like lifting a key or releasing
-        /// mouse button)</param>
-        public PointerInputCmdHandler(PointerInputCmdDelegate callback, bool ignoreUp = true)
-            : this((in PointerInputCmdArgs args) =>
-            callback(args.Session, args.Coordinates, args.EntityUid), ignoreUp) { }
+        public override bool FireOutsidePrediction { get; }
 
         /// <summary>
         /// Handler which will handle the command using the indicated callback
@@ -97,11 +94,21 @@ namespace Robust.Shared.Input.Binding
         /// <param name="callback">callback to handle the command</param>
         /// <param name="ignoreUp">whether keyup actions will be ignored by this handler (like lifting a key or releasing
         /// mouse button)</param>
-        public PointerInputCmdHandler(PointerInputCmdDelegate2 callback, bool ignoreUp = true)
+        public PointerInputCmdHandler(PointerInputCmdDelegate callback, bool ignoreUp = true, bool outsidePrediction = false)
+            : this((in PointerInputCmdArgs args) =>
+            callback(args.Session, args.Coordinates, args.EntityUid), ignoreUp, outsidePrediction) { }
+
+        /// <summary>
+        /// Handler which will handle the command using the indicated callback
+        /// </summary>
+        /// <param name="callback">callback to handle the command</param>
+        /// <param name="ignoreUp">whether keyup actions will be ignored by this handler (like lifting a key or releasing
+        /// mouse button)</param>
+        public PointerInputCmdHandler(PointerInputCmdDelegate2 callback, bool ignoreUp = true, bool outsidePrediction = false)
         {
             _callback = callback;
             _ignoreUp = ignoreUp;
-
+            FireOutsidePrediction = outsidePrediction;
         }
 
         public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)
@@ -141,11 +148,13 @@ namespace Robust.Shared.Input.Binding
     {
         private PointerInputCmdDelegate _enabled;
         private PointerInputCmdDelegate _disabled;
+        public override bool FireOutsidePrediction { get; }
 
-        public PointerStateInputCmdHandler(PointerInputCmdDelegate enabled, PointerInputCmdDelegate disabled)
+        public PointerStateInputCmdHandler(PointerInputCmdDelegate enabled, PointerInputCmdDelegate disabled, bool outsidePrediction = false)
         {
             _enabled = enabled;
             _disabled = disabled;
+            FireOutsidePrediction = outsidePrediction;
         }
 
         /// <inheritdoc />

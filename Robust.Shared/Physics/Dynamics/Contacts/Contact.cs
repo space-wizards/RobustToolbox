@@ -429,8 +429,14 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         {
             if (Manifold.PointCount > 0 && FixtureA?.Hard == true && FixtureB?.Hard == true)
             {
-                FixtureA.Body.Awake = true;
-                FixtureB.Body.Awake = true;
+                var bodyA = FixtureA.Body;
+                var bodyB = FixtureB.Body;
+
+                if (bodyA.CanCollide)
+                    FixtureA.Body.Awake = true;
+
+                if (bodyB.CanCollide)
+                    FixtureB.Body.Awake = true;
             }
 
             Reset(null, 0, null, 0);

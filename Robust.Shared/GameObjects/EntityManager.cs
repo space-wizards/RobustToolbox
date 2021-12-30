@@ -109,11 +109,11 @@ namespace Robust.Shared.GameObjects
             Started = false;
         }
 
-        public virtual void TickUpdate(float frameTime, Histogram? histogram)
+        public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                EntitySystemManager.TickUpdate(frameTime);
+                EntitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
@@ -266,10 +266,10 @@ namespace Robust.Shared.GameObjects
             EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
-            foreach (var childTransform in transform.Children.ToArray())
+            foreach (var child in transform._children.ToArray())
             {
                 // Recursion Alert
-                RecursiveDeleteEntity(childTransform.Owner);
+                RecursiveDeleteEntity(child);
             }
 
             // Shut down all components.

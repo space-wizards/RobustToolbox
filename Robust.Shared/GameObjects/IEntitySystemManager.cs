@@ -104,8 +104,11 @@ namespace Robust.Shared.GameObjects
         /// Update all systems.
         /// </summary>
         /// <param name="frameTime">Time since the last frame was rendered.</param>
+        /// <param name="noPredictions">
+        /// Only run systems with <see cref="EntitySystem.UpdatesOutsidePrediction"/> set true.
+        /// </param>
         /// <seealso cref="IEntitySystem.Update(float)"/>
-        void TickUpdate(float frameTime);
+        void TickUpdate(float frameTime, bool noPredictions);
         void FrameUpdate(float frameTime);
 
         /// <summary>

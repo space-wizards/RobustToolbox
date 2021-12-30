@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
-        [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
+        [ViewVariables] internal readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -543,6 +543,7 @@ namespace Robust.Shared.GameObjects
             }
 
             GridID = GetGridIndex();
+            RebuildMatrices();
         }
 
         private GridId GetGridIndex()
@@ -574,7 +575,6 @@ namespace Robust.Shared.GameObjects
             base.Startup();
 
             // Keep the cached matrices in sync with the fields.
-            RebuildMatrices();
             Dirty();
         }
 
@@ -1070,6 +1070,7 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever an entity moves.
     ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
     /// </summary>
+    [ByRefEvent]
     public readonly struct MoveEvent
     {
         public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
@@ -1095,6 +1096,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Raised whenever this entity rotates in relation to their parent.
     /// </summary>
+    [ByRefEvent]
     public readonly struct RotateEvent
     {
         public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
@@ -1118,6 +1120,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
+    [ByRefEvent]
     public readonly struct AnchorStateChangedEvent
     {
         public readonly EntityUid Entity;

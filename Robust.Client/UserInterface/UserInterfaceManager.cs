@@ -116,7 +116,7 @@ namespace Robust.Client.UserInterface
 
             _debugMonitors = new DebugMonitors(_gameTiming, _playerManager, _eyeManager, _inputManager, _stateManager,
                 _clyde, _netManager, _mapManager);
-            RootControl.AddChild(_debugMonitors);
+            DebugConsole.BelowConsole.AddChild(_debugMonitors);
 
             _inputManager.SetInputCommand(EngineKeyFunctions.ShowDebugConsole,
                 InputCmdHandler.FromDelegate(session => DebugConsole.Toggle()));
@@ -550,7 +550,7 @@ namespace Robust.Client.UserInterface
 
         public void Popup(string contents, string title = "Alert!")
         {
-            var popup = new SS14Window
+            var popup = new DefaultWindow
             {
                 Title = title
             };

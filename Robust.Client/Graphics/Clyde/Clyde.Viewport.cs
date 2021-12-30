@@ -112,6 +112,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             public Vector2i Size { get; set; }
+            public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; } = Vector2.One;
             public bool AutomaticRender { get; set; }
 

@@ -16,7 +16,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public sealed class EntitySpawnWindow : SS14Window
+    public sealed class EntitySpawnWindow : DefaultWindow
     {
         private readonly IPlacementManager placementManager;
         private readonly IPrototypeManager prototypeManager;
@@ -208,7 +208,9 @@ namespace Robust.Client.UserInterface.CustomControls
         private void OnEraseButtonToggled(BaseButton.ButtonToggledEventArgs args)
         {
             placementManager.Clear();
-            placementManager.ToggleEraser();
+            // Only toggle the eraser back if the button is pressed.
+            if(args.Pressed)
+                placementManager.ToggleEraser();
             // clearing will toggle the erase button off...
             args.Button.Pressed = args.Pressed;
             OverrideMenu.Disabled = args.Pressed;

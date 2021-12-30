@@ -205,7 +205,7 @@ namespace Robust.Client.Graphics.Clyde
                                         $"The exact error is: {lastError}";
 
                     fixed (char* pText = msgBoxContent)
-                    fixed (char* pCaption = "Space Station 14: Failed to create window")
+                    fixed (char* pCaption = "RobustToolbox: Failed to create window")
                     {
                         Windows.MessageBoxW(HWND.NULL,
                             (ushort*) pText,

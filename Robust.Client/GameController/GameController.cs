@@ -79,6 +79,8 @@ namespace Robust.Client
         public GameControllerOptions Options { get; private set; } = new();
         public InitialLaunchState LaunchState { get; private set; } = default!;
 
+        private ResourceManifestData? _resourceManifest;
+
         public void SetCommandLineArgs(CommandLineArgs args)
         {
             _commandLineArgs = args;
@@ -86,19 +88,25 @@ namespace Robust.Client
 
         internal bool StartupContinue(DisplayMode displayMode)
         {
+            DebugTools.AssertNotNull(_resourceManifest);
+
             _clyde.InitializePostWindowing();
             _clydeAudio.InitializePostWindowing();
-            _clyde.SetWindowTitle(Options.DefaultWindowTitle);
+            _clyde.SetWindowTitle(Options.DefaultWindowTitle ?? _resourceManifest!.DefaultWindowTitle ?? "RobustToolbox");
 
             _taskManager.Initialize();
             _fontManager.SetFontDpi((uint)_configurationManager.GetCVar(CVars.DisplayFontDpi));
+
+            // Load optional Robust modules.
+            LoadOptionalRobustModules(displayMode, _resourceManifest!);
 
             // Disable load context usage on content start.
             // This prevents Content.Client being loaded twice and things like csi blowing up because of it.
             _modLoader.SetUseLoadContext(!ContentStart);
             _modLoader.SetEnableSandboxing(Options.Sandboxing);
 
-            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, Options.ContentModulePrefix))
+            var assemblyPrefix = Options.ContentModulePrefix ?? _resourceManifest!.AssemblyPrefix ?? "Content.";
+            if (!_modLoader.TryLoadModulesFrom(Options.AssemblyDirectory, assemblyPrefix))
             {
                 Logger.Fatal("Errors while loading content assemblies.");
                 return false;
@@ -110,9 +118,6 @@ namespace Robust.Client
             }
 
             IoCManager.Resolve<ISerializationManager>().Initialize();
-
-            // Load optional Robust modules.
-            LoadOptionalRobustModules(displayMode);
 
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
@@ -209,7 +214,7 @@ namespace Robust.Client
         {
             // Parses /manifest.yml for game-specific settings that cannot be exclusively set up by content code.
             if (!_resourceCache.TryContentFileRead("/manifest.yml", out var stream))
-                return new ResourceManifestData(Array.Empty<string>());
+                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null);
 
             var yamlStream = new YamlStream();
             using (stream)
@@ -217,6 +222,9 @@ namespace Robust.Client
                 using var streamReader = new StreamReader(stream, EncodingHelpers.UTF8);
                 yamlStream.Load(streamReader);
             }
+
+            if (yamlStream.Documents.Count == 0)
+                return new ResourceManifestData(Array.Empty<string>(), null, null, null, null);
 
             if (yamlStream.Documents.Count != 1 || yamlStream.Documents[0].RootNode is not YamlMappingNode mapping)
             {
@@ -235,7 +243,23 @@ namespace Robust.Client
                 }
             }
 
-            return new ResourceManifestData(modules);
+            string? assemblyPrefix = null;
+            if (mapping.TryGetNode("assemblyPrefix", out var prefixNode))
+                assemblyPrefix = prefixNode.AsString();
+
+            string? defaultWindowTitle = null;
+            if (mapping.TryGetNode("defaultWindowTitle", out var winTitleNode))
+                defaultWindowTitle = winTitleNode.AsString();
+
+            string? windowIconSet = null;
+            if (mapping.TryGetNode("windowIconSet", out var iconSetNode))
+                windowIconSet = iconSetNode.AsString();
+
+            string? splashLogo = null;
+            if (mapping.TryGetNode("splashLogo", out var splashNode))
+                splashLogo = splashNode.AsString();
+
+            return new ResourceManifestData(modules, assemblyPrefix, defaultWindowTitle, windowIconSet, splashLogo);
         }
 
         internal bool StartupSystemSplash(GameControllerOptions options, Func<ILogHandler>? logHandlerFactory)
@@ -301,15 +325,6 @@ namespace Robust.Client
                 _configurationManager.OverrideConVars(_commandLineArgs.CVars);
             }
 
-            {
-                // Handle GameControllerOptions implicit CVar overrides.
-                _configurationManager.OverrideConVars(new[]
-                {
-                    (CVars.DisplayWindowIconSet.Name, options.WindowIconSet.ToString()),
-                    (CVars.DisplaySplashLogo.Name, options.SplashLogo.ToString())
-                });
-            }
-
             ProfileOptSetup.Setup(_configurationManager);
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
@@ -327,6 +342,19 @@ namespace Robust.Client
                 _stringSerializer.EnableCaching = false;
                 _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
+            }
+
+            _resourceManifest = LoadResourceManifest();
+
+            {
+                // Handle GameControllerOptions implicit CVar overrides.
+                _configurationManager.OverrideConVars(new[]
+                {
+                    (CVars.DisplayWindowIconSet.Name,
+                        options.WindowIconSet?.ToString() ?? _resourceManifest.WindowIconSet ?? ""),
+                    (CVars.DisplaySplashLogo.Name,
+                        options.SplashLogo?.ToString() ?? _resourceManifest.SplashLogo ?? "")
+                });
             }
 
             _clyde.TextEntered += TextEntered;
@@ -431,7 +459,7 @@ namespace Robust.Client
             // In singleplayer, however, we're in full control instead.
             else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
             {
-                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds);
+                _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
                 _lookup.Update();
             }
 
@@ -543,6 +571,12 @@ namespace Robust.Client
             _clydeAudio.Shutdown();
         }
 
-        private sealed record ResourceManifestData(string[] Modules);
+        private sealed record ResourceManifestData(
+            string[] Modules,
+            string? AssemblyPrefix,
+            string? DefaultWindowTitle,
+            string? WindowIconSet,
+            string? SplashLogo
+        );
     }
 }

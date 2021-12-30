@@ -40,6 +40,7 @@ namespace Robust.Shared.ContentPack
 
         public DumpFlags Dump { get; init; } = DumpFlags.None;
         public bool VerifyIL { get; init; } = true;
+        public string[]? EngineModuleDirectories;
 
         private bool WouldNoOp => Dump == DumpFlags.None && DisableTypeCheck && !VerifyIL;
 
@@ -62,23 +63,32 @@ namespace Robust.Shared.ContentPack
         {
             var dotnetDir = Path.GetDirectoryName(typeof(int).Assembly.Location)!;
             var ourPath = typeof(AssemblyTypeChecker).Assembly.Location;
-            string[] loadDirs;
+            var loadDirs = new List<string> { dotnetDir };
+
             if (string.IsNullOrEmpty(ourPath))
             {
                 _sawmill.Debug("Robust directory not available");
-                loadDirs = new[] {dotnetDir};
             }
             else
             {
                 _sawmill.Debug("Robust directory is {0}", ourPath);
-                loadDirs = new[] {dotnetDir, Path.GetDirectoryName(ourPath)!};
+                loadDirs.Add(Path.GetDirectoryName(ourPath)!);
             }
 
             _sawmill.Debug(".NET runtime directory is {0}", dotnetDir);
 
+            if (EngineModuleDirectories != null)
+            {
+                foreach (var moduleDir in EngineModuleDirectories)
+                {
+                    _sawmill.Debug("Adding engine module directory: {ModuleDirectory}", moduleDir);
+                    loadDirs.Add(moduleDir);
+                }
+            }
+
             return new Resolver(
                 this,
-                loadDirs,
+                loadDirs.ToArray(),
                 new[] {new ResourcePath("/Assemblies/")}
             );
         }

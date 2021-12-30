@@ -36,6 +36,8 @@ namespace Robust.Shared.ContentPack
         private bool _useLoadContext = true;
         private bool _sandboxingEnabled;
 
+        private readonly List<string> _engineModuleDirectories = new();
+
         public ModLoader()
         {
             var id = Interlocked.Increment(ref _modLoaderId);
@@ -61,6 +63,11 @@ namespace Robust.Shared.ContentPack
         }
 
         public Func<string, Stream?>? VerifierExtraLoadHandler { get; set; }
+
+        public void AddEngineModuleDirectory(string dir)
+        {
+            _engineModuleDirectories.Add(dir);
+        }
 
         public bool TryLoadModulesFrom(ResourcePath mountPath, string filterPrefix)
         {
@@ -348,7 +355,8 @@ namespace Robust.Shared.ContentPack
             {
                 VerifyIL = _sandboxingEnabled,
                 DisableTypeCheck = !_sandboxingEnabled,
-                ExtraRobustLoader = VerifierExtraLoadHandler
+                ExtraRobustLoader = VerifierExtraLoadHandler,
+                EngineModuleDirectories = _engineModuleDirectories.ToArray()
             };
         }
     }

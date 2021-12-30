@@ -259,10 +259,13 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void TickUpdate(float frameTime)
+        public void TickUpdate(float frameTime, bool noPredictions)
         {
             foreach (var updReg in _updateOrder)
             {
+                if (noPredictions && !updReg.System.UpdatesOutsidePrediction)
+                    continue;
+
                 if (MetricsEnabled)
                 {
                     _stopwatch.Restart();

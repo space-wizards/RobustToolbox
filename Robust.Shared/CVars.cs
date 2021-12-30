@@ -61,6 +61,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetLogging =
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
+        /// <summary>
+        /// Whether prediction is enabled on the client.
+        /// </summary>
+        /// <remarks>
+        /// If off, simulation input commands will not fire and most entity methods will not run update.
+        /// </remarks>
         public static readonly CVarDef<bool> NetPredict =
             CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
 
@@ -119,6 +125,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetUPnP =
             CVarDef.Create("net.upnp", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// App identifier used by Lidgren. This must match between client and server for them to be able to connect.
+        /// </summary>
+        public static readonly CVarDef<string> NetLidgrenAppIdentifier =
+            CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
         /**
          * SUS

@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    internal abstract class SharedTransformSystem : EntitySystem
+    public abstract class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -18,6 +18,9 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+
+            UpdatesOutsidePrediction = true;
+
             _mapManager.TileChanged += MapManagerOnTileChanged;
             SubscribeLocalEvent<TransformComponent, EntityDirtyEvent>(OnTransformDirty);
         }

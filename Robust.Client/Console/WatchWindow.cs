@@ -15,7 +15,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console
 {
-    public class WatchWindow : SS14Window
+    public class WatchWindow : DefaultWindow
     {
         private readonly IReflectionManager _reflectionManager;
 
@@ -153,6 +153,11 @@ namespace Robust.Client.Console
             public ScriptGlobalsImpl()
             {
                 IoCManager.InjectDependencies(this);
+            }
+
+            protected override void WriteSyntax(object toString)
+            {
+                // No-op: nothing to write to.
             }
 
             public override void write(object toString)

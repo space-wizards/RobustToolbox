@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -235,9 +236,6 @@ namespace Robust.Shared.GameObjects
             // EventType -> CompType -> Handler
             private Dictionary<Type, Dictionary<Type, DirectedRegistration>> _subscriptions;
 
-            // EventType -> Passed by Ref or not
-            private Dictionary<Type, bool> _refEvents;
-
             // prevents shitcode, get your subscriptions figured out before you start spawning entities
             private bool _subscriptionLock;
 
@@ -254,7 +252,6 @@ namespace Robust.Shared.GameObjects
 
                 _eventTables = new();
                 _subscriptions = new();
-                _refEvents = new();
                 _subscriptionLock = false;
             }
 
@@ -285,15 +282,11 @@ namespace Robust.Shared.GameObjects
                 if (_subscriptionLock)
                     throw new InvalidOperationException("Subscription locked.");
 
-                if (!_refEvents.TryGetValue(eventType, out var referenceEvent))
-                {
-                    _refEvents.Add(eventType, registration.ReferenceEvent);
-                    referenceEvent = registration.ReferenceEvent;
-                }
+                var referenceEvent = eventType.HasCustomAttribute<ByRefEventAttribute>();
 
                 if (referenceEvent != registration.ReferenceEvent)
                     throw new InvalidOperationException(
-                        $"Attempted to subscribe by-ref and by-value to the same directed event! comp={compType.Name}, event={eventType.Name}");
+                        $"Attempted to subscribe by-ref and by-value to the same directed event! comp={compType.Name}, event={eventType.Name} eventIsByRef={referenceEvent} subscriptionIsByRef={registration.ReferenceEvent}");
 
                 if (!_subscriptions.TryGetValue(compType, out var compSubs))
                 {

@@ -25,5 +25,17 @@ namespace Robust.Server.ServerStatus
         ///     MAKE TRIPLE SURE EVERYTHING IN HERE IS THREAD SAFE DEAR GOD.
         /// </summary>
         event Action<JObject> OnInfoRequest;
+
+        /// <summary>
+        /// Set information used by automatic-client-zipping to determine the layout of your dev setup,
+        /// and which assembly files to send.
+        /// </summary>
+        /// <param name="clientBinFolder">
+        /// The name of your client project in the bin/ folder on the top of your project.
+        /// </param>
+        /// <param name="clientAssemblyNames">
+        /// The list of client assemblies to send from the aforementioned folder.
+        /// </param>
+        void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames);
     }
 }

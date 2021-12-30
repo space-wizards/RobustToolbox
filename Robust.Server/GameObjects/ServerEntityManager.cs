@@ -128,7 +128,7 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public override void TickUpdate(float frameTime, Histogram? histogram)
+        public override void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntityNet").NewTimer())
             {
@@ -138,7 +138,7 @@ namespace Robust.Server.GameObjects
                 }
             }
 
-            base.TickUpdate(frameTime, histogram);
+            base.TickUpdate(frameTime, noPredictions, histogram);
 
             EntitiesCount.Set(Entities.Count);
         }

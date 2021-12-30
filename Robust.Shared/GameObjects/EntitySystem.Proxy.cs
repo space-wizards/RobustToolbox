@@ -474,9 +474,9 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddComp<T>(EntityUid uid) where T :  Component, new()
+    public T AddComp<T>(EntityUid uid) where T :  Component, new()
     {
-        EntityManager.AddComponent<T>(uid);
+        return EntityManager.AddComponent<T>(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>

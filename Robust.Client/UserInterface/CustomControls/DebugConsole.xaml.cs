@@ -335,8 +335,12 @@ namespace Robust.Client.UserInterface.CustomControls
                     return;
                 }
 
-                // ReSharper disable once MethodHasAsyncOverload
-                writer.Write(newHistory);
+                // ReSharper disable once UseAwaitUsing
+                using (writer)
+                {
+                    // ReSharper disable once MethodHasAsyncOverload
+                    writer.Write(newHistory);
+                }
             });
         }
     }

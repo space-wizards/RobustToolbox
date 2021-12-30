@@ -30,7 +30,10 @@ namespace Robust.Client
         /// <summary>
         ///     Default window title.
         /// </summary>
-        public string DefaultWindowTitle { get; init; } = "Space Station 14";
+        /// <remarks>
+        /// Defaults to <c>RobustToolbox</c> if unset.
+        /// </remarks>
+        public string? DefaultWindowTitle { get; init; }
 
         /// <summary>
         ///     Assemblies with this prefix will be loaded.
@@ -58,12 +61,12 @@ namespace Robust.Client
         /// <summary>
         /// Directory resource path containing window icons to load.
         /// </summary>
-        public ResourcePath WindowIconSet { get; init; } = new("/Textures/Logo/icon");
+        public ResourcePath? WindowIconSet { get; init; }
 
         /// <summary>
         /// Resource path for splash image to show when the game starts up.
         /// </summary>
-        public ResourcePath SplashLogo { get; init; } = new("/Textures/Logo/logo.png");
+        public ResourcePath? SplashLogo { get; init; }
 
         /// <summary>
         ///     Whether to disable mounting the "Resources/" folder on FULL_RELEASE.

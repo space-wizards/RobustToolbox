@@ -69,7 +69,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class TeleportToPlayerCommand : IConsoleCommand
+    public class TeleportToCommand : IConsoleCommand
     {
         public string Command => "tpto";
         public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";

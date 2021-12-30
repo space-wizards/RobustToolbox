@@ -126,6 +126,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetUPnP =
             CVarDef.Create("net.upnp", false, CVar.SERVERONLY);
 
+        /// <summary>
+        /// App identifier used by Lidgren. This must match between client and server for them to be able to connect.
+        /// </summary>
+        public static readonly CVarDef<string> NetLidgrenAppIdentifier =
+            CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
+
         /**
          * SUS
          */

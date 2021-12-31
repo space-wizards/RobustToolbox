@@ -22,13 +22,32 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (Attribute.GetCustomAttribute(GetType(), typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
-                    return attribute.PrototypeName;
-
-                // Legacy code requires all components have a name, even though this should not be required.
-                throw new InvalidOperationException($"{GetType().FullName} does not have a defined Data Name.");
+                var type = GetType();
+                if (!DefaultNames.TryGetValue(type, out string? name))
+                {
+                    name = CalculateDefaultName(type);
+                    DefaultNames.Add(type, name);
+                }
+                return name;
             }
         }
+
+        private static string CalculateDefaultName(Type type)
+        {
+
+            if (Attribute.GetCustomAttribute(type, typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
+                return attribute.PrototypeName;
+            const string component = "Component";
+            var typeName = type.Name;
+            if (typeName == component) return component;
+            if (typeName.EndsWith(component, StringComparison.Ordinal))
+            {
+                return typeName[..^component.Length];
+            }
+            return typeName;
+        }
+
+        private static Dictionary<Type, string> DefaultNames = new();
 
         /// <inheritdoc />
         [ViewVariables]

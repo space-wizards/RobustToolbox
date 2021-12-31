@@ -189,6 +189,10 @@ namespace Robust.Shared.ContentPack
 
             _sawmill.Debug($"Inheritance... {fullStopwatch.ElapsedMilliseconds}ms");
 
+            CheckNoUnmanagedMethodDefs(reader, errors);
+
+            _sawmill.Debug($"Unmanaged methods... {fullStopwatch.ElapsedMilliseconds}ms");
+
             CheckMemberReferences(loadedConfig, members, errors);
 
             foreach (var error in errors)
@@ -243,11 +247,7 @@ namespace Robust.Shared.ContentPack
                     if (!res.Method.IsNil)
                     {
                         var method = reader.GetMethodDefinition(res.Method);
-                        var methodSig = method.DecodeSignature(new TypeProvider(), 0);
-                        var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
-
-                        var methodName =
-                            $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+                        var methodName = FormatMethodName(reader, method);
 
                         msg = $"{msg}, method: {methodName}";
                     }
@@ -275,6 +275,40 @@ namespace Robust.Shared.ContentPack
             }
 
             return true;
+        }
+
+        private static string FormatMethodName(MetadataReader reader, MethodDefinition method)
+        {
+            var methodSig = method.DecodeSignature(new TypeProvider(), 0);
+            var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
+
+            return
+                $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+        }
+
+        [SuppressMessage("ReSharper", "BitwiseOperatorOnEnumWithoutFlags")]
+        private static void CheckNoUnmanagedMethodDefs(MetadataReader reader, ConcurrentBag<SandboxError> errors)
+        {
+            foreach (var methodDefHandle in reader.MethodDefinitions)
+            {
+                var methodDef = reader.GetMethodDefinition(methodDefHandle);
+                var implAttr = methodDef.ImplAttributes;
+                var attr = methodDef.Attributes;
+
+                if ((implAttr & MethodImplAttributes.Unmanaged) != 0 ||
+                    (implAttr & MethodImplAttributes.CodeTypeMask) is not (MethodImplAttributes.IL
+                    or MethodImplAttributes.Runtime))
+                {
+                    var err = $"Method has illegal MethodImplAttributes: {FormatMethodName(reader, methodDef)}";
+                    errors.Add(new SandboxError(err));
+                }
+
+                if ((attr & (MethodAttributes.PinvokeImpl | MethodAttributes.UnmanagedExport)) != 0)
+                {
+                    var err = $"Method has illegal MethodAttributes: {FormatMethodName(reader, methodDef)}";
+                    errors.Add(new SandboxError(err));
+                }
+            }
         }
 
         private void CheckMemberReferences(

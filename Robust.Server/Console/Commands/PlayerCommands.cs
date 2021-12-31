@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Robust.Server.Player;
@@ -85,21 +86,8 @@ namespace Robust.Server.Console.Commands
 
             var target = args[^1];
 
-            if (!int.TryParse(target, out var targetUid)
-                || !entMan.TryGetComponent(new EntityUid(targetUid), out TransformComponent targetTransform))
-            {
-                if (!playerMan.TryGetSessionByUsername(target, out var targetSession))
-                {
-                    shell.WriteError("Can't find username/id: " + target);
-                    return;
-                }
-
-                if (!entMan.TryGetComponent(targetSession.AttachedEntity, out targetTransform))
-                {
-                    shell.WriteError(target + " does not have an entity.");
-                    return;
-                }
-            }
+            if (!TryGetTransformFromUidOrUsername(target, shell, entMan, playerMan, out var targetTransform))
+                return;
 
             var targetCoords = targetTransform.Coordinates;
 
@@ -120,32 +108,38 @@ namespace Robust.Server.Console.Commands
 
                 playerTransform.Coordinates = targetCoords;
             }
-            else if (args.Length > 1)
+            else
             {
                 foreach (var victim in args)
                 {
                     if (victim == target)
                         continue;
 
-                    if (!int.TryParse(victim, out var victimUid)
-                        || !entMan.TryGetComponent(new EntityUid(victimUid), out TransformComponent victimTransform))
-                    {
-                        if (!playerMan.TryGetSessionByUsername(victim, out var playerSession))
-                        {
-                            shell.WriteError("Can't find username/id: " + victim);
-                            continue;
-                        }
-
-                        if (!entMan.TryGetComponent(playerSession.AttachedEntity, out victimTransform))
-                        {
-                            shell.WriteError(victim + " does not have an entity.");
-                            continue;
-                        }
-                    }
+                    if (!TryGetTransformFromUidOrUsername(victim, shell, entMan, playerMan, out var victimTransform))
+                        return;
 
                     victimTransform.Coordinates = targetCoords;
                 }
             }
+        }
+
+        private static bool TryGetTransformFromUidOrUsername(string str, IConsoleShell shell, IEntityManager entMan,
+            IPlayerManager playerMan, [NotNullWhen(true)] out TransformComponent? transform)
+        {
+            if (int.TryParse(str, out var uid)
+                && entMan.TryGetComponent(new EntityUid(uid), out transform))
+                return true;
+
+            if (playerMan.TryGetSessionByUsername(str, out var session)
+                && entMan.TryGetComponent(session.AttachedEntity, out transform))
+                return true;
+
+            if (session == null)
+                shell.WriteError("Can't find username/id: " + str);
+            else
+                shell.WriteError(str + " does not have an entity.");
+            transform = null;
+            return false;
         }
     }
 

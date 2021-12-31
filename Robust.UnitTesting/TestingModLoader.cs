@@ -51,5 +51,7 @@ namespace Robust.UnitTesting
         {
             // Only used for ILVerify, not necessary.
         }
+
+        public event ExtraModuleLoad? ExtraModuleLoaders;
     }
 }

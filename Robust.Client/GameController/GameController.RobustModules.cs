@@ -67,7 +67,22 @@ namespace Robust.Client
                 if (!File.Exists(assemblyPath))
                     return null;
 
-                return Assembly.LoadFrom(assemblyPath);
+                return alc.LoadFromAssemblyPath(assemblyPath);
+            };
+
+            _modLoader.ExtraModuleLoaders += name =>
+            {
+                foreach (var assembly in alc.Assemblies)
+                {
+                    var assemblyName = assembly.GetName();
+                    if (assemblyName.Name == name.Name)
+                    {
+                        sawmill.Debug("Resolved {ResolvingAssembly} as assembly {ResolvedAssembly} from {ModuleName}", name.ToString(), assemblyName.ToString(), moduleName);
+                        return assembly;
+                    }
+                }
+
+                return null;
             };
 
             _modLoader.AddEngineModuleDirectory(envVar);

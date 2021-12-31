@@ -37,6 +37,13 @@ namespace Robust.Shared.ContentPack
         private bool _sandboxingEnabled;
 
         private readonly List<string> _engineModuleDirectories = new();
+        private readonly List<ExtraModuleLoad> _extraModuleLoads = new();
+
+        public event ExtraModuleLoad ExtraModuleLoaders
+        {
+            add => _extraModuleLoads.Add(value);
+            remove => _extraModuleLoads.Remove(value);
+        }
 
         public ModLoader()
         {
@@ -285,6 +292,9 @@ namespace Robust.Shared.ContentPack
                         }
                     }
 
+                    if (TryLoadExtra(name) is { } asm)
+                        return asm;
+
                     // Do not allow sideloading when sandboxing is enabled.
                     // Side loaded assemblies would not be checked for sandboxing currently, so we can't have that.
                     if (!_sandboxingEnabled)
@@ -344,6 +354,20 @@ namespace Robust.Shared.ContentPack
                         return module;
                     }
                 }
+
+                if (TryLoadExtra(name) is { } asm)
+                    return asm;
+            }
+
+            return null;
+        }
+
+        private Assembly? TryLoadExtra(AssemblyName name)
+        {
+            foreach (var extra in _extraModuleLoads)
+            {
+                if (extra(name) is { } asm)
+                    return asm;
             }
 
             return null;

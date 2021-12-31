@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using OpenToolkit;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using TerraFX.Interop.Windows;
 using static Robust.Client.Graphics.Clyde.Egl;
 
 namespace Robust.Client.Graphics.Clyde
@@ -106,7 +106,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (OperatingSystem.IsWindows())
                 {
                     // Setting up ANGLE without manually selecting a D3D11 device requires a windows DC.
-                    mainWindow.DC = GetDC(Clyde._windowing!.WindowGetWin32Window(mainWindow.Reg)!.Value);
+                    mainWindow.DC = Windows.GetDC((HWND)Clyde._windowing!.WindowGetWin32Window(mainWindow.Reg)!.Value);
 
                     _eglDisplay = eglGetPlatformDisplayEXT(EGL_PLATFORM_ANGLE_ANGLE, (void*) mainWindow.DC, null);
                     if (_eglDisplay == null)
@@ -271,25 +271,6 @@ namespace Robust.Client.Graphics.Clyde
                 public nint DC;
 
                 public void* EglSurface;
-            }
-
-
-            [DllImport("user32.dll")]
-            private static extern nint GetDC(nint hWnd);
-
-            private sealed class EglBindingsContext : IBindingsContext
-            {
-                public IntPtr GetProcAddress(string procName)
-                {
-                    Span<byte> buf = stackalloc byte[128];
-                    buf.Clear();
-                    Encoding.UTF8.GetBytes(procName, buf);
-
-                    fixed (byte* b = &buf.GetPinnableReference())
-                    {
-                        return (nint) eglGetProcAddress(b);
-                    }
-                }
             }
         }
     }

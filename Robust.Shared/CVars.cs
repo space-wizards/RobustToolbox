@@ -421,7 +421,7 @@ namespace Robust.Shared
         /// This only tries to use EGL if on a platform like X11 or Windows (w/ ANGLE) where it is possible.
         /// </remarks>
         public static readonly CVarDef<bool> DisplayEgl =
-            CVarDef.Create("display.egl", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> DisplayFontDpi =
             CVarDef.Create("display.fontdpi", 96, CVar.CLIENTONLY);

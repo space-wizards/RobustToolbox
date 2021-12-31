@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
@@ -19,19 +19,7 @@ namespace Robust.Shared.GameObjects
     {
         /// <inheritdoc />
         [ViewVariables]
-        public virtual string Name
-        {
-            get
-            {
-                var type = GetType();
-                if (!DefaultNames.TryGetValue(type, out string? name))
-                {
-                    name = CalculateDefaultName(type);
-                    DefaultNames.Add(type, name);
-                }
-                return name;
-            }
-        }
+        public virtual string Name => DefaultNames.GetOrAdd(GetType(), CalculateDefaultName);
 
         private static string CalculateDefaultName(Type type)
         {
@@ -48,7 +36,7 @@ namespace Robust.Shared.GameObjects
             return typeName;
         }
 
-        private static Dictionary<Type, string> DefaultNames = new();
+        private static readonly ConcurrentDictionary<Type, string> DefaultNames = new();
 
         /// <inheritdoc />
         [ViewVariables]

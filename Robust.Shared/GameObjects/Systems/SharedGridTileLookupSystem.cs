@@ -1,4 +1,3 @@
-#if DEBUG
 using System;
 using System.Collections.Generic;
 using Robust.Shared.Map;
@@ -34,4 +33,3 @@ namespace Robust.Shared.GameObjects
         }
     }
 }
-#endif

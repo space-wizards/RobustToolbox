@@ -85,6 +85,12 @@ namespace Robust.Shared.Serialization
             _serializer = new Serializer(types, settings);
             _serializableTypes = new HashSet<Type>(_serializer.GetTypeMap().Keys);
             LogSzr.Info($"Serializer Types Hash: {_serializer.GetSHA256()}");
+            /*
+            foreach (var (t, i) in _serializer.GetTypeMap().OrderBy(kv => kv.Key.ToString()))
+            {
+                LogSzr.Info($"{TypeAbbreviation.Abbreviate(t)}: {i}");
+            }
+            */
         }
 
         public void Serialize(Stream stream, object toSerialize)

@@ -282,7 +282,8 @@ internal partial class PVSSystem : EntitySystem
         while(globalOverridesEnumerator.MoveNext())
         {
             var uid = globalOverridesEnumerator.Current;
-            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
+            //todo paul reenable budgetcheck here once you fix mapmanager
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, dontSkip: true);
         }
         globalOverridesEnumerator.Dispose();
 
@@ -290,7 +291,8 @@ internal partial class PVSSystem : EntitySystem
         while (localOverridesEnumerator.MoveNext())
         {
             var uid = localOverridesEnumerator.Current;
-            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
+            //todo paul reenable budgetcheck here once you fix mapmanager
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, dontSkip: true);
         }
         localOverridesEnumerator.Dispose();
 

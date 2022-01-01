@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Robust.Server.Player;
@@ -69,91 +70,76 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class TeleportToPlayerCommand : IConsoleCommand
+    public class TeleportToCommand : IConsoleCommand
     {
         public string Command => "tpto";
-        public string Description => "Teleports the current player or the specified players to the location of last player specified.";
-        public string Help => "tpto <username> [username]...";
+        public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";
+        public string Help => "tpto <username|uid> [username|uid]...";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var player = shell.Player as IPlayerSession;
-            if (player?.Status != SessionStatus.InGame)
+            if (args.Length == 0)
                 return;
 
-            if (args.Length == 0)
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            var playerMan = IoCManager.Resolve<IPlayerManager>();
+
+            var target = args[^1];
+
+            if (!TryGetTransformFromUidOrUsername(target, shell, entMan, playerMan, out var targetTransform))
+                return;
+
+            var targetCoords = targetTransform.Coordinates;
+
+            if (args.Length == 1)
             {
-                shell.WriteError(Help);
-            }
-            else if (args.Length == 1)
-            {
-                var playerAE = player.AttachedEntityTransform;
-                if (playerAE == null)
+                var player = shell.Player as IPlayerSession;
+                if (player?.Status != SessionStatus.InGame)
+                {
+                    shell.WriteError("You need to be in game to teleport to an entity.");
+                    return;
+                }
+
+                if (!entMan.TryGetComponent(player.AttachedEntity, out TransformComponent playerTransform))
                 {
                     shell.WriteError("You don't have an entity.");
                     return;
                 }
 
-                var players = IoCManager.Resolve<IPlayerManager>();
-
-                var username = args[0];
-
-                if (!players.TryGetSessionByUsername(username, out var playerSession))
-                {
-                    shell.WriteError("Can't find username: " + username);
-                    return;
-                }
-
-                var targetAE = playerSession.AttachedEntityTransform;
-                if (targetAE == null)
-                {
-                    shell.WriteError(username + " does not have an entity.");
-                    return;
-                }
-
-                playerAE.Coordinates = targetAE.Coordinates;
+                playerTransform.Coordinates = targetCoords;
             }
-            else if (args.Length > 1)
+            else
             {
-                var players = IoCManager.Resolve<IPlayerManager>();
-
-                var target = args[^1];
-                if (!players.TryGetSessionByUsername(target, out var targetSession))
+                foreach (var victim in args)
                 {
-                    shell.WriteError("Can't find username: " + target);
-                    return;
-                }
-
-                var targetAE = targetSession.AttachedEntityTransform;
-                if (targetAE == null)
-                {
-                    shell.WriteError(target + " does not have an entity.");
-                    return;
-                }
-
-                var targetCoords = targetAE.Coordinates;
-
-                foreach (var username in args)
-                {
-                    if (username == target)
+                    if (victim == target)
                         continue;
 
-                    if (!players.TryGetSessionByUsername(username, out var playerSession))
-                    {
-                        shell.WriteError("Can't find username: " + username);
-                        continue;
-                    }
+                    if (!TryGetTransformFromUidOrUsername(victim, shell, entMan, playerMan, out var victimTransform))
+                        return;
 
-                    var victimAE = playerSession.AttachedEntityTransform;
-                    if (victimAE == null)
-                    {
-                        shell.WriteError(username + " does not have an entity.");
-                        continue;
-                    }
-
-                    victimAE.Coordinates = targetCoords;
+                    victimTransform.Coordinates = targetCoords;
                 }
             }
+        }
+
+        private static bool TryGetTransformFromUidOrUsername(string str, IConsoleShell shell, IEntityManager entMan,
+            IPlayerManager playerMan, [NotNullWhen(true)] out TransformComponent? transform)
+        {
+            if (int.TryParse(str, out var uid)
+                && entMan.TryGetComponent(new EntityUid(uid), out transform))
+                return true;
+
+            if (playerMan.TryGetSessionByUsername(str, out var session)
+                && entMan.TryGetComponent(session.AttachedEntity, out transform))
+                return true;
+
+            if (session == null)
+                shell.WriteError("Can't find username/id: " + str);
+            else
+                shell.WriteError(str + " does not have an entity.");
+            transform = null;
+            return false;
         }
     }
 

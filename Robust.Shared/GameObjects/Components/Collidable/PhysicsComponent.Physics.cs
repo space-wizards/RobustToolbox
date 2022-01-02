@@ -50,9 +50,6 @@ namespace Robust.Shared.GameObjects
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
 
-        /// <inheritdoc />
-        public override string Name => "Physics";
-
         /// <summary>
         ///     Has this body been added to an island previously in this tick.
         /// </summary>

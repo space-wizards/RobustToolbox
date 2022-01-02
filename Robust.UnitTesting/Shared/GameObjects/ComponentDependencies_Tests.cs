@@ -67,8 +67,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class TestOneComponent : Component
         {
-            public override string Name => "TestOne";
-
             [ComponentDependency(nameof(TestTwoAdded), nameof(TestTwoRemoved))]
             public readonly TestTwoComponent? TestTwo = default!;
 
@@ -92,8 +90,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class TestTwoComponent : Component
         {
-            public override string Name => "TestTwo";
-
             // This silly component wants itself!
             [ComponentDependency]
             public readonly TestTwoComponent? TestTwo = default!;
@@ -104,8 +100,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class TestThreeComponent : Component
         {
-            public override string Name => "TestThree";
-
             [ComponentDependency]
             public readonly TestOneComponent? TestOne = default!;
         }
@@ -117,13 +111,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [ComponentReference(typeof(ITestInterfaceInterface))]
         private class TestInterfaceComponent : Component, ITestInterfaceInterface, ITestInterfaceUnreferenced
         {
-            public override string Name => "TestInterface";
         }
 
         private class TestFourComponent : Component
         {
-            public override string Name => "TestFour";
-
             [ComponentDependency] public readonly ITestInterfaceInterface? TestInterface = default!;
 
             [ComponentDependency] public readonly ITestInterfaceUnreferenced? TestInterfaceUnreferenced = default!;
@@ -131,8 +122,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class TestFiveComponent : Component
         {
-            public override string Name => "TestFive";
-
 #pragma warning disable 649
             [ComponentDependency] public bool? Thing;
 #pragma warning restore 649
@@ -140,15 +129,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class TestSixComponent : Component
         {
-            public override string Name => "TestSix";
-
             [ComponentDependency] public TestFiveComponent Thing = null!;
         }
 
         private class TestSevenComponent : Component
         {
-            public override string Name => "TestSeven";
-
             [ComponentDependency("ABCDEF")] public TestFiveComponent? Thing = null!;
         }
 

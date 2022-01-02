@@ -42,8 +42,6 @@ namespace Robust.Shared.Physics.Dynamics
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
         internal SharedPhysicsSystem PhysicsSystem = default!;
 
-        public override string Name => "PhysicsMap";
-
         internal ContactManager ContactManager = default!;
 
         public bool AutoClearForces;

@@ -17,18 +17,8 @@ namespace Robust.Shared.GameObjects
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
-        [ViewVariables]
-        public virtual string Name
-        {
-            get
-            {
-                if (Attribute.GetCustomAttribute(GetType(), typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
-                    return attribute.PrototypeName;
-
-                // Legacy code requires all components have a name, even though this should not be required.
-                throw new InvalidOperationException($"{GetType().FullName} does not have a defined Data Name.");
-            }
-        }
+        [ViewVariables(VVAccess.ReadOnly)]
+        public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
 
         /// <inheritdoc />
         [ViewVariables]

@@ -365,7 +365,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.Name}");
+                    Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.GetType()}");
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);
@@ -605,7 +605,7 @@ namespace Robust.Client.GameStates
                     catch (Exception e)
                     {
                         var wrapper = new ComponentStateApplyException(
-                            $"Failed to apply comp state: entity={component.Owner}, comp={component.Name}", e);
+                            $"Failed to apply comp state: entity={component.Owner}, comp={component.GetType()}", e);
 #if EXCEPTION_TOLERANCE
                     _runtimeLog.LogException(wrapper, "Component state apply");
 #else

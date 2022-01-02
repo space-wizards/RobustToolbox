@@ -17,8 +17,6 @@ namespace Robust.Shared.Physics
     // [Friend(typeof(SharedJointSystem))]
     public sealed class JointComponent : Component
     {
-        public override string Name => "Joint";
-
         [ViewVariables]
         public int JointCount => Joints.Count;
 

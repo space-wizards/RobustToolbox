@@ -691,7 +691,7 @@ namespace Robust.Server.Maps
                 RootNode.Add("tilemap", tileMap);
                 foreach (var tileDefinition in _tileDefinitionManager)
                 {
-                    tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.Name);
+                    tileMap.Add(tileDefinition.TileId.ToString(CultureInfo.InvariantCulture), tileDefinition.ID);
                 }
             }
 

@@ -292,6 +292,13 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RemoveComponent(EntityUid uid, string name)
+        {
+            RemoveComponentImmediate((Component)GetComponent(uid, name), uid, false);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component)
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
@@ -480,6 +487,17 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool HasComponent(EntityUid uid, string name)
+        {
+            if (!_componentFactory.TryGetRegistration(name, out var reg))
+                throw new ArgumentException("Component name is invalid.", name);
+
+            var dict = _entTraitDict[reg.Type];
+            return dict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasComponent(EntityUid? uid, Type type)
         {
             if (!uid.HasValue)
@@ -551,6 +569,24 @@ namespace Robust.Shared.GameObjects
             }
 
             throw new KeyNotFoundException($"Entity {uid} does not have a component of type {type}");
+        }
+
+        /// <inheritdoc />
+        public IComponent GetComponent(EntityUid uid, string name)
+        {
+            if (!_componentFactory.TryGetRegistration(name, out var reg))
+                throw new ArgumentException("Component name is invalid.", name);
+            // ReSharper disable once InvertIf
+            var dict = _entTraitDict[reg.Type];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    return comp;
+                }
+            }
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {reg.Type}");
         }
 
         /// <inheritdoc />
@@ -671,6 +707,25 @@ namespace Robust.Shared.GameObjects
             }
 
             component = default;
+            return false;
+        }
+
+        /// <inheritdoc />
+        public bool TryGetComponent(EntityUid uid, string name, [NotNullWhen(true)] out IComponent? component)
+        {
+            if (!_componentFactory.TryGetRegistration(name, out var reg))
+                throw new ArgumentException("Component name is invalid.", name);
+            var dict = _entTraitDict[reg.Type];
+            if (dict.TryGetValue(uid, out var comp))
+            {
+                if (!comp.Deleted)
+                {
+                    component = comp;
+                    return true;
+                }
+            }
+
+            component = null;
             return false;
         }
 

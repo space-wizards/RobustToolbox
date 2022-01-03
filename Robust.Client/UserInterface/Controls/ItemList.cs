@@ -216,10 +216,10 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public void SortItemsByText()
-        {
-            _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
-        }
+        public void SortItemsByText() => Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
+
+        public void Sort(Comparison<Item> comparison) => _itemList.Sort(comparison);
+
 
         public void EnsureCurrentIsVisible()
         {

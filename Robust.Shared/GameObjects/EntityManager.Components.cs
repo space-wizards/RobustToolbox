@@ -192,6 +192,15 @@ namespace Robust.Shared.GameObjects
             return newComponent;
         }
 
+        public void AddComponent(EntityUid uid, string name)
+        {
+            if (!_componentFactory.TryGetRegistration(name, out _))
+                throw new ArgumentException("Component name is invalid.", name);
+            var newComponent = (Component) _componentFactory.GetComponent(name);
+            newComponent.Owner = uid;
+            AddComponent(uid, newComponent);
+        }
+
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
         {
             if (!uid.IsValid() || !EntityExists(uid))

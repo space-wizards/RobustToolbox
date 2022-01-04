@@ -108,9 +108,9 @@ namespace Robust.Shared.Console
         /// A console command that was registered inline through <see cref="IConsoleHost"/>.
         /// </summary>
         [Reflect(false)]
-        private class RegisteredCommand : IConsoleCommand
+        public class RegisteredCommand : IConsoleCommand
         {
-            private readonly ConCommandCallback _callback;
+            public ConCommandCallback Callback { get; }
 
             /// <inheritdoc />
             public string Command { get; }
@@ -131,15 +131,16 @@ namespace Robust.Shared.Console
             public RegisteredCommand(string command, string description, string help, ConCommandCallback callback)
             {
                 Command = command;
+                // Should these two be localized somehow?
                 Description = description;
                 Help = help;
-                _callback = callback;
+                Callback = callback;
             }
 
             /// <inheritdoc />
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                _callback(shell, argStr, args);
+                Callback(shell, argStr, args);
             }
         }
     }

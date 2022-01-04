@@ -186,6 +186,8 @@ namespace Robust.Client.UserInterface.Controls
 
         private void Select(int idx)
         {
+            if(SelectMode != ItemListSelectMode.Multiple)
+                ClearSelected(idx);
             OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
         }
 
@@ -208,10 +210,11 @@ namespace Robust.Client.UserInterface.Controls
             Deselect(idx);
         }
 
-        public void ClearSelected()
+        public void ClearSelected(int? except = null)
         {
             foreach (var item in GetSelected())
             {
+                if(IndexOf(item) == except) continue;
                 item.Selected = false;
             }
         }
@@ -447,8 +450,6 @@ namespace Robust.Client.UserInterface.Controls
                         return;
                     }
 
-                    if(SelectMode != ItemListSelectMode.Multiple)
-                        ClearSelected();
                     item.Selected = true;
                     if (SelectMode == ItemListSelectMode.Button)
                         Timer.Spawn(ButtonDeselectDelay, () => {  item.Selected = false; } );

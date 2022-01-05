@@ -25,7 +25,7 @@ namespace Robust.Shared.Map
 
         public virtual void Register(ITileDefinition tileDef)
         {
-            var name = tileDef.Name;
+            var name = tileDef.ID;
             if (_tileNames.ContainsKey(name))
             {
                 throw new ArgumentException("Another tile definition with the same name has already been registered.", nameof(tileDef));

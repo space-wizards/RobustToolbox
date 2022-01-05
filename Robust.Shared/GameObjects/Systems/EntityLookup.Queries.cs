@@ -23,11 +23,12 @@ public sealed partial class EntityLookup
 
         var lookup = _entityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
         var results = new HashSet<EntityUid>();
+        var tileSize = grid.TileSize;
 
         // TODO: You can probably decompose the indices into larger areas if you take in a hashset instead.
         foreach (var index in gridIndices)
         {
-            var aabb = GetLocalBounds(index);
+            var aabb = GetLocalBounds(index, tileSize);
 
             lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
             {
@@ -51,8 +52,9 @@ public sealed partial class EntityLookup
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
 
         var lookup = _entityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
+        var tileSize = grid.TileSize;
 
-        var aabb = GetLocalBounds(gridIndices);
+        var aabb = GetLocalBounds(gridIndices, tileSize);
         var results = new HashSet<EntityUid>();
 
         lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
@@ -79,15 +81,15 @@ public sealed partial class EntityLookup
     #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Box2 GetLocalBounds(Vector2i gridIndices)
+    private Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
-        return new Box2(gridIndices, gridIndices + 1);
+        return new Box2(gridIndices, gridIndices + tileSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Box2 GetLocalBounds(TileRef tileRef)
+    private Box2 GetLocalBounds(TileRef tileRef, ushort tileSize)
     {
-        return GetLocalBounds(tileRef.GridIndices);
+        return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
 
     public Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null)

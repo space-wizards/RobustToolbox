@@ -562,7 +562,8 @@ namespace Robust.Shared.GameObjects
                 return Parent!.GridID;
             }
 
-            return _mapManager.TryFindGridAt(Coordinates, out var mapGrid) ? mapGrid.Index : GridId.Invalid;
+            // Note: Can't use the EntityCoordinates version here as it uses the GridID property!
+            return _mapManager.TryFindGridAt(MapPosition, out var mapGrid) ? mapGrid.Index : GridId.Invalid;
         }
 
         protected override void Startup()

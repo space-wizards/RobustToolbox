@@ -560,24 +560,15 @@ namespace Robust.Shared.Map
 
         public bool TryFindGridAt(EntityCoordinates coordinates, [NotNullWhen(true)] out IMapGrid? grid)
         {
-            var parent = coordinates.EntityId;
-
-            if (EntityManager.TryGetComponent(parent, out IMapGridComponent? gridComp))
-            {
-                grid = gridComp.Grid;
-                return true;
-            }
-
-            if (EntityManager.HasComponent<MapComponent>(parent))
+            var gridId = coordinates.GetGridId(EntityManager);
+            if (gridId == GridId.Invalid)
             {
                 grid = null;
                 return false;
             }
 
-            // Fallback if we're nested further down
-            var mapCoordinates = coordinates.ToMap(EntityManager);
-
-            return TryFindGridAt(mapCoordinates, out grid);
+            grid = GetGrid(gridId);
+            return true;
         }
 
         public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAABB, out FindGridsEnumerator enumerator, bool approx = false)

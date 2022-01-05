@@ -1,40 +1,42 @@
+using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
-using Robust.Shared.Utility.Markup;
 
 namespace Robust.UnitTesting.Shared.Utility
 {
     [Parallelizable(ParallelScope.All)]
     [TestFixture]
-    [TestOf(typeof(Basic))]
-    public class MarkupBasic_Test
+    [TestOf(typeof(FormattedMessage))]
+    public class FormattedMessage_Test
     {
         [Test]
         public static void TestParseMarkup()
         {
-            var msg = new Basic();
-            msg.AddMarkup("foo[color=#aabbcc]bar[/color]baz");
+            var msg = FormattedMessage.FromMarkup("foo[color=#aabbcc]bar[/color]baz");
 
-            Assert.That(msg.Render().Sections, NUnit.Framework.Is.EquivalentTo(new[]
+            Assert.That(msg.Tags, NUnit.Framework.Is.EquivalentTo(new FormattedMessage.Tag[]
             {
-                new Section { Content="foo" },
-                new Section { Content="bar", Color=unchecked ((int) 0xFFAABBCC) },
-                new Section { Content="baz" }
+                new FormattedMessage.TagText("foo"),
+                new FormattedMessage.TagColor(Color.FromHex("#aabbcc")),
+                new FormattedMessage.TagText("bar"),
+                FormattedMessage.TagPop.Instance,
+                new FormattedMessage.TagText("baz")
             }));
         }
 
         [Test]
         public static void TestParseMarkupColorName()
         {
-            var msg = new Basic();
-            msg.AddMarkup("foo[color=orange]bar[/color]baz");
+            var msg = FormattedMessage.FromMarkup("foo[color=orange]bar[/color]baz");
 
-            Assert.That(msg.Render().Sections, NUnit.Framework.Is.EquivalentTo(new[]
+            Assert.That(msg.Tags, NUnit.Framework.Is.EquivalentTo(new FormattedMessage.Tag[]
             {
-                new Section { Content="foo" },
-                new Section { Content="bar", Color=Color.Orange.ToArgb() },
-                new Section { Content="baz" }
+                new FormattedMessage.TagText("foo"),
+                new FormattedMessage.TagColor(Color.Orange),
+                new FormattedMessage.TagText("bar"),
+                FormattedMessage.TagPop.Instance,
+                new FormattedMessage.TagText("baz")
             }));
         }
 
@@ -44,12 +46,20 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("foo[stinky] bar")]
         public static void TestParsePermissiveMarkup(string text)
         {
-            var msg = new Basic();
-            msg.AddMarkupPermissive(text);
+            var msg = FormattedMessage.FromMarkupPermissive(text);
 
             Assert.That(
-                msg.Render().ToString(),
+                string.Join("", msg.Tags.Cast<FormattedMessage.TagText>().Select(p => p.Text)),
                 NUnit.Framework.Is.EqualTo(text));
+        }
+
+        [Test]
+        [TestCase("Foo", ExpectedResult = "Foo")]
+        [TestCase("[color=red]Foo[/color]", ExpectedResult = "Foo")]
+        [TestCase("[color=red]Foo[/color]bar", ExpectedResult = "Foobar")]
+        public string TestRemoveMarkup(string test)
+        {
+            return FormattedMessage.RemoveMarkup(test);
         }
 
         [Test]
@@ -58,9 +68,8 @@ namespace Robust.UnitTesting.Shared.Utility
         [TestCase("[color=#00FF00FF]Foo[/color]bar")]
         public static void TestToMarkup(string text)
         {
-            var message = new Basic();
-            message.AddMarkup(text);
-            Assert.That(message.Render().ToMarkup(), NUnit.Framework.Is.EqualTo(text));
+            var message = FormattedMessage.FromMarkup(text);
+            Assert.That(message.ToMarkup(), NUnit.Framework.Is.EqualTo(text));
         }
     }
 }

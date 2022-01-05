@@ -53,8 +53,20 @@ namespace Robust.Shared.Containers
         /// <inheritdoc />
         public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
         {
-            if (ContainedEntity != null)
-                return false;
+            return (ContainedEntity == null) && CanInsertIfEmpty(toinsert, entMan);
+        }
+
+        /// <summary>
+        /// Checks if the entity can be inserted into this container, assuming that the container slot is empty.
+        /// </summary>
+        /// <remarks>
+        /// Useful if you need to know whether an item could be inserted into a slot, without having to actually eject
+        /// the currently contained entity first.
+        /// </remarks>
+        /// <param name="toinsert">The entity to attempt to insert.</param>
+        /// <returns>True if the entity could be inserted into an empty slot, false otherwise.</returns>
+        public bool CanInsertIfEmpty(EntityUid toinsert, IEntityManager? entMan = null)
+        {
             return base.CanInsert(toinsert, entMan);
         }
 
@@ -67,14 +79,14 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
         {
             ContainedEntity = toinsert;
             base.InternalInsert(toinsert, entMan);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(EntityUid toremove, IEntityManager? entMan = null)
+        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
         {
             ContainedEntity = null;
             base.InternalRemove(toremove, entMan);

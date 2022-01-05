@@ -10,7 +10,7 @@ using Robust.Shared.Localization;
 namespace Robust.Client.ViewVariables
 {
     [GenerateTypedNameReferences]
-    public partial class ViewVariablesAddWindow : SS14Window
+    public partial class ViewVariablesAddWindow : DefaultWindow
     {
         private string? _lastSearch;
         private string[] _entries = Array.Empty<string>();

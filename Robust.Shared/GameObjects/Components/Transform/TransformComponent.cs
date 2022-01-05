@@ -54,7 +54,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
-        [ViewVariables] private readonly SortedSet<EntityUid> _children = new();
+        [ViewVariables] internal readonly SortedSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -543,6 +543,7 @@ namespace Robust.Shared.GameObjects
             }
 
             GridID = GetGridIndex();
+            RebuildMatrices();
         }
 
         private GridId GetGridIndex()
@@ -575,7 +576,6 @@ namespace Robust.Shared.GameObjects
             base.Startup();
 
             // Keep the cached matrices in sync with the fields.
-            RebuildMatrices();
             Dirty();
         }
 
@@ -656,22 +656,34 @@ namespace Robust.Shared.GameObjects
 
         public void DetachParentToNull()
         {
-            var oldParent = Parent;
-            if (oldParent == null)
+            var oldParent = _parent;
+            if (!oldParent.IsValid())
             {
                 return;
             }
 
-            Anchored = false;
+            // TODO: When ECSing this can just pass it into the anchor setter
+            if (Anchored && _mapManager.TryGetGrid(GridID, out var grid))
+            {
+                if (_entMan.GetComponent<MetaDataComponent>(grid.GridEntityId).EntityLifeStage <=
+                    EntityLifeStage.MapInitialized)
+                {
+                    Anchored = false;
+                }
+            }
+            else
+            {
+                DebugTools.Assert(!Anchored);
+            }
 
-            var oldConcrete = (TransformComponent) oldParent;
+            var oldConcrete = _entMan.GetComponent<TransformComponent>(oldParent);
             var uid = Owner;
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
             var oldMapId = MapID;
             MapID = MapId.Nullspace;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
@@ -1048,7 +1060,7 @@ namespace Robust.Shared.GameObjects
         internal void SetAnchored(bool value)
         {
             _anchored = value;
-            Dirty();
+            Dirty(_entMan);
 
             var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
@@ -1059,6 +1071,7 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever an entity moves.
     ///     There is no guarantee it will be raised if they move in worldspace, only when moved relative to their parent.
     /// </summary>
+    [ByRefEvent]
     public readonly struct MoveEvent
     {
         public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
@@ -1084,6 +1097,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Raised whenever this entity rotates in relation to their parent.
     /// </summary>
+    [ByRefEvent]
     public readonly struct RotateEvent
     {
         public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
@@ -1107,6 +1121,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Raised when the Anchor state of the transform is changed.
     /// </summary>
+    [ByRefEvent]
     public readonly struct AnchorStateChangedEvent
     {
         public readonly EntityUid Entity;

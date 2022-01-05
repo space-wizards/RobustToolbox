@@ -97,26 +97,6 @@ namespace Robust.Client.GameObjects
         public Texture? Mask { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [Animatable]
-        public float Energy
-        {
-            get => _energy;
-            set => _energy = value;
-        }
-
-        /// <summary>
-        ///     Soft shadow strength multiplier.
-        ///     Has no effect if soft shadows are not enabled.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [Animatable]
-        public float Softness
-        {
-            get => _softness;
-            set => _softness = value;
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
         public bool VisibleNested
         {
             get => _visibleNested;
@@ -134,10 +114,7 @@ namespace Robust.Client.GameObjects
         [DataField("autoRot")]
         private bool _maskAutoRotate;
         private Angle _rotation;
-        [DataField("energy")]
-        private float _energy = 1f;
-        [DataField("softness")]
-        private float _softness = 1f;
+
         [DataField("mask")]
         internal string? _maskPath;
 

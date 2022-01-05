@@ -520,7 +520,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var window = new SS14Window { MinSize = (500, 400)};
+            var window = new DefaultWindow { MinSize = (500, 400)};
             var tabContainer = new TabContainer();
             window.Contents.AddChild(tabContainer);
             var scroll = new ScrollContainer();
@@ -557,12 +557,12 @@ namespace Robust.Client.Console.Commands
             vBox.AddChild(tree);
 
             var rich = new RichTextLabel();
-            var message = new FormattedMessage.Builder();
+            var message = new FormattedMessage();
             message.AddText("Foo\n");
             message.PushColor(Color.Red);
             message.AddText("Bar");
             message.Pop();
-            rich.SetMessage(message.Build());
+            rich.SetMessage(message);
             vBox.AddChild(rich);
 
             var itemList = new ItemList();

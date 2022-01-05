@@ -216,7 +216,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (!Visible)
             {
                 Visible = true;
-                Logger.WarningS("ui", $"Window {this} had visibility false. Do not use visibility on SS14Window.");
+                Logger.WarningS("ui", $"Window {this} had visibility false. Do not use visibility on DefaultWindow.");
             }
 
             if (!IsOpen)

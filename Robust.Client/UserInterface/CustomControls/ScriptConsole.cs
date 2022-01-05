@@ -6,7 +6,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal abstract class ScriptConsole : SS14Window
+    internal abstract class ScriptConsole : DefaultWindow
     {
         protected OutputPanel OutputPanel { get; }
         protected HistoryLineEdit InputBar { get; }

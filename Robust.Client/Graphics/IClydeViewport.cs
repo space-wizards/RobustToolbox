@@ -19,6 +19,11 @@ namespace Robust.Client.Graphics
         Vector2i Size { get; }
 
         /// <summary>
+        /// Color to clear the render target to before rendering. If null, no clearing will happen.
+        /// </summary>
+        Color? ClearColor { get; set; }
+
+        /// <summary>
         ///     This is, effectively, a multiplier to the eye's zoom.
         /// </summary>
         Vector2 RenderScale { get; set; }

@@ -32,14 +32,20 @@ namespace Robust.Client.Graphics
         public IEye CurrentEye
         {
             get => _currentEye ?? _defaultEye;
-            set => _currentEye = value;
+            set
+            {
+                var old = _currentEye;
+                _currentEye = value;
+
+                _entityManager.EventBus.RaiseEvent(EventSource.Local, new CurrentEyeChangedEvent(old, _currentEye));
+            }
         }
 
         public IViewportControl MainViewport { get; set; } = default!;
 
         public void ClearCurrentEye()
         {
-            _currentEye = _defaultEye;
+            CurrentEye = _defaultEye;
         }
 
         void IEyeManager.Initialize()
@@ -144,6 +150,18 @@ namespace Robust.Client.Graphics
         public MapCoordinates ScreenToMap(Vector2 point)
         {
             return MainViewport.ScreenToMap(point);
+        }
+    }
+
+    public class CurrentEyeChangedEvent : EntityEventArgs
+    {
+        public IEye? Old { get; }
+        public IEye New { get; }
+
+        public CurrentEyeChangedEvent(IEye? oldEye, IEye newEye)
+        {
+            Old = oldEye;
+            New = newEye;
         }
     }
 }

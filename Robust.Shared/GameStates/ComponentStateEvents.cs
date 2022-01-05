@@ -3,6 +3,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameStates
 {
+    [ByRefEvent]
     public readonly struct ComponentHandleState
     {
         public ComponentState? Current { get; }
@@ -18,6 +19,7 @@ namespace Robust.Shared.GameStates
     /// <summary>
     ///     Component event for getting the component state for a specific player.
     /// </summary>
+    [ByRefEvent]
     public struct ComponentGetState
     {
         /// <summary>

@@ -292,14 +292,14 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toinsert, IEntityManager? entMan = null)
+            protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
             {
                 _containerList.Add(toinsert);
                 base.InternalInsert(toinsert, entMan);
             }
 
             /// <inheritdoc />
-            protected override void InternalRemove(EntityUid toremove, IEntityManager? entMan = null)
+            protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
             {
                 _containerList.Remove(toremove);
                 base.InternalRemove(toremove, entMan);
@@ -327,7 +327,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
             {
                 IoCManager.Resolve(ref entMan);
-
                 return entMan.TryGetComponent(toinsert, out IContainerManager? _);
             }
         }

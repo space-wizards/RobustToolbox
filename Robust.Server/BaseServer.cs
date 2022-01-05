@@ -12,6 +12,7 @@ using Robust.Server.Log;
 using Robust.Server.Placement;
 using Robust.Server.Player;
 using Robust.Server.Scripting;
+using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
 using Robust.Server.Utility;
 using Robust.Server.ViewVariables;
@@ -78,6 +79,7 @@ namespace Robust.Server
         [Dependency] private readonly IRuntimeLog runtimeLog = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
+        [Dependency] private readonly HubManager _hubManager = default!;
         [Dependency] private readonly IScriptHost _scriptHost = default!;
         [Dependency] private readonly IMetricsManager _metricsManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -353,6 +355,7 @@ namespace Robust.Server
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 
             IoCManager.Resolve<IStatusHost>().Start();
+            IoCManager.Resolve<HubManager>().Start();
 
             AppDomain.CurrentDomain.ProcessExit += ProcessExiting;
 
@@ -612,7 +615,7 @@ namespace Robust.Server
             }
 
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
-            _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, TickUsage);
+            _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false, TickUsage);
 
             _lookup.Update();
 
@@ -627,6 +630,7 @@ namespace Robust.Server
             }
 
             _watchdogApi.Heartbeat();
+            _hubManager.Heartbeat();
         }
     }
 }

@@ -29,7 +29,11 @@ namespace Robust.Shared.GameObjects
         {
             var entMan = IoCManager.Resolve<IEntityManager>();
             var meta = entMan.GetComponent<MetaDataComponent>(entity);
-            DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized);
+
+            if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)
+                return; // Already map initialized, do nothing.
+
+            DebugTools.Assert(meta.EntityLifeStage == EntityLifeStage.Initialized, $"Expected entity {entMan.ToPrettyString(entity)} to be initialized, was {meta.EntityLifeStage}");
             meta.EntityLifeStage = EntityLifeStage.MapInitialized;
 
             entMan.EventBus.RaiseLocalEvent(entity, MapInit, false);

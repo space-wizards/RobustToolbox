@@ -403,6 +403,9 @@ namespace Robust.Client.Graphics.Clyde
             ClearFramebuffer(Color.Black);
 
             var splashTex = _cfg.GetCVar(CVars.DisplaySplashLogo);
+            if (string.IsNullOrEmpty(splashTex))
+                return;
+
             var texture = _resourceCache.GetResource<TextureResource>(splashTex).Texture;
 
             handle.DrawingHandleScreen.DrawTexture(texture, (ScreenSize - texture.Size) / 2);
@@ -525,7 +528,7 @@ namespace Robust.Client.Graphics.Clyde
                 RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
 
                 _currentViewport = oldVp;
-            });
+            }, viewport.ClearColor);
         }
 
         private static Box2 CalcWorldAABB(Viewport viewport)

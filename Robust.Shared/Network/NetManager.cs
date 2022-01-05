@@ -559,7 +559,7 @@ namespace Robust.Shared.Network
 
         private NetPeerConfiguration _getBaseNetPeerConfig()
         {
-            var netConfig = new NetPeerConfiguration("SS14_NetTag");
+            var netConfig = new NetPeerConfiguration(_config.GetCVar(CVars.NetLidgrenAppIdentifier));
 
             // ping the client once per second.
             netConfig.PingInterval = 1f;

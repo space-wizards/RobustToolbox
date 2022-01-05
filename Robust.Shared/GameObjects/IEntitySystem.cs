@@ -17,6 +17,11 @@ namespace Robust.Shared.GameObjects
         IEnumerable<Type> UpdatesBefore { get; }
 
         /// <summary>
+        /// If prediction is disabled on the client, <see cref="Update"/> will not be ran unless this flag is set.
+        /// </summary>
+        bool UpdatesOutsidePrediction { get; }
+
+        /// <summary>
         ///     Called once when the system is created to initialize its state.
         /// </summary>
         void Initialize();

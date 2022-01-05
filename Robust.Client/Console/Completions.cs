@@ -11,7 +11,7 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Client.Console
 {
-    public class Completions : SS14Window
+    public class Completions : DefaultWindow
     {
         private HistoryLineEdit _textBar;
         private ScrollContainer _suggestPanel = new()
@@ -83,7 +83,7 @@ namespace Robust.Client.Console
             {
                 MouseFilter = MouseFilterMode.Stop;
                 Result = result;
-                var compl = new FormattedMessage.Builder();
+                var compl = new FormattedMessage();
                 var dim = Color.FromHsl((0f, 0f, 0.8f, 1f));
 
                 // warning: ew ahead
@@ -120,7 +120,7 @@ namespace Robust.Client.Console
                     compl.PushColor(Color.LightSlateGray);
                     compl.AddText(Result.InlineDescription);
                 }
-                SetMessage(compl.Build());
+                SetMessage(compl);
             }
         }
     }

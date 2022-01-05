@@ -77,7 +77,7 @@ namespace Robust.Shared.Scripting
                     "var x = 5 + 5; var y = (object) \"foobar\"; void Foo(object a) { } Foo(y); Foo(x)";
 
                 var script = await CSharpScript.RunAsync(code);
-                var msg = new FormattedMessage.Builder();
+                var msg = new FormattedMessage();
                 // Even run the syntax highlighter!
                 AddWithSyntaxHighlighting(script.Script, msg, code, new AdhocWorkspace());
             });
@@ -101,7 +101,7 @@ namespace Robust.Shared.Scripting
             return _getDiagnosticArguments(diag);
         }
 
-        public static void AddWithSyntaxHighlighting(Script script, FormattedMessage.Builder msg, string code,
+        public static void AddWithSyntaxHighlighting(Script script, FormattedMessage msg, string code,
             Workspace workspace)
         {
             var compilation = script.GetCompilation();

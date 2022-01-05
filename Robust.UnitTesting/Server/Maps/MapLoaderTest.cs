@@ -1,9 +1,11 @@
 using System.Linq;
 using Moq;
 using NUnit.Framework;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Maps;
 using Robust.Server.Physics;
+using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -67,11 +69,13 @@ entities:
             var physics = new PhysicsSystem();
             var gridFixtures = new GridFixtureSystem();
             var fixtures = new FixtureSystem();
+            var con = new ContainerSystem();
 
             // MOCKS WHY
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
             mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
+            mock.Setup(m => m.GetEntitySystem<SharedContainerSystem>()).Returns(con);
             mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
@@ -101,6 +105,7 @@ entities:
             protoMan.RegisterType(typeof(EntityPrototype));
 
             protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
+            protoMan.Resync();
         }
 
         [Test]

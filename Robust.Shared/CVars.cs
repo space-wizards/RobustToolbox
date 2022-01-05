@@ -5,6 +5,7 @@ using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared
 {
@@ -60,6 +61,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> NetLogging =
             CVarDef.Create("net.logging", false, CVar.ARCHIVE);
 
+        /// <summary>
+        /// Whether prediction is enabled on the client.
+        /// </summary>
+        /// <remarks>
+        /// If off, simulation input commands will not fire and most entity methods will not run update.
+        /// </remarks>
         public static readonly CVarDef<bool> NetPredict =
             CVarDef.Create("net.predict", true, CVar.CLIENTONLY);
 
@@ -118,6 +125,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> NetUPnP =
             CVarDef.Create("net.upnp", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// App identifier used by Lidgren. This must match between client and server for them to be able to connect.
+        /// </summary>
+        public static readonly CVarDef<string> NetLidgrenAppIdentifier =
+            CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
         /**
          * SUS
@@ -408,7 +421,7 @@ namespace Robust.Shared
         /// This only tries to use EGL if on a platform like X11 or Windows (w/ ANGLE) where it is possible.
         /// </remarks>
         public static readonly CVarDef<bool> DisplayEgl =
-            CVarDef.Create("display.egl", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.egl", false, CVar.CLIENTONLY);
 
         public static readonly CVarDef<int> DisplayFontDpi =
             CVarDef.Create("display.fontdpi", 96, CVar.CLIENTONLY);
@@ -509,6 +522,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> GenerateGridFixtures =
             CVarDef.Create("physics.grid_fixtures", true, CVar.REPLICATED);
+
+        /// <summary>
+        /// How much to enlarge grids when determining their fixture bounds.
+        /// </summary>
+        public static readonly CVarDef<float> GridFixtureEnlargement =
+            CVarDef.Create("physics.grid_fixture_enlargement", -PhysicsConstants.PolygonRadius, CVar.ARCHIVE | CVar.REPLICATED);
 
         // - Contacts
         public static readonly CVarDef<int> ContactMultithreadThreshold =
@@ -650,5 +669,44 @@ namespace Robust.Shared
 
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
+        /*
+         * HUB
+         * CVars related to public master server hub
+         */
+
+        /// <summary>
+        /// Whether to advertise this server to the public server hub.
+        /// </summary>
+        public static readonly CVarDef<bool> HubAdvertise =
+            CVarDef.Create("hub.advertise", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL of the master hub server to advertise to.
+        /// </summary>
+        public static readonly CVarDef<string> HubMasterUrl =
+            CVarDef.Create("hub.master_url", "https://central.spacestation14.io/hub/", CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL of this server to advertise.
+        /// This is automatically inferred by the hub server based on IP address if left empty,
+        /// but if you want to specify a domain or use <c>ss14://</c> you should specify this manually.
+        /// You also have to set this if you change status.bind.
+        /// </summary>
+        public static readonly CVarDef<string> HubServerUrl =
+            CVarDef.Create("hub.server_url", "", CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL to use to automatically try to detect IPv4 address.
+        /// This is only used if hub.server_url is unset.
+        /// </summary>
+        public static readonly CVarDef<string> HubIpifyUrl =
+            CVarDef.Create("hub.ipify_url", "https://api.ipify.org?format=json", CVar.SERVERONLY);
+
+        /// <summary>
+        /// How long to wait between advertise pings to the hub server.
+        /// </summary>
+        public static readonly CVarDef<int> HubAdvertiseInterval =
+            CVarDef.Create("hub.advertise_interval", 120, CVar.SERVERONLY);
     }
 }

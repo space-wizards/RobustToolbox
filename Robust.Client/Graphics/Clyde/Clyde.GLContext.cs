@@ -31,7 +31,6 @@ namespace Robust.Client.Graphics.Clyde
                     }
                 }
 
-                /*
                 if (_cfg.GetCVar(CVars.DisplayEgl))
                 {
                     _sawmillOgl.Debug("Trying EGL");
@@ -40,7 +39,6 @@ namespace Robust.Client.Graphics.Clyde
                     _glContext = ctxEgl;
                     return;
                 }
-                */
             }
 
             /*

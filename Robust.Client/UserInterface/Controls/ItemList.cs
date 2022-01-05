@@ -186,6 +186,8 @@ namespace Robust.Client.UserInterface.Controls
 
         private void Select(int idx)
         {
+            if(SelectMode != ItemListSelectMode.Multiple)
+                ClearSelected(idx);
             OnItemSelected?.Invoke(new ItemListSelectedEventArgs(idx, this));
         }
 
@@ -208,18 +210,19 @@ namespace Robust.Client.UserInterface.Controls
             Deselect(idx);
         }
 
-        public void ClearSelected()
+        public void ClearSelected(int? except = null)
         {
             foreach (var item in GetSelected())
             {
+                if(IndexOf(item) == except) continue;
                 item.Selected = false;
             }
         }
 
-        public void SortItemsByText()
-        {
-            _itemList.Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
-        }
+        public void SortItemsByText() => Sort((p, q) => string.Compare(p.Text, q.Text, StringComparison.Ordinal));
+
+        public void Sort(Comparison<Item> comparison) => _itemList.Sort(comparison);
+
 
         public void EnsureCurrentIsVisible()
         {
@@ -235,17 +238,12 @@ namespace Robust.Client.UserInterface.Controls
         {
             get
             {
-                TryGetStyleProperty<FontClass>("font", out var font);
-                if (TryGetStyleProperty<IFontLibrary>("font-library", out var flib))
+                if (TryGetStyleProperty<Font>("font", out var font))
                 {
-                    return flib.StartFont(font).Current;
+                    return font;
                 }
 
-                return UserInterfaceManager
-                    .ThemeDefaults
-                    .DefaultFontLibrary
-                    .StartFont(font)
-                    .Current;
+                return UserInterfaceManager.ThemeDefaults.DefaultFont;
             }
         }
 
@@ -452,8 +450,6 @@ namespace Robust.Client.UserInterface.Controls
                         return;
                     }
 
-                    if(SelectMode != ItemListSelectMode.Multiple)
-                        ClearSelected();
                     item.Selected = true;
                     if (SelectMode == ItemListSelectMode.Button)
                         Timer.Spawn(ButtonDeselectDelay, () => {  item.Selected = false; } );

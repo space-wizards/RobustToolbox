@@ -27,6 +27,8 @@ namespace Robust.Shared.GameObjects
         {
             base.Update(frameTime);
 
+            UpdatesOutsidePrediction = true;
+
             // Need to queue because otherwise calling HandleMove during FrameUpdate will lead to prediction issues.
             // TODO: Need to check if that's even still relevant since transform lerping fix?
             ProcessChanges();

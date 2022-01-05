@@ -20,20 +20,32 @@ namespace Robust.Shared.GameObjects
 
         private bool _enabled;
 
+        private float _fixtureEnlargement;
+
         public override void Initialize()
         {
             base.Initialize();
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
-            IoCManager.Resolve<IConfigurationManager>().OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+
+            configManager.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
+            configManager.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
-            IoCManager.Resolve<IConfigurationManager>().UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
+
+            var configManager = IoCManager.Resolve<IConfigurationManager>();
+
+            configManager.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
+            configManager.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
         }
 
         private void SetEnabled(bool value) => _enabled = value;
+
+        private void SetEnlargement(float value) => _fixtureEnlargement = value;
 
         internal void ProcessGrid(IMapGridInternal gridInternal)
         {
@@ -83,7 +95,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var rectangle in rectangles)
             {
-                var bounds = rectangle.Translated(origin);
+                var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(_fixtureEnlargement);
                 var poly = new PolygonShape();
 
                 vertices[0] = bounds.BottomLeft;

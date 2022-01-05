@@ -109,11 +109,11 @@ namespace Robust.Shared.GameObjects
             Started = false;
         }
 
-        public virtual void TickUpdate(float frameTime, Histogram? histogram)
+        public virtual void TickUpdate(float frameTime, bool noPredictions, Histogram? histogram)
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                EntitySystemManager.TickUpdate(frameTime);
+                EntitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
@@ -172,13 +172,14 @@ namespace Robust.Shared.GameObjects
         public virtual EntityUid CreateEntityUninitialized(string? prototypeName, MapCoordinates coordinates)
         {
             var newEntity = CreateEntity(prototypeName);
-            GetComponent<TransformComponent>(newEntity).AttachParent(_mapManager.GetMapEntityId(coordinates.MapId));
+            var transform = GetComponent<TransformComponent>(newEntity);
+            transform.AttachParent(_mapManager.GetMapEntityId(coordinates.MapId));
 
             // TODO: Look at this bullshit. Please code a way to force-move an entity regardless of anchoring.
-            var oldAnchored = GetComponent<TransformComponent>(newEntity).Anchored;
-            GetComponent<TransformComponent>(newEntity).Anchored = false;
-            GetComponent<TransformComponent>(newEntity).WorldPosition = coordinates.Position;
-            GetComponent<TransformComponent>(newEntity).Anchored = oldAnchored;
+            var oldAnchored = transform.Anchored;
+            transform.Anchored = false;
+            transform.WorldPosition = coordinates.Position;
+            transform.Anchored = oldAnchored;
             return newEntity;
         }
 
@@ -218,7 +219,7 @@ namespace Robust.Shared.GameObjects
             var currentTick = CurrentTick;
 
             // We want to retrieve MetaDataComponent even if its Deleted flag is set.
-            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var component))
                 throw new KeyNotFoundException($"Entity {uid} does not exist, cannot dirty it.");
 
             var metadata = (MetaDataComponent)component;
@@ -240,7 +241,7 @@ namespace Robust.Shared.GameObjects
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
-            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(e, out var comp)
+            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(e, out var comp)
                 || comp is not MetaDataComponent meta || meta.EntityDeleted)
                 return;
 
@@ -265,10 +266,10 @@ namespace Robust.Shared.GameObjects
             EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
-            foreach (var childTransform in transform.Children.ToArray())
+            foreach (var child in transform._children.ToArray())
             {
                 // Recursion Alert
-                RecursiveDeleteEntity(childTransform.Owner);
+                RecursiveDeleteEntity(child);
             }
 
             // Shut down all components.
@@ -302,7 +303,7 @@ namespace Robust.Shared.GameObjects
 
         public bool EntityExists(EntityUid uid)
         {
-            return _entTraitDict[typeof(MetaDataComponent)].ContainsKey(uid);
+            return _entTraitArray[ArrayIndexFor<MetaDataComponent>()].ContainsKey(uid);
         }
 
         public bool EntityExists(EntityUid? uid)
@@ -312,12 +313,12 @@ namespace Robust.Shared.GameObjects
 
         public bool Deleted(EntityUid uid)
         {
-            return !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
         public bool Deleted(EntityUid? uid)
         {
-            return !uid.HasValue || !_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
+            return !uid.HasValue || !_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid.Value, out var comp) || ((MetaDataComponent) comp).EntityDeleted;
         }
 
         /// <summary>
@@ -442,7 +443,7 @@ namespace Robust.Shared.GameObjects
         public virtual EntityStringRepresentation ToPrettyString(EntityUid uid)
         {
             // We want to retrieve the MetaData component even if it is deleted.
-            if (!_entTraitDict[typeof(MetaDataComponent)].TryGetValue(uid, out var component))
+            if (!_entTraitArray[ArrayIndexFor<MetaDataComponent>()].TryGetValue(uid, out var component))
                 return new EntityStringRepresentation(uid, true);
 
             var metadata = (MetaDataComponent) component;

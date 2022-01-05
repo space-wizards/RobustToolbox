@@ -40,7 +40,6 @@ namespace Robust.Client.Graphics.Clyde
             private IDXGIFactory1* _factory;
             private IDXGIAdapter1* _adapter;
             private ID3D11Device* _device;
-            private ID3D11DeviceContext* _deviceContext;
             private D3D_FEATURE_LEVEL _deviceFl;
             private void* _eglDevice;
             private void* _eglDisplay;
@@ -320,6 +319,7 @@ namespace Robust.Client.Graphics.Clyde
                     }
 
 #pragma warning disable CA1416
+#pragma warning disable CS0162
                     IDXGIFactory6* factory6;
                     if (_adapter == null && _factory->QueryInterface(__uuidof<IDXGIFactory6>(), (void**) &factory6) == 0)
                     {
@@ -349,6 +349,7 @@ namespace Robust.Client.Graphics.Clyde
 
                         factory6->Release();
                     }
+#pragma warning restore CS0162
 #pragma warning restore CA1416
 
                     Span<D3D_FEATURE_LEVEL> featureLevels = stackalloc D3D_FEATURE_LEVEL[]

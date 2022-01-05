@@ -72,7 +72,7 @@ namespace Robust.Shared.Containers
 
             // Attach to parent first so we can check IsInContainer more easily.
             transform.AttachParent(entMan.GetComponent<TransformComponent>(Owner));
-            InternalInsert(toinsert);
+            InternalInsert(toinsert, entMan);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)
@@ -101,9 +101,24 @@ namespace Robust.Shared.Containers
                 return false;
 
             // Crucial, prevent circular insertion.
-            return !entMan.GetComponent<TransformComponent>(toinsert).ContainsEntity(entMan.GetComponent<TransformComponent>(Owner));
+            if (entMan.GetComponent<TransformComponent>(toinsert)
+                    .ContainsEntity(entMan.GetComponent<TransformComponent>(Owner)))
+                return false;
 
             //Improvement: Traverse the entire tree to make sure we are not creating a loop.
+
+            //raise events
+            var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(this, toinsert);
+            entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent);
+            if (insertAttemptEvent.Cancelled)
+                return false;
+
+            var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(this, toinsert);
+            entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent);
+            if (gettingInsertedAttemptEvent.Cancelled)
+                return false;
+
+            return true;
         }
 
         /// <inheritdoc />
@@ -115,8 +130,8 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(toremove));
 
-            if (!CanRemove(toremove)) return false;
-            InternalRemove(toremove);
+            if (!CanRemove(toremove, entMan)) return false;
+            InternalRemove(toremove, entMan);
 
             entMan.GetComponent<TransformComponent>(toremove).AttachParentToContainerOrGrid();
             return true;
@@ -131,14 +146,31 @@ namespace Robust.Shared.Containers
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(toRemove));
 
-            InternalRemove(toRemove);
+            InternalRemove(toRemove, entMan);
         }
 
         /// <inheritdoc />
-        public virtual bool CanRemove(EntityUid toremove)
+        public virtual bool CanRemove(EntityUid toremove, IEntityManager? entMan = null)
         {
             DebugTools.Assert(!Deleted);
-            return Contains(toremove);
+
+            if (!Contains(toremove))
+                return false;
+
+            IoCManager.Resolve(ref entMan);
+
+            //raise events
+            var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toremove);
+            entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent);
+            if (removeAttemptEvent.Cancelled)
+                return false;
+
+            var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toremove);
+            entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent);
+            if (gettingRemovedAttemptEvent.Cancelled)
+                return false;
+
+            return true;
         }
 
         /// <inheritdoc />
@@ -155,31 +187,31 @@ namespace Robust.Shared.Containers
         /// Implement to store the reference in whatever form you want
         /// </summary>
         /// <param name="toinsert"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        /// <param name="entMan"></param>
+        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan)
         {
             DebugTools.Assert(!Deleted);
-            IoCManager.Resolve(ref entMan);
 
             entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
             entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
-            Manager.Dirty();
+            Manager.Dirty(entMan);
         }
 
         /// <summary>
         /// Implement to remove the reference you used to store the entity
         /// </summary>
         /// <param name="toremove"></param>
-        protected virtual void InternalRemove(EntityUid toremove, IEntityManager? entMan = null)
+        /// <param name="entMan"></param>
+        protected virtual void InternalRemove(EntityUid toremove, IEntityManager entMan)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
-            IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(toremove));
 
             entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
             entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
-            Manager.Dirty();
+            Manager.Dirty(entMan);
         }
     }
 }

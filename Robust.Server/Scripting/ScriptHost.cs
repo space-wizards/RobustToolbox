@@ -184,12 +184,12 @@ namespace Robust.Server.Scripting
             newScript.Compile();
 
             // Echo entered script.
-            var echoMessage = new FormattedMessage.Builder();
+            var echoMessage = new FormattedMessage();
             ScriptInstanceShared.AddWithSyntaxHighlighting(newScript, echoMessage, code, instance.HighlightWorkspace);
 
-            replyMessage.Echo = echoMessage.Build();
+            replyMessage.Echo = echoMessage;
 
-            var msg = new FormattedMessage.Builder();
+            var msg = new FormattedMessage();
 
             try
             {
@@ -215,7 +215,7 @@ namespace Robust.Server.Scripting
 
                 PromptAutoImports(e.Diagnostics, code, msg, instance);
 
-                replyMessage.Response = msg.Build();
+                replyMessage.Response = msg;
                 _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
                 return;
             }
@@ -224,9 +224,9 @@ namespace Robust.Server.Scripting
                 instance.RunningScript = false;
             }
 
-            if (instance.OutputBuffer.Length != 0)
+            if (!instance.OutputBuffer.IsEmpty)
             {
-                msg.AddText(instance.OutputBuffer.ToString());
+                msg.AddMessage(instance.OutputBuffer);
                 instance.OutputBuffer.Clear();
             }
 
@@ -240,7 +240,7 @@ namespace Robust.Server.Scripting
                 msg.AddText(ScriptInstanceShared.SafeFormat(instance.State.ReturnValue));
             }
 
-            replyMessage.Response = msg.Build();
+            replyMessage.Response = msg;
             _netManager.ServerSendMessage(replyMessage, message.MsgChannel);
         }
 
@@ -316,7 +316,7 @@ namespace Robust.Server.Scripting
         private void PromptAutoImports(
             IEnumerable<Diagnostic> diags,
             string code,
-            FormattedMessage.Builder output,
+            FormattedMessage output,
             ScriptInstance instance)
         {
             if (!ScriptInstanceShared.CalcAutoImports(_reflectionManager, diags, out var found))
@@ -332,7 +332,7 @@ namespace Robust.Server.Scripting
         {
             public Workspace HighlightWorkspace { get; } = new AdhocWorkspace();
             public StringBuilder InputBuffer { get; } = new();
-            public StringBuilder OutputBuffer { get; } = new();
+            public FormattedMessage OutputBuffer { get; } = new();
             public bool RunningScript { get; set; }
 
             public ScriptGlobals Globals { get; }
@@ -348,6 +348,8 @@ namespace Robust.Server.Scripting
 
         private sealed class ScriptGlobalsImpl : ScriptGlobals
         {
+            [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+
             private readonly ScriptInstance _scriptInstance;
 
             public ScriptGlobalsImpl(ScriptInstance scriptInstance)
@@ -356,11 +358,26 @@ namespace Robust.Server.Scripting
                 IoCManager.InjectDependencies(this);
             }
 
+            protected override void WriteSyntax(object toString)
+            {
+                if (_scriptInstance.RunningScript && toString?.ToString() is {} code)
+                {
+                    var options = ScriptInstanceShared.GetScriptOptions(_reflectionManager);
+                    var script = CSharpScript.Create(code, options, typeof(ScriptGlobals));
+                    script.Compile();
+
+                    var syntax = new FormattedMessage();
+                    ScriptInstanceShared.AddWithSyntaxHighlighting(script, syntax, code, _scriptInstance.HighlightWorkspace);
+
+                    _scriptInstance.OutputBuffer.AddMessage(syntax);
+                }
+            }
+
             public override void write(object toString)
             {
-                if (_scriptInstance.RunningScript)
+                if (_scriptInstance.RunningScript && toString.ToString() is {} value)
                 {
-                    _scriptInstance.OutputBuffer.AppendLine(toString?.ToString());
+                    _scriptInstance.OutputBuffer.AddText(value);
                 }
             }
 

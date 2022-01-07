@@ -408,7 +408,9 @@ internal partial class PVSSystem : EntitySystem
         if (visMask != null)
         {
             // TODO: Don't need to know about parents so no longer need to use bool for this method.
-            if ((visMask & metadata.VisibilityMask) == 0)
+
+            // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
+            if ((visMask & metadata.VisibilityMask) != metadata.VisibilityMask) 
                 return false;
         }
 

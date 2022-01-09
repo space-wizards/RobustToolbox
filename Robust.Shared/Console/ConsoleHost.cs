@@ -70,6 +70,18 @@ namespace Robust.Shared.Console
             AvailableCommands.Add(command, newCmd);
         }
 
+        /// <inheritdoc />
+        public void UnregisterCommand(string command)
+        {
+            if (!AvailableCommands.TryGetValue(command, out var cmd))
+                throw new KeyNotFoundException($"Command {command} is not registered.");
+
+            if (cmd is not RegisteredCommand)
+                throw new InvalidOperationException("You cannot unregister commands that have been registered automatically.");
+
+            AvailableCommands.Remove(command);
+        }
+
         //TODO: Pull up
         public abstract void ExecuteCommand(ICommonSession? session, string command);
 

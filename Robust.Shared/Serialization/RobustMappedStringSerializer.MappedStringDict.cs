@@ -11,7 +11,6 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using NetSerializer;
-using Newtonsoft.Json.Linq;
 using Robust.Shared.Log;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -349,55 +348,6 @@ namespace Robust.Shared.Serialization
                         }
 
                         AddString(v);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Add strings from the given <see cref="JObject"/> to the mapping.
-            /// </summary>
-            /// <remarks>
-            /// Strings are taken from JSON property names and string nodes.
-            /// </remarks>
-            /// <param name="obj">The JSON to collect strings from.</param>
-            public void AddStrings(JObject obj)
-            {
-                if (Locked)
-                {
-                    throw new InvalidOperationException("Mapped strings are locked, will not add.");
-                }
-
-                foreach (var node in obj.DescendantsAndSelf())
-                {
-                    switch (node)
-                    {
-                        case JValue value:
-                        {
-                            if (value.Type != JTokenType.String)
-                            {
-                                continue;
-                            }
-
-                            var v = value.Value?.ToString();
-                            if (string.IsNullOrEmpty(v))
-                            {
-                                continue;
-                            }
-
-                            AddString(v);
-                            break;
-                        }
-                        case JProperty prop:
-                        {
-                            var propName = prop.Name;
-                            if (string.IsNullOrEmpty(propName))
-                            {
-                                continue;
-                            }
-
-                            AddString(propName);
-                            break;
-                        }
                     }
                 }
             }

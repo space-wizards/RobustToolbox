@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -164,6 +165,23 @@ namespace Robust.Shared.Physics
             return joint;
         }
 
+        public WeldJoint GetOrCreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            if (id != null &&
+                EntityManager.TryGetComponent(bodyA, out JointComponent? jointComponent) &&
+                jointComponent.Joints.TryGetValue(id, out var weldJoint))
+            {
+                return (WeldJoint) weldJoint;
+            }
+
+            var joint = new WeldJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
         public WeldJoint CreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
         {
             var joint = new WeldJoint(bodyA, bodyB);
@@ -232,6 +250,7 @@ namespace Robust.Shared.Physics
         }
 
         #region Joints
+
         protected void AddJoint(Joint joint)
         {
             var bodyA = joint.BodyA;
@@ -380,6 +399,7 @@ namespace Robust.Shared.Physics
             _dirtyJoints.Add(jointComponentA);
             _dirtyJoints.Add(jointComponentB);
         }
+
         #endregion
 
         internal void FilterContactsForJoint(Joint joint)

@@ -28,6 +28,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             public virtual IEnumerable<Type> UpdatesAfter => Enumerable.Empty<Type>();
             public virtual IEnumerable<Type> UpdatesBefore => Enumerable.Empty<Type>();
+            public bool UpdatesOutsidePrediction => true;
             public void Initialize() { }
             public void Shutdown() { }
 
@@ -99,7 +100,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
             systems.GetEntitySystem<TestSystemC>().Counter = counter;
             systems.GetEntitySystem<TestSystemD>().Counter = counter;
 
-            systems.TickUpdate(1);
+            systems.TickUpdate(1, noPredictions: false);
 
             Assert.That(counter.X, Is.EqualTo(4));
 

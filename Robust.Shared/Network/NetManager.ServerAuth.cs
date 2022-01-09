@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Lidgren.Network;
-using Newtonsoft.Json;
 using Robust.Shared.AuthLib;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
@@ -122,12 +122,7 @@ namespace Robust.Shared.Network
 
                     var client = new HttpClient();
                     var url = $"{authServer}api/session/hasJoined?hash={authHash}&userId={msgEncResponse.UserId}";
-                    var joinedResp = await client.GetAsync(url);
-
-                    joinedResp.EnsureSuccessStatusCode();
-
-                    var resp = await joinedResp.Content.ReadAsStringAsync();
-                    var joinedRespJson = JsonConvert.DeserializeObject<HasJoinedResponse>(resp);
+                    var joinedRespJson = await client.GetFromJsonAsync<HasJoinedResponse>(url);
 
                     if (joinedRespJson is not {IsValid: true})
                     {
@@ -307,19 +302,9 @@ namespace Robust.Shared.Network
             message.SenderConnection.Approve();
         }
 
-        private sealed class HasJoinedResponse
-        {
-#pragma warning disable 649
-            public bool IsValid;
-            public HasJoinedUserData? UserData;
-
-            public sealed class HasJoinedUserData
-            {
-                public string UserName = default!;
-                public Guid UserId = default!;
-                public string? PatronTier;
-            }
-#pragma warning restore 649
-        }
+        // ReSharper disable ClassNeverInstantiated.Local
+        private sealed record HasJoinedResponse(bool IsValid, HasJoinedUserData? UserData);
+        private sealed record HasJoinedUserData(string UserName, Guid UserId, string? PatronTier);
+        // ReSharper restore ClassNeverInstantiated.Local
     }
 }

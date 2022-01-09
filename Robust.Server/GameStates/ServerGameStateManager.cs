@@ -38,9 +38,10 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IServerMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         private ISawmill _logger = default!;
+
+        public ushort TransformNetId { get; set; }
 
         public void PostInject()
         {

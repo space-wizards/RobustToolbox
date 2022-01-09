@@ -25,6 +25,8 @@ namespace Robust.Shared.GameObjects
         {
             base.Update(frameTime);
 
+            UpdatesOutsidePrediction = true;
+
             // Need to queue because otherwise calling HandleMove during FrameUpdate will lead to prediction issues.
             // TODO: Need to check if that's even still relevant since transform lerping fix?
             ProcessChanges();
@@ -34,7 +36,7 @@ namespace Robust.Shared.GameObjects
         {
             while (_queuedEvents.TryPop(out var moveEvent))
             {
-                if (!_handledThisTick.Add(moveEvent.Sender.Uid)) continue;
+                if (!_handledThisTick.Add(moveEvent.Sender)) continue;
                 HandleMove(ref moveEvent);
             }
 
@@ -45,15 +47,15 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if (entity.Deleted ||
-                entity.HasComponent<IMapComponent>() ||
-                entity.HasComponent<IMapGridComponent>() ||
+            if (EntityManager.Deleted(entity) ||
+                EntityManager.HasComponent<IMapComponent>(entity) ||
+                EntityManager.HasComponent<IMapGridComponent>(entity) ||
                 entity.IsInContainer())
             {
                 return;
             }
 
-            var transform = entity.Transform;
+            var transform = EntityManager.GetComponent<TransformComponent>(entity);
 
             if (float.IsNaN(moveEvent.NewPosition.X) || float.IsNaN(moveEvent.NewPosition.Y))
             {
@@ -64,14 +66,14 @@ namespace Robust.Shared.GameObjects
 
             // Change parent if necessary
             if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
-                EntityManager.TryGetEntity(grid.GridEntityId, out var gridEnt) &&
-                grid.GridEntityId != entity.Uid)
+                EntityManager.EntityExists(grid.GridEntityId) &&
+                grid.GridEntityId != entity)
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
                 if (grid.Index != transform.GridID)
                 {
-                    transform.AttachParent(gridEnt);
-                    RaiseLocalEvent(entity.Uid, new ChangedGridEvent(entity, transform.GridID, grid.Index));
+                    transform.AttachParent(grid.GridEntityId);
+                    RaiseLocalEvent(entity, new ChangedGridEvent(entity, transform.GridID, grid.Index));
                 }
             }
             else
@@ -81,8 +83,8 @@ namespace Robust.Shared.GameObjects
                 // Attach them to map / they are on an invalid grid
                 if (oldGridId != GridId.Invalid)
                 {
-                    transform.AttachParent(_mapManager.GetMapEntity(transform.MapID));
-                    RaiseLocalEvent(entity.Uid, new ChangedGridEvent(entity, oldGridId, GridId.Invalid));
+                    transform.AttachParent(_mapManager.GetMapEntityIdOrThrow(transform.MapID));
+                    RaiseLocalEvent(entity, new ChangedGridEvent(entity, oldGridId, GridId.Invalid));
                 }
             }
         }
@@ -90,11 +92,11 @@ namespace Robust.Shared.GameObjects
 
     public sealed class ChangedGridEvent : EntityEventArgs
     {
-        public IEntity Entity;
+        public EntityUid Entity;
         public GridId OldGrid;
         public GridId NewGrid;
 
-        public ChangedGridEvent(IEntity entity, GridId oldGrid, GridId newGrid)
+        public ChangedGridEvent(EntityUid entity, GridId oldGrid, GridId newGrid)
         {
             Entity = entity;
             OldGrid = oldGrid;

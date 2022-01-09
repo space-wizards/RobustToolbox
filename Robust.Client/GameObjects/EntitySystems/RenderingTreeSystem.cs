@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Physics;
 using Robust.Shared;
@@ -11,7 +9,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
@@ -30,7 +27,7 @@ namespace Robust.Client.GameObjects
         private readonly List<SpriteComponent> _spriteQueue = new();
         private readonly List<PointLightComponent> _lightQueue = new();
 
-        private HashSet<EntityUid> _checkedChildren = new();
+        private readonly HashSet<EntityUid> _checkedChildren = new();
 
         /// <summary>
         /// <see cref="CVars.MaxLightRadius"/>
@@ -43,10 +40,12 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+                var tempQualifier = grid.GridEntityId;
+                yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+            var tempQualifier1 = _mapManager.GetMapEntityId(mapId);
+            yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
         internal IEnumerable<RenderingTreeComponent> GetRenderTrees(MapId mapId, Box2 worldAABB)
@@ -55,10 +54,12 @@ namespace Robust.Client.GameObjects
 
             foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
             {
-                yield return EntityManager.GetEntity(grid.GridEntityId).GetComponent<RenderingTreeComponent>();
+                var tempQualifier = grid.GridEntityId;
+                yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier);
             }
 
-            yield return _mapManager.GetMapEntity(mapId).GetComponent<RenderingTreeComponent>();
+            var tempQualifier1 = _mapManager.GetMapEntityId(mapId);
+            yield return EntityManager.GetComponent<RenderingTreeComponent>(tempQualifier1);
         }
 
         public override void Initialize()
@@ -86,10 +87,17 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
             SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
 
-            SubscribeLocalEvent<RenderingTreeComponent, ComponentRemove>(HandleTreeRemove);
+            SubscribeLocalEvent<RenderingTreeComponent, ComponentInit>(OnTreeInit);
+            SubscribeLocalEvent<RenderingTreeComponent, ComponentRemove>(OnTreeRemove);
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.MaxLightRadius, value => MaxLightRadius = value, true);
+        }
+
+        private void OnTreeInit(EntityUid uid, RenderingTreeComponent component, ComponentInit args)
+        {
+            component.LightTree = new DynamicTree<PointLightComponent>(LightAabbFunc);
+            component.SpriteTree = new DynamicTree<SpriteComponent>(SpriteAabbFunc);
         }
 
         private void HandleLightUpdate(EntityUid uid, PointLightComponent component, PointLightUpdateEvent args)
@@ -106,26 +114,27 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMoved(ref MoveEvent args)
         {
-            AnythingMovedSubHandler(args.Sender.Transform);
+            AnythingMovedSubHandler(args.Sender);
         }
 
-        private void AnythingMovedSubHandler(TransformComponent sender)
+        private void AnythingMovedSubHandler(EntityUid uid, TransformComponent? xform = null)
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
-            if (!_checkedChildren.Add(sender.Owner.Uid) ||
-                sender.Owner.HasComponent<RenderingTreeComponent>()) return;
+            if (!_checkedChildren.Add(uid) || EntityManager.HasComponent<RenderingTreeComponent>(uid)) return;
 
             // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             // Ironically this was lagging the GC lolz
-            if (sender.Owner.TryGetComponent(out SpriteComponent? sprite))
+            if (EntityManager.TryGetComponent(uid, out SpriteComponent? sprite))
                 QueueSpriteUpdate(sprite);
 
-            if (sender.Owner.TryGetComponent(out PointLightComponent? light))
+            if (EntityManager.TryGetComponent(uid, out PointLightComponent? light))
                 QueueLightUpdate(light);
 
-            foreach (TransformComponent child in sender.Children)
+            if (!Resolve(uid, ref xform)) return;
+
+            foreach (var child in xform.ChildEntities)
             {
                 AnythingMovedSubHandler(child);
             }
@@ -214,7 +223,7 @@ namespace Robust.Client.GameObjects
             _mapManager.OnGridCreated -= MapManagerOnGridCreated;
         }
 
-        private void HandleTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)
+        private void OnTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)
         {
             foreach (var sprite in component.SpriteTree)
             {
@@ -237,27 +246,31 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            _mapManager.GetMapEntity(e.Map).EnsureComponent<RenderingTreeComponent>();
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(e.Map));
         }
 
         private void MapManagerOnGridCreated(MapId mapId, GridId gridId)
         {
-            EntityManager.GetEntity(_mapManager.GetGrid(gridId).GridEntityId).EnsureComponent<RenderingTreeComponent>();
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(gridId).GridEntityId);
         }
 
-        internal static RenderingTreeComponent? GetRenderTree(IEntity entity)
+        // TODO: Pass in TransformComponent directly: mainly interested in getting this shit working atm.
+        private RenderingTreeComponent? GetRenderTree(EntityUid entity)
         {
-            if (entity.Deleted || entity.Transform.MapID == MapId.Nullspace ||
-                entity.HasComponent<RenderingTreeComponent>()) return null;
+            if (!EntityManager.EntityExists(entity) ||
+                !EntityManager.TryGetComponent(entity, out TransformComponent? xform) ||
+                xform.MapID == MapId.Nullspace ||
+                EntityManager.HasComponent<RenderingTreeComponent>(entity)) return null;
 
-            var parent = entity.Transform.Parent?.Owner;
+            var parent = xform.ParentUid;
 
             while (true)
             {
-                if (parent == null) break;
+                if (!parent.IsValid())
+                    break;
 
-                if (parent.TryGetComponent(out RenderingTreeComponent? comp)) return comp;
-                parent = parent.Transform.Parent?.Owner;
+                if (EntityManager.TryGetComponent(parent, out RenderingTreeComponent? comp)) return comp;
+                parent = EntityManager.GetComponent<TransformComponent>(parent).ParentUid;
             }
 
             return null;
@@ -284,7 +297,8 @@ namespace Robust.Client.GameObjects
                 var oldMapTree = sprite.RenderTree;
                 var newMapTree = GetRenderTree(sprite.Owner);
                 // TODO: Temp PVS guard
-                var worldPos = sprite.Owner.Transform.WorldPosition;
+                var xform = EntityManager.GetComponent<TransformComponent>(sprite.Owner);
+                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
                 if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {
@@ -292,7 +306,7 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                var aabb = RenderingTreeComponent.SpriteAabbFunc(sprite, worldPos);
+                var aabb = SpriteAabbFunc(sprite, worldPos, worldRot);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)
@@ -321,7 +335,7 @@ namespace Robust.Client.GameObjects
                 var oldMapTree = light.RenderTree;
                 var newMapTree = GetRenderTree(light.Owner);
                 // TODO: Temp PVS guard
-                var worldPos = light.Owner.Transform.WorldPosition;
+                var worldPos = EntityManager.GetComponent<TransformComponent>(light.Owner).WorldPosition;
 
                 if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {
@@ -336,7 +350,7 @@ namespace Robust.Client.GameObjects
                     Logger.WarningS(LoggerSawmill, $"Light radius for {light.Owner} set above max radius of {MaxLightRadius}. This may lead to pop-in.");
                 }
 
-                var aabb = RenderingTreeComponent.LightAabbFunc(light, worldPos);
+                var aabb = LightAabbFunc(light, worldPos);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)
@@ -354,6 +368,74 @@ namespace Robust.Client.GameObjects
 
             _spriteQueue.Clear();
             _lightQueue.Clear();
+        }
+
+        private Box2 SpriteAabbFunc(in SpriteComponent value)
+        {
+            var xform = EntityManager.GetComponent<TransformComponent>(value.Owner);
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
+            var tree = GetRenderTree(value.Owner);
+
+            if (tree == null)
+            {
+                return bounds.CalcBoundingBox();
+            }
+            else
+            {
+                return EntityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(bounds);
+            }
+        }
+
+        private Box2 LightAabbFunc(in PointLightComponent value)
+        {
+            var worldPos = EntityManager.GetComponent<TransformComponent>(value.Owner).WorldPosition;
+            var tree = GetRenderTree(value.Owner);
+            var boxSize = value.Radius * 2;
+
+            Vector2 localPos;
+            if (tree == null)
+            {
+                localPos = worldPos;
+            }
+            else
+            {
+                // TODO: Need a way to just cache this InvWorldMatrix
+                localPos = EntityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.Transform(worldPos);
+            }
+            return Box2.CenteredAround(localPos, (boxSize, boxSize));
+        }
+
+        private Box2 SpriteAabbFunc(SpriteComponent value, Vector2 worldPos, Angle worldRot)
+        {
+            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
+            var tree = GetRenderTree(value.Owner);
+
+            if (tree == null)
+            {
+                return bounds.CalcBoundingBox();
+            }
+            else
+            {
+                return EntityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(bounds);
+            }
+        }
+
+        private Box2 LightAabbFunc(PointLightComponent value, Vector2 worldPos)
+        {
+            // Lights are circles so don't need entity's rotation
+            var tree = GetRenderTree(value.Owner);
+            var boxSize = value.Radius * 2;
+
+            Vector2 localPos;
+            if (tree == null)
+            {
+                localPos = worldPos;
+            } else
+            {
+                localPos = EntityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.Transform(worldPos);
+            }
+            return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
     }
 

@@ -259,7 +259,7 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// A list of type references that can be used to get a reference to an instance of this component,
-        /// for methods like <see cref="Robust.Shared.GameObjects.IEntity.GetComponent{T}" />.
+        /// for methods like GetComponent.
         /// These are not unique and can overlap with other components.
         /// </summary>
         IReadOnlyList<Type> References { get; }

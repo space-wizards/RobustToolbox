@@ -12,9 +12,16 @@ public partial class EntitySystem
 {
     #region Entity LifeStage
 
-    /// <inheritdoc cref="IEntityManager.EntityExists" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool Exists(EntityUid uid)
+    /// <inheritdoc cref="IEntityManager.EntityExists(EntityUid)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Exists(EntityUid uid)
+    {
+        return EntityManager.EntityExists(uid);
+    }
+
+    /// <inheritdoc cref="IEntityManager.EntityExists(EntityUid?)" />
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Exists([NotNullWhen(true)] EntityUid? uid)
     {
         return EntityManager.EntityExists(uid);
     }
@@ -22,8 +29,8 @@ public partial class EntitySystem
     /// <summary>
     ///     Retrieves whether the entity is initializing. Throws if the entity does not exist.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool Initializing(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Initializing(EntityUid uid, MetaDataComponent? metaData = null)
     {
         return LifeStage(uid, metaData) == EntityLifeStage.Initializing;
     }
@@ -31,8 +38,8 @@ public partial class EntitySystem
     /// <summary>
     ///     Retrieves whether the entity is initialized. Throws if the entity does not exist.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool Initialized(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Initialized(EntityUid uid, MetaDataComponent? metaData = null)
     {
         return LifeStage(uid, metaData) >= EntityLifeStage.Initialized;
     }
@@ -40,24 +47,36 @@ public partial class EntitySystem
     /// <summary>
     ///     Retrieves whether the entity is being terminated. Throws if the entity does not exist.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool Terminating(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Terminating(EntityUid uid, MetaDataComponent? metaData = null)
     {
         return LifeStage(uid, metaData) == EntityLifeStage.Terminating;
     }
 
     /// <summary>
-    ///     Retrieves whether the entity is deleted. Throws if the entity does not exist.
+    ///     Retrieves whether the entity is deleted or is nonexistent.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool Deleted(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Deleted(EntityUid uid, MetaDataComponent? metaData = null)
     {
-        return LifeStage(uid, metaData) >= EntityLifeStage.Deleted;
+        if (!Resolve(uid, ref metaData, false))
+            return true;
+
+        return metaData.EntityDeleted;
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity is deleted or is nonexistent.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Deleted([NotNullWhen(false)] EntityUid? uid)
+    {
+        return !uid.HasValue || Deleted(uid.Value);
     }
 
     /// <inheritdoc cref="MetaDataComponent.EntityLifeStage" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public EntityLifeStage LifeStage(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityLifeStage LifeStage(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -69,8 +88,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve whether the entity is initializing.
     /// </summary>
     /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryInitializing(EntityUid uid, [NotNullWhen(true)] out bool? initializing, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryInitializing(EntityUid uid, [NotNullWhen(true)] out bool? initializing, MetaDataComponent? metaData = null)
     {
         if (!TryLifeStage(uid, out var lifeStage, metaData))
         {
@@ -86,8 +105,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve whether the entity is initialized.
     /// </summary>
     /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryInitialized(EntityUid uid, [NotNullWhen(true)] out bool? initialized, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryInitialized(EntityUid uid, [NotNullWhen(true)] out bool? initialized, MetaDataComponent? metaData = null)
     {
         if (!TryLifeStage(uid, out var lifeStage, metaData))
         {
@@ -103,8 +122,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve whether the entity is terminating.
     /// </summary>
     /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryTerminating(EntityUid uid, [NotNullWhen(true)] out bool? terminating, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryTerminating(EntityUid uid, [NotNullWhen(true)] out bool? terminating, MetaDataComponent? metaData = null)
     {
         if (!TryLifeStage(uid, out var lifeStage, metaData))
         {
@@ -117,29 +136,12 @@ public partial class EntitySystem
     }
 
     /// <summary>
-    ///     Attempts to retrieve whether the entity is deleted.
-    /// </summary>
-    /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryDeleted(EntityUid uid, [NotNullWhen(true)] out bool? deleted, MetaDataComponent? metaData = null)
-    {
-        if (!TryLifeStage(uid, out var lifeStage, metaData))
-        {
-            deleted = null;
-            return false;
-        }
-
-        deleted = lifeStage >= EntityLifeStage.Deleted;
-        return true;
-    }
-
-    /// <summary>
     ///     Attempts to retrieve the life-stage of the entity.
     ///     <seealso cref="MetaDataComponent.EntityLifeStage"/>
     /// </summary>
     /// <returns>Whether it could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryLifeStage(EntityUid uid, [NotNullWhen(true)] out EntityLifeStage? lifeStage, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryLifeStage(EntityUid uid, [NotNullWhen(true)] out EntityLifeStage? lifeStage, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData))
         {
@@ -158,8 +160,8 @@ public partial class EntitySystem
     /// <summary>
     ///     Marks an entity as dirty.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void Dirty(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(EntityUid uid)
     {
         EntityManager.DirtyEntity(uid);
     }
@@ -168,8 +170,8 @@ public partial class EntitySystem
     ///     Retrieves the name of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public string Name(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected string Name(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if(!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -181,8 +183,8 @@ public partial class EntitySystem
     ///     Retrieves the description of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public string Description(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected string Description(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if(!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -194,8 +196,8 @@ public partial class EntitySystem
     ///     Retrieves the prototype of an entity, if any.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public EntityPrototype? Prototype(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityPrototype? Prototype(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -207,7 +209,7 @@ public partial class EntitySystem
     ///     Retrieves the last <see cref="GameTick"/> the entity was modified at.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    public GameTick LastModifiedTick(EntityUid uid, MetaDataComponent? metaData = null)
+    protected GameTick LastModifiedTick(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -219,8 +221,8 @@ public partial class EntitySystem
     ///     Retrieves whether the entity is paused or not.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool Paused(EntityUid uid, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool Paused(EntityUid uid, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -232,8 +234,8 @@ public partial class EntitySystem
     ///     Sets the paused status on an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void SetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void SetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
@@ -245,8 +247,8 @@ public partial class EntitySystem
     ///     Attempts to mark an entity as dirty.
     /// </summary>
     /// <returns>Whether the operation succeeded.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryDirty(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryDirty(EntityUid uid)
     {
         if (!Exists(uid))
             return false;
@@ -259,8 +261,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve the name of an entity.
     /// </summary>
     /// <returns>Whether the name could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryName(EntityUid uid, [NotNullWhen(true)] out string? name, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryName(EntityUid uid, [NotNullWhen(true)] out string? name, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
         {
@@ -276,8 +278,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve the description of an entity.
     /// </summary>
     /// <returns>Whether the description could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryDescription(EntityUid uid, [NotNullWhen(true)] out string? description, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryDescription(EntityUid uid, [NotNullWhen(true)] out string? description, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
         {
@@ -293,8 +295,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve the prototype of an entity.
     /// </summary>
     /// <returns>Whether the prototype could be retrieved and was not null.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryPrototype(EntityUid uid, [NotNullWhen(true)] out EntityPrototype? prototype, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryPrototype(EntityUid uid, [NotNullWhen(true)] out EntityPrototype? prototype, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
         {
@@ -310,8 +312,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve the last <see cref="GameTick"/> the entity was modified at.
     /// </summary>
     /// <returns>Whether the last modified tick could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryLastModifiedTick(EntityUid uid, [NotNullWhen(true)] out GameTick? lastModifiedTick, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryLastModifiedTick(EntityUid uid, [NotNullWhen(true)] out GameTick? lastModifiedTick, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
         {
@@ -327,8 +329,8 @@ public partial class EntitySystem
     ///     Attempts to retrieve the paused status on an entity.
     /// </summary>
     /// <returns>Whether the pause status could be retrieved.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryPaused(EntityUid uid, [NotNullWhen(true)] out bool? paused, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryPaused(EntityUid uid, [NotNullWhen(true)] out bool? paused, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
         {
@@ -344,8 +346,8 @@ public partial class EntitySystem
     ///     Attempts to set the paused status on an entity.
     /// </summary>
     /// <returns>Whether the paused status could be set.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TrySetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TrySetPaused(EntityUid uid, bool paused, MetaDataComponent? metaData = null)
     {
         if (!Resolve(uid, ref metaData, false))
             return false;
@@ -355,8 +357,8 @@ public partial class EntitySystem
     }
 
     /// <inheritdoc cref="IEntityManager.ToPrettyString"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public EntityStringRepresentation ToPrettyString(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityStringRepresentation ToPrettyString(EntityUid uid)
     {
         return EntityManager.ToPrettyString(uid);
     }
@@ -366,8 +368,8 @@ public partial class EntitySystem
     #region Component Get
 
     /// <inheritdoc cref="IEntityManager.GetComponent&lt;T&gt;"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public T Comp<T>(EntityUid uid) where T : class, IComponent
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T Comp<T>(EntityUid uid) where T : class, IComponent
     {
         return EntityManager.GetComponent<T>(uid);
     }
@@ -375,8 +377,8 @@ public partial class EntitySystem
     /// <summary>
     ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public T? CompOrNull<T>(EntityUid uid) where T : class, IComponent
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T? CompOrNull<T>(EntityUid uid) where T : class, IComponent
     {
         return EntityManager.GetComponentOrNull<T>(uid);
     }
@@ -384,22 +386,22 @@ public partial class EntitySystem
     /// <summary>
     ///     Returns the component of a specific type, or null when it's missing or the entity does not exist.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public T? CompOrNull<T>(EntityUid? uid) where T : class, IComponent
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T? CompOrNull<T>(EntityUid? uid) where T : class, IComponent
     {
         return uid.HasValue ? EntityManager.GetComponentOrNull<T>(uid.Value) : null;
     }
 
-    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp)
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryComp<T>(EntityUid uid, [NotNullWhen(true)] out T? comp)
     {
         return EntityManager.TryGetComponent(uid, out comp);
     }
 
-    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool TryComp<T>(EntityUid? uid, [NotNullWhen(true)] out T? comp)
+    /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool TryComp<T>(EntityUid? uid, [NotNullWhen(true)] out T? comp)
     {
         if (!uid.HasValue)
         {
@@ -411,15 +413,15 @@ public partial class EntitySystem
     }
 
     /// <inheritdoc cref="IEntityManager.GetComponents"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public IEnumerable<IComponent> AllComps(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IEnumerable<IComponent> AllComps(EntityUid uid)
     {
         return EntityManager.GetComponents(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.GetComponents&lt;T&gt;"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public IEnumerable<T> AllComps<T>(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IEnumerable<T> AllComps<T>(EntityUid uid)
     {
         return EntityManager.GetComponents<T>(uid);
     }
@@ -428,8 +430,8 @@ public partial class EntitySystem
     ///     Returns the <see cref="TransformComponent"/> on an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public TransformComponent Transform(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected TransformComponent Transform(EntityUid uid)
     {
         return EntityManager.GetComponent<TransformComponent>(uid);
     }
@@ -438,8 +440,8 @@ public partial class EntitySystem
     ///     Returns the <see cref="MetaDataComponent"/> on an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public MetaDataComponent MetaData(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected MetaDataComponent MetaData(EntityUid uid)
     {
         return EntityManager.GetComponent<MetaDataComponent>(uid);
     }
@@ -451,8 +453,8 @@ public partial class EntitySystem
     /// <summary>
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool HasComp<T>(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>(EntityUid uid)
     {
         return EntityManager.HasComponent<T>(uid);
     }
@@ -460,8 +462,26 @@ public partial class EntitySystem
     /// <summary>
     ///     Retrieves whether the entity has the specified component or not.
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public bool HasComp(EntityUid uid, Type type)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp(EntityUid uid, Type type)
+    {
+        return EntityManager.HasComponent(uid, type);
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity has the specified component or not.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp<T>([NotNullWhen(true)] EntityUid? uid)
+    {
+        return EntityManager.HasComponent<T>(uid);
+    }
+
+    /// <summary>
+    ///     Retrieves whether the entity has the specified component or not.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected bool HasComp([NotNullWhen(true)] EntityUid? uid, Type type)
     {
         return EntityManager.HasComponent(uid, type);
     }
@@ -471,15 +491,15 @@ public partial class EntitySystem
     #region Component Add
 
     /// <inheritdoc cref="IEntityManager.AddComponent&lt;T&gt;(EntityUid)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void AddComp<T>(EntityUid uid) where T :  Component, new()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T AddComp<T>(EntityUid uid) where T :  Component, new()
     {
-        EntityManager.AddComponent<T>(uid);
+        return EntityManager.AddComponent<T>(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.EnsureComponent&lt;T&gt;(EntityUid)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public T EnsureComp<T>(EntityUid uid) where T : Component, new()
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected T EnsureComp<T>(EntityUid uid) where T : Component, new()
     {
         return EntityManager.EnsureComponent<T>(uid);
     }
@@ -489,8 +509,8 @@ public partial class EntitySystem
     #region Component Remove
 
     /// <inheritdoc cref="IEntityManager.RemoveComponent&lt;T&gt;(EntityUid)"/>
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void RemComp<T>(EntityUid uid) where T : class, IComponent
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void RemComp<T>(EntityUid uid) where T : class, IComponent
     {
         EntityManager.RemoveComponent<T>(uid);
     }
@@ -500,15 +520,15 @@ public partial class EntitySystem
     #region Entity Delete
 
     /// <inheritdoc cref="IEntityManager.DeleteEntity(EntityUid)" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void Del(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Del(EntityUid uid)
     {
         EntityManager.DeleteEntity(uid);
     }
 
     /// <inheritdoc cref="IEntityManager.QueueDeleteEntity(EntityUid)" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public void QueueDel(EntityUid uid)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void QueueDel(EntityUid uid)
     {
         EntityManager.QueueDeleteEntity(uid);
     }
@@ -518,17 +538,17 @@ public partial class EntitySystem
     #region Entity Spawning
 
     /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, EntityCoordinates)" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid Spawn(string? prototype, EntityCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates).Uid;
+        return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
     /// <inheritdoc cref="IEntityManager.SpawnEntity(string?, MapCoordinates)" />
-    [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-    public EntityUid Spawn(string? prototype, MapCoordinates coordinates)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityUid Spawn(string? prototype, MapCoordinates coordinates)
     {
-        return EntityManager.SpawnEntity(prototype, coordinates).Uid;
+        return EntityManager.SpawnEntity(prototype, coordinates);
     }
 
     #endregion
@@ -539,7 +559,7 @@ public partial class EntitySystem
     ///     Utility static method to create an exception to be thrown when an entity doesn't have a specific component.
     /// </summary>
     private static KeyNotFoundException CompNotFound<T>(EntityUid uid)
-        => throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(T)}");
+        => new($"Entity {uid} does not have a component of type {typeof(T)}");
 
     #endregion
 }

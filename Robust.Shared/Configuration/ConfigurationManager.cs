@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -357,7 +358,7 @@ namespace Robust.Shared.Configuration
         {
             if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 //TODO: Make flags work, required non-derpy net system.
-                return (T) (cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue)!;
+                return (T) (GetConfigVarValue(cVar))!;
 
             throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
         }
@@ -376,6 +377,11 @@ namespace Robust.Shared.Configuration
 
             // If it's null it's a string, since the rest is primitives which aren't null.
             return cVar.Value?.GetType() ?? typeof(string);
+        }
+
+        protected static object GetConfigVarValue(ConfigVar cVar)
+        {
+            return cVar.OverrideValueParsed ?? cVar.Value ?? cVar.DefaultValue;
         }
 
         public void OverrideConVars(IEnumerable<(string key, string value)> cVars)
@@ -415,7 +421,7 @@ namespace Robust.Shared.Configuration
 
             if (type == typeof(float))
             {
-                return float.Parse(value);
+                return float.Parse(value, CultureInfo.InvariantCulture);
             }
 
             if (type?.IsEnum ?? false)

@@ -25,6 +25,9 @@ namespace Robust.Shared.GameObjects
         protected internal List<Type> UpdatesAfter { get; } = new();
         protected internal List<Type> UpdatesBefore { get; } = new();
 
+
+        public bool UpdatesOutsidePrediction { get; protected internal set; }
+
         IEnumerable<Type> IEntitySystem.UpdatesAfter => UpdatesAfter;
         IEnumerable<Type> IEntitySystem.UpdatesBefore => UpdatesBefore;
 
@@ -40,6 +43,10 @@ namespace Robust.Shared.GameObjects
         public virtual void Initialize() { }
 
         /// <inheritdoc />
+        /// <remarks>
+        /// Not ran on the client if prediction is disabled and
+        /// <see cref="UpdatesOutsidePrediction"/> is false (the default).
+        /// </remarks>
         public virtual void Update(float frameTime) { }
 
         /// <inheritdoc />

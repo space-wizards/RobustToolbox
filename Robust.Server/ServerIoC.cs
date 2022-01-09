@@ -11,6 +11,7 @@ using Robust.Server.Player;
 using Robust.Server.Prototypes;
 using Robust.Server.Reflection;
 using Robust.Server.Scripting;
+using Robust.Server.ServerHub;
 using Robust.Server.ServerStatus;
 using Robust.Server.ViewVariables;
 using Robust.Shared;
@@ -75,6 +76,7 @@ namespace Robust.Server
             IoCManager.Register<IAuthManager, AuthManager>();
             IoCManager.Register<IPhysicsManager, PhysicsManager>();
             IoCManager.Register<IBqlQueryManager, BqlQueryManager>();
+            IoCManager.Register<HubManager, HubManager>();
         }
     }
 }

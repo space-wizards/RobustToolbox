@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.GameObjects;
@@ -16,7 +17,7 @@ namespace Robust.Shared.GameObjects;
 /// <param name="Prototype">The prototype identifier of the entity, if any.</param>
 /// <param name="Session">The session attached to the entity, if any.</param>
 public readonly record struct EntityStringRepresentation
-    (EntityUid Uid, bool Deleted, string? Name = null, string? Prototype = null, ICommonSession? Session = null)
+    (EntityUid Uid, bool Deleted, string? Name = null, string? Prototype = null, ICommonSession? Session = null) : IFormattable
 {
     public override string ToString()
     {
@@ -25,6 +26,11 @@ public readonly record struct EntityStringRepresentation
 
         return $"{Name} ({Uid}{(Prototype != null ? $", {Prototype}" : "")}{(Session != null ? $", {Session.Name}" : "")}){(Deleted ? "D" : "")}";
     }
-    
+
+    public string ToString(string? format, IFormatProvider? formatProvider)
+    {
+        return ToString();
+    }
+
     public static implicit operator string(EntityStringRepresentation rep) => rep.ToString();
 }

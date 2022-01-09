@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 
@@ -22,12 +23,12 @@ namespace Robust.Shared.Containers
         /// The generic container class uses a list of entities
         /// </summary>
         [DataField("ents")]
-        private readonly List<IEntity> _containerList = new();
+        private readonly List<EntityUid> _containerList = new();
 
         private readonly List<EntityUid> _expectedEntities = new();
 
         /// <inheritdoc />
-        public override IReadOnlyList<IEntity> ContainedEntities => _containerList;
+        public override IReadOnlyList<EntityUid> ContainedEntities => _containerList;
 
         public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
@@ -35,21 +36,21 @@ namespace Robust.Shared.Containers
         public override string ContainerType => ClassName;
 
         /// <inheritdoc />
-        protected override void InternalInsert(IEntity toinsert)
+        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
         {
             _containerList.Add(toinsert);
-            base.InternalInsert(toinsert);
+            base.InternalInsert(toinsert, entMan);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(IEntity toremove)
+        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
         {
             _containerList.Remove(toremove);
-            base.InternalRemove(toremove);
+            base.InternalRemove(toremove, entMan);
         }
 
         /// <inheritdoc />
-        public override bool Contains(IEntity contained)
+        public override bool Contains(EntityUid contained)
         {
             return _containerList.Contains(contained);
         }
@@ -59,9 +60,10 @@ namespace Robust.Shared.Containers
         {
             base.Shutdown();
 
+            var entMan = IoCManager.Resolve<IEntityManager>();
             foreach (var entity in _containerList)
             {
-                entity.Delete();
+                entMan.DeleteEntity(entity);
             }
         }
     }

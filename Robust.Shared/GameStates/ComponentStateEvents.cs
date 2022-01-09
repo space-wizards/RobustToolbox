@@ -3,6 +3,7 @@ using Robust.Shared.Players;
 
 namespace Robust.Shared.GameStates
 {
+    [ByRefEvent]
     public readonly struct ComponentHandleState
     {
         public ComponentState? Current { get; }
@@ -18,17 +19,13 @@ namespace Robust.Shared.GameStates
     /// <summary>
     ///     Component event for getting the component state for a specific player.
     /// </summary>
+    [ByRefEvent]
     public struct ComponentGetState
     {
         /// <summary>
         ///     Output parameter. Set this to the component's state for the player.
         /// </summary>
         public ComponentState? State { get; set; }
-
-        public ComponentGetState()
-        {
-            State = null;
-        }
     }
 
     public class ComponentGetStateAttemptEvent : CancellableEntityEventArgs

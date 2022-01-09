@@ -35,6 +35,7 @@ namespace Robust.Shared.IoC
         private readonly Dictionary<Type, DependencyFactoryDelegate<object>> _resolveFactories = new();
 
         private readonly Queue<Type> _pendingResolves = new();
+        private readonly Queue<object> _newInstances = new();
 
         // To do injection of common types like components, we make DynamicMethods to do the actual injecting.
         // This is way faster than reflection and should be allocation free outside setup.
@@ -113,8 +114,6 @@ namespace Robust.Shared.IoC
                 return (TImplementation) chosenConstructor.Invoke(parameters);
             }, overwrite);
         }
-
-
 
         /// <inheritdoc />
         public void Register<TInterface, TImplementation>(DependencyFactoryDelegate<TImplementation> factory, bool overwrite = false)
@@ -198,13 +197,13 @@ namespace Robust.Shared.IoC
         }
 
         /// <inheritdoc />
-        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false)
+        public void RegisterInstance<TInterface>(object implementation, bool overwrite = false, bool deferInject = false)
         {
-            RegisterInstance(typeof(TInterface), implementation, overwrite);
+            RegisterInstance(typeof(TInterface), implementation, overwrite, deferInject);
         }
 
         /// <inheritdoc />
-        public void RegisterInstance(Type type, object implementation, bool overwrite = false)
+        public void RegisterInstance(Type type, object implementation, bool overwrite = false, bool deferInject = false)
         {
             if (implementation == null)
                 throw new ArgumentNullException(nameof(implementation));
@@ -215,14 +214,24 @@ namespace Robust.Shared.IoC
 
             CheckRegisterInterface(type, implementation.GetType(), overwrite);
 
-            // do the equivalent of BuildGraph with a single type.
-            _resolveTypes[type] = implementation.GetType();
-            _services[type] = implementation;
+            if(!deferInject)
+            {
+                // do the equivalent of BuildGraph with a single type.
+                _resolveTypes[type] = implementation.GetType();
+                _services[type] = implementation;
 
-            InjectDependencies(implementation, true);
+                InjectDependencies(implementation, true);
 
-            if (implementation is IPostInjectInit init)
-                init.PostInject();
+                if (implementation is IPostInjectInit init)
+                    init.PostInject();
+            }
+            else
+            {
+                _resolveTypes[type] = implementation.GetType();
+                _services[type] = implementation;
+
+                _newInstances.Enqueue(implementation);
+            }
         }
 
         /// <inheritdoc />
@@ -236,6 +245,8 @@ namespace Robust.Shared.IoC
             _services.Clear();
             _resolveTypes.Clear();
             _resolveFactories.Clear();
+            _pendingResolves.Clear();
+            _newInstances.Clear();
             _injectorCache.Clear();
         }
 
@@ -341,6 +352,12 @@ namespace Robust.Shared.IoC
             // Because we only ever construct an instance once per registration, there is no need to keep the factory
             // delegates. Also we need to free the delegates because lambdas capture variables.
             _resolveFactories.Clear();
+
+            // add all the newly registered instances to the inject list
+            while (_newInstances.Count > 0)
+            {
+                injectList.Add(_newInstances.Dequeue());
+            }
 
             // Graph built, go over ones that need injection.
             foreach (var implementation in injectList)

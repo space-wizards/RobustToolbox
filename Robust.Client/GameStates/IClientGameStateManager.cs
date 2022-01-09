@@ -1,4 +1,5 @@
 ﻿using System;
+using Robust.Shared;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.Timing;
@@ -43,6 +44,13 @@ namespace Robust.Client.GameStates
         ///     apply the overflow of states in a single tick.
         /// </summary>
         int StateBufferMergeThreshold { get; }
+
+        /// <summary>
+        /// Whether prediction is currently enabled on the client entirely.
+        /// This is NOT equal to <see cref="IGameTiming.InPrediction"/> or <see cref="IGameTiming.IsFirstTimePredicted"/>.
+        /// </summary>
+        /// <remarks>This is effectively an alias of <see cref="CVars.NetPredict"/>.</remarks>
+        bool IsPredictionEnabled { get; }
 
         /// <summary>
         ///     This is called after the game state has been applied for the current tick.

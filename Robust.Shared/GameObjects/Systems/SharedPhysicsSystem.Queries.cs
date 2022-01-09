@@ -42,7 +42,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, collider))
             {
-                var gridCollider = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(collider);
+                var gridCollider = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(collider);
 
                 broadphase.Tree.QueryAabb(ref state, (ref (Box2 collider, MapId map, bool found) state, in FixtureProxy proxy) =>
                 {
@@ -64,7 +64,7 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, Vector2 offset, bool approximate = true)
         {
             var broadphase = body.Broadphase;
-            if (broadphase == null)
+            if (broadphase == null || !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager))
             {
                 return Array.Empty<PhysicsComponent>();
             }
@@ -73,7 +73,7 @@ namespace Robust.Shared.GameObjects
 
             var state = (body, entities);
 
-            foreach (var fixture in body.Fixtures)
+            foreach (var (_, fixture) in manager.Fixtures)
             {
                 foreach (var proxy in fixture.Proxies)
                 {
@@ -105,7 +105,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
             {
-                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldAABB);
+                var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
                 {
@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldBounds.CalcBoundingBox()))
             {
-                var gridAABB = broadphase.Owner.Transform.InvWorldMatrix.TransformBox(worldBounds);
+                var gridAABB = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 foreach (var proxy in broadphase.Tree.QueryAabb(gridAABB, false))
                 {
@@ -151,21 +151,24 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, float enlarge = 0f)
         {
             // TODO: Should use the collisionmanager test for overlap instead (once I optimise and check it actually works).
-            var mapId = body.Owner.Transform.MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(body.Owner).MapID;
 
-            if (mapId == MapId.Nullspace || body.FixtureCount == 0) return Array.Empty<PhysicsComponent>();
+            if (mapId == MapId.Nullspace ||
+                !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager) ||
+                manager.FixtureCount == 0) return Array.Empty<PhysicsComponent>();
 
             var bodies = new HashSet<PhysicsComponent>();
-            var transform = body.GetTransform();
-            var worldAABB = body.GetWorldAABB(transform.Position, transform.Quaternion2D.Angle);
+
+            var (worldPos, worldRot) = Transform(body.Owner).GetWorldPositionRotation();
+            var worldAABB = body.GetWorldAABB(worldPos, worldRot);
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
             {
-                var (_, broadRot, broadInvMatrix) = broadphase.Owner.Transform.GetWorldPositionRotationInvMatrix();
+                var (_, broadRot, broadInvMatrix) = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).GetWorldPositionRotationInvMatrix();
 
-                var localTransform = new Transform(broadInvMatrix.Transform(transform.Position), transform.Quaternion2D.Angle - broadRot);
+                var localTransform = new Transform(broadInvMatrix.Transform(worldPos), worldRot - broadRot);
 
-                foreach (var fixture in body.Fixtures)
+                foreach (var (_, fixture) in manager.Fixtures)
                 {
                     var collisionMask = fixture.CollisionMask;
                     var collisionLayer = fixture.CollisionLayer;
@@ -174,7 +177,7 @@ namespace Robust.Shared.GameObjects
                     {
                         var aabb = fixture.Shape.ComputeAABB(localTransform, i).Enlarged(enlarge);
 
-                        foreach (var proxy in broadphase.Tree.QueryAabb(aabb, false))
+                        foreach (var proxy in broadphase.Tree.QueryAabb(aabb))
                         {
                             var proxyFixture = proxy.Fixture;
                             var proxyBody = proxyFixture.Body;
@@ -216,7 +219,7 @@ namespace Robust.Shared.GameObjects
         /// <returns>A result object describing the hit, if any.</returns>
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
             float maxLength = 50F,
-            Func<IEntity, bool>? predicate = null, bool returnOnFirstHit = true)
+            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
@@ -225,31 +228,27 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var invMatrix = broadphase.Owner.Transform.InvWorldMatrix;
-                var matrix = broadphase.Owner.Transform.WorldMatrix;
+                var (_, rot, matrix, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationMatrixWithInv();
 
                 var position = invMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var gridRot = new Angle(-rot.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
                 var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
-                    if (returnOnFirstHit && results.Count > 0) return true;
+                    if (returnOnFirstHit && results.Count > 0)
+                        return true;
 
                     if (distFromOrigin > maxLength)
                         return true;
 
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
-                    {
                         return true;
-                    }
 
                     if (predicate?.Invoke(proxy.Fixture.Body.Owner) == true)
-                    {
                         return true;
-                    }
 
                     // TODO: Shape raycast here
 
@@ -287,7 +286,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
         /// <returns>An enumerable of either the first entity hit or everything hit</returns>
-        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, IEntity? ignoredEnt = null, bool returnOnFirstHit = true)
+        public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, EntityUid? ignoredEnt = null, bool returnOnFirstHit = true)
             => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
 
         /// <summary>
@@ -298,7 +297,7 @@ namespace Robust.Shared.GameObjects
         /// <param name="maxLength">Maximum length of the ray in meters.</param>
         /// <param name="ignoredEnt">A single entity that can be ignored by the RayCast. Useful if the ray starts inside the body of an entity.</param>
         /// <returns>The distance the ray traveled while colliding with entities</returns>
-        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, IEntity? ignoredEnt = null)
+        public float IntersectRayPenetration(MapId mapId, CollisionRay ray, float maxLength, EntityUid? ignoredEnt = null)
         {
             var penetration = 0f;
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
@@ -307,11 +306,13 @@ namespace Robust.Shared.GameObjects
 
             foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, rayBox))
             {
-                var offset = broadphase.Owner.Transform.InvWorldMatrix.Transform(ray.Position);
-                var gridRot = new Angle(-broadphase.Owner.Transform.WorldRotation.Theta);
+                var (_, rot, invMatrix) = Transform(broadphase.Owner).GetWorldPositionRotationInvMatrix();
+
+                var position = invMatrix.Transform(ray.Position);
+                var gridRot = new Angle(-rot.Theta);
                 var direction = gridRot.RotateVec(ray.Direction);
 
-                var gridRay = new CollisionRay(offset, direction, ray.CollisionMask);
+                var gridRay = new CollisionRay(position, direction, ray.CollisionMask);
 
                 broadphase.Tree.QueryRay((in FixtureProxy proxy, in Vector2 point, float distFromOrigin) =>
                 {
@@ -322,7 +323,7 @@ namespace Robust.Shared.GameObjects
                         return true;
                     }
 
-                    if (new Ray(point + ray.Direction * proxy.AABB.Size.Length * 2, -ray.Direction).Intersects(
+                    if (new Ray(point + gridRay.Direction * proxy.AABB.Size.Length * 2, -gridRay.Direction).Intersects(
                         proxy.AABB, out _, out var exitPoint))
                     {
                         penetration += (point - exitPoint).Length;

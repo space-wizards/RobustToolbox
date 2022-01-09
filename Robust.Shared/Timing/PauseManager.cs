@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -14,30 +15,30 @@ namespace Robust.Shared.Timing
     {
         [Dependency] private readonly IConsoleHost _conhost = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityLookup _entityLookup = default!;
+        [Dependency] private readonly IEntityManager _entityManager = default!;
 
         [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new();
         [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new();
 
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            var lookupSystem = IoCManager.Resolve<IEntityLookup>();
-
             if (paused)
             {
                 _pausedMaps.Add(mapId);
 
-                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
+                foreach (var entity in _entityLookup.GetEntitiesInMap(mapId))
                 {
-                    entity.Paused = true;
+                    _entityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
                 }
             }
             else
             {
                 _pausedMaps.Remove(mapId);
 
-                foreach (var entity in lookupSystem.GetEntitiesInMap(mapId))
+                foreach (var entity in _entityLookup.GetEntitiesInMap(mapId))
                 {
-                    entity.Paused = false;
+                    _entityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = false;
                 }
             }
         }
@@ -49,10 +50,13 @@ namespace Robust.Shared.Timing
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId).ToArray())
             {
                 entity.RunMapInit();
-                entity.Paused = false;
+
+                // MapInit could have deleted this entity.
+                if(_entityManager.TryGetComponent(entity, out MetaDataComponent? meta))
+                    meta.EntityPaused = false;
             }
         }
 
@@ -65,13 +69,13 @@ namespace Robust.Shared.Timing
         {
             var mapId = _mapManager.GetGrid(gridId).ParentMapId;
 
-            foreach (var entity in IoCManager.Resolve<IEntityLookup>().GetEntitiesInMap(mapId))
+            foreach (var entity in _entityLookup.GetEntitiesInMap(mapId))
             {
-                if (entity.Transform.GridID != gridId)
+                if (_entityManager.GetComponent<TransformComponent>(entity).GridID != gridId)
                     continue;
 
                 entity.RunMapInit();
-                entity.Paused = false;
+                _entityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = false;
             }
         }
 

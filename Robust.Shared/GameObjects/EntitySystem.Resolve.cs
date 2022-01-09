@@ -21,8 +21,7 @@ namespace Robust.Shared.GameObjects
         public bool Resolve<TComp>(EntityUid uid, [NotNullWhen(true)] ref TComp? component, bool logMissing = true)
             where TComp : IComponent
         {
-            DebugTools.Assert(Exists(uid), "Specified Entity does not exist!");
-            DebugTools.Assert(component == null || uid == component.Owner.Uid, "Specified Entity is not the component's Owner!");
+            DebugTools.Assert(component == null || uid == component.Owner, "Specified Entity is not the component's Owner!");
 
             if (component != null)
                 return true;

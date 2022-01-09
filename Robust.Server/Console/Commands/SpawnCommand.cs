@@ -1,3 +1,4 @@
+using System.Globalization;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Console;
@@ -22,18 +23,24 @@ namespace Robust.Server.Console.Commands
                 shell.WriteError("Incorrect number of arguments. " + Help);
             }
 
-            if (args.Length == 1 && player?.AttachedEntity != null)
+            var pAE = player?.AttachedEntity ?? EntityUid.Invalid;
+
+            if (args.Length == 1 && player != null && pAE != EntityUid.Invalid)
             {
-                ent.SpawnEntity(args[0], player.AttachedEntity.Transform.Coordinates);
+                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(pAE).Coordinates);
             }
             else if (args.Length == 2)
             {
-                ent.SpawnEntity(args[0], ent.GetEntity(EntityUid.Parse(args[1])).Transform.Coordinates);
+                var uid = EntityUid.Parse(args[1]);
+                ent.SpawnEntity(args[0], ent.GetComponent<TransformComponent>(uid).Coordinates);
             }
-            else if (player?.AttachedEntity != null)
+            else if (player != null && pAE != EntityUid.Invalid)
             {
-                var coords = new MapCoordinates(float.Parse(args[1]),
-                    float.Parse(args[2]), player.AttachedEntity.Transform.MapID);
+                var coords = new MapCoordinates(
+                    float.Parse(args[1], CultureInfo.InvariantCulture),
+                    float.Parse(args[2], CultureInfo.InvariantCulture),
+                    ent.GetComponent<TransformComponent>(pAE).MapID);
+
                 ent.SpawnEntity(args[0], coords);
             }
         }

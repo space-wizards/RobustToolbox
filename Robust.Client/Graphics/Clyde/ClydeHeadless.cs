@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -221,7 +221,7 @@ namespace Robust.Client.Graphics.Clyde
             return window;
         }
 
-        public ClydeHandle LoadShader(ParsedShader shader, string? name = null)
+        public ClydeHandle LoadShader(ParsedShader shader, string? name = null, Dictionary<string,string>? defines = null)
         {
             return default;
         }
@@ -383,6 +383,11 @@ namespace Robust.Client.Graphics.Clyde
             {
                 // Just do nothing on mutate.
             }
+
+            public override Color GetPixel(int x, int y)
+            {
+                return Color.Black;
+            }
         }
 
         private sealed class DummyShaderInstance : ShaderInstance
@@ -540,6 +545,7 @@ namespace Robust.Client.Graphics.Clyde
 
             public IEye? Eye { get; set; }
             public Vector2i Size { get; }
+            public Color? ClearColor { get; set; } = Color.Black;
             public Vector2 RenderScale { get; set; }
             public bool AutomaticRender { get; set; }
 

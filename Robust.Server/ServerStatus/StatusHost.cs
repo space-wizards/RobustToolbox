@@ -98,7 +98,7 @@ namespace Robust.Server.ServerStatus
 
             // Cache this in a field to avoid thread safety shenanigans.
             // Writes/reads of references are atomic in C# so no further synchronization necessary.
-            _configurationManager.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n);
+            _configurationManager.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
 
             if (!_configurationManager.GetCVar(CVars.StatusEnabled))
             {
@@ -238,8 +238,7 @@ namespace Robust.Server.ServerStatus
                 RequestHeaders = headers;
             }
 
-            [return: MaybeNull]
-            public T RequestBodyJson<T>()
+            public T? RequestBodyJson<T>()
             {
                 using var streamReader = new StreamReader(_context.Request.InputStream, EncodingHelpers.UTF8);
                 using var jsonReader = new JsonTextReader(streamReader);

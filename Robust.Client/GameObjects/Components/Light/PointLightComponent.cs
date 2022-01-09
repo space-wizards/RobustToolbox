@@ -1,6 +1,7 @@
 using Robust.Client.Graphics;
 using Robust.Shared.Animations;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -12,6 +13,8 @@ namespace Robust.Client.GameObjects
     [ComponentReference(typeof(SharedPointLightComponent))]
     public class PointLightComponent : SharedPointLightComponent, ISerializationHooks
     {
+        [Dependency] private readonly IEntityManager _entityManager = default!;
+
         internal bool TreeUpdateQueued { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -31,7 +34,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_enabled == value) return;
                 base.Enabled = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
             }
         }
 
@@ -44,7 +47,7 @@ namespace Robust.Client.GameObjects
                 if (_containerOccluded == value) return;
 
                 _containerOccluded = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightUpdateEvent());
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new PointLightUpdateEvent());
             }
         }
 
@@ -94,26 +97,6 @@ namespace Robust.Client.GameObjects
         public Texture? Mask { get; set; }
 
         [ViewVariables(VVAccess.ReadWrite)]
-        [Animatable]
-        public float Energy
-        {
-            get => _energy;
-            set => _energy = value;
-        }
-
-        /// <summary>
-        ///     Soft shadow strength multiplier.
-        ///     Has no effect if soft shadows are not enabled.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        [Animatable]
-        public float Softness
-        {
-            get => _softness;
-            set => _softness = value;
-        }
-
-        [ViewVariables(VVAccess.ReadWrite)]
         public bool VisibleNested
         {
             get => _visibleNested;
@@ -131,10 +114,7 @@ namespace Robust.Client.GameObjects
         [DataField("autoRot")]
         private bool _maskAutoRotate;
         private Angle _rotation;
-        [DataField("energy")]
-        private float _energy = 1f;
-        [DataField("softness")]
-        private float _softness = 1f;
+
         [DataField("mask")]
         internal string? _maskPath;
 
@@ -151,7 +131,7 @@ namespace Robust.Client.GameObjects
                 if (MathHelper.CloseToPercent(value, _radius)) return;
 
                 base.Radius = value;
-                Owner.EntityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
+                _entityManager.EventBus.RaiseEvent(EventSource.Local, new PointLightRadiusChangedEvent(this));
             }
         }
 

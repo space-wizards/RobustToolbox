@@ -40,7 +40,7 @@ namespace Robust.Client.ViewVariables.Instances
         private const int TabServerComponents = 3;
 
         private TabContainer _tabs = default!;
-        private IEntity _entity = default!;
+        private EntityUid _entity = default!;
 
         private ViewVariablesAddWindow? _addComponentWindow;
         private bool _addComponentServer;
@@ -67,9 +67,9 @@ namespace Robust.Client.ViewVariables.Instances
             _entityManager = entityManager;
         }
 
-        public override void Initialize(SS14Window window, object obj)
+        public override void Initialize(DefaultWindow window, object obj)
         {
-            _entity = (IEntity) obj;
+            _entity = (EntityUid) obj;
 
             var scrollContainer = new ScrollContainer();
             //scrollContainer.SetAnchorPreset(Control.LayoutPreset.Wide, true);
@@ -108,7 +108,7 @@ namespace Robust.Client.ViewVariables.Instances
                     top = new Label {Text = stringified};
                 }
 
-                if (_entity.TryGetComponent(out ISpriteComponent? sprite))
+                if (_entityManager.TryGetComponent(_entity, out ISpriteComponent? sprite))
                 {
                     var hBox = new BoxContainer
                     {
@@ -161,7 +161,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             PopulateClientComponents();
 
-            if (!_entity.Uid.IsClientSide())
+            if (!_entity.IsClientSide())
             {
                 _serverVariables = new BoxContainer
                 {
@@ -202,14 +202,14 @@ namespace Robust.Client.ViewVariables.Instances
             _clientComponentsAddButton.OnPressed += OnClientComponentsAddButtonPressed;
             _clientComponentsSearchBar.OnTextChanged += OnClientComponentsSearchBarChanged;
 
-            var componentList = _entity.GetAllComponents().OrderBy(c => c.GetType().ToString());
+            var componentList = _entityManager.GetComponents(_entity).OrderBy(c => c.GetType().ToString());
 
             foreach (var component in componentList)
             {
                 var button = new Button {Text = TypeAbbreviation.Abbreviate(component.GetType()), TextAlign = Label.AlignMode.Left};
                 var removeButton = new TextureButton()
                 {
-                    StyleClasses = { SS14Window.StyleClassWindowCloseButton },
+                    StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
                     HorizontalAlignment = HAlignment.Right
                 };
                 button.OnPressed += _ => ViewVariablesManager.OpenVV(component);
@@ -260,18 +260,18 @@ namespace Robust.Client.ViewVariables.Instances
                 var button = new Button {Text = componentType.Stringified, TextAlign = Label.AlignMode.Left};
                 var removeButton = new TextureButton()
                 {
-                    StyleClasses = { SS14Window.StyleClassWindowCloseButton },
+                    StyleClasses = { DefaultWindow.StyleClassWindowCloseButton },
                     HorizontalAlignment = HAlignment.Right
                 };
                 button.OnPressed += _ =>
                 {
                     ViewVariablesManager.OpenVV(
-                        new ViewVariablesComponentSelector(_entity.Uid, componentType.FullName));
+                        new ViewVariablesComponentSelector(_entity, componentType.FullName));
                 };
                 removeButton.OnPressed += _ =>
                 {
                     // We send a command to remove the component.
-                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity.Uid} {componentType.ComponentName}");
+                    IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"rmcomp {_entity} {componentType.ComponentName}");
                     PopulateServerComponents();
                 };
                 button.AddChild(removeButton);
@@ -392,7 +392,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             foreach (var type in componentFactory.AllRegisteredTypes)
             {
-                if (_entity.HasComponent(type))
+                if (_entityManager.HasComponent(_entity, type))
                     continue;
 
                 yield return (componentFactory.GetRegistration(type).Name);
@@ -415,7 +415,7 @@ namespace Robust.Client.ViewVariables.Instances
             if (_addComponentServer)
             {
                 // Attempted to add a component to the server entity... We send a command.
-                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity.Uid} {eventArgs.Entry}");
+                IoCManager.Resolve<IClientConsoleHost>().RemoteExecuteCommand(null, $"addcomp {_entity} {eventArgs.Entry}");
                 PopulateServerComponents();
                 _addComponentWindow?.Populate(await GetValidServerComponentsForAdding());
                 return;
@@ -446,7 +446,7 @@ namespace Robust.Client.ViewVariables.Instances
         {
             try
             {
-                _entityManager.RemoveComponent(_entity.Uid, component);
+                _entityManager.RemoveComponent(_entity, component);
             }
             catch (Exception e)
             {
@@ -456,7 +456,7 @@ namespace Robust.Client.ViewVariables.Instances
             PopulateClientComponents();
         }
 
-        public override async void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
+        public override async void Initialize(DefaultWindow window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             // TODO: this is pretty poorly implemented right now.
             // For example, it assumes a client-side entity exists,
@@ -468,8 +468,7 @@ namespace Robust.Client.ViewVariables.Instances
 
             var uid = (EntityUid) _membersBlob.MemberGroups.SelectMany(p => p.Item2).Single(p => p.Name == "Uid").Value;
 
-            var entity = _entityManager.GetEntity(uid);
-            Initialize(window, entity);
+            Initialize(window, uid);
         }
 
         public override void Close()
@@ -503,7 +502,7 @@ namespace Robust.Client.ViewVariables.Instances
                 try
                 {
                     _entitySession =
-                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity.Uid));
+                        await ViewVariablesManager.RequestSession(new ViewVariablesEntitySelector(_entity));
                 }
                 catch (SessionDenyException e)
                 {

@@ -365,10 +365,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var invIB = velocityConstraint.InvIB;
                 var pointCount = velocityConstraint.PointCount;
 
-                var linVelocityA = _linearVelocities[indexA];
-                var angVelocityA = _angularVelocities[indexA];
-                var linVelocityB = _linearVelocities[indexB];
-                var angVelocityB = _angularVelocities[indexB];
+                ref var linVelocityA = ref _linearVelocities[indexA];
+                ref var angVelocityA = ref _angularVelocities[indexA];
+                ref var linVelocityB = ref _linearVelocities[indexB];
+                ref var angVelocityB = ref _angularVelocities[indexB];
 
                 var normal = velocityConstraint.Normal;
                 var tangent = Vector2.Cross(normal, 1.0f);
@@ -382,11 +382,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     angVelocityB += invIB * Vector2.Cross(constraintPoint.RelativeVelocityB, P);
                     linVelocityB += P * invMassB;
                 }
-
-                _linearVelocities[indexA] = linVelocityA;
-                _angularVelocities[indexA] = angVelocityA;
-                _linearVelocities[indexB] = linVelocityB;
-                _angularVelocities[indexB] = angVelocityB;
             }
         }
 
@@ -423,10 +418,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 var iB = velocityConstraint.InvIB;
                 var pointCount = velocityConstraint.PointCount;
 
-                var vA = _linearVelocities[indexA];
-                var wA = _angularVelocities[indexA];
-                var vB = _linearVelocities[indexB];
-                var wB = _angularVelocities[indexB];
+                ref var vA = ref _linearVelocities[indexA];
+                ref var wA = ref _angularVelocities[indexA];
+                ref var vB = ref _linearVelocities[indexB];
+                ref var wB = ref _angularVelocities[indexB];
 
                 var normal = velocityConstraint.Normal;
                 var tangent = Vector2.Cross(normal, 1.0f);
@@ -683,11 +678,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                         break;
                     }
                 }
-
-                _linearVelocities[indexA] = vA;
-                _angularVelocities[indexA] = wA;
-                _linearVelocities[indexB] = vB;
-                _angularVelocities[indexB] = wB;
             }
         }
 
@@ -750,11 +740,10 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                 float iB = pc.InvIB;
                 int pointCount = pc.PointCount;
 
-                Vector2 centerA = _positions[indexA];
-                float angleA = _angles[indexA];
-
-                Vector2 centerB = _positions[indexB];
-                float angleB = _angles[indexB];
+                ref var centerA = ref _positions[indexA];
+                ref var angleA = ref _angles[indexA];
+                ref var centerB = ref _positions[indexB];
+                ref var angleB = ref _angles[indexB];
 
                 // Solve normal constraints
                 for (int j = 0; j < pointCount; ++j)
@@ -795,12 +784,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
                     centerB += P * mB;
                     angleB += iB * Vector2.Cross(rB, P);
                 }
-
-                _positions[indexA] = centerA;
-                _angles[indexA] = angleA;
-
-                _positions[indexB] = centerB;
-                _angles[indexB] = angleB;
             }
 
             // We can't expect minSpeparation >= -b2_linearSlop because we don't

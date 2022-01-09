@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
 using GlfwImage = OpenToolkit.GraphicsLibraryFramework.Image;
 using Monitor = OpenToolkit.GraphicsLibraryFramework.Monitor;
 
@@ -360,12 +361,12 @@ namespace Robust.Client.Graphics.Clyde
                     // On Windows, closing the child window causes the owner to be minimized, apparently.
                     // Clear owner on close to avoid this.
 
-                    var hWnd = (void*) GLFW.GetWin32Window(window);
-                    DebugTools.Assert(hWnd != null);
+                    var hWnd = (HWND) GLFW.GetWin32Window(window);
+                    DebugTools.Assert(hWnd != HWND.NULL);
 
-                    Win32.SetWindowLongPtrW(
+                    Windows.SetWindowLongPtrW(
                         hWnd,
-                        Win32.GWLP_HWNDPARENT,
+                        GWLP.GWLP_HWNDPARENT,
                         0);
                 }
 
@@ -378,8 +379,8 @@ namespace Robust.Client.Graphics.Clyde
                 Window* contextShare,
                 Window* ownerWindow)
             {
-                GLFW.WindowHint(WindowHintString.X11ClassName, "SS14");
-                GLFW.WindowHint(WindowHintString.X11InstanceName, "SS14");
+                GLFW.WindowHint(WindowHintString.X11ClassName, "RobustToolbox");
+                GLFW.WindowHint(WindowHintString.X11InstanceName, "RobustToolbox");
                 GLFW.WindowHint(WindowHintBool.ScaleToMonitor, true);
 
                 if (spec == null)
@@ -481,14 +482,14 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (OperatingSystem.IsWindows())
                     {
-                        var hWnd = (void*) GLFW.GetWin32Window(window);
-                        DebugTools.Assert(hWnd != null);
+                        var hWnd = (HWND) GLFW.GetWin32Window(window);
+                        DebugTools.Assert(hWnd != HWND.NULL);
 
-                        Win32.SetWindowLongPtrW(
+                        Windows.SetWindowLongPtrW(
                             hWnd,
-                            Win32.GWL_STYLE,
+                            GWL.GWL_STYLE,
                             // Cast to long here to work around a bug in rider with nint bitwise operators.
-                            (nint)((long)Win32.GetWindowLongPtrW(hWnd, Win32.GWL_STYLE) & ~Win32.WS_SYSMENU));
+                            (nint)((long)Windows.GetWindowLongPtrW(hWnd, GWL.GWL_STYLE) & ~WS.WS_SYSMENU));
                     }
                     else
                     {
@@ -500,13 +501,13 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     if (OperatingSystem.IsWindows())
                     {
-                        var hWnd = (void*) GLFW.GetWin32Window(window);
-                        var ownerHWnd = GLFW.GetWin32Window(ownerWindow);
-                        DebugTools.Assert(hWnd != null);
+                        var hWnd = (HWND) GLFW.GetWin32Window(window);
+                        var ownerHWnd = (HWND) GLFW.GetWin32Window(ownerWindow);
+                        DebugTools.Assert(hWnd != HWND.NULL);
 
-                        Win32.SetWindowLongPtrW(
+                        Windows.SetWindowLongPtrW(
                             hWnd,
-                            Win32.GWLP_HWNDPARENT,
+                            GWLP.GWLP_HWNDPARENT,
                             ownerHWnd);
                     }
                     else

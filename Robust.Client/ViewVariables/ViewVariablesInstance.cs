@@ -32,7 +32,7 @@ namespace Robust.Client.ViewVariables
         /// </summary>
         /// <param name="window">The window to initialize by adding GUI components.</param>
         /// <param name="obj">The object that is being VV'd</param>
-        public abstract void Initialize(SS14Window window, object obj);
+        public abstract void Initialize(DefaultWindow window, object obj);
 
         /// <summary>
         ///     Initializes this instance to work on a remote object.
@@ -41,7 +41,7 @@ namespace Robust.Client.ViewVariables
         /// <param name="window">The window to initialize by adding GUI components.</param>
         /// <param name="blob">The data blob sent by the server for this remote object.</param>
         /// <param name="session">The session connecting to the remote object.</param>
-        public virtual void Initialize(SS14Window window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
+        public virtual void Initialize(DefaultWindow window, ViewVariablesBlobMetadata blob, ViewVariablesRemoteSession session)
         {
             throw new NotSupportedException();
         }

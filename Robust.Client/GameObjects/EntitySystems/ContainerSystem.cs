@@ -15,7 +15,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
-        private readonly HashSet<IEntity> _updateQueue = new();
+        private readonly HashSet<EntityUid> _updateQueue = new();
 
         public readonly Dictionary<EntityUid, IContainer> ExpectedEntities = new();
 
@@ -37,10 +37,10 @@ namespace Robust.Client.GameObjects
 
         private void HandleEntityInitialized(EntityInitializedMessage ev)
         {
-            if (!ExpectedEntities.TryGetValue(ev.Entity.Uid, out var container))
+            if (!ExpectedEntities.TryGetValue(ev.Entity, out var container))
                 return;
 
-            RemoveExpectedEntity(ev.Entity.Uid);
+            RemoveExpectedEntity(ev.Entity);
 
             if (container.Deleted)
                 return;
@@ -89,12 +89,12 @@ namespace Robust.Client.GameObjects
                 container.OccludesLight = occludesLight;
 
                 // Remove gone entities.
-                List<IEntity>? toRemove = null;
+                List<EntityUid>? toRemove = null;
                 foreach (var entity in container.ContainedEntities)
                 {
-                    if (!entityUids.Contains(entity.Uid))
+                    if (!entityUids.Contains(entity))
                     {
-                        toRemove ??= new List<IEntity>();
+                        toRemove ??= new List<EntityUid>();
                         toRemove.Add(entity);
                     }
                 }
@@ -123,11 +123,11 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Add new entities.
-                foreach (var entityUid in entityUids)
+                foreach (var entity in entityUids)
                 {
-                    if (!EntityManager.TryGetEntity(entityUid, out var entity))
+                    if (!EntityManager.EntityExists(entity))
                     {
-                        AddExpectedEntity(entityUid, container);
+                        AddExpectedEntity(entity, container);
                         continue;
                     }
 
@@ -172,7 +172,7 @@ namespace Robust.Client.GameObjects
 
             foreach (var toUpdate in _updateQueue)
             {
-                if (toUpdate.Deleted)
+                if (EntityManager.Deleted(toUpdate))
                 {
                     continue;
                 }
@@ -183,22 +183,22 @@ namespace Robust.Client.GameObjects
             _updateQueue.Clear();
         }
 
-        private static void UpdateEntityRecursively(IEntity entity)
+        private void UpdateEntityRecursively(EntityUid entity)
         {
             // TODO: Since we are recursing down,
             // we could cache ShowContents data here to speed it up for children.
             // Am lazy though.
             UpdateEntity(entity);
 
-            foreach (var child in entity.Transform.Children)
+            foreach (var child in EntityManager.GetComponent<TransformComponent>(entity).Children)
             {
                 UpdateEntityRecursively(child.Owner);
             }
         }
 
-        private static void UpdateEntity(IEntity entity)
+        private void UpdateEntity(EntityUid entity)
         {
-            if (entity.TryGetComponent(out SpriteComponent? sprite))
+            if (EntityManager.TryGetComponent(entity, out SpriteComponent? sprite))
             {
                 sprite.ContainerOccluded = false;
 
@@ -216,7 +216,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (entity.TryGetComponent(out PointLightComponent? light))
+            if (EntityManager.TryGetComponent(entity, out PointLightComponent? light))
             {
                 light.ContainerOccluded = false;
 

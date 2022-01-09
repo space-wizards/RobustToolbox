@@ -11,7 +11,6 @@
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.ILVerification" Version="5.0.0" />
     <PackageReference Include="Nett" Version="0.15.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="nfluidsynth" Version="0.3.1" />
     <PackageReference Include="Pidgin" Version="2.5.0" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />
@@ -19,10 +18,10 @@
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="YamlDotNet" Version="9.1.4" />
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+    <PackageReference Include="Linguini.Bundle" Version="0.1.2" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\Linguini\Linguini.Bundle\Linguini.Bundle.csproj" />
     <ProjectReference Include="..\NetSerializer\NetSerializer\NetSerializer.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />

@@ -137,6 +137,71 @@ namespace Robust.UnitTesting.Shared.IoC
             Assert.That(IoCManager.Resolve<IIoCTestPriorities>(), Is.EqualTo(obj));
         }
 
+        private class DependencyA
+        {
+            [Dependency] public readonly DependencyB _depB = default!;
+        }
+        private class DependencyB
+        {
+            [Dependency] public readonly DependencyA _depA = default!;
+        }
+
+        [Test]
+        public void IoCRegInstancesBeforeBuildGraph()
+        {
+            var instanceA = new DependencyA();
+            IoCManager.RegisterInstance<DependencyA>(instanceA, deferInject: true);
+
+            var instanceB = new DependencyB();
+            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+
+            IoCManager.BuildGraph();
+            
+            var resolveA = IoCManager.Resolve<DependencyA>();
+            var resolveB = IoCManager.Resolve<DependencyB>();
+
+            Assert.That(instanceA, Is.EqualTo(resolveA));
+            Assert.That(instanceB, Is.EqualTo(resolveB));
+            Assert.That(resolveA._depB, Is.EqualTo(resolveB));
+            Assert.That(resolveB._depA, Is.EqualTo(resolveA));
+        }
+
+        [Test]
+        public void IoCRegInstanceBeforeBuildGraph()
+        {
+            IoCManager.Register<DependencyA, DependencyA>();
+
+            var instanceB = new DependencyB();
+            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+
+            IoCManager.BuildGraph();
+            
+            var resolveA = IoCManager.Resolve<DependencyA>();
+            var resolveB = IoCManager.Resolve<DependencyB>();
+
+            Assert.That(instanceB, Is.EqualTo(resolveB));
+            Assert.That(resolveA._depB, Is.EqualTo(resolveB));
+            Assert.That(resolveB._depA, Is.EqualTo(resolveA));
+        }
+
+        [Test]
+        public void IoCRegInstanceDepBeforeBuildGraph()
+        {
+            var instanceB = new DependencyB();
+            IoCManager.RegisterInstance<DependencyB>(instanceB, deferInject: true);
+
+            IoCManager.Register<DependencyA, DependencyA>();
+
+            IoCManager.BuildGraph();
+
+            var resolveA = IoCManager.Resolve<DependencyA>();
+            var resolveB = IoCManager.Resolve<DependencyB>();
+
+            Assert.That(instanceB, Is.EqualTo(resolveB));
+            Assert.That(resolveA._depB, Is.EqualTo(resolveB));
+            Assert.That(resolveB._depA, Is.EqualTo(resolveA));
+        }
+
         [Test]
         public void TestExplicitInjection()
         {

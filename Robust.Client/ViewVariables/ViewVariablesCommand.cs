@@ -83,16 +83,17 @@ namespace Robust.Client.ViewVariables
             }
 
             // Entity.
-            if (!EntityUid.TryParse(args[0], out var uid))
+            if (!EntityUid.TryParse(args[0], out var entity))
             {
                 shell.WriteLine("Invalid specifier format.");
                 return;
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            if (!entityManager.TryGetEntity(uid, out var entity))
+            if (!entityManager.EntityExists(entity))
             {
-                shell.WriteLine("That entity does not exist.");
+                shell.WriteLine("That entity does not exist locally. Attempting to open remote view...");
+                vvm.OpenVV(new ViewVariablesEntitySelector(entity));
                 return;
             }
 

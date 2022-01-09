@@ -1,20 +1,5 @@
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using OpenToolkit.Audio.OpenAL;
-using OpenToolkit.Audio.OpenAL.Extensions.Creative.EFX;
-using OpenToolkit.Mathematics;
-using Robust.Client.Audio;
-using Robust.Shared;
-using Robust.Shared.Configuration;
-using Robust.Shared.IoC;
-using Robust.Shared.Audio;
-using Robust.Shared.Log;
-using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {
@@ -51,7 +36,7 @@ namespace Robust.Client.Graphics.Audio
             // Clear out finalized audio buffers.
             while (_bufferDisposeQueue.TryDequeue(out var handle))
             {
-                AL.DeleteBuffer((int) handle);
+                AL.DeleteBuffer(handle);
                 _checkAlError();
             }
         }

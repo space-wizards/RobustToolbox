@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -13,14 +12,11 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
@@ -34,6 +30,7 @@ namespace Robust.Client.GameObjects
     {
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
+        [Dependency] private readonly IEntityManager entities = default!;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -47,7 +44,7 @@ namespace Robust.Client.GameObjects
                 if (_visible == value) return;
                 _visible = value;
 
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -303,7 +300,7 @@ namespace Robust.Client.GameObjects
             {
                 if (_containerOccluded == value) return;
                 _containerOccluded = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
+                entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
             }
         }
 
@@ -1505,7 +1502,7 @@ namespace Robust.Client.GameObjects
         {
             // Look this was an easy way to get bounds checks for layer updates.
             // If you really want it optimal you'll need to comb through all 2k lines of spritecomponent.
-            if (Owner?.EntityManager?.EventBus != null)
+            if ((Owner != default ? entities : null)?.EventBus != null)
                 UpdateBounds();
 
             if (_inertUpdateQueued)
@@ -1514,7 +1511,7 @@ namespace Robust.Client.GameObjects
             _inertUpdateQueued = true;
             // Yes that null check is valid because of that stupid fucking dummy IEntity.
             // Who thought that was a good idea.
-            Owner?.EntityManager?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
+            (Owner != default ? entities : null)?.EventBus?.RaiseEvent(EventSource.Local, new SpriteUpdateInertEvent {Sprite = this});
         }
 
         internal void DoUpdateIsInert()
@@ -1601,7 +1598,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, Owner.Transform.WorldRotation),
+                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, entities.GetComponent<TransformComponent>(Owner).WorldRotation),
                 DirectionOverride
             );
 
@@ -1655,7 +1652,7 @@ namespace Robust.Client.GameObjects
 
         internal void UpdateBounds()
         {
-            Owner.EntityManager.EventBus.RaiseLocalEvent(OwnerUid, new SpriteUpdateEvent());
+            entities.EventBus.RaiseLocalEvent(Owner, new SpriteUpdateEvent());
         }
 
         /// <summary>
@@ -2074,8 +2071,9 @@ namespace Robust.Client.GameObjects
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
+            EntitySystem.Get<AppearanceSystem>().OnChangeData(dummy);
 
             var anyTexture = false;
             foreach (var layer in spriteComponent.AllLayers)
@@ -2113,7 +2111,7 @@ namespace Robust.Client.GameObjects
             }
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
-            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace).Uid;
+            var dummy = entityManager.SpawnEntity(prototype.ID, MapCoordinates.Nullspace);
             var spriteComponent = entityManager.EnsureComponent<SpriteComponent>(dummy);
             var result = spriteComponent.Icon ?? GetFallbackState(resourceCache);
             entityManager.DeleteEntity(dummy);

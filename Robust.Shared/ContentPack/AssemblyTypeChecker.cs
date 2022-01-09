@@ -40,6 +40,7 @@ namespace Robust.Shared.ContentPack
 
         public DumpFlags Dump { get; init; } = DumpFlags.None;
         public bool VerifyIL { get; init; } = true;
+        public string[]? EngineModuleDirectories;
 
         private bool WouldNoOp => Dump == DumpFlags.None && DisableTypeCheck && !VerifyIL;
 
@@ -62,23 +63,32 @@ namespace Robust.Shared.ContentPack
         {
             var dotnetDir = Path.GetDirectoryName(typeof(int).Assembly.Location)!;
             var ourPath = typeof(AssemblyTypeChecker).Assembly.Location;
-            string[] loadDirs;
+            var loadDirs = new List<string> { dotnetDir };
+
             if (string.IsNullOrEmpty(ourPath))
             {
                 _sawmill.Debug("Robust directory not available");
-                loadDirs = new[] {dotnetDir};
             }
             else
             {
                 _sawmill.Debug("Robust directory is {0}", ourPath);
-                loadDirs = new[] {dotnetDir, Path.GetDirectoryName(ourPath)!};
+                loadDirs.Add(Path.GetDirectoryName(ourPath)!);
             }
 
             _sawmill.Debug(".NET runtime directory is {0}", dotnetDir);
 
+            if (EngineModuleDirectories != null)
+            {
+                foreach (var moduleDir in EngineModuleDirectories)
+                {
+                    _sawmill.Debug("Adding engine module directory: {ModuleDirectory}", moduleDir);
+                    loadDirs.Add(moduleDir);
+                }
+            }
+
             return new Resolver(
                 this,
-                loadDirs,
+                loadDirs.ToArray(),
                 new[] {new ResourcePath("/Assemblies/")}
             );
         }
@@ -179,6 +189,10 @@ namespace Robust.Shared.ContentPack
 
             _sawmill.Debug($"Inheritance... {fullStopwatch.ElapsedMilliseconds}ms");
 
+            CheckNoUnmanagedMethodDefs(reader, errors);
+
+            _sawmill.Debug($"Unmanaged methods... {fullStopwatch.ElapsedMilliseconds}ms");
+
             CheckMemberReferences(loadedConfig, members, errors);
 
             foreach (var error in errors)
@@ -233,11 +247,7 @@ namespace Robust.Shared.ContentPack
                     if (!res.Method.IsNil)
                     {
                         var method = reader.GetMethodDefinition(res.Method);
-                        var methodSig = method.DecodeSignature(new TypeProvider(), 0);
-                        var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
-
-                        var methodName =
-                            $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+                        var methodName = FormatMethodName(reader, method);
 
                         msg = $"{msg}, method: {methodName}";
                     }
@@ -265,6 +275,40 @@ namespace Robust.Shared.ContentPack
             }
 
             return true;
+        }
+
+        private static string FormatMethodName(MetadataReader reader, MethodDefinition method)
+        {
+            var methodSig = method.DecodeSignature(new TypeProvider(), 0);
+            var type = GetTypeFromDefinition(reader, method.GetDeclaringType());
+
+            return
+                $"{methodSig.ReturnType} {type}.{reader.GetString(method.Name)}({string.Join(", ", methodSig.ParameterTypes)})";
+        }
+
+        [SuppressMessage("ReSharper", "BitwiseOperatorOnEnumWithoutFlags")]
+        private static void CheckNoUnmanagedMethodDefs(MetadataReader reader, ConcurrentBag<SandboxError> errors)
+        {
+            foreach (var methodDefHandle in reader.MethodDefinitions)
+            {
+                var methodDef = reader.GetMethodDefinition(methodDefHandle);
+                var implAttr = methodDef.ImplAttributes;
+                var attr = methodDef.Attributes;
+
+                if ((implAttr & MethodImplAttributes.Unmanaged) != 0 ||
+                    (implAttr & MethodImplAttributes.CodeTypeMask) is not (MethodImplAttributes.IL
+                    or MethodImplAttributes.Runtime))
+                {
+                    var err = $"Method has illegal MethodImplAttributes: {FormatMethodName(reader, methodDef)}";
+                    errors.Add(new SandboxError(err));
+                }
+
+                if ((attr & (MethodAttributes.PinvokeImpl | MethodAttributes.UnmanagedExport)) != 0)
+                {
+                    var err = $"Method has illegal MethodAttributes: {FormatMethodName(reader, methodDef)}";
+                    errors.Add(new SandboxError(err));
+                }
+            }
         }
 
         private void CheckMemberReferences(

@@ -29,7 +29,7 @@ namespace Robust.Client.ViewVariables
         private uint _nextReqId = 1;
         private readonly Vector2i _defaultWindowSize = (640, 420);
 
-        private readonly Dictionary<ViewVariablesInstance, SS14Window> _windows =
+        private readonly Dictionary<ViewVariablesInstance, DefaultWindow> _windows =
             new();
 
         private readonly Dictionary<uint, ViewVariablesRemoteSession> _sessions =
@@ -213,7 +213,7 @@ namespace Robust.Client.ViewVariables
         {
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (obj is IEntity entity && !entity.Deleted)
+            if (obj is EntityUid entity && _entityManager.EntityExists(entity))
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }
@@ -222,7 +222,7 @@ namespace Robust.Client.ViewVariables
                 instance = new ViewVariablesInstanceObject(this, _robustSerializer);
             }
 
-            var window = new SS14Window {Title = "View Variables"};
+            var window = new DefaultWindow {Title = "View Variables"};
             instance.Initialize(window, obj);
             window.OnClose += () => _closeInstance(instance, false);
             _windows.Add(instance, window);
@@ -232,7 +232,7 @@ namespace Robust.Client.ViewVariables
 
         public async void OpenVV(ViewVariablesObjectSelector selector)
         {
-            var window = new SS14Window
+            var window = new DefaultWindow
             {
                 Title = "View Variables",
                 SetSize = _defaultWindowSize
@@ -258,7 +258,7 @@ namespace Robust.Client.ViewVariables
             var type = Type.GetType(blob.ObjectType);
             // TODO: more flexibility in allowing custom instances here.
             ViewVariablesInstance instance;
-            if (type != null && typeof(IEntity).IsAssignableFrom(type))
+            if (type != null && typeof(EntityUid).IsAssignableFrom(type))
             {
                 instance = new ViewVariablesInstanceEntity(this, _entityManager, _robustSerializer);
             }

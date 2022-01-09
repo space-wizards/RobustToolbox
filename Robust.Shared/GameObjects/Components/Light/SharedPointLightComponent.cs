@@ -1,5 +1,7 @@
 using System;
+using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -10,6 +12,8 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract class SharedPointLightComponent : Component
     {
+        [Dependency] private readonly IEntityManager _entMan = default!;
+
         public override string Name => "PointLight";
 
         [DataField("enabled")]
@@ -30,6 +34,11 @@ namespace Robust.Shared.GameObjects
         [DataField("offset")]
         protected Vector2 _offset = Vector2.Zero;
 
+        [DataField("energy")]
+        private float _energy = 1f;
+        [DataField("softness")]
+        private float _softness = 1f;
+
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual bool Enabled
         {
@@ -38,7 +47,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_enabled == value) return;
                 _enabled = value;
-                Owner.EntityManager.EventBus.RaiseLocalEvent(Owner.Uid, new PointLightToggleEvent(_enabled));
+                _entMan.EventBus.RaiseLocalEvent(Owner, new PointLightToggleEvent(_enabled));
                 Dirty();
             }
         }
@@ -75,6 +84,36 @@ namespace Robust.Shared.GameObjects
             {
                 if (_offset.EqualsApprox(value)) return;
                 _offset = value;
+                Dirty();
+            }
+        }
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
+        public float Energy
+        {
+            get => _energy;
+            set
+            {
+                if (_energy.Equals(value)) return;
+                _energy = value;
+                Dirty();
+            }
+        }
+
+        /// <summary>
+        ///     Soft shadow strength multiplier.
+        ///     Has no effect if soft shadows are not enabled.
+        /// </summary>
+        [ViewVariables(VVAccess.ReadWrite)]
+        [Animatable]
+        public float Softness
+        {
+            get => _softness;
+            set
+            {
+                if (_softness.Equals(value)) return;
+                _softness = value;
                 Dirty();
             }
         }

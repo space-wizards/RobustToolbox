@@ -13,12 +13,12 @@
         /// <summary>
         ///     The name of the definition. This is user facing.
         /// </summary>
-        string DisplayName { get; }
+        string Name { get; }
 
         /// <summary>
         ///     Internal name of the definition.
         /// </summary>
-        string Name { get; }
+        string ID { get; }
 
         /// <summary>
         ///     The name of the sprite to draw.

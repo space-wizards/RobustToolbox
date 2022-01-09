@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -24,18 +25,18 @@ namespace Robust.UnitTesting.Shared.Map
             IMapGrid? gridId2 = null;
             PhysicsComponent? physics1 = null;
             PhysicsComponent? physics2 = null;
-            IEntity? gridEnt1;
-            IEntity? gridEnt2;
+            EntityUid? gridEnt1;
+            EntityUid? gridEnt2;
 
             await server.WaitPost(() =>
             {
                 mapId = mapManager.CreateMap();
                 gridId1 = mapManager.CreateGrid(mapId);
                 gridId2 = mapManager.CreateGrid(mapId);
-                gridEnt1 = entManager.GetEntity(gridId1.GridEntityId);
-                gridEnt2 = entManager.GetEntity(gridId2.GridEntityId);
-                physics1 = gridEnt1.GetComponent<PhysicsComponent>();
-                physics2 = gridEnt2.GetComponent<PhysicsComponent>();
+                gridEnt1 = gridId1.GridEntityId;
+                gridEnt2 = gridId2.GridEntityId;
+                physics1 = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(gridEnt1.Value);
+                physics2 = IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(gridEnt2.Value);
                 // Can't collide static bodies and grids (at time of this writing) start as static
                 // (given most other games would probably prefer them as static) hence we need to make them dynamic.
                 physics1.BodyType = BodyType.Dynamic;

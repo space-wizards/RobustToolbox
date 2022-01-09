@@ -5,6 +5,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.ViewVariables;
 
@@ -80,28 +81,28 @@ namespace Robust.Server.GameObjects
             _sessionCache.Clear();
             _sessionCache.AddRange(ui.SubscribedSessions);
 
-            var transform = ui.Owner.Owner.Transform;
+            var transform = EntityManager.GetComponent<TransformComponent>(ui.Owner.Owner);
 
             var uiPos = transform.WorldPosition;
             var uiMap = transform.MapID;
 
             foreach (var session in _sessionCache)
             {
-                var attachedEntity = session.AttachedEntity;
+                var attachedEntityTransform = session.AttachedEntityTransform;
 
                 // The component manages the set of sessions, so this invalid session should be removed soon.
-                if (attachedEntity == null || !attachedEntity.IsValid())
+                if (attachedEntityTransform == null)
                 {
                     continue;
                 }
 
-                if (uiMap != attachedEntity.Transform.MapID)
+                if (uiMap != attachedEntityTransform.MapID)
                 {
                     ui.Close(session);
                     continue;
                 }
 
-                var distanceSquared = (uiPos - attachedEntity.Transform.WorldPosition).LengthSquared;
+                var distanceSquared = (uiPos - attachedEntityTransform.WorldPosition).LengthSquared;
                 if (distanceSquared > MaxWindowRangeSquared)
                 {
                     ui.Close(session);

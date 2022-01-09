@@ -42,12 +42,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Entity that this component is attached to.
         /// </summary>
-        IEntity Owner { get; }
-
-        /// <summary>
-        ///     Entity Uid that this component is attached to.
-        /// </summary>
-        EntityUid OwnerUid => Owner.Uid;
+        EntityUid Owner { get; }
 
         /// <summary>
         /// Component has been properly initialized.
@@ -67,7 +62,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Marks the component as dirty so that the network will re-sync it with clients.
         /// </summary>
-        void Dirty();
+        void Dirty(IEntityManager? entManager = null);
 
         /// <summary>
         ///     This is the tick the component was created.

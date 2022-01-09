@@ -60,6 +60,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadString(Prototypes);
+            prototypeManager.Resync();
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
@@ -73,18 +74,18 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var baseEntity = entityManager.SpawnEntity(BaseEntityId, coordinates);
 
-            Assert.That(baseEntity.TryGetComponent(out BaseComponent? baseComponent));
+            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(baseEntity, out BaseComponent? baseComponent));
             Assert.That(baseComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
 
             var inheritorEntity = entityManager.SpawnEntity(InheritorEntityId, coordinates);
 
-            Assert.That(inheritorEntity.TryGetComponent(out InheritorComponent? inheritorComponent));
+            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(inheritorEntity, out InheritorComponent? inheritorComponent));
             Assert.That(inheritorComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
             Assert.That(inheritorComponent!.InheritorField, Is.EqualTo(InheritorComponentFieldValue));
 
             var finalEntity = entityManager.SpawnEntity(FinalEntityId, coordinates);
 
-            Assert.That(finalEntity.TryGetComponent(out FinalComponent? finalComponent));
+            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(finalEntity, out FinalComponent? finalComponent));
             Assert.That(finalComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
             Assert.That(finalComponent!.InheritorField, Is.EqualTo(InheritorComponentFieldValue));
             Assert.That(finalComponent!.FinalField, Is.EqualTo(FinalComponentFieldValue));

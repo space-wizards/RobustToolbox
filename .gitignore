@@ -41,18 +41,6 @@ _ReSharper*/
 
 # Resources
 *.resources
-/Resources/textures/Animations/*.*
-/Resources/ResourcePack.zip
-/Resources/textures/*_Animations.png
-/Resources/textures/*_Decals.png
-/Resources/textures/*_Effects.png
-/Resources/textures/*_Items.png
-/Resources/textures/*_Objects.png
-/Resources/textures/*_Tiles.png
-/Resources/textures/*_UserInterface.png
-/Resources/textures/*.TAI
-/Resources/SpriteRenderer/Ogre.log
-/Resources/Spriterenderer/output
 /Media
 /setenv.bat
 
@@ -77,16 +65,6 @@ project.lock.json
 
 # Created by NUnit.
 TestResult.xml
-
-NetSerializerDebug.dll
-
-# We're not gonna ship Mac extlibs with the repo due to size. (11 MB)
-Third-Party/extlibs/Mac/
-# Or the automatically-fetched Windows natives, for that matter.
-Third-Party/extlibs/Windows/
-
-# Actually I'll make this folder because SS14.Shared.Bsdiff isn't third-party is it?
-Dependencies/
 
 # Python stuff
 __pycache__

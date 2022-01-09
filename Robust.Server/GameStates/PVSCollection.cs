@@ -34,7 +34,7 @@ public interface IPVSCollection
     public void CullDeletionHistoryUntil(GameTick tick);
 }
 
-public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
+public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
     [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
@@ -44,11 +44,6 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     {
         return (coordinates / PVSSystem.ChunkSize).Floored();
     }
-
-    /// <summary>
-    /// A delegate to retrieve elements
-    /// </summary>
-    private readonly Func<TIndex, TElement> _getElementDelegate;
 
     /// <summary>
     /// Index of which <see cref="TIndex"/> are contained in which mapchunk, indexed by <see cref="Vector2i"/>.
@@ -68,7 +63,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent.
     /// </summary>
-    public IReadOnlySet<TIndex> GlobalOverrides => _globalOverrides;
+    public HashSet<TIndex>.Enumerator GlobalOverridesEnumerator => _globalOverrides.GetEnumerator();
 
     /// <summary>
     /// List of <see cref="TIndex"/> that should always get sent to a certain <see cref="ICommonSession"/>.
@@ -99,9 +94,8 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     /// </summary>
     private readonly Dictionary<TIndex, GameTick> _removalBuffer = new();
 
-    public PVSCollection(Func<TIndex, TElement> getElementDelegate)
+    public PVSCollection()
     {
-        _getElementDelegate = getElementDelegate;
         IoCManager.InjectDependencies(this);
     }
 
@@ -158,7 +152,7 @@ public class PVSCollection<TIndex, TElement> : IPVSCollection where TIndex : ICo
     public bool TryGetChunk(GridId gridId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _gridChunkContents[gridId].TryGetValue(chunkIndices, out indices);
 
-    public IReadOnlySet<TIndex> GetElementsForSession(ICommonSession session) => _localOverrides[session];
+    public HashSet<TIndex>.Enumerator GetElementsForSession(ICommonSession session) => _localOverrides[session].GetEnumerator();
 
     private void AddIndexInternal(TIndex index, IndexLocation location)
     {

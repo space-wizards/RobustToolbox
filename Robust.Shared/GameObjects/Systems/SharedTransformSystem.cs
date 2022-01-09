@@ -4,10 +4,11 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    internal abstract class SharedTransformSystem : EntitySystem
+    public abstract class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -17,6 +18,9 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+
+            UpdatesOutsidePrediction = true;
+
             _mapManager.TileChanged += MapManagerOnTileChanged;
             SubscribeLocalEvent<TransformComponent, EntityDirtyEvent>(OnTransformDirty);
         }
@@ -25,10 +29,16 @@ namespace Robust.Shared.GameObjects
         {
             if (!component.Anchored ||
                 !component.ParentUid.IsValid() ||
-                EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Initialized)
+                MetaData(uid).EntityLifeStage < EntityLifeStage.Initialized)
                 return;
 
-            EntityManager.GetComponent<IMapGridComponent>(component.ParentUid).AnchoredEntityDirty(component);
+            // Anchor dirty
+            // May not even need this in future depending what happens with chunk anchoring (paulVS plz).
+            var gridComp = EntityManager.GetComponent<IMapGridComponent>(component.ParentUid);
+
+            var grid = (IMapGridInternal) gridComp.Grid;
+            DebugTools.Assert(component.GridID == gridComp.GridIndex);
+            grid.AnchoredEntDirty(grid.TileIndicesFor(component.Coordinates));
         }
 
         public override void Shutdown()
@@ -53,7 +63,7 @@ namespace Robust.Shared.GameObjects
 
             if (anchoredEnts.Count == 0) return;
 
-            var mapEnt = _mapManager.GetMapEntity(grid.ParentMapId);
+            var mapEnt = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
 
             foreach (var ent in anchoredEnts) // changing anchored modifies this set
             {
@@ -66,7 +76,7 @@ namespace Robust.Shared.GameObjects
 
         public void DeferMoveEvent(ref MoveEvent moveEvent)
         {
-            if (moveEvent.Sender.HasComponent<IMapGridComponent>())
+            if (EntityManager.HasComponent<IMapGridComponent>(moveEvent.Sender))
                 _gridMoves.Enqueue(moveEvent);
             else
                 _otherMoves.Enqueue(moveEvent);
@@ -84,8 +94,10 @@ namespace Robust.Shared.GameObjects
             {
                 while (queue.TryDequeue(out var ev))
                 {
-                    if (ev.Sender.Deleted)
+                    if (EntityManager.Deleted(ev.Sender))
+                    {
                         continue;
+                    }
 
                     // Hopefully we can remove this when PVS gets updated to not use NaNs
                     if (!ev.NewPosition.IsValid(EntityManager))
@@ -93,7 +105,7 @@ namespace Robust.Shared.GameObjects
                         continue;
                     }
 
-                    RaiseLocalEvent(ev.Sender.Uid, ref ev);
+                    RaiseLocalEvent(ev.Sender, ref ev);
                 }
             }
         }

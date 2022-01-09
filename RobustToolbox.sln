@@ -23,41 +23,31 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NetSerializer", "NetSeriali
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetSerializer", "NetSerializer\NetSerializer\NetSerializer.csproj", "{ECBCE1D8-05C2-4881-9446-197C4C8E1C14}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Physics", "Robust.Physics\Robust.Physics.csproj", "{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Physics", "Robust.Physics\Robust.Physics.csproj", "{887A54FA-7D31-4D6D-9D7F-9AE3739E4982}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Robust.LoaderApi", "Robust.LoaderApi", "{805C8FD2-0C32-4DA8-BC4B-143BA5D48FF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.LoaderApi", "Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj", "{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.LoaderApi", "Robust.LoaderApi\Robust.LoaderApi\Robust.LoaderApi.csproj", "{4FC5049F-AEEC-4DC0-9F4D-EB927AAB4F15}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ManagedHttpListener", "ManagedHttpListener", "{15D28C35-25F6-4EA8-8D53-29DA7C8A24A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Net.HttpListener", "ManagedHttpListener\src\System.Net.HttpListener.csproj", "{C3EB43AF-31FD-48F5-A4FB-552D0F13948B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "System.Net.HttpListener", "ManagedHttpListener\src\System.Net.HttpListener.csproj", "{C3EB43AF-31FD-48F5-A4FB-552D0F13948B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.Injectors", "Robust.Client.Injectors\Robust.Client.Injectors.csproj", "{EEF2C805-5E03-41EA-A916-49C1DD15EF41}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Client.Injectors", "Robust.Client.Injectors\Robust.Client.Injectors.csproj", "{EEF2C805-5E03-41EA-A916-49C1DD15EF41}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Client.NameGenerator", "Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj", "{EFB7A05D-71D0-47D1-B7B4-35D4FF661F13}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Client.NameGenerator", "Robust.Client.NameGenerator\Robust.Client.NameGenerator.csproj", "{EFB7A05D-71D0-47D1-B7B4-35D4FF661F13}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "XamlX", "XamlX", "{1B1FC7C4-0212-4B3E-90D4-C7B58759E4B0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX", "XamlX\src\XamlX\XamlX.csproj", "{D73768A2-BFCD-4916-8F52-4034C28F345C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlX", "XamlX\src\XamlX\XamlX.csproj", "{D73768A2-BFCD-4916-8F52-4034C28F345C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.IL.Cecil", "XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj", "{1CDC9C4F-668E-47A3-8A44-216E95644BEB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlX.IL.Cecil", "XamlX\src\XamlX.IL.Cecil\XamlX.IL.Cecil.csproj", "{1CDC9C4F-668E-47A3-8A44-216E95644BEB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XamlX.Runtime", "XamlX\src\XamlX.Runtime\XamlX.Runtime.csproj", "{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XamlX.Runtime", "XamlX\src\XamlX.Runtime\XamlX.Runtime.csproj", "{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Robust.Analyzers", "Robust.Analyzers\Robust.Analyzers.csproj", "{3173712A-9E75-4685-B657-9AF9B7D54EFB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Robust.Analyzers", "Robust.Analyzers\Robust.Analyzers.csproj", "{3173712A-9E75-4685-B657-9AF9B7D54EFB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Avalonia.Base", "Avalonia.Base\Avalonia.Base.csproj", "{C60905B4-072F-4376-BCEC-C91186644127}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Linguini", "Linguini", "{3D0047D0-1089-48EC-AF72-A9B7A2E7A4BF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Linguini.Bundle", "Linguini\Linguini.Bundle\Linguini.Bundle.csproj", "{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Linguini.Shared", "Linguini\Linguini.Shared\Linguini.Shared.csproj", "{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Linguini.Syntax", "Linguini\Linguini.Syntax\Linguini.Syntax.csproj", "{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluralRules.Generator", "Linguini\PluralRules.Generator\PluralRules.Generator.csproj", "{479FD643-665B-4DE1-B68E-3AAAD8E7A967}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Avalonia.Base", "Avalonia.Base\Avalonia.Base.csproj", "{C60905B4-072F-4376-BCEC-C91186644127}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -219,38 +209,6 @@ Global
 		{C60905B4-072F-4376-BCEC-C91186644127}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C60905B4-072F-4376-BCEC-C91186644127}.Release|x64.ActiveCfg = Release|Any CPU
 		{C60905B4-072F-4376-BCEC-C91186644127}.Release|x64.Build.0 = Release|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Debug|x64.Build.0 = Debug|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Release|x64.ActiveCfg = Release|Any CPU
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B}.Release|x64.Build.0 = Release|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Debug|x64.Build.0 = Debug|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Release|x64.ActiveCfg = Release|Any CPU
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5}.Release|x64.Build.0 = Release|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Debug|x64.Build.0 = Debug|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Release|x64.ActiveCfg = Release|Any CPU
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53}.Release|x64.Build.0 = Release|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Debug|x64.Build.0 = Debug|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Release|Any CPU.Build.0 = Release|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Release|x64.ActiveCfg = Release|Any CPU
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -262,10 +220,6 @@ Global
 		{D73768A2-BFCD-4916-8F52-4034C28F345C} = {1B1FC7C4-0212-4B3E-90D4-C7B58759E4B0}
 		{1CDC9C4F-668E-47A3-8A44-216E95644BEB} = {1B1FC7C4-0212-4B3E-90D4-C7B58759E4B0}
 		{B05EFB71-AEC7-4C6E-984A-A1BCC58F9AD1} = {1B1FC7C4-0212-4B3E-90D4-C7B58759E4B0}
-		{71A3AD7B-9D09-4246-A574-E5EB7D7FF20B} = {3D0047D0-1089-48EC-AF72-A9B7A2E7A4BF}
-		{918FEA70-4B6B-4C8D-8AAB-2C911DCDCAE5} = {3D0047D0-1089-48EC-AF72-A9B7A2E7A4BF}
-		{A5EDDBF2-3FA0-4364-A953-A814A0CBBE53} = {3D0047D0-1089-48EC-AF72-A9B7A2E7A4BF}
-		{479FD643-665B-4DE1-B68E-3AAAD8E7A967} = {3D0047D0-1089-48EC-AF72-A9B7A2E7A4BF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {57757344-0FF4-4842-8A68-141CAA18A35D}

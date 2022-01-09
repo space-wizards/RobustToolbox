@@ -11,7 +11,7 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Client.Console
 {
-    public class Completions : SS14Window
+    public class Completions : DefaultWindow
     {
         private HistoryLineEdit _textBar;
         private ScrollContainer _suggestPanel = new()

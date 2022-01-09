@@ -137,9 +137,9 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeEvent(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
             eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, HandleAnchored);
 
-            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentInit>(HandleLookupInit);
-            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
-            eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, HandleGridInit);
+            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
+            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
+            eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
 
             _entityManager.EntityDeleted += OnEntityDeleted;
             _entityManager.EntityInitialized += OnEntityInit;
@@ -180,19 +180,28 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void HandleLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
+        private void OnLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
         {
             component.Tree.Clear();
         }
 
-        private void HandleGridInit(GridInitializeEvent ev)
+        private void OnGridInit(GridInitializeEvent ev)
         {
             _entityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
         }
 
-        private void HandleLookupInit(EntityUid uid, EntityLookupComponent component, ComponentInit args)
+        private void OnLookupAdd(EntityUid uid, EntityLookupComponent component, ComponentAdd args)
         {
-            var capacity = (int) Math.Min(256, Math.Ceiling(_entityManager.GetComponent<TransformComponent>(component.Owner).ChildCount / (float) GrowthRate) * GrowthRate);
+            int capacity;
+
+            if (_entityManager.TryGetComponent(uid, out TransformComponent? xform))
+            {
+                capacity = (int) Math.Min(256, Math.Ceiling(xform.ChildCount / (float) GrowthRate) * GrowthRate);
+            }
+            else
+            {
+                capacity = 256;
+            }
 
             component.Tree = new DynamicTree<EntityUid>(
                 GetRelativeAABBFromEntity,

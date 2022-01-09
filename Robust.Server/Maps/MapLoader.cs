@@ -497,6 +497,7 @@ namespace Robust.Server.Maps
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity;
                         pvs?.EntityPVSCollection.UpdateIndex(entity);
+                        _serverEntityManager.EnsureComponent<EntityLookupComponent>(entity);
                     }
                 }
             }

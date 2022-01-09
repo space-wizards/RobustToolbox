@@ -55,7 +55,27 @@ namespace Robust.Shared.Physics
             UpdatesOutsidePrediction = true;
 
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
-            SubscribeLocalEvent<JointComponent, ComponentShutdown>(HandleShutdown);
+            SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
+            SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+        }
+
+        private void OnJointInit(EntityUid uid, JointComponent component, ComponentInit args)
+        {
+            foreach (var (_, joint) in component.Joints)
+            {
+                var bodyA = EntityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
+                var bodyB = EntityManager.GetComponent<PhysicsComponent>(joint.BodyBUid);
+
+                bodyA.WakeBody();
+                bodyB.WakeBody();
+
+                // Raise broadcast last so we can do both sides of directed first.
+                var vera = new JointAddedEvent(joint, bodyA, bodyB);
+                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                var smug = new JointAddedEvent(joint, bodyB, bodyA);
+                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            }
         }
 
         private IEnumerable<Joint> GetAllJoints()
@@ -69,7 +89,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void HandleShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
+        private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
         {
             foreach (var joint in component.Joints.Values)
             {

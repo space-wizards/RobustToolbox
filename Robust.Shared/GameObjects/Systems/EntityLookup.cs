@@ -74,17 +74,9 @@ namespace Robust.Shared.GameObjects
 
         bool IsIntersecting(EntityUid entityOne, EntityUid entityTwo);
 
-        /// <summary>
-        /// Updates the lookup for this entity.
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="worldAABB">Pass in to avoid it being re-calculated</param>
-        /// <returns></returns>
-        bool UpdateEntityTree(EntityUid entity, Box2? worldAABB = null);
-
         void RemoveFromEntityTrees(EntityUid entity);
 
-        Box2 GetWorldAabbFromEntity(in EntityUid ent);
+        Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);
     }
 
     [UsedImplicitly]
@@ -149,9 +141,9 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(HandleLookupShutdown);
             eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, HandleGridInit);
 
-            _entityManager.EntityDeleted += HandleEntityDeleted;
-            _entityManager.EntityStarted += HandleEntityStarted;
-            _mapManager.MapCreated += HandleMapCreated;
+            _entityManager.EntityDeleted += OnEntityDeleted;
+            _entityManager.EntityInitialized += OnEntityInit;
+            _mapManager.MapCreated += OnMapCreated;
             Started = true;
         }
 
@@ -166,23 +158,25 @@ namespace Robust.Shared.GameObjects
             _handledThisTick.Clear();
             _parentChangeQueue.Clear();
 
-            _entityManager.EntityDeleted -= HandleEntityDeleted;
-            _entityManager.EntityStarted -= HandleEntityStarted;
-            _mapManager.MapCreated -= HandleMapCreated;
+            _entityManager.EntityDeleted -= OnEntityDeleted;
+            _entityManager.EntityInitialized -= OnEntityInit;
+            _mapManager.MapCreated -= OnMapCreated;
             Started = false;
         }
 
         private void HandleAnchored(ref AnchorStateChangedEvent @event)
         {
+            var xform = _entityManager.GetComponent<TransformComponent>(@event.Entity);
+
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
-            if (_entityManager.GetComponent<TransformComponent>(@event.Entity).Anchored)
+            if (xform.Anchored)
             {
                 RemoveFromEntityTrees(@event.Entity);
             }
             else
             {
-                UpdateEntityTree(@event.Entity);
+                UpdateEntityTree(@event.Entity, xform);
             }
         }
 
@@ -220,18 +214,19 @@ namespace Robust.Shared.GameObjects
             return _entityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(aabb);
         }
 
-        private void HandleEntityDeleted(object? sender, EntityUid uid)
+        private void OnEntityDeleted(object? sender, EntityUid uid)
         {
             RemoveFromEntityTrees(uid);
         }
 
-        private void HandleEntityStarted(object? sender, EntityUid uid)
+        private void OnEntityInit(object? sender, EntityUid uid)
         {
-            if (_entityManager.GetComponent<TransformComponent>(uid).Anchored) return;
-            UpdateEntityTree(uid);
+            var xform = _entityManager.GetComponent<TransformComponent>(uid);
+            if (xform.Anchored) return;
+            UpdateEntityTree(uid, xform);
         }
 
-        private void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        private void OnMapCreated(object? sender, MapEventArgs eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
 
@@ -247,9 +242,10 @@ namespace Robust.Shared.GameObjects
             {
                 _handledThisTick.Add(mapChangeEvent.Entity);
                 RemoveFromEntityTrees(mapChangeEvent.Entity);
+                var xform = _entityManager.GetComponent<TransformComponent>(mapChangeEvent.Entity);
 
-                if (_entityManager.Deleted(mapChangeEvent.Entity) || _entityManager.GetComponent<TransformComponent>(mapChangeEvent.Entity).Anchored) continue;
-                UpdateEntityTree(mapChangeEvent.Entity, GetWorldAabbFromEntity(mapChangeEvent.Entity));
+                if (_entityManager.Deleted(mapChangeEvent.Entity) || xform.Anchored) continue;
+                UpdateEntityTree(mapChangeEvent.Entity, xform, GetWorldAabbFromEntity(mapChangeEvent.Entity));
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
@@ -257,8 +253,9 @@ namespace Robust.Shared.GameObjects
                 if (!_handledThisTick.Add(moveEvent.Sender) || _entityManager.Deleted(moveEvent.Sender) ||
                     _entityManager.GetComponent<TransformComponent>(moveEvent.Sender).Anchored) continue;
 
-                DebugTools.Assert(!_entityManager.GetComponent<TransformComponent>(moveEvent.Sender).Anchored);
-                UpdateEntityTree(moveEvent.Sender, moveEvent.WorldAABB);
+                var xform = _entityManager.GetComponent<TransformComponent>(moveEvent.Sender);
+                DebugTools.Assert(!xform.Anchored);
+                UpdateEntityTree(moveEvent.Sender, xform, moveEvent.WorldAABB);
             }
 
             while (_rotateQueue.TryPop(out var rotateEvent))
@@ -267,8 +264,9 @@ namespace Robust.Shared.GameObjects
                     _entityManager.Deleted(rotateEvent.Sender) ||
                     _entityManager.GetComponent<TransformComponent>(rotateEvent.Sender).Anchored) continue;
 
-                DebugTools.Assert(!_entityManager.GetComponent<TransformComponent>(rotateEvent.Sender).Anchored);
-                UpdateEntityTree(rotateEvent.Sender, rotateEvent.WorldAABB);
+                var xform = _entityManager.GetComponent<TransformComponent>(rotateEvent.Sender);
+                DebugTools.Assert(!xform.Anchored);
+                UpdateEntityTree(rotateEvent.Sender, xform, rotateEvent.WorldAABB);
             }
 
             _handledThisTick.Clear();
@@ -769,18 +767,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool UpdateEntityTree(EntityUid entity, Box2? worldAABB = null)
+        public bool UpdateEntityTree(EntityUid entity, TransformComponent xform, Box2? worldAABB = null)
         {
-            // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
-            // PVS is more stable and entity anchoring has been battle-tested.
-            if (_entityManager.Deleted(entity))
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
-
-            DebugTools.Assert(_entityManager.GetComponent<MetaDataComponent>(entity).EntityInitialized);
-            DebugTools.Assert(!_entityManager.GetComponent<TransformComponent>(entity).Anchored);
+            DebugTools.Assert(!_entityManager.Deleted(entity));
 
             var lookup = GetLookup(entity);
 
@@ -791,17 +780,10 @@ namespace Robust.Shared.GameObjects
             }
 
             // Temp PVS guard for when we clear dynamictree for now.
-            worldAABB ??= GetWorldAabbFromEntity(entity);
+            worldAABB ??= GetWorldAabbFromEntity(entity, xform);
             var center = worldAABB.Value.Center;
 
-            if (float.IsNaN(center.X) || float.IsNaN(center.Y))
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
-
-            var transform = _entityManager.GetComponent<TransformComponent>(entity);
-            DebugTools.Assert(transform.Initialized);
+            DebugTools.Assert(!float.IsNaN(center.X) && !float.IsNaN(center.Y));
 
             var aabb = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.TransformBox(worldAABB.Value);
 
@@ -815,11 +797,15 @@ namespace Robust.Shared.GameObjects
 
             if (!_entityManager.HasComponent<EntityLookupComponent>(entity))
             {
-                foreach (var childTx in _entityManager.GetComponent<TransformComponent>(entity).ChildEntities)
+                DebugTools.Assert(!_entityManager.HasComponent<IMapGridComponent>(entity));
+
+                foreach (var childTx in xform.ChildEntities)
                 {
                     if (!_handledThisTick.Add(childTx)) continue;
 
-                    if (UpdateEntityTree(childTx))
+                    var childXform = _entityManager.GetComponent<TransformComponent>(childTx);
+
+                    if (UpdateEntityTree(childTx, childXform))
                     {
                         ++necessary;
                     }
@@ -841,19 +827,19 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public Box2 GetWorldAabbFromEntity(in EntityUid ent)
+        public Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null)
         {
-            return GetWorldAABB(ent);
+            return GetWorldAABB(ent, xform);
         }
 
-        private Box2 GetWorldAABB(in EntityUid ent)
+        private Box2 GetWorldAABB(in EntityUid ent, TransformComponent? xform = null)
         {
             Vector2 pos;
-            var transform = _entityManager.GetComponent<TransformComponent>(ent);
+            xform ??= _entityManager.GetComponent<TransformComponent>(ent);
 
             if ((!_entityManager.EntityExists(ent) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(ent).EntityLifeStage) >= EntityLifeStage.Deleted)
             {
-                pos = transform.WorldPosition;
+                pos = xform.WorldPosition;
                 return new Box2(pos, pos);
             }
 
@@ -862,7 +848,7 @@ namespace Robust.Shared.GameObjects
                 return GetWorldAABB(manager.Owner);
             }
 
-            pos = transform.WorldPosition;
+            pos = xform.WorldPosition;
 
             return _entityManager.TryGetComponent(ent, out ILookupWorldBox2Component? lookup) ?
                 lookup.GetWorldAABB(pos) :

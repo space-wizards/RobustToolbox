@@ -1,7 +1,9 @@
 # Last match in file takes precedence.
 
-# Be they Fluent translations or Freemarker templates, I know them both!
-*.ftl @RemieRichards
-
 # Ping for all PRs
 * @Acruid @PJB3005 @Silvertorch5
+
+/Robust.*/Audio/Midi/ @Zumorica
+
+# Be they Fluent translations or Freemarker templates, I know them both!
+*.ftl @RemieRichards

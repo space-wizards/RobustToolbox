@@ -83,7 +83,7 @@ public sealed partial class EntityLookup
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
-        return new Box2(gridIndices, gridIndices + tileSize);
+        return new Box2(gridIndices * tileSize, (gridIndices + 1) * tileSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

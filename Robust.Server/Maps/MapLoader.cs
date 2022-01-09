@@ -68,6 +68,10 @@ namespace Robust.Server.Maps
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
+        /*
+         * TODO: LoadBlueprint and Loadmap should be almost identical methods but right now it's copypaste spaghet everywhere
+         */
+
         /// <inheritdoc />
         public IMapGrid? LoadBlueprint(MapId mapId, string path)
         {
@@ -119,7 +123,17 @@ namespace Robust.Server.Maps
                 context.Deserialize();
                 grid = context.Grids[0];
 
-                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
+                var entityManager = IoCManager.Resolve<IEntityManager>();
+
+                if (context.MapIsPostInit)
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        var meta = entityManager.GetComponent<MetaDataComponent>(entity);
+                        meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+                    }
+                }
+                else if (_pauseManager.IsMapInitialized(mapId))
                 {
                     foreach (var entity in context.Entities)
                     {
@@ -206,11 +220,29 @@ namespace Robust.Server.Maps
                     _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
 
-                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
+                var entityManager = IoCManager.Resolve<IEntityManager>();
+
+                if (context.MapIsPostInit)
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        var meta = entityManager.GetComponent<MetaDataComponent>(entity);
+                        meta.EntityLifeStage = EntityLifeStage.MapInitialized;
+                    }
+                }
+                else if (_pauseManager.IsMapInitialized(mapId))
                 {
                     foreach (var entity in context.Entities)
                     {
                         entity.RunMapInit();
+                    }
+                }
+
+                if (_pauseManager.IsMapPaused(mapId))
+                {
+                    foreach (var entity in context.Entities)
+                    {
+                        _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
                     }
                 }
             }

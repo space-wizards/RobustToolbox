@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using NetSerializer;
-using Newtonsoft.Json.Linq;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using YamlDotNet.RepresentationModel;
@@ -78,15 +77,6 @@ namespace Robust.Shared.Serialization
         /// </remarks>
         /// <param name="yaml">The YAML to collect strings from.</param>
         void AddStrings(YamlStream yaml);
-
-        /// <summary>
-        /// Add strings from the given <see cref="JObject"/> to the mapping.
-        /// </summary>
-        /// <remarks>
-        /// Strings are taken from JSON property names and string nodes.
-        /// </remarks>
-        /// <param name="obj">The JSON to collect strings from.</param>
-        void AddStrings(JObject obj);
 
         /// <summary>
         /// Add strings from the given enumeration to the mapping.

@@ -238,8 +238,7 @@ namespace Robust.Server.ServerStatus
                 RequestHeaders = headers;
             }
 
-            [return: MaybeNull]
-            public T RequestBodyJson<T>()
+            public T? RequestBodyJson<T>()
             {
                 using var streamReader = new StreamReader(_context.Request.InputStream, EncodingHelpers.UTF8);
                 using var jsonReader = new JsonTextReader(streamReader);

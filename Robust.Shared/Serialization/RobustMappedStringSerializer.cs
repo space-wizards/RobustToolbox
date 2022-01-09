@@ -8,7 +8,6 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using NetSerializer;
-using Newtonsoft.Json.Linq;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -536,21 +535,6 @@ namespace Robust.Shared.Serialization
             if (!_net.IsClient)
             {
                 _dict.AddStrings(yaml);
-            }
-        }
-
-        /// <summary>
-        /// Add strings from the given <see cref="JObject"/> to the mapping.
-        /// </summary>
-        /// <remarks>
-        /// Strings are taken from JSON property names and string nodes.
-        /// </remarks>
-        /// <param name="obj">The JSON to collect strings from.</param>
-        public void AddStrings(JObject obj)
-        {
-            if (!_net.IsClient)
-            {
-                _dict.AddStrings(obj);
             }
         }
 

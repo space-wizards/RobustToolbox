@@ -273,11 +273,7 @@ namespace Robust.Client.Graphics.Clyde
             public Vector2i Size;
             public bool IsSrgb;
 
-#pragma warning disable 649
-            // Gets assigned by (currently commented out) GLContextAngle.
-            // It's fine don't worry about it.
             public bool FlipY;
-#pragma warning restore 649
 
             public RTCF ColorFormat;
 

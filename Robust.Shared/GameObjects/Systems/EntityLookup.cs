@@ -23,6 +23,7 @@ namespace Robust.Shared.GameObjects
         // IncludeGrids = 1 << 2,
     }
 
+    // TODO: Nuke IEntityLookup and just make a system
     public interface IEntityLookup
     {
         // Not an EntitySystem given _entityManager has a dependency on it which means it's just easier to IoC it for tests.
@@ -40,6 +41,12 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<EntityUid> GetEntitiesInArc(EntityCoordinates coordinates, float range, Angle direction,
             float arcWidth, LookupFlags flags = LookupFlags.IncludeAnchored);
+
+        IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices);
+
+        IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices);
+
+        IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef);
 
         IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = LookupFlags.IncludeAnchored);
 
@@ -81,7 +88,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [UsedImplicitly]
-    public class EntityLookup : IEntityLookup, IEntityEventSubscriber
+    public sealed partial class EntityLookup : IEntityLookup, IEntityEventSubscriber
     {
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
@@ -762,7 +769,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public virtual bool UpdateEntityTree(EntityUid entity, Box2? worldAABB = null)
+        public bool UpdateEntityTree(EntityUid entity, Box2? worldAABB = null)
         {
             // look there's JANK everywhere but I'm just bandaiding it for now for shuttles and we'll fix it later when
             // PVS is more stable and entity anchoring has been battle-tested.

@@ -242,18 +242,25 @@ namespace Robust.Shared.GameObjects
             {
                 _handledThisTick.Add(mapChangeEvent.Entity);
                 RemoveFromEntityTrees(mapChangeEvent.Entity);
+
+                if (_entityManager.Deleted(mapChangeEvent.Entity)) continue;
+
                 var xform = _entityManager.GetComponent<TransformComponent>(mapChangeEvent.Entity);
 
-                if (_entityManager.Deleted(mapChangeEvent.Entity) || xform.Anchored) continue;
+                if (xform.Anchored) continue;
+
                 UpdateEntityTree(mapChangeEvent.Entity, xform, GetWorldAabbFromEntity(mapChangeEvent.Entity));
             }
 
             while (_moveQueue.TryPop(out var moveEvent))
             {
-                if (!_handledThisTick.Add(moveEvent.Sender) || _entityManager.Deleted(moveEvent.Sender) ||
-                    _entityManager.GetComponent<TransformComponent>(moveEvent.Sender).Anchored) continue;
+                if (!_handledThisTick.Add(moveEvent.Sender) ||
+                    _entityManager.Deleted(moveEvent.Sender)) continue;
 
                 var xform = _entityManager.GetComponent<TransformComponent>(moveEvent.Sender);
+
+                if (xform.Anchored) continue;
+
                 DebugTools.Assert(!xform.Anchored);
                 UpdateEntityTree(moveEvent.Sender, xform, moveEvent.WorldAABB);
             }
@@ -261,10 +268,12 @@ namespace Robust.Shared.GameObjects
             while (_rotateQueue.TryPop(out var rotateEvent))
             {
                 if (!_handledThisTick.Add(rotateEvent.Sender) ||
-                    _entityManager.Deleted(rotateEvent.Sender) ||
-                    _entityManager.GetComponent<TransformComponent>(rotateEvent.Sender).Anchored) continue;
+                    _entityManager.Deleted(rotateEvent.Sender)) continue;
 
                 var xform = _entityManager.GetComponent<TransformComponent>(rotateEvent.Sender);
+
+                if (xform.Anchored) continue;
+
                 DebugTools.Assert(!xform.Anchored);
                 UpdateEntityTree(rotateEvent.Sender, xform, rotateEvent.WorldAABB);
             }

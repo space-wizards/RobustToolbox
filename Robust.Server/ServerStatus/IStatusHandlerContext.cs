@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Http;
 using Microsoft.Extensions.Primitives;
@@ -15,8 +14,7 @@ namespace Robust.Server.ServerStatus
         bool IsGetLike { get; }
         IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
 
-        [return: MaybeNull]
-        public T RequestBodyJson<T>();
+        public T? RequestBodyJson<T>();
 
         void Respond(
             string text,

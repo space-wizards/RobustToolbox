@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Primitives;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -18,7 +18,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using Robust.Shared.Exceptions;
 using HttpListener = ManagedHttpListener.HttpListener;
 using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
 
@@ -36,7 +35,6 @@ namespace Robust.Server.ServerStatus
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
-        private static readonly JsonSerializer JsonSerializer = new();
         private readonly List<StatusHostHandlerAsync> _handlers = new();
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
@@ -77,9 +75,9 @@ namespace Robust.Server.ServerStatus
                                          */
         }
 
-        public event Action<JObject>? OnStatusRequest;
+        public event Action<JsonNode>? OnStatusRequest;
 
-        public event Action<JObject>? OnInfoRequest;
+        public event Action<JsonNode>? OnInfoRequest;
 
         public void AddHandler(StatusHostHandler handler)
         {
@@ -164,7 +162,7 @@ namespace Robust.Server.ServerStatus
             if (File.Exists(path))
             {
                 var buildInfo = File.ReadAllText(path);
-                var info = JsonConvert.DeserializeObject<BuildInfo>(buildInfo)!;
+                var info = JsonSerializer.Deserialize<BuildInfo>(buildInfo)!;
 
                 // Don't replace cvars with contents of build.json if overriden by --cvar or such.
                 SetCVarIfUnmodified(CVars.BuildEngineVersion, info.EngineVersion);
@@ -200,17 +198,17 @@ namespace Robust.Server.ServerStatus
             _listener!.Stop();
         }
 
-        #pragma warning disable CS0649
-        [JsonObject(ItemRequired = Required.DisallowNull)]
-        private sealed class BuildInfo
-        {
-            [JsonProperty("engine_version")] public string EngineVersion = default!;
-            [JsonProperty("hash")] public string? Hash;
-            [JsonProperty("download")] public string? Download = default;
-            [JsonProperty("fork_id")] public string ForkId = default!;
-            [JsonProperty("version")] public string Version = default!;
-        }
-        #pragma warning restore CS0649
+        private sealed record BuildInfo(
+            [property: JsonPropertyName("engine_version")]
+            string EngineVersion,
+            [property: JsonPropertyName("hash")]
+            string? Hash,
+            [property: JsonPropertyName("download")]
+            string? Download,
+            [property: JsonPropertyName("fork_id")]
+            string ForkId,
+            [property: JsonPropertyName("version")]
+            string Version);
 
         private sealed class ContextImpl : IStatusHandlerContext
         {
@@ -240,11 +238,7 @@ namespace Robust.Server.ServerStatus
 
             public T? RequestBodyJson<T>()
             {
-                using var streamReader = new StreamReader(_context.Request.InputStream, EncodingHelpers.UTF8);
-                using var jsonReader = new JsonTextReader(streamReader);
-
-                var serializer = new JsonSerializer();
-                return serializer.Deserialize<T>(jsonReader);
+                return JsonSerializer.Deserialize<T>(_context.Request.InputStream);
             }
 
             public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
@@ -300,15 +294,11 @@ namespace Robust.Server.ServerStatus
 
             public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
-                using var streamWriter = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
-
                 _context.Response.ContentType = MediaTypeNames.Application.Json;
 
-                using var jsonWriter = new JsonTextWriter(streamWriter);
+                JsonSerializer.Serialize(_context.Response.OutputStream, jsonData);
 
-                JsonSerializer.Serialize(jsonWriter, jsonData);
-
-                jsonWriter.Flush();
+                _context.Response.Close();
             }
         }
     }

@@ -1,5 +1,5 @@
 using System;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 namespace Robust.Server.ServerStatus
 {
@@ -16,7 +16,7 @@ namespace Robust.Server.ServerStatus
         ///     I REPEAT, THIS DOES NOT RUN ON THE MAIN THREAD.
         ///     MAKE TRIPLE SURE EVERYTHING IN HERE IS THREAD SAFE DEAR GOD.
         /// </summary>
-        event Action<JObject> OnStatusRequest;
+        event Action<JsonNode> OnStatusRequest;
 
         /// <summary>
         ///     Invoked when a client queries an info request from the server.
@@ -24,7 +24,7 @@ namespace Robust.Server.ServerStatus
         ///     I REPEAT, THIS DOES NOT RUN ON THE MAIN THREAD.
         ///     MAKE TRIPLE SURE EVERYTHING IN HERE IS THREAD SAFE DEAR GOD.
         /// </summary>
-        event Action<JObject> OnInfoRequest;
+        event Action<JsonNode> OnInfoRequest;
 
         /// <summary>
         /// Set information used by automatic-client-zipping to determine the layout of your dev setup,

@@ -117,14 +117,8 @@ namespace Robust.Server.Maps
             {
                 foreach (var entity in context.Entities)
                 {
-                    foreach (var entity in context.Entities)
-                    {
-                        entity.RunMapInit();
-                    }
                     _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.MapInitialized;
                 }
-
-                if (_pauseManager.IsMapPaused(mapId))
             }
             else if (_pauseManager.IsMapInitialized(mapId))
             {

@@ -68,10 +68,6 @@ namespace Robust.Server.Maps
             stream.Save(new YamlMappingFix(new Emitter(writer)), false);
         }
 
-        /*
-         * TODO: LoadBlueprint and Loadmap should be almost identical methods but right now it's copypaste spaghet everywhere
-         */
-
         /// <inheritdoc />
         public IMapGrid? LoadBlueprint(MapId mapId, string path)
         {

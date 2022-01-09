@@ -11,17 +11,4 @@ namespace Robust.Shared.GameObjects
         OnGround,
         InAir
     }
-
-    /// <summary>
-    ///     Sent whenever a <see cref="IPhysBody"/> is changed.
-    /// </summary>
-    public sealed class PhysicsUpdateMessage : EntityEventArgs
-    {
-        public PhysicsComponent Component { get; }
-
-        public PhysicsUpdateMessage(PhysicsComponent component)
-        {
-            Component = component;
-        }
-    }
 }

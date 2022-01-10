@@ -228,7 +228,7 @@ namespace Robust.Shared.Physics
                 var proxyBody = proxy.Fixture.Body;
                 if (proxyBody.Deleted)
                 {
-                    Logger.ErrorS("physics", $"Deleted body {proxyBody.Owner} made it to FindNewContacts; this should never happen!");
+                    Logger.ErrorS("physics", $"Deleted body {EntityManager.ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
                     DebugTools.Assert(false);
                     continue;
                 }

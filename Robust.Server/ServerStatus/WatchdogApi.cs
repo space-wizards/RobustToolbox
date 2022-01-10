@@ -3,8 +3,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -85,7 +85,11 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
-            var auth = context.RequestHeaders["WatchdogToken"];
+            if (!context.RequestHeaders.TryGetValue("WatchdogToken", out var auth))
+            {
+                context.Respond("Expected WatchdogToken header", HttpStatusCode.BadRequest);
+                return true;
+            }
 
             if (auth != _watchdogToken)
             {
@@ -101,7 +105,7 @@ namespace Robust.Server.ServerStatus
             {
                 parameters = context.RequestBodyJson<ShutdownParameters>();
             }
-            catch (JsonSerializationException)
+            catch (JsonException)
             {
                 // parameters null so it'll catch the block down below.
             }
@@ -183,7 +187,6 @@ namespace Robust.Server.ServerStatus
         private sealed class ShutdownParameters
         {
             // ReSharper disable once RedundantDefaultMemberInitializer
-            [JsonProperty(Required = Required.Always)]
             public string Reason { get; set; } = default!;
         }
     }

@@ -61,12 +61,12 @@ namespace Robust.Server.ServerStatus
 
                 // No handler returned true, assume no handlers care about this.
                 // 404.
-                apiContext.Respond("Not Found", HttpStatusCode.NotFound);
+                await apiContext.RespondAsync("Not Found", HttpStatusCode.NotFound);
             }
             catch (Exception e)
             {
                 _httpSawmill.Error($"Exception in StatusHost: {e}");
-                apiContext.Respond("Internal Server Error", HttpStatusCode.InternalServerError);
+                await apiContext.RespondErrorAsync(HttpStatusCode.InternalServerError);
             }
 
             /*
@@ -241,6 +241,11 @@ namespace Robust.Server.ServerStatus
                 return JsonSerializer.Deserialize<T>(_context.Request.InputStream);
             }
 
+            public async Task<T?> RequestBodyJsonAsync<T>()
+            {
+                return await JsonSerializer.DeserializeAsync<T>(_context.Request.InputStream);
+            }
+
             public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
             {
                 Respond(text, (int) code, contentType);
@@ -278,13 +283,47 @@ namespace Robust.Server.ServerStatus
                     return;
                 }
 
-                // Passing 'true' to this is CRITICAL.
-                // There's a bug in the ManagedHttpListener submodule.
-                // See:
-                // HttpListenerResponse.Managed.cs Close(byte[], bool),
-                // "thisRef.OutputStream.EndWrite"
-                // Yes, this will block, yes, you have to deal with it...
-                _context.Response.Close(data, true);
+                _context.Response.OutputStream.Write(data);
+                _context.Response.Close();
+            }
+
+            public Task RespondAsync(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain")
+            {
+                return RespondAsync(text, (int) code, contentType);
+            }
+
+            public async Task RespondAsync(string text, int code = 200, string contentType = "text/plain")
+            {
+                _context.Response.StatusCode = code;
+                _context.Response.ContentType = contentType;
+
+                if (RequestMethod == HttpMethod.Head)
+                    return;
+
+                using var writer = new StreamWriter(_context.Response.OutputStream, EncodingHelpers.UTF8);
+
+                await writer.WriteAsync(text);
+            }
+
+            public Task RespondAsync(byte[] data, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain")
+            {
+                return RespondAsync(data, (int) code, contentType);
+            }
+
+            public async Task RespondAsync(byte[] data, int code = 200, string contentType = "text/plain")
+            {
+                _context.Response.StatusCode = code;
+                _context.Response.ContentType = contentType;
+                _context.Response.ContentLength64 = data.Length;
+
+                if (RequestMethod == HttpMethod.Head)
+                {
+                    _context.Response.Close();
+                    return;
+                }
+
+                await _context.Response.OutputStream.WriteAsync(data);
+                _context.Response.Close();
             }
 
             public void RespondError(HttpStatusCode code)
@@ -292,11 +331,25 @@ namespace Robust.Server.ServerStatus
                 Respond(code.ToString(), code);
             }
 
+            public Task RespondErrorAsync(HttpStatusCode code)
+            {
+                return RespondAsync(code.ToString(), code);
+            }
+
             public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
-                _context.Response.ContentType = MediaTypeNames.Application.Json;
+                _context.Response.ContentType = "application/json";
 
                 JsonSerializer.Serialize(_context.Response.OutputStream, jsonData);
+
+                _context.Response.Close();
+            }
+
+            public async Task RespondJsonAsync(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
+            {
+                _context.Response.ContentType = "application/json";
+
+                await JsonSerializer.SerializeAsync(_context.Response.OutputStream, jsonData);
 
                 _context.Response.Close();
             }

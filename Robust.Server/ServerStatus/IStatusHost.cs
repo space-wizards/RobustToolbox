@@ -7,6 +7,7 @@ namespace Robust.Server.ServerStatus
     {
         void Start();
 
+        [Obsolete("Use async handlers")]
         void AddHandler(StatusHostHandler handler);
         void AddHandler(StatusHostHandlerAsync handler);
 

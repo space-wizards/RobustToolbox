@@ -18,18 +18,18 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleAutomaticClientZip);
         }
 
-        private static bool HandleTeapot(IStatusHandlerContext context)
+        private static async Task<bool> HandleTeapot(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/teapot")
             {
                 return false;
             }
 
-            context.Respond("I am a teapot.", (HttpStatusCode) 418);
+            await context.RespondAsync("I am a teapot.", (HttpStatusCode) 418);
             return true;
         }
 
-        private bool HandleStatus(IStatusHandlerContext context)
+        private async Task<bool> HandleStatus(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/status")
             {
@@ -46,7 +46,7 @@ namespace Robust.Server.ServerStatus
 
             OnStatusRequest?.Invoke(jObject);
 
-            context.RespondJson(jObject);
+            await context.RespondJsonAsync(jObject);
 
             return true;
         }
@@ -101,7 +101,7 @@ namespace Robust.Server.ServerStatus
 
             OnInfoRequest?.Invoke(jObject);
 
-            context.RespondJson(jObject);
+            await context.RespondJsonAsync(jObject);
 
             return true;
         }

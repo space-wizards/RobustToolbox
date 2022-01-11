@@ -336,7 +336,6 @@ namespace Robust.Shared.GameObjects
 
                 _canCollide = value;
                 _entMan.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
-                _entMan.EventBus.RaiseEvent(EventSource.Local, new PhysicsUpdateMessage(this));
                 Dirty();
             }
         }
@@ -832,8 +831,8 @@ namespace Robust.Shared.GameObjects
         {
             return EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
         }
-        
-        public void ResetMassData()
+
+        public void ResetMassData(FixturesComponent? fixtures = null)
         {
             _mass = 0.0f;
             _invMass = 0.0f;
@@ -846,10 +845,12 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            // Temporary until ECS don't @ me.
+            fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
             var shapeManager = EntitySystem.Get<FixtureSystem>();
 
-            foreach (var fixture in Fixtures)
+            foreach (var (_, fixture) in fixtures.Fixtures)
             {
                 if (fixture.Mass <= 0.0f) continue;
 

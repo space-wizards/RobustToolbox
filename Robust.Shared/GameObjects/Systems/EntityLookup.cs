@@ -176,7 +176,7 @@ namespace Robust.Shared.GameObjects
         {
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
-            if (_entityManager.GetComponent<TransformComponent>(@event.Entity).Anchored)
+            if (@event.Anchored)
             {
                 RemoveFromEntityTrees(@event.Entity);
             }

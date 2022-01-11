@@ -3,8 +3,9 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
@@ -42,7 +43,7 @@ namespace Robust.Server.ServerStatus
             _statusHost.AddHandler(ShutdownHandler);
         }
 
-        private bool UpdateHandler(IStatusHandlerContext context)
+        private async Task<bool> UpdateHandler(IStatusHandlerContext context)
         {
             if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/update")
             {
@@ -61,18 +62,18 @@ namespace Robust.Server.ServerStatus
             {
                 // Holy shit nobody read these logs please.
                 _sawmill.Info(@"Failed auth: ""{0}"" vs ""{1}""", auth, _watchdogToken);
-                context.RespondError(HttpStatusCode.Unauthorized);
+                await context.RespondErrorAsync(HttpStatusCode.Unauthorized);
                 return true;
             }
 
             _taskManager.RunOnMainThread(() => UpdateReceived?.Invoke());
 
-            context.Respond("Success", HttpStatusCode.OK);
+            await context.RespondAsync("Success", HttpStatusCode.OK);
 
             return true;
         }
 
-        private bool ShutdownHandler(IStatusHandlerContext context)
+        private async Task<bool> ShutdownHandler(IStatusHandlerContext context)
         {
             if (context.RequestMethod != HttpMethod.Post || context.Url!.AbsolutePath != "/shutdown")
             {
@@ -85,37 +86,41 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
-            var auth = context.RequestHeaders["WatchdogToken"];
+            if (!context.RequestHeaders.TryGetValue("WatchdogToken", out var auth))
+            {
+                await context.RespondAsync("Expected WatchdogToken header", HttpStatusCode.BadRequest);
+                return true;
+            }
 
             if (auth != _watchdogToken)
             {
                 _sawmill.Warning(
                     "received POST /shutdown with invalid authentication token. Ignoring {0}, {1}", auth,
                     _watchdogToken);
-                context.RespondError(HttpStatusCode.Unauthorized);
+                await context.RespondErrorAsync(HttpStatusCode.Unauthorized);
                 return true;
             }
 
             ShutdownParameters? parameters = null;
             try
             {
-                parameters = context.RequestBodyJson<ShutdownParameters>();
+                parameters = await context.RequestBodyJsonAsync<ShutdownParameters>();
             }
-            catch (JsonSerializationException)
+            catch (JsonException)
             {
                 // parameters null so it'll catch the block down below.
             }
 
             if (parameters == null)
             {
-                context.RespondError(HttpStatusCode.BadRequest);
+                await context.RespondErrorAsync(HttpStatusCode.BadRequest);
 
                 return true;
             }
 
             _taskManager.RunOnMainThread(() => _baseServer.Shutdown(parameters.Reason));
 
-            context.Respond("Success", HttpStatusCode.OK);
+            await context.RespondAsync("Success", HttpStatusCode.OK);
 
             return true;
         }
@@ -183,7 +188,6 @@ namespace Robust.Server.ServerStatus
         private sealed class ShutdownParameters
         {
             // ReSharper disable once RedundantDefaultMemberInitializer
-            [JsonProperty(Required = Required.Always)]
             public string Reason { get; set; } = default!;
         }
     }

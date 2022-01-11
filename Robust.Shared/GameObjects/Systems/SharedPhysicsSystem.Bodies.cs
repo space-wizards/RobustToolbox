@@ -30,11 +30,7 @@ public abstract partial class SharedPhysicsSystem
 
         if (component.CanCollide)
         {
-            if (!component.Awake)
-            {
-                EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsSleepMessage(component));
-            }
-            else
+            if (component.Awake)
             {
                 EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(component));
             }
@@ -43,7 +39,6 @@ public abstract partial class SharedPhysicsSystem
             {
                 // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
                 EntityManager.EventBus.RaiseLocalEvent(uid, new CollisionChangeMessage(component, uid, component._canCollide));
-                EntityManager.EventBus.RaiseLocalEvent(uid, new PhysicsUpdateMessage(component));
             }
         }
         else
@@ -53,7 +48,5 @@ public abstract partial class SharedPhysicsSystem
 
         var startup = new PhysicsInitializedEvent(uid);
         EntityManager.EventBus.RaiseLocalEvent(uid, ref startup);
-
-        component.ResetMassData();
     }
 }

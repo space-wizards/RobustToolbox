@@ -166,16 +166,15 @@ namespace Robust.Shared.GameObjects
 
         private void HandleAnchored(ref AnchorStateChangedEvent @event)
         {
-            var xform = _entityManager.GetComponent<TransformComponent>(@event.Entity);
-
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
-            if (xform.Anchored)
+            if (@event.Anchored)
             {
                 RemoveFromEntityTrees(@event.Entity);
             }
             else
             {
+                var xform = _entityManager.GetComponent<TransformComponent>(@event.Entity);
                 UpdateEntityTree(@event.Entity, xform);
             }
         }

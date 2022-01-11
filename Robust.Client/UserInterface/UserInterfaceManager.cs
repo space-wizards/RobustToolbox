@@ -164,19 +164,19 @@ namespace Robust.Client.UserInterface
             };
             RootControl.AddChild(WindowRoot);
 
-            PopupRoot = new LayoutContainer
-            {
-                Name = "PopupRoot",
-                MouseFilter = Control.MouseFilterMode.Ignore
-            };
-            RootControl.AddChild(PopupRoot);
-
             ModalRoot = new PopupContainer
             {
                 Name = "ModalRoot",
                 MouseFilter = Control.MouseFilterMode.Ignore,
             };
             RootControl.AddChild(ModalRoot);
+
+            PopupRoot = new LayoutContainer
+            {
+                Name = "PopupRoot",
+                MouseFilter = Control.MouseFilterMode.Ignore
+            };
+            RootControl.AddChild(PopupRoot);
 
             _tooltip = new Tooltip();
             PopupRoot.AddChild(_tooltip);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Server.Player;
 using Robust.Shared.Console;
+using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
@@ -112,7 +113,7 @@ namespace Robust.Server.Console
             }
             catch (Exception e)
             {
-                LogManager.GetSawmill(SawmillName).Warning($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
+                LogManager.GetSawmill(SawmillName).Error($"{FormatPlayerString(shell.Player)}: ExecuteError - {command}:\n{e}");
                 shell.WriteError($"There was an error while executing the command: {e}");
             }
         }

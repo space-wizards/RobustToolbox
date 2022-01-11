@@ -388,7 +388,7 @@ namespace Robust.Shared.Physics
                 hard |= fixture.Hard;
             }
 
-            body.ResetMassData();
+            body.ResetMassData(component);
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;

@@ -6,10 +6,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
-using Newtonsoft.Json.Linq;
 using Robust.Shared;
 using Robust.Shared.ContentPack;
-using Robust.Shared.Utility;
 
 namespace Robust.Server.ServerStatus
 {
@@ -34,18 +32,18 @@ namespace Robust.Server.ServerStatus
 
             if (!string.IsNullOrEmpty(_configurationManager.GetCVar(CVars.BuildDownloadUrl)))
             {
-                context.Respond("This server has a build download URL.", HttpStatusCode.NotFound);
+                await context.RespondAsync("This server has a build download URL.", HttpStatusCode.NotFound);
                 return true;
             }
 
             var result = await PrepareACZ();
             if (result == null)
             {
-                context.Respond("Automatic Client Zip was not preparable.", HttpStatusCode.InternalServerError);
+                await context.RespondAsync("Automatic Client Zip was not preparable.", HttpStatusCode.InternalServerError);
                 return true;
             }
 
-            context.Respond(result.Value.Data, HttpStatusCode.OK, "application/zip");
+            await context.RespondAsync(result.Value.Data, HttpStatusCode.OK, "application/zip");
             return true;
         }
 

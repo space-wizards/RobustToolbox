@@ -497,6 +497,11 @@ namespace Robust.Server.Maps
                         var castGrid = (MapGrid) grid.Grid;
                         castGrid.GridEntityId = entity;
                         pvs?.EntityPVSCollection.UpdateIndex(entity);
+                        // The problem here is that the grid is initialising at the same time as everything else which
+                        // is bad for slothcoin because a bunch of components are only added
+                        // to the grid during its initialisation hence you get exceptions
+                        // hence this 1 snowflake thing.
+                        _serverEntityManager.EnsureComponent<EntityLookupComponent>(entity);
                     }
                 }
             }

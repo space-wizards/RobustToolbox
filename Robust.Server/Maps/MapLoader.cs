@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -74,31 +75,16 @@ namespace Robust.Server.Maps
             return LoadBlueprint(mapId, path, DefaultLoadOptions);
         }
 
+        private ResourcePath Rooted(string path)
+        {
+            return new ResourcePath(path).ToRootedPath();
+        }
+
         public IMapGrid? LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
-            TextReader reader;
-            var resPath = new ResourcePath(path).ToRootedPath();
+            var resPath = Rooted(path);
 
-            // try user
-            if (!_resMan.UserData.Exists(resPath))
-            {
-                Logger.InfoS("map", $"No user blueprint path: {resPath}");
-
-                // fallback to content
-                if (_resMan.TryContentFileRead(resPath, out var contentReader))
-                {
-                    reader = new StreamReader(contentReader);
-                }
-                else
-                {
-                    Logger.ErrorS("map", $"No blueprint found: {resPath}");
-                    return null;
-                }
-            }
-            else
-            {
-                reader = _resMan.UserData.OpenText(resPath);
-            }
+            if (!TryGetReader(resPath, out var reader)) return null;
 
             IMapGrid grid;
             using (reader)
@@ -119,24 +105,36 @@ namespace Robust.Server.Maps
                 context.Deserialize();
                 grid = context.Grids[0];
 
-                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
-                {
-                    foreach (var entity in context.Entities)
-                    {
-                        entity.RunMapInit();
-                    }
-                }
-
-                if (_pauseManager.IsMapPaused(mapId))
-                {
-                    foreach (var entity in context.Entities)
-                    {
-                        _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
-                    }
-                }
+                PostDeserialize(mapId, context);
             }
 
             return grid;
+        }
+
+        private void PostDeserialize(MapId mapId, MapContext context)
+        {
+            if (context.MapIsPostInit)
+            {
+                foreach (var entity in context.Entities)
+                {
+                    _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.MapInitialized;
+                }
+            }
+            else if (_pauseManager.IsMapInitialized(mapId))
+            {
+                foreach (var entity in context.Entities)
+                {
+                    entity.RunMapInit(_serverEntityManager);
+                }
+            }
+
+            if (_pauseManager.IsMapPaused(mapId))
+            {
+                foreach (var entity in context.Entities)
+                {
+                    _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -168,11 +166,8 @@ namespace Robust.Server.Maps
             LoadMap(mapId, path, DefaultLoadOptions);
         }
 
-        public void LoadMap(MapId mapId, string path, MapLoadOptions options)
+        private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
         {
-            TextReader reader;
-            var resPath = new ResourcePath(path).ToRootedPath();
-
             // try user
             if (!_resMan.UserData.Exists(resPath))
             {
@@ -186,13 +181,23 @@ namespace Robust.Server.Maps
                 else
                 {
                     Logger.ErrorS("map", $"No map found: {resPath}");
-                    return;
+                    reader = null;
+                    return false;
                 }
             }
             else
             {
                 reader = _resMan.UserData.OpenText(resPath);
             }
+
+            return true;
+        }
+
+        public void LoadMap(MapId mapId, string path, MapLoadOptions options)
+        {
+            var resPath = Rooted(path);
+
+            if (!TryGetReader(resPath, out var reader)) return;
 
             using (reader)
             {
@@ -206,13 +211,7 @@ namespace Robust.Server.Maps
                     _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
 
-                if (!context.MapIsPostInit && _pauseManager.IsMapInitialized(mapId))
-                {
-                    foreach (var entity in context.Entities)
-                    {
-                        entity.RunMapInit();
-                    }
-                }
+                PostDeserialize(mapId, context);
             }
         }
 

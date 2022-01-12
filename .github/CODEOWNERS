@@ -5,5 +5,13 @@
 
 /Robust.*/Audio/Midi/ @Zumorica
 
+/Robust.Client.NameGenerator @PaulRitter
+/Robust.Client.Injectors @PaulRitter
+/Robust.Generators @PaulRitter
+/Robust.Analyzers @PaulRitter
+/Robust.Server/GameStates @PaulRitter
+/Robust.Shared/Analyzers @PaulRitter
+/Robust.Shared/Serialization @PaulRitter
+
 # Be they Fluent translations or Freemarker templates, I know them both!
 *.ftl @RemieRichards

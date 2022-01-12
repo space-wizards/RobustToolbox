@@ -10,8 +10,16 @@
 /Robust.Generators @PaulRitter
 /Robust.Analyzers @PaulRitter
 /Robust.Server/GameStates @PaulRitter
+/Robust.Client/GameStates @PaulRitter
 /Robust.Shared/Analyzers @PaulRitter
 /Robust.Shared/Serialization @PaulRitter
+/Robust.Client/Serialization @PaulRitter
+/Robust.Shared/Prototypes @PaulRitter
+/Robust.Client/Prototypes @PaulRitter
+/Robust.Server/Prototypes @PaulRitter
+/Robust.Shared/GameObjects/ComponentDependencies @PaulRitter
+/Robust.Shared/Containers @PaulRitter
+/Robust.Server/Containers @PaulRitter
 
 # Be they Fluent translations or Freemarker templates, I know them both!
 *.ftl @RemieRichards

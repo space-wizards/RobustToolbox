@@ -68,9 +68,9 @@ namespace Robust.Shared.GameObjects
             var gridUid = grid.GridEntityId;
             var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
 
-            // given that we need to check if the entity's CENTER is on the tile (not jut intersect), and as we need to
-            // obtain the entity's transform anyway, we will use the lookup with a callback rather than the generic
-            // GetEntitiesIntersecting().
+            // Given that we need to check if the entity's CENTER is on the tile, and not just whether it intersects,
+            // and as we need to obtain the entity's transform anyway, we will use the lookup with a callback rather
+            // than the generic GetEntitiesIntersecting().
 
             var aabb = new Box2(tileIndices * grid.TileSize, (tileIndices + 1) * grid.TileSize);
             var lookup = Comp<EntityLookupComponent>(gridUid);

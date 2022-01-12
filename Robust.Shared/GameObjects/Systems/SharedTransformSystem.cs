@@ -67,35 +67,13 @@ namespace Robust.Shared.GameObjects
             var grid = _mapManager.GetGrid(gridId);
             var gridUid = grid.GridEntityId;
             var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
-
-            // Given that we need to check if the entity's CENTER is on the tile, and not just whether it intersects,
-            // and as we need to obtain the entity's transform anyway, we will use the lookup with a callback rather
-            // than the generic GetEntitiesIntersecting().
-
             var aabb = new Box2(tileIndices * grid.TileSize, (tileIndices + 1) * grid.TileSize);
-            var lookup = Comp<EntityLookupComponent>(gridUid);
-            HashSet<TransformComponent> results = new();
 
-            _entityLookup.FastEntitiesIntersecting(lookup, ref aabb, (uid) =>
+            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
-                if (Deleted(uid))
-                    return;
-
-                var transform = Transform(uid);
+                var transform = Transform(entity);
                 if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
-                    results.Add(transform); // cannot de-parent directly, else modified-while-enumerating error.
-            });
-
-            foreach (var transform in results)
-            {
-                transform.AttachParent(mapTransform);
-            }
-
-            // Next handle anchored entities
-            foreach (var ent in grid.GetAnchoredEntities(tileIndices).ToList())
-            {
-                if (!Deleted(ent))
-                    Transform(ent).AttachParent(mapTransform);
+                    transform.AttachParent(mapTransform);
             }
         }
 

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using System.Net;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 using Robust.Shared;
 
 namespace Robust.Server.ServerStatus
@@ -18,25 +18,25 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleAutomaticClientZip);
         }
 
-        private static bool HandleTeapot(IStatusHandlerContext context)
+        private static async Task<bool> HandleTeapot(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/teapot")
             {
                 return false;
             }
 
-            context.Respond("I am a teapot.", (HttpStatusCode) 418);
+            await context.RespondAsync("I am a teapot.", (HttpStatusCode) 418);
             return true;
         }
 
-        private bool HandleStatus(IStatusHandlerContext context)
+        private async Task<bool> HandleStatus(IStatusHandlerContext context)
         {
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/status")
             {
                 return false;
             }
 
-            var jObject = new JObject
+            var jObject = new JsonObject
             {
                 // We need to send at LEAST name and player count to have the launcher work with us.
                 // Content can override these if it wants (e.g. stealthmins).
@@ -46,7 +46,7 @@ namespace Robust.Server.ServerStatus
 
             OnStatusRequest?.Invoke(jObject);
 
-            context.RespondJson(jObject);
+            await context.RespondJsonAsync(jObject);
 
             return true;
         }
@@ -60,7 +60,7 @@ namespace Robust.Server.ServerStatus
 
             var downloadUrl = _configurationManager.GetCVar(CVars.BuildDownloadUrl);
 
-            JObject? buildInfo;
+            JsonObject? buildInfo;
 
             if (string.IsNullOrEmpty(downloadUrl))
             {
@@ -74,7 +74,7 @@ namespace Robust.Server.ServerStatus
                     hash = null;
                 }
 
-                buildInfo = new JObject
+                buildInfo = new JsonObject
                 {
                     ["engine_version"] = _configurationManager.GetCVar(CVars.BuildEngineVersion),
                     ["fork_id"] = _configurationManager.GetCVar(CVars.BuildForkId),
@@ -84,7 +84,7 @@ namespace Robust.Server.ServerStatus
                 };
             }
 
-            var authInfo = new JObject
+            var authInfo = new JsonObject
             {
                 ["mode"] = _netManager.Auth.ToString(),
                 ["public_key"] = _netManager.RsaPublicKey != null
@@ -92,7 +92,7 @@ namespace Robust.Server.ServerStatus
                     : null
             };
 
-            var jObject = new JObject
+            var jObject = new JsonObject
             {
                 ["connect_address"] = _configurationManager.GetCVar(CVars.StatusConnectAddress),
                 ["auth"] = authInfo,
@@ -101,12 +101,12 @@ namespace Robust.Server.ServerStatus
 
             OnInfoRequest?.Invoke(jObject);
 
-            context.RespondJson(jObject);
+            await context.RespondJsonAsync(jObject);
 
             return true;
         }
 
-        private async Task<JObject?> PrepareACZBuildInfo()
+        private async Task<JsonObject?> PrepareACZBuildInfo()
         {
             var acz = await PrepareACZ();
             if (acz == null) return null;
@@ -121,7 +121,7 @@ namespace Robust.Server.ServerStatus
             {
                 fork = "custom";
             }
-            return new JObject
+            return new JsonObject
             {
                 ["engine_version"] = engineVersion,
                 ["fork_id"] = fork,

@@ -17,7 +17,6 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.3" />
     <PackageReference Include="nfluidsynth" Version="0.3.1" />
     <PackageReference Include="NVorbis" Version="0.10.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />
     <PackageReference Include="OpenToolkit.Graphics" Version="4.0.0-pre9.1" />
     <PackageReference Include="OpenToolkit.OpenAL" Version="4.0.0-pre9.1" />

@@ -27,6 +27,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
@@ -72,12 +73,14 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public abstract Joint GetJoint();
     }
 
+    [ImplicitDataDefinitionForInheritors]
     public abstract class Joint : IEquatable<Joint>
     {
         /// <summary>
         /// Network identifier of this joint.
         /// </summary>
         [ViewVariables]
+        [DataField("id")]
         public string ID { get; set; } = string.Empty;
 
         /// <summary>
@@ -97,6 +100,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("enabled")]
         private bool _enabled = true;
 
         /// <summary>
@@ -117,6 +121,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public PhysicsComponent BodyA =>
             IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyAUid);
 
+        [DataField("bodyA")]
         public EntityUid BodyAUid { get; init; }
 
         /// <summary>
@@ -125,6 +130,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         public PhysicsComponent BodyB =>
             IoCManager.Resolve<IEntityManager>().GetComponent<PhysicsComponent>(BodyBUid);
 
+        [DataField("bodyB")]
         public EntityUid BodyBUid { get; init; }
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -139,6 +145,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("localAnchorA")]
         private Vector2 _localAnchorA;
 
         [ViewVariables(VVAccess.ReadWrite)]
@@ -153,6 +160,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("localAnchorB")]
         private Vector2 _localAnchorB;
 
         /// <summary>
@@ -174,6 +182,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("collideConnected")]
         private bool _collideConnected = true;
 
         /// <summary>
@@ -193,6 +202,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             }
         }
 
+        [DataField("breakpoint")]
         private float _breakpoint = float.MaxValue;
         private double _breakpointSquared = Double.MaxValue;
 
@@ -205,6 +215,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
             BodyA.Dirty();
             BodyB.Dirty();
         }
+
+        protected Joint() {}
 
         protected Joint(EntityUid bodyAUid, EntityUid bodyBUid)
         {

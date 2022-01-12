@@ -33,6 +33,16 @@ namespace Robust.Client.UserInterface.Controls
 
         private bool Vertical => Orientation == SplitOrientation.Vertical;
 
+        public SplitState State
+        {
+            get => _splitState;
+            set
+            {
+                _splitState = value;
+                InvalidateMeasure();
+            }
+        }
+
         [ViewVariables(VVAccess.ReadWrite)]
         public SplitOrientation Orientation
         {
@@ -266,7 +276,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         /// Defines how the split position should be determined
         /// </summary>
-        private enum SplitState : byte
+        public enum SplitState : byte
         {
             /// <summary>
             /// Automatically adjust the split based on the width of the children

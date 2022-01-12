@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -11,6 +10,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityLookup _entityLookup = default!;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
@@ -52,25 +52,21 @@ namespace Robust.Shared.GameObjects
             if(e.NewTile.Tile != Tile.Empty)
                 return;
 
-            var grid = _mapManager.GetGrid(e.NewTile.GridIndex);
-            var tileIndices = e.NewTile.GridIndices;
-            UnanchorAllEntsOnTile(grid, tileIndices);
+            DeparentAllEntsOnTile(e.NewTile.GridIndex, e.NewTile.GridIndices);
         }
 
-        private void UnanchorAllEntsOnTile(IMapGrid grid, Vector2i tileIndices)
+        /// <summary>
+        ///     De-parents and unanchors all entities on a grid-tile.
+        /// </summary>
+        private void DeparentAllEntsOnTile(GridId gridId, Vector2i tileIndices)
         {
-            var anchoredEnts = grid.GetAnchoredEntities(tileIndices).Where(e => EntityManager.EntityExists(e)).ToList();
-
-            if (anchoredEnts.Count == 0) return;
-
-            var mapEnt = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
-
-            foreach (var ent in anchoredEnts) // changing anchored modifies this set
+            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
+            var mapTransform = Transform(_mapManager.GetMapEntityId(mapId));
+         
+            foreach (var uid in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
-                var transform = EntityManager.GetComponent<TransformComponent>(ent);
-                transform.Anchored = false;
-                // If the tile was nuked than that means no longer intersecting the grid hence parent to the map
-                transform.AttachParent(mapEnt);
+                // Attach parent will automatically set anchored=false;
+                Transform(uid).AttachParent(mapTransform);
             }
         }
 

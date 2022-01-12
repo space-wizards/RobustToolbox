@@ -89,7 +89,7 @@ namespace Robust.Shared.GameObjects
             MapManager.MapCreated += HandleMapCreated;
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
-            SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
+            SubscribeLocalEvent<CollisionChangeMessage>(HandlePhysicsUpdateMessage);
             SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
             SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
@@ -297,22 +297,22 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
+        private void HandlePhysicsUpdateMessage(CollisionChangeMessage message)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Component.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            if (message.Component.Deleted || !message.Component.CanCollide)
+            var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
+
+            if (Deleted(message.Owner) || !message.CanCollide)
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(message.Component);
+                physicsMap.RemoveBody(message.Body);
             }
             else
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(message.Component);
+                physicsMap.AddBody(message.Body);
             }
         }
 

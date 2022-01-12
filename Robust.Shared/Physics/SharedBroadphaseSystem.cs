@@ -67,7 +67,7 @@ namespace Robust.Shared.Physics
 
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
-            SubscribeLocalEvent<PhysicsUpdateMessage>(OnPhysicsUpdate);
+            SubscribeLocalEvent<CollisionChangeMessage>(OnPhysicsUpdate);
 
             // Shouldn't need to listen to mapchanges as parent changes should handle it...
             SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
@@ -228,7 +228,7 @@ namespace Robust.Shared.Physics
                 var proxyBody = proxy.Fixture.Body;
                 if (proxyBody.Deleted)
                 {
-                    Logger.ErrorS("physics", $"Deleted body {proxyBody.Owner} made it to FindNewContacts; this should never happen!");
+                    Logger.ErrorS("physics", $"Deleted body {EntityManager.ToPrettyString(proxyBody.Owner)} made it to FindNewContacts; this should never happen!");
                     DebugTools.Assert(false);
                     continue;
                 }
@@ -383,20 +383,20 @@ namespace Robust.Shared.Physics
             body.Broadphase = null;
         }
 
-        private void OnPhysicsUpdate(PhysicsUpdateMessage ev)
+        private void OnPhysicsUpdate(CollisionChangeMessage ev)
         {
-            var lifestage = ev.Component.LifeStage;
+            var lifestage = ev.Body.LifeStage;
 
             // Oh god kill it with fire.
             if (lifestage is < ComponentLifeStage.Initialized or > ComponentLifeStage.Running) return;
 
-            if (ev.Component.CanCollide)
+            if (ev.CanCollide)
             {
-                AddBody(ev.Component);
+                AddBody(ev.Body);
             }
             else
             {
-                RemoveBody(ev.Component);
+                RemoveBody(ev.Body);
             }
         }
 

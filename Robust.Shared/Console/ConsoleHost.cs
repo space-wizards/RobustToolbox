@@ -70,6 +70,18 @@ namespace Robust.Shared.Console
             AvailableCommands.Add(command, newCmd);
         }
 
+        /// <inheritdoc />
+        public void UnregisterCommand(string command)
+        {
+            if (!AvailableCommands.TryGetValue(command, out var cmd))
+                throw new KeyNotFoundException($"Command {command} is not registered.");
+
+            if (cmd is not RegisteredCommand)
+                throw new InvalidOperationException("You cannot unregister commands that have been registered automatically.");
+
+            AvailableCommands.Remove(command);
+        }
+
         //TODO: Pull up
         public abstract void ExecuteCommand(ICommonSession? session, string command);
 
@@ -108,9 +120,9 @@ namespace Robust.Shared.Console
         /// A console command that was registered inline through <see cref="IConsoleHost"/>.
         /// </summary>
         [Reflect(false)]
-        private class RegisteredCommand : IConsoleCommand
+        public class RegisteredCommand : IConsoleCommand
         {
-            private readonly ConCommandCallback _callback;
+            public ConCommandCallback Callback { get; }
 
             /// <inheritdoc />
             public string Command { get; }
@@ -131,15 +143,16 @@ namespace Robust.Shared.Console
             public RegisteredCommand(string command, string description, string help, ConCommandCallback callback)
             {
                 Command = command;
+                // Should these two be localized somehow?
                 Description = description;
                 Help = help;
-                _callback = callback;
+                Callback = callback;
             }
 
             /// <inheritdoc />
             public void Execute(IConsoleShell shell, string argStr, string[] args)
             {
-                _callback(shell, argStr, args);
+                Callback(shell, argStr, args);
             }
         }
     }

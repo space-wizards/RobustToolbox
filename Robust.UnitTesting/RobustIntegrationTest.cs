@@ -69,7 +69,7 @@ namespace Robust.UnitTesting
         /// </summary>
         protected virtual ServerIntegrationInstance StartServer(ServerIntegrationOptions? options = null)
         {
-            ServerIntegrationInstance instance;
+            ServerIntegrationInstance? instance = null;
 
             if (ShouldPool(options))
             {
@@ -78,12 +78,18 @@ namespace Robust.UnitTesting
                     server.PreviousOptions = server.ServerOptions;
                     server.ServerOptions = options;
 
-                    OnServerReturn(server).Wait();
-
-                    _serversRunning[server] = 0;
-                    instance = server;
+                    try
+                    {
+                        OnServerReturn(server).Wait();
+                        _serversRunning[server] = 0;
+                        instance = server;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"weh... {ex.Message}");
+                    }
                 }
-                else
+                if (instance == null)
                 {
                     instance = new ServerIntegrationInstance(options);
                     _serversRunning[instance] = 0;

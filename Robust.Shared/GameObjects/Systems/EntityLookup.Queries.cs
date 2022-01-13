@@ -81,13 +81,13 @@ public sealed partial class EntityLookup
     #endregion
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
+    public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
         return new Box2(gridIndices * tileSize, (gridIndices + 1) * tileSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private Box2 GetLocalBounds(TileRef tileRef, ushort tileSize)
+    public Box2 GetLocalBounds(TileRef tileRef, ushort tileSize)
     {
         return GetLocalBounds(tileRef.GridIndices, tileSize);
     }
@@ -104,8 +104,9 @@ public sealed partial class EntityLookup
             angle = wAng;
         }
 
-        var center = worldMatrix.Value.Transform((Vector2) tileRef.GridIndices + 0.5f);
+        var center = worldMatrix.Value.Transform((Vector2)tileRef.GridIndices * grid.TileSize + 0.5f);
+        var translatedBox = Box2.CenteredAround(center, (grid.TileSize, grid.TileSize));
 
-        return new Box2Rotated(Box2.UnitCentered.Translated(center), -angle.Value, center);
+        return new Box2Rotated(translatedBox, -angle.Value, center);
     }
 }

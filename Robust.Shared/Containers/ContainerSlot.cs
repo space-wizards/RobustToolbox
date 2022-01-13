@@ -51,9 +51,10 @@ namespace Robust.Shared.Containers
         public override string ContainerType => ClassName;
 
         /// <inheritdoc />
-        public override bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        public override bool CanInsert(EntityUid toinsert, out string? reason, IEntityManager? entMan = null)
         {
-            return (ContainedEntity == null) && CanInsertIfEmpty(toinsert, entMan);
+            reason = null;
+            return (ContainedEntity == null) && CanInsertIfEmpty(toinsert, out reason, entMan);
         }
 
         /// <summary>
@@ -65,10 +66,12 @@ namespace Robust.Shared.Containers
         /// </remarks>
         /// <param name="toinsert">The entity to attempt to insert.</param>
         /// <returns>True if the entity could be inserted into an empty slot, false otherwise.</returns>
-        public bool CanInsertIfEmpty(EntityUid toinsert, IEntityManager? entMan = null)
+        public bool CanInsertIfEmpty(EntityUid toinsert, out string? reason, IEntityManager? entMan = null)
         {
-            return base.CanInsert(toinsert, entMan);
+            return base.CanInsert(toinsert, out reason, entMan);
         }
+
+        public bool CanInsertIfEmpty(EntityUid toinsert, IEntityManager? entMan = null) => CanInsertIfEmpty(toinsert, out _, entMan);
 
         /// <inheritdoc />
         public override bool Contains(EntityUid contained)

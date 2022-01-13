@@ -86,9 +86,10 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public virtual bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null)
+        public virtual bool CanInsert(EntityUid toinsert, out string? reason, IEntityManager? entMan = null)
         {
             DebugTools.Assert(!Deleted);
+            reason = null;
 
             // cannot insert into itself.
             if (Owner == toinsert)
@@ -111,15 +112,23 @@ namespace Robust.Shared.Containers
             var insertAttemptEvent = new ContainerIsInsertingAttemptEvent(this, toinsert);
             entMan.EventBus.RaiseLocalEvent(Owner, insertAttemptEvent);
             if (insertAttemptEvent.Cancelled)
+            {
+                reason = insertAttemptEvent.Reason;
                 return false;
+            }
 
             var gettingInsertedAttemptEvent = new ContainerGettingInsertedAttemptEvent(this, toinsert);
             entMan.EventBus.RaiseLocalEvent(toinsert, gettingInsertedAttemptEvent);
             if (gettingInsertedAttemptEvent.Cancelled)
+            {
+                reason = gettingInsertedAttemptEvent.Reason;
                 return false;
+            }
 
             return true;
         }
+
+        public bool CanInsert(EntityUid toinsert, IEntityManager? entMan = null) => CanInsert(toinsert, out _, entMan);
 
         /// <inheritdoc />
         public bool Remove(EntityUid toremove, IEntityManager? entMan = null)
@@ -150,9 +159,10 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public virtual bool CanRemove(EntityUid toremove, IEntityManager? entMan = null)
+        public virtual bool CanRemove(EntityUid toremove, out string? reason, IEntityManager? entMan = null)
         {
             DebugTools.Assert(!Deleted);
+            reason = null;
 
             if (!Contains(toremove))
                 return false;
@@ -163,15 +173,23 @@ namespace Robust.Shared.Containers
             var removeAttemptEvent = new ContainerIsRemovingAttemptEvent(this, toremove);
             entMan.EventBus.RaiseLocalEvent(Owner, removeAttemptEvent);
             if (removeAttemptEvent.Cancelled)
+            {
+                reason = removeAttemptEvent.Reason;
                 return false;
+            }
 
             var gettingRemovedAttemptEvent = new ContainerGettingRemovedAttemptEvent(this, toremove);
             entMan.EventBus.RaiseLocalEvent(toremove, gettingRemovedAttemptEvent);
             if (gettingRemovedAttemptEvent.Cancelled)
+            {
+                reason = gettingRemovedAttemptEvent.Reason;
                 return false;
+            }
 
             return true;
         }
+
+        public bool CanRemove(EntityUid toremove, IEntityManager? entMan = null) => CanRemove(toremove, out _, entMan);
 
         /// <inheritdoc />
         public abstract bool Contains(EntityUid contained);

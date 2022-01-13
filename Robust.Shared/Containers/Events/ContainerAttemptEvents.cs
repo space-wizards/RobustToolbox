@@ -8,6 +8,7 @@ public class ContainerAttemptEventBase : CancellableEntityEventArgs
 {
     public readonly IContainer Container;
     public readonly EntityUid EntityUid;
+    public string? Reason;
 
     public ContainerAttemptEventBase(IContainer container, EntityUid entityUid)
     {

@@ -25,9 +25,10 @@ namespace Robust.Shared.GameObjects
     {
         private static readonly MapInitEvent MapInit = new MapInitEvent();
 
-        public static void RunMapInit(this EntityUid entity)
+        public static void RunMapInit(this EntityUid entity, IEntityManager? entMan = null)
         {
-            var entMan = IoCManager.Resolve<IEntityManager>();
+            // Temporary until a bit more ECS
+            IoCManager.Resolve(ref entMan);
             var meta = entMan.GetComponent<MetaDataComponent>(entity);
 
             if (meta.EntityLifeStage == EntityLifeStage.MapInitialized)

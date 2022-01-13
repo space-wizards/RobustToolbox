@@ -104,7 +104,7 @@ public sealed partial class EntityLookup
             angle = wAng;
         }
 
-        var center = worldMatrix.Value.Transform((Vector2)tileRef.GridIndices * grid.TileSize + 0.5f);
+        var center = worldMatrix.Value.Transform((Vector2) tileRef.GridIndices + 0.5f) * grid.TileSize;
         var translatedBox = Box2.CenteredAround(center, (grid.TileSize, grid.TileSize));
 
         return new Box2Rotated(translatedBox, -angle.Value, center);

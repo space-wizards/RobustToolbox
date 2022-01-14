@@ -65,6 +65,9 @@ namespace Robust.Shared.GameObjects
          
             foreach (var uid in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
+                if (EntityManager.IsQueuedForDeletion(uid))
+                    continue;
+
                 // Attach parent will automatically set anchored=false;
                 Transform(uid).AttachParent(mapTransform);
             }

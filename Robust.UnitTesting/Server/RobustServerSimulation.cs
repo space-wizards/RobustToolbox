@@ -203,7 +203,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
-            container.Register<IComponentDependencyManager, ComponentDependencyManager>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IIslandManager, IslandManager>();
             container.Register<IManifoldManager, CollisionManager>();

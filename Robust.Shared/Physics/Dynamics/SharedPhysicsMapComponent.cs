@@ -229,10 +229,8 @@ namespace Robust.Shared.Physics.Dynamics
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
-            foreach (var controller in PhysicsSystem.Controllers)
-            {
-                controller.UpdateBeforeMapSolve(prediction, this, frameTime);
-            }
+            var updateBeforeSolve = new PhysicsUpdateBeforeMapSolveEvent(prediction, this, frameTime);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref updateBeforeSolve);
 
             ContactManager.Collide();
             // Don't run collision behaviors during FrameUpdate?
@@ -247,10 +245,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             // TODO: SolveTOI
 
-            foreach (var controller in PhysicsSystem.Controllers)
-            {
-                controller.UpdateAfterMapSolve(prediction, this, frameTime);
-            }
+            var updateAfterSolve = new PhysicsUpdateAfterMapSolveEvent(prediction, this, frameTime);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref updateAfterSolve);
 
             // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
             if (!prediction && AutoClearForces)
@@ -472,6 +468,36 @@ namespace Robust.Shared.Physics.Dynamics
                 body.Force = Vector2.Zero;
                 body.Torque = 0.0f;
             }
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct PhysicsUpdateBeforeMapSolveEvent
+    {
+        public readonly bool Prediction;
+        public readonly SharedPhysicsMapComponent MapComponent;
+        public readonly float DeltaTime;
+
+        public PhysicsUpdateBeforeMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
+        {
+            Prediction = prediction;
+            MapComponent = mapComponent;
+            DeltaTime = deltaTime;
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct PhysicsUpdateAfterMapSolveEvent
+    {
+        public readonly bool Prediction;
+        public readonly SharedPhysicsMapComponent MapComponent;
+        public readonly float DeltaTime;
+
+        public PhysicsUpdateAfterMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
+        {
+            Prediction = prediction;
+            MapComponent = mapComponent;
+            DeltaTime = deltaTime;
         }
     }
 }

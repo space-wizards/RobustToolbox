@@ -65,6 +65,8 @@ namespace Robust.Shared.GameObjects
          
             foreach (var uid in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
+                // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
+                // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(uid))
                     continue;
 

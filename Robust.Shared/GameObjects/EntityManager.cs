@@ -297,11 +297,11 @@ namespace Robust.Shared.GameObjects
 
         public void QueueDeleteEntity(EntityUid uid)
         {
-            if (QueuedDeletionsSet.Add(uid))
+            if(QueuedDeletionsSet.Add(uid))
                 QueuedDeletions.Enqueue(uid);
         }
 
-        public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletions.Contains(uid);
+        public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
 
         public bool EntityExists(EntityUid uid)
         {

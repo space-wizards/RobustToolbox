@@ -214,7 +214,6 @@ namespace Robust.Shared.Prototypes
 
             entityManager.CullRemovedComponents();
 
-            var componentDependencyManager = IoCManager.Resolve<IComponentDependencyManager>();
 
             // Add new components
             foreach (var (name, type) in newPrototypeComponents.Where(t => !ignoredComponents.Contains(t.name))
@@ -223,7 +222,6 @@ namespace Robust.Shared.Prototypes
                 var data = Components[name];
                 var component = (Component) factory.GetComponent(name);
                 component.Owner = entity;
-                componentDependencyManager.OnComponentAdd(entity, component);
                 entityManager.AddComponent(entity, component);
             }
 

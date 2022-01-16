@@ -319,10 +319,6 @@ namespace Robust.Server.Maps
                 // Create the new map.
                 AllocMap();
 
-                // Load grids.
-                ReadTileMapSection();
-                ReadGridSection();
-
                 // Entities are first allocated. This allows us to know the future UID of all entities on the map before
                 // even ExposeData is loaded. This allows us to resolve serialized EntityUid instances correctly.
                 AllocEntities();
@@ -333,6 +329,10 @@ namespace Robust.Server.Maps
                 // Clear the net tick numbers so that components from prototypes (not modified by map)
                 // aren't sent over the wire initially.
                 ResetNetTicks();
+
+                // Load grids.
+                ReadTileMapSection();
+                ReadGridSection();
 
                 // Grid entities were NOT created inside ReadGridSection().
                 // We have to fix the created grids up with the grid entities deserialized from the map.
@@ -540,23 +540,39 @@ namespace Robust.Server.Maps
 
             private void ReadGridSection()
             {
-                var grids = RootNode.GetNode<YamlSequenceNode>("grids");
+                // This function expects all of the grid ents to already be deserialized
+                // and exist in the ECS system.
 
-                foreach (var grid in grids)
+                var grids = RootNode.GetNode<YamlSequenceNode>("grids");
+                
+                // get ents that the grids will bind to
+                var gents = new MapGridComponent[grids.Children.Count];
+                foreach (var tuple in _entitiesToDeserialize)
                 {
-                    var newId = new GridId?();
+                    if (_serverEntityManager.TryGetComponent(tuple.Item1, out MapGridComponent gridComp))
+                    {
+                        // The implicit order of the grids in this section
+                        // match up with the MapGridComponent.Index field.
+                        gents[gridComp.GridIndex.Value] = gridComp;
+                    }
+                }
+
+                for (var i = 0; i < grids.Children.Count; i++)
+                {
+                    var gridYml = grids.Children[i];
+                    var gridComp = gents[i];
+
+                    GridId newId = default;
                     YamlGridSerializer.DeserializeGrid(
                         _mapManager, TargetMap, ref newId,
-                        (YamlMappingNode) grid["settings"],
-                        (YamlSequenceNode) grid["chunks"],
+                        (YamlMappingNode)gridYml["settings"],
+                        (YamlSequenceNode)gridYml["chunks"],
                         _tileMap!,
-                        _tileDefinitionManager
+                        _tileDefinitionManager,
+                        gridComp
                     );
 
-                    if (newId != null)
-                    {
-                        Grids.Add(_mapManager.GetGrid(newId.Value));
-                    }
+                    Grids.Add(_mapManager.GetGrid(newId));
                 }
             }
 

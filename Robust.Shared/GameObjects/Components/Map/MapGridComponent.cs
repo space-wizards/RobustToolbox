@@ -34,6 +34,8 @@ namespace Robust.Shared.GameObjects
         [DataField("index")]
         private GridId _gridIndex = GridId.Invalid;
 
+        private IMapGrid? _mapGrid;
+
         /// <inheritdoc />
         public GridId GridIndex
         {
@@ -43,7 +45,11 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public IMapGrid Grid => _mapManager.GetGrid(_gridIndex);
+        public IMapGrid Grid
+        {
+            get => _mapGrid ?? throw new InvalidOperationException();
+            set => _mapGrid = value;
+        }
 
         /// <inheritdoc />
         public void ClearGridId()

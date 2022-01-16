@@ -170,5 +170,9 @@ namespace Robust.Shared.Map
 
         MapId NextMapId();
         GridId NextGridId();
+        EntityUid GetGridEuid(GridId id);
+        GridId EntToGridId(EntityUid uid);
+        IMapGridComponent GetGridComp(GridId id);
+        IMapGridComponent GetGridComp(EntityUid euid);
     }
 }

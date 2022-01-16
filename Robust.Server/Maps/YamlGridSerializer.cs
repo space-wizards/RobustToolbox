@@ -77,9 +77,9 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
+        public static void DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, ref GridId gridId, YamlMappingNode info,
             YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
-            ITileDefinitionManager tileDefinitionManager)
+            ITileDefinitionManager tileDefinitionManager, MapGridComponent mapGridComponent)
         {
             ushort csz = 0;
             ushort tsz = 0;
@@ -97,7 +97,7 @@ namespace Robust.Server.Maps
                     sgsz = float.Parse(val, CultureInfo.InvariantCulture);
             }
 
-            var grid = mapMan.CreateGridNoEntity(mapId, gridId);
+            var grid = mapMan.CreateBoundGrid(mapId, mapGridComponent);
 
             gridId = grid.Index;
 

@@ -22,6 +22,6 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
-        IMapGridInternal CreateGridNoEntity(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16);
+        IMapGridInternal CreateBoundGrid(MapId mapId, MapGridComponent gridComponent);
     }
 }

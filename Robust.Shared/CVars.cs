@@ -150,7 +150,7 @@ namespace Robust.Shared
             CVarDef.Create("sys.game_thread_stack_size", 8 * 1024 * 1024);
 
         /// <summary>
-        ///     Controls stack size of the game logic thread.
+        ///     Controls thread priority of the game logic thread.
         /// </summary>
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);

@@ -71,7 +71,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
         var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
-        foreach (var grid in Grids.Values)
+        foreach (MapGrid grid in GetAllGrids())
         {
             if (grid.LastTileModifiedTick < fromTick)
                 continue;
@@ -154,11 +154,11 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         // - Grid Creation data --
         var gridCreations = new Dictionary<GridId, GameStateMapData.GridCreationDatum>();
 
-        foreach (var (gridId, grid) in Grids)
+        foreach (MapGrid grid in GetAllGrids())
         {
             if (grid.CreatedTick < fromTick || grid.ParentMapId == MapId.Nullspace)
                 continue;
-            gridCreations.Add(gridId, new GameStateMapData.GridCreationDatum(grid.ChunkSize));
+            gridCreations.Add(grid.Index, new GameStateMapData.GridCreationDatum(grid.ChunkSize));
         }
 
         // no point sending empty collections
@@ -242,7 +242,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
 
             foreach (var (gridId, creationDatum) in data.CreatedGrids)
             {
-                if (Grids.ContainsKey(gridId))
+                if (GridExists(gridId))
                     continue;
 
                 EntityUid gridEuid = default;
@@ -287,7 +287,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
             // Ok good all the grids and maps exist now.
             foreach (var (gridId, gridDatum) in data.GridData)
             {
-                var grid = Grids[gridId];
+                var grid = (MapGrid)GetGrid(gridId);
                 if (grid.ParentMapId != gridDatum.Coordinates.MapId)
                     throw new NotImplementedException("Moving grids between maps is not yet implemented");
 
@@ -346,7 +346,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         {
             foreach (var grid in data.DeletedGrids)
             {
-                if (Grids.ContainsKey(grid))
+                if (GridExists(grid))
                     DeleteGrid(grid);
             }
         }

@@ -35,7 +35,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         EnsureNullspaceExistsAndClear();
 
-        DebugTools.Assert(Grids.Count == 0);
+        DebugTools.Assert(_grids.Count == 0);
         DebugTools.Assert(!GridExists(GridId.Invalid));
     }
 
@@ -50,7 +50,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         DeleteAllMaps();
 
 #if DEBUG
-        DebugTools.Assert(Grids.Count == 0);
+        DebugTools.Assert(_grids.Count == 0);
         DebugTools.Assert(!GridExists(GridId.Invalid));
         _dbgGuardRunning = false;
 #endif

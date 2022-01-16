@@ -59,7 +59,7 @@ public class TileChangedEventArgs : EventArgs
 
 internal partial class MapManager
 {
-    private protected readonly Dictionary<GridId, MapGrid> Grids = new();
+    private readonly Dictionary<GridId, MapGrid> _grids = new();
 
     private GridId _highestGridId = GridId.Invalid;
 
@@ -67,7 +67,7 @@ internal partial class MapManager
 
     public IEnumerable<IMapGrid> GetAllGrids()
     {
-        return Grids.Values;
+        return _grids.Values;
     }
 
     public IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16)
@@ -82,17 +82,17 @@ internal partial class MapManager
 
     public IMapGrid GetGrid(GridId gridId)
     {
-        return Grids[gridId];
+        return _grids[gridId];
     }
 
     public bool IsGrid(EntityUid uid)
     {
-        return Grids.Any(x => x.Value.GridEntityId == uid);
+        return _grids.Any(x => x.Value.GridEntityId == uid);
     }
 
     public bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid)
     {
-        if (Grids.TryGetValue(gridId, out var mapGrid))
+        if (_grids.TryGetValue(gridId, out var mapGrid))
         {
             grid = mapGrid;
             return true;
@@ -104,17 +104,17 @@ internal partial class MapManager
 
     public bool GridExists(GridId gridId)
     {
-        return Grids.ContainsKey(gridId);
+        return _grids.ContainsKey(gridId);
     }
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
     {
-        return Grids.Values.Where(m => m.ParentMapId == mapId);
+        return _grids.Values.Where(m => m.ParentMapId == mapId);
     }
 
     public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false)
     {
-        enumerator = new FindGridsEnumerator(EntityManager, Grids.GetEnumerator(), mapId, worldAabb, approx);
+        enumerator = new FindGridsEnumerator(EntityManager, _grids.GetEnumerator(), mapId, worldAabb, approx);
     }
 
     public virtual void DeleteGrid(GridId gridId)
@@ -123,7 +123,7 @@ internal partial class MapManager
         DebugTools.Assert(_dbgGuardRunning);
 #endif
         // Possible the grid was already deleted / is invalid
-        if (!Grids.TryGetValue(gridId, out var grid) || grid.Deleting)
+        if (!_grids.TryGetValue(gridId, out var grid) || grid.Deleting)
             return;
 
         grid.Deleting = true;
@@ -141,7 +141,7 @@ internal partial class MapManager
         }
 
         grid.Dispose();
-        Grids.Remove(grid.Index);
+        _grids.Remove(grid.Index);
 
         Logger.DebugS("map", $"Deleted grid {gridId}");
         OnGridRemoved?.Invoke(mapId, gridId);
@@ -226,7 +226,7 @@ internal partial class MapManager
             _highestGridId = actualId;
 
         var grid = new MapGrid(this, EntityManager, actualId, chunkSize, currentMapId);
-        Grids.Add(actualId, grid);
+        _grids.Add(actualId, grid);
         Logger.InfoS("map", $"Creating new grid {actualId}");
 
         if (actualId != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity

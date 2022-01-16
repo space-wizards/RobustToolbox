@@ -77,6 +77,12 @@ namespace Robust.Shared.GameObjects
         void RemoveFromEntityTrees(EntityUid entity);
 
         Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);
+
+        Box2 GetLocalBounds(TileRef tileRef, ushort tileSize);
+
+        Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize);
+
+        Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null);
     }
 
     [UsedImplicitly]

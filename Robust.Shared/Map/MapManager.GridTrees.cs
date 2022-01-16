@@ -26,12 +26,12 @@ internal partial class MapManager
 
     private void InitializeGridTrees()
     {
-        _entityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
-        _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
+        EntityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
+        EntityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
     }
 
     private void OnMapCreatedGridTree(MapEventArgs e)

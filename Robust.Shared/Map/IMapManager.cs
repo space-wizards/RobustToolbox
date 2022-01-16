@@ -47,21 +47,21 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Creates a new map.
         /// </summary>
-        /// <param name="mapID">
+        /// <param name="mapId">
         ///     If provided, the new map will use this ID. If not provided, a new ID will be selected automatically.
         /// </param>
         /// <returns>The new map.</returns>
         /// <exception cref="InvalidOperationException">
         ///     Throw if an explicit ID for the map or default grid is passed and a map or grid with the specified ID already exists, respectively.
         /// </exception>
-        MapId CreateMap(MapId? mapID = null);
+        MapId CreateMap(MapId? mapId = null);
 
         /// <summary>
         ///     Check whether a map with specified ID exists.
         /// </summary>
-        /// <param name="mapID">The map ID to check existance of.</param>
+        /// <param name="mapId">The map ID to check existence of.</param>
         /// <returns>True if the map exists, false otherwise.</returns>
-        bool MapExists(MapId mapID);
+        bool MapExists(MapId mapId);
 
         /// <summary>
         /// Creates a new entity, then sets it as the map entity.
@@ -87,12 +87,12 @@ namespace Robust.Shared.Map
 
         IEnumerable<MapId> GetAllMapIds();
 
-        void DeleteMap(MapId mapID);
+        void DeleteMap(MapId mapId);
 
-        IMapGrid CreateGrid(MapId currentMapID, GridId? gridID = null, ushort chunkSize = 16);
-        IMapGrid GetGrid(GridId gridID);
+        IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16);
+        IMapGrid GetGrid(GridId gridId);
         bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid);
-        bool GridExists(GridId gridID);
+        bool GridExists(GridId gridId);
         IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId);
 
         /// <summary>
@@ -118,16 +118,16 @@ namespace Robust.Shared.Map
         /// <returns>Returns true when a grid was found under the location.</returns>
         bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid);
 
-        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAABB, out FindGridsEnumerator enumerator, bool approx = false);
+        void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.
         /// </summary>
         /// <param name="mapId">The relevant MapID</param>
-        /// <param name="worldAABB">The AABB to intersect</param>
+        /// <param name="worldAabb">The AABB to intersect</param>
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         /// <returns></returns>
-        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAABB, bool approx = false);
+        IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.
@@ -137,7 +137,7 @@ namespace Robust.Shared.Map
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false);
 
-        void DeleteGrid(GridId gridID);
+        void DeleteGrid(GridId gridId);
 
         /// <summary>
         ///     A tile is being modified.

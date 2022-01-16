@@ -71,7 +71,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
         var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
-        foreach (var grid in _grids.Values)
+        foreach (var grid in Grids.Values)
         {
             if (grid.LastTileModifiedTick < fromTick)
                 continue;
@@ -144,7 +144,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         // -- Map Creations --
         var mapCreations = new List<MapId>();
 
-        foreach (var (mapId, tick) in _mapCreationTick)
+        foreach (var (mapId, tick) in MapCreationTick)
         {
             if (tick < fromTick || mapId == MapId.Nullspace)
                 continue;
@@ -154,7 +154,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         // - Grid Creation data --
         var gridCreations = new Dictionary<GridId, GameStateMapData.GridCreationDatum>();
 
-        foreach (var (gridId, grid) in _grids)
+        foreach (var (gridId, grid) in Grids)
         {
             if (grid.CreatedTick < fromTick || grid.ParentMapId == MapId.Nullspace)
                 continue;
@@ -209,7 +209,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
             foreach (var mapId in data.CreatedMaps)
             {
                 // map already exists from a previous state.
-                if (_maps.Contains(mapId))
+                if (MapExists(mapId))
                     continue;
 
                 EntityUid mapEuid = default;
@@ -242,7 +242,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
 
             foreach (var (gridId, creationDatum) in data.CreatedGrids)
             {
-                if (_grids.ContainsKey(gridId))
+                if (Grids.ContainsKey(gridId))
                     continue;
 
                 EntityUid gridEuid = default;
@@ -287,7 +287,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
             // Ok good all the grids and maps exist now.
             foreach (var (gridId, gridDatum) in data.GridData)
             {
-                var grid = _grids[gridId];
+                var grid = Grids[gridId];
                 if (grid.ParentMapId != gridDatum.Coordinates.MapId)
                     throw new NotImplementedException("Moving grids between maps is not yet implemented");
 
@@ -346,7 +346,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         {
             foreach (var grid in data.DeletedGrids)
             {
-                if (_grids.ContainsKey(grid))
+                if (Grids.ContainsKey(grid))
                     DeleteGrid(grid);
             }
         }
@@ -355,7 +355,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         {
             foreach (var map in data.DeletedMaps)
             {
-                if (_maps.Contains(map))
+                if (MapExists(map))
                     DeleteMap(map);
             }
         }

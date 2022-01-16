@@ -69,17 +69,32 @@ internal partial class MapManager
 
     public EntityUid GetGridEuid(GridId id)
     {
-        return GetGridComp(id).Owner;
+        DebugTools.Assert(id != GridId.Invalid);
+
+        //This turns into a linear search with EntityQuery without the _grids mapping
+        return _grids[id].GridEntityId;
     }
 
-    public GridId EntToGridId(EntityUid uid)
+    public bool TryGetGridEuid(GridId id, [MaybeNullWhen(false)]out EntityUid euid)
     {
-        return GetGridComp(uid).GridIndex;
+        DebugTools.Assert(id != GridId.Invalid);
+
+        if (_grids.TryGetValue(id, out var grid))
+        {
+            euid = grid.GridEntityId;
+            return true;
+        }
+
+        euid = default;
+        return false;
     }
-    
+
     public IMapGridComponent GetGridComp(GridId id)
     {
-        return EntityManager.EntityQuery<IMapGridComponent>(true).First(c => c.GridIndex == id);
+        DebugTools.Assert(id != GridId.Invalid);
+
+        var euid = GetGridEuid(id);
+        return GetGridComp(euid);
     }
 
     public IMapGridComponent GetGridComp(EntityUid euid)
@@ -87,12 +102,25 @@ internal partial class MapManager
         return EntityManager.GetComponent<IMapGridComponent>(euid);
     }
 
+    public bool TryGetGridComp(GridId id, [MaybeNullWhen(false)]out IMapGridComponent comp)
+    {
+        DebugTools.Assert(id != GridId.Invalid);
+
+        var euid = GetGridEuid(id);
+        if(EntityManager.TryGetComponent(euid, out comp))
+            return true;
+
+        comp = default;
+        return false;
+    }
+
     public IMapGridInternal CreateBoundGrid(MapId mapId, MapGridComponent gridComponent)
     {
-        var newGrid = CreateGridImpl(mapId, null, 16, false, default);
+        var newGrid = (MapGrid) CreateGridImpl(mapId, null, 16, false, default);
 
         gridComponent.Grid = newGrid;
         gridComponent.GridIndex = newGrid.Index;
+        newGrid.GridEntityId = gridComponent.Owner;
 
         OnGridCreated?.Invoke(newGrid.ParentMapId, newGrid.Index);
         return newGrid;
@@ -100,59 +128,76 @@ internal partial class MapManager
 
     public IEnumerable<IMapGrid> GetAllGrids()
     {
-#if MECS
-        return EntityManager.EntityQuery<IMapGridComponent>().Select(c => c.Grid);
-#else
-        return _grids.Values;
-#endif
+        return EntityManager.EntityQuery<IMapGridComponent>(true).Select(c => c.Grid);
     }
 
     public IMapGrid CreateGrid(MapId currentMapId, GridId? gridId = null, ushort chunkSize = 16)
     {
+        DebugTools.Assert(gridId != GridId.Invalid);
+
         var mapGrid = CreateGridImpl(currentMapId, gridId, chunkSize, true, default);
         OnGridCreated?.Invoke(currentMapId, mapGrid.Index);
         return mapGrid;
     }
 
+    public IMapGrid GetGrid(EntityUid euid)
+    {
+        return GetGridComp(euid).Grid;
+    }
+
     public IMapGrid GetGrid(GridId gridId)
     {
-#if MECS
-        return GetGridComp(gridId).Grid;
-#else
-        return _grids[gridId];
-#endif
+        DebugTools.Assert(gridId != GridId.Invalid);
+
+        var euid = GetGridEuid(gridId);
+        return GetGridComp(euid).Grid;
     }
 
     public bool IsGrid(EntityUid uid)
     {
-        return _grids.Any(x => x.Value.GridEntityId == uid);
+        return EntityManager.HasComponent<IMapGridComponent>(uid);
     }
 
-    public bool TryGetGrid(GridId gridId, [NotNullWhen(true)] out IMapGrid? grid)
+    public bool TryGetGrid(EntityUid euid, [MaybeNullWhen(false)] out IMapGrid grid)
     {
-        if (_grids.TryGetValue(gridId, out var mapGrid))
+        if (EntityManager.TryGetComponent(euid, out IMapGridComponent comp))
         {
-            grid = mapGrid;
+            grid = comp.Grid;
             return true;
         }
 
-        grid = null;
+        grid = default;
         return false;
+    }
+
+    public bool TryGetGrid(GridId gridId, [MaybeNullWhen(false)] out IMapGrid grid)
+    {
+        DebugTools.Assert(gridId != GridId.Invalid);
+
+        var euid = GetGridEuid(gridId);
+        return TryGetGrid(euid, out grid);
     }
 
     public bool GridExists(GridId gridId)
     {
-        return _grids.ContainsKey(gridId);
+        return gridId != GridId.Invalid && (TryGetGridEuid(gridId, out var euid) && GridExists(euid));
+    }
+
+    public bool GridExists(EntityUid euid)
+    {
+        return EntityManager.EntityExists(euid) && EntityManager.HasComponent<IMapGridComponent>(euid);
     }
 
     public IEnumerable<IMapGrid> GetAllMapGrids(MapId mapId)
     {
-        return _grids.Values.Where(m => m.ParentMapId == mapId);
+        return EntityManager.EntityQuery<IMapGridComponent>(true)
+            .Where(c => c.Grid.ParentMapId == mapId)
+            .Select(c => c.Grid);
     }
 
     public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAabb, out FindGridsEnumerator enumerator, bool approx = false)
     {
-        enumerator = new FindGridsEnumerator(EntityManager, _grids.GetEnumerator(), mapId, worldAabb, approx);
+        enumerator = new FindGridsEnumerator(EntityManager, GetAllGrids().Cast<MapGrid>().GetEnumerator(), mapId, worldAabb, approx);
     }
 
     public virtual void DeleteGrid(GridId gridId)

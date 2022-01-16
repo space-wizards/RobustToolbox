@@ -493,8 +493,6 @@ namespace Robust.Server.Maps
                 {
                     if (_serverEntityManager.TryGetComponent(entity, out IMapGridComponent? grid))
                     {
-                        var castGrid = (MapGrid) grid.Grid;
-                        castGrid.GridEntityId = entity;
                         pvs?.EntityPVSCollection.UpdateIndex(entity);
                         // The problem here is that the grid is initialising at the same time as everything else which
                         // is bad for slothcoin because a bunch of components are only added

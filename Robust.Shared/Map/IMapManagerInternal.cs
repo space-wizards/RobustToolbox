@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Timing;
@@ -23,5 +24,7 @@ namespace Robust.Shared.Map
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
         IMapGridInternal CreateBoundGrid(MapId mapId, MapGridComponent gridComponent);
+        bool TryGetGridComp(GridId id, [MaybeNullWhen(false)]out IMapGridComponent comp);
+        bool TryGetGridEuid(GridId id, [MaybeNullWhen(false)]out EntityUid euid);
     }
 }

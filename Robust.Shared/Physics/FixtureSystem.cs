@@ -112,7 +112,6 @@ namespace Robust.Shared.Physics
             {
                 var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
-                _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
                 _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot);
             }
 

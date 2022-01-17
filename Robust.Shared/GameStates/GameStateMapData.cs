@@ -40,14 +40,16 @@ namespace Robust.Shared.GameStates
         public struct GridDatum
         {
             public readonly MapCoordinates Coordinates;
+            public readonly Angle Angle;
             public readonly ChunkDatum[] ChunkData;
             public readonly DeletedChunkDatum[] DeletedChunkData;
 
-            public GridDatum(ChunkDatum[] chunkData, DeletedChunkDatum[] deletedChunkData, MapCoordinates coordinates)
+            public GridDatum(ChunkDatum[] chunkData, DeletedChunkDatum[] deletedChunkData, MapCoordinates coordinates, Angle angle)
             {
                 ChunkData = chunkData;
                 DeletedChunkData = deletedChunkData;
                 Coordinates = coordinates;
+                Angle = angle;
             }
         }
 

@@ -1257,7 +1257,10 @@ namespace Robust.Client.GameObjects
             if (worldRotation.Theta < 0)
                 worldRotation = new Angle(worldRotation.Theta + Math.Tau);
 
-            var spriteMatrix = GetLocalMatrix();
+            // sprite matrix, WITHOUT offset.
+            // offset is applied after sprite numDirs snapping/rotation correction
+            // --> apply at same time as layer offset
+            var spriteMatrix = Matrix3.CreateTransform(Vector2.Zero, rotation, scale);
 
             foreach (var layer in Layers)
             {
@@ -1268,7 +1271,7 @@ namespace Robust.Client.GameObjects
 
                 var numDirs = GetLayerDirectionCount(layer);
                 var layerRotation = worldRotation + layer.Rotation;
-                var layerPosition = worldPosition + layerRotation.RotateVec(layer._offset);
+                var layerPosition = worldPosition + layerRotation.RotateVec(layer._offset + offset);
 
                 CalcModelMatrix(numDirs, eyeRotation, layerRotation, layerPosition, out var modelMatrix);
                 Matrix3.Multiply(ref spriteMatrix, ref modelMatrix, out var transformMatrix);

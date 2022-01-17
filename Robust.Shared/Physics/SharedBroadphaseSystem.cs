@@ -194,6 +194,8 @@ namespace Robust.Shared.Physics
                 }
 
                 // Get every broadphase we may be intersecting.
+                // TODO: Fuck LINQ
+                // Also TODO: Don't put grids on movebuffer so you get peak shuttle driving performance.
                 var broadphases = _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand)).Select(o => o.GridEntityId).ToList();
                 broadphases.Add(_mapManager.GetMapEntityIdOrThrow(mapId));
 

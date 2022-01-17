@@ -94,20 +94,20 @@ internal partial class MapManager
         var grid = (MapGrid) GetGrid(args.GridId);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
 
+        if (xform.MapID == MapId.Nullspace) return;
+
         _gridTrees[xform.MapID].DestroyProxy(grid.MapProxy);
     }
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
-        // Just maploader things
-        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+        var grid = (MapGrid) component.Grid;
 
-        if (lifestage < EntityLifeStage.Initialized) return;
+        // Just maploader / test things
+        if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var grid = (MapGrid) component.Grid;
         var aabb = GetWorldAABB(grid);
-        DebugTools.Assert(grid.MapProxy != DynamicTree.Proxy.Free);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
     }
 

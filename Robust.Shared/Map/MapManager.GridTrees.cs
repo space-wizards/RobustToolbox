@@ -65,6 +65,8 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
         var mapId = xform.MapID;
 
+        if (mapId == MapId.Nullspace) return;
+
         var aabb = GetWorldAABB(grid);
         var proxy = _gridTrees[mapId].CreateProxy(in aabb, grid);
 

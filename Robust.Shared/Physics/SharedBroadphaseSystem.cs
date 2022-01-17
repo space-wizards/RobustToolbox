@@ -485,7 +485,7 @@ namespace Robust.Shared.Physics
             {
                 var mapId = EntityManager.GetComponent<TransformComponent>(body.Owner).MapID;
 
-                foreach (var fixture in body.Fixtures)
+                foreach (var fixture in EntityManager.GetComponent<FixturesComponent>(body.Owner).Fixtures.Values)
                 {
                     TouchProxies(mapId, broadphase, fixture);
                 }

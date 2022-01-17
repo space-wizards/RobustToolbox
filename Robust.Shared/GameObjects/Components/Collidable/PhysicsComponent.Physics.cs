@@ -306,7 +306,7 @@ namespace Robust.Shared.GameObjects
 
             var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in Fixtures)
+            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {

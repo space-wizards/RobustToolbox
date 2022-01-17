@@ -99,14 +99,13 @@ internal partial class MapManager
 
     private void OnGridRotate(EntityUid uid, MapGridComponent component, ref RotateEvent args)
     {
-        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+        var grid = (MapGrid) component.Grid;
 
-        if (lifestage < EntityLifeStage.Initialized) return;
+        // Just maploader / test things
+        if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var grid = (MapGrid) component.Grid;
         var aabb = GetWorldAABB(grid);
-        DebugTools.Assert(grid.MapProxy != DynamicTree.Proxy.Free);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
     }
 

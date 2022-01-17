@@ -1,5 +1,3 @@
-#define MECS
-
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -61,7 +59,7 @@ public class TileChangedEventArgs : EventArgs
 
 internal partial class MapManager
 {
-    private readonly Dictionary<GridId, MapGrid> _grids = new();
+    private readonly Dictionary<GridId, EntityUid> _grids = new();
 
     private GridId _highestGridId = GridId.Invalid;
 
@@ -72,16 +70,15 @@ internal partial class MapManager
         DebugTools.Assert(id != GridId.Invalid);
 
         //This turns into a linear search with EntityQuery without the _grids mapping
-        return _grids[id].GridEntityId;
+        return _grids[id];
     }
 
     public bool TryGetGridEuid(GridId id, [MaybeNullWhen(false)]out EntityUid euid)
     {
         DebugTools.Assert(id != GridId.Invalid);
 
-        if (_grids.TryGetValue(id, out var grid))
+        if (_grids.TryGetValue(id, out euid))
         {
-            euid = grid.GridEntityId;
             return true;
         }
 
@@ -116,14 +113,16 @@ internal partial class MapManager
 
     public IMapGridInternal CreateBoundGrid(MapId mapId, MapGridComponent gridComponent)
     {
-        var newGrid = (MapGrid) CreateGridImpl(mapId, null, 16, false, default);
+        var mapGrid = (MapGrid) CreateGridImpl(mapId, null, 16, false, default);
 
-        gridComponent.Grid = newGrid;
-        gridComponent.GridIndex = newGrid.Index;
-        newGrid.GridEntityId = gridComponent.Owner;
-
-        OnGridCreated?.Invoke(newGrid.ParentMapId, newGrid.Index);
-        return newGrid;
+        gridComponent.Grid = mapGrid;
+        gridComponent.GridIndex = mapGrid.Index;
+        mapGrid.GridEntityId = gridComponent.Owner;
+        
+        _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
+        Logger.InfoS("map", $"Creating new grid {mapGrid.Index}");
+        OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
+        return mapGrid;
     }
 
     public IEnumerable<IMapGrid> GetAllGrids()
@@ -136,6 +135,11 @@ internal partial class MapManager
         DebugTools.Assert(gridId != GridId.Invalid);
 
         var mapGrid = CreateGridImpl(currentMapId, gridId, chunkSize, true, default);
+        _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
+        Logger.InfoS("map", $"Creating new grid {mapGrid.Index}");
+        
+        EntityManager.InitializeComponents(mapGrid.GridEntityId);
+        EntityManager.StartComponents(mapGrid.GridEntityId);
         OnGridCreated?.Invoke(currentMapId, mapGrid.Index);
         return mapGrid;
     }
@@ -180,7 +184,7 @@ internal partial class MapManager
 
     public bool GridExists(GridId gridId)
     {
-        return gridId != GridId.Invalid && (TryGetGridEuid(gridId, out var euid) && GridExists(euid));
+        return gridId != GridId.Invalid && TryGetGridEuid(gridId, out var euid) && GridExists(euid);
     }
 
     public bool GridExists(EntityUid euid)
@@ -205,9 +209,15 @@ internal partial class MapManager
 #if DEBUG
         DebugTools.Assert(_dbgGuardRunning);
 #endif
+
         // Possible the grid was already deleted / is invalid
-        if (!_grids.TryGetValue(gridId, out var grid) || grid.Deleting)
-            return;
+        if (!TryGetGrid(gridId, out var iGrid) || ((MapGrid)iGrid).Deleting)
+        {
+            DebugTools.Assert($"Calling {nameof(DeleteGrid)} multiple times for grid {gridId}.");
+            return; // Silently fail on release
+        }
+
+        var grid = (MapGrid)iGrid;
 
         grid.Deleting = true;
 
@@ -286,6 +296,11 @@ internal partial class MapManager
     protected IMapGrid CreateGrid(MapId currentMapId, GridId gridId, ushort chunkSize, EntityUid euid)
     {
         var mapGrid = CreateGridImpl(currentMapId, gridId, chunkSize, true, euid);
+        _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
+        Logger.InfoS("map", $"Creating new grid {mapGrid.Index}");
+
+        EntityManager.InitializeComponents(mapGrid.GridEntityId);
+        EntityManager.StartComponents(mapGrid.GridEntityId);
         OnGridCreated?.Invoke(currentMapId, mapGrid.Index);
         return mapGrid;
     }
@@ -313,8 +328,6 @@ internal partial class MapManager
             _highestGridId = actualId;
 
         var grid = new MapGrid(this, EntityManager, actualId, chunkSize, currentMapId);
-        _grids.Add(actualId, grid);
-        Logger.InfoS("map", $"Creating new grid {actualId}");
 
         if (actualId != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
         {
@@ -352,9 +365,6 @@ internal partial class MapManager
                 //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
                 //use in transform states anytime before the state parent is properly set.
                 EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(GetMapEntityIdOrThrow(currentMapId));
-
-                EntityManager.InitializeComponents(gridEnt);
-                EntityManager.StartComponents(gridEnt);
             }
         }
         else

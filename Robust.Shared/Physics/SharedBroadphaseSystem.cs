@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -227,33 +228,31 @@ namespace Robust.Shared.Physics
                 }
 
                 // Get every broadphase we may be intersecting.
-                foreach (var (broadphase, _) in _broadphaseTransforms)
+                var broadphases = _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand)).Select(o => o.GridEntityId).ToList();
+                broadphases.Add(_mapManager.GetMapEntityIdOrThrow(mapId));
+
+                foreach (var broadphase in broadphases)
                 {
                     // Broadphase can't intersect with entities on itself so skip.
-                    if (proxyBody.Owner == broadphase.Owner ||
-                        EntityManager.GetComponent<TransformComponent>(broadphase.Owner).MapID != EntityManager.GetComponent<TransformComponent>(proxyBody.Owner).MapID) continue;
-
-                    var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
-
-                    // If we're a map / our BB intersects then we'll do the work
-                    if (_broadphaseBounding.TryGetValue(broadphase.Owner, out var broadphaseAABB) &&
-                        !broadphaseAABB.Intersects(enlargedAABB)) continue;
+                    if (proxyBody.Owner == broadphase) continue;
 
                     // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
                     Box2 aabb;
                     var proxyBroad = proxyBody.Broadphase!;
 
                     // If it's the same broadphase as our body's one then don't need to translate the AABB.
-                    if (proxyBroad == broadphase)
+                    if (proxyBroad.Owner == broadphase)
                     {
                         aabb = proxy.AABB;
                     }
                     else
                     {
-                        aabb = _broadphaseInvMatrices[broadphase.Owner].TransformBox(worldAABB);
+                        aabb = _broadphaseInvMatrices[broadphase].TransformBox(worldAABB);
                     }
 
-                    foreach (var other in broadphase.Tree.QueryAabb(_queryBuffer, aabb))
+                    var broadphaseComp = EntityManager.GetComponent<BroadphaseComponent>(broadphase);
+
+                    foreach (var other in broadphaseComp.Tree.QueryAabb(_queryBuffer, aabb))
                     {
                         // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
 

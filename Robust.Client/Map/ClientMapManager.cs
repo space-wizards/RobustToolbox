@@ -108,6 +108,7 @@ namespace Robust.Client.Map
                         throw new NotImplementedException("Moving grids between maps is not yet implemented");
                     }
 
+                    // I love mapmanager!!!
                     grid.WorldPosition = gridDatum.Coordinates.Position;
                     grid.WorldRotation = gridDatum.Angle;
 

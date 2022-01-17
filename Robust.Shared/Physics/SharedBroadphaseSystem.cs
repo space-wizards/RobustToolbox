@@ -35,9 +35,6 @@ namespace Robust.Shared.Physics
         // This is because we'll chuck anything the broadphase moves over onto the movebuffer so contacts can be generated.
         private Dictionary<MapId, Dictionary<FixtureProxy, Box2>> _moveBuffer = new();
 
-        // Cache moved grids so we can just check our overall bounds and not each proxy for FindGridContacts
-        private Dictionary<MapId, HashSet<GridId>> _movedGrids = new();
-
         // Caching for FindNewContacts
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
         private Dictionary<EntityUid, Box2> _broadphaseBounding = new(8);
@@ -74,9 +71,6 @@ namespace Robust.Shared.Physics
 
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
             SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
-
-            SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
-            SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
@@ -155,8 +149,10 @@ namespace Robust.Shared.Physics
         /// </summary>
         private void FindGridContacts(MapId mapId)
         {
+            var movedGrids = _mapManager.GetMovedGrids(mapId);
+
             // None moved this tick
-            if (!_movedGrids.TryGetValue(mapId, out var movedGrids)) return;
+            if (movedGrids.Count == 0) return;
 
             var mapBroadphase = EntityManager.GetComponent<BroadphaseComponent>(_mapManager.GetMapEntityId(mapId));
 
@@ -164,11 +160,8 @@ namespace Robust.Shared.Physics
             // we move over is getting checked for collisions, and putting it on the movebuffer is the easiest way to do so.
             var moveBuffer = _moveBuffer[mapId];
 
-            foreach (var movedGrid in movedGrids)
+            foreach (var grid in movedGrids)
             {
-                if (!_mapManager.TryGetGrid(movedGrid, out var grid))
-                    continue;
-
                 DebugTools.Assert(grid.ParentMapId == mapId);
                 var worldAABB = grid.WorldBounds;
                 var enlargedAABB = worldAABB.Enlarged(_broadphaseExpand);
@@ -322,6 +315,7 @@ namespace Robust.Shared.Physics
             _pairBuffer.Clear();
             moveBuffer.Clear();
             _gridMoveBuffer.Clear();
+            _mapManager.ClearMovedGrids(mapId);
         }
 
         #endregion
@@ -428,29 +422,6 @@ namespace Robust.Shared.Physics
             }
 
             DestroyProxies(body, manager);
-        }
-
-        private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
-        {
-            var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
-
-            if (!_movedGrids.TryGetValue(mapId, out var gridMap))
-            {
-                gridMap = new HashSet<GridId>();
-                _movedGrids[mapId] = gridMap;
-            }
-
-            gridMap.Add(component.GridIndex);
-        }
-
-        private void OnGridMapChange(EntityUid uid, MapGridComponent component, EntMapIdChangedMessage args)
-        {
-            // Make sure we cleanup old map for moved grid stuff.
-            var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
-
-            if (!_movedGrids.TryGetValue(mapId, out var movedGrids)) return;
-
-            movedGrids.Remove(component.GridIndex);
         }
 
         public void RegenerateContacts(PhysicsComponent body)
@@ -794,7 +765,6 @@ namespace Robust.Shared.Physics
         private void OnMapDestroyed(object? sender, MapEventArgs e)
         {
             _moveBuffer.Remove(e.Map);
-            _movedGrids.Remove(e.Map);
         }
 
         private void OnGridAdd(GridAddEvent ev)

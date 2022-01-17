@@ -16,7 +16,6 @@ namespace Robust.Shared.GameObjects
     {
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
-        void ClearGridId();
 
         bool AnchorEntity(TransformComponent transform);
         void UnanchorEntity(TransformComponent transform);
@@ -24,12 +23,13 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
-    [NetworkedComponent()]
+    [NetworkedComponent]
     internal class MapGridComponent : Component, IMapGridComponent
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
 
+        // This field is used for deserialization internally in the map loader.
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private GridId _gridIndex = GridId.Invalid;
@@ -51,12 +51,6 @@ namespace Robust.Shared.GameObjects
             set => _mapGrid = value;
         }
 
-        /// <inheritdoc />
-        public void ClearGridId()
-        {
-            _gridIndex = GridId.Invalid;
-        }
-
         protected override void Initialize()
         {
             base.Initialize();
@@ -66,6 +60,13 @@ namespace Robust.Shared.GameObjects
             {
                 _entMan.GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
+        }
+
+        protected override void OnRemove()
+        {
+            _mapManager.TrueGridDelete((MapGrid)_mapGrid!);
+
+            base.OnRemove();
         }
 
         /// <inheritdoc />

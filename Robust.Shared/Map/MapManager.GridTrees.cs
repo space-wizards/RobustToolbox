@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
 
@@ -98,17 +99,28 @@ internal partial class MapManager
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
     {
+        // Just maploader things
+        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+
+        if (lifestage < EntityLifeStage.Initialized) return;
+
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var grid = (MapGrid) component.Grid;
         var aabb = GetWorldAABB(grid);
+        DebugTools.Assert(grid.MapProxy != DynamicTree.Proxy.Free);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
     }
 
     private void OnGridRotate(EntityUid uid, MapGridComponent component, ref RotateEvent args)
     {
+        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+
+        if (lifestage < EntityLifeStage.Initialized) return;
+
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var grid = (MapGrid) component.Grid;
         var aabb = GetWorldAABB(grid);
+        DebugTools.Assert(grid.MapProxy != DynamicTree.Proxy.Free);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
     }
 

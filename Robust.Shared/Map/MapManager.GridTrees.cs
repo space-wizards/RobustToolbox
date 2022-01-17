@@ -24,11 +24,8 @@ internal partial class MapManager
         _movedGrids[mapId].Clear();
     }
 
-    private void StartupGridTrees()
+    private void InitializeGridTrees()
     {
-        MapCreated += OnMapCreatedGridTree;
-        MapDestroyed += OnMapDestroyedGridTree;
-
         _entityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
         _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
         _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
@@ -37,20 +34,7 @@ internal partial class MapManager
         _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
     }
 
-    private void ShutdownGridTrees()
-    {
-        MapCreated -= OnMapCreatedGridTree;
-        MapDestroyed -= OnMapDestroyedGridTree;
-
-        _entityManager.EventBus.UnsubscribeEvent<GridInitializeEvent>(EventSource.Local, this);
-        _entityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
-        _entityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();
-        _entityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, RotateEvent>();
-        _entityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>();
-        _entityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>();
-    }
-
-    private void OnMapCreatedGridTree(object? sender, MapEventArgs e)
+    private void OnMapCreatedGridTree(MapEventArgs e)
     {
         if (e.Map == MapId.Nullspace) return;
 
@@ -58,7 +42,7 @@ internal partial class MapManager
         _movedGrids.Add(e.Map, new HashSet<IMapGrid>());
     }
 
-    private void OnMapDestroyedGridTree(object? sender, MapEventArgs e)
+    private void OnMapDestroyedGridTree(MapEventArgs e)
     {
         if (e.Map == MapId.Nullspace) return;
 

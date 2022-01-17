@@ -65,6 +65,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void Initialize()
         {
+            InitializeGridTrees();
+
 #if DEBUG
             DebugTools.Assert(!_dbgGuardInit);
             DebugTools.Assert(!_dbgGuardRunning);
@@ -75,8 +77,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void Startup()
         {
-            StartupGridTrees();
-
 #if DEBUG
             DebugTools.Assert(_dbgGuardInit);
             _dbgGuardRunning = true;
@@ -146,8 +146,6 @@ namespace Robust.Shared.Map
                     Logger.InfoS("map", "Removing nullspace map entity.");
             }
 
-            ShutdownGridTrees();
-
 #if DEBUG
             DebugTools.Assert(_grids.Count == 0);
             DebugTools.Assert(!GridExists(GridId.Invalid));
@@ -201,7 +199,9 @@ namespace Robust.Shared.Map
 
             if (mapID != MapId.Nullspace)
             {
-                MapDestroyed?.Invoke(this, new MapEventArgs(mapID));
+                var args = new MapEventArgs(mapID);
+                OnMapDestroyedGridTree(args);
+                MapDestroyed?.Invoke(this, args);
                 _maps.Remove(mapID);
                 _mapCreationTick.Remove(mapID);
             }
@@ -282,7 +282,9 @@ namespace Robust.Shared.Map
                 }
             }
 
-            MapCreated?.Invoke(this, new MapEventArgs(actualID));
+            var args = new MapEventArgs(actualID);
+            OnMapCreatedGridTree(args);
+            MapCreated?.Invoke(this, args);
 
             return actualID;
         }

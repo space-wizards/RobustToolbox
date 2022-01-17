@@ -109,5 +109,16 @@ namespace Robust.Client.Utility
         {
             return (Direction)(((int)dir + 1) % 8);
         }
+
+        public static RSIDirection ToRsiDirection(this Angle angle, RSI.State.DirectionType type)
+        {
+            return type switch
+            {
+                RSI.State.DirectionType.Dir1 => RSIDirection.South,
+                RSI.State.DirectionType.Dir4 => angle.GetCardinalDir().Convert(type),
+                RSI.State.DirectionType.Dir8 => angle.GetDir().Convert(type),
+                _ => throw new ArgumentOutOfRangeException($"Unknown rsi direction type: {type}.", nameof(type))
+            };
+        }
     }
 }

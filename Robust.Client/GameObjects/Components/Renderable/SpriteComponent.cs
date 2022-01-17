@@ -1474,30 +1474,6 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType rsiDirectionType, Angle worldRotation)
-        {
-            var dir = rsiDirectionType switch
-            {
-                RSI.State.DirectionType.Dir1 => Direction.South,
-                RSI.State.DirectionType.Dir4 => worldRotation.GetCardinalDir(),
-                RSI.State.DirectionType.Dir8 => worldRotation.GetDir(),
-                _ => throw new ArgumentException($"Unknown RSI DirectionType: {rsiDirectionType}.", nameof(rsiDirectionType))
-            };
-
-            return dir switch
-            {
-                Direction.North => RSI.State.Direction.North,
-                Direction.South => RSI.State.Direction.South,
-                Direction.East => RSI.State.Direction.East,
-                Direction.West => RSI.State.Direction.West,
-                Direction.SouthEast => RSI.State.Direction.SouthEast,
-                Direction.SouthWest => RSI.State.Direction.SouthWest,
-                Direction.NorthEast => RSI.State.Direction.NorthEast,
-                Direction.NorthWest => RSI.State.Direction.NorthWest,
-                _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
-            };
-        }
-
         private void QueueUpdateIsInert()
         {
             // Look this was an easy way to get bounds checks for layer updates.
@@ -1598,7 +1574,7 @@ namespace Robust.Client.GameObjects
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, entities.GetComponent<TransformComponent>(Owner).WorldRotation),
+                Color, NoRotation, entities.GetComponent<TransformComponent>(Owner).WorldRotation.ToRsiDirection(RSI.State.DirectionType.Dir8),
                 DirectionOverride
             );
 
@@ -1839,7 +1815,7 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        dir = _parent.GetDir(state.Directions, worldRotation);
+                        dir = worldRotation.ToRsiDirection(state.Directions);
                     }
 
                     return OffsetRsiDir(dir, DirOffset);

@@ -1547,7 +1547,7 @@ namespace Robust.Client.GameObjects
             return rsi["error"];
         }
 
-        private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
+        public static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
         {
             // There is probably a better way to do this.
             // Eh.

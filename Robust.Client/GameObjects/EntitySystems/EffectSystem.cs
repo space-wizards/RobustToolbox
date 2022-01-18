@@ -344,19 +344,24 @@ namespace Robust.Client.GameObjects
                 var worldHandle = args.WorldHandle;
                 ShaderInstance? currentShader = null;
 
-                if (_playerManager.LocalPlayer?.ControlledEntity is not {} playerEnt)
+                if (_playerManager.LocalPlayer?.ControlledEntity is not { } playerEnt ||
+                    !_entityManager.TryGetComponent(playerEnt, out TransformComponent? playerXform))
                     return;
-
-                var playerXform = _entityManager.GetComponent<TransformComponent>(playerEnt);
 
                 foreach (var effect in _owner._Effects)
                 {
                     TransformComponent? attachedXform = null;
 
-                    if ((effect.AttachedEntityUid is {} attached &&
-                        _entityManager.TryGetComponent(attached, out attachedXform) &&
-                        attachedXform.MapID != playerXform.MapID) ||
-                        (effect.AttachedEntityUid == null &&
+                    // Check if it's entity attached
+                    if (effect.AttachedEntityUid is {} attached &&
+                        (!_entityManager.TryGetComponent(attached, out attachedXform) ||
+                        attachedXform.MapID != playerXform.MapID))
+                    {
+                        continue;
+                    }
+
+                    if (effect.AttachedEntityUid == null &&
+                        (!effect.Coordinates.IsValid(_entityManager) ||
                          effect.Coordinates.GetMapId(_entityManager) != map))
                     {
                         continue;

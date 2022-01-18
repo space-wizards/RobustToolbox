@@ -147,6 +147,20 @@ namespace Robust.Shared.Physics
         }
 
         /// <summary>
+        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
+        /// </summary>
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass, int collisionLayer, int collisionMask)
+        {
+            // TODO: Make it take in density instead?
+            var fixture = new Fixture(body, shape) {
+                Mass = mass,
+                CollisionLayer = collisionLayer,
+                CollisionMask = collisionMask
+            };
+            CreateFixture(body, fixture);
+        }
+
+        /// <summary>
         /// Attempts to get the <see cref="Fixture"/> with the specified ID for this body.
         /// </summary>
         public Fixture? GetFixtureOrNull(PhysicsComponent body, string id, FixturesComponent? manager = null)

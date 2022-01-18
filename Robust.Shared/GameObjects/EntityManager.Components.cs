@@ -21,7 +21,6 @@ namespace Robust.Shared.GameObjects
     public partial class EntityManager
     {
         [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [IoC.Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [IoC.Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -254,8 +253,6 @@ namespace Robust.Shared.GameObjects
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
-            _componentDependencyManager.OnComponentAdd(uid, component);
-
             component.LifeAddToEntity();
 
             var metadata = GetComponent<MetaDataComponent>(uid);
@@ -368,7 +365,6 @@ namespace Robust.Shared.GameObjects
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
                 component.LifeRemoveFromEntity();
-            _componentDependencyManager.OnComponentRemove(uid, component);
             ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
@@ -403,7 +399,6 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(); // Sets delete
 
-                _componentDependencyManager.OnComponentRemove(uid, component);
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
             }
 #if EXCEPTION_TOLERANCE

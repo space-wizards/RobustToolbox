@@ -243,6 +243,9 @@ namespace Robust.Shared.GameObjects
             if (!Owner.IsValid() || LifeStage >= ComponentLifeStage.Removing)
                 return;
 
+            if (!NetSyncEnabled)
+                return;
+
             IoCManager.Resolve(ref entManager);
             entManager.DirtyEntity(Owner);
             LastModifiedTick = entManager.CurrentTick;

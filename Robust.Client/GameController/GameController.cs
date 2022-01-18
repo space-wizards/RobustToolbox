@@ -459,6 +459,8 @@ namespace Robust.Client
             // In singleplayer, however, we're in full control instead.
             else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
             {
+                // The last real tick is the current tick! This way we won't be in "prediction" mode.
+                _gameTiming.LastRealTick = _gameTiming.CurTick;
                 _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
                 _lookup.Update();
             }

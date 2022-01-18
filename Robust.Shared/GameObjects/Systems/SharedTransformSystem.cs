@@ -58,20 +58,27 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     De-parents and unanchors all entities on a grid-tile.
         /// </summary>
+        /// <remarks>
+        ///     Used when a tile on a grid is removed (becomes space). Only de-parents entities if they are actually
+        ///     parented to that grid. No more disemboweling mobs. 
+        /// </remarks>
         private void DeparentAllEntsOnTile(GridId gridId, Vector2i tileIndices)
         {
-            var mapId = _mapManager.GetGrid(gridId).ParentMapId;
-            var mapTransform = Transform(_mapManager.GetMapEntityId(mapId));
-         
-            foreach (var uid in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
+            var grid = _mapManager.GetGrid(gridId);
+            var gridUid = grid.GridEntityId;
+            var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
+            var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
+
+            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
                 // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
                 // Avoid unnecessary entity updates.
                 if (EntityManager.IsQueuedForDeletion(uid))
                     continue;
 
-                // Attach parent will automatically set anchored=false;
-                Transform(uid).AttachParent(mapTransform);
+                var transform = Transform(entity);
+                if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
+                    transform.AttachParent(mapTransform);
             }
         }
 

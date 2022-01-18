@@ -77,6 +77,12 @@ namespace Robust.Shared.GameObjects
         void RemoveFromEntityTrees(EntityUid entity);
 
         Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);
+
+        Box2 GetLocalBounds(TileRef tileRef, ushort tileSize);
+
+        Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize);
+
+        Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null);
     }
 
     [UsedImplicitly]
@@ -172,11 +178,12 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveFromEntityTrees(@event.Entity);
             }
-            else
+            else if (_entityManager.TryGetComponent(@event.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 var xform = _entityManager.GetComponent<TransformComponent>(@event.Entity);
                 UpdateEntityTree(@event.Entity, xform);
             }
+            // else -> the entity is terminating. We can ignore this un-anchor event, as this entity will be removed by the tree via OnEntityDeleted.
         }
 
         private void OnLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)

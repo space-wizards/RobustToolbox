@@ -43,7 +43,6 @@ namespace Robust.Shared
             IoCManager.Register<ITimerManager, TimerManager>();
             IoCManager.Register<IRobustRandom, RobustRandom>();
             IoCManager.Register<IRobustMappedStringSerializer, RobustMappedStringSerializer>();
-            IoCManager.Register<IComponentDependencyManager, ComponentDependencyManager>();
             IoCManager.Register<ISandboxHelper, SandboxHelper>();
             IoCManager.Register<IManifoldManager, CollisionManager>();
             IoCManager.Register<IIslandManager, IslandManager>();

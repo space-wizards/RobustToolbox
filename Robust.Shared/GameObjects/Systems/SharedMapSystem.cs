@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects
 {
@@ -94,6 +96,56 @@ namespace Robust.Shared.GameObjects
         public GridAddEvent(EntityUid uid)
         {
             EntityUid = uid;
+        }
+    }
+
+    /// <summary>
+    ///     Arguments for when a single tile on a grid is changed locally or remotely.
+    /// </summary>
+    public sealed class TileChangedEvent : EntityEventArgs
+    {
+        /// <summary>
+        ///     Creates a new instance of this class.
+        /// </summary>
+        public TileChangedEvent(TileRef newTile, Tile oldTile)
+        {
+            NewTile = newTile;
+            OldTile = oldTile;
+        }
+
+        /// <summary>
+        ///     New tile that replaced the old one.
+        /// </summary>
+        public TileRef NewTile { get; }
+
+        /// <summary>
+        ///     Old tile that was replaced.
+        /// </summary>
+        public Tile OldTile { get; }
+    }
+
+    /// <summary>
+    ///     Arguments for when a one or more tiles on a grid are modified at once.
+    /// </summary>
+    public sealed class GridModifiedEvent : EntityEventArgs
+    {
+        /// <summary>
+        ///     Grid being changed.
+        /// </summary>
+        public IMapGrid Grid { get; }
+
+        /// <summary>
+        /// Set of tiles that were modified.
+        /// </summary>
+        public IReadOnlyCollection<(Vector2i position, Tile tile)> Modified { get; }
+
+        /// <summary>
+        ///     Creates a new instance of this class.
+        /// </summary>
+        public GridModifiedEvent(IMapGrid grid, IReadOnlyCollection<(Vector2i position, Tile tile)> modified)
+        {
+            Grid = grid;
+            Modified = modified;
         }
     }
 }

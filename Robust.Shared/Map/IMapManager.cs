@@ -153,15 +153,19 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     A tile is being modified.
         /// </summary>
+        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
         event EventHandler<TileChangedEventArgs> TileChanged;
 
+        [Obsolete("Subscribe to GridStartupEvent on the event bus.")]
         event GridEventHandler OnGridCreated;
 
+        [Obsolete("Subscribe to GridRemovalEvent on the event bus.")]
         event GridEventHandler OnGridRemoved;
 
         /// <summary>
         ///     A Grid was modified.
         /// </summary>
+        [Obsolete("Subscribe to GridModifiedEvent on the event bus.")]
         event EventHandler<GridChangedEventArgs> GridChanged;
 
         /// <summary>

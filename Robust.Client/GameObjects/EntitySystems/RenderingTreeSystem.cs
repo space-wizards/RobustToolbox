@@ -71,7 +71,8 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
             _mapManager.MapCreated += MapManagerOnMapCreated;
-            _mapManager.OnGridCreated += MapManagerOnGridCreated;
+
+            SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
             // Due to how recursion works, this must be done.
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
@@ -224,7 +225,6 @@ namespace Robust.Client.GameObjects
         {
             base.Shutdown();
             _mapManager.MapCreated -= MapManagerOnMapCreated;
-            _mapManager.OnGridCreated -= MapManagerOnGridCreated;
         }
 
         private void OnTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)
@@ -253,9 +253,9 @@ namespace Robust.Client.GameObjects
             EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(e.Map));
         }
 
-        private void MapManagerOnGridCreated(MapId mapId, GridId gridId)
+        private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(gridId).GridEntityId);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.GridId).GridEntityId);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, EntityQuery<TransformComponent> xforms)

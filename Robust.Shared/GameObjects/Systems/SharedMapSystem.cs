@@ -15,10 +15,25 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
 
+            SubscribeLocalEvent<MapComponent, ComponentInit>(OnMapAdded);
+            SubscribeLocalEvent<MapComponent, ComponentShutdown>(OnMapRemoved);
+
             SubscribeLocalEvent<MapGridComponent, ComponentAdd>(OnGridAdd);
             SubscribeLocalEvent<MapGridComponent, ComponentInit>(OnGridInit);
             SubscribeLocalEvent<MapGridComponent, ComponentStartup>(OnGridStartup);
             SubscribeLocalEvent<MapGridComponent, ComponentShutdown>(OnGridRemove);
+        }
+
+        private void OnMapAdded(EntityUid uid, MapComponent component, ComponentInit args)
+        {
+            var msg = new MapChangedEvent(component.WorldMap, true);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
+        }
+
+        private void OnMapRemoved(EntityUid uid, MapComponent component, ComponentShutdown args)
+        {
+            var msg = new MapChangedEvent(component.WorldMap, false);
+            EntityManager.EventBus.RaiseLocalEvent(uid, msg);
         }
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
@@ -45,6 +60,36 @@ namespace Robust.Shared.GameObjects
             EntityManager.EventBus.RaiseLocalEvent(uid, new GridRemovalEvent(uid, component.GridIndex));
             MapManager.OnComponentRemoved(component);
         }
+    }
+
+    /// <summary>
+    ///     Arguments for when a map is created or deleted.
+    /// </summary>
+    public sealed class MapChangedEvent : EntityEventArgs
+    {
+        /// <summary>
+        ///     Creates a new instance of this class.
+        /// </summary>
+        public MapChangedEvent(MapId map, bool created)
+        {
+            Map = map;
+            Created = created;
+        }
+
+        /// <summary>
+        ///     Map that is being modified.
+        /// </summary>
+        public MapId Map { get; }
+
+        /// <summary>
+        ///     The map is being created.
+        /// </summary>
+        public bool Created { get; }
+
+        /// <summary>
+        ///     The map is being destroyed (not <see cref="Created"/>).
+        /// </summary>
+        public bool Destroyed => !Created;
     }
 
     public sealed class GridStartupEvent : EntityEventArgs

@@ -70,7 +70,7 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(TransformSystem));
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
-            _mapManager.MapCreated += MapManagerOnMapCreated;
+            SubscribeLocalEvent<MapChangedEvent>(MapManagerOnMapCreated);
 
             SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
@@ -221,12 +221,6 @@ namespace Robust.Client.GameObjects
         }
         #endregion
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _mapManager.MapCreated -= MapManagerOnMapCreated;
-        }
-
         private void OnTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)
         {
             foreach (var sprite in component.SpriteTree)
@@ -243,9 +237,9 @@ namespace Robust.Client.GameObjects
             component.LightTree.Clear();
         }
 
-        private void MapManagerOnMapCreated(object? sender, MapEventArgs e)
+        private void MapManagerOnMapCreated(MapChangedEvent e)
         {
-            if (e.Map == MapId.Nullspace)
+            if (e.Destroyed || e.Map == MapId.Nullspace)
             {
                 return;
             }

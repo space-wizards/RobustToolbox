@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
@@ -21,8 +21,12 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
 
             UpdatesOutsidePrediction = true;
-
-            _mapManager.MapCreated += OnMapCreated;
+            
+            SubscribeLocalEvent<MapChangedEvent>(ev =>
+            {
+                if (ev.Created)
+                    OnMapCreated(ev);
+            });
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<OccluderTreeComponent, ComponentInit>(HandleOccluderTreeInit);
@@ -92,7 +96,6 @@ namespace Robust.Shared.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-            _mapManager.MapCreated -= OnMapCreated;
             _updates.Clear();
         }
 
@@ -156,7 +159,7 @@ namespace Robust.Shared.GameObjects
             _updates.Enqueue(new OccluderUpdateEvent(component));
         }
 
-        private void OnMapCreated(object? sender, MapEventArgs e)
+        private void OnMapCreated(MapChangedEvent e)
         {
             if (e.Map == MapId.Nullspace) return;
 

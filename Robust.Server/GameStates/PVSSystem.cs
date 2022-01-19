@@ -97,8 +97,14 @@ internal sealed partial class PVSSystem : EntitySystem
         base.Initialize();
 
         _entityPvsCollection = RegisterPVSCollection<EntityUid>();
-        _mapManager.MapCreated += OnMapCreated;
-        _mapManager.MapDestroyed += OnMapDestroyed;
+
+        SubscribeLocalEvent<MapChangedEvent>(ev =>
+        {
+            if (ev.Created)
+                OnMapCreated(ev);
+            else
+                OnMapDestroyed(ev);
+        });
 
         SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
         SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
@@ -126,8 +132,6 @@ internal sealed partial class PVSSystem : EntitySystem
         base.Shutdown();
 
         UnregisterPVSCollection(_entityPvsCollection);
-        _mapManager.MapCreated -= OnMapCreated;
-        _mapManager.MapDestroyed -= OnMapDestroyed;
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         EntityManager.EntityDeleted -= OnEntityDeleted;
 
@@ -285,7 +289,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _entityPvsCollection.UpdateIndex(euid);
     }
 
-    private void OnMapDestroyed(object? sender, MapEventArgs e)
+    private void OnMapDestroyed(MapChangedEvent e)
     {
         foreach (var pvsCollection in _pvsCollections)
         {
@@ -293,7 +297,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    private void OnMapCreated(object? sender, MapEventArgs e)
+    private void OnMapCreated(MapChangedEvent e)
     {
         foreach (var pvsCollection in _pvsCollections)
         {

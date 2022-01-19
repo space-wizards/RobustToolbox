@@ -171,11 +171,13 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     A new map has been created.
         /// </summary>
+        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Created is true.")]
         event EventHandler<MapEventArgs> MapCreated;
 
         /// <summary>
         ///     An existing map has been destroyed.
         /// </summary>
+        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Destroyed is true.")]
         event EventHandler<MapEventArgs> MapDestroyed;
 
         bool HasMapEntity(MapId mapId);

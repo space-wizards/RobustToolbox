@@ -670,9 +670,9 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
-        public FunnyEntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
+        public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
         {
-            return new FunnyEntityQuery<TComp1>(_entTraitArray[ArrayIndexFor<TComp1>()]);
+            return new EntityQuery<TComp1>(_entTraitArray[ArrayIndexFor<TComp1>()]);
         }
 
         /// <inheritdoc />
@@ -1049,11 +1049,11 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public readonly struct FunnyEntityQuery<TComp1> where TComp1 : Component
+    public readonly struct EntityQuery<TComp1> where TComp1 : Component
     {
         private readonly Dictionary<EntityUid, Component> _traitDict;
 
-        public FunnyEntityQuery(Dictionary<EntityUid, Component> traitDict)
+        public EntityQuery(Dictionary<EntityUid, Component> traitDict)
         {
             _traitDict = traitDict;
         }

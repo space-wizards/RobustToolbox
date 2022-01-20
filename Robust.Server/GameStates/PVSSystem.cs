@@ -415,8 +415,8 @@ internal partial class PVSSystem : EntitySystem
         GameTick fromTick,
         ref int newEntitiesSent,
         ref int totalEnteredEntities,
-        FunnyEntityQuery<MetaDataComponent> metadataQuery,
-        FunnyEntityQuery<TransformComponent> transformQuery,
+        EntityQuery<MetaDataComponent> metadataQuery,
+        EntityQuery<TransformComponent> transformQuery,
         uint? visMask = null,
         bool dontSkip = false,
         bool trustParent = false)
@@ -634,7 +634,7 @@ internal partial class PVSSystem : EntitySystem
     }
 
     // Read Safe
-    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid, FunnyEntityQuery<TransformComponent> transformQuery)
+    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
 

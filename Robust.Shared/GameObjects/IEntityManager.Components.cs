@@ -235,7 +235,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Returns a cached struct enumerator with the specified component.
         /// </summary>
-        FunnyEntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
+        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
 
         /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance

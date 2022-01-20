@@ -40,7 +40,6 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
-        internal SharedPhysicsSystem PhysicsSystem = default!;
 
         public override string Name => "PhysicsMap";
 
@@ -292,6 +291,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             _awakeBodyList.AddRange(AwakeBodies);
 
+            var jointQuery = _entityManager.GetEntityQuery<JointComponent>();
 
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in _awakeBodyList)
@@ -360,7 +360,7 @@ namespace Robust.Shared.Physics.Dynamics
                         other.Island = true;
                     }
 
-                    if (!_entityManager.TryGetComponent(body.Owner, out JointComponent? jointComponent)) continue;
+                    if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {

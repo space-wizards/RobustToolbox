@@ -362,7 +362,9 @@ namespace Robust.Client.GameObjects
         public int LayerMapReserveBlank(object key)
         {
             if (LayerMapTryGet(key, out var index))
+            {
                 return index;
+            }
 
             index = AddBlankLayer();
             LayerMapSet(key, index);
@@ -674,6 +676,7 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
+                    _layerMapEnsurePrivate();
                     LayerMap[key] = index;
                 }
             }
@@ -1235,12 +1238,10 @@ namespace Robust.Client.GameObjects
             return this[layerKey].ActualRsi;
         }
 
-        public int LayerCount => Layers.Count;
         public ISpriteLayer this[int layer] => Layers[layer];
         public ISpriteLayer this[Index layer] => Layers[layer];
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
-        public IEnumerable<object> Keys => LayerMap.Keys;
 
         // Lobby SpriteView rendering path
         internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)

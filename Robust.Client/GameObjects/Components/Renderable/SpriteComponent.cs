@@ -359,14 +359,15 @@ namespace Robust.Client.GameObjects
             _layerMapShared = false;
         }
 
-        public void LayerMapReserveBlank(object key)
+        public int LayerMapReserveBlank(object key)
         {
-            if (LayerMapTryGet(key, out var _))
-            {
-                return;
-            }
+            if (LayerMapTryGet(key, out var index))
+                return index;
 
-            LayerMapSet(key, AddBlankLayer());
+            index = AddBlankLayer();
+            LayerMapSet(key, index);
+
+            return index;
         }
 
         public int AddBlankLayer(int? newIndex = null)
@@ -376,37 +377,13 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Add a new layer based on some <see cref="PrototypeLayerData"/>. Also adds layer maps for this new layer.
+        ///     Add a new layer based on some <see cref="PrototypeLayerData"/>.
         /// </summary>
         public int AddLayer(PrototypeLayerData layerDatum, int? newIndex = null)
         {
             var layer = new Layer(this);
 
             var index = AddLayer(layer, newIndex);
-
-            if (layerDatum.MapKeys != null)
-            {
-                foreach (var keyString in layerDatum.MapKeys)
-                {
-                    object key;
-                    if (reflection.TryParseEnumReference(keyString, out var @enum))
-                    {
-                        key = @enum;
-                    }
-                    else
-                    {
-                        key = keyString;
-                    }
-
-                    if (LayerMap.ContainsKey(key))
-                    {
-                        Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
-                        continue;
-                    }
-
-                    LayerMap[key] = index;
-                }
-            }
 
             LayerSetData(index, layerDatum);
             return index;
@@ -588,13 +565,13 @@ namespace Robust.Client.GameObjects
         }
 
         /// <summary>
-        ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>. Does not add layer maps.
+        ///     Fills in a layer's values using some <see cref="PrototypeLayerData"/>.
         /// </summary>
         public void LayerSetData(int index, PrototypeLayerData layerDatum)
         {
             if (Layers.Count <= index)
             {
-                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set shader! Trace:\n{1}",
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set layer data! Trace:\n{1}",
                     index, Environment.StackTrace);
                 return;
             }
@@ -665,6 +642,7 @@ namespace Robust.Client.GameObjects
             {
                 if (prototypes.TryIndex<ShaderPrototype>(layerDatum.Shader, out var prototype))
                 {
+                    layer.ShaderPrototype = layerDatum.Shader;
                     layer.Shader = prototype.Instance();
                 }
                 else
@@ -672,6 +650,31 @@ namespace Robust.Client.GameObjects
                     Logger.ErrorS(LogCategory,
                         "Shader prototype '{0}' does not exist.",
                         layerDatum.Shader);
+                }
+            }
+
+            if (layerDatum.MapKeys != null)
+            {
+                foreach (var keyString in layerDatum.MapKeys)
+                {
+                    object key;
+                    if (reflection.TryParseEnumReference(keyString, out var @enum))
+                    {
+                        key = @enum;
+                    }
+                    else
+                    {
+                        key = keyString;
+                    }
+
+                    if (LayerMap.TryGetValue(key, out var mappedIndex))
+                    {
+                        if (mappedIndex != index)
+                            Logger.ErrorS(LogCategory, "Duplicate layer map key definition: {0}", key);
+                        continue;
+                    }
+
+                    LayerMap[key] = index;
                 }
             }
 
@@ -695,7 +698,7 @@ namespace Robust.Client.GameObjects
             LayerSetData(layer, data);
         }
 
-        public void LayerSetShader(int layer, ShaderInstance? shader)
+        public void LayerSetShader(int layer, ShaderInstance? shader, string? prototype = null)
         {
             if (Layers.Count <= layer)
             {
@@ -706,9 +709,10 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Shader = shader;
+            theLayer.ShaderPrototype = prototype;
         }
 
-        public void LayerSetShader(object layerKey, ShaderInstance shader)
+        public void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null)
         {
             if (!LayerMapTryGet(layerKey, out var layer))
             {
@@ -717,7 +721,7 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
-            LayerSetShader(layer, shader);
+            LayerSetShader(layer, shader, prototype);
         }
 
         public void LayerSetShader(int layer, string shaderName)
@@ -726,10 +730,12 @@ namespace Robust.Client.GameObjects
             {
                 Logger.ErrorS(LogCategory, "Shader prototype '{0}' does not exist. Trace:\n{1}", shaderName,
                     Environment.StackTrace);
+
+                LayerSetShader(layer, null, null);
+                return;
             }
 
-            // This will set the shader to null if it does not exist.
-            LayerSetShader(layer, prototype?.Instance());
+            LayerSetShader(layer, prototype.Instance(), shaderName);
         }
 
         public void LayerSetShader(object layerKey, string shaderName)
@@ -1229,10 +1235,12 @@ namespace Robust.Client.GameObjects
             return this[layerKey].ActualRsi;
         }
 
+        public int LayerCount => Layers.Count;
         public ISpriteLayer this[int layer] => Layers[layer];
         public ISpriteLayer this[Index layer] => Layers[layer];
         public ISpriteLayer this[object layerKey] => this[LayerMap[layerKey]];
         public IEnumerable<ISpriteLayer> AllLayers => Layers;
+        public IEnumerable<object> Keys => LayerMap.Keys;
 
         // Lobby SpriteView rendering path
         internal void Render(DrawingHandleWorld drawingHandle, Angle eyeRotation, Angle worldRotation, Direction? overrideDirection = null)
@@ -1695,6 +1703,7 @@ namespace Robust.Client.GameObjects
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 
+            [ViewVariables] public string? ShaderPrototype;
             [ViewVariables] public ShaderInstance? Shader;
             [ViewVariables] public Texture? Texture;
 
@@ -1751,6 +1760,7 @@ namespace Robust.Client.GameObjects
                 if (toClone.Shader != null)
                 {
                     Shader = toClone.Shader.Mutable ? toClone.Shader.Duplicate() : toClone.Shader;
+                    ShaderPrototype = toClone.ShaderPrototype;
                 }
                 Texture = toClone.Texture;
                 RSI = toClone.RSI;
@@ -1777,7 +1787,7 @@ namespace Robust.Client.GameObjects
                     Color = Color,
                     Rotation = Rotation,
                     Scale = Scale,
-                    //todo Shader = Shader
+                    Shader = ShaderPrototype,
                     State = State.Name,
                     Visible = Visible,
                     RsiPath = RSI?.Path?.ToString(),

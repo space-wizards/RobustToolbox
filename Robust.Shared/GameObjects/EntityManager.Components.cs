@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -669,6 +670,11 @@ namespace Robust.Shared.GameObjects
             return false;
         }
 
+        public FunnyEntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
+        {
+            return new FunnyEntityQuery<TComp1>(_entTraitArray[ArrayIndexFor<TComp1>()]);
+        }
+
         /// <inheritdoc />
         public IEnumerable<IComponent> GetComponents(EntityUid uid)
         {
@@ -1040,6 +1046,36 @@ namespace Robust.Shared.GameObjects
                 var val = _dictEnum.Current;
                 return (val.Key, val.Value);
             }
+        }
+    }
+
+    public readonly struct FunnyEntityQuery<TComp1> where TComp1 : Component
+    {
+        private readonly Dictionary<EntityUid, Component> _traitDict;
+
+        public FunnyEntityQuery(Dictionary<EntityUid, Component> traitDict)
+        {
+            _traitDict = traitDict;
+        }
+
+        public TComp1 GetComponent(EntityUid uid)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+                return (TComp1) comp;
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
+        public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            {
+                component = (TComp1) comp;
+                return true;
+            }
+
+            component = default;
+            return false;
         }
     }
 }

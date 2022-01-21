@@ -339,6 +339,14 @@ namespace Robust.Client
 
             if (_loaderArgs != null)
             {
+                if (_loaderArgs.ApiMounts is { } mounts)
+                {
+                    foreach (var (api, prefix) in mounts)
+                    {
+                        _resourceCache.MountLoaderApi(api, "", new ResourcePath(prefix));
+                    }
+                }
+
                 _stringSerializer.EnableCaching = false;
                 _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;

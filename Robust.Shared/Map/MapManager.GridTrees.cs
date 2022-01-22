@@ -85,6 +85,7 @@ internal partial class MapManager
         var grid = (MapGrid) GetGrid(args.GridId);
         var xform = EntityManager.GetComponent<TransformComponent>(args.EntityUid);
 
+        // Can't check for free proxy because DetachParentToNull gets called first woo!
         if (xform.MapID == MapId.Nullspace) return;
 
         RemoveGrid(grid, xform.MapID);
@@ -93,6 +94,7 @@ internal partial class MapManager
     private void RemoveGrid(MapGrid grid, MapId mapId)
     {
         _gridTrees[mapId].DestroyProxy(grid.MapProxy);
+        grid.MapProxy = DynamicTree.Proxy.Free;
     }
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -121,32 +123,37 @@ internal partial class MapManager
 
     private void OnGridMapChange(EntityUid uid, MapGridComponent component, EntMapIdChangedMessage args)
     {
+        var aGrid = (MapGrid)component.Grid;
+        var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
+
         // oh boy
-        if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Initialized) return;
+        // Want gridinit / gridremoval to handle this hence specialcase those situations.
+        if (lifestage < EntityLifeStage.Initialized) return;
 
         // Make sure we cleanup old map for moved grid stuff.
         var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
 
-        if (_movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
+        if (aGrid.MapProxy != DynamicTree.Proxy.Free && _movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
             oldMovedGrids.Remove(component.Grid);
-            RemoveGrid((MapGrid) component.Grid, args.OldMapId);
+            RemoveGrid(aGrid, args.OldMapId);
         }
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {
             newMovedGrids.Add(component.Grid);
-            AddGrid((MapGrid) component.Grid, mapId);
+            AddGrid(aGrid, mapId);
         }
     }
 
     private void OnGridBoundsChange(EntityUid uid, MapGridComponent component, GridFixtureChangeEvent args)
     {
+        var grid = (MapGrid) component.Grid;
+
         // Just MapLoader things.
-        if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Initialized) return;
+        if (grid.MapProxy == DynamicTree.Proxy.Free) return;
 
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
-        var grid = (MapGrid) component.Grid;
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
     }

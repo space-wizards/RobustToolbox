@@ -67,6 +67,11 @@ internal partial class MapManager
 
         if (mapId == MapId.Nullspace) return;
 
+        AddGrid(grid, mapId);
+    }
+
+    private void AddGrid(MapGrid grid, MapId mapId)
+    {
         var aabb = GetWorldAABB(grid);
         var proxy = _gridTrees[mapId].CreateProxy(in aabb, grid);
 
@@ -82,7 +87,12 @@ internal partial class MapManager
 
         if (xform.MapID == MapId.Nullspace) return;
 
-        _gridTrees[xform.MapID].DestroyProxy(grid.MapProxy);
+        RemoveGrid(grid, xform.MapID);
+    }
+
+    private void RemoveGrid(MapGrid grid, MapId mapId)
+    {
+        _gridTrees[mapId].DestroyProxy(grid.MapProxy);
     }
 
     private void OnGridMove(EntityUid uid, MapGridComponent component, ref MoveEvent args)
@@ -117,11 +127,13 @@ internal partial class MapManager
         if (_movedGrids.TryGetValue(args.OldMapId, out var oldMovedGrids))
         {
             oldMovedGrids.Remove(component.Grid);
+            RemoveGrid((MapGrid) component.Grid, args.OldMapId);
         }
 
         if (_movedGrids.TryGetValue(mapId, out var newMovedGrids))
         {
             newMovedGrids.Add(component.Grid);
+            AddGrid((MapGrid) component.Grid, mapId);
         }
     }
 

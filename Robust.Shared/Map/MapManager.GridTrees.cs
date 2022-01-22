@@ -121,6 +121,9 @@ internal partial class MapManager
 
     private void OnGridMapChange(EntityUid uid, MapGridComponent component, EntMapIdChangedMessage args)
     {
+        // oh boy
+        if (EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage < EntityLifeStage.Initialized) return;
+
         // Make sure we cleanup old map for moved grid stuff.
         var mapId = EntityManager.GetComponent<TransformComponent>(uid).MapID;
 

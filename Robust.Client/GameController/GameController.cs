@@ -134,8 +134,8 @@ namespace Robust.Client
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.Resync();
-            _mapManager.Initialize();
             _entityManager.Initialize();
+            _mapManager.Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();

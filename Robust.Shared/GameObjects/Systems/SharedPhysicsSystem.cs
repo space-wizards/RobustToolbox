@@ -325,9 +325,6 @@ namespace Robust.Shared.GameObjects
             var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
             RaiseLocalEvent(ref updateBeforeSolve);
 
-            // As controllers may update rotations / positions on their own we can't re-use the cache for finding new contacts
-            _broadphaseSystem.EnsureBroadphaseTransforms();
-
             foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.Step(deltaTime, prediction);

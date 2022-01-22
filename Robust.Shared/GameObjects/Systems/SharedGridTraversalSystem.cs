@@ -61,8 +61,10 @@ namespace Robust.Shared.GameObjects
 
             if (_container.IsEntityInContainer(entity, transform)) return;
 
+            var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
+
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(transform.MapID, moveEvent.NewPosition.ToMapPos(EntityManager), out var grid) &&
+            if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
                 // TODO: Do we even need this?
                 EntityManager.EntityExists(grid.GridEntityId) &&
                 grid.GridEntityId != entity)

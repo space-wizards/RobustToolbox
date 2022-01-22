@@ -278,12 +278,26 @@ internal partial class PVSSystem : EntitySystem
 
         visibleEnts.Clear();
 
+        var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
+        var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+
         var globalOverridesEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
         while(globalOverridesEnumerator.MoveNext())
         {
             var uid = globalOverridesEnumerator.Current;
             //todo paul reenable budgetcheck here once you fix mapmanager
-            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, dontSkip: true);
+            TryAddToVisibleEnts(
+                in uid,
+                seenSet,
+                playerVisibleSet,
+                visibleEnts,
+                fromTick,
+                ref newEntitiesSent,
+                ref entitiesSent,
+                metadataQuery,
+                transformQuery,
+                dontSkip: true);
         }
         globalOverridesEnumerator.Dispose();
 
@@ -292,7 +306,7 @@ internal partial class PVSSystem : EntitySystem
         {
             var uid = localOverridesEnumerator.Current;
             //todo paul reenable budgetcheck here once you fix mapmanager
-            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, dontSkip: true);
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, dontSkip: true);
         }
         localOverridesEnumerator.Dispose();
 
@@ -300,21 +314,21 @@ internal partial class PVSSystem : EntitySystem
         RaiseLocalEvent(ref expandEvent);
         foreach (var entityUid in expandEvent.Entities)
         {
-            TryAddToVisibleEnts(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent);
+            TryAddToVisibleEnts(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery);
         }
 
         var viewers = GetSessionViewers(session);
 
         foreach (var eyeEuid in viewers)
         {
-            var (viewBox, mapId) = CalcViewBounds(in eyeEuid);
+            var (viewBox, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
             uint visMask = EyeComponent.DefaultVisibilityMask;
-            if (EntityManager.TryGetComponent<EyeComponent>(eyeEuid, out var eyeComp))
+            if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
                 visMask = eyeComp.VisibilityMask;
 
             //todo at some point just register the viewerentities as localoverrides
-            TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask, dontSkip: true);
+            TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask, dontSkip: true);
 
             var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -324,7 +338,7 @@ internal partial class PVSSystem : EntitySystem
                 {
                     foreach (var index in chunk)
                     {
-                        TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
+                        TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask);
                     }
                 }
             }
@@ -341,7 +355,7 @@ internal partial class PVSSystem : EntitySystem
                     {
                         foreach (var index in chunk)
                         {
-                            TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, visMask);
+                            TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask);
                         }
                     }
                 }
@@ -393,7 +407,19 @@ internal partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool TryAddToVisibleEnts(in EntityUid uid, HashSet<EntityUid> seenSet, Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts, Dictionary<EntityUid, PVSEntityVisiblity> toSend, GameTick fromTick, ref int newEntitiesSent, ref int totalEnteredEntities, uint? visMask = null, bool dontSkip = false, bool trustParent = false)
+    private bool TryAddToVisibleEnts(
+        in EntityUid uid,
+        HashSet<EntityUid> seenSet,
+        Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
+        Dictionary<EntityUid, PVSEntityVisiblity> toSend,
+        GameTick fromTick,
+        ref int newEntitiesSent,
+        ref int totalEnteredEntities,
+        EntityQuery<MetaDataComponent> metadataQuery,
+        EntityQuery<TransformComponent> transformQuery,
+        uint? visMask = null,
+        bool dontSkip = false,
+        bool trustParent = false)
     {
         //are we valid yet?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -402,7 +428,7 @@ internal partial class PVSSystem : EntitySystem
         //did we already get added?
         if (toSend.ContainsKey(uid)) return true;
 
-        var metadata = MetaData(uid);
+        var metadata = metadataQuery.GetComponent(uid);
 
         // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
         if (visMask != null)
@@ -410,16 +436,16 @@ internal partial class PVSSystem : EntitySystem
             // TODO: Don't need to know about parents so no longer need to use bool for this method.
 
             // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
-            if ((visMask & metadata.VisibilityMask) != metadata.VisibilityMask) 
+            if ((visMask & metadata.VisibilityMask) != metadata.VisibilityMask)
                 return false;
         }
 
-        var parent = Transform(uid).ParentUid;
+        var parent = transformQuery.GetComponent(uid).ParentUid;
 
         if (!trustParent && //do we have it on good authority the parent exists?
             parent.IsValid() && //is it not a worldentity?
             !toSend.ContainsKey(parent) && //was the parent not yet added to toSend?
-            !TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, visMask)) //did we just fail to add the parent?
+            !TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, metadataQuery, transformQuery, visMask)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
         //did we already get added through the parent call?
@@ -475,6 +501,7 @@ internal partial class PVSSystem : EntitySystem
         stateEntities = new List<EntityState>();
         var seenEnts = new HashSet<EntityUid>();
         var slowPath = false;
+        var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
 
         for (var i = fromTick.Value; i <= toTick.Value; i++)
         {
@@ -489,7 +516,7 @@ internal partial class PVSSystem : EntitySystem
             {
                 if (!seenEnts.Add(uid)) continue;
                 // This is essentially the same as IEntityManager.EntityExists, but returning MetaDataComponent.
-                if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
+                if (!metadataQuery.TryGetComponent(uid, out MetaDataComponent? md)) continue;
 
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
@@ -502,7 +529,7 @@ internal partial class PVSSystem : EntitySystem
                 DebugTools.Assert(!add.Contains(uid));
 
                 if (!seenEnts.Add(uid)) continue;
-                if (!EntityManager.TryGetComponent(uid, out MetaDataComponent? md)) continue;
+                if (!metadataQuery.TryGetComponent(uid, out MetaDataComponent? md)) continue;
 
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
@@ -607,9 +634,9 @@ internal partial class PVSSystem : EntitySystem
     }
 
     // Read Safe
-    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid)
+    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
-        var xform = EntityManager.GetComponent<TransformComponent>(euid);
+        var xform = transformQuery.GetComponent(euid);
 
         var view = Box2.UnitCentered.Scale(_viewSize).Translated(xform.WorldPosition);
         var map = xform.MapID;

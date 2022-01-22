@@ -178,11 +178,12 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveFromEntityTrees(@event.Entity);
             }
-            else
+            else if (_entityManager.TryGetComponent(@event.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 var xform = _entityManager.GetComponent<TransformComponent>(@event.Entity);
                 UpdateEntityTree(@event.Entity, xform);
             }
+            // else -> the entity is terminating. We can ignore this un-anchor event, as this entity will be removed by the tree via OnEntityDeleted.
         }
 
         private void OnLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)

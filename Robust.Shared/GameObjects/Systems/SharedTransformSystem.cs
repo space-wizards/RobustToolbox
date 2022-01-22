@@ -60,7 +60,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <remarks>
         ///     Used when a tile on a grid is removed (becomes space). Only de-parents entities if they are actually
-        ///     parented to that grid. No more disemboweling mobs. 
+        ///     parented to that grid. No more disemboweling mobs.
         /// </remarks>
         private void DeparentAllEntsOnTile(GridId gridId, Vector2i tileIndices)
         {
@@ -71,6 +71,11 @@ namespace Robust.Shared.GameObjects
 
             foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
+                // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
+                // Avoid unnecessary entity updates.
+                if (EntityManager.IsQueuedForDeletion(entity))
+                    continue;
+
                 var transform = Transform(entity);
                 if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
                     transform.AttachParent(mapTransform);

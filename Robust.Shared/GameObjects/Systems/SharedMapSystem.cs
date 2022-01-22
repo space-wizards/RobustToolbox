@@ -21,7 +21,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridAdd(EntityUid uid, MapGridComponent component, ComponentAdd args)
         {
-            var msg = new GridAddEvent(uid, component.GridIndex);
+            // GridID is not set yet so we don't include it.
+            var msg = new GridAddEvent(uid);
             EntityManager.EventBus.RaiseLocalEvent(uid, msg);
         }
 
@@ -89,12 +90,10 @@ namespace Robust.Shared.GameObjects
     public sealed class GridAddEvent : EntityEventArgs
     {
         public EntityUid EntityUid { get; }
-        public GridId GridId { get; }
 
-        public GridAddEvent(EntityUid uid, GridId gridId)
+        public GridAddEvent(EntityUid uid)
         {
             EntityUid = uid;
-            GridId = gridId;
         }
     }
 }

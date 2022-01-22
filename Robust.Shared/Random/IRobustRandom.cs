@@ -13,6 +13,7 @@ namespace Robust.Shared.Random
         int Next(int minValue, int maxValue);
         int Next(int maxValue);
         double NextDouble();
+        double NextDouble(double minValue, double maxValue) => NextDouble() * (maxValue - minValue) + minValue;
         void NextBytes(byte[] buffer);
 
         public Angle NextAngle() => NextFloat() * MathHelper.Pi * 2;

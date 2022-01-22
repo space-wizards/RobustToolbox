@@ -53,6 +53,8 @@ namespace Robust.Client.Graphics.Clyde
 
                 adapter3->Release();
             }
+
+            dxgiFactory->Release();
         }
 
         private static void ThrowIfFailed(string methodName, HRESULT hr)

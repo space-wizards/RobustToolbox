@@ -112,7 +112,6 @@ namespace Robust.Shared.Physics
             {
                 var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
-                _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
                 _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot);
             }
 
@@ -143,6 +142,20 @@ namespace Robust.Shared.Physics
         {
             // TODO: Make it take in density instead?
             var fixture = new Fixture(body, shape) {Mass = mass};
+            CreateFixture(body, fixture);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
+        /// </summary>
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass, int collisionLayer, int collisionMask)
+        {
+            // TODO: Make it take in density instead?
+            var fixture = new Fixture(body, shape) {
+                Mass = mass,
+                CollisionLayer = collisionLayer,
+                CollisionMask = collisionMask
+            };
             CreateFixture(body, fixture);
         }
 
@@ -388,7 +401,7 @@ namespace Robust.Shared.Physics
                 hard |= fixture.Hard;
             }
 
-            body.ResetMassData();
+            body.ResetMassData(component);
 
             // Normally this method is called when fixtures need to be dirtied anyway so no point in returning early I think
             body.CollisionMask = mask;

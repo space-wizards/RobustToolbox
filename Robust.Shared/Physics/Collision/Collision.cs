@@ -66,8 +66,6 @@ namespace Robust.Shared.Physics.Collision
     /// </summary>
     internal sealed class CollisionManager : IManifoldManager
     {
-        [Dependency] private readonly IConfigurationManager _configManager = default!;
-
         /*
          * Farseer had this as a static class with a ThreadStatic DistanceInput
          */

@@ -301,6 +301,8 @@ namespace Robust.Shared.GameObjects
                 QueuedDeletions.Enqueue(uid);
         }
 
+        public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
+
         public bool EntityExists(EntityUid uid)
         {
             return _entTraitArray[ArrayIndexFor<MetaDataComponent>()].ContainsKey(uid);

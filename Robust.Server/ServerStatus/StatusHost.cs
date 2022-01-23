@@ -79,10 +79,13 @@ namespace Robust.Server.ServerStatus
 
         public event Action<JsonNode>? OnInfoRequest;
 
+        // TODO: Remove at some point in the future
+#pragma warning disable CS0618 // Uses the obsolete StatusHostHandler. Exists for backwards compatibility
         public void AddHandler(StatusHostHandler handler)
         {
             _handlers.Add((ctx) => Task.FromResult(handler(ctx)));
         }
+#pragma warning restore CS0618
 
         public void AddHandler(StatusHostHandlerAsync handler)
         {

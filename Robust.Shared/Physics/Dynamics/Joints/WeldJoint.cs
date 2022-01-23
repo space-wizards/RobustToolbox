@@ -3,6 +3,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -34,10 +35,6 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
     public sealed class WeldJoint : Joint, IEquatable<WeldJoint>
     {
-        public float Stiffness;
-        public float Damping;
-        public float Bias;
-
         // Shared
         private float _gamma;
         private Vector3 _impulse;
@@ -56,10 +53,26 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private Matrix33 _mass;
 
         // Settable
+
+        [DataField("stiffness")]
+        public float Stiffness;
+
+        [DataField("damping")]
+        public float Damping;
+
+        [DataField("bias")]
+        public float Bias;
+
         /// <summary>
         /// The bodyB angle minus bodyA angle in the reference state (radians).
         /// </summary>
+        [DataField("referenceAngle")]
         public float ReferenceAngle;
+
+        /// <summary>
+        /// Used for Serv3 reasons
+        /// </summary>
+        public WeldJoint() {}
 
         public WeldJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
         {

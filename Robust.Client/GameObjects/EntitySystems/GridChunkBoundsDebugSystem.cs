@@ -1,4 +1,3 @@
-using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -13,6 +12,10 @@ namespace Robust.Client.GameObjects
 {
     public class GridChunkBoundsDebugSystem : EntitySystem
     {
+        [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IOverlayManager _overlayManager = default!;
+
         private GridChunkBoundsOverlay? _overlay;
 
         public bool Enabled
@@ -29,14 +32,14 @@ namespace Robust.Client.GameObjects
                     DebugTools.Assert(_overlay == null);
                     _overlay = new GridChunkBoundsOverlay(
                         EntityManager,
-                        IoCManager.Resolve<IEyeManager>(),
-                        IoCManager.Resolve<IMapManager>());
+                        _eyeManager,
+                        _mapManager);
 
-                    IoCManager.Resolve<IOverlayManager>().AddOverlay(_overlay);
+                    _overlayManager.AddOverlay(_overlay);
                 }
                 else
                 {
-                    IoCManager.Resolve<IOverlayManager>().RemoveOverlay(_overlay!);
+                    _overlayManager.RemoveOverlay(_overlay!);
                     _overlay = null;
                 }
             }
@@ -63,7 +66,7 @@ namespace Robust.Client.GameObjects
         protected internal override void Draw(in OverlayDrawArgs args)
         {
             var currentMap = _eyeManager.CurrentMap;
-            var viewport = _eyeManager.GetWorldViewport();
+            var viewport = args.WorldBounds;
             var worldHandle = args.WorldHandle;
 
             foreach (var grid in _mapManager.FindGridsIntersecting(currentMap, viewport))

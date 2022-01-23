@@ -156,7 +156,6 @@ namespace Robust.Shared.Physics.Dynamics
 
                 _mass = MathF.Max(0f, value);
                 EntitySystem.Get<FixtureSystem>().FixtureUpdate(IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Body.Owner), Body);
-                Body.ResetMassData();
             }
         }
 

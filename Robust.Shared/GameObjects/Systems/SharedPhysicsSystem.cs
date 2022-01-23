@@ -57,14 +57,14 @@ namespace Robust.Shared.GameObjects
          * Given the kind of game SS14 is (our target game I guess) parallelising the islands will probably be the biggest benefit.
          */
 
-        private static readonly Histogram _tickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",
+        public static readonly Histogram TickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",
             "Amount of time spent running a controller's UpdateBeforeSolve", new HistogramConfiguration
             {
                 LabelNames = new[] {"controller"},
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
-        private static readonly Histogram _tickUsageControllerAfterSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_after_solve",
+        public static readonly Histogram TickUsageControllerAfterSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_after_solve",
             "Amount of time spent running a controller's UpdateAfterSolve", new HistogramConfiguration
             {
                 LabelNames = new[] {"controller"},
@@ -75,12 +75,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
-        internal IEnumerable<VirtualController> Controllers => _controllers.Values;
-        private readonly Dictionary<Type, VirtualController> _controllers = new();
-
         public Action<Fixture, Fixture, float, Vector2>? KinematicControllerCollision;
 
-        public bool MetricsEnabled;
+        public bool MetricsEnabled { get; protected set; }
         private readonly Stopwatch _stopwatch = new();
 
         public override void Initialize()
@@ -89,7 +86,7 @@ namespace Robust.Shared.GameObjects
             MapManager.MapCreated += HandleMapCreated;
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
-            SubscribeLocalEvent<PhysicsUpdateMessage>(HandlePhysicsUpdateMessage);
+            SubscribeLocalEvent<CollisionChangeMessage>(HandlePhysicsUpdateMessage);
             SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
             SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
@@ -99,9 +96,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
-
-            BuildControllers();
-            Logger.DebugS("physics", $"Found {_controllers.Count} physics controllers.");
 
             IoCManager.Resolve<IIslandManager>().Initialize();
 
@@ -113,7 +107,6 @@ namespace Robust.Shared.GameObjects
         {
             IoCManager.InjectDependencies(component);
             component.BroadphaseSystem = _broadphaseSystem;
-            component.PhysicsSystem = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;
@@ -133,11 +126,6 @@ namespace Robust.Shared.GameObjects
         {
             component.ContactManager.KinematicControllerCollision -= KinematicControllerCollision;
             component.ContactManager.Shutdown();
-        }
-
-        public T GetController<T>() where T : VirtualController
-        {
-            return (T) _controllers[typeof(T)];
         }
 
         private void HandleParentChange(ref EntParentChangedMessage args)
@@ -223,50 +211,9 @@ namespace Robust.Shared.GameObjects
             EntityManager.EnsureComponent<FixturesComponent>(ev.EntityUid);
         }
 
-        private void BuildControllers()
-        {
-            var reflectionManager = IoCManager.Resolve<IReflectionManager>();
-            var typeFactory = IoCManager.Resolve<IDynamicTypeFactory>();
-            var instantiated = new List<VirtualController>();
-
-            foreach (var type in reflectionManager.GetAllChildren(typeof(VirtualController)))
-            {
-                if (type.IsAbstract)
-                    continue;
-
-                instantiated.Add(typeFactory.CreateInstance<VirtualController>(type));
-            }
-
-            var nodes = TopologicalSort.FromBeforeAfter(
-                instantiated,
-                c => c.GetType(),
-                c => c,
-                c => c.UpdatesBefore,
-                c => c.UpdatesAfter);
-
-            var controllers = TopologicalSort.Sort(nodes).ToList();
-
-            foreach (var controller in controllers)
-            {
-                _controllers[controller.GetType()] = controller;
-            }
-
-            foreach (var (_, controller) in _controllers)
-            {
-                controller.BeforeMonitor = _tickUsageControllerBeforeSolveHistogram.WithLabels(controller.GetType().Name);
-                controller.AfterMonitor = _tickUsageControllerAfterSolveHistogram.WithLabels(controller.GetType().Name);
-                controller.Initialize();
-            }
-        }
-
         public override void Shutdown()
         {
             base.Shutdown();
-
-            foreach (var (_, controller) in _controllers)
-            {
-                controller.Shutdown();
-            }
 
             MapManager.MapCreated -= HandleMapCreated;
 
@@ -297,22 +244,22 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void HandlePhysicsUpdateMessage(PhysicsUpdateMessage message)
+        private void HandlePhysicsUpdateMessage(CollisionChangeMessage message)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Component.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(message.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
-            if (message.Component.Deleted || !message.Component.CanCollide)
+            var physicsMap = EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
+
+            if (Deleted(message.Owner) || !message.CanCollide)
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(message.Component);
+                physicsMap.RemoveBody(message.Body);
             }
             else
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(message.Component);
+                physicsMap.AddBody(message.Body);
             }
         }
 
@@ -375,41 +322,16 @@ namespace Robust.Shared.GameObjects
         /// <param name="prediction">Should only predicted entities be considered in this simulation step?</param>
         protected void SimulateWorld(float deltaTime, bool prediction)
         {
-            foreach (var (_, controller) in _controllers)
-            {
-                if (MetricsEnabled)
-                {
-                    _stopwatch.Restart();
-                }
-                controller.UpdateBeforeSolve(prediction, deltaTime);
-                if (MetricsEnabled)
-                {
-                    controller.BeforeMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
-                }
-            }
-
-            // As controllers may update rotations / positions on their own we can't re-use the cache for finding new contacts
-            _broadphaseSystem.EnsureBroadphaseTransforms();
+            var updateBeforeSolve = new PhysicsUpdateBeforeSolveEvent(prediction, deltaTime);
+            RaiseLocalEvent(ref updateBeforeSolve);
 
             foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
             {
                 comp.Step(deltaTime, prediction);
             }
 
-            foreach (var (_, controller) in _controllers)
-            {
-                if (MetricsEnabled)
-                {
-                    _stopwatch.Restart();
-                }
-
-                controller.UpdateAfterSolve(prediction, deltaTime);
-
-                if (MetricsEnabled)
-                {
-                    controller.AfterMonitor.Observe(_stopwatch.Elapsed.TotalSeconds);
-                }
-            }
+            var updateAfterSolve = new PhysicsUpdateAfterSolveEvent(prediction, deltaTime);
+            RaiseLocalEvent(ref updateAfterSolve);
 
             // Go through and run all of the deferred events now
             foreach (var comp in EntityManager.EntityQuery<SharedPhysicsMapComponent>(true))
@@ -427,6 +349,32 @@ namespace Robust.Shared.GameObjects
             var batchSize = (int) MathF.Ceiling((float) count / batches);
 
             return (batches, batchSize);
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct PhysicsUpdateAfterSolveEvent
+    {
+        public readonly bool Prediction;
+        public readonly float DeltaTime;
+
+        public PhysicsUpdateAfterSolveEvent(bool prediction, float deltaTime)
+        {
+            Prediction = prediction;
+            DeltaTime = deltaTime;
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct PhysicsUpdateBeforeSolveEvent
+    {
+        public readonly bool Prediction;
+        public readonly float DeltaTime;
+
+        public PhysicsUpdateBeforeSolveEvent(bool prediction, float deltaTime)
+        {
+            Prediction = prediction;
+            DeltaTime = deltaTime;
         }
     }
 }

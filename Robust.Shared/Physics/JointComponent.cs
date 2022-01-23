@@ -1,13 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Log;
 using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics
@@ -15,6 +12,7 @@ namespace Robust.Shared.Physics
     [RegisterComponent]
     [NetworkedComponent]
     // [Friend(typeof(SharedJointSystem))]
+    [ComponentProtoName("Joint")]
     public sealed class JointComponent : Component
     {
         [ViewVariables]
@@ -23,6 +21,7 @@ namespace Robust.Shared.Physics
         [ViewVariables]
         public IEnumerable<Joint> GetJoints => Joints.Values;
 
+        [DataField("joints")]
         internal Dictionary<string, Joint> Joints = new();
 
         [Serializable, NetSerializable]

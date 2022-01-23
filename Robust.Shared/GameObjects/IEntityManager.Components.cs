@@ -233,6 +233,11 @@ namespace Robust.Shared.GameObjects
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
+        /// Returns a cached struct enumerator with the specified component.
+        /// </summary>
+        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
+
+        /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
         ///     can have multiple component types.
         /// </summary>

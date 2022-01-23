@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -11,6 +12,7 @@ namespace Robust.Shared.GameObjects
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
 
         private Stack<MoveEvent> _queuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
@@ -18,7 +20,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            SubscribeLocalEvent<MoveEvent>((ref MoveEvent ev) => _queuedEvents.Push(ev));
+            SubscribeLocalEvent((ref MoveEvent ev) => _queuedEvents.Push(ev));
         }
 
         public override void Update(float frameTime)
@@ -47,25 +49,23 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if (EntityManager.Deleted(entity) ||
-                EntityManager.HasComponent<IMapComponent>(entity) ||
-                EntityManager.HasComponent<IMapGridComponent>(entity) ||
-                entity.IsInContainer())
+            if (Deleted(entity) ||
+                HasComp<IMapComponent>(entity) ||
+                HasComp<IMapGridComponent>(entity))
             {
                 return;
             }
 
             var transform = EntityManager.GetComponent<TransformComponent>(entity);
+            DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if (float.IsNaN(moveEvent.NewPosition.X) || float.IsNaN(moveEvent.NewPosition.Y))
-            {
-                return;
-            }
+            if (_container.IsEntityInContainer(entity, transform)) return;
 
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
 
             // Change parent if necessary
             if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
+                // TODO: Do we even need this?
                 EntityManager.EntityExists(grid.GridEntityId) &&
                 grid.GridEntityId != entity)
             {

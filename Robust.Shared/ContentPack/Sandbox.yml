@@ -485,6 +485,7 @@ Types:
     TargetFrameworkAttribute: { All: True }
   System.Text.Json.Serialization:
     JsonIgnoreAttribute: { All: True }
+    JsonPropertyNameAttribute: { All: True }
   System.Text.RegularExpressions:
     Capture: { All: True }
     CaptureCollection: { All: True }

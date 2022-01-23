@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -21,7 +22,6 @@ namespace Robust.Shared.GameObjects
     public partial class EntityManager
     {
         [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
-        [IoC.Dependency] private readonly IComponentDependencyManager _componentDependencyManager = default!;
 
 #if EXCEPTION_TOLERANCE
         [IoC.Dependency] private readonly IRuntimeLog _runtimeLog = default!;
@@ -254,8 +254,6 @@ namespace Robust.Shared.GameObjects
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
-            _componentDependencyManager.OnComponentAdd(uid, component);
-
             component.LifeAddToEntity();
 
             var metadata = GetComponent<MetaDataComponent>(uid);
@@ -296,7 +294,7 @@ namespace Robust.Shared.GameObjects
         {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
-            if (component.Owner == null || component.Owner != uid)
+            if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
             RemoveComponentImmediate((Component)component, uid, false);
@@ -368,7 +366,6 @@ namespace Robust.Shared.GameObjects
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
                 component.LifeRemoveFromEntity();
-            _componentDependencyManager.OnComponentRemove(uid, component);
             ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
@@ -403,7 +400,6 @@ namespace Robust.Shared.GameObjects
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
                     component.LifeRemoveFromEntity(); // Sets delete
 
-                _componentDependencyManager.OnComponentRemove(uid, component);
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
             }
 #if EXCEPTION_TOLERANCE
@@ -672,6 +668,11 @@ namespace Robust.Shared.GameObjects
 
             component = default;
             return false;
+        }
+
+        public EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component
+        {
+            return new EntityQuery<TComp1>(_entTraitArray[ArrayIndexFor<TComp1>()]);
         }
 
         /// <inheritdoc />
@@ -1045,6 +1046,36 @@ namespace Robust.Shared.GameObjects
                 var val = _dictEnum.Current;
                 return (val.Key, val.Value);
             }
+        }
+    }
+
+    public readonly struct EntityQuery<TComp1> where TComp1 : Component
+    {
+        private readonly Dictionary<EntityUid, Component> _traitDict;
+
+        public EntityQuery(Dictionary<EntityUid, Component> traitDict)
+        {
+            _traitDict = traitDict;
+        }
+
+        public TComp1 GetComponent(EntityUid uid)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+                return (TComp1) comp;
+
+            throw new KeyNotFoundException($"Entity {uid} does not have a component of type {typeof(TComp1)}");
+        }
+
+        public bool TryGetComponent(EntityUid uid, [NotNullWhen(true)] out TComp1? component)
+        {
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            {
+                component = (TComp1) comp;
+                return true;
+            }
+
+            component = default;
+            return false;
         }
     }
 }

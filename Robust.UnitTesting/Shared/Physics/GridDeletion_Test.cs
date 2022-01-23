@@ -45,6 +45,7 @@ public class GridDeletion_Test : RobustIntegrationTest
             Assert.That(physics.LinearVelocity.Length, NUnit.Framework.Is.GreaterThan(0f));
             entManager.DeleteEntity(grid.GridEntityId);
 
+            // So if gridtree is fucky then this SHOULD throw.
             foreach (var _ in mapManager.FindGridsIntersecting(mapId,
                          new Box2(new Vector2(float.MinValue, float.MinValue),
                              new Vector2(float.MaxValue, float.MaxValue))))

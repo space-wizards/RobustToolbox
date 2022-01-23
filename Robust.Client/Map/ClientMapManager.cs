@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -107,7 +108,9 @@ namespace Robust.Client.Map
                         throw new NotImplementedException("Moving grids between maps is not yet implemented");
                     }
 
+                    // I love mapmanager!!!
                     grid.WorldPosition = gridDatum.Coordinates.Position;
+                    grid.WorldRotation = gridDatum.Angle;
 
                     var modified = new List<(Vector2i position, Tile tile)>();
                     foreach (var chunkData in gridDatum.ChunkData)

@@ -319,24 +319,19 @@ namespace Robust.Server.Console.Commands
             // TODO: Box2D just derefs, bleh shape structs someday
             var shape1 = new PolygonShape();
             shape1.SetAsBox(0.5f, 10.0f, new Vector2(10.0f, 0.0f), 0.0f);
-            broadphaseSystem.CreateFixture(body, shape1, 20.0f);
+            broadphaseSystem.CreateFixture(body, shape1, 20.0f, 2, 0);
 
             var shape2 = new PolygonShape();
             shape2.SetAsBox(0.5f, 10.0f, new Vector2(-10.0f, 0.0f), 0f);
-            broadphaseSystem.CreateFixture(body, shape2, 20.0f);
+            broadphaseSystem.CreateFixture(body, shape2, 20.0f, 2, 0);
 
             var shape3 = new PolygonShape();
             shape3.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, 10.0f), 0f);
-            broadphaseSystem.CreateFixture(body, shape3, 20.0f);
+            broadphaseSystem.CreateFixture(body, shape3, 20.0f, 2, 0);
 
             var shape4 = new PolygonShape();
             shape4.SetAsBox(10.0f, 0.5f, new Vector2(0.0f, -10.0f), 0f);
-            broadphaseSystem.CreateFixture(body, shape4, 20.0f);
-
-            foreach (var fixture in body.Fixtures)
-            {
-                fixture.CollisionLayer = 2;
-            }
+            broadphaseSystem.CreateFixture(body, shape4, 20.0f, 2, 0);
 
             var revolute = EntitySystem.Get<SharedJointSystem>().CreateRevoluteJoint(groundUid, bodyUid);
             revolute.LocalAnchorA = new Vector2(0f, 10f);
@@ -363,9 +358,7 @@ namespace Robust.Server.Console.Commands
                     box.FixedRotation = false;
                     var shape = new PolygonShape();
                     shape.SetAsBox(0.125f, 0.125f);
-                    broadphaseSystem.CreateFixture(box, shape, 0.0625f);
-                    box.Fixtures[0].CollisionMask = 2;
-                    box.Fixtures[0].CollisionLayer = 2;
+                    broadphaseSystem.CreateFixture(box, shape, 0.0625f, 2, 2);
                 });
             }
         }

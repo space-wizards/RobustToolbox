@@ -19,7 +19,7 @@ namespace Robust.Client.GameObjects
             while (_queuedUpdates.TryDequeue(out var appearance))
             {
                 if (appearance.Deleted)
-                    return;
+                    continue;
 
                 OnChangeData(appearance.Owner, appearance);
                 appearance.UnmarkDirty();

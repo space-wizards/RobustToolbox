@@ -281,6 +281,22 @@ namespace Robust.Client
 
             if (Options.LoadConfigAndUserData)
             {
+                // Load content config
+                if (_resourceCache.TryGetDiskFilePath(new ResourcePath(Options.ContentConfigFileName),
+                        out var contentPath))
+                {
+                    _configurationManager.LoadFromFile(contentPath);
+                }
+                else
+                {
+                    var contentFile = Path.Combine(userDataDir, Options.ContentConfigFileName);
+                    if (File.Exists(contentFile))
+                    {
+                        _configurationManager.LoadFromFile(contentFile);
+                    }
+                }
+
+                // Load client config
                 var configFile = Path.Combine(userDataDir, Options.ConfigFileName);
                 if (File.Exists(configFile))
                 {
@@ -321,10 +337,6 @@ namespace Robust.Client
             ProgramShared.DoMounts(_resourceCache, mountOptions, Options.ContentBuildDirectory,
                 Options.AssemblyDirectory,
                 Options.LoadContentResources, _loaderArgs != null && !Options.ResourceMountDisabled, ContentStart);
-
-            // Load content config
-            if(_resourceCache.TryGetDiskFilePath(new ResourcePath(Options.ContentConfigFileName), out var contentPath))
-                _configurationManager.LoadFromFile(contentPath);
 
             if (_loaderArgs != null)
             {

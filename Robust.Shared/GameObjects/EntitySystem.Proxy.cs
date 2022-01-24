@@ -163,7 +163,7 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid)
     {
-        EntityManager.DirtyEntity(uid);
+        EntityManager.Dirty(uid);
     }
 
     /// <summary>

@@ -165,7 +165,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick LastModifiedTick { get; private set; }
+        public GameTick LastModifiedTick { get; internal set; }
 
         private static readonly ComponentAdd CompAddInstance = new();
         private static readonly ComponentInit CompInitInstance = new();
@@ -238,17 +238,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Dirty(IEntityManager? entManager = null)
         {
-            // Deserialization will cause this to be true.
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (!Owner.IsValid() || LifeStage >= ComponentLifeStage.Removing)
-                return;
-
-            if (!NetSyncEnabled)
-                return;
-
             IoCManager.Resolve(ref entManager);
-            entManager.DirtyEntity(Owner);
-            LastModifiedTick = entManager.CurrentTick;
+            entManager.Dirty(this);
         }
 
         /// <summary>

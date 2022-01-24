@@ -249,7 +249,7 @@ namespace Robust.Shared.GameObjects
                 netSet.Add(netId, component);
 
                 // mark the component as dirty for networking
-                component.Dirty();
+                Dirty(component);
             }
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
@@ -440,7 +440,7 @@ namespace Robust.Shared.GameObjects
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                DirtyEntity(entityUid);
+                Dirty(entityUid);
             }
 
             foreach (var refType in reg.References)

@@ -868,7 +868,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // MOCKS WHY
-            if (EntitySystem.Get<SharedContainerSystem>().TryGetContainingContainer(ent, out var container, xform))
+            if (ent.TryGetContainer(out var container))
             {
                 return GetWorldAABB(container.Owner);
             }

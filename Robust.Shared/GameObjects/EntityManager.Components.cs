@@ -971,10 +971,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false)
         {
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
             var comps = _entTraitDict[type];
             foreach (var comp in comps.Values)
             {
-                if (comp.Deleted || !includePaused && comp.Paused) continue;
+                if (comp.Deleted || !includePaused && metaQuery.GetComponent(comp.Owner).EntityPaused) continue;
 
                 yield return comp;
             }

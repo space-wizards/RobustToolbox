@@ -291,15 +291,18 @@ namespace Robust.Shared.Physics.Dynamics
 
             _awakeBodyList.AddRange(AwakeBodies);
 
+            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             var jointQuery = _entityManager.GetEntityQuery<JointComponent>();
 
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in _awakeBodyList)
             {
+                // TODO: When this gets ECSd add a helper and remove
+
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 if (seed.Island ||
-                    seed.Paused && !seed.IgnorePaused)
+                    metaQuery.GetComponent(seed.Owner).EntityPaused && !seed.IgnorePaused)
                 {
                     continue;
                 }

@@ -20,11 +20,6 @@ namespace Robust.Shared.GameObjects
         string Name { get; }
 
         /// <summary>
-        ///     Whether the Owner has been paused.
-        /// </summary>
-        bool Paused { get; }
-
-        /// <summary>
         ///     The current lifetime stage of this component. You can use this to check
         ///     if the component is initialized or being deleted.
         /// </summary>

@@ -39,6 +39,7 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
+        internal SharedPhysicsSystem _physics = default!;
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
 
         public override string Name => "PhysicsMap";
@@ -259,12 +260,14 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public void ProcessQueue()
         {
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var fixtures = _entityManager.GetEntityQuery<FixturesComponent>();
+
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                var (worldPos, worldRot) = transform.GetWorldPositionRotation();
-
-                transform.RunDeferred(physics.GetWorldAABB(worldPos, worldRot));
+                var worldAABB = _physics.GetWorldAABB(physics, transform, xforms, fixtures);
+                transform.RunDeferred(worldAABB);
             }
 
             _deferredUpdates.Clear();

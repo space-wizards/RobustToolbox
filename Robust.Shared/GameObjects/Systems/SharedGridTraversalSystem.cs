@@ -36,54 +36,58 @@ namespace Robust.Shared.GameObjects
 
         private void ProcessChanges()
         {
+            var maps = EntityManager.GetEntityQuery<MapComponent>();
+            var grids = EntityManager.GetEntityQuery<MapGridComponent>();
+            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+
             while (_queuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender)) continue;
-                HandleMove(ref moveEvent);
+                HandleMove(ref moveEvent, xforms, maps, grids);
             }
 
             _handledThisTick.Clear();
         }
 
-        private void HandleMove(ref MoveEvent moveEvent)
+        private void HandleMove(ref MoveEvent moveEvent, EntityQuery<TransformComponent> xforms, EntityQuery<MapComponent> maps, EntityQuery<MapGridComponent> grids)
         {
             var entity = moveEvent.Sender;
 
             if (Deleted(entity) ||
-                HasComp<IMapComponent>(entity) ||
-                HasComp<IMapGridComponent>(entity))
+                maps.HasComponent(entity) ||
+                grids.HasComponent(entity))
             {
                 return;
             }
 
-            var transform = EntityManager.GetComponent<TransformComponent>(entity);
+            var xform = xforms.GetComponent(entity);
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if (_container.IsEntityInContainer(entity, transform)) return;
+            if (_container.IsEntityInContainer(entity, xform)) return;
 
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
 
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(transform.MapID, mapPos, out var grid) &&
+            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var grid) &&
                 // TODO: Do we even need this?
                 EntityManager.EntityExists(grid.GridEntityId) &&
                 grid.GridEntityId != entity)
             {
                 // Some minor duplication here with AttachParent but only happens when going on/off grid so not a big deal ATM.
-                if (grid.Index != transform.GridID)
+                if (grid.Index != xform.GridID)
                 {
-                    transform.AttachParent(grid.GridEntityId);
-                    RaiseLocalEvent(entity, new ChangedGridEvent(entity, transform.GridID, grid.Index));
+                    xform.AttachParent(grid.GridEntityId);
+                    RaiseLocalEvent(entity, new ChangedGridEvent(entity, xform.GridID, grid.Index));
                 }
             }
             else
             {
-                var oldGridId = transform.GridID;
+                var oldGridId = xform.GridID;
 
                 // Attach them to map / they are on an invalid grid
                 if (oldGridId != GridId.Invalid)
                 {
-                    transform.AttachParent(_mapManager.GetMapEntityIdOrThrow(transform.MapID));
+                    xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(xform.MapID));
                     RaiseLocalEvent(entity, new ChangedGridEvent(entity, oldGridId, GridId.Invalid));
                 }
             }

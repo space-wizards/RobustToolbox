@@ -90,6 +90,7 @@ namespace Robust.Shared.GameObjects
     {
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
+        private SharedContainerSystem _containers = default!;
 
         private const int GrowthRate = 256;
 
@@ -134,6 +135,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Startup() called multiple times.");
             }
 
+            _containers = EntitySystem.Get<SharedContainerSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
@@ -867,9 +869,9 @@ namespace Robust.Shared.GameObjects
                 return new Box2(pos, pos);
             }
 
-            if (ent.TryGetContainerMan(out var manager))
+            if (_containers.TryGetContainingContainer(ent, out var container, xform))
             {
-                return GetWorldAABB(manager.Owner);
+                return GetWorldAABB(container.Owner);
             }
 
             pos = xform.WorldPosition;

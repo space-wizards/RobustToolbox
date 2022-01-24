@@ -1077,5 +1077,10 @@ namespace Robust.Shared.GameObjects
             component = default;
             return false;
         }
+
+        public bool HasComponent(EntityUid uid)
+        {
+            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
     }
 }

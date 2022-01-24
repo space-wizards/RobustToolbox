@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -108,7 +107,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -133,7 +132,7 @@ namespace Robust.Shared.GameObjects
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 _localRotation = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -253,26 +252,52 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var parent = _parent;
+
+                if (!parent.IsValid()) return Vector2.Zero;
+
+                var xforms = _entMan.GetEntityQuery<TransformComponent>();
+
+                // So there is something funny going on where if you use matrices all the way down
+                // you get some subtle bug that causes anchoring issues
+                // Somehow this doesn't crop up in the helper methods.
+                var matrix = Matrix3.Identity;
+
+                while (parent.IsValid())
                 {
-                    // parent coords to world coords
-                    return Parent!.WorldMatrix.Transform(_localPosition);
+                    var parentXform = xforms.GetComponent(parent);
+                    var parentMatrix = parentXform.GetLocalMatrix();
+                    Matrix3.Multiply(ref matrix, ref parentMatrix, out var result);
+                    matrix = result;
+                    parent = parentXform.ParentUid;
                 }
-                else
-                {
-                    return Vector2.Zero;
-                }
+
+                return matrix.Transform(_localPosition);
             }
             set
             {
-                if (!_parent.IsValid())
+                var parent = _parent;
+
+                if (!parent.IsValid())
                 {
                     DebugTools.Assert("Parent is invalid while attempting to set WorldPosition - did you try to move root node?");
                     return;
                 }
 
+                var xforms = _entMan.GetEntityQuery<TransformComponent>();
+                var invMatrix = Matrix3.Identity;
+
+                while (parent.IsValid())
+                {
+                    var parentXform = xforms.GetComponent(parent);
+                    var parentMatrix = parentXform.GetLocalMatrixInv();
+                    Matrix3.Multiply(ref invMatrix, ref parentMatrix, out var result);
+                    invMatrix = result;
+                    parent = parentXform.ParentUid;
+                }
+
                 // world coords to parent coords
-                var newPos = Parent!.InvWorldMatrix.Transform(value);
+                var newPos = invMatrix.Transform(value);
 
                 // float rounding error guard, if the offset is less than 1mm ignore it
                 //if ((newPos - GetLocalPosition()).LengthSquared < 1.0E-3)
@@ -344,7 +369,7 @@ namespace Robust.Shared.GameObjects
                 // This may not in fact be the right thing.
                 if (changedParent || !DeferUpdates)
                     RebuildMatrices();
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -394,7 +419,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -584,7 +609,7 @@ namespace Robust.Shared.GameObjects
             base.Startup();
 
             // Keep the cached matrices in sync with the fields.
-            Dirty();
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -659,7 +684,7 @@ namespace Robust.Shared.GameObjects
             WorldPosition = mapPos.Position;
             DeferUpdates = false;
 
-            Dirty();
+            Dirty(_entMan);
         }
 
         public void DetachParentToNull()
@@ -697,7 +722,7 @@ namespace Robust.Shared.GameObjects
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             RebuildMatrices();
             MapIdChanged(oldMapId);
-            Dirty();
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -952,7 +977,7 @@ namespace Robust.Shared.GameObjects
                     RebuildMatrices();
                 }
 
-                Dirty();
+                Dirty(_entMan);
             }
 
             if (nextState is TransformComponentState nextTransform)

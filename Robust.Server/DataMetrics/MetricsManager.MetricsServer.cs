@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 using ManagedHttpListener;
@@ -12,6 +13,7 @@ internal sealed partial class MetricsManager
 {
     // prometheus-net's MetricServer uses HttpListener by default.
     // Use our ManagedHttpListener instead because it's less problematic.
+    // Also allows us to implement gzip support.
 
     private sealed class ManagedHttpListenerMetricsServer : MetricHandler
     {
@@ -46,8 +48,11 @@ internal sealed partial class MetricsManager
                     _ = Task.Run(async () =>
                     {
                         var resp = ctx.Response;
+                        var req = ctx.Request;
                         try
                         {
+
+                            var stream = resp.OutputStream;
                             // prometheus-net is a terrible library and have to do all this insanity,
                             // just to handle the ScrapeFailedException correctly.
                             // Ridiculous.
@@ -56,8 +61,19 @@ internal sealed partial class MetricsManager
                                 resp.ContentType = "text/plain; version=0.0.4; charset=utf-8";
                                 resp.StatusCode = 200;
 
-                                return resp.OutputStream;
+                                var acceptEncoding = req.Headers["Accept-Encoding"];
+                                var gzip = acceptEncoding != null && acceptEncoding.Contains("gzip");
+
+                                if (gzip)
+                                {
+                                    stream = new GZipStream(stream, CompressionLevel.Fastest);
+                                    resp.Headers["Content-Encoding"] = "gzip";
+                                }
+
+                                return stream;
                             }), cancel);
+
+                            await stream.DisposeAsync();
                         }
                         catch (ScrapeFailedException e)
                         {

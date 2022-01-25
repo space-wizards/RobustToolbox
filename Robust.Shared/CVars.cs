@@ -323,7 +323,7 @@ namespace Robust.Shared
         /// Histogram buckets for thread pool queue length.
         /// </summary>
         public static readonly CVarDef<string> MetricsRuntimeThreadPoolQueueHistogram =
-            CVarDef.Create("metrics.runtime_thread_pool_queue_histogram", "0,10,25,50,100", CVar.SERVERONLY);
+            CVarDef.Create("metrics.runtime_thread_pool_queue_histogram", "0,10,30,60,120,180", CVar.SERVERONLY);
 
         /// <summary>
         /// Mode for runtime JIT metrics. Empty to disable.

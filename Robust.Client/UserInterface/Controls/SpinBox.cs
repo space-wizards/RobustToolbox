@@ -33,7 +33,18 @@ namespace Robust.Client.UserInterface.Controls
                     return;
                 }
                 _value = value;
-                _lineEdit.Text = value.ToString();
+
+                var edgeCursor = _lineEdit.CursorPosition == _lineEdit.Text.Length;
+
+                _lineEdit.SetText(value.ToString());
+
+                var textLength = _lineEdit.Text.Length;
+
+                if (edgeCursor && textLength != _lineEdit.CursorPosition)
+                    _lineEdit.CursorPosition++;
+                else if (_lineEdit.CursorPosition > textLength)
+                    _lineEdit.CursorPosition = textLength;
+
                 ValueChanged?.Invoke(this, new ValueChangedEventArgs(value));
             }
         }
@@ -49,7 +60,9 @@ namespace Robust.Client.UserInterface.Controls
             {
                 return;
             }
-            _lineEdit.Text = value.ToString();
+
+            _value = value;
+            _lineEdit.SetText(value.ToString());
         }
 
         public event EventHandler<ValueChangedEventArgs>? ValueChanged;
@@ -72,7 +85,7 @@ namespace Robust.Client.UserInterface.Controls
             _lineEdit.OnTextChanged += (args) =>
             {
                 if (int.TryParse(args.Text, out int i))
-                    Value = i;
+                    OverrideValue(i);
             };
         }
 

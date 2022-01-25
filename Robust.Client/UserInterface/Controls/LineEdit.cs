@@ -215,7 +215,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <remarks>
         /// Does not fix cursor positions, those will have to be adjusted manually.
         /// </remarks>>
-        protected bool SetText(string newText)
+        public bool SetText(string newText)
         {
             if (IsValid != null && !IsValid(newText))
             {

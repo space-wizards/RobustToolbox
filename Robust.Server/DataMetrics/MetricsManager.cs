@@ -2,7 +2,6 @@ using System;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using Prometheus;
 using Prometheus.DotNetRuntime;
 using Prometheus.DotNetRuntime.Metrics.Producers;
 using Robust.Shared;
@@ -15,14 +14,14 @@ using Robust.Shared.Log;
 
 namespace Robust.Server.DataMetrics;
 
-internal sealed class MetricsManager : IMetricsManager, IDisposable
+internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 {
     [Dependency] private readonly IConfigurationManager _cfg = default!;
     [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
 
     private bool _initialized;
 
-    private MetricServer? _metricServer;
+    private ManagedHttpListenerMetricsServer? _metricServer;
     private IDisposable? _runtimeCollector;
 
     public void Initialize()
@@ -94,7 +93,8 @@ internal sealed class MetricsManager : IMetricsManager, IDisposable
         var port = _cfg.GetCVar(CVars.MetricsPort);
 
         Logger.InfoS("metrics", "Prometheus metrics enabled, host: {1} port: {0}", port, host);
-        _metricServer = new MetricServer(host, port);
+        var sawmill = Logger.GetSawmill("metrics.server");
+        _metricServer = new ManagedHttpListenerMetricsServer(sawmill, host, port);
         _metricServer.Start();
 
         if (_cfg.GetCVar(CVars.MetricsRuntime))
@@ -157,7 +157,7 @@ internal sealed class MetricsManager : IMetricsManager, IDisposable
         double[] Buckets(CVarDef<string> cvar)
         {
             return _cfg.GetCVar(cvar)
-                .Split()
+                .Split(',')
                 .Select(x => double.Parse(x, CultureInfo.InvariantCulture) / 1000)
                 .ToArray();
         }

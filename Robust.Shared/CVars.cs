@@ -267,6 +267,100 @@ namespace Robust.Shared
         public static readonly CVarDef<int> MetricsPort =
             CVarDef.Create("metrics.port", 44880, CVar.SERVERONLY);
 
+        /// <summary>
+        /// Enable detailed runtime metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// Runtime metrics are provided by https://github.com/djluck/prometheus-net.DotNetRuntime.
+        /// Granularity of metrics can be further configured with related CVars.
+        /// </remarks>
+        public static readonly CVarDef<bool> MetricsRuntime =
+            CVarDef.Create("metrics.runtime", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Mode for runtime GC metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// See the documentation for prometheus-net.DotNetRuntime for values and their metrics:
+        /// https://github.com/djluck/prometheus-net.DotNetRuntime/blob/master/docs/metrics-exposed-5.0.md
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsRuntimeGc =
+            CVarDef.Create("metrics.runtime_gc", "Counters", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Histogram buckets for GC and pause times. Comma-separated list of floats, in milliseconds.
+        /// </summary>
+        public static readonly CVarDef<string> MetricsRuntimeGcHistogram =
+            CVarDef.Create("metrics.runtime_gc_histogram", "0.5,1.0,2.0,4.0,6.0,10.0,15.0,20.0", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Mode for runtime lock contention metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// See the documentation for prometheus-net.DotNetRuntime for values and their metrics:
+        /// https://github.com/djluck/prometheus-net.DotNetRuntime/blob/master/docs/metrics-exposed-5.0.md
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsRuntimeContention =
+            CVarDef.Create("metrics.runtime_contention", "Counters", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Sample lock contention every N events. Higher numbers increase accuracy but also memory use.
+        /// </summary>
+        public static readonly CVarDef<int> MetricsRuntimeContentionSampleRate =
+            CVarDef.Create("metrics.runtime_contention_sample_rate", 50, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Mode for runtime thread pool metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// See the documentation for prometheus-net.DotNetRuntime for values and their metrics:
+        /// https://github.com/djluck/prometheus-net.DotNetRuntime/blob/master/docs/metrics-exposed-5.0.md
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsRuntimeThreadPool =
+            CVarDef.Create("metrics.runtime_thread_pool", "Counters", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Histogram buckets for thread pool queue length.
+        /// </summary>
+        public static readonly CVarDef<string> MetricsRuntimeThreadPoolQueueHistogram =
+            CVarDef.Create("metrics.runtime_thread_pool_queue_histogram", "0,10,25,50,100", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Mode for runtime JIT metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// See the documentation for prometheus-net.DotNetRuntime for values and their metrics:
+        /// https://github.com/djluck/prometheus-net.DotNetRuntime/blob/master/docs/metrics-exposed-5.0.md
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsRuntimeJit =
+            CVarDef.Create("metrics.runtime_jit", "Counters", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Sample JIT every N events. Higher numbers increase accuracy but also memory use.
+        /// </summary>
+        public static readonly CVarDef<int> MetricsRuntimeJitSampleRate =
+            CVarDef.Create("metrics.runtime_jit_sample_rate", 10, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Mode for runtime exception metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// See the documentation for prometheus-net.DotNetRuntime for values and their metrics:
+        /// https://github.com/djluck/prometheus-net.DotNetRuntime/blob/master/docs/metrics-exposed-5.0.md
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsRuntimeException =
+            CVarDef.Create("metrics.runtime_exception", "Counters", CVar.SERVERONLY);
+
+        /// <summary>
+        /// Mode for runtime TCP socket metrics. Empty to disable.
+        /// </summary>
+        /// <remarks>
+        /// See the documentation for prometheus-net.DotNetRuntime for values and their metrics:
+        /// https://github.com/djluck/prometheus-net.DotNetRuntime/blob/master/docs/metrics-exposed-5.0.md
+        /// </remarks>
+        public static readonly CVarDef<string> MetricsRuntimeSocket =
+            CVarDef.Create("metrics.runtime_socket", "Counters", CVar.SERVERONLY);
+
         /*
          * STATUS
          */

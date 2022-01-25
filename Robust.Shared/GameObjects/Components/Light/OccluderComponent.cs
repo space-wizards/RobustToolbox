@@ -14,8 +14,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        public sealed override string Name => "Occluder";
-
         [DataField("enabled")]
         private bool _enabled = true;
         [DataField("boundingBox")]

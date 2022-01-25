@@ -11,8 +11,6 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public abstract class SharedSpriteComponent : Component
     {
-        public override string Name => "Sprite";
-
         public abstract bool Visible { get; set; }
 
         /// <summary>

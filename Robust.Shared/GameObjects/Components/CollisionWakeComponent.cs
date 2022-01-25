@@ -18,8 +18,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        public override string Name => "CollisionWake";
-
         [DataField("enabled")]
         private bool _enabled = true;
 

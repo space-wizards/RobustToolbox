@@ -57,8 +57,6 @@ namespace Robust.Shared.GameObjects
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        public override string Name => "Transform";
-
         /// <summary>
         ///     Returns the index of the map which this object is on
         /// </summary>

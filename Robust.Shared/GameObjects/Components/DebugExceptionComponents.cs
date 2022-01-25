@@ -1,9 +1,7 @@
 using System;
-using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects
 {
-#if DEBUG
     // If you wanna use these, add it to some random prototype.
     // I recommend the #1 mug:
     // 1. it doesn't spawn on the map (currently).
@@ -15,8 +13,6 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class DebugExceptionOnAddComponent : Component
     {
-        public override string Name => "DebugExceptionOnAdd";
-
         protected override void OnAdd() => throw new NotSupportedException();
     }
 
@@ -25,8 +21,6 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class DebugExceptionInitializeComponent : Component
     {
-        public override string Name => "DebugExceptionInitialize";
-
         protected override void Initialize() => throw new NotSupportedException();
     }
 
@@ -35,9 +29,6 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class DebugExceptionStartupComponent : Component
     {
-        public override string Name => "DebugExceptionStartup";
-
         protected override void Startup() => throw new NotSupportedException();
     }
-#endif
 }

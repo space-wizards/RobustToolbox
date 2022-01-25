@@ -358,18 +358,16 @@ namespace Robust.Shared.Physics
             }
 
             Logger.DebugS("physics", $"Removed joint {joint.ID}");
-            var metaA = EntityManager.GetComponent<MetaDataComponent>(bodyAUid);
-            var metaB = EntityManager.GetComponent<MetaDataComponent>(bodyBUid);
 
             // Wake up connected bodies.
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
-                metaA.EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
                 bodyA.Awake = true;
             }
 
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
-                metaB.EntityLifeStage < EntityLifeStage.Terminating)
+                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
                 bodyB.Awake = true;
             }

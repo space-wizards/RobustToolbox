@@ -34,6 +34,10 @@ namespace Robust.Client.UserInterface.Controls
                 }
                 _value = value;
 
+                // tl;dr
+                // If cursor position is at the end and we scroll up and have more characters then it will get shifted
+                // to the end again
+                // If we scroll down and have fewer characters then it will shift it left to the end.
                 var edgeCursor = _lineEdit.CursorPosition == _lineEdit.Text.Length;
 
                 _lineEdit.SetText(value.ToString());

@@ -307,7 +307,7 @@ namespace Robust.Server.Console.Commands
             var entityManager = IoCManager.Resolve<IEntityManager>();
 
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 0f, mapId));
-            var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
+            entityManager.AddComponent<PhysicsComponent>(groundUid);
 
             var bodyUid = entityManager.SpawnEntity(null, new MapCoordinates(0f, 10f, mapId));
             var body = entityManager.AddComponent<PhysicsComponent>(bodyUid);

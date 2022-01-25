@@ -84,4 +84,15 @@ namespace Robust.Shared.ViewVariables
 
         public string TypeName { get; }
     }
+
+    [Serializable, NetSerializable]
+    public class ViewVariablesEntitySystemSelector : ViewVariablesObjectSelector
+    {
+        public ViewVariablesEntitySystemSelector(string typeName)
+        {
+            TypeName = typeName;
+        }
+
+        public string TypeName { get; }
+    }
 }

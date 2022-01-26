@@ -20,7 +20,7 @@ namespace Robust.Shared.Utility
         /// <param name="self">The list to shallow clone.</param>
         /// <typeparam name="T">The type of the list's elements.</typeparam>
         /// <returns>A new list with the same elements as <paramref name="list" />.</returns>
-        public static List<T> ShallowClone<T>(this List<T> self)
+        public static List<T> ShallowClone<T>(this IReadOnlyList<T> self)
         {
             var list = new List<T>(self.Count);
             list.AddRange(self);

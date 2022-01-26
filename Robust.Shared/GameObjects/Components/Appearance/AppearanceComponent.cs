@@ -1,10 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.Players;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
@@ -51,14 +53,39 @@ public abstract class AppearanceComponent : Component
 
         if (!stateDiff) return;
 
-        _appearanceData = actualState.Data;
+        _appearanceData = CloneAppearanceData(actualState.Data);
         MarkDirty();
+    }
+
+    /// <summary>
+    ///     Take in an appearance data dictionary and attempt to clone it.
+    /// </summary>
+    /// <remarks>
+    ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
+    /// </remarks>
+    private Dictionary<object, object> CloneAppearanceData(Dictionary<object, object> data)
+    {
+        Dictionary<object, object> newDict = new();
+
+        foreach (var (key, value) in data)
+        {
+            if (value.GetType().IsValueType)
+                newDict[key] = value;
+            else if (value is ICloneable cloneable)
+                newDict[key] = cloneable.Clone();
+            else
+                throw new NotSupportedException("Invalid object in appearance data dictionary. Appearance data must be cloneable");
+        }
+
+        return newDict;
     }
 
     public void SetData(string key, object value)
     {
         if (_appearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
+
+        DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         _appearanceData[key] = value;
         Dirty();
@@ -69,6 +96,8 @@ public abstract class AppearanceComponent : Component
     {
         if (_appearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
+
+        DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         _appearanceData[key] = value;
         Dirty();

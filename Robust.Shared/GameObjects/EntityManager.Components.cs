@@ -984,13 +984,11 @@ namespace Robust.Shared.GameObjects
             }
             else
             {
-                var metaDatas = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
+                var metaQuery = GetEntityQuery<MetaDataComponent>();
 
                 foreach (var comp in comps.Values)
                 {
-                    if (comp.Deleted || !metaDatas.TryGetValue(comp.Owner, out var meta)) continue;
-
-                    if (((MetaDataComponent)meta).EntityPaused) continue;
+                    if (comp.Deleted || !metaQuery.TryGetComponent(comp.Owner, out var meta) || meta.EntityPaused) continue;
 
                     yield return comp;
                 }

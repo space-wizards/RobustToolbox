@@ -31,10 +31,6 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public bool Paused => !IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out MetaDataComponent? metaData) || metaData.EntityPaused;
-
-        /// <inheritdoc />
-        [ViewVariables]
         public ComponentLifeStage LifeStage { get; private set; } = ComponentLifeStage.PreAdd;
 
         /// <summary>

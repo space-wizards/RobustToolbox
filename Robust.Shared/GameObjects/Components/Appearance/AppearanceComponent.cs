@@ -65,7 +65,7 @@ public abstract class AppearanceComponent : Component
     /// </remarks>
     private Dictionary<object, object> CloneAppearanceData(Dictionary<object, object> data)
     {
-        Dictionary<object, object> newDict = new();
+        Dictionary<object, object> newDict = new(data.Count);
 
         foreach (var (key, value) in data)
         {

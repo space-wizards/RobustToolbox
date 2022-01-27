@@ -181,7 +181,12 @@ internal partial class MapManager
             return false;
         }
 
-        var euid = GetGridEuid(gridId);
+        if (!TryGetGridEuid(gridId, out var euid))
+        {
+            grid = default;
+            return false;
+        }
+
         return TryGetGrid(euid, out grid);
     }
 

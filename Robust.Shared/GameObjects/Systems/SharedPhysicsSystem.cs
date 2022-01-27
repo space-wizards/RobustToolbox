@@ -23,38 +23,13 @@ namespace Robust.Shared.GameObjects
     {
         /*
          * TODO:
-         * Port acruid's box solver in to reduce allocs for building manifolds (this one is important for perf to remove the disgusting ctors and casts)
+
          * Raycasts for non-box shapes.
          * SetTransformIgnoreContacts for teleports (and anything else left on the physics body in Farseer)
-         * Actual center of mass for shapes (currently just assumes center coordinate)
          * TOI Solver (continuous collision detection)
          * Poly cutting
          * Chain shape
-         * (Content) grenade launcher grenades that explode after time rather than impact.
-         * pulling prediction
-         * When someone yeets out of disposals need to have no collision on that object until they stop colliding
          * A bunch of objects have collision on round start
-         * Need a way to specify conditional non-hard collisions (i.e. so items collide with players for IThrowCollide but can still be moved through freely but walls can't collide with them)
-         */
-
-        /*
-         * Multi-threading notes:
-         * Sources:
-         * https://github.com/VelcroPhysics/VelcroPhysics/issues/29
-         * Aether2D
-         * Rapier
-         * https://www.slideshare.net/takahiroharada/solver-34909157
-         *
-         * SO essentially what we should look at doing from what I can discern:
-         * Build islands sequentially and then solve them all in parallel (as static bodies are the only thing shared
-         * it should be okay given they're never written to)
-         * After this, we can then look at doing narrowphase in parallel maybe (at least Aether2D does it) +
-         * position constraints in parallel + velocity constraints in parallel
-         *
-         * The main issue to tackle is graph colouring; Aether2D just seems to use locks for the parallel constraints solver
-         * though rapier has a graph colouring implementation (and because of this we should be able to avoid using locks) which we could try using.
-         *
-         * Given the kind of game SS14 is (our target game I guess) parallelising the islands will probably be the biggest benefit.
          */
 
         public static readonly Histogram TickUsageControllerBeforeSolveHistogram = Metrics.CreateHistogram("robust_entity_physics_controller_before_solve",

@@ -630,22 +630,32 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
         /// </remarks>
+        [ViewVariables]
         public Vector2 MapLinearVelocity
         {
             get
             {
-                var velocity = _linearVelocity;
-                var entMan = _entMan;
-                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                var physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
+                var xforms = entManager.GetEntityQuery<TransformComponent>();
+                var physics = entManager.GetEntityQuery<PhysicsComponent>();
+                var xform = xforms.GetComponent(Owner);
+                var parent = xform.ParentUid;
+                var localPos = xform.LocalPosition;
 
-                while (parent != null)
+                var velocity = _linearVelocity;
+
+                while (parent.IsValid())
                 {
-                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
+                    var parentXform = xforms.GetComponent(parent);
+
+                    if (physics.TryGetComponent(parent, out var body))
                     {
-                        velocity += body.LinearVelocity;
+                        velocity += physicsSystem.GetLinearVelocityFromLocalPoint(body, localPos);
                     }
 
-                    parent = parent.Parent;
+                    velocity = parentXform.LocalRotation.RotateVec(velocity);
+                    parent = parentXform.ParentUid;
                 }
 
                 return velocity;
@@ -686,6 +696,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
         /// </remarks>
+        [ViewVariables]
         public float MapAngularVelocity
         {
             get

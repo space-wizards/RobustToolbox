@@ -637,7 +637,9 @@ namespace Robust.Shared.GameObjects
             {
                 var entManager = IoCManager.Resolve<IEntityManager>();
                 var physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-                var xform = entManager.GetComponent<TransformComponent>(Owner);
+                var xforms = entManager.GetEntityQuery<TransformComponent>();
+                var physics = entManager.GetEntityQuery<PhysicsComponent>();
+                var xform = xforms.GetComponent(Owner);
                 var parent = xform.ParentUid;
                 var localPos = xform.LocalPosition;
 
@@ -645,9 +647,9 @@ namespace Robust.Shared.GameObjects
 
                 while (parent.IsValid())
                 {
-                    var parentXform = entManager.GetComponent<TransformComponent>(parent);
+                    var parentXform = xforms.GetComponent(parent);
 
-                    if (entManager.TryGetComponent(parent, out PhysicsComponent? body))
+                    if (physics.TryGetComponent(parent, out var body))
                     {
                         velocity += physicsSystem.GetLinearVelocityFromLocalPoint(body, localPos);
                     }

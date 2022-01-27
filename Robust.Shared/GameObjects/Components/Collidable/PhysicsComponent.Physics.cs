@@ -637,11 +637,11 @@ namespace Robust.Shared.GameObjects
             {
                 var entManager = IoCManager.Resolve<IEntityManager>();
                 var physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-                var xform = entManager.GetComponent<TransformComponent>(OwnerUid);
+                var xform = entManager.GetComponent<TransformComponent>(Owner);
                 var parent = xform.ParentUid;
                 var localPos = xform.LocalPosition;
 
-                var velocity = _linVelocity;
+                var velocity = _linearVelocity;
 
                 while (parent.IsValid())
                 {

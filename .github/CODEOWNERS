@@ -1,7 +1,20 @@
 # Last match in file takes precedence.
 
-# Be they Fluent translations or Freemarker templates, I know them both!
-*.ftl @RemieRichards
-
 # Ping for all PRs
 * @Acruid @PJB3005 @Silvertorch5
+
+/Robust.*/Audio/Midi/ @Zumorica
+
+/Robust.Client.NameGenerator @PaulRitter
+/Robust.Client.Injectors @PaulRitter
+/Robust.Generators @PaulRitter
+/Robust.Analyzers @PaulRitter
+/Robust.*/GameStates @PaulRitter
+/Robust.Shared/Analyzers @PaulRitter
+/Robust.*/Serialization @PaulRitter
+/Robust.*/Prototypes @PaulRitter
+/Robust.Shared/GameObjects/ComponentDependencies @PaulRitter
+/Robust.*/Containers @PaulRitter
+
+# Be they Fluent translations or Freemarker templates, I know them both!
+*.ftl @RemieRichards

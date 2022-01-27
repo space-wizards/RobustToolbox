@@ -116,11 +116,12 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException($"Type is already registered: {type}");
             }
 
-            // Create a dummy to be able to fetch instance properties like name.
-            // Not clean but sadly C# doesn't have static virtual members.
-            var dummy = (IComponent)Activator.CreateInstance(type)!;
+            if (!type.IsSubclassOf(typeof(Component)))
+            {
+                throw new InvalidOperationException($"Type is not derived from component: {type}");
+            }
 
-            var name = dummy.Name;
+            var name = CalculateComponentName(type);
             var lowerCaseName = name.ToLowerInvariant();
 
             if (IgnoredComponentNames.Contains(name))
@@ -157,6 +158,47 @@ namespace Robust.Shared.GameObjects
             types[type] = registration;
 
             ComponentAdded?.Invoke(registration);
+
+            static string CalculateComponentName(Type type)
+            {
+                // Backward compatible fallback
+                if (type.GetProperty(nameof(Component.Name))!.DeclaringType != typeof(Component))
+                {
+                    var instance = (IComponent) Activator.CreateInstance(type)!;
+                    return instance.Name;
+                }
+
+                // Attributes can use any name they want, they are for bypassing the automatic names
+                // If a parent class has this attribute, a child class will use the same name, unless it also uses this attribute
+                if (Attribute.GetCustomAttribute(type, typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
+                    return attribute.PrototypeName;
+
+                const string component = "Component";
+                var typeName = type.Name;
+                if (!typeName.EndsWith(component))
+                {
+                    throw new InvalidComponentNameException($"Component {type} must end with the word Component");
+                }
+
+                string name = typeName[..^component.Length];
+                const string client = "Client";
+                const string server = "Server";
+                const string shared = "Shared";
+                if (typeName.StartsWith(client, StringComparison.Ordinal))
+                {
+                    name = typeName[client.Length..^component.Length];
+                }
+                else if (typeName.StartsWith(server, StringComparison.Ordinal))
+                {
+                    name = typeName[server.Length..^component.Length];
+                }
+                else if (typeName.StartsWith(shared, StringComparison.Ordinal))
+                {
+                    name = typeName[shared.Length..^component.Length];
+                }
+                DebugTools.Assert(name != String.Empty, $"Component {type} has invalid name {type.Name}");
+                return name;
+            }
         }
 
         private void RegisterReference(Type target, Type @interface)
@@ -279,6 +321,11 @@ namespace Robust.Shared.GameObjects
             {
                 throw new UnknownComponentException($"Unknown name: {componentName}");
             }
+        }
+
+        public string GetComponentName(Type componentType)
+        {
+            return GetRegistration(componentType).Name;
         }
 
         public IComponentRegistration GetRegistration(ushort netID)
@@ -466,4 +513,6 @@ namespace Robust.Shared.GameObjects
     }
 
     public class ComponentRegistrationLockException : Exception { }
+
+    public class InvalidComponentNameException : Exception { public InvalidComponentNameException(string message) : base(message) { } }
 }

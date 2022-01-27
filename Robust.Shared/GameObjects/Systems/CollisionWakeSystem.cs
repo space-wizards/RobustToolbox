@@ -22,8 +22,18 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionWakeComponent, EntParentChangedMessage>(HandleParentChange);
         }
 
+        private bool CanRaiseEvent(EntityUid uid)
+        {
+            var meta = MetaData(uid);
+
+            if (meta.EntityLifeStage >= EntityLifeStage.Terminating) return false;
+            return true;
+        }
+
         private void HandleParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
         {
+            if (!CanRaiseEvent(uid)) return;
+
             component.RaiseStateChange();
         }
 
@@ -34,6 +44,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
+            if (!CanRaiseEvent(uid)) return;
+
             component.RaiseStateChange();
         }
 
@@ -49,6 +61,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleSleep(EntityUid uid, CollisionWakeComponent component, PhysicsSleepMessage args)
         {
+            if (!CanRaiseEvent(uid)) return;
+
             component.RaiseStateChange();
         }
 

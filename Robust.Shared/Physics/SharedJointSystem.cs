@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
@@ -55,7 +56,27 @@ namespace Robust.Shared.Physics
             UpdatesOutsidePrediction = true;
 
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
-            SubscribeLocalEvent<JointComponent, ComponentShutdown>(HandleShutdown);
+            SubscribeLocalEvent<JointComponent, ComponentShutdown>(OnJointShutdown);
+            SubscribeLocalEvent<JointComponent, ComponentInit>(OnJointInit);
+        }
+
+        private void OnJointInit(EntityUid uid, JointComponent component, ComponentInit args)
+        {
+            foreach (var (_, joint) in component.Joints)
+            {
+                var bodyA = EntityManager.GetComponent<PhysicsComponent>(joint.BodyAUid);
+                var bodyB = EntityManager.GetComponent<PhysicsComponent>(joint.BodyBUid);
+
+                bodyA.WakeBody();
+                bodyB.WakeBody();
+
+                // Raise broadcast last so we can do both sides of directed first.
+                var vera = new JointAddedEvent(joint, bodyA, bodyB);
+                EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+                var smug = new JointAddedEvent(joint, bodyB, bodyA);
+                EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+                EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            }
         }
 
         private IEnumerable<Joint> GetAllJoints()
@@ -69,7 +90,7 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void HandleShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
+        private void OnJointShutdown(EntityUid uid, JointComponent component, ComponentShutdown args)
         {
             foreach (var joint in component.Joints.Values)
             {
@@ -137,6 +158,23 @@ namespace Robust.Shared.Physics
         public RevoluteJoint CreateRevoluteJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
         {
             var joint = new RevoluteJoint(bodyA, bodyB);
+            id ??= GetJointId(joint);
+            joint.ID = id;
+            AddJoint(joint);
+
+            return joint;
+        }
+
+        public WeldJoint GetOrCreateWeldJoint(EntityUid bodyA, EntityUid bodyB, string? id = null)
+        {
+            if (id != null &&
+                EntityManager.TryGetComponent(bodyA, out JointComponent? jointComponent) &&
+                jointComponent.Joints.TryGetValue(id, out var weldJoint))
+            {
+                return (WeldJoint) weldJoint;
+            }
+
+            var joint = new WeldJoint(bodyA, bodyB);
             id ??= GetJointId(joint);
             joint.ID = id;
             AddJoint(joint);
@@ -212,6 +250,7 @@ namespace Robust.Shared.Physics
         }
 
         #region Joints
+
         protected void AddJoint(Joint joint)
         {
             var bodyA = joint.BodyA;
@@ -321,24 +360,26 @@ namespace Robust.Shared.Physics
             Logger.DebugS("physics", $"Removed joint {joint.ID}");
 
             // Wake up connected bodies.
-            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
+                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
                 bodyA.Awake = true;
             }
 
-            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
+                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
                 bodyB.Awake = true;
             }
 
             if (!jointComponentA.Deleted)
             {
-                jointComponentA.Dirty();
+                jointComponentA.Dirty(EntityManager);
             }
 
             if (!jointComponentB.Deleted)
             {
-                jointComponentB.Dirty();
+                jointComponentB.Dirty(EntityManager);
             }
 
             if (jointComponentA.Deleted && jointComponentB.Deleted)
@@ -360,6 +401,7 @@ namespace Robust.Shared.Physics
             _dirtyJoints.Add(jointComponentA);
             _dirtyJoints.Add(jointComponentB);
         }
+
         #endregion
 
         internal void FilterContactsForJoint(Joint joint)

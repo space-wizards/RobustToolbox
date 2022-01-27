@@ -85,9 +85,13 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         IEnumerable<EntityUid> GetEntities();
 
-        public void DirtyEntity(EntityUid uid);
+        public void Dirty(EntityUid uid);
+
+        public void Dirty(Component component);
 
         public void QueueDeleteEntity(EntityUid uid);
+
+        public bool IsQueuedForDeletion(EntityUid uid);
 
         /// <summary>
         /// Shuts-down and removes the entity with the given <see cref="Robust.Shared.GameObjects.EntityUid"/>. This is also broadcast to all clients.

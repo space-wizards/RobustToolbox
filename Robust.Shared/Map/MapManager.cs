@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc cref="IMapManager"/>
-    internal class MapManager : IMapManagerInternal
+    internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -65,6 +65,8 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void Initialize()
         {
+            InitializeGridTrees();
+
 #if DEBUG
             DebugTools.Assert(!_dbgGuardInit);
             DebugTools.Assert(!_dbgGuardRunning);
@@ -197,7 +199,9 @@ namespace Robust.Shared.Map
 
             if (mapID != MapId.Nullspace)
             {
-                MapDestroyed?.Invoke(this, new MapEventArgs(mapID));
+                var args = new MapEventArgs(mapID);
+                OnMapDestroyedGridTree(args);
+                MapDestroyed?.Invoke(this, args);
                 _maps.Remove(mapID);
                 _mapCreationTick.Remove(mapID);
             }
@@ -278,7 +282,9 @@ namespace Robust.Shared.Map
                 }
             }
 
-            MapCreated?.Invoke(this, new MapEventArgs(actualID));
+            var args = new MapEventArgs(actualID);
+            OnMapCreatedGridTree(args);
+            MapCreated?.Invoke(this, args);
 
             return actualID;
         }
@@ -517,165 +523,9 @@ namespace Robust.Shared.Map
             return _grids.Values.Where(m => m.ParentMapId == mapId);
         }
 
-        /// <inheritdoc />
-        public bool TryFindGridAt(MapId mapId, Vector2 worldPos, [NotNullWhen(true)] out IMapGrid? grid)
-        {
-            foreach (var (_, mapGrid) in _grids)
-            {
-                // So not sure if doing the transform for WorldBounds and early out here is faster than just
-                // checking if we have a relevant chunk, need to profile.
-                if (mapGrid.ParentMapId != mapId)
-                    continue;
-
-                // Turn the worldPos into a localPos and work out the relevant chunk we need to check
-                // This is much faster than iterating over every chunk individually.
-                // (though now we need some extra calcs up front).
-
-                // Doesn't use WorldBounds because it's just an AABB.
-                var matrix = _entityManager.GetComponent<TransformComponent>(mapGrid.GridEntityId).InvWorldMatrix;
-                var localPos = matrix.Transform(worldPos);
-
-                // NOTE:
-                // If you change this to use fixtures instead (i.e. if you want half-tiles) then you need to make sure
-                // you account for the fact that fixtures are shrunk slightly!
-                var tile = new Vector2i((int) Math.Floor(localPos.X), (int) Math.Floor(localPos.Y));
-                var chunkIndices = mapGrid.GridTileToChunkIndices(tile);
-
-                if (!mapGrid.HasChunk(chunkIndices)) continue;
-
-                var chunk = mapGrid.GetChunk(chunkIndices);
-                var chunkTile = chunk.GetTileRef(chunk.GridTileToChunkTile(tile));
-
-                if (chunkTile.Tile.IsEmpty) continue;
-                grid = mapGrid;
-                return true;
-            }
-
-            grid = null;
-            return false;
-        }
-
-        /// <inheritdoc />
-        public bool TryFindGridAt(MapCoordinates mapCoordinates, [NotNullWhen(true)] out IMapGrid? grid)
-        {
-            return TryFindGridAt(mapCoordinates.MapId, mapCoordinates.Position, out grid);
-        }
-
         public void FindGridsIntersectingEnumerator(MapId mapId, Box2 worldAABB, out FindGridsEnumerator enumerator, bool approx = false)
         {
             enumerator = new FindGridsEnumerator(_entityManager, _grids.GetEnumerator(), mapId, worldAABB, approx);
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAABB, bool approx = false)
-        {
-            // So despite the fact we have accurate bounds the reason I didn't make this tile-based is because
-            // at some stage we may want to overwrite the default behavior e.g. if you allow diagonals
-            foreach (var (_, grid) in _grids)
-            {
-                if (grid.ParentMapId != mapId) continue;
-
-                var xformComp = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-                var invMatrix3 = xformComp.InvWorldMatrix;
-                var localAABB = invMatrix3.TransformBox(worldAABB);
-
-                if (!localAABB.Intersects(grid.LocalBounds)) continue;
-
-                var intersects = false;
-
-                if (_entityManager.HasComponent<PhysicsComponent>(grid.GridEntityId))
-                {
-                    grid.GetLocalMapChunks(localAABB, out var enumerator);
-
-                    if (!approx)
-                    {
-                        var (worldPos, worldRot) = xformComp.GetWorldPositionRotation();
-
-                        var transform = new Transform(worldPos, worldRot);
-
-                        while (!intersects && enumerator.MoveNext(out var chunk))
-                        {
-                            foreach (var fixture in chunk.Fixtures)
-                            {
-                                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                                {
-                                    // TODO: Need to use collisionmanager for overlapsies
-                                    if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldAABB)) continue;
-
-                                    intersects = true;
-                                    break;
-                                }
-
-                                if (intersects) break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        intersects = enumerator.MoveNext(out _);
-                    }
-                }
-
-                if (intersects || grid.ChunkCount == 0 && worldAABB.Contains(xformComp.WorldPosition))
-                {
-                    yield return grid;
-                }
-            }
-        }
-
-        /// <inheritdoc />
-        public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2Rotated worldArea, bool approx = false)
-        {
-            var worldAABB = worldArea.CalcBoundingBox();
-
-            foreach (var (_, grid) in _grids)
-            {
-                if (grid.ParentMapId != mapId) continue;
-
-                var xformComp = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-                var invMatrix3 = xformComp.InvWorldMatrix;
-                var localAABB = invMatrix3.TransformBox(worldAABB);
-
-                if (!localAABB.Intersects(grid.LocalBounds)) continue;
-
-                var intersects = false;
-
-                if (_entityManager.HasComponent<PhysicsComponent>(grid.GridEntityId))
-                {
-                    grid.GetLocalMapChunks(localAABB, out var enumerator);
-
-                    if (!approx)
-                    {
-                        var (worldPos, worldRot) = xformComp.GetWorldPositionRotation();
-                        var transform = new Transform(worldPos, worldRot);
-
-                        while (!intersects && enumerator.MoveNext(out var chunk))
-                        {
-                            foreach (var fixture in chunk.Fixtures)
-                            {
-                                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                                {
-                                    if (!fixture.Shape.ComputeAABB(transform, i).Intersects(worldAABB)) continue;
-
-                                    intersects = true;
-                                    break;
-                                }
-
-                                if (intersects) break;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        intersects = enumerator.MoveNext(out _);
-                    }
-                }
-
-                if (intersects || grid.ChunkCount == 0 && worldAABB.Contains(xformComp.WorldPosition))
-                {
-                    yield return grid;
-                }
-            }
         }
 
         public virtual void DeleteGrid(GridId gridID)

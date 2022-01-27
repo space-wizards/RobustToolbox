@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Utility;
@@ -11,6 +10,7 @@ namespace Robust.Shared.GameObjects
     public abstract class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IEntityLookup _entityLookup = default!;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
@@ -52,25 +52,33 @@ namespace Robust.Shared.GameObjects
             if(e.NewTile.Tile != Tile.Empty)
                 return;
 
-            var grid = _mapManager.GetGrid(e.NewTile.GridIndex);
-            var tileIndices = e.NewTile.GridIndices;
-            UnanchorAllEntsOnTile(grid, tileIndices);
+            DeparentAllEntsOnTile(e.NewTile.GridIndex, e.NewTile.GridIndices);
         }
 
-        private void UnanchorAllEntsOnTile(IMapGrid grid, Vector2i tileIndices)
+        /// <summary>
+        ///     De-parents and unanchors all entities on a grid-tile.
+        /// </summary>
+        /// <remarks>
+        ///     Used when a tile on a grid is removed (becomes space). Only de-parents entities if they are actually
+        ///     parented to that grid. No more disemboweling mobs.
+        /// </remarks>
+        private void DeparentAllEntsOnTile(GridId gridId, Vector2i tileIndices)
         {
-            var anchoredEnts = grid.GetAnchoredEntities(tileIndices).Where(e => EntityManager.EntityExists(e)).ToList();
+            var grid = _mapManager.GetGrid(gridId);
+            var gridUid = grid.GridEntityId;
+            var mapTransform = Transform(_mapManager.GetMapEntityId(grid.ParentMapId));
+            var aabb = _entityLookup.GetLocalBounds(tileIndices, grid.TileSize);
 
-            if (anchoredEnts.Count == 0) return;
-
-            var mapEnt = _mapManager.GetMapEntityIdOrThrow(grid.ParentMapId);
-
-            foreach (var ent in anchoredEnts) // changing anchored modifies this set
+            foreach (var entity in _entityLookup.GetEntitiesIntersecting(gridId, tileIndices).ToList())
             {
-                var transform = EntityManager.GetComponent<TransformComponent>(ent);
-                transform.Anchored = false;
-                // If the tile was nuked than that means no longer intersecting the grid hence parent to the map
-                transform.AttachParent(mapEnt);
+                // If a tile is being removed due to an explosion or somesuch, some entities are likely being deleted.
+                // Avoid unnecessary entity updates.
+                if (EntityManager.IsQueuedForDeletion(entity))
+                    continue;
+
+                var transform = Transform(entity);
+                if (transform.ParentUid == gridUid && aabb.Contains(transform.LocalPosition))
+                    transform.AttachParent(mapTransform);
             }
         }
 

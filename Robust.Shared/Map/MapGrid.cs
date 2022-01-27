@@ -5,6 +5,7 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
@@ -35,6 +36,11 @@ namespace Robust.Shared.Map
 
         [ViewVariables]
         public EntityUid GridEntityId { get; internal set; }
+
+        /// <summary>
+        /// Map DynamicTree proxy to lookup for grid intersection.
+        /// </summary>
+        internal DynamicTree.Proxy MapProxy = DynamicTree.Proxy.Free;
 
         /// <summary>
         ///     Grid chunks than make up this grid.

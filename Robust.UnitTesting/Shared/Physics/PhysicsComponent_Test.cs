@@ -15,29 +15,21 @@ namespace Robust.UnitTesting.Shared.Physics
     [TestOf(typeof(PhysicsComponent))]
     public class PhysicsComponent_Test : RobustIntegrationTest
     {
-        private ServerIntegrationInstance _server = default!;
-
-        [OneTimeSetUp]
-        public async Task Setup()
-        {
-            _server = StartServer();
-            await _server.WaitIdleAsync();
-            var mapManager = _server.ResolveDependency<IMapManager>();
-            mapManager.CreateMap();
-        }
-
         [Test]
         public async Task TestPointLinearImpulse()
         {
-            await _server.WaitIdleAsync();
-            var entManager = _server.ResolveDependency<IEntityManager>();
-            var fixtureSystem = _server.ResolveDependency<IEntitySystemManager>()
+            var server = StartServer();
+            await server.WaitIdleAsync();
+            var entManager = server.ResolveDependency<IEntityManager>();
+            var mapManager = server.ResolveDependency<IMapManager>();
+            var fixtureSystem = server.ResolveDependency<IEntitySystemManager>()
                 .GetEntitySystem<FixtureSystem>();
 
-            await _server.WaitAssertion(() =>
+            await server.WaitAssertion(() =>
             {
-                var boxEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, new MapId(1)));
-                var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(boxEnt);
+                var mapId = mapManager.CreateMap();
+                var boxEnt = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+                var box = entManager.AddComponent<PhysicsComponent>(boxEnt);
                 var poly = new PolygonShape();
                 poly.SetAsBox(0.5f, 0.5f);
                 var fixture = fixtureSystem.CreateFixture(box, poly);

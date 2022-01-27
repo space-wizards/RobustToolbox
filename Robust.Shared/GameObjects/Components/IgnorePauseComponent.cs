@@ -8,8 +8,6 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        public override string Name => "IgnorePause";
-
         protected override void OnAdd()
         {
             base.OnAdd();

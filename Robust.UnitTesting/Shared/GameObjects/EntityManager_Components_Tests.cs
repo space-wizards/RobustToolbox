@@ -276,7 +276,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [NetworkedComponent()]
         private class DummyComponent : Component, ICompType1, ICompType2
         {
-            public override string Name => "Dummy";
         }
 
         private interface ICompType1 { }

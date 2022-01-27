@@ -39,10 +39,8 @@ namespace Robust.Shared.Physics.Dynamics
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IIslandManager _islandManager = default!;
 
+        internal SharedPhysicsSystem _physics = default!;
         internal SharedBroadphaseSystem BroadphaseSystem = default!;
-        internal SharedPhysicsSystem PhysicsSystem = default!;
-
-        public override string Name => "PhysicsMap";
 
         internal ContactManager ContactManager = default!;
 
@@ -229,10 +227,8 @@ namespace Robust.Shared.Physics.Dynamics
             var invDt = frameTime > 0.0f ? 1.0f / frameTime : 0.0f;
             var dtRatio = _invDt0 * frameTime;
 
-            foreach (var controller in PhysicsSystem.Controllers)
-            {
-                controller.UpdateBeforeMapSolve(prediction, this, frameTime);
-            }
+            var updateBeforeSolve = new PhysicsUpdateBeforeMapSolveEvent(prediction, this, frameTime);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref updateBeforeSolve);
 
             ContactManager.Collide();
             // Don't run collision behaviors during FrameUpdate?
@@ -247,10 +243,8 @@ namespace Robust.Shared.Physics.Dynamics
 
             // TODO: SolveTOI
 
-            foreach (var controller in PhysicsSystem.Controllers)
-            {
-                controller.UpdateAfterMapSolve(prediction, this, frameTime);
-            }
+            var updateAfterSolve = new PhysicsUpdateAfterMapSolveEvent(prediction, this, frameTime);
+            _entityManager.EventBus.RaiseEvent(EventSource.Local, ref updateAfterSolve);
 
             // Box2d recommends clearing (if you are) during fixed updates rather than variable if you are using it
             if (!prediction && AutoClearForces)
@@ -264,12 +258,14 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public void ProcessQueue()
         {
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var fixtures = _entityManager.GetEntityQuery<FixturesComponent>();
+
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
             foreach (var (transform, physics) in _deferredUpdates)
             {
-                var (worldPos, worldRot) = transform.GetWorldPositionRotation();
-
-                transform.RunDeferred(physics.GetWorldAABB(worldPos, worldRot));
+                var worldAABB = _physics.GetWorldAABB(physics, transform, xforms, fixtures);
+                transform.RunDeferred(worldAABB);
             }
 
             _deferredUpdates.Clear();
@@ -296,14 +292,18 @@ namespace Robust.Shared.Physics.Dynamics
 
             _awakeBodyList.AddRange(AwakeBodies);
 
+            var metaQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+            var jointQuery = _entityManager.GetEntityQuery<JointComponent>();
 
             // Build the relevant islands / graphs for all bodies.
             foreach (var seed in _awakeBodyList)
             {
+                // TODO: When this gets ECSd add a helper and remove
+
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 if (seed.Island ||
-                    seed.Paused && !seed.IgnorePaused)
+                    metaQuery.GetComponent(seed.Owner).EntityPaused && !seed.IgnorePaused)
                 {
                     continue;
                 }
@@ -364,7 +364,7 @@ namespace Robust.Shared.Physics.Dynamics
                         other.Island = true;
                     }
 
-                    if (!_entityManager.TryGetComponent(body.Owner, out JointComponent? jointComponent)) continue;
+                    if (!jointQuery.TryGetComponent(body.Owner, out var jointComponent)) continue;
 
                     foreach (var (_, joint) in jointComponent.Joints)
                     {
@@ -472,6 +472,36 @@ namespace Robust.Shared.Physics.Dynamics
                 body.Force = Vector2.Zero;
                 body.Torque = 0.0f;
             }
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct PhysicsUpdateBeforeMapSolveEvent
+    {
+        public readonly bool Prediction;
+        public readonly SharedPhysicsMapComponent MapComponent;
+        public readonly float DeltaTime;
+
+        public PhysicsUpdateBeforeMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
+        {
+            Prediction = prediction;
+            MapComponent = mapComponent;
+            DeltaTime = deltaTime;
+        }
+    }
+
+    [ByRefEvent]
+    public readonly struct PhysicsUpdateAfterMapSolveEvent
+    {
+        public readonly bool Prediction;
+        public readonly SharedPhysicsMapComponent MapComponent;
+        public readonly float DeltaTime;
+
+        public PhysicsUpdateAfterMapSolveEvent(bool prediction, SharedPhysicsMapComponent mapComponent, float deltaTime)
+        {
+            Prediction = prediction;
+            MapComponent = mapComponent;
+            DeltaTime = deltaTime;
         }
     }
 }

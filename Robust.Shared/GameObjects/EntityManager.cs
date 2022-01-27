@@ -214,7 +214,7 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Calling Dirty on a component will call this directly.
         /// </remarks>
-        public void DirtyEntity(EntityUid uid)
+        public void Dirty(EntityUid uid)
         {
             var currentTick = CurrentTick;
 
@@ -230,6 +230,22 @@ namespace Robust.Shared.GameObjects
 
             var dirtyEvent = new EntityDirtyEvent {Uid = uid};
             EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
+        }
+
+        public void Dirty(Component component)
+        {
+            var owner = component.Owner;
+
+            // Deserialization will cause this to be true.
+            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+            if (!owner.IsValid() || component.LifeStage >= ComponentLifeStage.Removing)
+                return;
+
+            if (!component.NetSyncEnabled)
+                return;
+
+            Dirty(owner);
+            component.LastModifiedTick = CurrentTick;
         }
 
         /// <summary>
@@ -300,6 +316,8 @@ namespace Robust.Shared.GameObjects
             if(QueuedDeletionsSet.Add(uid))
                 QueuedDeletions.Enqueue(uid);
         }
+
+        public bool IsQueuedForDeletion(EntityUid uid) => QueuedDeletionsSet.Contains(uid);
 
         public bool EntityExists(EntityUid uid)
         {

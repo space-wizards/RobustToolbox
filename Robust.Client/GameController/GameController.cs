@@ -134,8 +134,8 @@ namespace Robust.Client
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.Resync();
-            _mapManager.Initialize();
             _entityManager.Initialize();
+            _mapManager.Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
@@ -339,6 +339,14 @@ namespace Robust.Client
 
             if (_loaderArgs != null)
             {
+                if (_loaderArgs.ApiMounts is { } mounts)
+                {
+                    foreach (var (api, prefix) in mounts)
+                    {
+                        _resourceCache.MountLoaderApi(api, "", new ResourcePath(prefix));
+                    }
+                }
+
                 _stringSerializer.EnableCaching = false;
                 _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
@@ -459,6 +467,8 @@ namespace Robust.Client
             // In singleplayer, however, we're in full control instead.
             else if (_client.RunLevel == ClientRunLevel.SinglePlayerGame)
             {
+                // The last real tick is the current tick! This way we won't be in "prediction" mode.
+                _gameTiming.LastRealTick = _gameTiming.CurTick;
                 _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
                 _lookup.Update();
             }

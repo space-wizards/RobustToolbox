@@ -127,7 +127,7 @@ namespace Robust.Server
 
             _shutdownReason = reason;
 
-            _mainLoop.Running = false;
+            if (_mainLoop != null) _mainLoop.Running = false;
             if (_logHandler != null)
             {
                 _log.RootSawmill.RemoveHandler(_logHandler);
@@ -506,7 +506,13 @@ namespace Robust.Server
         {
             SetupMainLoop();
 
-            _mainLoop.Run();
+            // If the server has been given a reason to shut down before the main loop has started,
+            // Don't start the main loop. This only works if a reason is passed to Shutdown(...)
+            if (_shutdownReason != null)
+            {
+                Logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
+            }
+            else _mainLoop.Run();
 
             FinishMainLoop();
         }

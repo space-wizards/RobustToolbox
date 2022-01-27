@@ -8,7 +8,7 @@ namespace Robust.Shared.Map
     {
         public static EntityCoordinates ToEntityCoordinates(this Vector2i vector, GridId gridId, IMapManager? mapManager = null)
         {
-            mapManager ??= IoCManager.Resolve<IMapManager>();
+            IoCManager.Resolve(ref mapManager);
 
             var grid = mapManager.GetGrid(gridId);
             var tile = grid.TileSize;

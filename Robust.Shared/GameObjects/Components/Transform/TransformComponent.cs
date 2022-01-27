@@ -58,8 +58,6 @@ namespace Robust.Shared.GameObjects
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
-        public override string Name => "Transform";
-
         /// <summary>
         ///     Returns the index of the map which this object is on
         /// </summary>
@@ -453,11 +451,20 @@ namespace Robust.Shared.GameObjects
         }
 
         [ViewVariables]
-        public IEnumerable<TransformComponent> Children =>
-            _children.Select(u =>
+        public IEnumerable<TransformComponent> Children
+        {
+            get
             {
-                return _entMan.GetComponent<TransformComponent>(u);
-            });
+                if (_children.Count == 0) yield break;
+
+                var xforms = _entMan.GetEntityQuery<TransformComponent>();
+
+                foreach (var child in _children)
+                {
+                    yield return xforms.GetComponent(child);
+                }
+            }
+        }
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
 
@@ -724,9 +731,11 @@ namespace Robust.Shared.GameObjects
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
         {
+            var xforms = _entMan.GetEntityQuery<TransformComponent>();
+
             foreach (var child in _children)
             {
-                var concrete = entMan.GetComponent<TransformComponent>(child);
+                var concrete = xforms.GetComponent(child);
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
@@ -773,10 +782,17 @@ namespace Robust.Shared.GameObjects
             return (worldPos, worldRot);
         }
 
+        /// <see cref="GetWorldPositionRotation()"/>
+        public (Vector2 WorldPosition, Angle WorldRotation) GetWorldPositionRotation(EntityQuery<TransformComponent> xforms)
+        {
+            var (worldPos, worldRot, _) = GetWorldPositionRotationMatrix(xforms);
+            return (worldPos, worldRot);
+        }
+
         /// <summary>
         /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
         /// </summary>
-        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix()
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix(EntityQuery<TransformComponent> xforms)
         {
             var parent = _parent;
             var worldRot = _localRotation;
@@ -785,7 +801,7 @@ namespace Robust.Shared.GameObjects
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
-                var xform = _entMan.GetComponent<TransformComponent>(parent);
+                var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
                 var parentMatrix = xform.GetLocalMatrix();
                 Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
@@ -796,6 +812,15 @@ namespace Robust.Shared.GameObjects
             var worldPosition = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
 
             return (worldPosition, worldRot, worldMatrix);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, and WorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix) GetWorldPositionRotationMatrix()
+        {
+            var xforms = _entMan.GetEntityQuery<TransformComponent>();
+            return GetWorldPositionRotationMatrix(xforms);
         }
 
         /// <summary>
@@ -816,11 +841,12 @@ namespace Robust.Shared.GameObjects
             var worldRot = _localRotation;
             var invMatrix = GetLocalMatrixInv();
             var worldMatrix = GetLocalMatrix();
+            var xforms = _entMan.GetEntityQuery<TransformComponent>();
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
-                var xform = _entMan.GetComponent<TransformComponent>(parent);
+                var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
 
                 var parentMatrix = xform.GetLocalMatrix();

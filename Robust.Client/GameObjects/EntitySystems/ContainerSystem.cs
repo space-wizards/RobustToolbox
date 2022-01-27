@@ -5,6 +5,7 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
@@ -131,10 +132,51 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
+                    // If an entity is currently in the shadow realm, it means we probably left PVS and are now getting
+                    // back into range. We do not want to directly insert this entity, as IF the container and entity
+                    // transform states did not get sent simultaneously, the entity's transform will be modified by the
+                    // insert operation. This means it will then be reset to the shadow realm, causing it to be ejected
+                    // from the container. It would then subsequently be parented to the container without ever being
+                    // re-inserted, leading to the client seeing what should be hidden entities attached to
+                    // containers/players.
+                    // 
+                    // For any non-map entity, the parent of the transform should be valid. And maps can't be in containers.
+                    if (!Transform(entity).ParentUid.IsValid())
+                    {
+                        AddExpectedEntity(entity, container);
+                        continue;
+                    }
+
                     if (!container.ContainedEntities.Contains(entity))
                         container.Insert(entity);
                 }
             }
+        }
+
+        protected override void HandleParentChanged(ref EntParentChangedMessage message)
+        {
+            base.HandleParentChanged(ref message);
+
+            // If an entity warped in from null-space (i.e., re-entered PVS) and got attached to a container, do the same checks as for newly initialized entities.
+            if (message.OldParent != null && message.OldParent.Value.IsValid())
+                return;
+
+            if (!ExpectedEntities.TryGetValue(message.Entity, out var container))
+                return;
+
+            if (Transform(message.Entity).ParentUid != container.Owner)
+            {
+                // This container is expecting an entity... but it got parented to some other entity???
+                // Ah well, the sever should send a new container state that updates expected entities so just ignore it for now.
+                return;
+            }    
+
+            RemoveExpectedEntity(message.Entity);
+
+            if (container.Deleted)
+                return;
+
+            container.Insert(message.Entity);
         }
 
         private IContainer ContainerFactory(ContainerManagerComponent component, string containerType, string id)

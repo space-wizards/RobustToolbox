@@ -126,7 +126,7 @@ namespace Robust.Shared.Containers
         #endregion
 
         // Eject entities from their parent container if the parent change is done by the transform only.
-        private void HandleParentChanged(ref EntParentChangedMessage message)
+        protected virtual void HandleParentChanged(ref EntParentChangedMessage message)
         {
             var oldParentEntity = message.OldParent;
 

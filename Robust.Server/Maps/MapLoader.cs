@@ -379,6 +379,8 @@ namespace Robust.Server.Maps
 
             private void ResetNetTicks()
             {
+                var compFactory = IoCManager.Resolve<IComponentFactory>();
+
                 foreach (var (entity, data) in _entitiesToDeserialize)
                 {
                     if (!data.TryGetNode("components", out YamlSequenceNode? componentList))
@@ -394,10 +396,11 @@ namespace Robust.Server.Maps
                     foreach (var (netId, component) in _serverEntityManager.GetNetComponents(entity))
                     {
                         var castComp = (Component) component;
+                        var compName = compFactory.GetComponentName(castComp.GetType());
 
-                        if (componentList.Any(p => p["type"].AsString() == component.Name))
+                        if (componentList.Any(p => p["type"].AsString() == compName))
                         {
-                            if (prototype.Components.ContainsKey(component.Name))
+                            if (prototype.Components.ContainsKey(compName))
                             {
                                 // This component is modified by the map so we have to send state.
                                 // Though it's still in the prototype itself so creation doesn't need to be sent.

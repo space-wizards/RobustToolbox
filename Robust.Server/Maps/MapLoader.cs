@@ -231,7 +231,7 @@ namespace Robust.Server.Maps
 
             private readonly MapLoadOptions? _loadOptions;
             private readonly Dictionary<GridId, int> GridIDMap = new();
-            public readonly List<IMapGrid> Grids = new();
+            public readonly List<MapGrid> Grids = new();
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
             private readonly Dictionary<int, EntityUid> UidEntityMap = new();
@@ -319,6 +319,10 @@ namespace Robust.Server.Maps
                 // Create the new map.
                 AllocMap();
 
+                // Load grids.
+                ReadTileMapSection();
+                ReadGridSection();
+
                 // Entities are first allocated. This allows us to know the future UID of all entities on the map before
                 // even ExposeData is loaded. This allows us to resolve serialized EntityUid instances correctly.
                 AllocEntities();
@@ -326,13 +330,12 @@ namespace Robust.Server.Maps
                 // Actually instance components and run ExposeData on them.
                 FinishEntitiesLoad();
 
+                // Finish binding MapGrids to their respective MapGridComponents.
+                BindGridComponents();
+
                 // Clear the net tick numbers so that components from prototypes (not modified by map)
                 // aren't sent over the wire initially.
                 ResetNetTicks();
-
-                // Load grids.
-                ReadTileMapSection();
-                ReadGridSection();
 
                 // Grid entities were NOT created inside ReadGridSection().
                 // We have to fix the created grids up with the grid entities deserialized from the map.
@@ -470,6 +473,43 @@ namespace Robust.Server.Maps
                 }
             }
 
+            private void BindGridComponents()
+            {
+                // There were no new grids, nothing to do here.
+                if(Grids.Count == 0)
+                    return;
+
+                // MapGrids already contain their assigned GridId from their ctor, and the MapComponents just got deserialized.
+                // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
+                // After doing this, it should be 100% safe to use the MapManager API like normal.
+
+                // get ents that the grids will bind to
+                var gridComps = new Dictionary<GridId, MapGridComponent>(Grids.Count);
+
+                // linear search for new grid comps
+                foreach (var tuple in _entitiesToDeserialize)
+                {
+                    if (!_serverEntityManager.TryGetComponent(tuple.Item1, out MapGridComponent gridComp))
+                        continue;
+
+                    // These should actually be new, pre-init
+                    DebugTools.Assert(gridComp.LifeStage == ComponentLifeStage.Added);
+
+                    // yaml deserializer turns "null" into Invalid, this has been encountered by a customer from failed serialization.
+                    DebugTools.Assert(gridComp.GridIndex != GridId.Invalid);
+
+                    gridComps[gridComp.GridIndex] = gridComp;
+                }
+
+                // Actually bind them
+                foreach (var mapGrid in Grids)
+                {
+                    // designed to throw if something is broken, every grid must map to an ent
+                    var gridComp = gridComps[mapGrid.Index];
+                    _mapManager.BindGrid(gridComp, mapGrid);
+                }
+            }
+
             private void AttachMapEntities()
             {
                 var mapEntity = _mapManager.GetMapEntityIdOrThrow(TargetMap);
@@ -538,39 +578,19 @@ namespace Robust.Server.Maps
 
             private void ReadGridSection()
             {
-                // This function expects all of the grid ents to already be deserialized
-                // and exist in the ECS system.
+                var yamlGrids = RootNode.GetNode<YamlSequenceNode>("grids");
 
-                var grids = RootNode.GetNode<YamlSequenceNode>("grids");
-                
-                // get ents that the grids will bind to
-                var gents = new MapGridComponent[grids.Children.Count];
-                foreach (var tuple in _entitiesToDeserialize)
+                foreach (var yamlGrid in yamlGrids)
                 {
-                    if (_serverEntityManager.TryGetComponent(tuple.Item1, out MapGridComponent gridComp))
-                    {
-                        // The implicit order of the grids in this section
-                        // match up with the MapGridComponent.Index field.
-                        gents[gridComp.GridIndex.Value] = gridComp;
-                    }
-                }
-
-                for (var i = 0; i < grids.Children.Count; i++)
-                {
-                    var gridYml = grids.Children[i];
-                    var gridComp = gents[i];
-
-                    GridId newId = default;
-                    YamlGridSerializer.DeserializeGrid(
-                        _mapManager, TargetMap, ref newId,
-                        (YamlMappingNode)gridYml["settings"],
-                        (YamlSequenceNode)gridYml["chunks"],
+                    var grid = YamlGridSerializer.DeserializeGrid(
+                        _mapManager, TargetMap,
+                        (YamlMappingNode) yamlGrid["settings"],
+                        (YamlSequenceNode) yamlGrid["chunks"],
                         _tileMap!,
-                        _tileDefinitionManager,
-                        gridComp
+                        _tileDefinitionManager
                     );
 
-                    Grids.Add(_mapManager.GetGrid(newId));
+                    Grids.Add(grid);
                 }
             }
 
@@ -665,7 +685,7 @@ namespace Robust.Server.Maps
                     throw new InvalidOperationException();
                 }
 
-                Grids.Add(grid);
+                Grids.Add((MapGrid) grid);
                 GridIDMap.Add(grid.Index, GridIDMap.Count);
             }
 
@@ -902,6 +922,9 @@ namespace Robust.Server.Maps
                 bool skipHook,
                 ISerializationContext? context = null)
             {
+                // This is the code that deserializes the Grids index into the GridId. This has to happen between Grid allocation
+                // and when grids are bound to their entities.
+
                 if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
 
                 var val = int.Parse(node.Value);

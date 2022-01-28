@@ -111,16 +111,28 @@ internal partial class MapManager
 
     public IMapGridInternal CreateBoundGrid(MapId mapId, MapGridComponent gridComponent)
     {
-        var mapGrid = (MapGrid)CreateGridImpl(mapId, null, 16, false, default);
+        var mapGrid = CreateUnboundGrid(mapId);
 
+        BindGrid(gridComponent, mapGrid);
+        return mapGrid;
+    }
+
+    public void BindGrid(MapGridComponent gridComponent, MapGrid mapGrid)
+    {
         gridComponent.Grid = mapGrid;
         gridComponent.GridIndex = mapGrid.Index;
         mapGrid.GridEntityId = gridComponent.Owner;
 
         _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
-        Logger.InfoS("map", $"Creating new grid {mapGrid.Index}");
+        Logger.InfoS("map", $"Binding grid {mapGrid.Index} to entity {gridComponent.Owner}");
         OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
-        return mapGrid;
+    }
+
+    public MapGrid CreateUnboundGrid(MapId mapId)
+    {
+        var newGrid = CreateGridImpl(mapId, null, 16, false, default);
+        Logger.InfoS("map", $"Creating unbound grid {newGrid.Index}");
+        return (MapGrid) newGrid;
     }
 
     public IEnumerable<IMapGrid> GetAllGrids()

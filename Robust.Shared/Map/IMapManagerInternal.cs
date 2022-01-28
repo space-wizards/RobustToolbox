@@ -23,9 +23,10 @@ namespace Robust.Shared.Map
         /// <param name="oldTile">The old tile that got replaced.</param>
         void RaiseOnTileChanged(TileRef tileRef, Tile oldTile);
 
-        IMapGridInternal CreateBoundGrid(MapId mapId, MapGridComponent gridComponent);
         bool TryGetGridComp(GridId id, [MaybeNullWhen(false)]out IMapGridComponent comp);
         bool TryGetGridEuid(GridId id, [MaybeNullWhen(false)]out EntityUid euid);
         void TrueGridDelete(MapGrid grid);
+        MapGrid CreateUnboundGrid(MapId mapId);
+        void BindGrid(MapGridComponent gridComponent, MapGrid mapGrid);
     }
 }

@@ -218,7 +218,7 @@ namespace Robust.Server.GameObjects
             var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
 
             if (!netId.HasValue)
-                throw new ArgumentException($"Component {component.Name} does not have a NetID.", nameof(component));
+                throw new ArgumentException($"Component {component.GetType()} does not have a NetID.", nameof(component));
 
             var msg = _networkManager.CreateNetMessage<MsgEntity>();
             msg.Type = EntityMessageType.ComponentMessage;

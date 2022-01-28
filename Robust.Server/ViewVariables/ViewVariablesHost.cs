@@ -119,6 +119,7 @@ namespace Robust.Server.ViewVariables
             switch (message.Selector)
             {
                 case ViewVariablesComponentSelector componentSelector:
+                {
                     var compType = _reflectionManager.GetType(componentSelector.ComponentType);
                     if (compType == null ||
                         !_entityManager.TryGetComponent(componentSelector.Entity, compType, out var component))
@@ -129,6 +130,7 @@ namespace Robust.Server.ViewVariables
 
                     theObject = component;
                     break;
+                }
                 case ViewVariablesEntitySelector entitySelector:
                 {
                     if (!_entityManager.EntityExists(entitySelector.Entity))
@@ -141,6 +143,7 @@ namespace Robust.Server.ViewVariables
                     break;
                 }
                 case ViewVariablesSessionRelativeSelector sessionRelativeSelector:
+                {
                     if (!_sessions.TryGetValue(sessionRelativeSelector.SessionId, out var relSession)
                         || relSession.PlayerUser != message.MsgChannel.UserId)
                     {
@@ -178,8 +181,9 @@ namespace Robust.Server.ViewVariables
 
                     theObject = value;
                     break;
-
+                }
                 case ViewVariablesIoCSelector ioCSelector:
+                {
                     var reflectionManager = IoCManager.Resolve<IReflectionManager>();
                     if (!reflectionManager.TryLooseGetType(ioCSelector.TypeName, out var type))
                     {
@@ -189,7 +193,19 @@ namespace Robust.Server.ViewVariables
 
                     theObject = IoCManager.ResolveType(type);
                     break;
+                }
+                case ViewVariablesEntitySystemSelector esSelector:
+                {
+                    var reflectionManager = IoCManager.Resolve<IReflectionManager>();
+                    if (!reflectionManager.TryLooseGetType(esSelector.TypeName, out var type))
+                    {
+                        Deny(DenyReason.InvalidRequest);
+                        return;
+                    }
 
+                    theObject = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem(type);
+                    break;
+                }
                 default:
                     Deny(DenyReason.InvalidRequest);
                     return;

@@ -253,9 +253,15 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="audioParams"></param>
-        private IPlayingAudioStream Play(AudioStream stream, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(AudioStream stream, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
+
+            if (source == null)
+            {
+                return null;
+            }
+
             ApplyAudioParams(audioParams, source);
 
             source.SetGlobal();
@@ -303,6 +309,12 @@ namespace Robust.Client.GameObjects
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
+
+            if (source == null)
+            {
+                return null;
+            }
+
             if (!source.SetPosition(EntityManager.GetComponent<TransformComponent>(entity).WorldPosition))
             {
                 return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
@@ -356,6 +368,12 @@ namespace Robust.Client.GameObjects
             EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
+
+            if (source == null)
+            {
+                return null;
+            }
+
             if (!source.SetPosition(fallbackCoordinates.Position))
             {
                 source.Dispose();

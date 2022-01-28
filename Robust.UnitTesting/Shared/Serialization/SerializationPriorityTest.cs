@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -45,7 +45,6 @@ namespace Robust.UnitTesting.Shared.Serialization
 
     public class PriorityTestComponent : Component, ISerializationHooks
     {
-        public override string Name => "PriorityTest";
 
         public readonly List<string> Strings = new() {string.Empty, string.Empty, string.Empty};
 

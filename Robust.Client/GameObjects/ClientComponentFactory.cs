@@ -29,13 +29,9 @@ namespace Robust.Client.GameObjects
             RegisterClass<EyeComponent>();
             RegisterClass<AnimationPlayerComponent>();
             RegisterClass<TimerComponent>();
-
-#if DEBUG
             RegisterClass<DebugExceptionOnAddComponent>();
             RegisterClass<DebugExceptionInitializeComponent>();
             RegisterClass<DebugExceptionStartupComponent>();
-#endif
-
         }
     }
 }

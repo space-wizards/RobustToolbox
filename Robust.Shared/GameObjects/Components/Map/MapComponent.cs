@@ -29,9 +29,6 @@ namespace Robust.Shared.GameObjects
         [DataField("index")]
         private MapId _mapIndex = MapId.Nullspace;
 
-        /// <inheritdoc />
-        public override string Name => "Map";
-
         [ViewVariables(VVAccess.ReadWrite)]
         [DataField(("lightingEnabled"))]
         public bool LightingEnabled { get; set; } = true;

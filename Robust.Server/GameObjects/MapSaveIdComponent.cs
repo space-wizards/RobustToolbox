@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
 {
@@ -11,8 +11,6 @@ namespace Robust.Server.GameObjects
     /// </remarks>
     public sealed class MapSaveIdComponent : Component
     {
-        public override string Name => "MapSaveId";
-
         public int Uid { get; set; }
     }
 }

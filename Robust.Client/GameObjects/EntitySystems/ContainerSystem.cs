@@ -140,7 +140,7 @@ namespace Robust.Client.GameObjects
                     // from the container. It would then subsequently be parented to the container without ever being
                     // re-inserted, leading to the client seeing what should be hidden entities attached to
                     // containers/players.
-                    if (!Transform(entity).MapID == MapId.Nullspace)
+                    if (Transform(entity).MapID == MapId.Nullspace)
                     {
                         AddExpectedEntity(entity, container);
                         continue;

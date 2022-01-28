@@ -6,6 +6,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
@@ -139,9 +140,7 @@ namespace Robust.Client.GameObjects
                     // from the container. It would then subsequently be parented to the container without ever being
                     // re-inserted, leading to the client seeing what should be hidden entities attached to
                     // containers/players.
-                    // 
-                    // For any non-map entity, the parent of the transform should be valid. And maps can't be in containers.
-                    if (!Transform(entity).ParentUid.IsValid())
+                    if (!Transform(entity).MapID == MapId.Nullspace)
                     {
                         AddExpectedEntity(entity, container);
                         continue;

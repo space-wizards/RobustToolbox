@@ -167,6 +167,15 @@ public partial class EntitySystem
     }
 
     /// <summary>
+    ///     Marks a component as dirty.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(Component component)
+    {
+        EntityManager.Dirty(component);
+    }
+
+    /// <summary>
     ///     Retrieves the name of an entity.
     /// </summary>
     /// <exception cref="KeyNotFoundException">Thrown when the entity doesn't exist.</exception>

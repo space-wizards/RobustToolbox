@@ -17,19 +17,21 @@ namespace Robust.Analyzers
     public class SerializableAnalyzer : DiagnosticAnalyzer
     {
         // Metadata of the analyzer
-        public const string DiagnosticId = "RA0001";
 
         // You could use LocalizedString but it's a little more complicated for this sample
-        private const string Title = "Class not marked as (Net)Serializable";
-        private const string MessageFormat = "Class not marked as (Net)Serializable";
-        private const string Description = "The class should be marked as (Net)Serializable.";
-        private const string Category = "Usage";
 
         private const string RequiresSerializableAttributeMetadataName = "Robust.Shared.Analyzers.RequiresSerializableAttribute";
         private const string SerializableAttributeMetadataName = "System.SerializableAttribute";
         private const string NetSerializableAttributeMetadataName = "Robust.Shared.Serialization.NetSerializableAttribute";
 
-        [SuppressMessage("ReSharper", "RS2008")] private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+        [SuppressMessage("ReSharper", "RS2008")] private static readonly DiagnosticDescriptor Rule = new(
+            Diagnostics.IdSerializable,
+            "Class not marked as (Net)Serializable",
+            "Class not marked as (Net)Serializable",
+            "Usage",
+            DiagnosticSeverity.Warning,
+            isEnabledByDefault: true,
+            description: "The class should be marked as (Net)Serializable.");
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 
@@ -139,7 +141,7 @@ namespace Robust.Analyzers
             return document.WithSyntaxRoot(root);
         }
 
-        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(SerializableAnalyzer.DiagnosticId);
+        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create("RA0001");
 
         public override FixAllProvider GetFixAllProvider()
         {

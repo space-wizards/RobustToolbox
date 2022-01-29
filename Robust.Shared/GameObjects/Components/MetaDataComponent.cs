@@ -57,9 +57,6 @@ namespace Robust.Shared.GameObjects
         private EntityPrototype? _entityPrototype;
         private bool _entityPaused;
 
-        /// <inheritdoc />
-        public override string Name => "MetaData";
-
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
         public GameTick EntityLastModifiedTick { get; internal set; } = new(1);

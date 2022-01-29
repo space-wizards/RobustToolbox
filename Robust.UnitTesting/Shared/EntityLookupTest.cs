@@ -29,8 +29,7 @@ namespace Robust.UnitTesting.Shared
                 var mapId = mapManager.CreateMap();
                 var grid = mapManager.CreateGrid(mapId);
 
-                var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One)
-                    ;
+                var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
                 grid.SetTile(new Vector2i(), new Tile(1));
 
                 lookup.Update();
@@ -41,14 +40,16 @@ namespace Robust.UnitTesting.Shared
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
+                var xform = entManager.GetComponent<TransformComponent>(dummy);
+
                 // When anchoring should still only be 1 entity.
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).Anchored = true;
-                Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).Anchored);
+                xform.Anchored = true;
+                Assert.That(xform.Anchored);
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
 
                 // Even when unanchored should still be there
-                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(dummy).Anchored = false;
+                xform.Anchored = false;
                 lookup.Update();
                 Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList().Count, Is.EqualTo(2));
             });

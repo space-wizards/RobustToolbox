@@ -482,9 +482,11 @@ namespace Robust.Shared.Physics
         {
             if (!component.CanCollide) return;
 
-            var worldPos = EntityManager.GetComponent<TransformComponent>(uid).WorldPosition;
+            var xform = EntityManager.GetComponent<TransformComponent>(uid);
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+            DebugTools.Assert(xform.LocalRotation.Equals(args.NewRotation));
 
-            SynchronizeFixtures(component, worldPos, (float) args.NewRotation.Theta);
+            SynchronizeFixtures(component, worldPos, (float) worldRot.Theta);
         }
 
         private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)

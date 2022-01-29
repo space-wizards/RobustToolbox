@@ -7,8 +7,6 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     public sealed class OccluderTreeComponent : Component
     {
-        public override string Name => "OccluderTree";
-
         internal DynamicTree<OccluderComponent> Tree { get; set; } = default!;
     }
 }

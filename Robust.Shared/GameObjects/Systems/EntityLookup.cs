@@ -867,9 +867,10 @@ namespace Robust.Shared.GameObjects
                 return new Box2(pos, pos);
             }
 
-            if (ent.TryGetContainerMan(out var manager))
+            // MOCKS WHY
+            if (ent.TryGetContainer(out var container))
             {
-                return GetWorldAABB(manager.Owner);
+                return GetWorldAABB(container.Owner);
             }
 
             pos = xform.WorldPosition;

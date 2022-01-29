@@ -11,8 +11,6 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract class SharedUserInterfaceComponent : Component
     {
-        public sealed override string Name => "UserInterface";
-
         [DataDefinition]
         public sealed class PrototypeData : ISerializationHooks
         {

@@ -119,5 +119,7 @@ namespace Robust.Shared.GameObjects
         /// Thrown if the manager has been initialized already.
         /// </exception>
         void LoadExtraSystemType<T>() where T : IEntitySystem, new();
+
+        object GetEntitySystem(Type sysType);
     }
 }

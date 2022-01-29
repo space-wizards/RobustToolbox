@@ -54,7 +54,7 @@ namespace Robust.Client.Graphics.Audio
             return ActualImplementation.LoadAudioRaw(samples, channels, sampleRate, name);
         }
 
-        public IClydeAudioSource CreateAudioSource(AudioStream stream)
+        public IClydeAudioSource? CreateAudioSource(AudioStream stream)
         {
             return ActualImplementation.CreateAudioSource(stream);
         }

@@ -13,7 +13,7 @@ namespace Robust.Client.Graphics
 
         void SetMasterVolume(float newVolume);
 
-        IClydeAudioSource CreateAudioSource(AudioStream stream);
+        IClydeAudioSource? CreateAudioSource(AudioStream stream);
         IClydeBufferedAudioSource CreateBufferedAudioSource(int buffers, bool floatAudio=false);
     }
 }

@@ -13,7 +13,8 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc cref="IMapManager"/>
-    internal abstract partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
+    [Virtual]
+    internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;

@@ -195,7 +195,8 @@ namespace Robust.Shared.Prototypes
         }
     }
 
-    public abstract class PrototypeManager : IPrototypeManager
+    [Virtual]
+    public class PrototypeManager : IPrototypeManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] protected readonly IResourceManager Resources = default!;

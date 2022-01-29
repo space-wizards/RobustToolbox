@@ -46,13 +46,13 @@ public sealed class ExplicitVirtualAnalyzer : DiagnosticAnalyzer
         if (classSymbol == null)
             return;
 
-        if (classSymbol.IsSealed || classSymbol.IsAbstract)
+        if (classSymbol.IsSealed || classSymbol.IsAbstract || classSymbol.IsStatic)
             return;
 
         if (HasAttribute(classSymbol, attrSymbol))
             return;
 
-        var diag = Diagnostic.Create(Rule, context.Node.GetLocation());
+        var diag = Diagnostic.Create(Rule, classDecl.Keyword.GetLocation());
         context.ReportDiagnostic(diag);
     }
 }

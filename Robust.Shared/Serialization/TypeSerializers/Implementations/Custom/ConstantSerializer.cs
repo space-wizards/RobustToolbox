@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
-    public class ConstantSerializer<TTag> : ITypeSerializer<int, ValueDataNode>
+    public sealed class ConstantSerializer<TTag> : ITypeSerializer<int, ValueDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

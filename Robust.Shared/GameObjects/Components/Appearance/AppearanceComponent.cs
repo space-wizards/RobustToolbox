@@ -110,7 +110,7 @@ public abstract class AppearanceComponent : Component
     }
 
     [Serializable, NetSerializable]
-    protected class AppearanceComponentState : ComponentState
+    protected sealed class AppearanceComponentState : ComponentState
     {
         public readonly Dictionary<object, object> Data;
 

@@ -14,7 +14,7 @@ using static Robust.Shared.Serialization.Manager.SerializationManager;
 
 namespace Robust.Shared.Serialization.Manager.Definition
 {
-    public partial class DataDefinition
+    public sealed partial class DataDefinition
     {
         private readonly DeserializeDelegate _deserialize;
         private readonly PopulateDelegateSignature _populate;

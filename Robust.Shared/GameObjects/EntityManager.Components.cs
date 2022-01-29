@@ -19,7 +19,7 @@ using Robust.Shared.Exceptions;
 namespace Robust.Shared.GameObjects
 {
     /// <inheritdoc />
-    public partial class EntityManager
+    public abstract partial class EntityManager
     {
         [IoC.Dependency] private readonly IComponentFactory _componentFactory = default!;
 

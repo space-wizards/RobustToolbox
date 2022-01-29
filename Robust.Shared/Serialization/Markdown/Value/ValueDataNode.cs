@@ -2,7 +2,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Value
 {
-    public class ValueDataNode : DataNode<ValueDataNode>
+    public sealed class ValueDataNode : DataNode<ValueDataNode>
     {
         public ValueDataNode(string value) : base(NodeMark.Invalid, NodeMark.Invalid)
         {

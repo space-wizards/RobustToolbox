@@ -28,7 +28,7 @@ namespace Robust.Shared.GameStates
         public ComponentState? State { get; set; }
     }
 
-    public class ComponentGetStateAttemptEvent : CancellableEntityEventArgs
+    public sealed class ComponentGetStateAttemptEvent : CancellableEntityEventArgs
     {
         /// <summary>
         ///     Input parameter. The player the state is being sent to.

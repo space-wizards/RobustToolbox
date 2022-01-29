@@ -7,7 +7,7 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent server to client to notify that a session was accepted and its new ID.
     /// </summary>
-    public class MsgViewVariablesOpenSession : NetMessage
+    public sealed class MsgViewVariablesOpenSession : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

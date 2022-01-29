@@ -1281,7 +1281,7 @@ namespace Robust.Shared.Physics.Collision
     /// <summary>
     /// This holds polygon B expressed in frame A.
     /// </summary>
-    public class TempPolygon
+    public sealed class TempPolygon
     {
         public Vector2[] Vertices;
         public Vector2[] Normals;

@@ -15,7 +15,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype
 {
     [TypeSerializer]
-    public class PrototypeFlagsTypeSerializer<T>
+    public sealed class PrototypeFlagsTypeSerializer<T>
         : ITypeSerializer<PrototypeFlags<T>, SequenceDataNode>, ITypeSerializer<PrototypeFlags<T>, ValueDataNode>
         where T : class, IPrototype
     {

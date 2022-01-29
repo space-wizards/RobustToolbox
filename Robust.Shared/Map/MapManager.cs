@@ -13,7 +13,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc cref="IMapManager"/>
-    internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
+    internal abstract partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -577,7 +577,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Arguments for when a map is created or deleted locally ore remotely.
     /// </summary>
-    public class MapEventArgs : EventArgs
+    public sealed class MapEventArgs : EventArgs
     {
         /// <summary>
         ///     Map that is being modified.
@@ -596,7 +596,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Arguments for when a single tile on a grid is changed locally or remotely.
     /// </summary>
-    public class TileChangedEventArgs : EventArgs
+    public sealed class TileChangedEventArgs : EventArgs
     {
         /// <summary>
         ///     New tile that replaced the old one.
@@ -621,7 +621,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     Arguments for when a one or more tiles on a grid is changed at once.
     /// </summary>
-    public class GridChangedEventArgs : EventArgs
+    public sealed class GridChangedEventArgs : EventArgs
     {
         /// <summary>
         ///     Grid being changed.

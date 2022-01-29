@@ -40,6 +40,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
+    [Virtual]
     public class Contact : IEquatable<Contact>
     {
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;

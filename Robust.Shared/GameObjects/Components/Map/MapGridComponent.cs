@@ -25,7 +25,7 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
     [NetworkedComponent()]
-    internal class MapGridComponent : Component, IMapGridComponent
+    internal sealed class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -127,7 +127,7 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal class MapGridComponentState : ComponentState
+    internal sealed class MapGridComponentState : ComponentState
     {
         /// <summary>
         ///     Index of the grid this component is linked to.

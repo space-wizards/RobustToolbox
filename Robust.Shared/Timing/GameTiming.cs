@@ -7,6 +7,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     This holds main loop timing information and helper functions.
     /// </summary>
+    [Virtual]
     public class GameTiming : IGameTiming
     {
         // number of sample frames to store for profiling

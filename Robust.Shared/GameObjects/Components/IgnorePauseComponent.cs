@@ -4,7 +4,7 @@ using Robust.Shared.Timing;
 namespace Robust.Shared.GameObjects
 {
     [RegisterComponent]
-    public class IgnorePauseComponent : Component
+    public sealed class IgnorePauseComponent : Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 

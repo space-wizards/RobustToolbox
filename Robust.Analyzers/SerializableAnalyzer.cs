@@ -141,7 +141,8 @@ namespace Robust.Analyzers
             return document.WithSyntaxRoot(root);
         }
 
-        public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create("RA0001");
+        public sealed override ImmutableArray<string> FixableDiagnosticIds
+            => ImmutableArray.Create(Diagnostics.IdSerializable);
 
         public override FixAllProvider GetFixAllProvider()
         {

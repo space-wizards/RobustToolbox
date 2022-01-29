@@ -1526,51 +1526,6 @@ namespace Robust.Client.GameObjects
             return rsi["error"];
         }
 
-        public static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
-        {
-            // There is probably a better way to do this.
-            // Eh.
-            switch (offset)
-            {
-                case DirectionOffset.None:
-                    return dir;
-                case DirectionOffset.Clockwise:
-                    return dir switch
-                    {
-                        RSI.State.Direction.North => RSI.State.Direction.East,
-                        RSI.State.Direction.East => RSI.State.Direction.South,
-                        RSI.State.Direction.South => RSI.State.Direction.West,
-                        RSI.State.Direction.West => RSI.State.Direction.North,
-                        _ => throw new NotImplementedException()
-                    };
-                case DirectionOffset.CounterClockwise:
-                    return dir switch
-                    {
-                        RSI.State.Direction.North => RSI.State.Direction.West,
-                        RSI.State.Direction.East => RSI.State.Direction.North,
-                        RSI.State.Direction.South => RSI.State.Direction.East,
-                        RSI.State.Direction.West => RSI.State.Direction.South,
-                        _ => throw new NotImplementedException()
-                    };
-                case DirectionOffset.Flip:
-                    switch (dir)
-                    {
-                        case RSI.State.Direction.North:
-                            return RSI.State.Direction.South;
-                        case RSI.State.Direction.East:
-                            return RSI.State.Direction.West;
-                        case RSI.State.Direction.South:
-                            return RSI.State.Direction.North;
-                        case RSI.State.Direction.West:
-                            return RSI.State.Direction.East;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
         public string GetDebugString()
         {
             var builder = new StringBuilder();
@@ -1821,7 +1776,7 @@ namespace Robust.Client.GameObjects
                         dir = worldRotation.ToRsiDirection(state.Directions);
                     }
 
-                    return OffsetRsiDir(dir, DirOffset);
+                    return dir.OffsetRsiDir(DirOffset);
                 }
             }
 

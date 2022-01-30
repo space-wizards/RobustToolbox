@@ -639,7 +639,7 @@ internal partial class PVSSystem : EntitySystem
     private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
-        return (xform.WorldPosition, _viewSize, xform.MapID);
+        return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
     }
 }
 

@@ -6,7 +6,7 @@ using Robust.Shared.Console;
 namespace Robust.Server.Console.Commands
 {
     [UsedImplicitly]
-    internal class ListAssembliesCommand : IConsoleCommand
+    internal sealed class ListAssembliesCommand : IConsoleCommand
     {
         public string Command => "lsasm";
         public string Description => "Lists loaded assemblies by load context.";

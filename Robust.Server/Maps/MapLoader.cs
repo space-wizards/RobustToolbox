@@ -34,7 +34,7 @@ namespace Robust.Server.Maps
     /// <summary>
     ///     Saves and loads maps to the disk.
     /// </summary>
-    public class MapLoader : IMapLoader
+    public sealed class MapLoader : IMapLoader
     {
         private static readonly MapLoadOptions DefaultLoadOptions = new();
 
@@ -218,7 +218,7 @@ namespace Robust.Server.Maps
         /// <summary>
         ///     Handles the primary bulk of state during the map serialization process.
         /// </summary>
-        private class MapContext : ISerializationContext, IEntityLoadContext,
+        private sealed class MapContext : ISerializationContext, IEntityLoadContext,
             ITypeSerializer<GridId, ValueDataNode>,
             ITypeSerializer<EntityUid, ValueDataNode>,
             ITypeReaderWriter<EntityUid, ValueDataNode>
@@ -1011,7 +1011,7 @@ namespace Robust.Server.Maps
         ///     Does basic pre-deserialization checks on map file load.
         ///     For example, let's not try to use maps with multiple grids as blueprints, shall we?
         /// </summary>
-        private class MapData
+        private sealed class MapData
         {
             public YamlStream Stream { get; }
 

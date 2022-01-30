@@ -9,7 +9,7 @@ using SLogger = Serilog.Core.Logger;
 
 namespace Robust.Server.Log
 {
-    public class LokiLogHandler : ILogHandler, IDisposable
+    public sealed class LokiLogHandler : ILogHandler, IDisposable
     {
         private readonly SLogger _sLogger;
 

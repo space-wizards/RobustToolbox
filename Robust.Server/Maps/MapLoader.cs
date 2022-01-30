@@ -783,7 +783,9 @@ namespace Robust.Server.Maps
                         {"uid", EntityUidMap[entity].ToString(CultureInfo.InvariantCulture)}
                     };
 
-                    if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype is {} prototype)
+                    var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
+
+                    if (md.EntityPrototype is {} prototype)
                     {
                         mapping.Add("type", prototype.ID);
                         if (!prototypeCompCache.ContainsKey(prototype.ID))
@@ -797,7 +799,6 @@ namespace Robust.Server.Maps
                     }
 
                     var components = new YamlSequenceNode();
-                    var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
 
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in _serverEntityManager.GetComponents(entity))

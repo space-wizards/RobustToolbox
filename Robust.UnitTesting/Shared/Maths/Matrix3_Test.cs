@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestFixture]
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestOf(typeof(Matrix3))]
-    public class Matrix3_Test
+    public sealed class Matrix3_Test
     {
         [Test]
         public void TranslationTest()

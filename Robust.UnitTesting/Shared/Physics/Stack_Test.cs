@@ -38,7 +38,7 @@ using Robust.Shared.Physics.Dynamics;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    public class PhysicsTestBedTest : RobustIntegrationTest
+    public sealed class PhysicsTestBedTest : RobustIntegrationTest
     {
         [Test]
         public async Task TestBoxStack()

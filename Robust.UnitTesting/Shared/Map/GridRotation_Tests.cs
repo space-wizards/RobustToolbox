@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture]
-    public class GridRotation_Tests : RobustIntegrationTest
+    public sealed class GridRotation_Tests : RobustIntegrationTest
     {
         // Because integration tests are ten billion percent easier we'll just do all the rotation tests here.
         // These are mainly looking out for situations where the grid is rotated 90 / 180 degrees and we

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -9,7 +10,7 @@ using Robust.Shared.IoC.Exceptions;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, TestOf(typeof(EntitySystemManager))]
-    public class EntitySystemManager_Tests: RobustUnitTest
+    public sealed class EntitySystemManager_Tests: RobustUnitTest
     {
 
         public abstract class ESystemBase : IEntitySystem
@@ -22,17 +23,18 @@ namespace Robust.UnitTesting.Shared.GameObjects
             public void Update(float frameTime) { }
             public void FrameUpdate(float frameTime) { }
         }
+        [Virtual]
         public class ESystemA : ESystemBase { }
-        public class ESystemC : ESystemA { }
+        public sealed class ESystemC : ESystemA { }
         public abstract class ESystemBase2 : ESystemBase { }
-        public class ESystemB : ESystemBase2 { }
+        public sealed class ESystemB : ESystemBase2 { }
 
-        public class ESystemDepA : ESystemBase
+        public sealed class ESystemDepA : ESystemBase
         {
             [Dependency] public readonly ESystemDepB ESystemDepB = default!;
         }
 
-        public class ESystemDepB : ESystemBase
+        public sealed class ESystemDepB : ESystemBase
         {
             [Dependency] public readonly ESystemDepA ESystemDepA = default!;
         }

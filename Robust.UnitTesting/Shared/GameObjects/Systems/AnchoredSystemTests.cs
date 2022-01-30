@@ -13,12 +13,12 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {
     [TestFixture, Parallelizable]
-    public class AnchoredSystemTests
+    public sealed class AnchoredSystemTests
     {
         private static readonly MapId TestMapId = new(1);
         private static readonly GridId TestGridId = new(1);
 
-        private class Subscriber : IEntityEventSubscriber { }
+        private sealed class Subscriber : IEntityEventSubscriber { }
 
         private const string Prototypes = @"
 - type: entity

@@ -15,6 +15,7 @@ using Robust.Server;
 using Robust.Server.Console;
 using Robust.Server.ServerStatus;
 using Robust.Shared;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
@@ -896,6 +897,7 @@ namespace Robust.UnitTesting
             }
         }
 
+        [Virtual]
         public class ServerIntegrationOptions : IntegrationOptions
         {
             public virtual ServerOptions Options { get; set; } = new()
@@ -905,6 +907,7 @@ namespace Robust.UnitTesting
             };
         }
 
+        [Virtual]
         public class ClientIntegrationOptions : IntegrationOptions
         {
             public virtual GameControllerOptions Options { get; set; } = new()

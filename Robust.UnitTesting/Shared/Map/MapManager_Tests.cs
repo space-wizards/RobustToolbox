@@ -12,7 +12,7 @@ using Robust.Shared.Physics.Broadphase;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, TestOf(typeof(MapManager))]
-    class MapManager_Tests : RobustUnitTest
+    sealed class MapManager_Tests : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Server;
 

@@ -9,14 +9,14 @@ using Robust.Shared.Players;
 namespace Robust.UnitTesting.Shared.Input.Binding
 {
     [TestFixture, TestOf(typeof(CommandBindRegistry))]
-    public class CommandBindRegistry_Test : RobustUnitTest
+    public sealed class CommandBindRegistry_Test : RobustUnitTest
     {
 
-        private class TypeA { }
-        private class TypeB { }
-        private class TypeC { }
+        private sealed class TypeA { }
+        private sealed class TypeB { }
+        private sealed class TypeC { }
 
-        private class TestInputCmdHandler : InputCmdHandler
+        private sealed class TestInputCmdHandler : InputCmdHandler
         {
             // these vars only for tracking / debugging during testing
             private readonly string name;

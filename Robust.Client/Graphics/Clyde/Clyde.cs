@@ -159,6 +159,7 @@ namespace Robust.Client.Graphics.Clyde
         private void InitOpenGL()
         {
             _isGLES = _openGLVersion is RendererOpenGLVersion.GLES2 or RendererOpenGLVersion.GLES3;
+            _isGLES2 = _openGLVersion is RendererOpenGLVersion.GLES2;
             _isCore = _openGLVersion is RendererOpenGLVersion.GL33;
 
             GLInitBindings(_isGLES);

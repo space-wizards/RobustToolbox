@@ -130,6 +130,12 @@ namespace Robust.Shared.Maths
             return new((int) MathF.Floor(X), (int) MathF.Floor(Y));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public readonly Vector2i Ceiling()
+        {
+            return new((int) MathF.Ceiling(X), (int) MathF.Ceiling(Y));
+        }
+
         /// <summary>
         ///     Subtracts a vector from another, returning a new vector.
         /// </summary>

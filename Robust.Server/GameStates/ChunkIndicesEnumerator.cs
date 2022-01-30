@@ -5,30 +5,30 @@ namespace Robust.Server.GameStates;
 
 public struct ChunkIndicesEnumerator
 {
-    private Vector2i _topLeft;
-    private Vector2i _bottomRight;
+    private Vector2i _bottomLeft;
+    private Vector2i _topRight;
 
     private int _x;
     private int _y;
 
-    public ChunkIndicesEnumerator(Box2 viewBox, float chunkSize)
+    public ChunkIndicesEnumerator(Vector2 viewPos, float range, float chunkSize)
     {
-        _topLeft = (viewBox.TopLeft / chunkSize).Floored();
-        _bottomRight = (viewBox.BottomRight / chunkSize).Floored();
+        _bottomLeft = ((viewPos - range) / chunkSize).Floored();
+        _topRight = ((viewPos + range) / chunkSize).Ceiling();
 
-        _x = _topLeft.X;
-        _y = _bottomRight.Y;
+        _x = _bottomLeft.X;
+        _y = _topRight.Y;
     }
 
     public bool MoveNext([NotNullWhen(true)] out Vector2i? chunkIndices)
     {
-        if (_y > _topLeft.Y)
+        if (_y > _topRight.Y)
         {
             _x++;
-            _y = _bottomRight.Y;
+            _y = _bottomLeft.Y;
         }
 
-        if (_x > _bottomRight.X)
+        if (_x > _topRight.X)
         {
             chunkIndices = null;
             return false;

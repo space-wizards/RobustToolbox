@@ -321,7 +321,7 @@ internal partial class PVSSystem : EntitySystem
 
         foreach (var eyeEuid in viewers)
         {
-            var (viewBox, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+            var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
             uint visMask = EyeComponent.DefaultVisibilityMask;
             if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
@@ -330,7 +330,7 @@ internal partial class PVSSystem : EntitySystem
             //todo at some point just register the viewerentities as localoverrides
             TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask, dontSkip: true);
 
-            var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
+            var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
 
             while (mapChunkEnumerator.MoveNext(out var chunkIndices))
             {
@@ -343,11 +343,13 @@ internal partial class PVSSystem : EntitySystem
                 }
             }
 
-            _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
+            _mapManager.FindGridsIntersectingEnumerator(mapId, new Box2(viewPos - range, viewPos + range), out var gridEnumerator, true);
             while (gridEnumerator.MoveNext(out var mapGrid))
             {
+                var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
+
                 var gridChunkEnumerator =
-                    new ChunkIndicesEnumerator(mapGrid.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
+                    new ChunkIndicesEnumerator(localPos, range, ChunkSize);
 
                 while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                 {
@@ -634,14 +636,10 @@ internal partial class PVSSystem : EntitySystem
     }
 
     // Read Safe
-    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
+    private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
-
-        var view = Box2.UnitCentered.Scale(_viewSize).Translated(xform.WorldPosition);
-        var map = xform.MapID;
-
-        return (view, map);
+        return (xform.WorldPosition, _viewSize, xform.MapID);
     }
 }
 

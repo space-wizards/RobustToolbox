@@ -292,7 +292,7 @@ namespace Robust.Client.GameObjects
                 var newMapTree = GetRenderTree(sprite.Owner);
                 // TODO: Temp PVS guard
                 var xform = EntityManager.GetComponent<TransformComponent>(sprite.Owner);
-                var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+                var (worldPos, worldRot, worldMatrix) = xform.GetWorldPositionRotationMatrix();
 
                 if (float.IsNaN(worldPos.X) || float.IsNaN(worldPos.Y))
                 {
@@ -300,7 +300,7 @@ namespace Robust.Client.GameObjects
                     continue;
                 }
 
-                var aabb = SpriteAabbFunc(sprite, worldPos, worldRot);
+                var aabb = SpriteAabbFunc(sprite, worldPos, worldRot, worldMatrix);
 
                 // If we're on a new map then clear the old one.
                 if (oldMapTree != newMapTree)
@@ -367,8 +367,8 @@ namespace Robust.Client.GameObjects
         private Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var xform = EntityManager.GetComponent<TransformComponent>(value.Owner);
-            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
+            var (worldPos, worldRot, worldMatrix) = xform.GetWorldPositionRotationMatrix();
+            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldMatrix), worldRot, worldPos);
             var tree = GetRenderTree(value.Owner);
 
             if (tree == null)
@@ -400,9 +400,9 @@ namespace Robust.Client.GameObjects
             return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
 
-        private Box2 SpriteAabbFunc(SpriteComponent value, Vector2 worldPos, Angle worldRot)
+        private Box2 SpriteAabbFunc(SpriteComponent value, Vector2 worldPos, Angle worldRot, Matrix3 worldMatrix)
         {
-            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
+            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldMatrix), worldRot, worldPos);
             var tree = GetRenderTree(value.Owner);
 
             if (tree == null)

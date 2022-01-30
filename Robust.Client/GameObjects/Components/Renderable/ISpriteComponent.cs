@@ -219,6 +219,6 @@ namespace Robust.Client.GameObjects
         /// <summary>
         ///     Calculate sprite bounding box in world-space coordinates.
         /// </summary>
-        Box2 CalculateBoundingBox(Vector2 worldPos);
+        Box2 CalculateBoundingBox(Matrix3 worldMatrix);
     }
 }

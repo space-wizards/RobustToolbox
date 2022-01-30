@@ -284,7 +284,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (entry.sprite.PostShader != null)
                 {
                     // calculate world bounding box
-                    var spriteBB = entry.sprite.CalculateBoundingBox(worldPosition);
+                    var spriteBB = entry.sprite.CalculateBoundingBox(matrix);
                     var spriteLB = spriteBB.BottomLeft;
                     var spriteRT = spriteBB.TopRight;
 
@@ -389,7 +389,7 @@ namespace Robust.Client.Graphics.Clyde
                     entry.matrix = transform.WorldMatrix;
                     var eyePos = eyeMatrix.Transform(new Vector2(entry.matrix.R0C2, entry.matrix.R1C2));
                     // Didn't use the bounds from the query as that has to be re-calculated (and is probably more expensive than this).
-                    var bounds = value.CalculateBoundingBox(eyePos);
+                    var bounds = value.CalculateBoundingBox(eyeMatrix);
                     entry.yWorldPos = eyePos.Y - bounds.Extents.Y;
                     return true;
 

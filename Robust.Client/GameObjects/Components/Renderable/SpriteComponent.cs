@@ -1622,8 +1622,11 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc/>
-        public Box2 CalculateBoundingBox(Vector2 worldPos)
+        public Box2 CalculateBoundingBox(Matrix3 worldMatrix)
         {
+            // Given if the thing is upside down the offset is inverse we need to do a matrix transform
+            var worldPos = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
+
             // fast check for empty sprites
             if (Layers.Count == 0)
                 return new Box2(worldPos, worldPos);
@@ -1649,7 +1652,8 @@ namespace Robust.Client.GameObjects
                 new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
 
             // move it all to world transform system (with sprite offset)
-            var worldBB = spriteBB.Translated(Offset + worldPos);
+            var worldBB = spriteBB.Translated(worldMatrix.Transform(Offset));
+
             return worldBB;
         }
 

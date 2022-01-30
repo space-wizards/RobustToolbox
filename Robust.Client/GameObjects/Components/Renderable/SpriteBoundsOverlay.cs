@@ -84,8 +84,8 @@ namespace Robust.Client.GameObjects
 
                 foreach (var sprite in comp.SpriteTree.QueryAabb(localAABB))
                 {
-                    var worldPos = _entityManager.GetComponent<TransformComponent>(sprite.Owner).WorldPosition;
-                    var bounds = sprite.CalculateBoundingBox(worldPos);
+                    var worldMatrix = _entityManager.GetComponent<TransformComponent>(sprite.Owner).WorldMatrix;
+                    var bounds = sprite.CalculateBoundingBox(worldMatrix);
                     handle.DrawRect(bounds, Color.Red.WithAlpha(0.2f));
                     handle.DrawRect(bounds.Scale(0.2f).Translated(-new Vector2(0f, bounds.Extents.Y)), Color.Blue.WithAlpha(0.5f));
                 }

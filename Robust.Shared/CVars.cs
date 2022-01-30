@@ -704,7 +704,7 @@ namespace Robust.Shared
         /// Force ANGLE to create a GLES2 context (not a compatible GLES3 context).
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleForceEs2 =
-            CVarDef.Create("display.angle_force_es2", true, CVar.CLIENTONLY);
+            CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.

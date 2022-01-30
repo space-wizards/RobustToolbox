@@ -114,10 +114,8 @@ namespace Robust.Shared.Physics
         /// <summary>
         /// Check the AABB for each moved broadphase fixture and add any colliding entities to the movebuffer in case.
         /// </summary>
-        private void FindGridContacts(MapId mapId)
+        private void FindGridContacts(MapId mapId, HashSet<IMapGrid> movedGrids)
         {
-            var movedGrids = _mapManager.GetMovedGrids(mapId);
-
             // None moved this tick
             if (movedGrids.Count == 0) return;
 
@@ -139,10 +137,11 @@ namespace Robust.Shared.Physics
                 // Easier to just not go over each proxy as we already unioned the fixture's worldaabb.
                 foreach (var other in mapBroadphase.Tree.QueryAabb(_queryBuffer, enlargedAABB))
                 {
+                    DebugTools.Assert(other.Fixture.Body != gridBody);
                     // 99% of the time it's just going to be the broadphase (for now the grid) itself.
                     // hence this body check makes this run significantly better.
                     // Also check if it's not already on the movebuffer.
-                    if (other.Fixture.Body == gridBody || moveBuffer.ContainsKey(other)) continue;
+                    if (moveBuffer.ContainsKey(other)) continue;
 
                     // To avoid updating during iteration.
                     // Don't need to transform as it's already in map terms.
@@ -156,8 +155,6 @@ namespace Robust.Shared.Physics
             {
                 moveBuffer[proxy] = worldAABB;
             }
-
-            movedGrids.Clear();
         }
 
         /// <summary>
@@ -166,11 +163,10 @@ namespace Robust.Shared.Physics
         internal void FindNewContacts(MapId mapId)
         {
             var moveBuffer = _moveBuffer[mapId];
-
-            if (moveBuffer.Count == 0) return;
+            var movedGrids = _mapManager.GetMovedGrids(mapId);
 
             // Find any entities being driven over that might need to be considered
-            FindGridContacts(mapId);
+            FindGridContacts(mapId, movedGrids);
 
             // There is some mariana trench levels of bullshit going on.
             // We essentially need to re-create Box2D's FindNewContacts but in a way that allows us to check every
@@ -181,6 +177,15 @@ namespace Robust.Shared.Physics
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
             var contactManager = EntityManager.GetComponent<SharedPhysicsMapComponent>(_mapManager.GetMapEntityIdOrThrow(mapId)).ContactManager;
+
+            // Handle grids first as they're not stored on map broadphase at all.
+            HandleGridCollisions(mapId, contactManager, movedGrids);
+
+            if (moveBuffer.Count == 0)
+            {
+                movedGrids.Clear();
+                return;
+            }
 
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)
@@ -279,10 +284,68 @@ namespace Robust.Shared.Physics
                 }
             }
 
+            movedGrids.Clear();
             _pairBuffer.Clear();
             moveBuffer.Clear();
             _gridMoveBuffer.Clear();
             _mapManager.ClearMovedGrids(mapId);
+        }
+
+        private void HandleGridCollisions(MapId mapId, ContactManager contactManager, HashSet<IMapGrid> movedGrids)
+        {
+            foreach (var grid in movedGrids)
+            {
+                DebugTools.Assert(grid.ParentMapId == mapId);
+
+                var mapGrid = (MapGrid)grid;
+                var aabb = grid.WorldBounds;
+
+                // TODO: Need to handle grids colliding with non-grid entities.
+                // var broadphase = EntityManager.GetComponent<BroadphaseComponent>(_mapManager.GetMapEntityId(mapId));
+                _mapManager.FindGridsIntersectingEnumerator(mapId, aabb, out var gridEnumerator);
+                var transform = EntityManager.GetComponent<PhysicsComponent>(grid.GridEntityId).GetTransform();
+
+                while (gridEnumerator.MoveNext(out var colliding))
+                {
+                    if (grid == colliding) continue;
+
+                    var collidingMapGrid = (MapGrid)colliding;
+                    var otherGridAABB = colliding.WorldBounds;
+                    var otherTransform = EntityManager.GetComponent<PhysicsComponent>(colliding.GridEntityId).GetTransform();
+
+                    var overlap = aabb.Union(otherGridAABB);
+
+                    // TODO: AddPair has a nasty check in there that's O(n) but that's also a general physics problem.
+                    mapGrid.GetMapChunks(overlap, out var ourChunks);
+                    collidingMapGrid.GetMapChunks(overlap, out var collidingChunks);
+
+                    while (ourChunks.MoveNext(out var ourChunk))
+                    {
+                        while (collidingChunks.MoveNext(out var collidingChunk))
+                        {
+                            foreach (var fixture in ourChunk.Fixtures)
+                            {
+                                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                                {
+                                    var fixAABB = fixture.Shape.ComputeAABB(transform, i);
+
+                                    foreach (var otherFixture in collidingChunk.Fixtures)
+                                    {
+                                        for (var j = 0; j < otherFixture.Shape.ChildCount; j++)
+                                        {
+                                            var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
+
+                                            if (!fixAABB.Intersects(otherAABB)) continue;
+                                            contactManager.AddPair(fixture, i, otherFixture, j);
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         #endregion
@@ -364,8 +427,9 @@ namespace Robust.Shared.Physics
             // TODO: Good idea? Ehhhhhhhhhhhh
             // The problem is there's some fuckery with events while an entity is initializing.
             // Can probably just bypass this by doing stuff in Update / FrameUpdate again but future problem
-            //
-            if (body.Broadphase != null) return;
+            // Also grids are special-cased due to their high fixture count.
+            if (body.Broadphase != null ||
+                HasComp<MapGridComponent>(body.Owner)) return;
 
             if (!Resolve(body.Owner, ref manager))
             {
@@ -471,18 +535,21 @@ namespace Robust.Shared.Physics
 
         private void OnMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
         {
-            if (!component.CanCollide || !EntityManager.TryGetComponent(uid, out FixturesComponent? manager)) return;
+            if (!component.CanCollide ||
+                !TryComp<FixturesComponent>(uid, out var manager) ||
+                HasComp<MapGridComponent>(uid)) return;
 
-            var worldRot = EntityManager.GetComponent<TransformComponent>(uid).WorldRotation;
+            var worldRot = Transform(uid).WorldRotation;
 
             SynchronizeFixtures(component, args.NewPosition.ToMapPos(EntityManager), (float) worldRot.Theta, manager);
         }
 
         private void OnRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
         {
-            if (!component.CanCollide) return;
+            if (!component.CanCollide ||
+                HasComp<MapGridComponent>(uid)) return;
 
-            var xform = EntityManager.GetComponent<TransformComponent>(uid);
+            var xform = Transform(uid);
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
             DebugTools.Assert(xform.LocalRotation.Equals(args.NewRotation));
 

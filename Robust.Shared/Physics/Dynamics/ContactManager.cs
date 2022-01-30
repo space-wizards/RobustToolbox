@@ -107,16 +107,14 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         /// <summary>
-        ///     Go through the cached broadphase movement and update contacts.
+        /// Try to create a contact between these 2 fixtures.
         /// </summary>
-        internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
+        /// <param name="fixtureA"></param>
+        /// <param name="indexA"></param>
+        /// <param name="fixtureB"></param>
+        /// <param name="indexB"></param>
+        internal void AddPair(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
         {
-            Fixture fixtureA = proxyA.Fixture;
-            Fixture fixtureB = proxyB.Fixture;
-
-            var indexA = proxyA.ChildIndex;
-            var indexB = proxyB.ChildIndex;
-
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
 
@@ -155,20 +153,8 @@ namespace Robust.Shared.Physics.Dynamics
             if (!bodyB.ShouldCollide(bodyA))
                 return;
 
-            //FPE feature: BeforeCollision delegate
-            /*
-            if (fixtureA.BeforeCollision != null && fixtureA.BeforeCollision(fixtureA, fixtureB) == false)
-                return;
-
-            if (fixtureB.BeforeCollision != null && fixtureB.BeforeCollision(fixtureB, fixtureA) == false)
-                return;
-            */
-
             // Call the factory.
             Contact c = Contact.Create(this, fixtureA, indexA, fixtureB, indexB);
-
-            // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
-            if (c == null) return;
 
             // Contact creation may swap fixtures.
             fixtureA = c.FixtureA!;
@@ -208,6 +194,14 @@ namespace Robust.Shared.Physics.Dynamics
                 bodyB.ContactEdges.Previous = c.NodeB;
             }
             bodyB.ContactEdges = c.NodeB;
+        }
+
+        /// <summary>
+        ///     Go through the cached broadphase movement and update contacts.
+        /// </summary>
+        internal void AddPair(in FixtureProxy proxyA, in FixtureProxy proxyB)
+        {
+            AddPair(proxyA.Fixture, proxyA.ChildIndex, proxyB.Fixture, proxyB.ChildIndex);
         }
 
         internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)

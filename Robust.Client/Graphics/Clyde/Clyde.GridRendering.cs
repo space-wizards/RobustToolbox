@@ -214,7 +214,7 @@ namespace Robust.Client.Graphics.Clyde
             _mapChunkData.Remove(gridId);
         }
 
-        private class MapChunkData
+        private sealed class MapChunkData
         {
             public bool Dirty;
             public readonly uint VAO;

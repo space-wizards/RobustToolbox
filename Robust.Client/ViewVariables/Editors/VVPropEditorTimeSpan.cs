@@ -4,7 +4,7 @@ using Robust.Client.UserInterface.Controls;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorTimeSpan : VVPropEditor
+    public sealed class VVPropEditorTimeSpan : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

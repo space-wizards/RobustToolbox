@@ -20,7 +20,7 @@ using static Robust.Client.ViewVariables.Editors.VVPropEditorNumeric;
 
 namespace Robust.Client.ViewVariables
 {
-    internal class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
+    internal sealed class ViewVariablesManager : ViewVariablesManagerShared, IViewVariablesManagerInternal
     {
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IRobustSerializer _robustSerializer = default!;
@@ -408,6 +408,7 @@ namespace Robust.Client.ViewVariables
         }
     }
 
+    [Virtual]
     public class SessionDenyException : Exception
     {
         public SessionDenyException(MsgViewVariablesDenySession.DenyReason reason)

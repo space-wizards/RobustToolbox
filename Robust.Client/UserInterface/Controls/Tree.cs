@@ -6,6 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class Tree : Control
     {
         public const string StylePropertyItemBoxSelected = "item-selected";

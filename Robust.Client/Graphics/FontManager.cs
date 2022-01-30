@@ -219,7 +219,7 @@ namespace Robust.Client.Graphics
             return bitmapImage;
         }
 
-        private class FontFaceHandle : IFontFaceHandle
+        private sealed class FontFaceHandle : IFontFaceHandle
         {
             public Face Face { get; }
 
@@ -230,7 +230,7 @@ namespace Robust.Client.Graphics
         }
 
         [PublicAPI]
-        private class FontInstanceHandle : IFontInstanceHandle
+        private sealed class FontInstanceHandle : IFontInstanceHandle
         {
             public FontFaceHandle FaceHandle { get; }
             public int Size { get; }
@@ -325,7 +325,7 @@ namespace Robust.Client.Graphics
             }
         }
 
-        private class ScaledFontData
+        private sealed class ScaledFontData
         {
             public ScaledFontData(int ascent, int descent, int height, int lineHeight)
             {

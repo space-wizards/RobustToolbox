@@ -192,7 +192,7 @@ namespace Robust.Client.Graphics
         }
 
         [DataDefinition]
-        public class StencilData
+        public sealed class StencilData
         {
             [DataField("ref")] public int StencilRef;
 

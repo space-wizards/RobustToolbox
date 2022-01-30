@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Map
 {
-    internal class ClientMapManager : MapManager, IClientMapManager
+    internal sealed class ClientMapManager : MapManager, IClientMapManager
     {
         public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
         {

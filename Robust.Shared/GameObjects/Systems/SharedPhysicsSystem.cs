@@ -205,18 +205,25 @@ namespace Robust.Shared.GameObjects
                 return;
 
             _joints.ClearJoints(physicsComponent);
+
+            // So if the map is being deleted it detaches all of its bodies to null soooo we have this fun check.
+
             var oldMapId = message.OldMapId;
             if (oldMapId != MapId.Nullspace)
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(oldMapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveBody(physicsComponent);
+                var oldMapEnt = MapManager.GetMapEntityId(oldMapId);
+
+                if (MetaData(oldMapEnt).EntityLifeStage < EntityLifeStage.Terminating)
+                {
+                    EntityManager.GetComponent<SharedPhysicsMapComponent>(oldMapEnt).RemoveBody(physicsComponent);
+                }
             }
 
-            var newMapId = EntityManager.GetComponent<TransformComponent>(message.Entity).MapID;
+            var newMapId = Transform(message.Entity).MapID;
+
             if (newMapId != MapId.Nullspace)
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(newMapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
+                EntityManager.GetComponent<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(newMapId)).AddBody(physicsComponent);
             }
         }
 

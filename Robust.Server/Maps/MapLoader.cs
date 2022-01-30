@@ -770,6 +770,7 @@ namespace Robust.Server.Maps
             private void WriteEntitySection()
             {
                 var serializationManager = IoCManager.Resolve<ISerializationManager>();
+                var compFactory = IoCManager.Resolve<IComponentFactory>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -782,7 +783,9 @@ namespace Robust.Server.Maps
                         {"uid", EntityUidMap[entity].ToString(CultureInfo.InvariantCulture)}
                     };
 
-                    if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype is {} prototype)
+                    var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
+
+                    if (md.EntityPrototype is {} prototype)
                     {
                         mapping.Add("type", prototype.ID);
                         if (!prototypeCompCache.ContainsKey(prototype.ID))
@@ -796,17 +799,19 @@ namespace Robust.Server.Maps
                     }
 
                     var components = new YamlSequenceNode();
+
                     // See engine#636 for why the Distinct() call.
                     foreach (var component in _serverEntityManager.GetComponents(entity))
                     {
                         if (component is MapSaveIdComponent)
                             continue;
 
-                        CurrentWritingComponent = component.Name;
-                        var compMapping = serializationManager.WriteValueAs<MappingDataNode>(component.GetType(), component, context: this);
+                        var compType = component.GetType();
+                        var compName = compFactory.GetComponentName(compType);
+                        CurrentWritingComponent = compName;
+                        var compMapping = serializationManager.WriteValueAs<MappingDataNode>(compType, component, context: this);
 
-                        var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
-                        if (md.EntityPrototype != null && prototypeCompCache[md.EntityPrototype.ID].TryGetValue(component.Name, out var protMapping))
+                        if (md.EntityPrototype != null && prototypeCompCache[md.EntityPrototype.ID].TryGetValue(compName, out var protMapping))
                         {
                             compMapping = compMapping.Except(protMapping);
                             if(compMapping == null) continue;
@@ -815,7 +820,7 @@ namespace Robust.Server.Maps
                         // Don't need to write it if nothing was written!
                         if (compMapping.Children.Count != 0)
                         {
-                            compMapping.Add("type", new ValueDataNode(component.Name));
+                            compMapping.Add("type", new ValueDataNode(compName));
                             // Something actually got written!
                             components.Add(compMapping.ToYamlNode());
                         }

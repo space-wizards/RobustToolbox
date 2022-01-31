@@ -176,12 +176,12 @@ namespace Robust.Shared.GameObjects
 
             var endPoint = ray.Position + ray.Direction * maxLength;
             var worldBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint), Vector2.ComponentMax(ray.Position, endPoint));
+            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
-                var transform = EntityManager.GetComponent<TransformComponent>(comp.Owner);
-                var matrix = transform.InvWorldMatrix;
-                var treeRot = transform.WorldRotation;
+                var transform = xforms.GetComponent(comp.Owner);
+                var (_, treeRot, matrix) = transform.GetWorldPositionRotationInvMatrix();
 
                 var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
 

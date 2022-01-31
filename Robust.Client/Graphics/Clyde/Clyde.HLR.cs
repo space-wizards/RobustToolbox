@@ -372,22 +372,24 @@ namespace Robust.Client.Graphics.Clyde
         private void ProcessSpriteEntities(MapId map, Matrix3 eyeMatrix, Box2Rotated worldBounds,
             RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> list)
         {
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Matrix3 matrix, Angle worldRot, float yWorldPos)> state,
                     in SpriteComponent value) =>
                 {
                     var entity = value.Owner;
-                    var transform = _entityManager.GetComponent<TransformComponent>(entity);
+                    var transform = xforms.GetComponent(entity);
 
                     ref var entry = ref state.AllocAdd();
                     entry.sprite = value;
-                    entry.worldRot = transform.WorldRotation;
-                    entry.matrix = transform.WorldMatrix;
-                    var eyePos = eyeMatrix.Transform(new Vector2(entry.matrix.R0C2, entry.matrix.R1C2));
+                    Vector2 worldPos;
+                    (worldPos, entry.worldRot, entry.matrix) = transform.GetWorldPositionRotationMatrix();
+                    var eyePos = eyeMatrix.Transform(worldPos);
                     // Didn't use the bounds from the query as that has to be re-calculated (and is probably more expensive than this).
                     var bounds = value.CalculateBoundingBox(eyePos);
                     entry.yWorldPos = eyePos.Y - bounds.Extents.Y;

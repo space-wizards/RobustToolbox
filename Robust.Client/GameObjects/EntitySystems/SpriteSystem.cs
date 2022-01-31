@@ -53,9 +53,11 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
+            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+
             foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var bounds = EntityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
 
                 comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
                 {

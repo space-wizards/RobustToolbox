@@ -184,80 +184,6 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        public static bool IsInSameOrNoContainer(this EntityUid user, EntityUid other)
-        {
-            var isUserContained = TryGetContainer(user, out var userContainer);
-            var isOtherContained = TryGetContainer(other, out var otherContainer);
-
-            // Both entities are not in a container
-            if (!isUserContained && !isOtherContained) return true;
-
-            // Both entities are in different contained states
-            if (isUserContained != isOtherContained) return false;
-
-            // Both entities are in the same container
-            return userContainer == otherContainer;
-        }
-
-        public static bool IsInSameOrParentContainer(this EntityUid user, EntityUid other)
-        {
-            var isUserContained = TryGetContainer(user, out var userContainer);
-            var isOtherContained = TryGetContainer(other, out var otherContainer);
-
-            // Both entities are not in a container
-            if (!isUserContained && !isOtherContained) return true;
-
-            // One contains the other
-            if (userContainer?.Owner == other || otherContainer?.Owner == user) return true;
-
-            // Both entities are in different contained states
-            if (isUserContained != isOtherContained) return false;
-
-            // Both entities are in the same container
-            return userContainer == otherContainer;
-        }
-
-        /// <summary>
-        ///     Check whether a given entity can see another entity despite whatever containers they may be in.
-        /// </summary>
-        /// <remarks>
-        ///     This is effectively a variant of <see cref="IsInSameOrParentContainer"/> that also checks whether the
-        ///     containers are transparent. Additionally, an entity can "see" the entity that contains it, but unless
-        ///     otherwise specified the containing entity cannot see into itself. For example, a human in a locker can
-        ///     see the locker and other items in that locker, but the human cannot see their own organs.  Note that
-        ///     this means that the two entity arguments are NOT interchangeable.
-        /// </remarks>
-        public static bool IsInSameOrTransparentContainer(this EntityUid user, EntityUid other, bool userSeeInsideSelf = false)
-        {
-            DebugTools.AssertNotNull(user);
-            DebugTools.AssertNotNull(other);
-
-            TryGetContainer(user, out IContainer? userContainer);
-            TryGetContainer(other, out IContainer? otherContainer);
-
-            // Are both entities in the same container (or none)?
-            if (userContainer == otherContainer) return true;
-
-            // Is the user contained in the other entity?
-            if (userContainer?.Owner == other) return true;
-
-            // Does the user contain the other and can they see through themselves?
-            if (userSeeInsideSelf && otherContainer?.Owner == user) return true;
-
-            // Next we check for see-through containers. This uses some recursion, but it should be fine unless people
-            // start spawning in glass matryoshka dolls.
-
-            // Is the user in a see-through container?
-            if (userContainer?.ShowContents ?? false)
-                return IsInSameOrTransparentContainer(userContainer.Owner, other);
-
-            // Is the other entity in a see-through container?
-            if (otherContainer?.ShowContents ?? false)
-                return IsInSameOrTransparentContainer(user, otherContainer.Owner);
-
-            return false;
-        }
-
         /// <summary>
         /// Shortcut method to make creation of containers easier.
         /// Creates a new container on the entity and gives it back to you.
@@ -275,21 +201,6 @@ namespace Robust.Shared.Containers
                 containermanager = entMan.AddComponent<ContainerManagerComponent>(entity);
 
             return containermanager.MakeContainer<T>(containerId);
-        }
-
-        /// <summary>
-        /// Shortcut method to make creation of containers easier.
-        /// Creates a new container on the entity and gives it back to you.
-        /// </summary>
-        /// <param name="entity">The entity to create the container for.</param>
-        /// <param name="containerId"></param>
-        /// <returns>The new container.</returns>
-        /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
-        /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
-        public static T CreateContainer<T>(IEntityManager entityManager, EntityUid uid, string containerId)
-            where T : IContainer
-        {
-            return entityManager.EnsureComponent<ContainerManagerComponent>(uid).MakeContainer<T>(containerId);
         }
 
         public static T EnsureContainer<T>(this EntityUid entity, string containerId)

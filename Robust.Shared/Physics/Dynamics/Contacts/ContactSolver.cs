@@ -175,7 +175,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 for (var j = 0; j < pointCount; ++j)
                 {
-                    var contactPoint = manifold.Points[j];
+                    ref var contactPoint = ref manifold.Points[j];
                     ref var constraintPoint = ref velocityConstraint.Points[j];
 
                     if (_warmStarting)

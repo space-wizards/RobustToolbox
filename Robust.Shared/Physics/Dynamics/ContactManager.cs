@@ -104,7 +104,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         private int ContactPoolInitialSize = 64;
 
-        private ObjectPool<Contact> _contactPool = new DefaultObjectPool<Contact>(new ContactPoolPolicy(), 256);
+        private ObjectPool<Contact> _contactPool = new DefaultObjectPool<Contact>(new ContactPoolPolicy(), 1024);
 
         internal LinkedList<Contact> _activeContacts = new();
 
@@ -306,6 +306,15 @@ namespace Robust.Shared.Physics.Dynamics
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA));
             }
 
+            if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
+            {
+                if (bodyA.CanCollide)
+                    contact.FixtureA.Body.Awake = true;
+
+                if (bodyB.CanCollide)
+                    contact.FixtureB.Body.Awake = true;
+            }
+
             // Remove from the world
             DebugTools.Assert(contact.MapNode != null);
             _activeContacts.Remove(contact.MapNode!);
@@ -323,15 +332,6 @@ namespace Robust.Shared.Physics.Dynamics
             fixtureB.Contacts.Remove(fixtureA);
             bodyB.Contacts.Remove(contact.BodyBNode!);
             contact.BodyBNode = null;
-
-            if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
-            {
-                if (bodyA.CanCollide)
-                    contact.FixtureA.Body.Awake = true;
-
-                if (bodyB.CanCollide)
-                    contact.FixtureB.Body.Awake = true;
-            }
 
             // Insert into the pool.
             _contactPool.Return(contact);

@@ -277,8 +277,12 @@ namespace Robust.Shared.Physics.Dynamics
 
             DebugTools.Assert(_islandSet.Count == 0);
 
-            foreach (var contact in ContactManager._activeContacts)
+            var contactNode = ContactManager._activeContacts.First;
+
+            while (contactNode != null)
             {
+                var contact = contactNode.Value;
+                contactNode = contactNode.Next;
                 contact.IslandFlag = false;
             }
 

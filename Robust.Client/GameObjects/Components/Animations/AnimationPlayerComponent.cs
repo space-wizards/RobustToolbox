@@ -13,8 +13,6 @@ namespace Robust.Client.GameObjects
     {
         // TODO: Give this component a friend someday. Way too much content shit to change atm ._.
 
-        public override string Name => "AnimationPlayer";
-
         public int PlayingAnimationCount => PlayingAnimations.Count;
 
         internal readonly Dictionary<string, AnimationPlayback> PlayingAnimations

@@ -1493,30 +1493,6 @@ namespace Robust.Client.GameObjects
             LayerDatums = thestate.Layers;
         }
 
-        private RSI.State.Direction GetDir(RSI.State.DirectionType rsiDirectionType, Angle worldRotation)
-        {
-            var dir = rsiDirectionType switch
-            {
-                RSI.State.DirectionType.Dir1 => Direction.South,
-                RSI.State.DirectionType.Dir4 => worldRotation.GetCardinalDir(),
-                RSI.State.DirectionType.Dir8 => worldRotation.GetDir(),
-                _ => throw new ArgumentException($"Unknown RSI DirectionType: {rsiDirectionType}.", nameof(rsiDirectionType))
-            };
-
-            return dir switch
-            {
-                Direction.North => RSI.State.Direction.North,
-                Direction.South => RSI.State.Direction.South,
-                Direction.East => RSI.State.Direction.East,
-                Direction.West => RSI.State.Direction.West,
-                Direction.SouthEast => RSI.State.Direction.SouthEast,
-                Direction.SouthWest => RSI.State.Direction.SouthWest,
-                Direction.NorthEast => RSI.State.Direction.NorthEast,
-                Direction.NorthWest => RSI.State.Direction.NorthWest,
-                _ => throw new ArgumentOutOfRangeException(nameof(dir), dir, null)
-            };
-        }
-
         private void QueueUpdateIsInert()
         {
             // Look this was an easy way to get bounds checks for layer updates.
@@ -1566,58 +1542,13 @@ namespace Robust.Client.GameObjects
             return rsi["error"];
         }
 
-        private static RSI.State.Direction OffsetRsiDir(RSI.State.Direction dir, DirectionOffset offset)
-        {
-            // There is probably a better way to do this.
-            // Eh.
-            switch (offset)
-            {
-                case DirectionOffset.None:
-                    return dir;
-                case DirectionOffset.Clockwise:
-                    return dir switch
-                    {
-                        RSI.State.Direction.North => RSI.State.Direction.East,
-                        RSI.State.Direction.East => RSI.State.Direction.South,
-                        RSI.State.Direction.South => RSI.State.Direction.West,
-                        RSI.State.Direction.West => RSI.State.Direction.North,
-                        _ => throw new NotImplementedException()
-                    };
-                case DirectionOffset.CounterClockwise:
-                    return dir switch
-                    {
-                        RSI.State.Direction.North => RSI.State.Direction.West,
-                        RSI.State.Direction.East => RSI.State.Direction.North,
-                        RSI.State.Direction.South => RSI.State.Direction.East,
-                        RSI.State.Direction.West => RSI.State.Direction.South,
-                        _ => throw new NotImplementedException()
-                    };
-                case DirectionOffset.Flip:
-                    switch (dir)
-                    {
-                        case RSI.State.Direction.North:
-                            return RSI.State.Direction.South;
-                        case RSI.State.Direction.East:
-                            return RSI.State.Direction.West;
-                        case RSI.State.Direction.South:
-                            return RSI.State.Direction.North;
-                        case RSI.State.Direction.West:
-                            return RSI.State.Direction.East;
-                        default:
-                            throw new NotImplementedException();
-                    }
-                default:
-                    throw new NotImplementedException();
-            }
-        }
-
         public string GetDebugString()
         {
             var builder = new StringBuilder();
             builder.AppendFormat(
                 "vis/depth/scl/rot/ofs/col/norot/override/dir: {0}/{1}/{2}/{3}/{4}/{5}/{6}/{8}/{7}\n",
                 Visible, DrawDepth, Scale, Rotation, Offset,
-                Color, NoRotation, GetDir(RSI.State.DirectionType.Dir8, entities.GetComponent<TransformComponent>(Owner).WorldRotation),
+                Color, NoRotation, entities.GetComponent<TransformComponent>(Owner).WorldRotation.ToRsiDirection(RSI.State.DirectionType.Dir8),
                 DirectionOverride
             );
 
@@ -1860,10 +1791,10 @@ namespace Robust.Client.GameObjects
                     }
                     else
                     {
-                        dir = _parent.GetDir(state.Directions, worldRotation);
+                        dir = worldRotation.ToRsiDirection(state.Directions);
                     }
 
-                    return OffsetRsiDir(dir, DirOffset);
+                    return dir.OffsetRsiDir(DirOffset);
                 }
             }
 

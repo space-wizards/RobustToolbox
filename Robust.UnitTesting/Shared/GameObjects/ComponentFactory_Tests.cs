@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
@@ -108,9 +108,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.True(componentFactory.TryGetRegistration(LowercaseTestComponentName, out _, true));
         }
 
+        [ComponentProtoName(TestComponentName)]
         private class TestComponent : Component
         {
-            public override string Name => TestComponentName;
         }
     }
 }

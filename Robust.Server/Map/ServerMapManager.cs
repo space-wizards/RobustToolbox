@@ -109,7 +109,8 @@ namespace Robust.Server.Map
                 var gridDatum = new GameStateMapData.GridDatum(
                         chunkData.ToArray(),
                         deletedChunkData.ToArray(),
-                        new MapCoordinates(grid.WorldPosition, grid.ParentMapId));
+                        new MapCoordinates(grid.WorldPosition, grid.ParentMapId),
+                        grid.WorldRotation);
 
                 gridDatums.Add(grid.Index, gridDatum);
             }

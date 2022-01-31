@@ -215,9 +215,16 @@ namespace Robust.Client.Graphics.Audio
             _openALSawmill.Info($"Set audio attenuation to {attToString.ToString()}");
         }
 
-        public IClydeAudioSource CreateAudioSource(AudioStream stream)
+        public IClydeAudioSource? CreateAudioSource(AudioStream stream)
         {
             var source = AL.GenSource();
+
+            if (!AL.IsSource(source))
+            {
+                _openALSawmill.Error("Failed to generate source. Too many simultaneous audio streams?");
+                return null;
+            }
+            
             // ReSharper disable once PossibleInvalidOperationException
             // TODO: This really shouldn't be indexing based on the ClydeHandle...
             AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value.Value].BufferHandle);

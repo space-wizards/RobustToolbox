@@ -56,6 +56,7 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("id")]
         public string ID { get; set; } = string.Empty;
 
+        [ViewVariables]
         [field: NonSerialized]
         public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();
 

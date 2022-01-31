@@ -164,8 +164,6 @@ namespace Robust.UnitTesting.Shared.Map
 
         private static IMapGridInternal MapGridFactory(GridId id)
         {
-            var entMan = (ServerEntityManager)IoCManager.Resolve<IEntityManager>();
-
             var mapId = new MapId(5);
             var mapMan = IoCManager.Resolve<IMapManager>();
 

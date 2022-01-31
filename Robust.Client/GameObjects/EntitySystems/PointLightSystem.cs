@@ -8,6 +8,7 @@ namespace Robust.Client.GameObjects
     public sealed class PointLightSystem : SharedPointLightSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
+        [Dependency] private readonly RenderingTreeSystem _renderingTreeSystem = default!;
 
         public override void Initialize()
         {
@@ -19,16 +20,14 @@ namespace Robust.Client.GameObjects
         private void HandleInit(EntityUid uid, PointLightComponent component, ComponentInit args)
         {
             UpdateMask(component);
+            RaiseLocalEvent(uid, new PointLightUpdateEvent());
         }
 
         private void HandleRemove(EntityUid uid, PointLightComponent component, ComponentRemove args)
         {
-            var map = EntityManager.GetComponent<TransformComponent>(uid).MapID;
-            // TODO: Just make this update the tree directly and not allocate
-            if (map != MapId.Nullspace)
+            if (Transform(uid).MapID != MapId.Nullspace)
             {
-                EntityManager.EventBus.RaiseEvent(EventSource.Local,
-                    new RenderTreeRemoveLightEvent(component, map));
+                _renderingTreeSystem.ClearLight(component);
             }
         }
 

@@ -92,9 +92,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 .NewSimulation()
                 .RegisterComponents(factory =>
                 {
-                    factory.RegisterClass<OrderComponentA>();
-                    factory.RegisterClass<OrderComponentB>();
-                    factory.RegisterClass<OrderComponentC>();
+                    factory.RegisterClass<OrderAComponent>();
+                    factory.RegisterClass<OrderBComponent>();
+                    factory.RegisterClass<OrderCComponent>();
                 })
                 .RegisterEntitySystems(factory =>
                 {
@@ -108,9 +108,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             simulation.AddMap(map);
 
             var entity = simulation.SpawnEntity(null, new MapCoordinates(0, 0, map));
-            IoCManager.Resolve<IEntityManager>().AddComponent<OrderComponentA>(entity);
-            IoCManager.Resolve<IEntityManager>().AddComponent<OrderComponentB>(entity);
-            IoCManager.Resolve<IEntityManager>().AddComponent<OrderComponentC>(entity);
+            IoCManager.Resolve<IEntityManager>().AddComponent<OrderAComponent>(entity);
+            IoCManager.Resolve<IEntityManager>().AddComponent<OrderBComponent>(entity);
+            IoCManager.Resolve<IEntityManager>().AddComponent<OrderCComponent>(entity);
 
             // Act.
             var testEvent = new TestStructEvent {TestNumber = 5};
@@ -128,10 +128,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 base.Initialize();
 
-                SubscribeLocalEvent<OrderComponentA, TestStructEvent>(OnA, new[]{typeof(OrderBSystem)}, new[]{typeof(OrderCSystem)});
+                SubscribeLocalEvent<OrderAComponent, TestStructEvent>(OnA, new[]{typeof(OrderBSystem)}, new[]{typeof(OrderCSystem)});
             }
 
-            private void OnA(EntityUid uid, OrderComponentA component, ref TestStructEvent args)
+            private void OnA(EntityUid uid, OrderAComponent component, ref TestStructEvent args)
             {
                 // Second handler being ran.
                 Assert.That(args.TestNumber, Is.EqualTo(0));
@@ -146,10 +146,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 base.Initialize();
 
-                SubscribeLocalEvent<OrderComponentB, TestStructEvent>(OnB, null, new []{typeof(OrderASystem)});
+                SubscribeLocalEvent<OrderBComponent, TestStructEvent>(OnB, null, new []{typeof(OrderASystem)});
             }
 
-            private void OnB(EntityUid uid, OrderComponentB component, ref TestStructEvent args)
+            private void OnB(EntityUid uid, OrderBComponent component, ref TestStructEvent args)
             {
                 // Last handler being ran.
                 Assert.That(args.TestNumber, Is.EqualTo(10));
@@ -164,10 +164,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             {
                 base.Initialize();
 
-                SubscribeLocalEvent<OrderComponentC, TestStructEvent>(OnC);
+                SubscribeLocalEvent<OrderCComponent, TestStructEvent>(OnC);
             }
 
-            private void OnC(EntityUid uid, OrderComponentC component, ref TestStructEvent args)
+            private void OnC(EntityUid uid, OrderCComponent component, ref TestStructEvent args)
             {
                 // First handler being ran.
                 Assert.That(args.TestNumber, Is.EqualTo(5));
@@ -177,7 +177,6 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
         private class DummyTwoComponent : Component
         {
-            public override string Name => "DummyTwo";
         }
 
         [ByRefEvent]

@@ -17,18 +17,8 @@ namespace Robust.Shared.GameObjects
     public abstract class Component : IComponent
     {
         /// <inheritdoc />
-        [ViewVariables]
-        public virtual string Name
-        {
-            get
-            {
-                if (Attribute.GetCustomAttribute(GetType(), typeof(ComponentProtoNameAttribute)) is ComponentProtoNameAttribute attribute)
-                    return attribute.PrototypeName;
-
-                // Legacy code requires all components have a name, even though this should not be required.
-                throw new InvalidOperationException($"{GetType().FullName} does not have a defined Data Name.");
-            }
-        }
+        [ViewVariables(VVAccess.ReadOnly)]
+        public virtual string Name => IoCManager.Resolve<IComponentFactory>().GetComponentName(GetType());
 
         /// <inheritdoc />
         [ViewVariables]
@@ -38,10 +28,6 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         [ViewVariables]
         public EntityUid Owner { get; set; } = EntityUid.Invalid;
-
-        /// <inheritdoc />
-        [ViewVariables]
-        public bool Paused => !IoCManager.Resolve<IEntityManager>().TryGetComponent(Owner, out MetaDataComponent? metaData) || metaData.EntityPaused;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -165,7 +151,7 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [ViewVariables]
-        public GameTick LastModifiedTick { get; private set; }
+        public GameTick LastModifiedTick { get; internal set; }
 
         private static readonly ComponentAdd CompAddInstance = new();
         private static readonly ComponentInit CompInitInstance = new();
@@ -238,17 +224,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Dirty(IEntityManager? entManager = null)
         {
-            // Deserialization will cause this to be true.
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (!Owner.IsValid() || LifeStage >= ComponentLifeStage.Removing)
-                return;
-
-            if (!NetSyncEnabled)
-                return;
-
             IoCManager.Resolve(ref entManager);
-            entManager.DirtyEntity(Owner);
-            LastModifiedTick = entManager.CurrentTick;
+            entManager.Dirty(this);
         }
 
         /// <summary>

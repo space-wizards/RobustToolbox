@@ -82,6 +82,7 @@ namespace Robust.Shared.GameObjects
         {
             IoCManager.InjectDependencies(component);
             component.BroadphaseSystem = _broadphaseSystem;
+            component._physics = this;
             component.ContactManager = new();
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;

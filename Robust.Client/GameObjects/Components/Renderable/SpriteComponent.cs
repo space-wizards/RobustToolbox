@@ -31,6 +31,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
         [Dependency] private readonly IEntityManager entities = default!;
+        [Dependency] private readonly IEyeManager eyeManager = default!;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -1621,15 +1622,16 @@ namespace Robust.Client.GameObjects
             return builder.ToString();
         }
 
-        /// <inheritdoc/>
-        public Box2 CalculateBoundingBox(Matrix3 worldMatrix)
+        /// <summary>
+        ///     Calculate sprite bounding box in local coordinates. Note that this only includes the visible part of sprites. This also does not include the sprite's overall scale, rotation and offset.
+        /// </summary>
+        public Box2 CalculateLocalBoundingBox()
         {
-            // Given if the thing is upside down the offset is inverse we need to do a matrix transform
-            var worldPos = new Vector2(worldMatrix.R0C2, worldMatrix.R1C2);
-
             // fast check for empty sprites
-            if (Layers.Count == 0)
-                return new Box2(worldPos, worldPos);
+            if (!Visible || Layers.Count == 0)
+            {
+                return new Box2(0, 0, 0, 0);
+            }
 
             // we need to calculate bounding box taking into account all nested layers
             // because layers can have offsets, scale or rotation we need to calculate a new BB
@@ -1639,22 +1641,34 @@ namespace Robust.Client.GameObjects
             for (int i = 1; i < Layers.Count; i++)
             {
                 var layer = Layers[i];
+                if (!layer.Visible) continue;
                 var layerBB = layer.CalculateBoundingBox();
 
                 box = box.Union(layerBB);
             }
 
-            // apply sprite transformations and calculate sprite bounding box
-            // we can optimize it a bit, if sprite doesn't have rotation
-            var spriteBox = box.Scale(Scale);
-            var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
-            var spriteBB = spriteHasRotation ?
-                new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+            return box;
+        }
 
-            // move it all to world transform system (with sprite offset)
-            var worldBB = spriteBB.Translated(worldMatrix.Transform(Offset));
+        /// <inheritdoc/>
+        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
+        {
+            var localBB = CalculateLocalBoundingBox().Scale(Scale);
 
-            return worldBB;
+            Angle finalRotation;
+            Vector2 finalPosition = worldRotation.RotateVec(Offset) + worldPosition;
+
+            if (NoRotation)
+            {
+                eye ??= eyeManager.CurrentEye;
+                finalRotation = Rotation - eye.Rotation;
+            }
+            else
+            {
+                finalRotation = Rotation + worldRotation;
+            }
+
+            return new Box2Rotated(localBB.Translated(finalPosition), finalRotation, finalPosition);
         }
 
         internal void UpdateBounds()

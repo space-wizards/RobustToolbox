@@ -479,6 +479,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> GameDeleteEmptyGrids =
             CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
 
+        /// <summary>
+        /// Automatically pause simulation if there are no players connected to the game server.
+        /// </summary>
+        public static readonly CVarDef<bool> GameAutoPauseEmpty =
+            CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
+
         /*
          * LOG
          */

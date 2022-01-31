@@ -14,9 +14,6 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
-        /// <inheritdoc />
-        public override string Name => "Eye";
-
         [ViewVariables]
         private Eye? _eye = default!;
 

@@ -69,6 +69,29 @@ namespace Robust.Client.ViewVariables
                 return;
             }
 
+            // Client side entity system.
+            if (valArg.StartsWith("CE"))
+            {
+                valArg = valArg.Substring(2);
+                var reflection = IoCManager.Resolve<IReflectionManager>();
+
+                if (!reflection.TryLooseGetType(valArg, out var type))
+                {
+                    shell.WriteLine("Unable to find that type.");
+                    return;
+                }
+
+                vvm.OpenVV(IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem(type));
+            }
+
+            if (valArg.StartsWith("SE"))
+            {
+                // Server-side Entity system selector.
+                var selector = new ViewVariablesEntitySystemSelector(valArg.Substring(2));
+                vvm.OpenVV(selector);
+                return;
+            }
+
             if (valArg.StartsWith("guihover"))
             {
                 // UI element.

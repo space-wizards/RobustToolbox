@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -95,8 +95,6 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     [RegisterComponent]
     public class TestComponent : Component
     {
-        public override string Name => "Test";
-
         [DataField("testType")] public ITestType? TestType { get; set; }
     }
 }

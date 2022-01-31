@@ -29,12 +29,9 @@ namespace Robust.Server.GameObjects
             RegisterClass<ServerUserInterfaceComponent>();
             RegisterClass<TimerComponent>();
             RegisterClass<MapSaveIdComponent>();
-
-#if DEBUG
             RegisterClass<DebugExceptionOnAddComponent>();
             RegisterClass<DebugExceptionInitializeComponent>();
             RegisterClass<DebugExceptionStartupComponent>();
-#endif
         }
     }
 }

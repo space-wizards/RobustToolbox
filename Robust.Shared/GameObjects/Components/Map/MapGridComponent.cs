@@ -35,9 +35,6 @@ namespace Robust.Shared.GameObjects
         private GridId _gridIndex = GridId.Invalid;
 
         /// <inheritdoc />
-        public override string Name => "MapGrid";
-
-        /// <inheritdoc />
         public GridId GridIndex
         {
             get => _gridIndex;

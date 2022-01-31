@@ -151,7 +151,7 @@ namespace Robust.Shared.GameObjects
                 if (!t.Initialized)
                 {
                     DebugTools.Assert(
-                        $"Component {t.Name} was not initialized at the end of {nameof(InitializeComponents)}.");
+                        $"Component {t.GetType()} was not initialized at the end of {nameof(InitializeComponents)}.");
                 }
             }
 
@@ -249,7 +249,7 @@ namespace Robust.Shared.GameObjects
                 netSet.Add(netId, component);
 
                 // mark the component as dirty for networking
-                component.Dirty();
+                Dirty(component);
             }
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
@@ -440,7 +440,7 @@ namespace Robust.Shared.GameObjects
                 else
                     netSet.Remove(reg.NetID.Value);
 
-                DirtyEntity(entityUid);
+                Dirty(entityUid);
             }
 
             foreach (var refType in reg.References)
@@ -972,11 +972,26 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<IComponent> GetAllComponents(Type type, bool includePaused = false)
         {
             var comps = _entTraitDict[type];
-            foreach (var comp in comps.Values)
-            {
-                if (comp.Deleted || !includePaused && comp.Paused) continue;
 
-                yield return comp;
+            if (includePaused)
+            {
+                foreach (var comp in comps.Values)
+                {
+                    if (comp.Deleted) continue;
+
+                    yield return comp;
+                }
+            }
+            else
+            {
+                var metaQuery = GetEntityQuery<MetaDataComponent>();
+
+                foreach (var comp in comps.Values)
+                {
+                    if (comp.Deleted || !metaQuery.TryGetComponent(comp.Owner, out var meta) || meta.EntityPaused) continue;
+
+                    yield return comp;
+                }
             }
         }
 
@@ -1076,6 +1091,11 @@ namespace Robust.Shared.GameObjects
 
             component = default;
             return false;
+        }
+
+        public bool HasComponent(EntityUid uid)
+        {
+            return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
         }
     }
 }

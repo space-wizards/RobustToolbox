@@ -367,7 +367,7 @@ namespace Robust.Client.Graphics.Clyde
             uiProjmatrix.R0C2 = view.Size.X / 2f;
             uiProjmatrix.R1C2 = view.Size.Y / 2f;
 
-            var matrix = _currentMatrixView * uiProjmatrix;
+            var matrix = viewMatrix * uiProjmatrix;
 
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {

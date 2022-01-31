@@ -270,6 +270,8 @@ namespace Robust.Shared.Physics.Dynamics
             // Contact creation may swap fixtures.
             fixtureA = contact.FixtureA!;
             fixtureB = contact.FixtureB!;
+            bodyA = fixtureA.Body;
+            bodyB = fixtureB.Body;
 
             // Insert into world
             contact.MapNode = _activeContacts.AddLast(contact);

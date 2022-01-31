@@ -252,19 +252,18 @@ namespace Robust.Client.GameObjects
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, EntityQuery<TransformComponent> xforms)
         {
+            var lookups = EntityManager.GetEntityQuery<RenderingTreeComponent>();
+
             if (!EntityManager.EntityExists(entity) ||
                 !xforms.TryGetComponent(entity, out var xform) ||
                 xform.MapID == MapId.Nullspace ||
-                EntityManager.HasComponent<RenderingTreeComponent>(entity)) return null;
+                lookups.HasComponent(entity)) return null;
 
             var parent = xform.ParentUid;
 
-            while (true)
+            while (parent.IsValid())
             {
-                if (!parent.IsValid())
-                    break;
-
-                if (EntityManager.TryGetComponent(parent, out RenderingTreeComponent? comp)) return comp;
+                if (lookups.TryGetComponent(parent, out var comp)) return comp;
                 parent = xforms.GetComponent(parent).ParentUid;
             }
 

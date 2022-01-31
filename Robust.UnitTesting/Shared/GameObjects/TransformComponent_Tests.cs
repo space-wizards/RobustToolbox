@@ -38,6 +38,10 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(worldPos, Is.EqualTo(xform1.WorldPosition));
             Assert.That(worldRot, Is.EqualTo(xform1.WorldRotation));
             Assert.That(worldMatrix, Is.EqualTo(xform1.WorldMatrix));
+
+            var (_, _, invWorldMatrix) = xform1.GetWorldPositionRotationInvMatrix();
+
+            Assert.That(invWorldMatrix, Is.EqualTo(xform1.InvWorldMatrix));
         }
     }
 }

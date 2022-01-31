@@ -272,15 +272,17 @@ namespace Robust.Shared.Physics.Dynamics
             fixtureB = contact.FixtureB!;
 
             // Insert into world
-            contact.Node = _activeContacts.AddLast(contact);
+            contact.MapNode = _activeContacts.AddLast(contact);
 
             // Connect to body A
             DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Add(fixtureB, contact);
+            contact.BodyANode = bodyA.Contacts.AddLast(contact);
 
             // Connect to body B
             DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Add(fixtureA, contact);
+            contact.BodyBNode = bodyB.Contacts.AddLast(contact);
         }
 
         internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
@@ -303,17 +305,22 @@ namespace Robust.Shared.Physics.Dynamics
             }
 
             // Remove from the world
-            DebugTools.Assert(contact.Node != null);
-            _activeContacts.Remove(contact.Node!);
-            contact.Node = null;
+            DebugTools.Assert(contact.MapNode != null);
+            _activeContacts.Remove(contact.MapNode!);
+            contact.MapNode = null;
 
             // Remove from body 1
             DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
             fixtureA.Contacts.Remove(fixtureB);
+            DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
+            bodyA.Contacts.Remove(contact.BodyANode!);
+            contact.BodyANode = null;
 
             // Remove from body 2
             DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
             fixtureB.Contacts.Remove(fixtureA);
+            bodyB.Contacts.Remove(contact.BodyBNode!);
+            contact.BodyBNode = null;
 
             if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
             {
@@ -338,10 +345,10 @@ namespace Robust.Shared.Physics.Dynamics
             // Can be changed while enumerating
             // TODO: check for null instead?
             // Work out which contacts are still valid before we decide to update manifolds.
-            for (var node = _activeContacts.First; node != _activeContacts.Last;)
-            {
-                if (node == null) break;
+            var node = _activeContacts.First;
 
+            while (node != null)
+            {
                 var contact = node.Value;
 
                 Fixture fixtureA = contact.FixtureA!;
@@ -542,16 +549,14 @@ namespace Robust.Shared.Physics.Dynamics
             Span<Vector2> points = stackalloc Vector2[2];
 
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
-            for (var node = _activeContacts.First; node != _activeContacts.Last; node = node.Next)
+            var node = _activeContacts.First;
+
+            while (node != null)
             {
-                if (node == null) break;
-
                 var contact = node.Value;
+                node = node.Next;
 
-                if (contact is not {IsTouching: true, Enabled: true})
-                {
-                    continue;
-                }
+                if (contact is not {IsTouching: true, Enabled: true}) continue;
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;

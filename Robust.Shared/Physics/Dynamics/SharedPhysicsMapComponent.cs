@@ -337,9 +337,12 @@ namespace Robust.Shared.Physics.Dynamics
                     // As static bodies can never be awake (unlike Farseer) we'll set this after the check.
                     body.ForceAwake();
 
-                    for (var contactEdge = body.ContactEdges; contactEdge != null; contactEdge = contactEdge.Next)
+                    var node = body.Contacts.First;
+
+                    while (node != null)
                     {
-                        var contact = contactEdge.Contact!;
+                        var contact = node.Value;
+                        node = node.Next;
 
                         // Has this contact already been added to an island?
                         if (contact.IslandFlag) continue;
@@ -352,8 +355,10 @@ namespace Robust.Shared.Physics.Dynamics
 
                         _islandContacts.Add(contact);
                         contact.IslandFlag = true;
+                        var bodyA = contact.FixtureA!.Body;
+                        var bodyB = contact.FixtureB!.Body;
 
-                        var other = contactEdge.Other!;
+                        var other = bodyA == body ? bodyB : bodyA;
 
                         // Was the other body already added to this island?
                         if (other.Island) continue;

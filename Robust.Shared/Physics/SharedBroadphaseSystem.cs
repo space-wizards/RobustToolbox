@@ -391,29 +391,16 @@ namespace Robust.Shared.Physics
 
         public void RegenerateContacts(PhysicsComponent body)
         {
-            var edge = body.ContactEdges;
-
             // TODO: PhysicsMap actually needs to be made nullable (or needs a re-design to not be on the body).
             // Eventually it'll be a component on the map so nullspace won't have one anyway and we need to handle that scenario.
             // Technically it is nullable coz of networking (previously it got away with being able to ignore it
             // but anchoring can touch BodyType in HandleComponentState so we need to handle this here).
             if (body.PhysicsMap != null)
             {
-                var contactManager = body.PhysicsMap.ContactManager;
-
-                while (edge != null)
-                {
-                    var ce0 = edge;
-                    edge = edge.Next;
-                    contactManager.Destroy(ce0.Contact!);
-                }
-            }
-            else
-            {
-                DebugTools.Assert(body.ContactEdges == null);
+                body.DestroyContacts();
             }
 
-            body.ContactEdges = null;
+            DebugTools.Assert(body.Contacts.Count == 0);
 
             var broadphase = body.Broadphase;
 
@@ -435,11 +422,12 @@ namespace Robust.Shared.Physics
 
             var body = fixture.Body;
 
-            var edge = body.ContactEdges;
+            var node = body.Contacts.First;
 
-            while (edge != null)
+            while (node != null)
             {
-                var contact = edge.Contact!;
+                var contact = node.Value;
+                node = node.Next;
                 var fixtureA = contact.FixtureA;
                 var fixtureB = contact.FixtureB;
 
@@ -447,8 +435,6 @@ namespace Robust.Shared.Physics
                 {
                     contact.FilterFlag = true;
                 }
-
-                edge = edge.Next;
             }
 
             var broadphase = body.Broadphase;

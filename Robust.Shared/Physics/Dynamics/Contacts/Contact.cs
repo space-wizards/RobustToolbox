@@ -44,7 +44,23 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         internal SharedDebugPhysicsSystem _debugPhysics = default!;
 #endif
 
-        public LinkedListNode<Contact>? Node = null;
+        // Store these nodes so we can do fast removals when required, rather than having to iterate every node
+        // trying to find it.
+
+        /// <summary>
+        /// The node of this contact on the map.
+        /// </summary>
+        public LinkedListNode<Contact>? MapNode = null;
+
+        /// <summary>
+        /// The node of this contact on body A.
+        /// </summary>
+        public LinkedListNode<Contact>? BodyANode = null;
+
+        /// <summary>
+        /// The node of this contact on body A.
+        /// </summary>
+        public LinkedListNode<Contact>? BodyBNode = null;
 
         public Fixture? FixtureA;
         public Fixture? FixtureB;

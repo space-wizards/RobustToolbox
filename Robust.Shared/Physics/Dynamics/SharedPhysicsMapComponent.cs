@@ -277,9 +277,9 @@ namespace Robust.Shared.Physics.Dynamics
 
             DebugTools.Assert(_islandSet.Count == 0);
 
-            for (Contact? c = ContactManager.ContactList.Next; c != ContactManager.ContactList; c = c.Next)
+            foreach (var contact in ContactManager._activeContacts)
             {
-                c!.IslandFlag = false;
+                contact.IslandFlag = false;
             }
 
             // Build and simulated islands from awake bodies.

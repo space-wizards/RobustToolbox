@@ -1622,15 +1622,13 @@ namespace Robust.Client.GameObjects
             return builder.ToString();
         }
 
-        /// <summary>
-        ///     Calculate sprite bounding box in local coordinates. Note that this only includes the visible part of sprites. This also does not include the sprite's overall scale, rotation and offset.
-        /// </summary>
-        public Box2 CalculateLocalBoundingBox()
+        /// <inheritdoc/>
+        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
         {
             // fast check for empty sprites
             if (!Visible || Layers.Count == 0)
             {
-                return new Box2(0, 0, 0, 0);
+                return new Box2Rotated(new Box2(worldPosition, worldPosition));
             }
 
             // we need to calculate bounding box taking into account all nested layers
@@ -1647,17 +1645,11 @@ namespace Robust.Client.GameObjects
                 box = box.Union(layerBB);
             }
 
-            return box;
-        }
+            if (Scale != Vector2.One)
+                box = box.Scale(Scale);
 
-        /// <inheritdoc/>
-        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
-        {
-            var localBB = CalculateLocalBoundingBox().Scale(Scale);
-
+            Vector2 position = worldRotation.RotateVec(Offset) + worldPosition;
             Angle finalRotation;
-            Vector2 finalPosition = worldRotation.RotateVec(Offset) + worldPosition;
-
             if (NoRotation)
             {
                 eye ??= eyeManager.CurrentEye;
@@ -1668,7 +1660,11 @@ namespace Robust.Client.GameObjects
                 finalRotation = Rotation + worldRotation;
             }
 
-            return new Box2Rotated(localBB.Translated(finalPosition), finalRotation, finalPosition);
+            // I think there might be a problem here when you have directional-sprites with unique bounding boxes, where
+            // maaaaybe the final rotation requires a CalcRectWorldAngle(). But currently, I don't even know if a sprite
+            // like this exists anywhere for testing.
+
+            return new Box2Rotated(box.Translated(position), finalRotation, position);
         }
 
         internal void UpdateBounds()

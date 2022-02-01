@@ -61,22 +61,20 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public float Radius
         {
-            get => PhysicsConstants.PolygonRadius;
-            set
-            {
-                // TODO Dump these for free savings.
-                throw new InvalidOperationException();
-            }
+            get => _radius;
+            set => _radius = PhysicsConstants.PolygonRadius;
         }
+
+        private float _radius = PhysicsConstants.PolygonRadius;
 
         /// <summary>
         ///     Create a 1-sided edge.
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        public EdgeShape(Vector2 start, Vector2 end)
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        public EdgeShape(Vector2 v1, Vector2 v2)
         {
-            SetTwoSided(start, end);
+            SetTwoSided(v1, v2);
         }
 
         public void SetOneSided(Vector2 v0, Vector2 v1, Vector2 v2, Vector2 v3)

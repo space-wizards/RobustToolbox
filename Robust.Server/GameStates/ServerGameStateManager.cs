@@ -127,7 +127,7 @@ namespace Robust.Server.GameStates
             // people not in the game don't get states
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
-            const int BatchSize = 4;
+            const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
 
             Parallel.For(0, batches, i =>

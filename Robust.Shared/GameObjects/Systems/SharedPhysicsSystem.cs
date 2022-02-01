@@ -321,8 +321,7 @@ namespace Robust.Shared.GameObjects
             {
                 comp.ProcessQueue();
             }
-
-            _broadphaseSystem.Cleanup();
+            
             _physicsManager.ClearTransforms();
         }
 

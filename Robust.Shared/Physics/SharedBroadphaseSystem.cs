@@ -40,7 +40,6 @@ namespace Robust.Shared.Physics
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
-        private Dictionary<EntityUid, Matrix3> _broadInvMatrices = new(8);
 
         /// <summary>
         /// How much to expand bounds by to check cross-broadphase collisions.
@@ -95,8 +94,6 @@ namespace Robust.Shared.Physics
         /// </summary>
         public void ProcessUpdates()
         {
-            _broadInvMatrices.Clear();
-
             // Unfortunately we can't re-use our broadphase transforms as controllers may update them.
             _physicsManager.ClearTransforms();
         }
@@ -292,12 +289,6 @@ namespace Robust.Shared.Physics
         }
 
         #endregion
-
-        internal void Cleanup()
-        {
-            // Can't just clear movebuffer / movedgrids here because this is called after transforms update.
-            _broadInvMatrices.Clear();
-        }
 
         private void OnParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
         {

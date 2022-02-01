@@ -292,7 +292,7 @@ namespace Robust.Shared.GameObjects
             foreach (var component in InSafeOrder(_entCompIndex[uid]))
             {
                 if(component.Running)
-                    component.LifeShutdown();
+                    component.LifeShutdown(this);
             }
 
             // map does not have a parent node, everything else needs to be detached

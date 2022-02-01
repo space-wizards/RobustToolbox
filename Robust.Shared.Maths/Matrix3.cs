@@ -430,7 +430,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
         {
-            // return a matrix functionally equivalent to returning CreateScale(scale) * CreateRotation(angle) * CreateTranslation(posX, posY) 
+            // returns a matrix that is equivalent to returning CreateScale(scale) * CreateRotation(angle) * CreateTranslation(posX, posY) 
 
             var (sin, cos) = MathF.SinCos(angle);
 
@@ -449,7 +449,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 CreateInverseTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
         {
-            // return a matrix functionally equivalent to returning  CreateTranslation(-posX, -posY) * CreateRotation(-angle) * CreateScale(1/scaleX, 1/scaleY) 
+            // returns a matrix that is equivalent to returning CreateTranslation(-posX, -posY) * CreateRotation(-angle) * CreateScale(1/scaleX, 1/scaleY) 
 
             var (sin, cos) = MathF.SinCos(angle);
 

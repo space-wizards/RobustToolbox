@@ -693,7 +693,7 @@ namespace Robust.Shared.GameObjects
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
-            // --> Actually also called pre-entity-delete and when moved outside of PVS range.
+            // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
             MapIdChanged(oldMapId);
             Dirty();

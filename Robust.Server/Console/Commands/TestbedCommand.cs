@@ -124,7 +124,7 @@ namespace Robust.Server.Console.Commands
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var horizontal = new EdgeShape(new Vector2(20, 0), new Vector2(-20, 0));
+            var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
             {
                 CollisionLayer = 2,
@@ -136,7 +136,7 @@ namespace Robust.Server.Console.Commands
 
             broadphase.CreateFixture(ground, horizontalFixture);
 
-            var vertical = new EdgeShape(new Vector2(10, 0), new Vector2(10, 10));
+            var vertical = new EdgeShape(new Vector2(20, 0), new Vector2(20, 20));
             var verticalFixture = new Fixture(ground, vertical)
             {
                 CollisionLayer = 2,
@@ -162,7 +162,7 @@ namespace Robust.Server.Console.Commands
                     var x = 0.0f;
 
                     var boxUid = entityManager.SpawnEntity(null,
-                        new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                        new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                     var box = entityManager.AddComponent<PhysicsComponent>(boxUid);
 
                     box.BodyType = BodyType.Dynamic;
@@ -176,7 +176,8 @@ namespace Robust.Server.Console.Commands
                         CollisionMask = 2,
                         CollisionLayer = 2,
                         Hard = true,
-                        Mass = 5.0f,
+                        Mass = 1.0f,
+                        Friction = 0.3f,
                     };
 
                     broadphase.CreateFixture(box, fixture);

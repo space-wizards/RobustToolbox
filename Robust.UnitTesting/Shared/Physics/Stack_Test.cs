@@ -135,12 +135,12 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 EntityUid tempQualifier = bodies[0].Owner;
-                Assert.That(firstPos != entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition);
+                Assert.That(firstPos, Is.Not.EqualTo(entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition));
             });
 
             // Assert
 
-            await server.WaitRunTicks(150);
+            await server.WaitRunTicks(300);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>
@@ -154,7 +154,8 @@ namespace Robust.UnitTesting.Shared.Physics
 
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
-                        Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.1f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
+                        Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.2f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
+                        Assert.That(!body.Awake);
                     }
                 }
             });
@@ -220,7 +221,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         var x = 0.0f;
 
                         EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
-                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
+                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
                         var circle = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
 
                         circle.LinearDamping = 0.05f;
@@ -255,7 +256,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
             // Assert
 
-            await server.WaitRunTicks(200);
+            await server.WaitRunTicks(300);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>
@@ -272,6 +273,7 @@ namespace Robust.UnitTesting.Shared.Physics
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
                         Assert.That(worldPos.EqualsApproxPercent(new Vector2(0.0f, expectedY), 0.1f), $"Expected y-value of {expectedY} but found {worldPos.Y}");
+                        Assert.That(!body.Awake);
                     }
                 }
             });

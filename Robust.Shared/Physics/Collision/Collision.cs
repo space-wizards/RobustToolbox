@@ -353,6 +353,7 @@ namespace Robust.Shared.Physics.Collision
 		        tempPolyNorms[i] = Transform.Mul(xf.Quaternion2D, polygonB.Normals[i]);
 	        }
 
+            DebugTools.Assert(tempPolyVerts.Length == tempPolyCount);
 	        float radius = polygonB.Radius + edgeA.Radius;
 
 	        EPAxis edgeAxis = ComputeEdgeSeparation(tempPolyVerts, v1, normal1);
@@ -437,7 +438,7 @@ namespace Robust.Shared.Physics.Collision
 	        }
 
 	        Span<ClipVertex> clipPoints = stackalloc ClipVertex[2];
-	        ReferenceFace refFace = new();
+            ReferenceFace refFace;
 
 	        if (primaryAxis.Type == EPAxisType.EdgeA)
 	        {

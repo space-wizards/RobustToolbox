@@ -122,15 +122,39 @@ namespace Robust.Server.GameStates
             var mainThread = Thread.CurrentThread;
             var parentDeps = IoCManager.Instance!;
 
+            _pvs.ProcessCollections();
+
+            // people not in the game don't get states
+            var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
+
+            const int BatchSize = 4;
+            var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
+
+            Parallel.For(0, batches, i =>
+            {
+                var start = i * BatchSize;
+                var end = Math.Min(start + BatchSize, players.Length);
+
+                for (var j = start; j < end; ++j)
+                {
+                    var session = players[j];
+
+                    try
+                    {
+                        SendStateUpdate(session);
+                    }
+                    catch (Exception e) // Catch EVERY exception
+                    {
+                        _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                    }
+                }
+            });
+
             void SendStateUpdate(IPlayerSession session)
             {
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
                     IoCManager.InitThread(new DependencyCollection(parentDeps), true);
-
-                // people not in the game don't get states
-                if (session.Status != SessionStatus.InGame)
-                    return;
 
                 var channel = session.ConnectedClient;
 
@@ -171,20 +195,6 @@ namespace Robust.Server.GameStates
 
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
-
-            _pvs.ProcessCollections();
-
-            Parallel.ForEach(_playerManager.ServerSessions, session =>
-            {
-                try
-                {
-                    SendStateUpdate(session);
-                }
-                catch (Exception e) // Catch EVERY exception
-                {
-                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
-                }
-            });
 
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);

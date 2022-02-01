@@ -44,7 +44,8 @@ namespace Robust.Client.Graphics.Clyde
             // Cache currently bound framebuffers
             // so if somebody creates a framebuffer while drawing it won't ruin everything.
             // Note that this means _currentBoundRenderTarget goes temporarily out of sync here
-            var boundDrawBuffer = GL.GetInteger(GetPName.DrawFramebufferBinding);
+            var boundDrawBuffer = GL.GetInteger(
+                _isGLES2 ? GetPName.FramebufferBinding : GetPName.DrawFramebufferBinding);
             var boundReadBuffer = 0;
             if (_hasGLReadFramebuffer)
             {
@@ -102,18 +103,29 @@ namespace Robust.Client.Graphics.Clyde
 
                 // Make sure to specify the correct pixel type and formats even if we're not uploading any data.
                 // Not doing this (just sending red/byte) is fine on desktop GL but illegal on ES.
+                // @formatter:off
                 var (internalFormat, pixFormat, pixType) = colorFormat switch
                 {
-                    // using block comments to force formatters to not fuck this up.
-                    RTCF.Rgba8 => /*       */(PIF.Rgba8, /*       */PF.Rgba, /**/PT.UnsignedByte),
-                    RTCF.Rgba16F => /*     */(PIF.Rgba16f, /*     */PF.Rgba, /**/PT.Float),
-                    RTCF.Rgba8Srgb => /*   */(PIF.Srgb8Alpha8, /* */PF.Rgba, /**/PT.UnsignedByte),
-                    RTCF.R11FG11FB10F => /**/(PIF.R11fG11fB10f, /**/PF.Rgb, /* */PT.Float),
-                    RTCF.R32F => /*        */(PIF.R32f, /*        */PF.Red, /* */PT.Float),
-                    RTCF.RG32F => /*       */(PIF.Rg32f, /*       */PF.Rg, /*  */PT.Float),
-                    RTCF.R8 => /*          */(PIF.R8, /*          */PF.Red, /* */PT.UnsignedByte),
+                    RTCF.Rgba8 =>        (PIF.Rgba8,        PF.Rgba, PT.UnsignedByte),
+                    RTCF.Rgba16F =>      (PIF.Rgba16f,      PF.Rgba, PT.Float),
+                    RTCF.Rgba8Srgb =>    (PIF.Srgb8Alpha8,  PF.Rgba, PT.UnsignedByte),
+                    RTCF.R11FG11FB10F => (PIF.R11fG11fB10f, PF.Rgb,  PT.Float),
+                    RTCF.R32F =>         (PIF.R32f,         PF.Red,  PT.Float),
+                    RTCF.RG32F =>        (PIF.Rg32f,        PF.Rg,   PT.Float),
+                    RTCF.R8 =>           (PIF.R8,           PF.Red,  PT.UnsignedByte),
                     _ => throw new ArgumentOutOfRangeException(nameof(format.ColorFormat), format.ColorFormat, null)
                 };
+                // @formatter:on
+
+                if (_isGLES2)
+                {
+                    (internalFormat, pixFormat, pixType) = colorFormat switch
+                    {
+                        RTCF.Rgba8 => (PIF.Rgba,      PF.Rgba,      PT.UnsignedByte),
+                        RTCF.R8 =>    (PIF.Rgba,      PF.Rgba,      PT.UnsignedByte),
+                        _ => throw new ArgumentOutOfRangeException(nameof(format.ColorFormat), format.ColorFormat, null)
+                    };
+                }
 
                 estPixSize += EstPixelSize(internalFormat);
 
@@ -169,7 +181,9 @@ namespace Robust.Client.Graphics.Clyde
                 $"new framebuffer has bad status {status}");
 
             // Re-bind previous framebuffers (thus _currentBoundRenderTarget is back in sync)
-            GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, boundDrawBuffer);
+            GL.BindFramebuffer(
+                _isGLES2 ? FramebufferTarget.Framebuffer : FramebufferTarget.DrawFramebuffer,
+                boundDrawBuffer);
             CheckGlError();
             if (_hasGLReadFramebuffer)
             {

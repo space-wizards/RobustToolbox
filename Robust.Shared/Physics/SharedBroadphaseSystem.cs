@@ -269,7 +269,8 @@ namespace Robust.Shared.Physics
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't
                     // moving locally but are moving in world-terms.
-                    if (proxyA.Fixture.Hard && other.Fixture.Hard)
+                    if (proxyA.Fixture.Hard && other.Fixture.Hard &&
+                        (_gridMoveBuffer.ContainsKey(proxyA) || _gridMoveBuffer.ContainsKey(other)))
                     {
                         proxyABody.WakeBody();
                         otherBody.WakeBody();

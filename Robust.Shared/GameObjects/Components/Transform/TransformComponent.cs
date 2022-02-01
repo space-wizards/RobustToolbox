@@ -854,7 +854,7 @@ namespace Robust.Shared.GameObjects
                 worldMatrix = result;
 
                 var parentInvMatrix = xform.GetLocalMatrixInv();
-                Matrix3.Multiply(ref invMatrix, ref parentInvMatrix, out var invResult);
+                Matrix3.Multiply(ref parentInvMatrix, ref invMatrix, out var invResult);
                 invMatrix = invResult;
 
                 parent = xform.ParentUid;

@@ -95,7 +95,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             Vertex1 = start;
             Vertex2 = end;
-            OneSided = true;
+            OneSided = false;
         }
 
         public bool Equals(IPhysShape? other)

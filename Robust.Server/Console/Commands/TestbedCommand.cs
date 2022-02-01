@@ -259,7 +259,7 @@ namespace Robust.Server.Console.Commands
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
+            var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
             {
                 CollisionLayer = 2,

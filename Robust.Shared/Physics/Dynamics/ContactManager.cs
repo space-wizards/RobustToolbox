@@ -30,7 +30,6 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
@@ -520,6 +519,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status)
         {
+            var wake = ArrayPool<bool>.Shared.Rent(count);
+
             if (count > _contactMultithreadThreshold * _contactMinimumThreads)
             {
                 var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMultithreadThreshold);
@@ -528,21 +529,37 @@ namespace Robust.Shared.Physics.Dynamics
                 {
                     var start = i * batchSize;
                     var end = Math.Min(start + batchSize, count);
-                    UpdateContacts(contacts, start, end, status);
+                    UpdateContacts(contacts, start, end, status, wake);
                 });
 
             }
             else
             {
-                UpdateContacts(contacts, 0, count, status);
+                UpdateContacts(contacts, 0, count, status, wake);
             }
+
+            // Can't do this during UpdateContacts due to IoC threading issues.
+            for (var i = 0; i < count; i++)
+            {
+                var shouldWake = wake[i];
+                if (!shouldWake) continue;
+
+                var contact = contacts[i];
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
+
+                bodyA.Awake = true;
+                bodyB.Awake = true;
+            }
+
+            ArrayPool<bool>.Shared.Return(wake);
         }
 
-        private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status)
+        private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake)
         {
             for (var i = start; i < end; i++)
             {
-                status[i] = contacts[i].Update(_physicsManager);
+                status[i] = contacts[i].Update(_physicsManager, out wake[i]);
             }
         }
 

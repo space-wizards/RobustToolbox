@@ -140,8 +140,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
+        /// <param name="wake">Whether we should wake the bodies due to touching changing.</param>
         /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
-        internal ContactStatus Update(IPhysicsManager physicsManager)
+        internal ContactStatus Update(IPhysicsManager physicsManager, out bool wake)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -154,6 +155,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             bool touching;
             var wasTouching = IsTouching;
 
+            wake = false;
             var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
             var bodyATransform = physicsManager.GetTransform(bodyA);
@@ -200,8 +202,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 if (touching != wasTouching)
                 {
-                    bodyA.Awake = true;
-                    bodyB.Awake = true;
+                    wake = true;
                 }
             }
 

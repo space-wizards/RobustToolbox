@@ -169,36 +169,46 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
+            var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
+            var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var toUpdate in _updateQueue)
             {
-                if (EntityManager.Deleted(toUpdate))
-                {
+                if (Deleted(toUpdate))
                     continue;
-                }
 
-                UpdateEntityRecursively(toUpdate);
+                UpdateEntityRecursively(toUpdate, xformQuery, pointQuery, spriteQuery);
             }
 
             _updateQueue.Clear();
         }
 
-        private void UpdateEntityRecursively(EntityUid entity)
+        private void UpdateEntityRecursively(
+            EntityUid entity,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SpriteComponent> spriteQuery)
         {
             // TODO: Since we are recursing down,
             // we could cache ShowContents data here to speed it up for children.
             // Am lazy though.
-            UpdateEntity(entity);
+            UpdateEntity(entity, pointQuery, spriteQuery);
 
-            foreach (var child in EntityManager.GetComponent<TransformComponent>(entity).Children)
+            var childEnumerator = xformQuery.GetComponent(entity).ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
             {
-                UpdateEntityRecursively(child.Owner);
+                UpdateEntityRecursively(child.Value, xformQuery, pointQuery, spriteQuery);
             }
         }
 
-        private void UpdateEntity(EntityUid entity)
+        private void UpdateEntity(
+            EntityUid entity,
+            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SpriteComponent> spriteQuery)
         {
-            if (EntityManager.TryGetComponent(entity, out SpriteComponent? sprite))
+            if (spriteQuery.TryGetComponent(entity, out var sprite))
             {
                 sprite.ContainerOccluded = false;
 
@@ -216,7 +226,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            if (EntityManager.TryGetComponent(entity, out PointLightComponent? light))
+            if (pointQuery.TryGetComponent(entity, out var light))
             {
                 light.ContainerOccluded = false;
 

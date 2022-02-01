@@ -62,8 +62,9 @@ namespace Robust.Shared.GameObjects
 
             _mapIndex = state.MapId;
             LightingEnabled = state.LightingEnabled;
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
 
-            _entMan.GetComponent<TransformComponent>(Owner).ChangeMapId(_mapIndex);
+            xformQuery.GetComponent(Owner).ChangeMapId(_mapIndex, xformQuery);
         }
     }
 

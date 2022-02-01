@@ -91,10 +91,19 @@ namespace Robust.Shared.Map
             else if (_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId))
             {
                 var mapEnt = mapEntId;
+                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                var mapXform = xformQuery.GetComponent(mapEnt);
+                // At least pre-allocate a little bit
+                var children = new List<EntityUid>(mapXform.ChildCount);
 
-                foreach (var childTransform in _entityManager.GetComponent<TransformComponent>(mapEnt).Children.ToArray())
+                while (mapXform.ChildEnumerator.MoveNext(out var child))
                 {
-                    _entityManager.DeleteEntity(childTransform.Owner);
+                    children.Add(child.Value);
+                }
+
+                foreach (var child in children)
+                {
+                    _entityManager.DeleteEntity(child);
                 }
             }
 

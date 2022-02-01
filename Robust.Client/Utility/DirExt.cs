@@ -1,6 +1,7 @@
 ﻿using System;
 using Robust.Client.Graphics;
 using Robust.Shared.Maths;
+using static Robust.Client.GameObjects.SpriteComponent;
 using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 
 namespace Robust.Client.Utility
@@ -108,6 +109,64 @@ namespace Robust.Client.Utility
         public static Direction TurnCcw(this Direction dir)
         {
             return (Direction)(((int)dir + 1) % 8);
+        }
+
+        public static RSIDirection ToRsiDirection(this Angle angle, RSI.State.DirectionType type)
+        {
+            return type switch
+            {
+                RSI.State.DirectionType.Dir1 => RSIDirection.South,
+                RSI.State.DirectionType.Dir4 or RSI.State.DirectionType.Dir8 => angle.GetDir().Convert(type),
+                _ => throw new ArgumentOutOfRangeException($"Unknown rsi direction type: {type}.", nameof(type))
+            };
+        }
+
+        public static RSIDirection OffsetRsiDir(this RSIDirection dir, DirectionOffset offset)
+        {
+            // There is probably a better way to do this.
+            // Eh.
+            //
+            // Maybe convert RSI direction to a direction and use the much more elegant solution in `TurnCw()` functions?
+            // but that conversion would probably be slower than this, even though its a mess to read.
+            switch (offset)
+            {
+                case DirectionOffset.None:
+                    return dir;
+                case DirectionOffset.Clockwise:
+                    return dir switch
+                    {
+                        RSIDirection.North => RSIDirection.East,
+                        RSIDirection.East => RSIDirection.South,
+                        RSIDirection.South => RSIDirection.West,
+                        RSIDirection.West => RSIDirection.North,
+                        _ => throw new NotImplementedException()
+                    };
+                case DirectionOffset.CounterClockwise:
+                    return dir switch
+                    {
+                        RSIDirection.North => RSIDirection.West,
+                        RSIDirection.East => RSIDirection.North,
+                        RSIDirection.South => RSIDirection.East,
+                        RSIDirection.West => RSIDirection.South,
+                        _ => throw new NotImplementedException()
+                    };
+                case DirectionOffset.Flip:
+                    switch (dir)
+                    {
+                        case RSIDirection.North:
+                            return RSIDirection.South;
+                        case RSIDirection.East:
+                            return RSIDirection.West;
+                        case RSIDirection.South:
+                            return RSIDirection.North;
+                        case RSIDirection.West:
+                            return RSIDirection.East;
+                        default:
+                            throw new NotImplementedException();
+                    }
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }

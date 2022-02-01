@@ -693,6 +693,7 @@ namespace Robust.Shared.GameObjects
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
+            // --> Actually also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
             MapIdChanged(oldMapId);
             Dirty();
@@ -1001,21 +1002,10 @@ namespace Robust.Shared.GameObjects
             if (!_parent.IsValid()) // Root Node
                 pos = Vector2.Zero;
 
-            var rot = _localRotation.Theta;
+            var rot = (float) _localRotation.Theta;
 
-            var posMat = Matrix3.CreateTranslation(pos);
-            var rotMat = Matrix3.CreateRotation((float) rot);
-
-            Matrix3.Multiply(ref rotMat, ref posMat, out var transMat);
-
-            _localMatrix = transMat;
-
-            var posImat = Matrix3.Invert(posMat);
-            var rotImap = Matrix3.Invert(rotMat);
-
-            Matrix3.Multiply(ref posImat, ref rotImap, out var itransMat);
-
-            _invLocalMatrix = itransMat;
+            _localMatrix = Matrix3.CreateTransform(pos.X, pos.Y, rot);
+            _invLocalMatrix = Matrix3.CreateInverseTransform(pos.X, pos.Y, rot);
         }
 
         public string GetDebugString()

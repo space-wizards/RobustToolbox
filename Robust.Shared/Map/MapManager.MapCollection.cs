@@ -169,7 +169,7 @@ internal partial class MapManager
 
     public bool IsMap(EntityUid uid)
     {
-        return _mapEntities.Any(x => x.Value == uid);
+        return EntityManager.HasComponent<IMapComponent>(uid);
     }
 
     public MapId NextMapId()
@@ -252,9 +252,12 @@ internal partial class MapManager
             if (!_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId))
                 return;
 
-            foreach (var childTransform in EntityManager.GetComponent<TransformComponent>(mapEntId).Children.ToArray())
+            // Notice we do not clear off any added comps to the nullspace map entity, would it be better to just delete
+            // and recreate the entity, letting recursive entity deletion perform this foreach loop?
+
+            foreach (var childEuid in EntityManager.GetComponent<TransformComponent>(mapEntId).ChildEntities)
             {
-                EntityManager.DeleteEntity(childTransform.Owner);
+                EntityManager.DeleteEntity(childEuid);
             }
         }
     }

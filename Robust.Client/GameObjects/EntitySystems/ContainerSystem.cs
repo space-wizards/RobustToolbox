@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
             {
                 if (!cast.ContainerSet.Any(data => data.Id == id))
                 {
-                    container.EmptyContainer(true, EntityManager);
+                    container.EmptyContainer(true, entMan: EntityManager);
                     container.Shutdown();
                     toDelete ??= new List<string>();
                     toDelete.Add(id);

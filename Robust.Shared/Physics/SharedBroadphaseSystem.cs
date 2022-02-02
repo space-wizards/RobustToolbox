@@ -286,6 +286,8 @@ namespace Robust.Shared.Physics
             _queryBuffer.Clear();
         }
 
+        #endregion
+
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>

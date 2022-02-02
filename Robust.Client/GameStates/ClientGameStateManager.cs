@@ -213,7 +213,7 @@ namespace Robust.Client.GameStates
                     break;
                 }
 
-                // _sawmill.Debug("net", $"{IGameTiming.TickStampStatic}: applying state from={curState.FromSequence} to={curState.ToSequence} ext={curState.Extrapolated}");
+                // Logger.DebugS("net", $"{IGameTiming.TickStampStatic}: applying state from={curState.FromSequence} to={curState.ToSequence} ext={curState.Extrapolated}");
 
                 // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
                 // this won't run meaning it could potentially get stuck dirty.
@@ -350,7 +350,7 @@ namespace Robust.Client.GameStates
                 }
 
                 // Check log level first to avoid the string alloc.
-                if (_sawmill.Level <= LogLevel.Debug)
+                if (_sawmill.Level >= LogLevel.Debug)
                 {
                     _sawmill.Debug(CVars.NetPredict.Name, $"Entity {entity} was made dirty.");
                 }

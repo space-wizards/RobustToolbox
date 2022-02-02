@@ -295,7 +295,7 @@ namespace Robust.Shared.Physics
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
         /// <param name="body"></param>
-        public void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
             if (!Resolve(body.Owner, ref manager, ref xform)) return;
 

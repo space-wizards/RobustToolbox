@@ -350,9 +350,9 @@ namespace Robust.Client.GameStates
                 }
 
                 // Check log level first to avoid the string alloc.
-                if (_sawmill.Level >= LogLevel.Debug)
+                if (_sawmill.Level <= LogLevel.Debug)
                 {
-                    _sawmill.Debug(CVars.NetPredict.Name, $"Entity {entity} was made dirty.");
+                    _sawmill.Debug($"Entity {entity} was made dirty.");
                 }
 
                 if (!_processor.TryGetLastServerStates(entity, out var last))

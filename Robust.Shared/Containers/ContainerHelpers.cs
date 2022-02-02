@@ -90,9 +90,9 @@ namespace Robust.Shared.Containers
                 wasInContainer = true;
 
                 if (!force)
-                    return container.Remove(entity);
+                    return container.Remove(entity, entMan);
 
-                container.ForceRemove(entity);
+                container.ForceRemove(entity, entMan);
                 return true;
             }
 
@@ -162,7 +162,7 @@ namespace Robust.Shared.Containers
         private static bool TryInsertIntoContainer(this TransformComponent transform, IContainer container, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
-            if (container.Insert(transform.Owner)) return true;
+            if (container.Insert(transform.Owner, entMan)) return true;
 
             if (entMan.GetComponent<TransformComponent>(container.Owner).Parent != null
                 && TryGetContainer(container.Owner, out var newContainer, entMan))

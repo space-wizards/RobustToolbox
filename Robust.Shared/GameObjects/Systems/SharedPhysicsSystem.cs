@@ -101,10 +101,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            if (LifeStage(uid) != EntityLifeStage.MapInitialized)
+            if (LifeStage(uid) != EntityLifeStage.MapInitialized || !TryComp(uid, out TransformComponent? xform))
                 return;
-
-            var xform = Transform(uid);
 
             if (body.CanCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
@@ -123,7 +121,7 @@ namespace Robust.Shared.GameObjects
             R.Transpose(out var nRT);
             nRT.Multiply(-1f);
 
-            if (args.OldParent is {} oldParent && EntityManager.TryGetComponent(oldParent, out PhysicsComponent? oldBody))
+            if (args.OldParent is {Valid: true} oldParent && EntityManager.TryGetComponent(oldParent, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 

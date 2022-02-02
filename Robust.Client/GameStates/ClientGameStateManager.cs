@@ -60,6 +60,8 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
 #endif
 
+        private ISawmill _sawmill = default!;
+
         /// <inheritdoc />
         public int MinBufferSize => _processor.MinBufferSize;
 
@@ -87,6 +89,7 @@ namespace Robust.Client.GameStates
         /// <inheritdoc />
         public void Initialize()
         {
+            _sawmill = Logger.GetSawmill(CVars.NetPredict.Name);
             _processor = new GameStateProcessor(_timing);
 
             _network.RegisterNetMessage<MsgState>(HandleStateMessage);
@@ -144,7 +147,7 @@ namespace Robust.Client.GameStates
             _pendingInputs.Enqueue(message);
 
             _inputManager.NetworkBindMap.TryGetKeyFunction(message.InputFunctionId, out var boundFunc);
-            Logger.DebugS(CVars.NetPredict.Name,
+            _sawmill.Debug(
                 $"CL> SENT tick={_timing.CurTick}, sub={_timing.TickFraction}, seq={_nextInputCmdSeq}, func={boundFunc.FunctionName}, state={message.State}");
             _nextInputCmdSeq++;
         }
@@ -210,7 +213,7 @@ namespace Robust.Client.GameStates
                     break;
                 }
 
-                // Logger.DebugS("net", $"{IGameTiming.TickStampStatic}: applying state from={curState.FromSequence} to={curState.ToSequence} ext={curState.Extrapolated}");
+                // _sawmill.Debug("net", $"{IGameTiming.TickStampStatic}: applying state from={curState.FromSequence} to={curState.ToSequence} ext={curState.Extrapolated}");
 
                 // TODO: If Predicting gets disabled *while* the world state is dirty from a prediction,
                 // this won't run meaning it could potentially get stuck dirty.
@@ -238,7 +241,7 @@ namespace Robust.Client.GameStates
 
                 if (_lastProcessedSeq < curState.LastProcessedInput)
                 {
-                    Logger.DebugS(CVars.NetPredict.Name, $"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
+                    _sawmill.Debug($"SV> RCV  tick={_timing.CurTick}, seq={_lastProcessedSeq}");
                     _lastProcessedSeq = curState.LastProcessedInput;
                 }
             }
@@ -257,8 +260,7 @@ namespace Robust.Client.GameStates
                 var inCmd = _pendingInputs.Dequeue();
 
                 _inputManager.NetworkBindMap.TryGetKeyFunction(inCmd.InputFunctionId, out var boundFunc);
-                Logger.DebugS(CVars.NetPredict.Name,
-                    $"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
+                _sawmill.Debug($"SV>     seq={inCmd.InputSequence}, func={boundFunc.FunctionName}, state={inCmd.State}");
             }
 
             while (_pendingSystemMessages.Count > 0 && _pendingSystemMessages.Peek().sequence <= _lastProcessedSeq)
@@ -274,7 +276,7 @@ namespace Robust.Client.GameStates
 
                 if (_pendingInputs.Count > 0)
                 {
-                    Logger.DebugS(CVars.NetPredict.Name,  "CL> Predicted:");
+                    _sawmill.Debug("CL> Predicted:");
                 }
 
                 var pendingInputEnumerator = _pendingInputs.GetEnumerator();
@@ -299,7 +301,7 @@ namespace Robust.Client.GameStates
 
                         _inputManager.NetworkBindMap.TryGetKeyFunction(inputCmd.InputFunctionId, out var boundFunc);
 
-                        Logger.DebugS(CVars.NetPredict.Name,
+                        _sawmill.Debug(
                             $"    seq={inputCmd.InputSequence}, sub={inputCmd.SubTick}, dTick={tick}, func={boundFunc.FunctionName}, " +
                             $"state={inputCmd.State}");
 
@@ -347,7 +349,11 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                Logger.DebugS(CVars.NetPredict.Name, $"Entity {entity} was made dirty.");
+                // Check log level first to avoid the string alloc.
+                if (_sawmill.Level <= LogLevel.Debug)
+                {
+                    _sawmill.Debug(CVars.NetPredict.Name, $"Entity {entity} was made dirty.");
+                }
 
                 if (!_processor.TryGetLastServerStates(entity, out var last))
                 {
@@ -365,7 +371,7 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    Logger.DebugS(CVars.NetPredict.Name, $"  And also its component {comp.GetType()}");
+                    _sawmill.Debug($"  And also its component {comp.GetType()}");
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);

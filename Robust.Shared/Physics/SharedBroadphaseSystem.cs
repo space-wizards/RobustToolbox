@@ -64,9 +64,6 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<CollisionChangeMessage>(OnPhysicsUpdate);
 
-            // Shouldn't need to listen to mapchanges as parent changes should handle it...
-            SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
-
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
             SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
 
@@ -269,7 +266,8 @@ namespace Robust.Shared.Physics
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't
                     // moving locally but are moving in world-terms.
-                    if (proxyA.Fixture.Hard && other.Fixture.Hard)
+                    if (proxyA.Fixture.Hard && other.Fixture.Hard &&
+                        (_gridMoveBuffer.ContainsKey(proxyA) || _gridMoveBuffer.ContainsKey(other)))
                     {
                         proxyABody.WakeBody();
                         otherBody.WakeBody();
@@ -293,22 +291,11 @@ namespace Robust.Shared.Physics
             _broadInvMatrices.Clear();
         }
 
-        private void OnParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
-        {
-            if (!component.CanCollide) return;
-
-            var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
-
-            if (lifestage is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized) return;
-
-            UpdateBroadphase(component);
-        }
-
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
         /// <param name="body"></param>
-        private void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
             if (!Resolve(body.Owner, ref manager, ref xform)) return;
 

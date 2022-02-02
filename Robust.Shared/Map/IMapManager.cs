@@ -130,6 +130,16 @@ namespace Robust.Shared.Map
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAABB, bool approx = false);
 
         /// <summary>
+        /// <see cref="FindGridsIntersecting(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,bool)"/>
+        /// </summary>
+        IEnumerable<IMapGrid> FindGridsIntersecting(
+            MapId mapId,
+            Box2 worldAABB,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PhysicsComponent> physicsQuery,
+            bool approx = false);
+
+        /// <summary>
         /// Returns the grids intersecting this AABB.
         /// </summary>
         /// <param name="mapId">The relevant MapID</param>

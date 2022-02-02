@@ -199,9 +199,7 @@ namespace Robust.Shared.Containers
             where T : IContainer
         {
             IoCManager.Resolve(ref entMan);
-            if (!entMan.TryGetComponent<IContainerManager?>(entity, out var containermanager))
-                containermanager = entMan.AddComponent<ContainerManagerComponent>(entity);
-
+            var containermanager = entMan.EnsureComponent<ContainerManagerComponent>(entity);
             return containermanager.MakeContainer<T>(containerId);
         }
 

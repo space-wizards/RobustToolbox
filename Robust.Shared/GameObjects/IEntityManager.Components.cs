@@ -280,11 +280,11 @@ namespace Robust.Shared.GameObjects
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
 
         /// <summary>
-        ///     Returns ALL component instances of a specified type.
+        ///     Returns ALL component instances of a specified type even if paused.
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <returns>All components that have the specified type.</returns>
-        EntityManager.EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component;
+        EntityManager.EntQueryEnumerator<T> EntityQueryEnumerator<T>() where T : Component;
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

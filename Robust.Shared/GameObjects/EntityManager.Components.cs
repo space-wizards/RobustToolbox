@@ -707,55 +707,32 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
-        // Funny struct enumerator equivalent to EntityQuery<T>
         public struct EntQueryEnumerator<T> : IDisposable where T : Component
         {
-            private readonly bool _includePaused;
             private Dictionary<EntityUid, Component>.Enumerator _comps;
-            private Dictionary<EntityUid, Component> _metaData;
 
-            public EntQueryEnumerator(bool includePaused, Dictionary<EntityUid, Component>.Enumerator comps,
-                Dictionary<EntityUid, Component> metaData)
+            public EntQueryEnumerator(Dictionary<EntityUid, Component>.Enumerator comps)
             {
-                _includePaused = includePaused;
                 _comps = comps;
-                _metaData = metaData;
             }
 
             public bool MoveNext([NotNullWhen(true)] out T? component)
             {
-                if (_includePaused)
+                if (!_comps.MoveNext())
                 {
-                    while (_comps.MoveNext())
-                    {
-                        component = (T)_comps.Current.Value;
-
-                        if (component.Deleted) continue;
-
-                        return true;
-                    }
-                }
-                else
-                {
-                    while (_comps.MoveNext())
-                    {
-                        component = (T)_comps.Current.Value;
-
-                        if (component.Deleted) continue;
-
-                        if (!_metaData.TryGetValue(component.Owner, out var metaComp)) continue;
-
-                        var meta = (MetaDataComponent)metaComp;
-
-                        if (meta.EntityPaused) continue;
-
-                        return true;
-                    }
+                    component = null;
+                    return false;
                 }
 
-                component = null;
-                Dispose();
-                return false;
+                var (_, comp) = _comps.Current;
+
+                if (comp.Deleted)
+                {
+                    return MoveNext(out component);
+                }
+
+                component = (T) comp;
+                return true;
             }
 
             public void Dispose()
@@ -764,12 +741,11 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component
+        public EntQueryEnumerator<T> EntityQueryEnumerator<T>() where T : Component
         {
             // Unless you have a profile showing a speed need for the funny struct enumerator just using the IEnumerable is easier.
             var comps = _entTraitArray[ArrayIndexFor<T>()];
-            var meta = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
-            var enumerator = new EntQueryEnumerator<T>(includePaused, comps.GetEnumerator(), meta);
+            var enumerator = new EntQueryEnumerator<T>(comps.GetEnumerator());
             return enumerator;
         }
 

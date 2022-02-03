@@ -1,5 +1,3 @@
-using System.Linq;
-using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 
@@ -11,6 +9,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             SubscribeLocalEvent<CollisionWakeComponent, EntityInitializedMessage>(HandleInitialize);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(HandleRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeMessage>(HandleWake);
             SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepMessage>(HandleSleep);
@@ -20,6 +19,14 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionWakeComponent, JointRemovedEvent>(HandleJointRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, EntParentChangedMessage>(HandleParentChange);
+        }
+
+        private void HandleRemove(EntityUid uid, CollisionWakeComponent component, ComponentRemove args)
+        {
+            if (!Terminating(uid) && TryComp(uid, out PhysicsComponent? physics))
+            {
+                physics.CanCollide = true;
+            }
         }
 
         private bool CanRaiseEvent(EntityUid uid)

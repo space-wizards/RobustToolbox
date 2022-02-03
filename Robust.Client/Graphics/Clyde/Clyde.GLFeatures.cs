@@ -38,6 +38,7 @@ namespace Robust.Client.Graphics.Clyde
 
         // These are set from Clyde.Windowing.
         private bool _isGLES;
+        private bool _isGLES2;
         private bool _isCore;
 
         [SuppressMessage("ReSharper", "UnusedParameter.Local")]

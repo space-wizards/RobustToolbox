@@ -84,7 +84,6 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
-            SubscribeLocalEvent<PointLightComponent, RenderTreeRemoveLightEvent>(RemoveLight);
             SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
 
             SubscribeLocalEvent<RenderingTreeComponent, ComponentInit>(OnTreeInit);
@@ -194,12 +193,7 @@ namespace Robust.Client.GameObjects
             QueueLightUpdate(component);
         }
 
-        private void RemoveLight(EntityUid uid, PointLightComponent component, RenderTreeRemoveLightEvent args)
-        {
-            ClearLight(component);
-        }
-
-        private void ClearLight(PointLightComponent component)
+        public void ClearLight(PointLightComponent component)
         {
             if (component.RenderTree == null) return;
 
@@ -437,17 +431,5 @@ namespace Robust.Client.GameObjects
             }
             return Box2.CenteredAround(localPos, (boxSize, boxSize));
         }
-    }
-
-    internal class RenderTreeRemoveLightEvent : EntityEventArgs
-    {
-        public RenderTreeRemoveLightEvent(PointLightComponent light, MapId map)
-        {
-            Light = light;
-            Map = map;
-        }
-
-        public PointLightComponent Light { get; }
-        public MapId Map { get; }
     }
 }

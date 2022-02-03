@@ -110,7 +110,7 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
 
         if (CapLevel(CVars.MetricsRuntimeGc) is { } gc)
         {
-            var buckets = Buckets(CVars.MetricsRuntimeGcHistogram);
+            var buckets = Buckets(CVars.MetricsRuntimeGcHistogram, 1000);
             builder.WithGcStats(gc, buckets);
         }
 
@@ -154,11 +154,11 @@ internal sealed partial class MetricsManager : IMetricsManager, IDisposable
         }
 
         // 🪣
-        double[] Buckets(CVarDef<string> cvar)
+        double[] Buckets(CVarDef<string> cvar, double divide=1)
         {
             return _cfg.GetCVar(cvar)
                 .Split(',')
-                .Select(x => double.Parse(x, CultureInfo.InvariantCulture) / 1000)
+                .Select(x => double.Parse(x, CultureInfo.InvariantCulture) / divide)
                 .ToArray();
         }
 

@@ -18,6 +18,7 @@ internal partial class MapManager
         return FindGridsIntersecting(mapId, aabb, approx);
     }
 
+
     /// <summary>
     /// Returns the grids intersecting this AABB.
     /// </summary>
@@ -25,6 +26,24 @@ internal partial class MapManager
     /// <param name="aabb">The AABB to intersect</param>
     /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
     public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 aabb, bool approx = false)
+    {
+        if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<IMapGrid>();
+
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+
+        return FindGridsIntersecting(mapId, aabb, xformQuery, physicsQuery, approx);
+    }
+
+    /// <summary>
+    /// Returns the grids intersecting this AABB.
+    /// </summary>
+    public IEnumerable<IMapGrid> FindGridsIntersecting(
+        MapId mapId,
+        Box2 aabb,
+        EntityQuery<TransformComponent> xformQuery,
+        EntityQuery<PhysicsComponent> physicsQuery,
+        bool approx = false)
     {
         if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<IMapGrid>();
 
@@ -41,13 +60,13 @@ internal partial class MapManager
             {
                 var grid = grids[i];
 
-                var xformComp = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-                var (worldPos, worldRot, invMatrix) = xformComp.GetWorldPositionRotationInvMatrix();
+                var xformComp = xformQuery.GetComponent(grid.GridEntityId);
+                var (worldPos, worldRot, invMatrix) = xformComp.GetWorldPositionRotationInvMatrix(xformQuery);
                 var localAABB = invMatrix.TransformBox(aabb);
 
                 var intersects = false;
 
-                if (EntityManager.HasComponent<PhysicsComponent>(grid.GridEntityId))
+                if (physicsQuery.HasComponent(grid.GridEntityId))
                 {
                     grid.GetLocalMapChunks(localAABB, out var enumerator);
 

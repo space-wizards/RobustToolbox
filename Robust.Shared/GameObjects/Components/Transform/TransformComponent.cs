@@ -154,12 +154,18 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var parent = _parent;
+                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+                var rotation = _localRotation;
+
+                while (parent.IsValid())
                 {
-                    return Parent!.WorldRotation + _localRotation;
+                    var parentXform = xformQuery.GetComponent(parent);
+                    rotation += parentXform._localRotation;
+                    parent = parentXform.ParentUid;
                 }
 
-                return _localRotation;
+                return rotation;
             }
             set
             {
@@ -210,15 +216,21 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+                var parent = _parent;
+                var myMatrix = GetLocalMatrix();
+
+                while (parent.IsValid())
                 {
-                    var parentMatrix = Parent!.WorldMatrix;
-                    var myMatrix = GetLocalMatrix();
+                    var parentXform = xformQuery.GetComponent(parent);
+                    var parentMatrix = parentXform.GetLocalMatrix();
+                    parent = parentXform.ParentUid;
+
                     Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
-                    return result;
+                    myMatrix = result;
                 }
 
-                return GetLocalMatrix();
+                return myMatrix;
             }
         }
 
@@ -229,15 +241,21 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+                var parent = _parent;
+                var myMatrix = GetLocalMatrixInv();
+
+                while (parent.IsValid())
                 {
-                    var matP = Parent!.InvWorldMatrix;
-                    var myMatrix = GetLocalMatrixInv();
-                    Matrix3.Multiply(ref matP, ref myMatrix, out var result);
-                    return result;
+                    var parentXform = xformQuery.GetComponent(parent);
+                    var parentMatrix = parentXform.GetLocalMatrixInv();
+                    parent = parentXform.ParentUid;
+
+                    Matrix3.Multiply(ref parentMatrix, ref myMatrix, out var result);
+                    myMatrix = result;
                 }
 
-                return GetLocalMatrixInv();
+                return myMatrix;
             }
         }
 

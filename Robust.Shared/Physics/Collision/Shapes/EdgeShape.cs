@@ -35,6 +35,8 @@ namespace Robust.Shared.Physics.Collision.Shapes
     {
         internal Vector2 Centroid { get; set; } = Vector2.Zero;
 
+        // Note that the normal is from Vertex 2 to Vertex 1 CCW
+
         /// <summary>
         ///     Edge start vertex
         /// </summary>
@@ -45,54 +47,43 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// </summary>
         internal Vector2 Vertex2;
 
-        /// <summary>
-        ///     Is true if the edge is connected to an adjacent vertex before vertex 1.
-        /// </summary>
-        public bool HasVertex0 { get; set; }
+        // Optional adjacent vertices for smooth collision.
 
-        /// <summary>
-        ///     Is true if the edge is connected to an adjacent vertex after vertex2.
-        /// </summary>
-        public bool HasVertex3 { get; set; }
+        internal Vector2 Vertex0;
 
-        /// <summary>
-        ///     Optional adjacent vertices. These are used for smooth collision.
-        /// </summary>
-        public Vector2 Vertex0 { get; set; }
+        internal Vector2 Vertex3;
 
-        /// <summary>
-        ///     Optional adjacent vertices. These are used for smooth collision.
-        /// </summary>
-        public Vector2 Vertex3 { get; set; }
+        public bool OneSided;
 
         public int ChildCount => 1;
 
-        public bool OneSided => !(HasVertex0 && HasVertex3);
+        public ShapeType ShapeType => ShapeType.Edge;
 
         public float Radius
         {
             get => _radius;
-            set
-            {
-                if (MathHelper.CloseToPercent(_radius, value)) return;
-                _radius = value;
-                //ComputeProperties();
-            }
+            set => _radius = PhysicsConstants.PolygonRadius;
         }
 
-        private float _radius;
-
-        public ShapeType ShapeType => ShapeType.Edge;
+        private float _radius = PhysicsConstants.PolygonRadius;
 
         /// <summary>
         ///     Create a 1-sided edge.
         /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        public EdgeShape(Vector2 start, Vector2 end)
+        /// <param name="v1"></param>
+        /// <param name="v2"></param>
+        public EdgeShape(Vector2 v1, Vector2 v2)
         {
-            Set(start, end);
-            _radius = PhysicsConstants.PolygonRadius;
+            SetTwoSided(v1, v2);
+        }
+
+        public void SetOneSided(Vector2 v0, Vector2 v1, Vector2 v2, Vector2 v3)
+        {
+            Vertex0 = v0;
+            Vertex1 = v1;
+            Vertex2 = v2;
+            Vertex3 = v3;
+            OneSided = true;
         }
 
         /// <summary>
@@ -100,45 +91,21 @@ namespace Robust.Shared.Physics.Collision.Shapes
         /// </summary>
         /// <param name="start">The start.</param>
         /// <param name="end">The end.</param>
-        public void Set(Vector2 start, Vector2 end)
+        public void SetTwoSided(Vector2 start, Vector2 end)
         {
             Vertex1 = start;
             Vertex2 = end;
-            HasVertex0 = false;
-            HasVertex3 = false;
-
-            //ComputeProperties();
+            OneSided = true;
         }
 
         public bool Equals(IPhysShape? other)
         {
             if (other is not EdgeShape edge) return false;
-            return (HasVertex0 == edge.HasVertex0 &&
-                    HasVertex3 == edge.HasVertex3 &&
-                    Vertex0 == edge.Vertex0 &&
-                    Vertex1 == edge.Vertex1 &&
-                    Vertex2 == edge.Vertex2 &&
-                    Vertex3 == edge.Vertex3);
-        }
-
-        public bool Intersects(Box2 worldAABB, Vector2 worldPos, Angle worldRot)
-        {
-            var bounds = CalculateLocalBounds(worldRot).Translated(worldPos);
-            return bounds.Intersects(worldAABB);
-        }
-
-        public Box2 CalculateLocalBounds(Angle rotation)
-        {
-            Vector2 lower = Vector2.ComponentMin(Vertex1, Vertex2);
-            Vector2 upper = Vector2.ComponentMax(Vertex1, Vertex2);
-
-            Vector2 r = new Vector2(Radius, Radius);
-            var aabb = new Box2
-            {
-                BottomLeft = lower - r,
-                TopRight = upper + r
-            };
-            return aabb;
+            return OneSided == edge.OneSided &&
+                   Vertex0.Equals(edge.Vertex0) &&
+                   Vertex1.Equals(edge.Vertex1) &&
+                   Vertex2.Equals(edge.Vertex2) &&
+                   Vertex3.Equals(edge.Vertex3);
         }
 
         public Box2 ComputeAABB(Transform transform, int childIndex)
@@ -151,7 +118,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
             var lower = Vector2.ComponentMin(v1, v2);
             var upper = Vector2.ComponentMax(v1, v2);
 
-            var radius = new Vector2(_radius, _radius);
+            var radius = new Vector2(PhysicsConstants.PolygonRadius, PhysicsConstants.PolygonRadius);
             return new Box2(lower - radius, upper + radius);
         }
 

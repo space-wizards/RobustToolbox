@@ -15,38 +15,23 @@ public class TestFormatErrors
 
     private const string Res1 = "err1 = $user)";
 
-    private const string Expect1Wide1 = @"
-err1 = $user)
-        ^ Unbalanced closing brace";
+    private const string Expect1Wide1 = "\r\nerr1 = $user)\r\n        ^ Unbalanced closing brace";
 
-    private const string Expect2Wide1 = @"
-err1 = $user)
-^ Unbalanced closing brace";
+    private const string Expect2Wide1 = "\r\nerr1 = $user)\r\n^ Unbalanced closing brace";
 
-    private const string Expect1Wide4 = @"
-err1 = $user)
-        ^^^^ Expected a message field for ""x""";
+    private const string Expect1Wide4 = "\r\nerr1 = $user)\r\n        ^^^^ Expected a message field for \"x\"";
 
-    private const string Expect2Wide4 = @"
-err1 = $user)
-^^^^ Expected a message field for ""x""";
+    private const string Expect2Wide4 = "\r\nerr1 = $user)\r\n^^^^ Expected a message field for \"x\"";
 
     #endregion
 
     #region MultiLineExample
 
-    private const string Res2 = @"a = b {{
-  err = x ";
+    private const string Res2 = "a = b {{\r\n  err = x";
 
-    private const string ExpectMulti1Wide1 = @"
-a = b {{
-  err = x 
-  ^ Unbalanced closing brace";
+    private const string ExpectMulti1Wide1 = "\r\na = b {{\r\n  err = x\r\n  ^ Unbalanced closing brace";
 
-    private const string ExpectMulti1Wide3 = @"
-a = b {{
-  err = x 
-  ^^^ Expected a message field for ""x""";
+    private const string ExpectMulti1Wide3 = "\r\na = b {{\r\n  err = x\r\n  ^^^ Expected a message field for \"x\"";
 
     #endregion
 
@@ -66,7 +51,7 @@ a = b {{
         }
 
         err.Slice = new Range(0, resource.Length);
-        var actual = err.FormatCompileErrors(resource.AsMemory());
+        var actual = err.FormatCompileErrors(resource.AsMemory(), "\r\n");
         Assert.That(actual, Is.EqualTo(expected));
     }
 }

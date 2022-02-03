@@ -7,18 +7,18 @@ namespace Robust.Shared.Localization;
 
 internal static class LocHelper
 {
-    public static string FormatCompileErrors(this ParseError self, ReadOnlyMemory<char> resource)
+    public static string FormatCompileErrors(this ParseError self, ReadOnlyMemory<char> resource, string? newLine = null)
     {
         ErrorSpan span = new(self.Row, self.Slice!.Value.Start.Value, self.Slice.Value.End.Value,
             self.Position.Start.Value, self.Position.End.Value);
-        return FormatErrors(self.Message, span, resource);
+        return FormatErrors(self.Message, span, resource, newLine);
     }
 
-    private static string FormatErrors(string message, ErrorSpan span, ReadOnlyMemory<char> resource)
+    private static string FormatErrors(string message, ErrorSpan span, ReadOnlyMemory<char> resource, string? newLine)
     {
         var sb = new StringBuilder();
         var errContext = resource.Slice(span.StartSpan, span.EndSpan - span.StartSpan).ToString();
-        sb.AppendLine();
+        sb.AppendLine(newLine);
         sb.Append(errContext);
 
         var currLineOffset = 0;

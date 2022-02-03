@@ -7,7 +7,6 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.GameObjects;
 using Robust.Client.Input;
-using Robust.Client.Map;
 using Robust.Client.Player;
 using Robust.Client.Timing;
 using Robust.Shared;
@@ -50,7 +49,7 @@ namespace Robust.Client.GameStates
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;
-        [Dependency] private readonly IClientMapManager _mapManager = default!;
+        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IClientGameTiming _timing = default!;
         [Dependency] private readonly INetConfigurationManager _config = default!;
         [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;

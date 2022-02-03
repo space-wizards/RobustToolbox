@@ -8,6 +8,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(OccluderComponent))]
+    [RegisterComponent]
     internal sealed class ClientOccluderComponent : OccluderComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;

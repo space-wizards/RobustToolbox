@@ -13,25 +13,7 @@ namespace Robust.Server.GameObjects
         {
             RegisterIgnore("Input");
             RegisterIgnore("AnimationPlayer");
-
-            RegisterClass<MetaDataComponent>();
-            RegisterClass<TransformComponent>();
-            RegisterClass<MapComponent>();
-            RegisterClass<MapGridComponent>();
-            RegisterClass<EyeComponent>();
-            RegisterClass<ActorComponent>();
-            RegisterClass<PhysicsComponent>();
-            RegisterClass<CollisionWakeComponent>();
-            RegisterClass<ContainerManagerComponent>();
             RegisterClass<OccluderComponent>();
-            RegisterClass<OccluderTreeComponent>();
-            RegisterClass<SpriteComponent>();
-            RegisterClass<ServerUserInterfaceComponent>();
-            RegisterClass<TimerComponent>();
-            RegisterClass<MapSaveIdComponent>();
-            RegisterClass<DebugExceptionOnAddComponent>();
-            RegisterClass<DebugExceptionInitializeComponent>();
-            RegisterClass<DebugExceptionStartupComponent>();
         }
     }
 }

@@ -11,6 +11,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Throws an exception in <see cref="OnAdd" />.
     /// </summary>
+    [RegisterComponent]
     public sealed class DebugExceptionOnAddComponent : Component
     {
         protected override void OnAdd() => throw new NotSupportedException();
@@ -19,6 +20,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Throws an exception in <see cref="Initialize" />.
     /// </summary>
+    [RegisterComponent]
     public sealed class DebugExceptionInitializeComponent : Component
     {
         protected override void Initialize() => throw new NotSupportedException();
@@ -27,6 +29,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Throws an exception in <see cref="Startup" />.
     /// </summary>
+    [RegisterComponent]
     public sealed class DebugExceptionStartupComponent : Component
     {
         protected override void Startup() => throw new NotSupportedException();

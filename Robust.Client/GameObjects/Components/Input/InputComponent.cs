@@ -8,6 +8,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Defines data fields used in the <see cref="InputSystem"/>.
     /// </summary>
+    [RegisterComponent]
     public class InputComponent : Component
     {
         /// <summary>

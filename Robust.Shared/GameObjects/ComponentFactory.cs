@@ -420,6 +420,7 @@ namespace Robust.Shared.GameObjects
         {
             foreach (var type in _reflectionManager.FindTypesWithAttribute<RegisterComponentAttribute>())
             {
+                if (types.ContainsKey(type)) continue;
                 RegisterClass(type);
             }
         }

@@ -25,6 +25,7 @@ namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
     [ComponentReference(typeof(ISpriteComponent))]
+    [RegisterComponent]
     public sealed class SpriteComponent : SharedSpriteComponent, ISpriteComponent,
         IComponentDebug, ISerializationHooks
     {

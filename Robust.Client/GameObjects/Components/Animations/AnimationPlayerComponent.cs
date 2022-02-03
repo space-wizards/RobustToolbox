@@ -9,6 +9,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Plays back <see cref="Animation"/>s on entities.
     /// </summary>
+    [RegisterComponent]
     public sealed class AnimationPlayerComponent : Component
     {
         // TODO: Give this component a friend someday. Way too much content shit to change atm ._.

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Robust.Client.Player;
 using Robust.Shared.GameObjects;
@@ -11,6 +11,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
+    [RegisterComponent]
     public class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;

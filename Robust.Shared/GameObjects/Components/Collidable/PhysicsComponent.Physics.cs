@@ -43,6 +43,7 @@ namespace Robust.Shared.GameObjects
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
     [NetworkedComponent(), ComponentProtoName("Physics")]
+    [RegisterComponent]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;

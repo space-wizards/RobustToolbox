@@ -4,6 +4,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
+    [RegisterComponent]
     public class ActorComponent : Component
     {
         [ViewVariables]

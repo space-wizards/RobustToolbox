@@ -19,6 +19,7 @@ namespace Robust.Server.GameObjects
     /// </summary>
     /// <seealso cref="BoundUserInterface"/>
     [PublicAPI]
+    [RegisterComponent]
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
     public sealed class ServerUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {

@@ -5,6 +5,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Stores the relevant occluder children of this entity.
     /// </summary>
+    [RegisterComponent]
     public sealed class OccluderTreeComponent : Component
     {
         internal DynamicTree<OccluderComponent> Tree { get; set; } = default!;

@@ -9,6 +9,7 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Shared.GameObjects
 {
+    [RegisterComponent]
     public class TimerComponent : Component
     {
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
@@ -54,7 +55,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
-        [ViewVariables] internal readonly SortedSet<EntityUid> _children = new();
+        [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 

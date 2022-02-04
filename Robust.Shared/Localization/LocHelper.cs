@@ -7,7 +7,8 @@ namespace Robust.Shared.Localization;
 
 internal static class LocHelper
 {
-    public static string FormatCompileErrors(this ParseError self, ReadOnlyMemory<char> resource, string? newLine = null)
+    public static string FormatCompileErrors(this ParseError self, ReadOnlyMemory<char> resource, 
+        string? newLine = null)
     {
         ErrorSpan span = new(self.Row, self.Slice!.Value.Start.Value, self.Slice.Value.End.Value,
             self.Position.Start.Value, self.Position.End.Value);
@@ -18,7 +19,7 @@ internal static class LocHelper
     {
         var sb = new StringBuilder();
         var errContext = resource.Slice(span.StartSpan, span.EndSpan - span.StartSpan).ToString();
-        sb.AppendLine(newLine);
+        sb.Append(newLine ?? Environment.NewLine);
         sb.Append(errContext);
 
         var currLineOffset = 0;
@@ -37,7 +38,7 @@ internal static class LocHelper
             }
         }
 
-        sb.AppendLine()
+        sb.Append(newLine ?? Environment.NewLine)
             .Append(' ', currLineOffset)
             .Append('^', span.EndMark - span.StartMark)
             .Append($" {message}");

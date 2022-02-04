@@ -490,7 +490,7 @@ namespace Robust.Server
 
             _mainLoop.Tick += (sender, args) => Update(args);
 
-            _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
+            _mainLoop.Update += (sender, args) => FrameUpdate(args);
 
             // set GameLoop.Running to false to return from this function.
             _time.Paused = _autoPause;
@@ -681,7 +681,11 @@ namespace Robust.Server
             {
                 _stateManager.SendGameStateUpdate();
             }
+        }
 
+        private void FrameUpdate(FrameEventArgs frameEventArgs)
+        {
+            ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
         }

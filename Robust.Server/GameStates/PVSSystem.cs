@@ -186,7 +186,7 @@ internal partial class PVSSystem : EntitySystem
         _entityPvsCollection.UpdateIndex(uid, transformComponent.Coordinates);
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if(EntityManager.HasComponent<MapGridComponent>(uid) || EntityManager.HasComponent<MapComponent>(uid)) return;
+        if(_mapManager.IsMap(uid) || _mapManager.IsGrid(uid)) return;
 
         foreach (var componentChild in transformComponent.ChildEntities)
         {

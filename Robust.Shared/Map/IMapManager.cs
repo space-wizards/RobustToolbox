@@ -175,6 +175,10 @@ namespace Robust.Shared.Map
 
         bool HasMapEntity(MapId mapId);
 
+        public bool IsGrid(EntityUid uid);
+
+        public bool IsMap(EntityUid uid);
+
         MapId NextMapId();
         GridId NextGridId();
         EntityUid GetGridEuid(GridId id);

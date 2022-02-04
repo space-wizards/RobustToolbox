@@ -67,7 +67,7 @@ namespace Robust.Shared.Containers
             var transform = entMan.GetComponent<TransformComponent>(toinsert);
 
             // CanInsert already checks nullability of Parent (or container forgot to call base that does)
-            if (toinsert.TryGetContainerMan(out var containerManager) && !containerManager.Remove(toinsert))
+            if (toinsert.TryGetContainerMan(out var containerManager, entMan) && !containerManager.Remove(toinsert))
                 return false; // Can't remove from existing container, can't insert.
 
             // Attach to parent first so we can check IsInContainer more easily.
@@ -133,7 +133,7 @@ namespace Robust.Shared.Containers
             if (!CanRemove(toremove, entMan)) return false;
             InternalRemove(toremove, entMan);
 
-            entMan.GetComponent<TransformComponent>(toremove).AttachParentToContainerOrGrid();
+            entMan.GetComponent<TransformComponent>(toremove).AttachParentToContainerOrGrid(entMan);
             return true;
         }
 

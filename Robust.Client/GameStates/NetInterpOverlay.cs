@@ -38,7 +38,7 @@ namespace Robust.Client.GameStates
                 var transform = _entityManager.GetComponent<TransformComponent>(boundingBox.Owner);
 
                 // if not on the same map, continue
-                if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer())
+                if (transform.MapID != _eyeManager.CurrentMap || boundingBox.Owner.IsInContainer(_entityManager))
                     continue;
 
                 // This entity isn't lerping, no need to draw debug info for it

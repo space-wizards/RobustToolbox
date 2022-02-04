@@ -346,7 +346,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_canCollide == value ||
-                    value && Owner.IsInContainer())
+                    value && Owner.IsInContainer(_entMan))
                     return;
 
                 _canCollide = value;

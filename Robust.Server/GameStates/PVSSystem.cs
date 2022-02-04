@@ -232,8 +232,8 @@ internal partial class PVSSystem : EntitySystem
             pvsCollection.AddGrid(gridId);
         }
 
-        var uid = _mapManager.GetGrid(gridId).GridEntityId;
-        _entityPvsCollection.UpdateIndex(uid);
+        var euid = _mapManager.GetGridEuid(gridId);
+        _entityPvsCollection.UpdateIndex(euid);
     }
 
     private void OnMapDestroyed(object? sender, MapEventArgs e)

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
@@ -8,14 +6,9 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Controllers;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Physics.Dynamics.Joints;
-using Robust.Shared.Reflection;
 using Robust.Shared.Timing;
-using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Shared.GameObjects
 {
@@ -46,6 +39,8 @@ namespace Robust.Shared.GameObjects
                 Buckets = Histogram.ExponentialBuckets(0.000_001, 1.5, 25)
             });
 
+        [Dependency] private readonly SharedBroadphaseSystem _broadphase = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedJointSystem _joints = default!;
         [Dependency] protected readonly IMapManager MapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
@@ -67,7 +62,7 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntMapIdChangedMessage>(HandleMapChange);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
-            SubscribeLocalEvent<EntParentChangedMessage>(HandleParentChange);
+            SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(HandleParentChange);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentInit>(HandlePhysicsMapInit);
             SubscribeLocalEvent<SharedPhysicsMapComponent, ComponentRemove>(HandlePhysicsMapRemove);
             SubscribeLocalEvent<PhysicsComponent, ComponentInit>(OnPhysicsInit);
@@ -104,23 +99,32 @@ namespace Robust.Shared.GameObjects
             component.ContactManager.Shutdown();
         }
 
-        private void HandleParentChange(ref EntParentChangedMessage args)
+        private void HandleParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            var entity = args.Entity;
+            if (LifeStage(uid) is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized
+                || !TryComp(uid, out TransformComponent? xform))
+            {
+                return;
+            }
+                
+            if (body.CanCollide)
+                _broadphase.UpdateBroadphase(body, xform: xform);
+            
+            if (!xform.ParentUid.IsValid() || !_container.IsEntityInContainer(uid, xform))
+                HandleParentChangeVelocity(uid, body, ref args, xform);
+        }
 
-            if (!TryInitialized(entity, out var initialized) || !initialized.Value ||
-                !EntityManager.TryGetComponent(entity, out PhysicsComponent? body) ||
-                entity.IsInContainer()) return;
-
+        private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args, TransformComponent xform)
+        {
             var angularVelocityDiff = 0f;
             var linearVelocityDiff = Vector2.Zero;
 
-            var (worldPos, worldRot) = Transform(entity).GetWorldPositionRotation();
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
             var R = Matrix3.CreateRotation(worldRot);
             R.Transpose(out var nRT);
             nRT.Multiply(-1f);
 
-            if (args.OldParent is {} oldParent && EntityManager.TryGetComponent(oldParent, out PhysicsComponent? oldBody))
+            if (args.OldParent is {Valid: true} oldParent && EntityManager.TryGetComponent(oldParent, out PhysicsComponent? oldBody))
             {
                 var (linear, angular) = oldBody.MapVelocities;
 
@@ -151,7 +155,7 @@ namespace Robust.Shared.GameObjects
                 angularVelocityDiff += (nRT * w * R).R1C0;
             }
 
-            var newParent = EntityManager.GetComponent<TransformComponent>(entity).ParentUid;
+            var newParent = xform.ParentUid;
 
             if (newParent != EntityUid.Invalid && EntityManager.TryGetComponent(newParent, out PhysicsComponent? newBody))
             {
@@ -321,8 +325,7 @@ namespace Robust.Shared.GameObjects
             {
                 comp.ProcessQueue();
             }
-
-            _broadphaseSystem.Cleanup();
+            
             _physicsManager.ClearTransforms();
         }
 

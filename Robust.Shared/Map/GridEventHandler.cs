@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Map
+using Robust.Shared.GameObjects;
+
+namespace Robust.Shared.Map
 {
     /// <summary>
     /// Invoked when a grid is altered.

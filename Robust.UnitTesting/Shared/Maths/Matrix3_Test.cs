@@ -56,9 +56,14 @@ namespace Robust.UnitTesting.Shared.Maths
         public void MultiplyTransformOrder()
         {
             var startPoint = new Vector3(1, 0, 1);
-            var scaleMatrix = Matrix3.CreateScale(new Vector2(2, 2));
-            var rotateMatrix = Matrix3.CreateRotation((float)(System.Math.PI / 2.0));
-            var translateMatrix = Matrix3.CreateTranslation(new Vector2(-5, -3));
+
+            Vector2 scale = new Vector2(2, 2);
+            Angle angle = new Angle(System.MathF.PI / 2);
+            Vector2 offset = new Vector2(-5, -3);
+
+            var scaleMatrix = Matrix3.CreateScale(scale);
+            var rotateMatrix = Matrix3.CreateRotation(angle);
+            var translateMatrix = Matrix3.CreateTranslation(offset);
 
             // 1. Take the start point  -> ( 1, 0)
             // 2. Scale it by 2         -> ( 2, 0)
@@ -68,6 +73,25 @@ namespace Robust.UnitTesting.Shared.Maths
 
             Assert.That(result.X, Is.Approximately(-5f));
             Assert.That(result.Y, Is.Approximately(-1f));
+
+            // repeat but with CreateTransform()
+            var transform = Matrix3.CreateTransform(offset, angle, scale);
+            result = transform * startPoint;
+            Assert.That(result.X, Is.Approximately(-5f));
+            Assert.That(result.Y, Is.Approximately(-1f));
+        }
+
+        [Test]
+        public void InverseTransformTest()
+        {
+            Vector2 scale = new Vector2(2.32f, 2);
+            Angle angle = new Angle(System.MathF.PI / 2.21f);
+            Vector2 offset = new Vector2(-5, 3);
+
+            var transform = Matrix3.CreateTransform(offset, angle, scale);
+            var invTransform = Matrix3.CreateInverseTransform(offset, angle, scale);
+
+            Assert.That(Matrix3.Invert(transform).EqualsApprox(invTransform));
         }
 
         [Test]

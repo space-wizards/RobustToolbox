@@ -37,11 +37,13 @@ namespace Robust.Shared.GameObjects
         /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
         /// calling <see cref="OnAdd" />.
         /// </summary>
-        internal void LifeAddToEntity()
+        internal void LifeAddToEntity(IEntityManager entManager)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.PreAdd);
 
             LifeStage = ComponentLifeStage.Adding;
+            CreationTick = entManager.CurrentTick;
+            entManager.EventBus.RaiseComponentEvent(this, CompAddInstance);
             OnAdd();
 
 #if DEBUG
@@ -56,11 +58,12 @@ namespace Robust.Shared.GameObjects
         /// Increases the life stage from <see cref="ComponentLifeStage.Added" /> to <see cref="ComponentLifeStage.Initialized" />,
         /// calling <see cref="Initialize" />.
         /// </summary>
-        internal void LifeInitialize()
+        internal void LifeInitialize(IEntityManager entManager)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
             LifeStage = ComponentLifeStage.Initializing;
+            entManager.EventBus.RaiseComponentEvent(this, CompInitInstance);
             Initialize();
 
 #if DEBUG
@@ -75,11 +78,12 @@ namespace Robust.Shared.GameObjects
         /// Increases the life stage from <see cref="ComponentLifeStage.Initialized" /> to
         /// <see cref="ComponentLifeStage.Running" />, calling <see cref="Startup" />.
         /// </summary>
-        internal void LifeStartup()
+        internal void LifeStartup(IEntityManager entManager)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Initialized);
 
             LifeStage = ComponentLifeStage.Starting;
+            entManager.EventBus.RaiseComponentEvent(this, CompStartupInstance);
             Startup();
 
 #if DEBUG
@@ -97,12 +101,13 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Components are allowed to remove themselves in their own Startup function.
         /// </remarks>
-        internal void LifeShutdown()
+        internal void LifeShutdown(IEntityManager entManager)
         {
             // Starting allows a component to remove itself in it's own Startup function.
             DebugTools.Assert(LifeStage == ComponentLifeStage.Starting || LifeStage == ComponentLifeStage.Running);
 
             LifeStage = ComponentLifeStage.Stopping;
+            entManager.EventBus.RaiseComponentEvent(this, CompShutdownInstance);
             Shutdown();
 
 #if DEBUG
@@ -117,12 +122,14 @@ namespace Robust.Shared.GameObjects
         /// Increases the life stage from <see cref="ComponentLifeStage.Stopped" /> to <see cref="ComponentLifeStage.Deleted" />,
         /// calling <see cref="OnRemove" />.
         /// </summary>
-        internal void LifeRemoveFromEntity()
+        internal void LifeRemoveFromEntity(IEntityManager entManager)
         {
             // can be called at any time after PreAdd, including inside other life stage events.
             DebugTools.Assert(LifeStage != ComponentLifeStage.PreAdd);
 
             LifeStage = ComponentLifeStage.Removing;
+            entManager.EventBus.RaiseComponentEvent(this, CompRemoveInstance);
+
             OnRemove();
 
 #if DEBUG
@@ -159,23 +166,11 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentShutdown CompShutdownInstance = new();
         private static readonly ComponentRemove CompRemoveInstance = new();
 
-        private IEventBus GetBus()
-        {
-            // Apparently components are being created outside of the EntityManager,
-            // and the Owner is not being set correctly.
-            // ReSharper disable once RedundantAssertionStatement
-            DebugTools.AssertNotNull(Owner);
-
-            return IoCManager.Resolve<IEntityManager>().EventBus;
-        }
-
         /// <summary>
         /// Called when the component gets added to an entity.
         /// </summary>
         protected virtual void OnAdd()
         {
-            CreationTick = IoCManager.Resolve<IEntityManager>().CurrentTick;
-            GetBus().RaiseComponentEvent(this, CompAddInstance);
             LifeStage = ComponentLifeStage.Added;
         }
 
@@ -185,7 +180,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected virtual void Initialize()
         {
-            GetBus().RaiseComponentEvent(this, CompInitInstance);
             LifeStage = ComponentLifeStage.Initialized;
         }
 
@@ -197,7 +191,6 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         protected virtual void Startup()
         {
-            GetBus().RaiseComponentEvent(this, CompStartupInstance);
             LifeStage = ComponentLifeStage.Running;
         }
 
@@ -206,7 +199,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected virtual void Shutdown()
         {
-            GetBus().RaiseComponentEvent(this, CompShutdownInstance);
             LifeStage = ComponentLifeStage.Stopped;
         }
 
@@ -217,7 +209,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         protected virtual void OnRemove()
         {
-            GetBus().RaiseComponentEvent(this, CompRemoveInstance);
             LifeStage = ComponentLifeStage.Deleted;
         }
 

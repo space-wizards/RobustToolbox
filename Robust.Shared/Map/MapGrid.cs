@@ -71,14 +71,6 @@ namespace Robust.Shared.Map
             LastTileModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
         }
 
-        /// <summary>
-        ///     Disposes the grid.
-        /// </summary>
-        public void Dispose()
-        {
-            // Nothing for now.
-        }
-
         /// <inheritdoc />
         [ViewVariables]
         public Box2 WorldBounds =>

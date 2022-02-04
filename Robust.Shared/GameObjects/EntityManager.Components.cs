@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
                 if (comp.Initialized)
                     continue;
 
-                comp.LifeInitialize();
+                comp.LifeInitialize(this);
             }
 
 #if DEBUG
@@ -179,7 +179,7 @@ namespace Robust.Shared.GameObjects
                 var comp = (Component)component;
                 if (comp.LifeStage == ComponentLifeStage.Initialized)
                 {
-                    comp.LifeStartup();
+                    comp.LifeStartup(this);
                 }
             }
         }
@@ -254,17 +254,17 @@ namespace Robust.Shared.GameObjects
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
-            component.LifeAddToEntity();
+            component.LifeAddToEntity(this);
 
             var metadata = GetComponent<MetaDataComponent>(uid);
 
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
 
-            component.LifeInitialize();
+            component.LifeInitialize(this);
 
             if (metadata.EntityInitialized)
-                component.LifeStartup();
+                component.LifeStartup(this);
         }
 
         /// <inheritdoc />
@@ -362,10 +362,10 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.Running)
-                component.LifeShutdown();
+                component.LifeShutdown(this);
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity();
+                component.LifeRemoveFromEntity(this);
             ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
@@ -395,10 +395,10 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (component.Running)
-                    component.LifeShutdown();
+                    component.LifeShutdown(this);
 
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    component.LifeRemoveFromEntity(); // Sets delete
+                    component.LifeRemoveFromEntity(this); // Sets delete
 
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
             }
@@ -1007,7 +1007,7 @@ namespace Robust.Shared.GameObjects
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
         {
             var attempt = new ComponentGetStateAttemptEvent(player);
-            eventBus.RaiseComponentEvent(component, attempt);
+            eventBus.RaiseComponentEvent(component, ref attempt);
             return !attempt.Cancelled;
         }
 

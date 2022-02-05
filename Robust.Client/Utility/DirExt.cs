@@ -65,11 +65,8 @@ namespace Robust.Client.Utility
 
         public static RSIDirection Convert(this Direction dir, RSI.State.DirectionType type)
         {
-            // Round down to a four-way direction if appropriate
-            if (type != RSI.State.DirectionType.Dir8)
-            {
-                return dir.Convert(RSI.State.DirectionType.Dir8).RoundToCardinal();
-            }
+            if (type == RSI.State.DirectionType.Dir1)
+                return RSIDirection.South;
 
             switch (dir)
             {
@@ -84,21 +81,24 @@ namespace Robust.Client.Utility
 
                 case Direction.West:
                     return RSIDirection.West;
-
-                case Direction.SouthEast:
-                    return RSIDirection.SouthEast;
-
-                case Direction.SouthWest:
-                    return RSIDirection.SouthWest;
-
-                case Direction.NorthEast:
-                    return RSIDirection.NorthEast;
-
-                case Direction.NorthWest:
-                    return RSIDirection.NorthWest;
             }
 
-            throw new ArgumentException($"Unknown dir: {dir}.", nameof(dir));
+            var rsiDir = dir switch
+            {
+                Direction.SouthEast => RSIDirection.SouthEast,
+                Direction.SouthWest => RSIDirection.SouthWest,
+                Direction.NorthEast => RSIDirection.NorthEast,
+                Direction.NorthWest => RSIDirection.NorthWest,
+                _ => throw new ArgumentException($"Unknown dir: {dir}.", nameof(dir))
+            };
+
+            // Round down to a four-way direction if appropriate.
+            if (type == RSI.State.DirectionType.Dir4)
+            {
+                return RoundToCardinal(rsiDir);
+            }
+
+            return rsiDir;
         }
 
         public static Direction TurnCw(this Direction dir)

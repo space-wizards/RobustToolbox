@@ -1593,7 +1593,8 @@ namespace Robust.Client.GameObjects
 
             // I think there might be a problem here when you have directional-sprites with unique bounding boxes, where
             // maaaaybe the final rotation requires a CalcRectWorldAngle(). But currently, I don't even know if a sprite
-            // like this exists anywhere for testing.
+            // like this exists anywhere for testing (sprites-sizes are generally 32x32 pixels, transparency is not
+            // accounted for in the layer bounding box). 
 
             return new Box2Rotated(box.Translated(position), finalRotation, position);
         }

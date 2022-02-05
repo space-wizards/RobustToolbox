@@ -188,9 +188,11 @@ internal partial class PVSSystem : EntitySystem
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
-        foreach (var componentChild in transformComponent.ChildEntities)
+        var children = transformComponent.ChildEnumerator;
+
+        while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(componentChild);
+            UpdateEntityRecursive(child.Value);
         }
     }
 

@@ -824,13 +824,15 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!_entityManager.HasComponent<IMapGridComponent>(entity));
 
-                foreach (var childTx in xform.ChildEntities)
+                var children = xform.ChildEnumerator;
+
+                while (children.MoveNext(out var child))
                 {
-                    if (!_handledThisTick.Add(childTx)) continue;
+                    if (!_handledThisTick.Add(child.Value)) continue;
 
-                    var childXform = _entityManager.GetComponent<TransformComponent>(childTx);
+                    var childXform = _entityManager.GetComponent<TransformComponent>(child.Value);
 
-                    if (UpdateEntityTree(childTx, childXform))
+                    if (UpdateEntityTree(child.Value, childXform))
                     {
                         ++necessary;
                     }

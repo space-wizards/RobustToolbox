@@ -357,9 +357,9 @@ public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<T
             return;
         }
 
-        var mapId = coordinates.GetMapId(_entityManager);
-        var mapIndices = GetChunkIndices(coordinates.ToMapPos(_entityManager));
-        UpdateIndex(index, mapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+        var mapCoordinates = coordinates.ToMap(_entityManager, xformQuery);
+        var mapIndices = GetChunkIndices(mapCoordinates.Position);
+        UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 
     /// <summary>

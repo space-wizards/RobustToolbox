@@ -170,15 +170,17 @@ internal partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        UpdateEntityRecursive(ev.Sender, ev.Component);
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        UpdateEntityRecursive(ev.Sender, xformQuery, ev.Component);
     }
 
     private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
     {
-        UpdateEntityRecursive(uid, component);
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        UpdateEntityRecursive(uid, xformQuery, component);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, TransformComponent? transformComponent = null)
+    private void UpdateEntityRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, TransformComponent? transformComponent = null)
     {
         if(!Resolve(uid, ref transformComponent))
             return;
@@ -192,7 +194,7 @@ internal partial class PVSSystem : EntitySystem
 
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value);
+            UpdateEntityRecursive(child.Value, xformQuery, xformQuery.GetComponent(child.Value));
         }
     }
 

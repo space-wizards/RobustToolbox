@@ -1628,7 +1628,7 @@ namespace Robust.Client.GameObjects
             // fast check for empty sprites
             if (!Visible || Layers.Count == 0)
             {
-                return new Box2Rotated(new Box2(worldPosition, worldPosition));
+                return new Box2Rotated(new Box2(worldPosition, worldPosition), Angle.Zero, worldPosition);
             }
 
             // we need to calculate bounding box taking into account all nested layers

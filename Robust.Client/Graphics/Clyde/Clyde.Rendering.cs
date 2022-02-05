@@ -1020,7 +1020,7 @@ namespace Robust.Client.Graphics.Clyde
                 }
 
                 // compare the bottom of the sprite's BB for y-sorting.
-                cmp = _drawList[y].Item4.Bottom.CompareTo(_drawList[x].Item4.Bottom);
+                cmp = _drawList[x].Item4.Bottom.CompareTo(_drawList[y].Item4.Bottom);
 
                 if (cmp != 0)
                 {

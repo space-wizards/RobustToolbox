@@ -1155,9 +1155,9 @@ namespace Robust.Shared.GameObjects
 
     public struct TransformChildrenEnumerator : IDisposable
     {
-        private SortedSet<EntityUid>.Enumerator _children;
+        private HashSet<EntityUid>.Enumerator _children;
 
-        public TransformChildrenEnumerator(SortedSet<EntityUid>.Enumerator children)
+        public TransformChildrenEnumerator(HashSet<EntityUid>.Enumerator children)
         {
             _children = children;
         }

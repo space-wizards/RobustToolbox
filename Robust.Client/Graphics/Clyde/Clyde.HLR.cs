@@ -357,36 +357,34 @@ namespace Robust.Client.Graphics.Clyde
         private void ProcessSpriteEntities(MapId map, Viewport view, IEye eye, Box2Rotated worldBounds,
             RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> list)
         {
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+
             // Construct a matrix equivalent for Viewport.WorldToLocal()
-
             eye.GetViewMatrix(out var viewMatrix, view.RenderScale);
-
             var uiProjmatrix = Matrix3.Identity;
             uiProjmatrix.R0C0 = EyeManager.PixelsPerMeter;
             uiProjmatrix.R1C1 = -EyeManager.PixelsPerMeter;
             uiProjmatrix.R0C2 = view.Size.X / 2f;
             uiProjmatrix.R1C2 = view.Size.Y / 2f;
-
-            var matrix = viewMatrix * uiProjmatrix;
+            var worldToLocal = viewMatrix * uiProjmatrix;
 
             foreach (var comp in _entitySystemManager.GetEntitySystem<RenderingTreeSystem>().GetRenderTrees(map, worldBounds))
             {
-                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.SpriteTree.QueryAabb(ref list, (
                     ref RefList<(SpriteComponent sprite, Vector2 worldPos, Angle worldRot, Box2 spriteScreenBB)> state,
                     in SpriteComponent value) =>
                 {
                     var entity = value.Owner;
-                    var transform = _entityManager.GetComponent<TransformComponent>(entity);
+                    var transform = xforms.GetComponent(entity);
 
                     ref var entry = ref state.AllocAdd();
                     entry.sprite = value;
                     (entry.worldPos, entry.worldRot) = transform.GetWorldPositionRotation();
 
                     var spriteWorldBB = value.CalculateRotatedBoundingBox(entry.worldPos, entry.worldRot, eye);
-                    entry.spriteScreenBB = matrix.TransformBox(spriteWorldBB);
-
+                    entry.spriteScreenBB = worldToLocal.TransformBox(spriteWorldBB);
                     return true;
 
                 }, bounds, true);

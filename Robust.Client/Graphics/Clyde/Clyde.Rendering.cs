@@ -1019,8 +1019,8 @@ namespace Robust.Client.Graphics.Clyde
                     return cmp;
                 }
 
-                // compare the bottom of the sprite's BB for y-sorting.
-                cmp = _drawList[x].Item4.Bottom.CompareTo(_drawList[y].Item4.Bottom);
+                // compare the top of the sprite's BB for y-sorting. Because screen coordinates are flipped, the "top" of the BB is actually the "bottom".
+                cmp = _drawList[x].Item4.Top.CompareTo(_drawList[y].Item4.Top);
 
                 if (cmp != 0)
                 {

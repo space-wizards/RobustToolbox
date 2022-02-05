@@ -16,15 +16,7 @@ namespace Robust.Shared.Map
         /// </summary>
         int ChunkCount { get; }
 
-        GameTick LastAnchoredModifiedTick { get; }
-
         void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
-
-        /// <summary>
-        /// Notifies the grid that an anchored entity is dirty.
-        /// </summary>
-        /// <param name="pos">Position of the entity in local tile indices.</param>
-        void AnchoredEntDirty(Vector2i pos);
 
         void UpdateAABB();
 

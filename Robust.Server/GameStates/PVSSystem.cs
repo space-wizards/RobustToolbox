@@ -234,8 +234,8 @@ internal partial class PVSSystem : EntitySystem
             pvsCollection.AddGrid(gridId);
         }
 
-        var uid = _mapManager.GetGrid(gridId).GridEntityId;
-        _entityPvsCollection.UpdateIndex(uid);
+        var euid = _mapManager.GetGridEuid(gridId);
+        _entityPvsCollection.UpdateIndex(euid);
     }
 
     private void OnMapDestroyed(object? sender, MapEventArgs e)
@@ -348,8 +348,10 @@ internal partial class PVSSystem : EntitySystem
             _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
             while (gridEnumerator.MoveNext(out var mapGrid))
             {
+                var gridXform = transformQuery.GetComponent(mapGrid.GridEntityId);
+
                 var gridChunkEnumerator =
-                    new ChunkIndicesEnumerator(mapGrid.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
+                    new ChunkIndicesEnumerator(gridXform.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
 
                 while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                 {

@@ -421,11 +421,11 @@ stored in a single array since multiple arrays lead to multiple misses.
             // Integrate positions
             for (var i = 0; i < BodyCount; i++)
             {
-                ref var linearVelocity = ref _linearVelocities[i];
-                ref var angularVelocity = ref _angularVelocities[i];
+                var linearVelocity = _linearVelocities[i];
+                var angularVelocity = _angularVelocities[i];
 
-                ref var position = ref _positions[i];
-                ref var angle = ref _angles[i];
+                var position = _positions[i];
+                var angle = _angles[i];
 
                 var translation = linearVelocity * frameTime;
                 if (Vector2.Dot(translation, translation) > _maxLinearVelocity)
@@ -444,6 +444,11 @@ stored in a single array since multiple arrays lead to multiple misses.
                 // Integrate
                 position += linearVelocity * frameTime;
                 angle += angularVelocity * frameTime;
+
+                _linearVelocities[i] = linearVelocity;
+                _angularVelocities[i] = angularVelocity;
+                _positions[i] = position;
+                _angles[i] = angle;
             }
 
             _positionSolved = false;
@@ -486,6 +491,8 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             _brokenJoints.Clear();
 
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
@@ -511,7 +518,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // body.Sweep.Angle = angle;
 
                     // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
-                    var transform = _entityManager.GetComponent<TransformComponent>(body.Owner);
+                    var transform = xforms.GetComponent(body.Owner);
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;

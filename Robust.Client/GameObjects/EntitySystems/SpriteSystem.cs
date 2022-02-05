@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects
     /// Updates the layer animation for every visible sprite.
     /// </summary>
     [UsedImplicitly]
-    public class SpriteSystem : EntitySystem
+    public sealed class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;

@@ -9,7 +9,7 @@ using Robust.Shared.Network;
 namespace Robust.UnitTesting.Shared
 {
     [TestFixture]
-    public class EngineIntegrationTest_Test : RobustIntegrationTest
+    public sealed class EngineIntegrationTest_Test : RobustIntegrationTest
     {
         [Test]
         public void ServerStartsCorrectlyTest()

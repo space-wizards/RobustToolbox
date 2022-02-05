@@ -6,7 +6,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
-    public class IntegerSerializerTest : SerializationTest
+    public sealed class IntegerSerializerTest : SerializationTest
     {
         [Test]
         public void IntReadTest()

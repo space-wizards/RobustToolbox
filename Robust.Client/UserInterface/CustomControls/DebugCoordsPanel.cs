@@ -11,7 +11,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class DebugCoordsPanel : PanelContainer
+    internal sealed class DebugCoordsPanel : PanelContainer
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;

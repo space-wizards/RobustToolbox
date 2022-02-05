@@ -9,7 +9,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Mapping
 {
-    public class MappingDataNode : DataNode<MappingDataNode>
+    public sealed class MappingDataNode : DataNode<MappingDataNode>
     {
         // To fetch nodes by key name with YAML, we NEED a YamlScalarNode.
         // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.

@@ -11,6 +11,7 @@ namespace Robust.Shared.GameObjects
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
     /// <inheritdoc />
+    [Virtual]
     public partial class EntityManager : IEntityManager
     {
         #region Dependencies

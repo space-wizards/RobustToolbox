@@ -4,6 +4,7 @@ using Robust.Shared.Input;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class HistoryLineEdit : LineEdit
     {
         private const int MaxHistorySize = 100;

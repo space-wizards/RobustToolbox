@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Robust.Client.UserInterface
 {
-    public class FileDialogFilters
+    public sealed class FileDialogFilters
     {
         public FileDialogFilters(IReadOnlyList<Group> groups)
         {
@@ -15,7 +15,7 @@ namespace Robust.Client.UserInterface
 
         public IReadOnlyList<Group> Groups { get; }
 
-        public class Group
+        public sealed class Group
         {
             public Group(IReadOnlyList<string> extensions)
             {

@@ -11,7 +11,7 @@ using static Robust.Shared.Network.Messages.MsgScriptCompletionResponse;
 
 namespace Robust.Client.Console
 {
-    public class Completions : DefaultWindow
+    public sealed class Completions : DefaultWindow
     {
         private HistoryLineEdit _textBar;
         private ScrollContainer _suggestPanel = new()
@@ -75,7 +75,7 @@ namespace Robust.Client.Console
         }
 
         // Label and ghetto button.
-        public class Entry : RichTextLabel
+        public sealed class Entry : RichTextLabel
         {
             public readonly LiteResult Result;
 

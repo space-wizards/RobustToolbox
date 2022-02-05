@@ -120,7 +120,7 @@ namespace Robust.Shared.Console
         /// A console command that was registered inline through <see cref="IConsoleHost"/>.
         /// </summary>
         [Reflect(false)]
-        public class RegisteredCommand : IConsoleCommand
+        public sealed class RegisteredCommand : IConsoleCommand
         {
             public ConCommandCallback Callback { get; }
 

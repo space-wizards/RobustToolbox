@@ -8,7 +8,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.GameObjects
 {
-    public class VelocityDebugSystem : EntitySystem
+    public sealed class VelocityDebugSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;

@@ -17,7 +17,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.ServerStatus
 {
-    public class WatchdogApi : IWatchdogApi, IPostInjectInit
+    public sealed class WatchdogApi : IWatchdogApi, IPostInjectInit
     {
         [Dependency] private readonly IStatusHost _statusHost = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;

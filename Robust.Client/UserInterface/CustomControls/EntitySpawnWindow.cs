@@ -406,7 +406,7 @@ namespace Robust.Client.UserInterface.CustomControls
             UpdateVisiblePrototypes();
         }
 
-        private class PrototypeListContainer : Container
+        private sealed class PrototypeListContainer : Container
         {
             // Quick and dirty container to do virtualization of the list.
             // Basically, get total item count and offset to put the current buttons at.
@@ -474,7 +474,7 @@ namespace Robust.Client.UserInterface.CustomControls
         }
 
         [DebuggerDisplay("spawnbutton {" + nameof(Index) + "}")]
-        private class EntitySpawnButton : Control
+        private sealed class EntitySpawnButton : Control
         {
             public string PrototypeID => Prototype.ID;
             public EntityPrototype Prototype { get; set; } = default!;
@@ -547,7 +547,7 @@ namespace Robust.Client.UserInterface.CustomControls
             RotationLabel.Text = placementManager.Direction.ToString();
         }
 
-        private class DoNotMeasure : Control
+        private sealed class DoNotMeasure : Control
         {
             protected override Vector2 MeasureOverride(Vector2 availableSize)
             {

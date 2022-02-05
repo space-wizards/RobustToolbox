@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
-    internal class MapGrid : IMapGridInternal
+    internal sealed class MapGrid : IMapGridInternal
     {
         /// <summary>
         ///     Game tick that the map was created.

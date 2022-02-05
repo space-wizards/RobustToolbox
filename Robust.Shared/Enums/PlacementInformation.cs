@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Enums
 {
-    public class PlacementInformation
+    public sealed class PlacementInformation
     {
         public string? EntityType { get; set; }
         public bool IsTile { get; set; }

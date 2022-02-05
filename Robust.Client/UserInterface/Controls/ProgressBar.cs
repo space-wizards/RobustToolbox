@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class ProgressBar : Range
     {
         public const string StylePropertyBackground = "background";

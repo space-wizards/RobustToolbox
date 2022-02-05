@@ -6,7 +6,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorAngle : VVPropEditor
+    public sealed class VVPropEditorAngle : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

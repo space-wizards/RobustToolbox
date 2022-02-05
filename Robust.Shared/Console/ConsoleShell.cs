@@ -3,7 +3,7 @@ using Robust.Shared.Players;
 namespace Robust.Shared.Console
 {
     /// <inheritdoc />
-    public class ConsoleShell : IConsoleShell
+    public sealed class ConsoleShell : IConsoleShell
     {
         /// <summary>
         /// Constructs a new instance of <see cref="ConsoleShell"/>.

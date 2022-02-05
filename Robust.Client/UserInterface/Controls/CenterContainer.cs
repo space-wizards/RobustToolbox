@@ -5,6 +5,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Container type that centers its children inside itself.
     /// </summary>
+    [Virtual]
     public class CenterContainer : Container
     {
         protected override Vector2 ArrangeOverride(Vector2 finalSize)

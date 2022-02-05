@@ -984,7 +984,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    public sealed class PhysicsBodyTypeChangedEvent : EntityEventArgs
     {
         /// <summary>
         ///     New BodyType of the entity.

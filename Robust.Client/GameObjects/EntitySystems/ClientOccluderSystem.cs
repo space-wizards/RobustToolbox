@@ -72,7 +72,7 @@ namespace Robust.Client.GameObjects
             var sender = ev.Sender;
             if (EntityManager.EntityExists(sender) &&
                 EntityManager.TryGetComponent(sender, out ClientOccluderComponent? iconSmooth)
-                && iconSmooth.Running)
+                && iconSmooth.Initialized)
             {
                 var grid1 = _mapManager.GetGrid(EntityManager.GetComponent<TransformComponent>(sender).GridID);
                 var coords = EntityManager.GetComponent<TransformComponent>(sender).Coordinates;
@@ -85,7 +85,7 @@ namespace Robust.Client.GameObjects
             }
 
             // Entity is no longer valid, update around the last position it was at.
-            if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out var grid))
+            else if (ev.LastPosition.HasValue && _mapManager.TryGetGrid(ev.LastPosition.Value.grid, out var grid))
             {
                 var pos = ev.LastPosition.Value.pos;
 

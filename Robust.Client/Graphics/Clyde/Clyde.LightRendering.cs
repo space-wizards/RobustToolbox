@@ -515,10 +515,11 @@ namespace Robust.Client.Graphics.Clyde
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
             var state = (this, worldAABB, count: 0);
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
                 comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count) state, in PointLightComponent light) =>
                 {
@@ -528,7 +529,7 @@ namespace Robust.Client.Graphics.Clyde
                         return false;
                     }
 
-                    var transform = _entityManager.GetComponent<TransformComponent>(light.Owner);
+                    var transform = xforms.GetComponent(light.Owner);
 
                     if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
 
@@ -871,21 +872,24 @@ namespace Robust.Client.Graphics.Clyde
                 var ii = 0;
                 var imi = 0;
 
+                var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    var treeBounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
-                        var occluder = (ClientOccluderComponent)sOccluder;
-                        var transform = _entityManager.GetComponent<TransformComponent>(occluder.Owner);
-                        if (!occluder.Enabled)
+                        var transform = xforms.GetComponent(sOccluder.Owner);
+                        if (!sOccluder.Enabled)
                         {
                             return true;
                         }
 
+                        var occluder = (ClientOccluderComponent)sOccluder;
+
                         var worldTransform = transform.WorldMatrix;
-                        var box = occluder.BoundingBox;
+                        var box = sOccluder.BoundingBox;
 
                         var tl = worldTransform.Transform(box.TopLeft);
                         var tr = worldTransform.Transform(box.TopRight);

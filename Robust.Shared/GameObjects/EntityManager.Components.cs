@@ -707,48 +707,6 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
-        public struct EntQueryEnumerator<T> : IDisposable where T : Component
-        {
-            private Dictionary<EntityUid, Component>.Enumerator _comps;
-
-            public EntQueryEnumerator(Dictionary<EntityUid, Component>.Enumerator comps)
-            {
-                _comps = comps;
-            }
-
-            public bool MoveNext([NotNullWhen(true)] out T? component)
-            {
-                if (!_comps.MoveNext())
-                {
-                    component = null;
-                    return false;
-                }
-
-                var (_, comp) = _comps.Current;
-
-                if (comp.Deleted)
-                {
-                    return MoveNext(out component);
-                }
-
-                component = (T) comp;
-                return true;
-            }
-
-            public void Dispose()
-            {
-                _comps.Dispose();
-            }
-        }
-
-        public EntQueryEnumerator<T> EntityQueryEnumerator<T>() where T : Component
-        {
-            // Unless you have a profile showing a speed need for the funny struct enumerator just using the IEnumerable is easier.
-            var comps = _entTraitArray[ArrayIndexFor<T>()];
-            var enumerator = new EntQueryEnumerator<T>(comps.GetEnumerator());
-            return enumerator;
-        }
-
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {

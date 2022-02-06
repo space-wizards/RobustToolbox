@@ -62,6 +62,12 @@ namespace Robust.Client.GameObjects
             Play(component, animation, key);
         }
 
+        public void Play(EntityUid uid, AnimationPlayerComponent? component, Animation animation, string key)
+        {
+            component ??= EntityManager.EnsureComponent<AnimationPlayerComponent>(uid);
+            Play(component, animation, key);
+        }
+
         /// <summary>
         ///     Start playing an animation.
         /// </summary>
@@ -86,6 +92,18 @@ namespace Robust.Client.GameObjects
 
         public void Stop(AnimationPlayerComponent component, string key)
         {
+            component.PlayingAnimations.Remove(key);
+        }
+
+        public void Stop(EntityUid uid, string key)
+        {
+            if (!TryComp<AnimationPlayerComponent>(uid, out var player)) return;
+            player.PlayingAnimations.Remove(key);
+        }
+
+        public void Stop(EntityUid uid, AnimationPlayerComponent? component, string key)
+        {
+            if (!Resolve(uid, ref component, false)) return;
             component.PlayingAnimations.Remove(key);
         }
     }

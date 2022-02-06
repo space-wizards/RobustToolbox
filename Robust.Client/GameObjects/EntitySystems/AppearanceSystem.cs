@@ -87,7 +87,8 @@ namespace Robust.Client.GameObjects
             // Give it AppearanceData so we can still keep the friend attribute on the component.
             EntityManager.EventBus.RaiseLocalEvent(uid, new AppearanceChangeEvent
             {
-                AppearanceData = appearanceComponent.AppearanceData,
+                Component = appearanceComponent,
+                AppearanceData = appearanceComponent._appearanceData,
             });
 
             // Eventually visualizers would be nuked and we'd just make them components instead.
@@ -103,6 +104,7 @@ namespace Robust.Client.GameObjects
     /// </summary>
     public sealed class AppearanceChangeEvent : EntityEventArgs
     {
+        public AppearanceComponent Component = default!;
         public IReadOnlyDictionary<object, object> AppearanceData = default!;
     }
 }

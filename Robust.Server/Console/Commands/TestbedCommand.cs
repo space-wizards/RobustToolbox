@@ -109,9 +109,8 @@ namespace Robust.Server.Console.Commands
         private void SetupPlayer(MapId mapId, IConsoleShell shell, IPlayerSession? player, IMapManager mapManager)
         {
             if (mapId == MapId.Nullspace) return;
-            var pauseManager = IoCManager.Resolve<IPauseManager>();
-            pauseManager.SetMapPaused(mapId, false);
-            var mapUid = IoCManager.Resolve<IMapManager>().GetMapEntityIdOrThrow(mapId);
+            mapManager.SetMapPaused(mapId, false);
+            var mapUid = mapManager.GetMapEntityIdOrThrow(mapId);
             IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(mapUid).Gravity = new Vector2(0, -9.8f);
 
             return;

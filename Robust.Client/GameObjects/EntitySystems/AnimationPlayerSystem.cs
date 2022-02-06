@@ -85,6 +85,14 @@ namespace Robust.Client.GameObjects
                    component.PlayingAnimations.ContainsKey(key);
         }
 
+        public bool HasRunningAnimation(EntityUid uid, AnimationPlayerComponent? component, string key)
+        {
+            if (component == null)
+                TryComp(uid, out component);
+
+            return component != null && component.PlayingAnimations.ContainsKey(key);
+        }
+
         public bool HasRunningAnimation(AnimationPlayerComponent component, string key)
         {
             return component.PlayingAnimations.ContainsKey(key);

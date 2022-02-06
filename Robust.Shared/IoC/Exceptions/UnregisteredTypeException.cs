@@ -7,6 +7,7 @@ namespace Robust.Shared.IoC.Exceptions
     /// Thrown by <see cref="IoCManager.Resolve{T}"/> if one attempts to resolve an interface that isn't registered.
     /// </summary>
     [Serializable]
+    [Virtual]
     public class UnregisteredTypeException : Exception
     {
         /// <summary>

@@ -19,7 +19,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
 
@@ -132,7 +132,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("save")]
-        public bool MapSavable { get; protected set; } = true;
+        public bool MapSavable { get; set; } = true;
 
         /// <summary>
         /// The prototype we inherit from.
@@ -294,7 +294,7 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, IComponent>
+        public sealed class ComponentRegistry : Dictionary<string, IComponent>
         {
             public ComponentRegistry()
             {
@@ -306,7 +306,7 @@ namespace Robust.Shared.Prototypes
         }
 
         [DataDefinition]
-        public class EntityPlacementProperties
+        public sealed class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }

@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 {
     [TestFixture]
     [TestOf(typeof(PopupContainer))]
-    public class PopupContainerTest : RobustUnitTest
+    public sealed class PopupContainerTest : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 

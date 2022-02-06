@@ -7,6 +7,7 @@ namespace Robust.Shared.IoC.Exceptions
     /// Signifies that a type threw an exception from its constructor while IoC was trying to build it.
     /// </summary>
     [Serializable]
+    [Virtual]
     public class ImplementationConstructorException : Exception
     {
         /// <summary>

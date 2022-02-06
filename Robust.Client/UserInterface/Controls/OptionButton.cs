@@ -6,6 +6,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class OptionButton : ContainerButton
     {
         public const string StyleClassOptionButton = "optionButton";
@@ -296,7 +297,7 @@ namespace Robust.Client.UserInterface.Controls
             TogglePopup(false);
         }
 
-        public class ItemSelectedEventArgs : EventArgs
+        public sealed class ItemSelectedEventArgs : EventArgs
         {
             public OptionButton Button { get; }
 

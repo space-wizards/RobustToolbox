@@ -2,6 +2,7 @@ using System;
 
 namespace Robust.Shared.Serialization
 {
+    [Virtual]
     public class InvalidMappingException : Exception
     {
 

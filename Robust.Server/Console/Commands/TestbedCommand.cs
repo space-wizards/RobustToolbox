@@ -44,7 +44,7 @@ namespace Robust.Server.Console.Commands
     /// <summary>
     ///     Copies of Box2D's physics testbed for debugging.
     /// </summary>
-    public class TestbedCommand : IConsoleCommand
+    public sealed class TestbedCommand : IConsoleCommand
     {
         public string Command => "testbed";
         public string Description => "Loads a physics testbed on the specified map.";

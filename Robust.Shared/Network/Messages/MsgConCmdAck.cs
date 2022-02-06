@@ -4,7 +4,7 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgConCmdAck : NetMessage
+    public sealed class MsgConCmdAck : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.String;
 

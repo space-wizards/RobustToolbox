@@ -3,7 +3,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.Utility
 {
-    public class VectorSerializerUtility
+    public sealed class VectorSerializerUtility
     {
         private static char[] _separators = {',', 'x'};
 

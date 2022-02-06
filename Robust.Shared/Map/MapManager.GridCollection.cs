@@ -13,7 +13,7 @@ namespace Robust.Shared.Map;
 /// <summary>
 ///     Arguments for when a one or more tiles on a grid is changed at once.
 /// </summary>
-public class GridChangedEventArgs : EventArgs
+public sealed class GridChangedEventArgs : EventArgs
 {
     /// <summary>
     ///     Creates a new instance of this class.
@@ -35,7 +35,7 @@ public class GridChangedEventArgs : EventArgs
 /// <summary>
 ///     Arguments for when a single tile on a grid is changed locally or remotely.
 /// </summary>
-public class TileChangedEventArgs : EventArgs
+public sealed class TileChangedEventArgs : EventArgs
 {
     /// <summary>
     ///     Creates a new instance of this class.

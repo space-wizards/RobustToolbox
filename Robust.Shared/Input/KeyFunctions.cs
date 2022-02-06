@@ -151,5 +151,5 @@ namespace Robust.Shared.Input
     ///     Makes all constant strings on this static class be added as input functions.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class KeyFunctionsAttribute : Attribute { }
+    public sealed class KeyFunctionsAttribute : Attribute { }
 }

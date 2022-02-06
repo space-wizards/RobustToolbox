@@ -50,7 +50,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [Serializable, NetSerializable]
-        public class CollisionWakeState : ComponentState
+        public sealed class CollisionWakeState : ComponentState
         {
             public bool Enabled { get; }
 

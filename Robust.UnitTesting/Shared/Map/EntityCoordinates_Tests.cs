@@ -16,7 +16,7 @@ using Robust.Shared.Serialization.Manager;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, Parallelizable, TestOf(typeof(EntityCoordinates))]
-    public class EntityCoordinates_Tests : RobustUnitTest
+    public sealed class EntityCoordinates_Tests : RobustUnitTest
     {
         private const string PROTOTYPES = @"
 - type: entity

@@ -24,7 +24,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 {
     // So Farseer uses List<T> but box2d and aether both use a linkedlist for world contacts presumably because you need to frequently
     // and remove in the middle of enumeration so this is probably more brrrrrt
-    public class ContactHead : Contact, IEnumerable<Contact>
+    public sealed class ContactHead : Contact, IEnumerable<Contact>
     {
         internal ContactHead(): base(null, 0, null, 0)
         {

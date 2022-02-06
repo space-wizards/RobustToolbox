@@ -2,7 +2,7 @@
 
 namespace Robust.Client.Console
 {
-    public class ClientConGroupController : IClientConGroupController
+    public sealed class ClientConGroupController : IClientConGroupController
     {
         private IClientConGroupImplementation? _implementation;
         public event Action? ConGroupUpdated;

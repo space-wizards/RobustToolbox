@@ -20,7 +20,7 @@ namespace Robust.Client.Graphics.Clyde
         /// <summary>
         ///     Represents some set of uniforms that can be backed by a uniform buffer or by regular uniforms.
         /// </summary>
-        private class GLUniformBuffer<T> where T : unmanaged, IAppliableUniformSet
+        private sealed class GLUniformBuffer<T> where T : unmanaged, IAppliableUniformSet
         {
             private readonly Clyde _clyde;
             private readonly int _index;

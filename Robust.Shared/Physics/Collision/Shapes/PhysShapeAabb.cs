@@ -17,7 +17,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
     /// </summary>
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PhysShapeAabb : IPhysShape
+    public sealed class PhysShapeAabb : IPhysShape
     {
         public int ChildCount => 1;
 

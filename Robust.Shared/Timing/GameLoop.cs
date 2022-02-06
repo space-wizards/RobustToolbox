@@ -46,7 +46,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     Manages the main game loop for a GameContainer.
     /// </summary>
-    public class GameLoop : IGameLoop
+    public sealed class GameLoop : IGameLoop
     {
         private static readonly Histogram _frameTimeHistogram = Metrics.CreateHistogram(
             "robust_game_loop_frametime",

@@ -28,7 +28,7 @@ namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
     [UsedImplicitly]
-    public class ClientGameStateManager : IClientGameStateManager
+    public sealed class ClientGameStateManager : IClientGameStateManager
     {
         private GameStateProcessor _processor = default!;
 
@@ -637,7 +637,7 @@ namespace Robust.Client.GameStates
         }
     }
 
-    public class GameStateAppliedArgs : EventArgs
+    public sealed class GameStateAppliedArgs : EventArgs
     {
         public GameState AppliedState { get; }
 

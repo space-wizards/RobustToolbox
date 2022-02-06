@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, Parallelizable, TestOf(typeof(GridChunkPartition))]
-    internal class GridChunkPartition_Tests : RobustUnitTest
+    internal sealed class GridChunkPartition_Tests : RobustUnitTest
     {
         // origin is top left
         private static readonly int[] _testMiscTiles = {

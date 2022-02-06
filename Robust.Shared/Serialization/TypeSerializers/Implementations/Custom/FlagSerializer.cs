@@ -10,7 +10,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
 {
-    public class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>
+    public sealed class FlagSerializer<TTag> : ITypeSerializer<int, ValueDataNode>, ITypeReader<int, SequenceDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

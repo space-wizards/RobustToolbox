@@ -12,7 +12,7 @@ namespace Robust.Shared.ContentPack
         /// <summary>
         ///     Loads a zipped content pack into the VFS.
         /// </summary>
-        class PackLoader : IContentRoot
+        sealed class PackLoader : IContentRoot
         {
             private readonly FileInfo? _pack;
             private readonly Stream? _stream;

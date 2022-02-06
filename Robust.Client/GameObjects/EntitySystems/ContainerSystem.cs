@@ -10,7 +10,7 @@ using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
-    public class ContainerSystem : SharedContainerSystem
+    public sealed class ContainerSystem : SharedContainerSystem
     {
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
@@ -59,7 +59,7 @@ namespace Robust.Client.GameObjects
             {
                 if (!cast.ContainerSet.Any(data => data.Id == id))
                 {
-                    container.EmptyContainer(true);
+                    container.EmptyContainer(true, entMan: EntityManager);
                     container.Shutdown();
                     toDelete ??= new List<string>();
                     toDelete.Add(id);

@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 {
     [UsedImplicitly]
     [TestFixture]
-    public class PrototypeManager_Test : RobustUnitTest
+    public sealed class PrototypeManager_Test : RobustUnitTest
     {
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
@@ -183,7 +183,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public class TestBasicPrototypeComponent : Component
+    public sealed class TestBasicPrototypeComponent : Component
     {
 
         [DataField("foo")] public string Foo = null!;

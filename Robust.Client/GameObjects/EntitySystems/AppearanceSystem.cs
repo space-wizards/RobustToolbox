@@ -88,7 +88,7 @@ namespace Robust.Client.GameObjects
             EntityManager.EventBus.RaiseLocalEvent(uid, new AppearanceChangeEvent
             {
                 Component = appearanceComponent,
-                AppearanceData = appearanceComponent._appearanceData,
+                AppearanceData = appearanceComponent.AppearanceData,
             });
 
             // Eventually visualizers would be nuked and we'd just make them components instead.

@@ -508,6 +508,7 @@ namespace Robust.Shared.GameObjects
                    && netSet.ContainsKey(netId);
         }
 
+        /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T EnsureComponent<T>(EntityUid uid) where T : Component, new()
         {
@@ -515,6 +516,20 @@ namespace Robust.Shared.GameObjects
                 return component;
 
             return AddComponent<T>(uid);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool EnsureComponent<T>(EntityUid entity, out T component) where T : Component, new()
+        {
+            if (TryGetComponent<T>(entity, out var comp))
+            {
+                component = comp;
+                return true;
+            }
+
+            component = AddComponent<T>(entity);
+            return false;
         }
 
         /// <inheritdoc />

@@ -31,11 +31,14 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics.Collision;
+using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
 
@@ -48,11 +51,61 @@ namespace Robust.Shared.Physics.Dynamics
 
         internal MapId MapId { get; set; }
 
-        public readonly ContactHead ContactList;
-        public int ContactCount { get; private set; }
-        private const int ContactPoolInitialSize = 64;
+        // TODO: Jesus we should really have a test for this
+        /// <summary>
+        ///     Ordering is under <see cref="ShapeType"/>
+        ///     uses enum to work out which collision evaluation to use.
+        /// </summary>
+        private static Contact.ContactType[,] _registers = {
+                                                           {
+                                                               // Circle register
+                                                               Contact.ContactType.Circle,
+                                                               Contact.ContactType.EdgeAndCircle,
+                                                               Contact.ContactType.PolygonAndCircle,
+                                                               Contact.ContactType.ChainAndCircle,
+                                                               Contact.ContactType.AabbAndCircle,
+                                                           },
+                                                           {
+                                                               // Edge register
+                                                               Contact.ContactType.EdgeAndCircle,
+                                                               Contact.ContactType.NotSupported, // Edge
+                                                               Contact.ContactType.EdgeAndPolygon,
+                                                               Contact.ContactType.NotSupported, // Chain
+                                                               Contact.ContactType.NotSupported, // Aabb
+                                                           },
+                                                           {
+                                                               // Polygon register
+                                                               Contact.ContactType.PolygonAndCircle,
+                                                               Contact.ContactType.EdgeAndPolygon,
+                                                               Contact.ContactType.Polygon,
+                                                               Contact.ContactType.ChainAndPolygon,
+                                                               Contact.ContactType.AabbAndPolygon,
+                                                           },
+                                                           {
+                                                               // Chain register
+                                                               Contact.ContactType.ChainAndCircle,
+                                                               Contact.ContactType.NotSupported, // Edge
+                                                               Contact.ContactType.ChainAndPolygon,
+                                                               Contact.ContactType.NotSupported, // Chain
+                                                               Contact.ContactType.NotSupported, // Aabb - TODO Just cast to poly
+                                                           },
+                                                           {
+                                                               // Aabb register
+                                                               Contact.ContactType.AabbAndCircle,
+                                                               Contact.ContactType.NotSupported, // Edge - TODO Just cast to poly
+                                                               Contact.ContactType.AabbAndPolygon,
+                                                               Contact.ContactType.NotSupported, // Chain - TODO Just cast to poly
+                                                               Contact.ContactType.Aabb,
+                                                           }
+                                                       };
 
-        internal Stack<Contact> ContactPoolList = new(ContactPoolInitialSize);
+        public int ContactCount => _activeContacts.Count;
+
+        private int ContactPoolInitialSize = 64;
+
+        private ObjectPool<Contact> _contactPool = new DefaultObjectPool<Contact>(new ContactPoolPolicy(), 1024);
+
+        internal LinkedList<Contact> _activeContacts = new();
 
         // Didn't use the eventbus because muh allocs on something being run for every collision every frame.
         /// <summary>
@@ -65,10 +118,54 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Also need to clean the station up to not have 160 contacts on roundstart
 
-        public ContactManager()
+        private sealed class ContactPoolPolicy : IPooledObjectPolicy<Contact>
         {
-            ContactList = new ContactHead();
-            ContactCount = 0;
+            public Contact Create()
+            {
+                var contact = new Contact();
+                IoCManager.InjectDependencies(contact);
+#if DEBUG
+                contact._debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
+#endif
+                contact.Manifold = new Manifold
+                {
+                    Points = new ManifoldPoint[2]
+                };
+
+                return contact;
+            }
+
+            public bool Return(Contact obj)
+            {
+                SetContact(obj, null, 0, null, 0);
+                return true;
+            }
+        }
+
+        private static void SetContact(Contact contact, Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
+        {
+            contact.Enabled = true;
+            contact.IsTouching = false;
+            contact.IslandFlag = false;
+            contact.FilterFlag = false;
+            // TOIFlag = false;
+
+            contact.FixtureA = fixtureA;
+            contact.FixtureB = fixtureB;
+
+            contact.ChildIndexA = indexA;
+            contact.ChildIndexB = indexB;
+
+            contact.Manifold.PointCount = 0;
+
+            //FPE: We only set the friction and restitution if we are not destroying the contact
+            if (fixtureA != null && fixtureB != null)
+            {
+                contact.Friction = MathF.Sqrt(fixtureA.Friction * fixtureB.Friction);
+                contact.Restitution = MathF.Max(fixtureA.Restitution, fixtureB.Restitution);
+            }
+
+            contact.TangentSpeed = 0;
         }
 
         public void Initialize()
@@ -100,10 +197,43 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void InitializePool()
         {
+            var dummy = new Contact[ContactPoolInitialSize];
+
             for (var i = 0; i < ContactPoolInitialSize; i++)
             {
-                ContactPoolList.Push(new Contact(null, 0, null, 0));
+                dummy[i] = _contactPool.Get();
             }
+
+            for (var i = 0; i < ContactPoolInitialSize; i++)
+            {
+                _contactPool.Return(dummy[i]);
+            }
+        }
+
+        private Contact CreateContact(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        {
+            var type1 = fixtureA.Shape.ShapeType;
+            var type2 = fixtureB.Shape.ShapeType;
+
+            DebugTools.Assert(ShapeType.Unknown < type1 && type1 < ShapeType.TypeCount);
+            DebugTools.Assert(ShapeType.Unknown < type2 && type2 < ShapeType.TypeCount);
+
+            // Pull out a spare contact object
+            var contact = _contactPool.Get();
+
+            // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
+            if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
+            {
+                SetContact(contact, fixtureA, indexA, fixtureB, indexB);
+            }
+            else
+            {
+                SetContact(contact, fixtureB, indexB, fixtureA, indexA);
+            }
+
+            contact.Type = _registers[(int)type1, (int)type2];
+
+            return contact;
         }
 
         /// <summary>
@@ -124,95 +254,40 @@ namespace Robust.Shared.Physics.Dynamics
             // so no point duplicating
 
             // Does a contact already exist?
-            var edge = bodyB.ContactEdges;
+            if (fixtureA.Contacts.ContainsKey(fixtureB))
+                return;
 
-            while (edge != null)
-            {
-                if (edge.Other == bodyA)
-                {
-                    var fA = edge.Contact!.FixtureA;
-                    var fB = edge.Contact!.FixtureB;
-                    var iA = edge.Contact.ChildIndexA;
-                    var iB = edge.Contact.ChildIndexB;
-
-                    if (fA == fixtureA && fB == fixtureB && iA == indexA && iB == indexB)
-                    {
-                        // A contact already exists.
-                        return;
-                    }
-
-                    if (fA == fixtureB && fB == fixtureA && iA == indexB && iB == indexA)
-                    {
-                        // A contact already exists.
-                        return;
-                    }
-                }
-
-                edge = edge.Next;
-            }
+            DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
 
             // Does a joint override collision? Is at least one body dynamic?
             if (!bodyB.ShouldCollide(bodyA))
                 return;
 
-            //FPE feature: BeforeCollision delegate
-            /*
-            if (fixtureA.BeforeCollision != null && fixtureA.BeforeCollision(fixtureA, fixtureB) == false)
-                return;
-
-            if (fixtureB.BeforeCollision != null && fixtureB.BeforeCollision(fixtureB, fixtureA) == false)
-                return;
-            */
-
             // Call the factory.
-            Contact c = Contact.Create(this, fixtureA, indexA, fixtureB, indexB);
-
-            // Sloth: IDK why Farseer and Aether2D have this shit but fuck it.
-            if (c == null) return;
+            var contact = CreateContact(fixtureA, indexA, fixtureB, indexB);
 
             // Contact creation may swap fixtures.
-            fixtureA = c.FixtureA!;
-            fixtureB = c.FixtureB!;
+            fixtureA = contact.FixtureA!;
+            fixtureB = contact.FixtureB!;
             bodyA = fixtureA.Body;
             bodyB = fixtureB.Body;
 
             // Insert into world
-            c.Prev = ContactList;
-            c.Next = c.Prev.Next;
-            c.Prev.Next = c;
-            c.Next!.Prev = c;
-            ContactCount++;
+            contact.MapNode = _activeContacts.AddLast(contact);
 
             // Connect to body A
-            c.NodeA.Contact = c;
-            c.NodeA.Other = bodyB;
-
-            c.NodeA.Previous = null;
-            c.NodeA.Next = bodyA.ContactEdges;
-
-            if (bodyA.ContactEdges != null)
-            {
-                bodyA.ContactEdges.Previous = c.NodeA;
-            }
-            bodyA.ContactEdges = c.NodeA;
+            DebugTools.Assert(!fixtureA.Contacts.ContainsKey(fixtureB));
+            fixtureA.Contacts.Add(fixtureB, contact);
+            contact.BodyANode = bodyA.Contacts.AddLast(contact);
 
             // Connect to body B
-            c.NodeB.Contact = c;
-            c.NodeB.Other = bodyA;
-
-            c.NodeB.Previous = null;
-            c.NodeB.Next = bodyB.ContactEdges;
-
-            if (bodyB.ContactEdges != null)
-            {
-                bodyB.ContactEdges.Previous = c.NodeB;
-            }
-            bodyB.ContactEdges = c.NodeB;
+            DebugTools.Assert(!fixtureB.Contacts.ContainsKey(fixtureA));
+            fixtureB.Contacts.Add(fixtureA, contact);
+            contact.BodyBNode = bodyB.Contacts.AddLast(contact);
         }
 
         internal static bool ShouldCollide(Fixture fixtureA, Fixture fixtureB)
         {
-            // TODO: Should we only be checking one side's mask? I think maybe fixtureB? IDK
             return !((fixtureA.CollisionMask & fixtureB.CollisionLayer) == 0x0 &&
                      (fixtureB.CollisionMask & fixtureA.CollisionLayer) == 0x0);
         }
@@ -230,33 +305,35 @@ namespace Robust.Shared.Physics.Dynamics
                 _entityManager.EventBus.RaiseLocalEvent(bodyB.Owner, new EndCollideEvent(fixtureB, fixtureA));
             }
 
+            if (contact.Manifold.PointCount > 0 && contact.FixtureA?.Hard == true && contact.FixtureB?.Hard == true)
+            {
+                if (bodyA.CanCollide)
+                    contact.FixtureA.Body.Awake = true;
+
+                if (bodyB.CanCollide)
+                    contact.FixtureB.Body.Awake = true;
+            }
+
             // Remove from the world
-            contact.Prev!.Next = contact.Next;
-            contact.Next!.Prev = contact.Prev;
-            contact.Next = null;
-            contact.Prev = null;
-            ContactCount--;
+            DebugTools.Assert(contact.MapNode != null);
+            _activeContacts.Remove(contact.MapNode!);
+            contact.MapNode = null;
 
             // Remove from body 1
-            if (contact.NodeA == bodyA.ContactEdges)
-                bodyA.ContactEdges = contact.NodeA.Next;
-            if (contact.NodeA.Previous != null)
-                contact.NodeA.Previous.Next = contact.NodeA.Next;
-            if (contact.NodeA.Next != null)
-                contact.NodeA.Next.Previous = contact.NodeA.Previous;
+            DebugTools.Assert(fixtureA.Contacts.ContainsKey(fixtureB));
+            fixtureA.Contacts.Remove(fixtureB);
+            DebugTools.Assert(bodyA.Contacts.Contains(contact.BodyANode!.Value));
+            bodyA.Contacts.Remove(contact.BodyANode!);
+            contact.BodyANode = null;
 
             // Remove from body 2
-            if (contact.NodeB == bodyB.ContactEdges)
-                bodyB.ContactEdges = contact.NodeB.Next;
-            if (contact.NodeB.Previous != null)
-                contact.NodeB.Previous.Next = contact.NodeB.Next;
-            if (contact.NodeB.Next != null)
-                contact.NodeB.Next.Previous = contact.NodeB.Previous;
-
-            contact.Destroy();
+            DebugTools.Assert(fixtureB.Contacts.ContainsKey(fixtureA));
+            fixtureB.Contacts.Remove(fixtureA);
+            bodyB.Contacts.Remove(contact.BodyBNode!);
+            contact.BodyBNode = null;
 
             // Insert into the pool.
-            ContactPoolList.Push(contact);
+            _contactPool.Return(contact);
         }
 
         internal void Collide()
@@ -269,9 +346,12 @@ namespace Robust.Shared.Physics.Dynamics
             // Can be changed while enumerating
             // TODO: check for null instead?
             // Work out which contacts are still valid before we decide to update manifolds.
-            for (var contact = ContactList.Next; contact != ContactList;)
+            var node = _activeContacts.First;
+
+            while (node != null)
             {
-                if (contact == null) break;
+                var contact = node.Value;
+
                 Fixture fixtureA = contact.FixtureA!;
                 Fixture fixtureB = contact.FixtureB!;
                 int indexA = contact.ChildIndexA;
@@ -283,7 +363,7 @@ namespace Robust.Shared.Physics.Dynamics
                 // Do not try to collide disabled bodies
                 if (!bodyA.CanCollide || !bodyB.CanCollide)
                 {
-                    contact = contact.Next;
+                    node = node.Next;
                     continue;
                 }
 
@@ -293,18 +373,16 @@ namespace Robust.Shared.Physics.Dynamics
                     // Should these bodies collide?
                     if (bodyB.ShouldCollide(bodyA) == false)
                     {
-                        Contact cNuke = contact;
-                        contact = contact.Next;
-                        Destroy(cNuke);
+                        node = node.Next;
+                        Destroy(contact);
                         continue;
                     }
 
                     // Check default filtering
                     if (ShouldCollide(fixtureA, fixtureB) == false)
                     {
-                        Contact cNuke = contact;
-                        contact = contact.Next;
-                        Destroy(cNuke);
+                        node = node.Next;
+                        Destroy(contact);
                         continue;
                     }
 
@@ -329,7 +407,7 @@ namespace Robust.Shared.Physics.Dynamics
                 // At least one body must be awake and it must be dynamic or kinematic.
                 if (activeA == false && activeB == false)
                 {
-                    contact = contact.Next;
+                    node = node.Next;
                     continue;
                 }
 
@@ -362,14 +440,13 @@ namespace Robust.Shared.Physics.Dynamics
                 // Here we destroy contacts that cease to overlap in the broad-phase.
                 if (!overlap)
                 {
-                    Contact cNuke = contact;
-                    contact = contact.Next;
-                    Destroy(cNuke);
+                    node = node.Next;
+                    Destroy(contact);
                     continue;
                 }
 
                 contacts[index++] = contact;
-                contact = contact.Next;
+                node = node.Next;
             }
 
             var status = ArrayPool<ContactStatus>.Shared.Rent(index);
@@ -442,6 +519,8 @@ namespace Robust.Shared.Physics.Dynamics
 
         private void BuildManifolds(Contact[] contacts, int count, ContactStatus[] status)
         {
+            var wake = ArrayPool<bool>.Shared.Rent(count);
+
             if (count > _contactMultithreadThreshold * _contactMinimumThreads)
             {
                 var (batches, batchSize) = SharedPhysicsSystem.GetBatch(count, _contactMultithreadThreshold);
@@ -450,21 +529,37 @@ namespace Robust.Shared.Physics.Dynamics
                 {
                     var start = i * batchSize;
                     var end = Math.Min(start + batchSize, count);
-                    UpdateContacts(contacts, start, end, status);
+                    UpdateContacts(contacts, start, end, status, wake);
                 });
 
             }
             else
             {
-                UpdateContacts(contacts, 0, count, status);
+                UpdateContacts(contacts, 0, count, status, wake);
             }
+
+            // Can't do this during UpdateContacts due to IoC threading issues.
+            for (var i = 0; i < count; i++)
+            {
+                var shouldWake = wake[i];
+                if (!shouldWake) continue;
+
+                var contact = contacts[i];
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
+
+                bodyA.Awake = true;
+                bodyB.Awake = true;
+            }
+
+            ArrayPool<bool>.Shared.Return(wake);
         }
 
-        private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status)
+        private void UpdateContacts(Contact[] contacts, int start, int end, ContactStatus[] status, bool[] wake)
         {
             for (var i = start; i < end; i++)
             {
-                status[i] = contacts[i].Update(_physicsManager);
+                status[i] = contacts[i].Update(_physicsManager, out wake[i]);
             }
         }
 
@@ -473,12 +568,14 @@ namespace Robust.Shared.Physics.Dynamics
             Span<Vector2> points = stackalloc Vector2[2];
 
             // We'll do pre and post-solve around all islands rather than each specific island as it seems cleaner with race conditions.
-            for (var contact = ContactList.Next; contact != ContactList; contact = contact?.Next)
+            var node = _activeContacts.First;
+
+            while (node != null)
             {
-                if (contact is not {IsTouching: true, Enabled: true})
-                {
-                    continue;
-                }
+                var contact = node.Value;
+                node = node.Next;
+
+                if (contact is not {IsTouching: true, Enabled: true}) continue;
 
                 var bodyA = contact.FixtureA!.Body;
                 var bodyB = contact.FixtureB!.Body;

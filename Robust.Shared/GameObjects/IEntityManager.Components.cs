@@ -293,13 +293,6 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
         /// <returns>All components that have the specified type.</returns>
-        EntityManager.EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component;
-
-        /// <summary>
-        ///     Returns ALL component instances of a specified type.
-        /// </summary>
-        /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
-        /// <returns>All components that have the specified type.</returns>
         IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T: IComponent;
 
         /// <summary>

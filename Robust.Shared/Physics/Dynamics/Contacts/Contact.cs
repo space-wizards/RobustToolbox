@@ -29,92 +29,45 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
-using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision;
 using Robust.Shared.Physics.Collision.Shapes;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
-    [Virtual]
-    public class Contact : IEquatable<Contact>
+    public sealed class Contact : IEquatable<Contact>
     {
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;
 #if DEBUG
-        private SharedDebugPhysicsSystem _debugPhysics = default!;
+        internal SharedDebugPhysicsSystem _debugPhysics = default!;
 #endif
 
-        public ContactEdge NodeA = new();
-        public ContactEdge NodeB = new();
+        // Store these nodes so we can do fast removals when required, rather than having to iterate every node
+        // trying to find it.
 
         /// <summary>
-        ///     Get the next world contact.
+        /// The node of this contact on the map.
         /// </summary>
-        public Contact? Next { get; internal set; }
+        public LinkedListNode<Contact>? MapNode = null;
 
         /// <summary>
-        ///     Get the previous world contact.
+        /// The node of this contact on body A.
         /// </summary>
-        public Contact? Prev { get; internal set; }
+        public LinkedListNode<Contact>? BodyANode = null;
+
+        /// <summary>
+        /// The node of this contact on body A.
+        /// </summary>
+        public LinkedListNode<Contact>? BodyBNode = null;
 
         public Fixture? FixtureA;
         public Fixture? FixtureB;
 
         public Manifold Manifold;
 
-        private ContactType _type;
-
-        // TODO: Jesus we should really have a test for this
-        /// <summary>
-        ///     Ordering is under <see cref="ShapeType"/>
-        ///     uses enum to work out which collision evaluation to use.
-        /// </summary>
-        private static ContactType[,] _registers = {
-                                                           {
-                                                               // Circle register
-                                                               ContactType.Circle,
-                                                               ContactType.EdgeAndCircle,
-                                                               ContactType.PolygonAndCircle,
-                                                               ContactType.ChainAndCircle,
-                                                               ContactType.AabbAndCircle,
-                                                           },
-                                                           {
-                                                               // Edge register
-                                                               ContactType.EdgeAndCircle,
-                                                               ContactType.NotSupported, // Edge
-                                                               ContactType.EdgeAndPolygon,
-                                                               ContactType.NotSupported, // Chain
-                                                               ContactType.NotSupported, // Aabb
-                                                           },
-                                                           {
-                                                               // Polygon register
-                                                               ContactType.PolygonAndCircle,
-                                                               ContactType.EdgeAndPolygon,
-                                                               ContactType.Polygon,
-                                                               ContactType.ChainAndPolygon,
-                                                               ContactType.AabbAndPolygon,
-                                                           },
-                                                           {
-                                                               // Chain register
-                                                               ContactType.ChainAndCircle,
-                                                               ContactType.NotSupported, // Edge
-                                                               ContactType.ChainAndPolygon,
-                                                               ContactType.NotSupported, // Chain
-                                                               ContactType.NotSupported, // Aabb - TODO Just cast to poly
-                                                           },
-                                                           {
-                                                               // Aabb register
-                                                               ContactType.AabbAndCircle,
-                                                               ContactType.NotSupported, // Edge - TODO Just cast to poly
-                                                               ContactType.AabbAndPolygon,
-                                                               ContactType.NotSupported, // Chain - TODO Just cast to poly
-                                                               ContactType.Aabb,
-                                                           }
-                                                       };
+        internal ContactType Type;
 
         /// <summary>
         ///     Has this contact already been added to an island?
@@ -158,54 +111,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// </summary>
         public float TangentSpeed { get; set; }
 
-        public Contact(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
-        {
-            IoCManager.InjectDependencies(this);
-#if DEBUG
-            _debugPhysics = EntitySystem.Get<SharedDebugPhysicsSystem>();
-#endif
-            Manifold = new Manifold
-            {
-                Points = new ManifoldPoint[2]
-            };
-            Reset(fixtureA, indexA, fixtureB, indexB);
-        }
-
-        /// <summary>
-        ///     Gets a new contact to use, using the contact pool if relevant.
-        /// </summary>
-        internal static Contact Create(ContactManager contactManager, Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
-        {
-            var type1 = fixtureA.Shape.ShapeType;
-            var type2 = fixtureB.Shape.ShapeType;
-
-            DebugTools.Assert(ShapeType.Unknown < type1 && type1 < ShapeType.TypeCount);
-            DebugTools.Assert(ShapeType.Unknown < type2 && type2 < ShapeType.TypeCount);
-
-            // Pull out a spare contact object
-            contactManager.ContactPoolList.TryPop(out var contact);
-
-            // Edge+Polygon is non-symmetrical due to the way Erin handles collision type registration.
-            if ((type1 >= type2 || (type1 == ShapeType.Edge && type2 == ShapeType.Polygon)) && !(type2 == ShapeType.Edge && type1 == ShapeType.Polygon))
-            {
-                if (contact == null)
-                    contact = new Contact(fixtureA, indexA, fixtureB, indexB);
-                else
-                    contact.Reset(fixtureA, indexA, fixtureB, indexB);
-            }
-            else
-            {
-                if (contact == null)
-                    contact = new Contact(fixtureB, indexB, fixtureA, indexA);
-                else
-                    contact.Reset(fixtureB, indexB, fixtureA, indexA);
-            }
-
-            contact._type = _registers[(int)type1, (int)type2];
-
-            return contact;
-        }
-
         public void ResetRestitution()
         {
             Restitution = MathF.Max(FixtureA?.Restitution ?? 0.0f, FixtureB?.Restitution ?? 0.0f);
@@ -214,47 +119,6 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         public void ResetFriction()
         {
             Friction = MathF.Sqrt(FixtureA?.Friction ?? 0.0f * FixtureB?.Friction ?? 0.0f);
-        }
-
-        private void Reset(Fixture? fixtureA, int indexA, Fixture? fixtureB, int indexB)
-        {
-            Enabled = true;
-            IsTouching = false;
-            IslandFlag = false;
-            FilterFlag = false;
-            // TOIFlag = false;
-
-            FixtureA = fixtureA;
-            FixtureB = fixtureB;
-
-            ChildIndexA = indexA;
-            ChildIndexB = indexB;
-
-            Manifold.PointCount = 0;
-
-            Next = null;
-            Prev = null;
-
-            NodeA.Contact = null;
-            NodeA.Previous = null;
-            NodeA.Next = null;
-            NodeA.Other = null;
-
-            NodeB.Contact = null;
-            NodeB.Previous = null;
-            NodeB.Next = null;
-            NodeB.Other = null;
-
-            // _toiCount = 0;
-
-            //FPE: We only set the friction and restitution if we are not destroying the contact
-            if (FixtureA != null && FixtureB != null)
-            {
-                Friction = MathF.Sqrt(FixtureA.Friction * FixtureB.Friction);
-                Restitution = MathF.Max(FixtureA.Restitution, FixtureB.Restitution);
-            }
-
-            TangentSpeed = 0;
         }
 
         /// <summary>
@@ -276,8 +140,9 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         /// Update the contact manifold and touching status.
         /// Note: do not assume the fixture AABBs are overlapping or are valid.
         /// </summary>
+        /// <param name="wake">Whether we should wake the bodies due to touching changing.</param>
         /// <returns>What current status of the contact is (e.g. start touching, end touching, etc.)</returns>
-        internal ContactStatus Update(IPhysicsManager physicsManager)
+        internal ContactStatus Update(IPhysicsManager physicsManager, out bool wake)
         {
             PhysicsComponent bodyA = FixtureA!.Body;
             PhysicsComponent bodyB = FixtureB!.Body;
@@ -290,6 +155,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             bool touching;
             var wasTouching = IsTouching;
 
+            wake = false;
             var sensor = !(FixtureA.Hard && FixtureB.Hard);
 
             var bodyATransform = physicsManager.GetTransform(bodyA);
@@ -336,8 +202,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
                 if (touching != wasTouching)
                 {
-                    bodyA.Awake = true;
-                    bodyB.Awake = true;
+                    wake = true;
                 }
             }
 
@@ -378,7 +243,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
         private void Evaluate(ref Manifold manifold, in Transform transformA, in Transform transformB)
         {
             // This is expensive and shitcodey, see below.
-            switch (_type)
+            switch (Type)
             {
                 // TODO: Need a unit test for these.
                 case ContactType.Polygon:
@@ -426,24 +291,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             }
         }
 
-        internal void Destroy()
-        {
-            if (Manifold.PointCount > 0 && FixtureA?.Hard == true && FixtureB?.Hard == true)
-            {
-                var bodyA = FixtureA.Body;
-                var bodyB = FixtureB.Body;
-
-                if (bodyA.CanCollide)
-                    FixtureA.Body.Awake = true;
-
-                if (bodyB.CanCollide)
-                    FixtureB.Body.Awake = true;
-            }
-
-            Reset(null, 0, null, 0);
-        }
-
-        private enum ContactType : byte
+        public enum ContactType : byte
         {
             NotSupported,
             Polygon,
@@ -466,7 +314,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             return Equals(FixtureA, other.FixtureA) &&
                    Equals(FixtureB, other.FixtureB) &&
                    Manifold.Equals(other.Manifold) &&
-                   _type == other._type &&
+                   Type == other.Type &&
                    Enabled == other.Enabled &&
                    ChildIndexA == other.ChildIndexA &&
                    ChildIndexB == other.ChildIndexB &&

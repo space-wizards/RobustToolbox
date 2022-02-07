@@ -409,17 +409,20 @@ namespace Robust.Shared.Physics
             var bodyA = joint.BodyA;
             var bodyB = joint.BodyB;
 
-            var edge = bodyB.ContactEdges;
-            while (edge != null)
+            var node = bodyB.Contacts.First;
+
+            while (node != null)
             {
-                if (edge.Other == bodyA)
+                var contact = node.Value;
+                node = node.Next;
+
+                if (contact.FixtureA?.Body == bodyA ||
+                    contact.FixtureB?.Body == bodyA)
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
-                    edge.Contact!.FilterFlag = true;
+                    contact.FilterFlag = true;
                 }
-
-                edge = edge.Next;
             }
         }
     }

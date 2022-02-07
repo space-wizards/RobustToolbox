@@ -57,7 +57,6 @@ namespace Robust.Shared.Timing
             });
 
         private readonly IGameTiming _timing;
-        private TimeSpan _lastTick; // last wall time tick
         private TimeSpan _lastKeepUp; // last wall time keep up announcement
 
         public event EventHandler<FrameEventArgs>? Input;
@@ -128,7 +127,7 @@ namespace Robust.Shared.Timing
                 // maximum number of ticks to queue before the loop slows down.
                 var maxTime = TimeSpan.FromTicks(_timing.TickPeriod.Ticks * MaxQueuedTicks);
 
-                var accumulator = _timing.RealTime - _lastTick;
+                var accumulator = _timing.RealTime - _timing.LastTick;
 
                 // If the game can't keep up, limit time.
                 if (accumulator > maxTime)
@@ -136,10 +135,10 @@ namespace Robust.Shared.Timing
                     // limit accumulator to max time.
                     accumulator = maxTime;
 
-                    // pull lastTick up to the current realTime
+                    // pull LastTick up to the current realTime
                     // This will slow down the simulation, but if we are behind from a
                     // lag spike hopefully it will be able to catch up.
-                    _lastTick = _timing.RealTime - maxTime;
+                    _timing.LastTick = _timing.RealTime - maxTime;
 
                     // announce we are falling behind
                     if ((_timing.RealTime - _lastKeepUp).TotalSeconds >= 15.0)
@@ -172,7 +171,7 @@ namespace Robust.Shared.Timing
                 while (accumulator >= tickPeriod)
                 {
                     accumulator -= tickPeriod;
-                    _lastTick += tickPeriod;
+                    _timing.LastTick += tickPeriod;
 
                     // only run the simulation if unpaused, but still use up the accumulated time
                     if (_timing.Paused)

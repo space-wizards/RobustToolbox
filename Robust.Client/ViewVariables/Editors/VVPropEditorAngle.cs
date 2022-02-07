@@ -25,7 +25,12 @@ namespace Robust.Client.ViewVariables.Editors
             if (!ReadOnly)
             {
                 lineEdit.OnTextEntered += e =>
-                    ValueChanged(Angle.FromDegrees(double.Parse(e.Text, CultureInfo.InvariantCulture)));
+                {
+                    if (!double.TryParse(e.Text, NumberStyles.Any, CultureInfo.InvariantCulture, out var number))
+                        return;
+
+                    ValueChanged(Angle.FromDegrees(number));
+                };
             }
 
             hBox.AddChild(lineEdit);

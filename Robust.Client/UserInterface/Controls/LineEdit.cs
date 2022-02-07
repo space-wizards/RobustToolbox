@@ -15,6 +15,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Allows the user to input and modify a line of text.
     /// </summary>
+    [Virtual]
     public class LineEdit : Control
     {
         private const float BlinkTime = 0.5f;
@@ -805,7 +806,7 @@ namespace Robust.Client.UserInterface.Controls
             Whitespace
         }
 
-        public class LineEditEventArgs : EventArgs
+        public sealed class LineEditEventArgs : EventArgs
         {
             public LineEdit Control { get; }
             public string Text { get; }

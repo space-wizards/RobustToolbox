@@ -22,7 +22,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
 {
-    public partial class PlacementManager : IPlacementManager, IDisposable
+    public sealed partial class PlacementManager : IPlacementManager, IDisposable
     {
         [Dependency] private readonly IClientNetManager NetworkManager = default!;
         [Dependency] public readonly IPlayerManager PlayerManager = default!;

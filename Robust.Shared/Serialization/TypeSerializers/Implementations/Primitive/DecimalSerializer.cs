@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
     [TypeSerializer]
-    public class DecimalSerializer : ITypeSerializer<decimal, ValueDataNode>
+    public sealed class DecimalSerializer : ITypeSerializer<decimal, ValueDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

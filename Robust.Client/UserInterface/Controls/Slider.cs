@@ -5,6 +5,7 @@ using static Robust.Client.UserInterface.Controls.LayoutContainer;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class Slider : Range
     {
         public const string StylePropertyBackground = "background";

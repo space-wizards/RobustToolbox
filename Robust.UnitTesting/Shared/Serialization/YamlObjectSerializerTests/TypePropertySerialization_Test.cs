@@ -15,7 +15,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [TestFixture]
-    public class TypePropertySerialization_Test : RobustUnitTest
+    public sealed class TypePropertySerialization_Test : RobustUnitTest
     {
         [OneTimeSetUp]
         public void Setup()
@@ -83,7 +83,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 
     [SerializedType("testtype2")]
     [DataDefinition]
-    public class TestTypeTwo : ITestType
+    public sealed class TestTypeTwo : ITestType
     {
         [DataField("testPropertyOne")]
         public string? TestPropertyOne { get; set; }
@@ -93,7 +93,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
     }
 
     [RegisterComponent]
-    public class TestComponent : Component
+    public sealed class TestComponent : Component
     {
         [DataField("testType")] public ITestType? TestType { get; set; }
     }

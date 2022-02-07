@@ -68,7 +68,7 @@ namespace Robust.UnitTesting.Server
 
     internal delegate void PrototypeRegistrationDelegate(IPrototypeManager protoMan);
 
-    internal class RobustServerSimulation : ISimulation, ISimulationFactory
+    internal sealed class RobustServerSimulation : ISimulation, ISimulationFactory
     {
         private DiContainerDelegate? _diFactory;
         private CompRegistrationDelegate? _regDelegate;

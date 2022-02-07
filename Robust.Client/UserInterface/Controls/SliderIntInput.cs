@@ -2,6 +2,7 @@ using System;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class SliderIntInput : Control
     {
         private Slider _slider;

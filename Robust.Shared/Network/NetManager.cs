@@ -36,7 +36,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Manages all network connections and packet IO.
     /// </summary>
-    public partial class NetManager : IClientNetManager, IServerNetManager
+    public sealed partial class NetManager : IClientNetManager, IServerNetManager
     {
         internal const int AesKeyLength = 32;
 
@@ -1172,6 +1172,7 @@ namespace Robust.Shared.Network
         #endregion Events
 
         [Serializable]
+        [Virtual]
         public class ClientDisconnectedException : Exception
         {
             public ClientDisconnectedException()
@@ -1193,7 +1194,7 @@ namespace Robust.Shared.Network
             }
         }
 
-        private class NetPeerData
+        private sealed class NetPeerData
         {
             public readonly NetPeer Peer;
 
@@ -1231,6 +1232,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Generic exception thrown by the NetManager class.
     /// </summary>
+    [Virtual]
     public class NetManagerException : Exception
     {
         public NetManagerException(string message)

@@ -8,7 +8,7 @@ namespace Robust.Shared.Input.Binding
     /// An individual binding of a given handler to a given key function, with associated
     /// dependency information to resolve handlers bound to the same key function from different types.
     /// </summary>
-    public class CommandBind
+    public sealed class CommandBind
     {
         private readonly BoundKeyFunction _boundKeyFunction;
         private readonly IEnumerable<Type> _after;

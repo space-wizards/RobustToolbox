@@ -3,7 +3,7 @@
     /// <summary>
     ///     A fixed eye is an eye which is fixed to one point, its position.
     /// </summary>
-    public class FixedEye : Eye
+    public sealed class FixedEye : Eye
     {
     }
 }

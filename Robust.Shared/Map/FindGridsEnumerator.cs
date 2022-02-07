@@ -9,15 +9,16 @@ namespace Robust.Shared.Map
 {
     public struct FindGridsEnumerator : IDisposable
     {
-        private IEntityManager _entityManager;
+        private readonly IEntityManager _entityManager;
 
-        private Dictionary<GridId, MapGrid>.Enumerator _enumerator;
+        // ReSharper disable once FieldCanBeMadeReadOnly.Local
+        private IEnumerator<MapGrid> _enumerator;
 
         private MapId _mapId;
         private Box2 _worldAABB;
         private bool _approx;
 
-        internal FindGridsEnumerator(IEntityManager entityManager, Dictionary<GridId, MapGrid>.Enumerator enumerator, MapId mapId, Box2 worldAABB, bool approx)
+        internal FindGridsEnumerator(IEntityManager entityManager, IEnumerator<MapGrid> enumerator, MapId mapId, Box2 worldAABB, bool approx)
         {
             _entityManager = entityManager;
             _enumerator = enumerator;
@@ -36,7 +37,7 @@ namespace Robust.Shared.Map
                     return false;
                 }
 
-                var (_, nextGrid) = _enumerator.Current;
+                var nextGrid = _enumerator.Current;
 
                 if (nextGrid.ParentMapId != _mapId)
                 {

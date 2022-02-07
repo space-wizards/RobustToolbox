@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
+    public sealed class ColorSerializer : ITypeSerializer<Color, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

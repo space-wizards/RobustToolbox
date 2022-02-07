@@ -3,7 +3,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.Player
 {
-    class PlayerData : IPlayerData
+    sealed class PlayerData : IPlayerData
     {
         public PlayerData(NetUserId userId)
         {

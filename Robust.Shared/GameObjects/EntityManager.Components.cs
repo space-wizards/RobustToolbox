@@ -141,7 +141,7 @@ namespace Robust.Shared.GameObjects
                 if (comp.Initialized)
                     continue;
 
-                comp.LifeInitialize();
+                comp.LifeInitialize(this);
             }
 
 #if DEBUG
@@ -179,7 +179,7 @@ namespace Robust.Shared.GameObjects
                 var comp = (Component)component;
                 if (comp.LifeStage == ComponentLifeStage.Initialized)
                 {
-                    comp.LifeStartup();
+                    comp.LifeStartup(this);
                 }
             }
         }
@@ -254,17 +254,17 @@ namespace Robust.Shared.GameObjects
 
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
-            component.LifeAddToEntity();
+            component.LifeAddToEntity(this);
 
             var metadata = GetComponent<MetaDataComponent>(uid);
 
             if (!metadata.EntityInitialized && !metadata.EntityInitializing)
                 return;
 
-            component.LifeInitialize();
+            component.LifeInitialize(this);
 
             if (metadata.EntityInitialized)
-                component.LifeStartup();
+                component.LifeStartup(this);
         }
 
         /// <inheritdoc />
@@ -362,10 +362,10 @@ namespace Robust.Shared.GameObjects
             }
 
             if (component.Running)
-                component.LifeShutdown();
+                component.LifeShutdown(this);
 
             if (component.LifeStage != ComponentLifeStage.PreAdd)
-                component.LifeRemoveFromEntity();
+                component.LifeRemoveFromEntity(this);
             ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
 #if EXCEPTION_TOLERANCE
             }
@@ -395,10 +395,10 @@ namespace Robust.Shared.GameObjects
                 }
 
                 if (component.Running)
-                    component.LifeShutdown();
+                    component.LifeShutdown(this);
 
                 if (component.LifeStage != ComponentLifeStage.PreAdd)
-                    component.LifeRemoveFromEntity(); // Sets delete
+                    component.LifeRemoveFromEntity(this); // Sets delete
 
                 ComponentRemoved?.Invoke(this, new RemovedComponentEventArgs(component, uid));
             }
@@ -707,72 +707,6 @@ namespace Robust.Shared.GameObjects
 
         #region Join Functions
 
-        // Funny struct enumerator equivalent to EntityQuery<T>
-        public struct EntQueryEnumerator<T> : IDisposable where T : Component
-        {
-            private readonly bool _includePaused;
-            private Dictionary<EntityUid, Component>.Enumerator _comps;
-            private Dictionary<EntityUid, Component> _metaData;
-
-            public EntQueryEnumerator(bool includePaused, Dictionary<EntityUid, Component>.Enumerator comps,
-                Dictionary<EntityUid, Component> metaData)
-            {
-                _includePaused = includePaused;
-                _comps = comps;
-                _metaData = metaData;
-            }
-
-            public bool MoveNext([NotNullWhen(true)] out T? component)
-            {
-                if (_includePaused)
-                {
-                    while (_comps.MoveNext())
-                    {
-                        component = (T)_comps.Current.Value;
-
-                        if (component.Deleted) continue;
-
-                        return true;
-                    }
-                }
-                else
-                {
-                    while (_comps.MoveNext())
-                    {
-                        component = (T)_comps.Current.Value;
-
-                        if (component.Deleted) continue;
-
-                        if (!_metaData.TryGetValue(component.Owner, out var metaComp)) continue;
-
-                        var meta = (MetaDataComponent)metaComp;
-
-                        if (meta.EntityPaused) continue;
-
-                        return true;
-                    }
-                }
-
-                component = null;
-                Dispose();
-                return false;
-            }
-
-            public void Dispose()
-            {
-                _comps.Dispose();
-            }
-        }
-
-        public EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component
-        {
-            // Unless you have a profile showing a speed need for the funny struct enumerator just using the IEnumerable is easier.
-            var comps = _entTraitArray[ArrayIndexFor<T>()];
-            var meta = _entTraitArray[ArrayIndexFor<MetaDataComponent>()];
-            var enumerator = new EntQueryEnumerator<T>(includePaused, comps.GetEnumerator(), meta);
-            return enumerator;
-        }
-
         /// <inheritdoc />
         public IEnumerable<T> EntityQuery<T>(bool includePaused = false) where T : IComponent
         {
@@ -1007,7 +941,7 @@ namespace Robust.Shared.GameObjects
         public bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player)
         {
             var attempt = new ComponentGetStateAttemptEvent(player);
-            eventBus.RaiseComponentEvent(component, attempt);
+            eventBus.RaiseComponentEvent(component, ref attempt);
             return !attempt.Cancelled;
         }
 

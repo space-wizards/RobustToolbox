@@ -317,7 +317,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_canCollide == value ||
-                    value && Owner.IsInContainer())
+                    value && Owner.IsInContainer(_entMan))
                     return;
 
                 _canCollide = value;
@@ -956,7 +956,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    public sealed class PhysicsBodyTypeChangedEvent : EntityEventArgs
     {
         /// <summary>
         ///     New BodyType of the entity.

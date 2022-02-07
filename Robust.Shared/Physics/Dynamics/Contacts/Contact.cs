@@ -37,6 +37,7 @@ using Robust.Shared.Physics.Collision.Shapes;
 
 namespace Robust.Shared.Physics.Dynamics.Contacts
 {
+    [Virtual]
     public class Contact : IEquatable<Contact>
     {
         [Dependency] private readonly IManifoldManager _manifoldManager = default!;

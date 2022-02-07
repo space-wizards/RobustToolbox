@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
     [TestOf(typeof(B2DynamicTree<>))]
-    public class B2DynamicTree_Test
+    public sealed class B2DynamicTree_Test
     {
         private static Box2[] aabbs1 =
         {

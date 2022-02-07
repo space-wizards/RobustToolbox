@@ -765,26 +765,27 @@ namespace Robust.Shared.GameObjects
 
         private EntityLookupComponent? GetLookup(EntityUid entity)
         {
-            if (_entityManager.GetComponent<TransformComponent>(entity).MapID == MapId.Nullspace)
-            {
+            // TODO: This should just be passed in when we cleanup EntityLookup a bit.
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+            var xform = xforms.GetComponent(entity);
+
+            if (xform.MapID == MapId.Nullspace)
                 return null;
-            }
+
+            var lookups = _entityManager.GetEntityQuery<EntityLookupComponent>();
+            var parent = xform.ParentUid;
 
             // if it's map return null. Grids should return the map's broadphase.
-            if (_entityManager.HasComponent<EntityLookupComponent>(entity) &&
-                _entityManager.GetComponent<TransformComponent>(entity).Parent == null)
+            if (lookups.HasComponent(entity) &&
+                !parent.IsValid())
             {
                 return null;
             }
 
-            var parent = _entityManager.GetComponent<TransformComponent>(entity).Parent;
-
-            while (true)
+            while (parent.IsValid())
             {
-                if (parent == null) break;
-
-                if (_entityManager.TryGetComponent(parent.Owner, out EntityLookupComponent? comp)) return comp;
-                parent = parent.Parent;
+                if (lookups.TryGetComponent(parent, out var comp)) return comp;
+                parent = xforms.GetComponent(parent).ParentUid;
             }
 
             return null;
@@ -823,13 +824,15 @@ namespace Robust.Shared.GameObjects
             {
                 DebugTools.Assert(!_entityManager.HasComponent<IMapGridComponent>(entity));
 
-                foreach (var childTx in xform.ChildEntities)
+                var children = xform.ChildEnumerator;
+
+                while (children.MoveNext(out var child))
                 {
-                    if (!_handledThisTick.Add(childTx)) continue;
+                    if (!_handledThisTick.Add(child.Value)) continue;
 
-                    var childXform = _entityManager.GetComponent<TransformComponent>(childTx);
+                    var childXform = _entityManager.GetComponent<TransformComponent>(child.Value);
 
-                    if (UpdateEntityTree(childTx, childXform))
+                    if (UpdateEntityTree(child.Value, childXform))
                     {
                         ++necessary;
                     }
@@ -868,7 +871,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // MOCKS WHY
-            if (ent.TryGetContainer(out var container))
+            if (ent.TryGetContainer(out var container, _entityManager))
             {
                 return GetWorldAABB(container.Owner);
             }

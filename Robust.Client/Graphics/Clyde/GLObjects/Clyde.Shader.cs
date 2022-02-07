@@ -4,7 +4,7 @@ namespace Robust.Client.Graphics.Clyde
 {
     internal partial class Clyde
     {
-        private class GLShader
+        private sealed class GLShader
         {
             private readonly Clyde _clyde;
 

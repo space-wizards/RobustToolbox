@@ -6,7 +6,7 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Client.GameObjects
 {
-    internal class ClientComponentFactory : ComponentFactory
+    internal sealed class ClientComponentFactory : ComponentFactory
     {
         public ClientComponentFactory(IDynamicTypeFactoryInternal typeFactory, IReflectionManager reflectionManager, IConsoleHost conHost)
             : base(typeFactory, reflectionManager, conHost)

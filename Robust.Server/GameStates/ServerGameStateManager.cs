@@ -5,15 +5,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Robust.Server.GameObjects;
-using Robust.Server.Map;
 using Robust.Server.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -23,7 +21,7 @@ namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
     [UsedImplicitly]
-    public class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
+    public sealed class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
         private readonly Dictionary<long, GameTick> _ackedStates = new();
@@ -35,7 +33,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IServerMapManager _mapManager = default!;
+        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
 
@@ -122,15 +120,39 @@ namespace Robust.Server.GameStates
             var mainThread = Thread.CurrentThread;
             var parentDeps = IoCManager.Instance!;
 
+            _pvs.ProcessCollections();
+
+            // people not in the game don't get states
+            var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
+
+            const int BatchSize = 2;
+            var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
+
+            Parallel.For(0, batches, i =>
+            {
+                var start = i * BatchSize;
+                var end = Math.Min(start + BatchSize, players.Length);
+
+                for (var j = start; j < end; ++j)
+                {
+                    var session = players[j];
+
+                    try
+                    {
+                        SendStateUpdate(session);
+                    }
+                    catch (Exception e) // Catch EVERY exception
+                    {
+                        _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                    }
+                }
+            });
+
             void SendStateUpdate(IPlayerSession session)
             {
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
                     IoCManager.InitThread(new DependencyCollection(parentDeps), true);
-
-                // people not in the game don't get states
-                if (session.Status != SessionStatus.InGame)
-                    return;
 
                 var channel = session.ConnectedClient;
 
@@ -171,20 +193,6 @@ namespace Robust.Server.GameStates
 
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
-
-            _pvs.ProcessCollections();
-
-            Parallel.ForEach(_playerManager.ServerSessions, session =>
-            {
-                try
-                {
-                    SendStateUpdate(session);
-                }
-                catch (Exception e) // Catch EVERY exception
-                {
-                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
-                }
-            });
 
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);

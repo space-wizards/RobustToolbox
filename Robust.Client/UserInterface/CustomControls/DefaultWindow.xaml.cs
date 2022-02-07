@@ -16,6 +16,7 @@ namespace Robust.Client.UserInterface.CustomControls
     /// Warning: ugly.
     /// </remarks>
     [GenerateTypedNameReferences]
+    [Virtual]
     // ReSharper disable once InconsistentNaming
     public partial class DefaultWindow : BaseWindow
     {
@@ -175,7 +176,7 @@ namespace Robust.Client.UserInterface.CustomControls
             return mode;
         }
 
-        public class SS14ContentCollection : ICollection<Control>, IReadOnlyCollection<Control>
+        public sealed class SS14ContentCollection : ICollection<Control>, IReadOnlyCollection<Control>
         {
             private readonly DefaultWindow Owner;
 

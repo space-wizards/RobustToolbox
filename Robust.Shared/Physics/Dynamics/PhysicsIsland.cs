@@ -491,6 +491,8 @@ stored in a single array since multiple arrays lead to multiple misses.
 
             _brokenJoints.Clear();
 
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+
             // Update data on bodies by copying the buffers back
             for (var i = 0; i < BodyCount; i++)
             {
@@ -516,7 +518,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // body.Sweep.Angle = angle;
 
                     // DebugTools.Assert(!float.IsNaN(bodyPos.X) && !float.IsNaN(bodyPos.Y));
-                    var transform = _entityManager.GetComponent<TransformComponent>(body.Owner);
+                    var transform = xforms.GetComponent(body.Owner);
 
                     // Defer MoveEvent / RotateEvent until the end of the physics step so cache can be better.
                     transform.DeferUpdates = true;

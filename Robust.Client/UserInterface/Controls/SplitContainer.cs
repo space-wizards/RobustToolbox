@@ -5,6 +5,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class SplitContainer : Container
     {
         /// <summary>

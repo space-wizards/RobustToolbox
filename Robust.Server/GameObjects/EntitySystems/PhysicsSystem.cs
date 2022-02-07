@@ -10,7 +10,7 @@ using Robust.Shared.Physics;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class PhysicsSystem : SharedPhysicsSystem
+    public sealed class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 

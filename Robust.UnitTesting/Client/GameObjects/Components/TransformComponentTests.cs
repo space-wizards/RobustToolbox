@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
 {
     [TestFixture]
     [TestOf(typeof(TransformComponent))]
-    public class TransformComponentTests
+    public sealed class TransformComponentTests
     {
         private static readonly MapId TestMapId = new(1);
         private static readonly GridId TestGridAId = new(1);

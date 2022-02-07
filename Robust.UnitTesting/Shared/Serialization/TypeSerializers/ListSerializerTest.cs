@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(ListSerializers<>))]
-    public class ListSerializerTest : SerializationTest
+    public sealed class ListSerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()

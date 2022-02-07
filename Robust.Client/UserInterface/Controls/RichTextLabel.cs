@@ -6,6 +6,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class RichTextLabel : Control
     {
         private FormattedMessage? _message;

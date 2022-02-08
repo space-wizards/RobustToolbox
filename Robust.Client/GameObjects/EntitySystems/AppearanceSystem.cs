@@ -102,6 +102,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Raised whenever the appearance data for an entity changes.
     /// </summary>
+    [ByRefEvent]
     public struct AppearanceChangeEvent
     {
         public AppearanceComponent Component = default!;

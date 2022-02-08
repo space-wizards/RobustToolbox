@@ -6,7 +6,7 @@ namespace Robust.Client.Placement
 {
     public partial class PlacementManager
     {
-        internal class PlacementOverlay : Overlay
+        internal sealed class PlacementOverlay : Overlay
         {
             private readonly PlacementManager _manager;
             public override OverlaySpace Space => OverlaySpace.WorldSpace;

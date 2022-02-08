@@ -9,6 +9,7 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="5.0.4" />
     <PackageReference Include="Microsoft.ILVerification" Version="5.0.0" />
     <PackageReference Include="Nett" Version="0.15.0" />
     <PackageReference Include="nfluidsynth" Version="0.3.1" />

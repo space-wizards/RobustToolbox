@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
 {
     [TypeSerializer]
-    public class UShortSerializer : ITypeSerializer<ushort, ValueDataNode>
+    public sealed class UShortSerializer : ITypeSerializer<ushort, ValueDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

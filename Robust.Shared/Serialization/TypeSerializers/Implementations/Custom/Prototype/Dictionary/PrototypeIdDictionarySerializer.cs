@@ -14,7 +14,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Dictionary
 {
     // [TypeSerializer]
-    public class PrototypeIdDictionarySerializer<TValue, TPrototype> :
+    public sealed class PrototypeIdDictionarySerializer<TValue, TPrototype> :
         ITypeSerializer<Dictionary<string, TValue>, MappingDataNode>,
         ITypeSerializer<SortedDictionary<string, TValue>, MappingDataNode>,
         ITypeSerializer<IReadOnlyDictionary<string, TValue>, MappingDataNode>

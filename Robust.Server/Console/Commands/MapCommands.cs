@@ -12,7 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
-    class AddMapCommand : IConsoleCommand
+    sealed class AddMapCommand : IConsoleCommand
     {
         public string Command => "addmap";
 
@@ -47,7 +47,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class RemoveMapCommand : IConsoleCommand
+    sealed class RemoveMapCommand : IConsoleCommand
     {
         public string Command => "rmmap";
         public string Description => "Removes a map from the world. You cannot remove nullspace.";
@@ -75,7 +75,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class SaveBp : IConsoleCommand
+    public sealed class SaveBp : IConsoleCommand
     {
         public string Command => "savebp";
         public string Description => "Serializes a grid to disk.";
@@ -111,7 +111,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class LoadBp : IConsoleCommand
+    public sealed class LoadBp : IConsoleCommand
     {
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
@@ -156,7 +156,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class SaveMap : IConsoleCommand
+    public sealed class SaveMap : IConsoleCommand
     {
         public string Command => "savemap";
         public string Description => "Serializes a map to disk.";
@@ -188,7 +188,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class LoadMap : IConsoleCommand
+    public sealed class LoadMap : IConsoleCommand
     {
         public string Command => "loadmap";
         public string Description => "Loads a map from disk into the game.";
@@ -223,7 +223,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class LocationCommand : IConsoleCommand
+    sealed class LocationCommand : IConsoleCommand
     {
         public string Command => "loc";
         public string Description => "Prints the absolute location of the player's entity to console.";
@@ -244,7 +244,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class TpGridCommand : IConsoleCommand
+    sealed class TpGridCommand : IConsoleCommand
     {
         public string Command => "tpgrid";
         public string Description => "Teleports a grid to a new location.";
@@ -275,7 +275,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class RemoveGridCommand : IConsoleCommand
+    sealed class RemoveGridCommand : IConsoleCommand
     {
         public string Command => "rmgrid";
         public string Description => "Removes a grid from a map. You cannot remove the default grid.";

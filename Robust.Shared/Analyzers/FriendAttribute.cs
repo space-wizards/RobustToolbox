@@ -3,7 +3,7 @@ using System;
 namespace Robust.Shared.Analyzers
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface | AttributeTargets.Struct)]
-    public class FriendAttribute : Attribute
+    public sealed class FriendAttribute : Attribute
     {
         public readonly Type[] Friends;
 

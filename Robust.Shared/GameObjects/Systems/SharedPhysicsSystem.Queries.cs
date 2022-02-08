@@ -138,61 +138,21 @@ namespace Robust.Shared.GameObjects
             return bodies;
         }
 
-        // TODO: This is mainly just a hack to get rotated grid doors working in SS14 but whenever we do querysystem we'll clean this shit up
-        /// <summary>
-        /// Returns all enabled physics bodies intersecting this body.
-        /// </summary>
-        /// <remarks>
-        /// Does not consider CanCollide on the provided body.
-        /// </remarks>
-        /// <param name="body">The body to check for intersection</param>
-        /// <param name="enlarge">How much to enlarge / shrink the bounds by given we often extend them slightly.</param>
-        /// <returns></returns>
-        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body, float enlarge = 0f)
+
+        public IEnumerable<PhysicsComponent> GetCollidingEntities(PhysicsComponent body)
         {
-            // TODO: Should use the collisionmanager test for overlap instead (once I optimise and check it actually works).
-            var mapId = EntityManager.GetComponent<TransformComponent>(body.Owner).MapID;
+            var node = body.Contacts.First;
 
-            if (mapId == MapId.Nullspace ||
-                !EntityManager.TryGetComponent(body.Owner, out FixturesComponent? manager) ||
-                manager.FixtureCount == 0) return Array.Empty<PhysicsComponent>();
-
-            var bodies = new HashSet<PhysicsComponent>();
-
-            var (worldPos, worldRot) = Transform(body.Owner).GetWorldPositionRotation();
-            var worldAABB = body.GetWorldAABB(worldPos, worldRot);
-
-            foreach (var broadphase in _broadphaseSystem.GetBroadphases(mapId, worldAABB))
+            while (node != null)
             {
-                var (_, broadRot, broadInvMatrix) = EntityManager.GetComponent<TransformComponent>(broadphase.Owner).GetWorldPositionRotationInvMatrix();
+                var contact = node.Value;
+                node = node.Next;
+                var bodyA = contact.FixtureA!.Body;
+                var bodyB = contact.FixtureB!.Body;
 
-                var localTransform = new Transform(broadInvMatrix.Transform(worldPos), worldRot - broadRot);
-
-                foreach (var (_, fixture) in manager.Fixtures)
-                {
-                    var collisionMask = fixture.CollisionMask;
-                    var collisionLayer = fixture.CollisionLayer;
-
-                    for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                    {
-                        var aabb = fixture.Shape.ComputeAABB(localTransform, i).Enlarged(enlarge);
-
-                        foreach (var proxy in broadphase.Tree.QueryAabb(aabb))
-                        {
-                            var proxyFixture = proxy.Fixture;
-                            var proxyBody = proxyFixture.Body;
-
-                            if (proxyBody == body ||
-                                (proxyFixture.CollisionMask & collisionLayer) == 0x0 &&
-                                (collisionMask & proxyFixture.CollisionLayer) == 0x0) continue;
-
-                            bodies.Add(proxyBody);
-                        }
-                    }
-                }
+                var other = body == bodyA ? bodyB : bodyA;
+                yield return other;
             }
-
-            return bodies;
         }
 
         // TODO: This will get every body but we don't need to do that

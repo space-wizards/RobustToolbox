@@ -7,7 +7,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.ResourceManagement
 {
-    public class AudioResource : BaseResource
+    public sealed class AudioResource : BaseResource
     {
         public AudioStream AudioStream { get; private set; } = default!;
 

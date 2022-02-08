@@ -11,7 +11,7 @@ using Robust.Shared.Map;
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {
     [TestFixture, Parallelizable]
-    public class ContainerTest
+    public sealed class ContainerTest
     {
         private static ISimulation SimulationFactory()
         {
@@ -276,7 +276,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt));
         }
 
-        private class ContainerOnlyContainer : BaseContainer
+        private sealed class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>
             /// The generic container class uses a list of entities

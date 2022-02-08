@@ -14,7 +14,7 @@ using MapGrid = Robust.Shared.Map.MapGrid;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, TestOf(typeof(MapGrid))]
-    class MapGrid_Tests : RobustUnitTest
+    sealed class MapGrid_Tests : RobustUnitTest
     {
         protected override void OverrideIoC()
         {

@@ -9,7 +9,7 @@ namespace Robust.Client.Log
     /// <summary>
     ///     Writes logs to the in-game debug console.
     /// </summary>
-    class DebugConsoleLogHandler : ILogHandler
+    sealed class DebugConsoleLogHandler : ILogHandler
     {
         readonly IClientConsoleHost Console;
 

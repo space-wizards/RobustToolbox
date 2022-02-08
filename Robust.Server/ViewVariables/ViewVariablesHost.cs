@@ -17,7 +17,7 @@ using static Robust.Shared.Network.Messages.MsgViewVariablesDenySession;
 
 namespace Robust.Server.ViewVariables
 {
-    internal class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
+    internal sealed class ViewVariablesHost : ViewVariablesManagerShared, IViewVariablesHost
     {
         [Dependency] private readonly INetManager _netManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;

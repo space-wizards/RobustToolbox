@@ -44,7 +44,7 @@ namespace Robust.Server.Console.Commands
     /// <summary>
     ///     Copies of Box2D's physics testbed for debugging.
     /// </summary>
-    public class TestbedCommand : IConsoleCommand
+    public sealed class TestbedCommand : IConsoleCommand
     {
         public string Command => "testbed";
         public string Description => "Loads a physics testbed on the specified map.";
@@ -124,7 +124,7 @@ namespace Robust.Server.Console.Commands
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var horizontal = new EdgeShape(new Vector2(40, 0), new Vector2(-40, 0));
+            var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
             {
                 CollisionLayer = 2,
@@ -192,7 +192,7 @@ namespace Robust.Server.Console.Commands
             var groundUid = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
             var ground = entityManager.AddComponent<PhysicsComponent>(groundUid);
 
-            var horizontal = new EdgeShape(new Vector2(20, 0), new Vector2(-20, 0));
+            var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
             var horizontalFixture = new Fixture(ground, horizontal)
             {
                 CollisionLayer = 2,

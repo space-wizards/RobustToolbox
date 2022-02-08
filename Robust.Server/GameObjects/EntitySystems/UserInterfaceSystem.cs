@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class UserInterfaceSystem : SharedUserInterfaceSystem
+    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         private const float MaxWindowRange = 2;
         private const float MaxWindowRangeSquared = MaxWindowRange * MaxWindowRange;

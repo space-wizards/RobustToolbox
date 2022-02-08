@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class StringSerializer : ITypeSerializer<string, ValueDataNode>
+    public sealed class StringSerializer : ITypeSerializer<string, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public class DebugNetBandwidthPanel : PanelContainer
+    public sealed class DebugNetBandwidthPanel : PanelContainer
     {
         private const int OneKibibyte = 1024;
 

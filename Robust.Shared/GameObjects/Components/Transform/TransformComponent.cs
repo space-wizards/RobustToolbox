@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
@@ -54,7 +55,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
-        [ViewVariables] internal readonly SortedSet<EntityUid> _children = new();
+        [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -486,6 +487,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
 
+        public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
+
         [ViewVariables] public int ChildCount => _children.Count;
 
         [ViewVariables]
@@ -847,7 +850,16 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix()
         {
-            var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv();
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+            return GetWorldPositionRotationInvMatrix(xformQuery);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, and InvWorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 InvWorldMatrix) GetWorldPositionRotationInvMatrix(EntityQuery<TransformComponent> xformQuery)
+        {
+            var (worldPos, worldRot, _, invWorldMatrix) = GetWorldPositionRotationMatrixWithInv(xformQuery);
             return (worldPos, worldRot, invWorldMatrix);
         }
 
@@ -856,16 +868,24 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv()
         {
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+            return GetWorldPositionRotationMatrixWithInv(xformQuery);
+        }
+
+        /// <summary>
+        /// Get the WorldPosition, WorldRotation, WorldMatrix, and InvWorldMatrix of this entity faster than each individually.
+        /// </summary>
+        public (Vector2 WorldPosition, Angle WorldRotation, Matrix3 WorldMatrix, Matrix3 InvWorldMatrix) GetWorldPositionRotationMatrixWithInv(EntityQuery<TransformComponent> xformQuery)
+        {
             var parent = _parent;
             var worldRot = _localRotation;
             var invMatrix = GetLocalMatrixInv();
             var worldMatrix = GetLocalMatrix();
-            var xforms = _entMan.GetEntityQuery<TransformComponent>();
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
-                var xform = xforms.GetComponent(parent);
+                var xform = xformQuery.GetComponent(parent);
                 worldRot += xform.LocalRotation;
 
                 var parentMatrix = xform.GetLocalMatrix();
@@ -1046,7 +1066,7 @@ namespace Robust.Shared.GameObjects
         ///     Serialized state of a TransformComponent.
         /// </summary>
         [Serializable, NetSerializable]
-        internal class TransformComponentState : ComponentState
+        internal sealed class TransformComponentState : ComponentState
         {
             /// <summary>
             ///     Current parent entity of this entity.
@@ -1149,6 +1169,33 @@ namespace Robust.Shared.GameObjects
         ///     New AABB of the entity.
         /// </summary>
         public readonly Box2? WorldAABB;
+    }
+
+    public struct TransformChildrenEnumerator : IDisposable
+    {
+        private HashSet<EntityUid>.Enumerator _children;
+
+        public TransformChildrenEnumerator(HashSet<EntityUid>.Enumerator children)
+        {
+            _children = children;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        {
+            if (!_children.MoveNext())
+            {
+                child = null;
+                return false;
+            }
+
+            child = _children.Current;
+            return true;
+        }
+
+        public void Dispose()
+        {
+            _children.Dispose();
+        }
     }
 
     /// <summary>

@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedCollection<TCollection, TElement> : DeserializationResult<TCollection> where TCollection : IReadOnlyCollection<TElement>
+    public sealed class DeserializedCollection<TCollection, TElement> : DeserializationResult<TCollection> where TCollection : IReadOnlyCollection<TElement>
     {
         public delegate TCollection Create(List<TElement> elements);
 

@@ -11,6 +11,7 @@ namespace Robust.Shared.GameObjects
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
     /// <inheritdoc />
+    [Virtual]
     public partial class EntityManager : IEntityManager
     {
         #region Dependencies
@@ -53,6 +54,7 @@ namespace Robust.Shared.GameObjects
         public event EventHandler<EntityUid>? EntityInitialized;
         public event EventHandler<EntityUid>? EntityStarted;
         public event EventHandler<EntityUid>? EntityDeleted;
+        public event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
 
         public bool Started { get; protected set; }
         public bool Initialized { get; protected set; }
@@ -228,8 +230,10 @@ namespace Robust.Shared.GameObjects
 
             metadata.EntityLastModifiedTick = currentTick;
 
-            var dirtyEvent = new EntityDirtyEvent {Uid = uid};
-            EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
+            if (metadata.EntityLifeStage > EntityLifeStage.Initializing)
+            {
+                EntityDirtied?.Invoke(this, uid);
+            }
         }
 
         public void Dirty(Component component)
@@ -273,11 +277,10 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if(Deleted(uid)) //TODO: Why was this still a child if it was already deleted?
-                return;
+            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted) 
+                return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);
-            var metadata = GetComponent<MetaDataComponent>(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
             EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
 

@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 namespace Robust.Shared
 {
     [Serializable]
+    [Virtual]
     public class SandboxArgumentException : Exception
     {
         public SandboxArgumentException()

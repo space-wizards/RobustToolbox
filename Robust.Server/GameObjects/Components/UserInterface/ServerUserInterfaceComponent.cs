@@ -347,7 +347,7 @@ namespace Robust.Server.GameObjects
     }
 
     [PublicAPI]
-    public class ServerBoundUserInterfaceMessage
+    public sealed class ServerBoundUserInterfaceMessage
     {
         public BoundUserInterfaceMessage Message { get; }
         public IPlayerSession Session { get; }

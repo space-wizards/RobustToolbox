@@ -6,7 +6,7 @@ namespace Robust.Client.UserInterface.XAML
 /// <summary>
     /// Implements a name scope.
     /// </summary>
-    public class NameScope
+    public sealed class NameScope
     {
         public bool IsCompleted { get; private set; }
 

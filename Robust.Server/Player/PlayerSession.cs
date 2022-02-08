@@ -15,7 +15,7 @@ namespace Robust.Server.Player
     /// <summary>
     /// This is the session of a connected client.
     /// </summary>
-    internal class PlayerSession : IPlayerSession
+    internal sealed class PlayerSession : IPlayerSession
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;

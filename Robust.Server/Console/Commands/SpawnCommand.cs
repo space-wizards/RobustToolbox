@@ -8,7 +8,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Server.Console.Commands
 {
-    public class SpawnCommand : IConsoleCommand
+    public sealed class SpawnCommand : IConsoleCommand
     {
         public string Command => "spawn";
         public string Description => "Spawns an entity with specific type.";

@@ -18,7 +18,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
-internal partial class PVSSystem : EntitySystem
+internal sealed partial class PVSSystem : EntitySystem
 {
     [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -188,9 +188,11 @@ internal partial class PVSSystem : EntitySystem
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
-        foreach (var componentChild in transformComponent.ChildEntities)
+        var children = transformComponent.ChildEnumerator;
+
+        while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(componentChild);
+            UpdateEntityRecursive(child.Value);
         }
     }
 
@@ -232,8 +234,8 @@ internal partial class PVSSystem : EntitySystem
             pvsCollection.AddGrid(gridId);
         }
 
-        var uid = _mapManager.GetGrid(gridId).GridEntityId;
-        _entityPvsCollection.UpdateIndex(uid);
+        var euid = _mapManager.GetGridEuid(gridId);
+        _entityPvsCollection.UpdateIndex(euid);
     }
 
     private void OnMapDestroyed(object? sender, MapEventArgs e)

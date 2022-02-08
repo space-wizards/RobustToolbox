@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(CommandParsing))]
-    public class CommandParsing_Test
+    public sealed class CommandParsing_Test
     {
         [TestCase("foo bar", new[] {"foo", "bar"})]
         [TestCase("foo  bar", new[] {"foo", "bar"})]

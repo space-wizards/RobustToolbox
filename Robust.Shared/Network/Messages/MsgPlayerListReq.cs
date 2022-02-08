@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgPlayerListReq : NetMessage
+    public sealed class MsgPlayerListReq : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Core;
 

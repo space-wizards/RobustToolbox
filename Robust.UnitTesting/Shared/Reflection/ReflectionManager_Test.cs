@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Reflection
     }
 
     [TestFixture]
-    public class ReflectionManager_Test : RobustUnitTest
+    public sealed class ReflectionManager_Test : RobustUnitTest
     {
         protected override void OverrideIoC()
         {
@@ -58,12 +58,12 @@ namespace Robust.UnitTesting.Shared.Reflection
         public interface IReflectionManagerTest { }
 
         // These two pass like normal.
-        public class TestClass1 : IReflectionManagerTest { }
-        public class TestClass2 : IReflectionManagerTest { }
+        public sealed class TestClass1 : IReflectionManagerTest { }
+        public sealed class TestClass2 : IReflectionManagerTest { }
 
         // These two should both NOT be passed.
         [Reflect(false)]
-        public class TestClass3 : IReflectionManagerTest { }
+        public sealed class TestClass3 : IReflectionManagerTest { }
         public abstract class TestClass4 : IReflectionManagerTest { }
 
         [Test]
@@ -79,7 +79,7 @@ namespace Robust.UnitTesting.Shared.Reflection
         }
     }
 
-    public class TestGetType1 { }
+    public sealed class TestGetType1 { }
     public abstract class TestGetType2 { }
     public interface ITestGetType3 { }
 }

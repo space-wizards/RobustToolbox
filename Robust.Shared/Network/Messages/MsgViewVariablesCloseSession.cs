@@ -7,7 +7,7 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent from client to server or server to client to notify to close a session.
     /// </summary>
-    public class MsgViewVariablesCloseSession : NetMessage
+    public sealed class MsgViewVariablesCloseSession : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

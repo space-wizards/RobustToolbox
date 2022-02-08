@@ -1,7 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Robust.Shared.Analyzers;
 
 namespace Robust.Benchmarks.NumericsHelpers
 {
+    [Virtual]
     public class AddBenchmark
     {
         [Params(32, 128)]

@@ -728,17 +728,27 @@ namespace Robust.Shared.GameObjects
 
             var oldMapId = MapID;
 
+            //Set Paused state
+            var mapPaused = _mapManager.IsMapPaused(newMapId);
+            var metaData = _entMan.GetComponent<MetaDataComponent>(Owner);
+            metaData.EntityPaused = mapPaused;
+
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, _entMan);
+            UpdateChildMapIdsRecursive(MapID, _entMan, mapPaused);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan, bool mapPaused)
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
+            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
 
             foreach (var child in _children)
             {
+                //Set Paused state
+                var metaData = metaEnts.GetComponent(child);
+                metaData.EntityPaused = mapPaused;
+
                 var concrete = xforms.GetComponent(child);
                 var old = concrete.MapID;
 
@@ -747,7 +757,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan, mapPaused);
                 }
             }
         }

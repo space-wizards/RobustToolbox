@@ -16,63 +16,83 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetMapPaused(MapId mapId, bool paused)
         {
+            if(!MapExists(mapId))
+                throw new ArgumentException("That map does not exist.");
+
             if (paused)
             {
                 _pausedMaps.Add(mapId);
-
-                foreach (var entity in _entityLookup.GetEntitiesInMap(mapId))
-                {
-                    EntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = true;
-                }
             }
             else
             {
                 _pausedMaps.Remove(mapId);
+            }
 
-                foreach (var entity in _entityLookup.GetEntitiesInMap(mapId))
-                {
-                    EntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = false;
-                }
+            var mapEnt = GetMapEntityId(mapId);
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+
+            RecursiveSetPaused(mapEnt, paused, in xformQuery, in metaQuery);
+        }
+
+        private static void RecursiveSetPaused(EntityUid entity, bool paused,
+            in EntityQuery<TransformComponent> xformQuery,
+            in EntityQuery<MetaDataComponent> metaQuery)
+        {
+            metaQuery.GetComponent(entity).EntityPaused = paused;
+
+            foreach (var child in xformQuery.GetComponent(entity)._children)
+            {
+                RecursiveSetPaused(child, paused, in xformQuery, in metaQuery);
             }
         }
 
         /// <inheritdoc />
         public void DoMapInitialize(MapId mapId)
         {
+            if(!MapExists(mapId))
+                throw new ArgumentException("That map does not exist.");
+
             if (IsMapInitialized(mapId))
                 throw new ArgumentException("That map is already initialized.");
 
             _unInitializedMaps.Remove(mapId);
 
-            foreach (var entity in _entityLookup.GetEntitiesInMap(mapId).ToArray())
-            {
-                entity.RunMapInit();
+            var mapEnt = GetMapEntityId(mapId);
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
 
-                // MapInit could have deleted this entity.
-                if(EntityManager.TryGetComponent(entity, out MetaDataComponent? meta))
-                    meta.EntityPaused = false;
+            RecursiveDoMapInit(mapEnt, in xformQuery, in metaQuery);
+        }
+
+        private static void RecursiveDoMapInit(EntityUid entity,
+            in EntityQuery<TransformComponent> xformQuery,
+            in EntityQuery<MetaDataComponent> metaQuery)
+        {
+            // RunMapInit can modify the TransformTree
+            // ToArray caches deleted euids, we check here if they still exist.
+            if(!metaQuery.TryGetComponent(entity, out var meta))
+                return;
+
+            entity.RunMapInit();
+            meta.EntityPaused = false;
+
+            foreach (var child in xformQuery.GetComponent(entity)._children.ToArray())
+            {
+                RecursiveDoMapInit(child, in xformQuery, in metaQuery);
             }
         }
 
         /// <inheritdoc />
         public void DoGridMapInitialize(IMapGrid grid)
         {
-            DoGridMapInitialize(grid.Index);
+            // NOP
         }
 
         /// <inheritdoc />
         public void DoGridMapInitialize(GridId gridId)
         {
-            var mapId = GetGrid(gridId).ParentMapId;
-
-            foreach (var entity in _entityLookup.GetEntitiesInMap(mapId))
-            {
-                if (EntityManager.GetComponent<TransformComponent>(entity).GridID != gridId)
-                    continue;
-
-                entity.RunMapInit();
-                EntityManager.GetComponent<MetaDataComponent>(entity).EntityPaused = false;
-            }
+            // NOP
         }
 
         /// <inheritdoc />

@@ -18,5 +18,5 @@ public abstract class VisualizerSystem<T> : EntitySystem
     }
 
     protected abstract void OnComponentInit(EntityUid uid, T component, ComponentInit args);
-    protected abstract void OnAppearanceChange(EntityUid uid, T component, AppearanceChangeEvent args);
+    protected abstract void OnAppearanceChange(EntityUid uid, T component, ref AppearanceChangeEvent args);
 }

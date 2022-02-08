@@ -100,9 +100,9 @@ namespace Robust.Client.GameObjects
     }
 
     /// <summary>
-    /// Raised whenever the appearance data for an entity changes.
+    ///     Raised whenever the appearance data for an entity changes.
     /// </summary>
-    public sealed class AppearanceChangeEvent : EntityEventArgs
+    public struct AppearanceChangeEvent
     {
         public AppearanceComponent Component = default!;
         public IReadOnlyDictionary<object, object> AppearanceData = default!;

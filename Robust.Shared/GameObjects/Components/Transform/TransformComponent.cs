@@ -332,15 +332,16 @@ namespace Robust.Shared.GameObjects
 
                 if (!sameParent)
                 {
+                    var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                     changedParent = true;
-                    var newParent = _entMan.GetComponent<TransformComponent>(value.EntityId);
+                    var newParent = xformQuery.GetComponent(value.EntityId);
 
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
 
                     // That's already our parent, don't bother attaching again.
 
-                    var oldParent = Parent;
+                    var oldParent = _parent.IsValid() ? xformQuery.GetComponent(_parent) : null;
                     var uid = Owner;
                     oldParent?._children.Remove(uid);
                     newParent._children.Add(uid);
@@ -361,7 +362,8 @@ namespace Robust.Shared.GameObjects
                 // This may not in fact be the right thing.
                 if (changedParent || !DeferUpdates)
                     RebuildMatrices();
-                Dirty();
+
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -525,7 +527,7 @@ namespace Robust.Shared.GameObjects
             // Children MAY be initialized here before their parents are.
             // We do this whole dance to handle this recursively,
             // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
-            static MapId FindMapIdAndSet(TransformComponent p, IEntityManager entMan)
+            static MapId FindMapIdAndSet(TransformComponent p, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
             {
                 if (p._mapIdInitialized)
                 {
@@ -535,7 +537,7 @@ namespace Robust.Shared.GameObjects
                 MapId value;
                 if (p._parent.IsValid())
                 {
-                    value = FindMapIdAndSet((TransformComponent) p.Parent!, entMan);
+                    value = FindMapIdAndSet(xformQuery.GetComponent(p._parent), entMan, xformQuery);
                 }
                 else
                 {
@@ -555,9 +557,11 @@ namespace Robust.Shared.GameObjects
                 return value;
             }
 
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+
             if (!_mapIdInitialized)
             {
-                FindMapIdAndSet(this, _entMan);
+                FindMapIdAndSet(this, _entMan, xformQuery);
 
                 _mapIdInitialized = true;
             }

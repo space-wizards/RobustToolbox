@@ -3,7 +3,7 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Server.GameObjects;
 
-internal sealed class AppearanceSystem : SharedAppearanceSystem
+public sealed class AppearanceSystem : SharedAppearanceSystem
 {
     public override void Initialize()
     {

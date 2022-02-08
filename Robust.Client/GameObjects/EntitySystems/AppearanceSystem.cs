@@ -6,7 +6,7 @@ using Robust.Shared.GameStates;
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    internal sealed class AppearanceSystem : SharedAppearanceSystem
+    public sealed class AppearanceSystem : SharedAppearanceSystem
     {
         private readonly Queue<ClientAppearanceComponent> _queuedUpdates = new();
 

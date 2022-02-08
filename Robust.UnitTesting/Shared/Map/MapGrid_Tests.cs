@@ -51,6 +51,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
             var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+            grid.WorldPosition = new Vector2(3, 5);
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
@@ -74,6 +75,7 @@ namespace Robust.UnitTesting.Shared.Map
             var mapMan = sim.Resolve<IMapManager>();
             var mapId = mapMan.CreateMap();
             var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+            grid.WorldPosition = new Vector2(3, 5);
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));

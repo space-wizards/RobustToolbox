@@ -117,6 +117,11 @@ namespace Robust.Shared.Timing
         /// </summary>
         public GameTick CurTick { get; set; } = new(1); // Time always starts on the first tick
 
+        /// <summary>
+        ///     Timespan for the last tick.
+        /// </summary>
+        public TimeSpan LastTick { get; set; }
+
         private byte _tickRate;
         private TimeSpan _tickRemainder;
 

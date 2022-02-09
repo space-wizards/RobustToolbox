@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Robust.Shared.Analyzers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -19,8 +20,9 @@ namespace Robust.Shared.Physics
     [RegisterComponent]
     [NetworkedComponent]
     [Friend(typeof(FixtureSystem))]
+    [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentProtoName("Fixtures")]
-    public sealed class FixturesComponent : Component, ISerializationHooks
+    public sealed class FixturesComponent : Component, ISerializationHooks, ILookupWorldBox2Component
     {
         // This is a snowflake component whose main job is making physics states smaller for massive bodies
         // (e.g. grids)
@@ -45,6 +47,23 @@ namespace Robust.Shared.Physics
             {
                 SerializedFixtures.Add(fixture);
             }
+        }
+
+        public Box2 GetLocalAABB()
+        {
+            var transform = Transform.Zero;
+            var bounds = new Box2(transform.Position, transform.Position);
+
+            foreach (var fixture in Fixtures.Values)
+            {
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
+            }
+
+            return bounds;
         }
     }
 }

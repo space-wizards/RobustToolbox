@@ -17,7 +17,7 @@ public partial class SharedPhysicsSystem
             return;
 
         body._linearVelocity = velocity;
-        body.Dirty(EntityManager);
+        Dirty(body);
     }
 
     public Box2 GetWorldAABB(PhysicsComponent body, TransformComponent xform, EntityQuery<TransformComponent> xforms, EntityQuery<FixturesComponent> fixtures)

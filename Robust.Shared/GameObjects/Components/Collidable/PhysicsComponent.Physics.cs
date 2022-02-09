@@ -40,10 +40,9 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
 {
-    [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
-    [NetworkedComponent(), ComponentProtoName("Physics")]
-    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
+    [NetworkedComponent, ComponentProtoName("Physics")]
+    public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 

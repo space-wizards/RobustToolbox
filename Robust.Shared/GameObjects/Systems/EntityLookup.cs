@@ -75,13 +75,24 @@ namespace Robust.Shared.GameObjects
 
         void RemoveFromEntityTrees(EntityUid entity);
 
-        Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);
-
         Box2 GetLocalBounds(TileRef tileRef, ushort tileSize);
 
         Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize);
 
+        /// <summary>
+        /// Get the AABB of this entity assuming 0,0 position and 0 rotation.
+        /// </summary>
+        Box2 GetLocalAABB(EntityUid uid, TransformComponent xform);
+
         Box2Rotated GetWorldBounds(TileRef tileRef, Matrix3? worldMatrix = null, Angle? angle = null);
+
+        Box2 GetWorldAABB(EntityUid uid);
+
+        Box2 GetWorldAABB(EntityUid uid, TransformComponent xform, Vector2 worldPos);
+
+        Box2 GetWorldAABB(EntityUid uid, TransformComponent xform);
+
+        Box2Rotated GetWorldBounds(EntityUid uid, TransformComponent xform);
     }
 
     [UsedImplicitly]
@@ -89,6 +100,7 @@ namespace Robust.Shared.GameObjects
     {
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
+        private SharedContainerSystem _container = default!;
 
         private const int GrowthRate = 256;
 
@@ -117,6 +129,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Startup() called multiple times.");
             }
 
+            _container = EntitySystem.Get<SharedContainerSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
@@ -198,13 +211,19 @@ namespace Robust.Shared.GameObjects
         {
             // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
 
-            var aabb = GetWorldAABB(entity);
             var tree = GetLookup(entity);
-
             if (tree == null)
-                return aabb;
+                throw new InvalidOperationException();
 
-            return _entityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(aabb);
+            var xform = _entityManager.GetComponent<TransformComponent>(entity);
+            var lookupXform = _entityManager.GetComponent<TransformComponent>(tree.Owner);
+            var lookupPos =
+                new EntityCoordinates(tree.Owner, lookupXform.InvWorldMatrix.Transform(xform.WorldPosition));
+
+            var localAABB = GetLocalAABB(entity, xform);
+            var lookupBounds = GetLookupBounds(entity, xform, lookupXform, lookupPos, localAABB);
+
+            return lookupBounds.CalcBoundingBox();
         }
 
         private void OnEntityDeleted(object? sender, EntityUid uid)
@@ -248,15 +267,15 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            // Temp PVS guard for when we clear dynamictree for now.
-            var worldAABB = GetWorldAabbFromEntity(uid, xform);
-            var center = worldAABB.Center;
+            var lookupXform = _entityManager.GetComponent<TransformComponent>(lookup.Owner);
+            // TODO: Optimise this 1 call.
+            var lookupPos = new EntityCoordinates(lookupXform.Owner,
+                lookupXform.InvWorldMatrix.Transform(xform.WorldPosition));
 
-            DebugTools.Assert(!float.IsNaN(center.X) && !float.IsNaN(center.Y));
+            var localAABB = GetLocalAABB(uid, xform);
+            var lookupBounds = GetLookupBounds(uid, xform, lookupXform, lookupPos, localAABB);
 
-            var aabb = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.TransformBox(worldAABB);
-
-            lookup.Tree.Add(uid, aabb);
+            lookup.Tree.Add(uid, lookupBounds.CalcBoundingBox());
 
             if (!_entityManager.HasComponent<EntityLookupComponent>(uid) && xform.ChildCount > 0)
             {
@@ -529,12 +548,11 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid entity, float enlarged = 0f, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            var worldAABB = GetWorldAabbFromEntity(entity);
             var xform = _entityManager.GetComponent<TransformComponent>(entity);
-
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+            var worldAABB = GetWorldAABB(entity, xform, worldPos);
 
-            var enumerator = GetLookupsIntersecting(xform.MapID, worldAABB);
+            var enumerator = GetLookupsIntersecting(xform.MapID, worldAABB.Enlarged(_lookupEnlargementRange));
             var list = new List<EntityUid>();
 
             while (enumerator.MoveNext(out var lookup))
@@ -647,8 +665,9 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetEntitiesInRange(EntityUid entity, float range, LookupFlags flags = LookupFlags.IncludeAnchored)
         {
-            var worldAABB = GetWorldAabbFromEntity(entity);
-            return GetEntitiesInRange(_entityManager.GetComponent<TransformComponent>(entity).MapID, worldAABB, range, flags);
+            var xform = _entityManager.GetComponent<TransformComponent>(entity);
+            var worldAABB = GetWorldAABB(entity, xform);
+            return GetEntitiesInRange(xform.MapID, worldAABB, range, flags);
         }
 
         /// <inheritdoc />
@@ -774,17 +793,24 @@ namespace Robust.Shared.GameObjects
             if (ev.Component.Anchored) return;
 
             var lookup = _entityManager.GetComponent<EntityLookupComponent>(ev.MoverCoordinates.EntityId);
+            var lookupXform = _entityManager.GetComponent<TransformComponent>(lookup.Owner);
+            Box2 localAABB;
 
-            // Temp PVS guard for when we clear dynamictree for now.
-            var worldAABB = GetWorldAabbFromEntity(ev.Entity, ev.Component);
-            var center = worldAABB.Center;
+            // Use the mover's AABB instead.
+            if (_container.IsEntityInContainer(ev.Entity, ev.Component))
+            {
+                localAABB = ev.MoverAABB;
+            }
+            else
+            {
+                localAABB = GetLocalAABBNoContainer(ev.Entity, ev.Component);
+            }
 
-            DebugTools.Assert(!float.IsNaN(center.X) && !float.IsNaN(center.Y));
+            var lookupBounds = GetLookupBounds(ev.Entity, ev.Component, lookupXform, ev.MoverCoordinates, localAABB);
 
-            // TODO: Should just get the lookup AABB directly as we already have a lookup specific position.
-            var aabb = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.TransformBox(worldAABB);
+            DebugTools.Assert(!float.IsNaN(ev.MoverCoordinates.X) && !float.IsNaN(ev.MoverCoordinates.Y));
 
-            lookup.Tree.Update(ev.Entity, aabb);
+            lookup.Tree.Update(ev.Entity, lookupBounds.CalcBoundingBox());
         }
 
         /// <inheritdoc />
@@ -799,33 +825,83 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        public Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null)
+        /// <summary>
+        /// Gets the Box2Rotated of this entity relative to its lookup tree.
+        /// </summary>
+        private Box2Rotated GetLookupBounds(EntityUid uid, TransformComponent xform, TransformComponent lookupXform, EntityCoordinates coordinates, Box2 localAABB)
         {
-            return GetWorldAABB(ent, xform);
+            DebugTools.Assert(lookupXform.Owner == coordinates.EntityId);
+
+            return new Box2Rotated(localAABB.Translated(coordinates.Position), -lookupXform.WorldRotation,
+                coordinates.Position);
         }
 
-        private Box2 GetWorldAABB(in EntityUid ent, TransformComponent? xform = null)
+        /// <summary>
+        /// Assumes the caller has already checked for container. This is useful for recursive moves.
+        /// </summary>
+        private Box2 GetLocalAABBNoContainer(EntityUid uid, TransformComponent xform)
         {
-            Vector2 pos;
-            xform ??= _entityManager.GetComponent<TransformComponent>(ent);
+            DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
+            Box2 localAABB;
 
-            if ((!_entityManager.EntityExists(ent) ? EntityLifeStage.Deleted : _entityManager.GetComponent<MetaDataComponent>(ent).EntityLifeStage) >= EntityLifeStage.Deleted)
+            if (_entityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
             {
-                pos = xform.WorldPosition;
-                return new Box2(pos, pos);
+                localAABB = worldLookup.GetLocalAABB();
+            }
+            else
+            {
+                localAABB = new Box2();
             }
 
-            // MOCKS WHY
-            if (ent.TryGetContainer(out var container, _entityManager))
+            return localAABB;
+        }
+
+        /// <inheritdoc />
+        public Box2 GetLocalAABB(EntityUid uid, TransformComponent xform)
+        {
+            Box2 localAABB;
+
+            if (_container.TryGetContainingContainer(uid, out var container, xform))
             {
-                return GetWorldAABB(container.Owner);
+                // Recursively go up and get parent's bounds
+                localAABB = GetLocalAABB(container.Owner,
+                    _entityManager.GetComponent<TransformComponent>(container.Owner));
+            }
+            else if (_entityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
+            {
+                localAABB = worldLookup.GetLocalAABB();
+            }
+            else
+            {
+                localAABB = new Box2();
             }
 
-            pos = xform.WorldPosition;
+            return localAABB;
+        }
 
-            return _entityManager.TryGetComponent(ent, out ILookupWorldBox2Component? lookup) ?
-                lookup.GetWorldAABB(pos) :
-                new Box2(pos, pos);
+        public Box2 GetWorldAABB(EntityUid uid)
+        {
+            var xform = _entityManager.GetComponent<TransformComponent>(uid);
+            return GetWorldAABB(uid, xform);
+        }
+
+        public Box2 GetWorldAABB(EntityUid uid, TransformComponent xform, Vector2 worldPos)
+        {
+            var localAABB = GetLocalAABB(uid, xform);
+            return localAABB.Translated(worldPos);
+        }
+
+        public Box2 GetWorldAABB(EntityUid uid, TransformComponent xform)
+        {
+            var localAABB = GetLocalAABB(uid, xform);
+            return localAABB.Translated(xform.WorldPosition);
+        }
+
+        public Box2Rotated GetWorldBounds(EntityUid uid, TransformComponent xform)
+        {
+            var localAABB = GetLocalAABB(uid, xform);
+            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+            return new Box2Rotated(localAABB.Translated(worldPos), worldRot, worldPos);
         }
 
         #endregion

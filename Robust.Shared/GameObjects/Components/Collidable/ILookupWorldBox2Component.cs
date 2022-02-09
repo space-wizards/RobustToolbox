@@ -4,6 +4,9 @@ namespace Robust.Shared.GameObjects
 {
     public interface ILookupWorldBox2Component
     {
-        Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null);
+        /// <summary>
+        /// Return the local AABB of this entity, assuming position 0,0 and rotation 0.
+        /// </summary>
+        Box2 GetLocalAABB();
     }
 }

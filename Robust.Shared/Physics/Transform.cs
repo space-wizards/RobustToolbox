@@ -31,6 +31,8 @@ namespace Robust.Shared.Physics
     // TODO: Probably replace this internally with just the Vector2 and radians but I'd need to re-learn trig so yeah....
     public struct Transform
     {
+        public static readonly Transform Zero = new(Vector2.Zero, 0f);
+
         public Vector2 Position;
         public Quaternion2D Quaternion2D;
 

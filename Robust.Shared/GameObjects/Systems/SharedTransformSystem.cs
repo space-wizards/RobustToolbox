@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Containers;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -34,7 +35,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnMoveEvent(ref MoveEvent ev)
         {
-            if (!EnableSubscriptions) return;
+            if (!EnableSubscriptions ||
+                !ev.NewPosition.IsValid(EntityManager)) return;
 
             OnUpdate(ev.Sender, ev.Component);
         }
@@ -59,15 +61,15 @@ namespace Robust.Shared.GameObjects
             var moverCoordinates = GetMoverCoordinates(xform);
             var gridId = moverCoordinates.GetGridId(EntityManager);
             var mapId = moverCoordinates.ToMap(EntityManager).MapId;
+            var localAABB = _entityLookup.GetLocalAABB(uid, xform);
 
-            var moveEvent = new EntityMoveEvent
-            {
-                Entity = uid,
-                MoverCoordinates = moverCoordinates,
-                Component = xform,
-                MapId = mapId,
-                GridId = gridId,
-            };
+            var moveEvent = new EntityMoveEvent(
+                uid,
+                moverCoordinates,
+                xform,
+                mapId,
+                gridId,
+                localAABB);
 
             RaiseLocalEvent(uid, ref moveEvent);
 
@@ -79,11 +81,11 @@ namespace Robust.Shared.GameObjects
 
             while (childEnumerator.MoveNext(out var child))
             {
-                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId);
+                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId, localAABB);
             }
         }
 
-        private void ChildMove(EntityUid uid, EntityQuery<TransformComponent> xformQuery, ref EntityCoordinates moverCoordinates, MapId mapId, GridId gridId)
+        private void ChildMove(EntityUid uid, EntityQuery<TransformComponent> xformQuery, ref EntityCoordinates moverCoordinates, MapId mapId, GridId gridId, Box2 moverAABB)
         {
             var xform = xformQuery.GetComponent(uid);
 
@@ -94,14 +96,13 @@ namespace Robust.Shared.GameObjects
                 moverCoordinates = GetMoverCoordinates(xform);
             }
 
-            var moveEvent = new EntityMoveEvent
-            {
-                Entity = uid,
-                MoverCoordinates = moverCoordinates,
-                Component = xform,
-                MapId = mapId,
-                GridId = gridId,
-            };
+            var moveEvent = new EntityMoveEvent(
+                uid,
+                moverCoordinates,
+                xform,
+                mapId,
+                gridId,
+                moverAABB);
 
             RaiseLocalEvent(uid, ref moveEvent);
 
@@ -109,7 +110,7 @@ namespace Robust.Shared.GameObjects
 
             while (childEnumerator.MoveNext(out var child))
             {
-                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId);
+                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId, moverAABB);
             }
         }
 
@@ -227,28 +228,51 @@ namespace Robust.Shared.GameObjects
     /// This is also raised on the children as well.
     /// </summary>
     [ByRefEvent]
-    public struct EntityMoveEvent
+    public readonly struct EntityMoveEvent
     {
         /// <summary>
-        /// The entity that triggered the move.
+        /// The moving entity.
         /// </summary>
-        public EntityUid Entity;
+        public readonly EntityUid Entity;
 
         /// <summary>
         /// The map / grid coordinates of the mover entity.
         /// </summary>
-        public EntityCoordinates MoverCoordinates;
+        public readonly EntityCoordinates MoverCoordinates;
 
-        public TransformComponent Component;
+        public readonly TransformComponent Component;
 
         /// <summary>
         /// The cached <see cref="MapId"/> of the <see cref="MoverCoordinates"/>.
         /// </summary>
-        public MapId MapId;
+        public readonly MapId MapId;
 
         /// <summary>
         /// The cached <see cref="GridId"/> of the <see cref="MoverCoordinates"/>.
         /// </summary>
-        public GridId GridId;
+        public readonly GridId GridId;
+
+        // This one is essentially for EntityLookup's recursion
+
+        /// <summary>
+        /// Local AABB of the mover entity.
+        /// </summary>
+        public readonly Box2 MoverAABB;
+
+        public EntityMoveEvent(
+            EntityUid entity,
+            EntityCoordinates moverCoordinates,
+            TransformComponent component,
+            MapId mapId,
+            GridId gridId,
+            Box2 moverAABB)
+        {
+            Entity = entity;
+            MoverCoordinates = moverCoordinates;
+            Component = component;
+            MapId = mapId;
+            GridId = gridId;
+            MoverAABB = moverAABB;
+        }
     }
 }

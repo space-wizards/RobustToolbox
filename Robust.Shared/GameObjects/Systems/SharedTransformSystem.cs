@@ -3,7 +3,6 @@ using System.Linq;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
@@ -22,6 +21,97 @@ namespace Robust.Shared.GameObjects
             UpdatesOutsidePrediction = true;
 
             _mapManager.TileChanged += MapManagerOnTileChanged;
+            SubscribeLocalEvent<MoveEvent>(OnMoveEvent);
+        }
+
+        private void OnMoveEvent(ref MoveEvent ev)
+        {
+            if (_mapManager.IsGrid(ev.Sender) || _mapManager.IsMap(ev.Sender)) return;
+
+            // Client can issue nullspace events due to PVS so can't just assert it.
+            // DebugTools.Assert(ev.Component.MapID != MapId.Nullspace);
+            var mover = ev.Sender;
+            var xform = ev.Component;
+
+            var moverCoordinates = GetMoverCoordinates(xform);
+            var gridId = moverCoordinates.GetGridId(EntityManager);
+            var mapId = moverCoordinates.ToMap(EntityManager).MapId;
+
+            var moveEvent = new EntityMoveEvent
+            {
+                Entity = mover,
+                MoverCoordinates = moverCoordinates,
+                Component = xform,
+                MapId = mapId,
+                GridId = gridId,
+            };
+
+            RaiseLocalEvent(mover, ref moveEvent);
+
+            // Check children on this one to avoid getting the query unnecessarily
+            if (xform.ChildCount == 0) return;
+
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            var childEnumerator = xform.ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId);
+            }
+        }
+
+        private void ChildMove(EntityUid uid, EntityQuery<TransformComponent> xformQuery, ref EntityCoordinates moverCoordinates, MapId mapId, GridId gridId)
+        {
+            var xform = xformQuery.GetComponent(uid);
+
+            // If our localpos is 0 then we can re-use our parent's position
+            // otherwise, recalculate
+            if (!xform.LocalPosition.Equals(Vector2.Zero))
+            {
+                moverCoordinates = GetMoverCoordinates(xform);
+            }
+
+            var moveEvent = new EntityMoveEvent
+            {
+                Entity = uid,
+                MoverCoordinates = moverCoordinates,
+                Component = xform,
+                MapId = mapId,
+                GridId = gridId,
+            };
+
+            RaiseLocalEvent(uid, ref moveEvent);
+
+            var childEnumerator = xform.ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId);
+            }
+        }
+
+        public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
+        {
+            // If they're parented directly to the map or grid then just return the coordinates.
+            if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+            {
+                var mapUid = _mapManager.GetMapEntityId(xform.MapID);
+                var coordinates = xform.Coordinates;
+
+                // Parented directly to the map.
+                if (xform.ParentUid == mapUid)
+                    return coordinates;
+
+                return new EntityCoordinates(mapUid, coordinates.ToMapPos(EntityManager));
+            }
+
+            // Parented directly to the grid
+            if (grid.GridEntityId == xform.ParentUid)
+                return xform.Coordinates;
+
+            // Parented to grid so convert their pos back to the grid.
+            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(xform.WorldPosition);
+            return new EntityCoordinates(grid.GridEntityId, gridPos);
         }
 
         public override void Shutdown()
@@ -100,5 +190,42 @@ namespace Robust.Shared.GameObjects
                 }
             }
         }
+    }
+
+    [ByRefEvent]
+    public struct TransformInitializedEvent
+    {
+        public TransformComponent Component;
+    }
+
+    /// <summary>
+    /// Raised whenever a non-map / non-grid entity moves.
+    /// This is useful for tree structures based around those components that need it for updating.
+    /// This is also raised on the children as well.
+    /// </summary>
+    [ByRefEvent]
+    public struct EntityMoveEvent
+    {
+        /// <summary>
+        /// The entity that triggered the move.
+        /// </summary>
+        public EntityUid Entity;
+
+        /// <summary>
+        /// The map / grid coordinates of the mover entity.
+        /// </summary>
+        public EntityCoordinates MoverCoordinates;
+
+        public TransformComponent Component;
+
+        /// <summary>
+        /// The cached <see cref="MapId"/> of the <see cref="MoverCoordinates"/>.
+        /// </summary>
+        public MapId MapId;
+
+        /// <summary>
+        /// The cached <see cref="GridId"/> of the <see cref="MoverCoordinates"/>.
+        /// </summary>
+        public GridId GridId;
     }
 }

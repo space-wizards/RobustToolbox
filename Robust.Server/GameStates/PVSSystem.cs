@@ -10,6 +10,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
@@ -24,6 +25,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
+    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
     public const float ChunkSize = 8;
 
@@ -78,8 +80,8 @@ internal sealed partial class PVSSystem : EntitySystem
         _mapManager.OnGridCreated += OnGridCreated;
         _mapManager.OnGridRemoved += OnGridRemoved;
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<MoveEvent>(OnEntityMove);
-        SubscribeLocalEvent<TransformComponent, ComponentInit>(OnTransformInit);
+        SubscribeLocalEvent<EntityMoveEvent>(OnEntityMove);
+        SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
@@ -168,31 +170,38 @@ internal sealed partial class PVSSystem : EntitySystem
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, e);
     }
 
-    private void OnEntityMove(ref MoveEvent ev)
+    private void OnEntityMove(ref EntityMoveEvent ev)
     {
-        UpdateEntityRecursive(ev.Sender, ev.Component);
+        // This is already called recursively so don't need to worry about child updates.
+        if (ev.GridId != GridId.Invalid)
+        {
+            _entityPvsCollection.UpdateIndex(ev.Entity, ev.MoverCoordinates, ev.GridId);
+        }
+        else
+        {
+            _entityPvsCollection.UpdateIndex(ev.Entity, ev.MoverCoordinates, ev.MapId);
+        }
     }
 
-    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
+        // TODO: Make this do the thing like move does.
         UpdateEntityRecursive(uid, component);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, TransformComponent? transformComponent = null)
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform)
     {
-        if(!Resolve(uid, ref transformComponent))
-            return;
-
-        _entityPvsCollection.UpdateIndex(uid, transformComponent.Coordinates);
+        var coordinates = _transform.GetMoverCoordinates(xform);
+        _entityPvsCollection.UpdateIndex(uid, coordinates);
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
-        if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
+        if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid) || xform.ChildCount == 0) return;
 
-        var children = transformComponent.ChildEnumerator;
+        var children = xform.ChildEnumerator;
 
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value);
+            UpdateEntityRecursive(child.Value, Transform(child.Value));
         }
     }
 

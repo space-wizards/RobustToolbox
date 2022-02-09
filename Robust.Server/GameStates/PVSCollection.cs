@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
@@ -344,6 +345,38 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// <param name="index">The <see cref="TIndex"/> to update.</param>
     /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
     /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, EntityCoordinates coordinates, GridId gridId, bool removeFromOverride = false)
+    {
+        if(!removeFromOverride && IsOverride(index))
+            return;
+
+        DebugTools.Assert(gridId != GridId.Invalid);
+        var gridIndices = GetChunkIndices(coordinates.Position);
+        UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+    }
+
+    /// <summary>
+    /// Updates an <see cref="TIndex"/> with the location based on the provided <see cref="EntityCoordinates"/>.
+    /// </summary>
+    /// <param name="index">The <see cref="TIndex"/> to update.</param>
+    /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
+    public void UpdateIndex(TIndex index, EntityCoordinates coordinates, MapId mapId, bool removeFromOverride = false)
+    {
+        if(!removeFromOverride && IsOverride(index))
+            return;
+
+        DebugTools.Assert(mapId != MapId.Nullspace);
+        var gridIndices = GetChunkIndices(coordinates.Position);
+        UpdateIndex(index, mapId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+    }
+
+    /// <summary>
+    /// Updates an <see cref="TIndex"/> with the location based on the provided <see cref="EntityCoordinates"/>.
+    /// </summary>
+    /// <param name="index">The <see cref="TIndex"/> to update.</param>
+    /// <param name="coordinates">The <see cref="EntityCoordinates"/> to use when adding the <see cref="TIndex"/> to the internal cache.</param>
+    /// <param name="removeFromOverride">An index at an override position will not be updated unless you set this flag.</param>
     public void UpdateIndex(TIndex index, EntityCoordinates coordinates, bool removeFromOverride = false)
     {
         if(!removeFromOverride && IsOverride(index))
@@ -352,13 +385,15 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         var gridId = coordinates.GetGridId(_entityManager);
         if (gridId != GridId.Invalid)
         {
-            var gridIndices = GetChunkIndices(_mapManager.GetGrid(gridId).LocalToGrid(coordinates));
+            DebugTools.Assert(_mapManager.IsGrid(coordinates.EntityId));
+            var gridIndices = GetChunkIndices(coordinates.Position);
             UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
             return;
         }
 
         var mapId = coordinates.GetMapId(_entityManager);
-        var mapIndices = GetChunkIndices(coordinates.ToMapPos(_entityManager));
+        DebugTools.Assert(_mapManager.IsMap(coordinates.EntityId));
+        var mapIndices = GetChunkIndices(coordinates.Position);
         UpdateIndex(index, mapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 

@@ -88,7 +88,6 @@ namespace Robust.Client.GameObjects
                     var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot);
 
                     // Get scaled down bounds used to indicate the "south" of a sprite.
-                    // Or at least thats what I think they are meant to do.
                     var localBound = bounds.Box;
                     var smallLocal = localBound.Scale(0.2f).Translated(-new Vector2(0f, localBound.Extents.Y));
                     var southIndicator = new Box2Rotated(smallLocal, bounds.Rotation, bounds.Origin);

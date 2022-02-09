@@ -59,12 +59,11 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<BroadphaseComponent, ComponentAdd>(OnBroadphaseAdd);
             SubscribeLocalEvent<GridAddEvent>(OnGridAdd);
 
+            Get<SharedTransformSystem>().OnEntityMove += OnEntityMove;
+
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInsert);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<CollisionChangeMessage>(OnPhysicsUpdate);
-
-            SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
-            SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
@@ -439,60 +438,43 @@ namespace Robust.Shared.Physics
             }
         }
 
-        private void OnMove(EntityUid uid, PhysicsComponent component, ref MoveEvent args)
+        private void OnEntityMove(EntityMoveEvent ev)
         {
-            if (!component.CanCollide || !EntityManager.TryGetComponent(uid, out FixturesComponent? manager)) return;
+            if (!TryComp<PhysicsComponent>(ev.Entity, out var body) ||
+                !body.CanCollide ||
+                body.Broadphase == null ||
+                !TryComp<FixturesComponent>(ev.Entity, out var fixtures)) return;
 
-            var worldRot = EntityManager.GetComponent<TransformComponent>(uid).WorldRotation;
+            var worldRot = ev.Component.WorldRotation;
 
-            SynchronizeFixtures(component, args.NewPosition.ToMapPos(EntityManager), (float) worldRot.Theta, manager);
-        }
-
-        private void OnRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
-        {
-            if (!component.CanCollide) return;
-
-            var xform = EntityManager.GetComponent<TransformComponent>(uid);
-            var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-            DebugTools.Assert(xform.LocalRotation.Equals(args.NewRotation));
-
-            SynchronizeFixtures(component, worldPos, (float) worldRot.Theta);
-        }
-
-        private void SynchronizeFixtures(PhysicsComponent body, Vector2 worldPos, float worldRot, FixturesComponent? manager = null)
-        {
-            if (!Resolve(body.Owner, ref manager))
+            foreach (var (_, fixture) in fixtures.Fixtures)
             {
-                return;
-            }
+                var proxyCount = fixture.ProxyCount;
 
-            // Logger.DebugS("physics", $"Synchronizing fixtures for {body.Owner}");
-            // Don't cache this as controllers may change it freely before we run physics!
-            var xf = new Transform(worldPos, worldRot);
+                if (proxyCount == 0) continue;
 
-            if (body.Awake)
-            {
-                // TODO: SWEPT HERE
-                // Check if we need to use the normal synchronize which also supports TOI
-                // Otherwise, use the slightly faster one.
+                // tl;dr update our bounding boxes stored in broadphase.
+                var broadphase = body.Broadphase!;
+                var broadphaseXform = EntityManager.GetComponent<TransformComponent>(broadphase.Owner);
 
-                // For now we'll just use the normal one as no TOI support
-                foreach (var (_, fixture) in manager.Fixtures)
+                var broadphaseMapId = broadphaseXform.MapID;
+                var (broadphaseWorldPos, broadphaseWorldRot) = broadphaseXform.GetWorldPositionRotation();
+
+                var relativePos1 = new Transform(ev.MoverCoordinates.Position, worldRot - broadphaseWorldRot);
+
+                for (var i = 0; i < proxyCount; i++)
                 {
-                    if (fixture.ProxyCount == 0) continue;
+                    var proxy = fixture.Proxies[i];
+                    var bounds = fixture.Shape.ComputeAABB(relativePos1, i);
+                    proxy.AABB = bounds;
+                    var displacement = Vector2.Zero;
+                    broadphase.Tree.MoveProxy(proxy.ProxyId, bounds, displacement);
 
-                    // SynchronizezTOI(fixture, xf1, xf2);
+                    var worldAABB = new Box2Rotated(bounds, broadphaseWorldRot, Vector2.Zero)
+                        .CalcBoundingBox()
+                        .Translated(broadphaseWorldPos);
 
-                    Synchronize(fixture, xf);
-                }
-            }
-            else
-            {
-                foreach (var (_, fixture) in manager.Fixtures)
-                {
-                    if (fixture.ProxyCount == 0) continue;
-
-                    Synchronize(fixture, xf);
+                    AddToMoveBuffer(broadphaseMapId, proxy, worldAABB);
                 }
             }
         }
@@ -674,6 +656,7 @@ namespace Robust.Shared.Physics
         public override void Shutdown()
         {
             base.Shutdown();
+            Get<SharedTransformSystem>().OnEntityMove -= OnEntityMove;
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
             _mapManager.MapCreated -= OnMapCreated;

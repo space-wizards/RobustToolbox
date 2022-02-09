@@ -258,12 +258,13 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public void ProcessQueue()
         {
-            var sys = EntitySystem.Get<SharedTransformSystem>();
-            sys.EnableSubscriptions = false;
+            var a = IoCManager.Resolve<IEntitySystemManager>();
+            var xformSystem = a.GetEntitySystem<SharedTransformSystem>();
+            xformSystem.EnableSubscriptions = false;
 
             foreach (var (transform, _) in _deferredUpdates)
             {
-                sys.OnUpdate(transform.Owner, transform);
+                xformSystem.OnUpdate(transform.Owner, transform);
             }
 
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
@@ -272,8 +273,7 @@ namespace Robust.Shared.Physics.Dynamics
                 transform.RunDeferred();
             }
 
-            sys.EnableSubscriptions = true;
-
+            xformSystem.EnableSubscriptions = true;
             _deferredUpdates.Clear();
         }
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.Containers;
@@ -14,6 +15,8 @@ namespace Robust.Shared.GameObjects
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
+
+        public event Action<EntityMoveEvent>? OnEntityMove = null;
 
         /// <summary>
         /// Used by physics to avoid duplicate entity moves going out.
@@ -68,10 +71,9 @@ namespace Robust.Shared.GameObjects
                 moverCoordinates,
                 xform,
                 mapId,
-                gridId,
-                localAABB);
+                gridId);
 
-            RaiseLocalEvent(uid, ref moveEvent);
+            OnEntityMove?.Invoke(moveEvent);
 
             // Check children on this one to avoid getting the query unnecessarily
             if (xform.ChildCount == 0) return;
@@ -81,11 +83,11 @@ namespace Robust.Shared.GameObjects
 
             while (childEnumerator.MoveNext(out var child))
             {
-                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId, localAABB);
+                ChildMove(child.Value, xformQuery, moverCoordinates, mapId, gridId, localAABB);
             }
         }
 
-        private void ChildMove(EntityUid uid, EntityQuery<TransformComponent> xformQuery, ref EntityCoordinates moverCoordinates, MapId mapId, GridId gridId, Box2 moverAABB)
+        private void ChildMove(EntityUid uid, EntityQuery<TransformComponent> xformQuery, EntityCoordinates moverCoordinates, MapId mapId, GridId gridId, Box2 moverAabb)
         {
             var xform = xformQuery.GetComponent(uid);
 
@@ -101,16 +103,15 @@ namespace Robust.Shared.GameObjects
                 moverCoordinates,
                 xform,
                 mapId,
-                gridId,
-                moverAABB);
+                gridId);
 
-            RaiseLocalEvent(uid, ref moveEvent);
+            OnEntityMove?.Invoke(moveEvent);
 
             var childEnumerator = xform.ChildEnumerator;
 
             while (childEnumerator.MoveNext(out var child))
             {
-                ChildMove(child.Value, xformQuery, ref moverCoordinates, mapId, gridId, moverAABB);
+                ChildMove(child.Value, xformQuery, moverCoordinates, mapId, gridId, moverAabb);
             }
         }
 
@@ -216,18 +217,11 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    [ByRefEvent]
-    public struct TransformInitializedEvent
-    {
-        public TransformComponent Component;
-    }
-
     /// <summary>
     /// Raised whenever a non-map / non-grid entity moves.
     /// This is useful for tree structures based around those components that need it for updating.
     /// This is also raised on the children as well.
     /// </summary>
-    [ByRefEvent]
     public readonly struct EntityMoveEvent
     {
         /// <summary>
@@ -252,27 +246,18 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public readonly GridId GridId;
 
-        // This one is essentially for EntityLookup's recursion
-
-        /// <summary>
-        /// Local AABB of the mover entity.
-        /// </summary>
-        public readonly Box2 MoverAABB;
-
         public EntityMoveEvent(
             EntityUid entity,
             EntityCoordinates moverCoordinates,
             TransformComponent component,
             MapId mapId,
-            GridId gridId,
-            Box2 moverAABB)
+            GridId gridId)
         {
             Entity = entity;
             MoverCoordinates = moverCoordinates;
             Component = component;
             MapId = mapId;
             GridId = gridId;
-            MoverAABB = moverAABB;
         }
     }
 }

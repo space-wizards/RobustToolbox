@@ -74,13 +74,13 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         base.Initialize();
 
+        _transform.OnEntityMove += OnEntityMove;
         _entityPvsCollection = RegisterPVSCollection<EntityUid>();
         _mapManager.MapCreated += OnMapCreated;
         _mapManager.MapDestroyed += OnMapDestroyed;
         _mapManager.OnGridCreated += OnGridCreated;
         _mapManager.OnGridRemoved += OnGridRemoved;
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
-        SubscribeLocalEvent<EntityMoveEvent>(OnEntityMove);
         SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -101,6 +101,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         base.Shutdown();
 
+        _transform.OnEntityMove -= OnEntityMove;
         UnregisterPVSCollection(_entityPvsCollection);
         _mapManager.MapCreated -= OnMapCreated;
         _mapManager.MapDestroyed -= OnMapDestroyed;
@@ -170,7 +171,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _entityPvsCollection.RemoveIndex(EntityManager.CurrentTick, e);
     }
 
-    private void OnEntityMove(ref EntityMoveEvent ev)
+    private void OnEntityMove(EntityMoveEvent ev)
     {
         // This is already called recursively so don't need to worry about child updates.
         if (ev.GridId != GridId.Invalid)

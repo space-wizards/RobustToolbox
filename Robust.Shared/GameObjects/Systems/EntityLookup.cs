@@ -135,8 +135,9 @@ namespace Robust.Shared.GameObjects
 
             var eventBus = _entityManager.EventBus;
 
+            EntitySystem.Get<SharedTransformSystem>().OnEntityMove += OnEntityMove;
+
             eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, OnParentChange);
-            eventBus.SubscribeEvent<EntityMoveEvent>(EventSource.Local, this, OnEntityMove);
             eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, OnAnchored);
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
@@ -155,6 +156,7 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
+            EntitySystem.Get<SharedTransformSystem>().OnEntityMove -= OnEntityMove;
             _entityManager.EntityDeleted -= OnEntityDeleted;
             _entityManager.EntityInitialized -= OnEntityInit;
             _mapManager.MapCreated -= OnMapCreated;
@@ -787,24 +789,14 @@ namespace Robust.Shared.GameObjects
             return null;
         }
 
-        private void OnEntityMove(ref EntityMoveEvent ev)
+        private void OnEntityMove(EntityMoveEvent ev)
         {
             // Maps and grids get ignored for this; these can be returned via alternative means (grids via gridtrees).
             if (ev.Component.Anchored) return;
 
             var lookup = _entityManager.GetComponent<EntityLookupComponent>(ev.MoverCoordinates.EntityId);
             var lookupXform = _entityManager.GetComponent<TransformComponent>(lookup.Owner);
-            Box2 localAABB;
-
-            // Use the mover's AABB instead.
-            if (_container.IsEntityInContainer(ev.Entity, ev.Component))
-            {
-                localAABB = ev.MoverAABB;
-            }
-            else
-            {
-                localAABB = GetLocalAABBNoContainer(ev.Entity, ev.Component);
-            }
+            var localAABB = GetLocalAABB(ev.Entity, ev.Component);
 
             var lookupBounds = GetLookupBounds(ev.Entity, ev.Component, lookupXform, ev.MoverCoordinates, localAABB);
 

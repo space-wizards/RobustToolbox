@@ -11,7 +11,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.GameStates
 {
-    internal class NetInterpOverlay : Overlay
+    internal sealed class NetInterpOverlay : Overlay
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -65,7 +65,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetShowInterpCommand : IConsoleCommand
+        private sealed class NetShowInterpCommand : IConsoleCommand
         {
             public string Command => "net_draw_interp";
             public string Help => "net_draw_interp <0|1>";

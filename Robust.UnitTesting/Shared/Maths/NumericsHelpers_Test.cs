@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestFixture]
     [TestOf(typeof(NumericsHelpers))]
     [SuppressMessage("ReSharper", "AccessToStaticMemberViaDerivedType")]
-    public class NumericsHelpers_Test
+    public sealed class NumericsHelpers_Test
     {
         #region Utils
 

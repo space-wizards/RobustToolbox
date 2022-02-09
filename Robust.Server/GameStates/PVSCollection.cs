@@ -34,7 +34,7 @@ public interface IPVSCollection
     public void CullDeletionHistoryUntil(GameTick tick);
 }
 
-public class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
+public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
     [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;

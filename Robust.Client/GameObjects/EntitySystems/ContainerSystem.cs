@@ -10,7 +10,7 @@ using static Robust.Shared.Containers.ContainerManagerComponent;
 
 namespace Robust.Client.GameObjects
 {
-    public class ContainerSystem : SharedContainerSystem
+    public sealed class ContainerSystem : SharedContainerSystem
     {
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;

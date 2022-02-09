@@ -7,7 +7,7 @@ namespace Robust.Shared.Serialization
     /// TODO: This fix exists because of https://github.com/aaubry/YamlDotNet/issues/409.
     /// Credit: https://stackoverflow.com/a/56452440
     /// </summary>
-    public class YamlMappingFix : IEmitter
+    public sealed class YamlMappingFix : IEmitter
     {
         private readonly IEmitter _next;
 

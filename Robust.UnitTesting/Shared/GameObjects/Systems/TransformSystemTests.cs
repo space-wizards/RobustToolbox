@@ -8,7 +8,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.GameObjects.Systems
 {
     [TestFixture, Parallelizable]
-    class TransformSystemTests
+    sealed class TransformSystemTests
     {
         private static ISimulation SimulationFactory()
         {
@@ -47,6 +47,6 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
             }
         }
 
-        private class Subscriber : IEntityEventSubscriber { }
+        private sealed class Subscriber : IEntityEventSubscriber { }
     }
 }

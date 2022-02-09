@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a <see cref="MetaDataComponent"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class MetaDataComponentState : ComponentState
+    public sealed class MetaDataComponentState : ComponentState
     {
         /// <summary>
         ///     The in-game name of this entity.
@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
     [NetworkedComponent]
-    public class MetaDataComponent : Component
+    public sealed class MetaDataComponent : Component
     {
         [DataField("name")]
         private string? _entityName;

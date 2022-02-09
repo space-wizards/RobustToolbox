@@ -78,41 +78,12 @@ namespace Robust.Shared.GameObjects
 
         public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
-        [ViewVariables]
-        public int ContactCount
-        {
-            get
-            {
-                var count = 0;
-                var edge = ContactEdges;
-                while (edge != null)
-                {
-                    edge = edge.Next;
-                    count++;
-                }
-
-                return count;
-            }
-        }
-
-        public IEnumerable<Contact> Contacts
-        {
-            get
-            {
-                var edge = ContactEdges;
-
-                while (edge != null)
-                {
-                    yield return edge.Contact!;
-                    edge = edge.Next;
-                }
-            }
-        }
+        [ViewVariables] public int ContactCount => Contacts.Count;
 
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
-        internal ContactEdge? ContactEdges { get; set; } = null;
+        internal LinkedList<Contact> Contacts = new();
 
         public bool IgnorePaused { get; set; }
 
@@ -842,15 +813,16 @@ namespace Robust.Shared.GameObjects
         // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
         public void DestroyContacts()
         {
-            ContactEdge? contactEdge = ContactEdges;
-            while (contactEdge != null)
+            var node = Contacts.First;
+
+            while (node != null)
             {
-                var contactEdge0 = contactEdge;
-                contactEdge = contactEdge.Next;
-                PhysicsMap?.ContactManager.Destroy(contactEdge0.Contact!);
+                var contact = node.Value;
+                node = node.Next;
+                PhysicsMap?.ContactManager.Destroy(contact);
             }
 
-            ContactEdges = null;
+            DebugTools.Assert(Contacts.Count == 0);
         }
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
@@ -984,7 +956,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    public sealed class PhysicsBodyTypeChangedEvent : EntityEventArgs
     {
         /// <summary>
         ///     New BodyType of the entity.

@@ -5,7 +5,7 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.Asynchronous
 {
-    internal class RobustSynchronizationContext : SynchronizationContext
+    internal sealed class RobustSynchronizationContext : SynchronizationContext
     {
         // Used only on release.
         // ReSharper disable once NotAccessedField.Local

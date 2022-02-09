@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
+    [Virtual]
     public class InvalidDeserializedResultTypeException<TExpected> : Exception
     {
         public readonly Type ReceivedType;

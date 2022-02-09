@@ -20,7 +20,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client
 {
     /// <inheritdoc />
-    public class BaseClient : IBaseClient
+    public sealed class BaseClient : IBaseClient
     {
         [Dependency] private readonly IClientNetManager _net = default!;
         [Dependency] private readonly IPlayerManager _playMan = default!;
@@ -291,7 +291,7 @@ namespace Robust.Client
     /// <summary>
     ///     Event arguments for when something changed with the player.
     /// </summary>
-    public class PlayerEventArgs : EventArgs
+    public sealed class PlayerEventArgs : EventArgs
     {
         /// <summary>
         ///     The session that triggered the event.
@@ -310,7 +310,7 @@ namespace Robust.Client
     /// <summary>
     ///     Event arguments for when the RunLevel has changed in the BaseClient.
     /// </summary>
-    public class RunLevelChangedEventArgs : EventArgs
+    public sealed class RunLevelChangedEventArgs : EventArgs
     {
         /// <summary>
         ///     RunLevel that the BaseClient switched from.
@@ -335,7 +335,7 @@ namespace Robust.Client
     /// <summary>
     ///     Info about the server and player that is sent to the client while connecting.
     /// </summary>
-    public class ServerInfo
+    public sealed class ServerInfo
     {
         public ServerInfo(string serverName)
         {

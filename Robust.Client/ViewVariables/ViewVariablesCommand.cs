@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
-    public class ViewVariablesCommand : IConsoleCommand
+    public sealed class ViewVariablesCommand : IConsoleCommand
     {
         public string Command => "vv";
         public string Description => "Opens View Variables.";
@@ -126,7 +126,7 @@ namespace Robust.Client.ViewVariables
         /// <summary>
         ///     Test class to test local VV easily without connecting to the server.
         /// </summary>
-        private class VVTest : IEnumerable<object>
+        private sealed class VVTest : IEnumerable<object>
         {
             [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
 

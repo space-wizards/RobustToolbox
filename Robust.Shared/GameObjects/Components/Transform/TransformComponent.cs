@@ -469,6 +469,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
 
+        public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
+
         [ViewVariables] public int ChildCount => _children.Count;
 
         [ViewVariables]
@@ -1046,7 +1048,7 @@ namespace Robust.Shared.GameObjects
         ///     Serialized state of a TransformComponent.
         /// </summary>
         [Serializable, NetSerializable]
-        internal class TransformComponentState : ComponentState
+        internal sealed class TransformComponentState : ComponentState
         {
             /// <summary>
             ///     Current parent entity of this entity.
@@ -1149,6 +1151,33 @@ namespace Robust.Shared.GameObjects
         ///     New AABB of the entity.
         /// </summary>
         public readonly Box2? WorldAABB;
+    }
+
+    public struct TransformChildrenEnumerator : IDisposable
+    {
+        private HashSet<EntityUid>.Enumerator _children;
+
+        public TransformChildrenEnumerator(HashSet<EntityUid>.Enumerator children)
+        {
+            _children = children;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        {
+            if (!_children.MoveNext())
+            {
+                child = null;
+                return false;
+            }
+
+            child = _children.Current;
+            return true;
+        }
+
+        public void Dispose()
+        {
+            _children.Dispose();
+        }
     }
 
     /// <summary>

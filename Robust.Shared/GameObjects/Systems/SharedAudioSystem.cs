@@ -3,7 +3,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Shared.GameObjects
 {
-    public class SharedAudioSystem : EntitySystem
+    public abstract class SharedAudioSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
 

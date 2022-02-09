@@ -20,7 +20,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom.Prototy
 {
     [TestFixture]
     [TestOf(typeof(PrototypeIdListSerializer<>))]
-    public class PrototypeIdListSerializerTest : SerializationTest
+    public sealed class PrototypeIdListSerializerTest : SerializationTest
     {
         private static readonly string TestEntityId = $"{nameof(PrototypeIdListSerializerTest)}Dummy";
 
@@ -167,7 +167,7 @@ entitiesImmutableList:
     }
 
     [DataDefinition]
-    public class PrototypeIdListSerializerTestDataDefinition
+    public sealed class PrototypeIdListSerializerTestDataDefinition
     {
         [DataField("entitiesList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public List<string> EntitiesList = new();

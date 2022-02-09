@@ -18,7 +18,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
 {
     [TestFixture]
     [TestOf(typeof(TransformComponent))]
-    class Transform_Test : RobustUnitTest
+    sealed class Transform_Test : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Server;
 

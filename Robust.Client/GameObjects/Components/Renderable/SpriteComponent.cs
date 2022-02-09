@@ -1630,7 +1630,7 @@ namespace Robust.Client.GameObjects
             Flip = 3,
         }
 
-        public class Layer : ISpriteLayer
+        public sealed class Layer : ISpriteLayer
         {
             [ViewVariables] private readonly SpriteComponent _parent;
 

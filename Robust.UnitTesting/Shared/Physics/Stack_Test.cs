@@ -38,7 +38,7 @@ using Robust.Shared.Physics.Dynamics;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    public class PhysicsTestBedTest : RobustIntegrationTest
+    public sealed class PhysicsTestBedTest : RobustIntegrationTest
     {
         [Test]
         public async Task TestBoxStack()
@@ -67,7 +67,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
 
-                var horizontal = new EdgeShape(new Vector2(20, 0), new Vector2(-20, 0));
+                var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
                 var horizontalFixture = new Fixture(ground, horizontal)
                 {
                     CollisionLayer = 1,
@@ -187,7 +187,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
                 var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
 
-                var horizontal = new EdgeShape(new Vector2(20, 0), new Vector2(-20, 0));
+                var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
                 var horizontalFixture = new Fixture(ground, horizontal)
                 {
                     CollisionLayer = 1,

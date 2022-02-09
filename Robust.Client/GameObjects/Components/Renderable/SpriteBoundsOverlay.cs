@@ -57,7 +57,7 @@ namespace Robust.Client.GameObjects
         private bool _enabled;
     }
 
-    public class SpriteBoundsOverlay : Overlay
+    public sealed class SpriteBoundsOverlay : Overlay
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 

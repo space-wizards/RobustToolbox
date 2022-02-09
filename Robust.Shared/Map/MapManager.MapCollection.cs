@@ -11,7 +11,7 @@ namespace Robust.Shared.Map;
 /// <summary>
 ///     Arguments for when a map is created or deleted locally ore remotely.
 /// </summary>
-public class MapEventArgs : EventArgs
+public sealed class MapEventArgs : EventArgs
 {
     /// <summary>
     ///     Creates a new instance of this class.

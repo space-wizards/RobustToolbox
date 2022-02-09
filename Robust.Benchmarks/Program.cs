@@ -4,7 +4,7 @@ using System;
 
 namespace Robust.Benchmarks
 {
-    internal class Program
+    internal static class Program
     {
         // --allCategories=ctg1,ctg2
         // --anyCategories=ctg1,ctg2

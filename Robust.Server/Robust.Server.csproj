@@ -13,7 +13,6 @@
     <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="All" />
     <!--  -->
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.7" />
-    <PackageReference Include="Microsoft.Extensions.ObjectPool" Version="5.0.4" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />
     <PackageReference Include="Serilog.Sinks.Loki" Version="4.0.0-beta3" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="5.0.0" />

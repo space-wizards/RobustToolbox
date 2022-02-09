@@ -15,7 +15,7 @@ using static Robust.Shared.Utility.SpriteSpecifier;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class SpriteSpecifierSerializer :
+    public sealed class SpriteSpecifierSerializer :
         ITypeSerializer<Texture, ValueDataNode>,
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,

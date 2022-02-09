@@ -9,7 +9,7 @@ using Robust.Shared.Map;
 namespace Robust.Server.Bql
 {
     [RegisterBqlQuerySelector]
-    public class WithQuerySelector : BqlQuerySelector
+    public sealed class WithQuerySelector : BqlQuerySelector
     {
         public override string Token => "with";
 
@@ -34,7 +34,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class NamedQuerySelector : BqlQuerySelector
+    public sealed class NamedQuerySelector : BqlQuerySelector
     {
         public override string Token => "named";
 
@@ -53,7 +53,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class ParentedToQuerySelector : BqlQuerySelector
+    public sealed class ParentedToQuerySelector : BqlQuerySelector
     {
         public override string Token => "parentedto";
 
@@ -68,7 +68,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class RecursiveParentedToQuerySelector : BqlQuerySelector
+    public sealed class RecursiveParentedToQuerySelector : BqlQuerySelector
     {
         public override string Token => "rparentedto";
 
@@ -97,7 +97,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class ChildrenQuerySelector : BqlQuerySelector
+    public sealed class ChildrenQuerySelector : BqlQuerySelector
     {
         public override string Token => "children";
 
@@ -118,7 +118,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class RecursiveChildrenQuerySelector : BqlQuerySelector
+    public sealed class RecursiveChildrenQuerySelector : BqlQuerySelector
     {
         public override string Token => "rchildren";
 
@@ -152,7 +152,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class ParentQuerySelector : BqlQuerySelector
+    public sealed class ParentQuerySelector : BqlQuerySelector
     {
         public override string Token => "parent";
 
@@ -172,7 +172,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class AboveQuerySelector : BqlQuerySelector
+    public sealed class AboveQuerySelector : BqlQuerySelector
     {
         public override string Token => "above";
 
@@ -207,7 +207,7 @@ namespace Robust.Server.Bql
 
     [RegisterBqlQuerySelector]
     // ReSharper disable once InconsistentNaming the name is correct shut up
-    public class OnGridQuerySelector : BqlQuerySelector
+    public sealed class OnGridQuerySelector : BqlQuerySelector
     {
         public override string Token => "ongrid";
 
@@ -223,7 +223,7 @@ namespace Robust.Server.Bql
 
     [RegisterBqlQuerySelector]
     // ReSharper disable once InconsistentNaming the name is correct shut up
-    public class OnMapQuerySelector : BqlQuerySelector
+    public sealed class OnMapQuerySelector : BqlQuerySelector
     {
         public override string Token => "onmap";
 
@@ -238,7 +238,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class PrototypedQuerySelector : BqlQuerySelector
+    public sealed class PrototypedQuerySelector : BqlQuerySelector
     {
         public override string Token => "prototyped";
 
@@ -252,7 +252,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class RecursivePrototypedQuerySelector : BqlQuerySelector
+    public sealed class RecursivePrototypedQuerySelector : BqlQuerySelector
     {
         public override string Token => "rprototyped";
 
@@ -274,7 +274,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class SelectQuerySelector : BqlQuerySelector
+    public sealed class SelectQuerySelector : BqlQuerySelector
     {
         public override string Token => "select";
 
@@ -302,7 +302,7 @@ namespace Robust.Server.Bql
     }
 
     [RegisterBqlQuerySelector]
-    public class NearQuerySelector : BqlQuerySelector
+    public sealed class NearQuerySelector : BqlQuerySelector
     {
         public override string Token => "near";
 
@@ -326,7 +326,7 @@ namespace Robust.Server.Bql
 
     [RegisterBqlQuerySelector]
     // ReSharper disable once InconsistentNaming the name is correct shut up
-    public class AnchoredQuerySelector : BqlQuerySelector
+    public sealed class AnchoredQuerySelector : BqlQuerySelector
     {
         public override string Token => "anchored";
 

@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Utility
 {
     [TestFixture]
     [TestOf(typeof(NullableHelper))]
-    public class NullableHelper_Test
+    public sealed class NullableHelper_Test
     {
         [SetUp]
         public void Setup()
@@ -42,7 +42,7 @@ namespace Robust.UnitTesting.Shared.Utility
 
 #pragma warning disable 169
 #pragma warning disable 414
-    public class NullableTestClass
+    public sealed class NullableTestClass
     {
         private int? i;
         private double? d;
@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Shared.Utility
         private char? c;
     }
 
-    public class NotNullableTestClass
+    public sealed class NotNullableTestClass
     {
         private int i;
         private double d;

@@ -38,18 +38,17 @@ namespace Robust.Shared.GameObjects
         {
             var maps = EntityManager.GetEntityQuery<MapComponent>();
             var grids = EntityManager.GetEntityQuery<MapGridComponent>();
-            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
 
             while (_queuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender)) continue;
-                HandleMove(ref moveEvent, xforms, maps, grids);
+                HandleMove(ref moveEvent, moveEvent.Component, maps, grids);
             }
 
             _handledThisTick.Clear();
         }
 
-        private void HandleMove(ref MoveEvent moveEvent, EntityQuery<TransformComponent> xforms, EntityQuery<MapComponent> maps, EntityQuery<MapGridComponent> grids)
+        private void HandleMove(ref MoveEvent moveEvent, TransformComponent xform, EntityQuery<MapComponent> maps, EntityQuery<MapGridComponent> grids)
         {
             var entity = moveEvent.Sender;
 
@@ -60,7 +59,6 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            var xform = xforms.GetComponent(entity);
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
             if (_container.IsEntityInContainer(entity, xform)) return;

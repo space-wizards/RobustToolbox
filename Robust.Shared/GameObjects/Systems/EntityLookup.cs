@@ -32,7 +32,6 @@ namespace Robust.Shared.GameObjects
 
         void Shutdown();
 
-        void Update();
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<EntityUid> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored);
@@ -95,29 +94,13 @@ namespace Robust.Shared.GameObjects
 
         private const float PointEnlargeRange = .00001f / 2;
 
-        // Using stacks so we always use latest data (given we only run it once per entity).
-        private readonly Stack<MoveEvent> _moveQueue = new();
-        private readonly Stack<RotateEvent> _rotateQueue = new();
-        private readonly Queue<EntParentChangedMessage> _parentChangeQueue = new();
-
         /// <summary>
         /// Like RenderTree we need to enlarge our lookup range for EntityLookupComponent as an entity is only ever on
         /// 1 EntityLookupComponent at a time (hence it may overlap without another lookup).
         /// </summary>
         private float _lookupEnlargementRange;
 
-        /// <summary>
-        /// Move and rotate events generate the same update so no point duplicating work in the same tick.
-        /// </summary>
-        private readonly HashSet<EntityUid> _handledThisTick = new();
-
         // TODO: Should combine all of the methods that check for IPhysBody and just use the one GetWorldAabbFromEntity method
-
-        // TODO: Combine GridTileLookupSystem and entity anchoring together someday.
-        // Queries are a bit of spaghet rn but ideally you'd just have:
-        // A) The fast tile-based one
-        // B) The physics-only one (given physics needs it to be fast af)
-        // C) A generic use one that covers anything not caught in the above.
 
         public bool Started { get; private set; } = false;
 
@@ -138,10 +121,10 @@ namespace Robust.Shared.GameObjects
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             var eventBus = _entityManager.EventBus;
-            eventBus.SubscribeEvent(EventSource.Local, this, (ref MoveEvent ev) => _moveQueue.Push(ev));
-            eventBus.SubscribeEvent(EventSource.Local, this, (ref RotateEvent ev) => _rotateQueue.Push(ev));
-            eventBus.SubscribeEvent(EventSource.Local, this, (ref EntParentChangedMessage ev) => _parentChangeQueue.Enqueue(ev));
-            eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, HandleAnchored);
+
+            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, OnParentChange);
+            eventBus.SubscribeEvent<EntityMoveEvent>(EventSource.Local, this, OnEntityMove);
+            eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, OnAnchored);
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
@@ -159,18 +142,13 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
-            _moveQueue.Clear();
-            _rotateQueue.Clear();
-            _handledThisTick.Clear();
-            _parentChangeQueue.Clear();
-
             _entityManager.EntityDeleted -= OnEntityDeleted;
             _entityManager.EntityInitialized -= OnEntityInit;
             _mapManager.MapCreated -= OnMapCreated;
             Started = false;
         }
 
-        private void HandleAnchored(ref AnchorStateChangedEvent @event)
+        private void OnAnchored(ref AnchorStateChangedEvent @event)
         {
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
@@ -238,6 +216,7 @@ namespace Robust.Shared.GameObjects
         {
             var xform = _entityManager.GetComponent<TransformComponent>(uid);
             if (xform.Anchored) return;
+
             UpdateEntityTree(uid, xform);
         }
 
@@ -248,52 +227,50 @@ namespace Robust.Shared.GameObjects
             _mapManager.GetMapEntityId(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
         }
 
-        public void Update()
+        private void OnParentChange(ref EntParentChangedMessage ev)
         {
-            // Acruid said he'd deal with Update being called around I_entityManager later.
+            RemoveFromEntityTrees(ev.Entity);
+            var xform = _entityManager.GetComponent<TransformComponent>(ev.Entity);
 
-            // Could be more efficient but essentially nuke their old lookup and add to new lookup if applicable.
-            while (_parentChangeQueue.TryDequeue(out var mapChangeEvent))
+            if (xform.Anchored) return;
+
+            UpdateEntityTree(ev.Entity, xform);
+        }
+
+        private void UpdateEntityTree(EntityUid uid, TransformComponent xform)
+        {
+            var lookup = GetLookup(uid);
+
+            if (lookup == null)
             {
-                _handledThisTick.Add(mapChangeEvent.Entity);
-                RemoveFromEntityTrees(mapChangeEvent.Entity);
-
-                if (_entityManager.Deleted(mapChangeEvent.Entity)) continue;
-
-                var xform = _entityManager.GetComponent<TransformComponent>(mapChangeEvent.Entity);
-
-                if (xform.Anchored) continue;
-
-                UpdateEntityTree(mapChangeEvent.Entity, xform, GetWorldAabbFromEntity(mapChangeEvent.Entity));
+                // TODO: Do we need this?
+                RemoveFromEntityTrees(uid);
+                return;
             }
 
-            while (_moveQueue.TryPop(out var moveEvent))
+            // Temp PVS guard for when we clear dynamictree for now.
+            var worldAABB = GetWorldAabbFromEntity(uid, xform);
+            var center = worldAABB.Center;
+
+            DebugTools.Assert(!float.IsNaN(center.X) && !float.IsNaN(center.Y));
+
+            var aabb = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.TransformBox(worldAABB);
+
+            lookup.Tree.Add(uid, aabb);
+
+            if (!_entityManager.HasComponent<EntityLookupComponent>(uid) && xform.ChildCount > 0)
             {
-                if (!_handledThisTick.Add(moveEvent.Sender) ||
-                    _entityManager.Deleted(moveEvent.Sender)) continue;
+                DebugTools.Assert(!_entityManager.HasComponent<IMapGridComponent>(uid));
 
-                var xform = _entityManager.GetComponent<TransformComponent>(moveEvent.Sender);
+                var children = xform.ChildEnumerator;
 
-                if (xform.Anchored) continue;
+                while (children.MoveNext(out var child))
+                {
+                    var childXform = _entityManager.GetComponent<TransformComponent>(child.Value);
 
-                DebugTools.Assert(!xform.Anchored);
-                UpdateEntityTree(moveEvent.Sender, xform, moveEvent.WorldAABB);
+                    UpdateEntityTree(child.Value, childXform);
+                }
             }
-
-            while (_rotateQueue.TryPop(out var rotateEvent))
-            {
-                if (!_handledThisTick.Add(rotateEvent.Sender) ||
-                    _entityManager.Deleted(rotateEvent.Sender)) continue;
-
-                var xform = _entityManager.GetComponent<TransformComponent>(rotateEvent.Sender);
-
-                if (xform.Anchored) continue;
-
-                DebugTools.Assert(!xform.Anchored);
-                UpdateEntityTree(rotateEvent.Sender, xform, rotateEvent.WorldAABB);
-            }
-
-            _handledThisTick.Clear();
         }
 
         #region Spatial Queries
@@ -791,55 +768,22 @@ namespace Robust.Shared.GameObjects
             return null;
         }
 
-        /// <inheritdoc />
-        public bool UpdateEntityTree(EntityUid entity, TransformComponent xform, Box2? worldAABB = null)
+        private void OnEntityMove(ref EntityMoveEvent ev)
         {
-            DebugTools.Assert(!_entityManager.Deleted(entity));
+            if (ev.Component.Anchored) return;
 
-            var lookup = GetLookup(entity);
-
-            if (lookup == null)
-            {
-                RemoveFromEntityTrees(entity);
-                return true;
-            }
+            var lookup = _entityManager.GetComponent<EntityLookupComponent>(ev.MoverCoordinates.EntityId);
 
             // Temp PVS guard for when we clear dynamictree for now.
-            worldAABB ??= GetWorldAabbFromEntity(entity, xform);
-            var center = worldAABB.Value.Center;
+            var worldAABB = GetWorldAabbFromEntity(ev.Entity, ev.Component);
+            var center = worldAABB.Center;
 
             DebugTools.Assert(!float.IsNaN(center.X) && !float.IsNaN(center.Y));
 
-            var aabb = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.TransformBox(worldAABB.Value);
+            // TODO: Should just get the lookup AABB directly as we already have a lookup specific position.
+            var aabb = _entityManager.GetComponent<TransformComponent>(lookup.Owner).InvWorldMatrix.TransformBox(worldAABB);
 
-            // for debugging
-            var necessary = 0;
-
-            if (lookup.Tree.AddOrUpdate(entity, aabb))
-            {
-                ++necessary;
-            }
-
-            if (!_entityManager.HasComponent<EntityLookupComponent>(entity))
-            {
-                DebugTools.Assert(!_entityManager.HasComponent<IMapGridComponent>(entity));
-
-                var children = xform.ChildEnumerator;
-
-                while (children.MoveNext(out var child))
-                {
-                    if (!_handledThisTick.Add(child.Value)) continue;
-
-                    var childXform = _entityManager.GetComponent<TransformComponent>(child.Value);
-
-                    if (UpdateEntityTree(child.Value, childXform))
-                    {
-                        ++necessary;
-                    }
-                }
-            }
-
-            return necessary > 0;
+            lookup.Tree.Update(ev.Entity, aabb);
         }
 
         /// <inheritdoc />

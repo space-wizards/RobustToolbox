@@ -14,6 +14,11 @@ namespace Robust.Shared.GameObjects
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
 
+        /// <summary>
+        /// Used by physics to avoid duplicate entity moves going out.
+        /// </summary>
+        internal bool EnableSubscriptions = true;
+
         public override void Initialize()
         {
             base.Initialize();
@@ -22,16 +27,34 @@ namespace Robust.Shared.GameObjects
 
             _mapManager.TileChanged += MapManagerOnTileChanged;
             SubscribeLocalEvent<MoveEvent>(OnMoveEvent);
+            SubscribeLocalEvent<RotateEvent>(OnRotateEvent);
         }
+
+        // TODO: To avoid dupe updates going out should special-case this in physics.
 
         private void OnMoveEvent(ref MoveEvent ev)
         {
-            if (_mapManager.IsGrid(ev.Sender) || _mapManager.IsMap(ev.Sender)) return;
+            if (!EnableSubscriptions) return;
+
+            OnUpdate(ev.Sender, ev.Component);
+        }
+
+        private void OnRotateEvent(ref RotateEvent ev)
+        {
+            if (!EnableSubscriptions) return;
+
+            OnUpdate(ev.Sender, ev.Component);
+        }
+
+        /// <summary>
+        /// Issues entity move events, excluding maps and grids.
+        /// </summary>
+        internal void OnUpdate(EntityUid uid, TransformComponent xform)
+        {
+            if (_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
             // Client can issue nullspace events due to PVS so can't just assert it.
             // DebugTools.Assert(ev.Component.MapID != MapId.Nullspace);
-            var mover = ev.Sender;
-            var xform = ev.Component;
 
             var moverCoordinates = GetMoverCoordinates(xform);
             var gridId = moverCoordinates.GetGridId(EntityManager);
@@ -39,14 +62,14 @@ namespace Robust.Shared.GameObjects
 
             var moveEvent = new EntityMoveEvent
             {
-                Entity = mover,
+                Entity = uid,
                 MoverCoordinates = moverCoordinates,
                 Component = xform,
                 MapId = mapId,
                 GridId = gridId,
             };
 
-            RaiseLocalEvent(mover, ref moveEvent);
+            RaiseLocalEvent(uid, ref moveEvent);
 
             // Check children on this one to avoid getting the query unnecessarily
             if (xform.ChildCount == 0) return;

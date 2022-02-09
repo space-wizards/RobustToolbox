@@ -301,6 +301,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     #region UpdateIndex
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool IsOverride(TIndex index)
     {
         if (_locationChangeBuffer.TryGetValue(index, out var change) &&

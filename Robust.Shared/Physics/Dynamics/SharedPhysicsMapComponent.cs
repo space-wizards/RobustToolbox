@@ -258,15 +258,21 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public void ProcessQueue()
         {
-            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var fixtures = _entityManager.GetEntityQuery<FixturesComponent>();
+            var sys = EntitySystem.Get<SharedTransformSystem>();
+            sys.EnableSubscriptions = false;
+
+            foreach (var (transform, _) in _deferredUpdates)
+            {
+                sys.OnUpdate(transform.Owner, transform);
+            }
 
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var (transform, physics) in _deferredUpdates)
+            foreach (var (transform, _) in _deferredUpdates)
             {
-                var worldAABB = _physics.GetWorldAABB(physics, transform, xforms, fixtures);
-                transform.RunDeferred(worldAABB);
+                transform.RunDeferred();
             }
+
+            sys.EnableSubscriptions = true;
 
             _deferredUpdates.Clear();
         }

@@ -670,8 +670,6 @@ namespace Robust.Server
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
             _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false, TickUsage);
 
-            _lookup.Update();
-
             using (TickUsage.WithLabels("PostEngine").NewTimer())
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);

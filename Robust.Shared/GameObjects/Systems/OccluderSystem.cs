@@ -23,15 +23,29 @@ namespace Robust.Shared.GameObjects
             UpdatesOutsidePrediction = true;
 
             _mapManager.MapCreated += OnMapCreated;
+            Get<SharedTransformSystem>().OnEntityMove += OnEntityMoved;
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<OccluderTreeComponent, ComponentInit>(HandleOccluderTreeInit);
             SubscribeLocalEvent<OccluderComponent, ComponentInit>(HandleOccluderInit);
             SubscribeLocalEvent<OccluderComponent, ComponentShutdown>(HandleOccluderShutdown);
 
-            SubscribeLocalEvent<OccluderComponent, MoveEvent>(EntMoved);
             SubscribeLocalEvent<OccluderComponent, EntParentChangedMessage>(EntParentChanged);
             SubscribeLocalEvent<OccluderEvent>(ev => _updates.Enqueue(ev));
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            _mapManager.MapCreated -= OnMapCreated;
+            Get<SharedTransformSystem>().OnEntityMove -= OnEntityMoved;
+            _updates.Clear();
+        }
+
+        private void OnEntityMoved(EntityMoveEvent ev)
+        {
+            if (!TryComp<OccluderComponent>(ev.Entity, out var occluder)) return;
+            _updates.Enqueue(new OccluderUpdateEvent(occluder));
         }
 
         internal IEnumerable<OccluderTreeComponent> GetOccluderTrees(MapId mapId, Box2 worldAABB)
@@ -89,13 +103,6 @@ namespace Robust.Shared.GameObjects
             return null;
         }
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _mapManager.MapCreated -= OnMapCreated;
-            _updates.Clear();
-        }
-
         public override void FrameUpdate(float frameTime)
         {
             UpdateTrees();
@@ -144,11 +151,6 @@ namespace Robust.Shared.GameObjects
                         throw new ArgumentOutOfRangeException($"No implemented occluder update for {occluderUpdate.GetType()}");
                 }
             }
-        }
-
-        private void EntMoved(EntityUid uid, OccluderComponent component, ref MoveEvent args)
-        {
-            _updates.Enqueue(new OccluderUpdateEvent(component));
         }
 
         private void EntParentChanged(EntityUid uid, OccluderComponent component, ref EntParentChangedMessage args)

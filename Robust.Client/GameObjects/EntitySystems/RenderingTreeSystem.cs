@@ -74,7 +74,8 @@ namespace Robust.Client.GameObjects
             _mapManager.OnGridCreated += MapManagerOnGridCreated;
 
             // Due to how recursion works, this must be done.
-            SubscribeLocalEvent<MoveEvent>(AnythingMoved);
+            // NOT ANYMORE.
+            Get<SharedTransformSystem>().OnEntityMove += OnEntityMoved;
 
             SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
@@ -111,34 +112,13 @@ namespace Robust.Client.GameObjects
             QueueSpriteUpdate(component);
         }
 
-        private void AnythingMoved(ref MoveEvent args)
+        private void OnEntityMoved(EntityMoveEvent ev)
         {
-            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
-
-            AnythingMovedSubHandler(args.Sender, xforms);
-        }
-
-        private void AnythingMovedSubHandler(EntityUid uid, EntityQuery<TransformComponent> xforms)
-        {
-            // To avoid doing redundant updates (and we don't need to update a grid's children ever)
-            if (!_checkedChildren.Add(uid) || EntityManager.HasComponent<RenderingTreeComponent>(uid)) return;
-
-            // This recursive search is needed, as MoveEvent is defined to not care about indirect events like children.
-            // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
-            // (Struct-based events ok though)
-            // Ironically this was lagging the GC lolz
-            if (EntityManager.TryGetComponent(uid, out SpriteComponent? sprite))
+            if (TryComp<SpriteComponent>(ev.Entity, out var sprite))
                 QueueSpriteUpdate(sprite);
 
-            if (EntityManager.TryGetComponent(uid, out PointLightComponent? light))
+            if (TryComp<PointLightComponent>(ev.Entity, out var light))
                 QueueLightUpdate(light);
-
-            if (!xforms.TryGetComponent(uid, out var xform)) return;
-
-            foreach (var child in xform.ChildEntities)
-            {
-                AnythingMovedSubHandler(child, xforms);
-            }
         }
 
         // For the RemoveX methods
@@ -217,6 +197,7 @@ namespace Robust.Client.GameObjects
             base.Shutdown();
             _mapManager.MapCreated -= MapManagerOnMapCreated;
             _mapManager.OnGridCreated -= MapManagerOnGridCreated;
+            Get<SharedTransformSystem>().OnEntityMove -= OnEntityMoved;
         }
 
         private void OnTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)

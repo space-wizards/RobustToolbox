@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -73,17 +75,17 @@ namespace Robust.UnitTesting
 
             configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
 
+            var entMan = IoCManager.Resolve<IEntityManager>();
+            entMan.Initialize();
+
             // Required systems
             var systems = IoCManager.Resolve<IEntitySystemManager>();
-            systems.Initialize();
 
-            var entMan = IoCManager.Resolve<IEntityManager>();
+            systems.LoadExtraSystemType<MapSystem>();
+            systems.LoadExtraSystemType<ContainerSystem>();
+            systems.LoadExtraSystemType<TransformSystem>();
 
-            if(entMan.EventBus == null)
-            {
-                entMan.Initialize();
-                entMan.Startup();
-            }
+            entMan.Startup();
 
             IoCManager.Resolve<IEntityLookup>().Startup();
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -121,11 +123,6 @@ namespace Robust.UnitTesting
             if (!compFactory.AllRegisteredTypes.Contains(typeof(FixturesComponent)))
             {
                 compFactory.RegisterClass<FixturesComponent>();
-            }
-
-            if(entMan.EventBus == null)
-            {
-                entMan.Startup();
             }
 
             mapMan.Startup();

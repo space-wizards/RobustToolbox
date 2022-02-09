@@ -1,7 +1,9 @@
 using Moq;
 using NUnit.Framework;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -22,8 +24,12 @@ namespace Robust.UnitTesting.Shared.Map
             var mock = new Mock<IEntitySystemManager>();
             var broady = new BroadPhaseSystem();
             var physics = new PhysicsSystem();
+            var xsystem = new TransformSystem();
+            var conSystem = new ContainerSystem();
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+            mock.Setup(m => m.GetEntitySystem<SharedTransformSystem>()).Returns(xsystem);
+            mock.Setup(m => m.GetEntitySystem<SharedContainerSystem>()).Returns(conSystem);
 
             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }

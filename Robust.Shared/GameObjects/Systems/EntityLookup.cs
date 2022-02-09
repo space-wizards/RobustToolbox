@@ -129,13 +129,14 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Startup() called multiple times.");
             }
 
-            _container = EntitySystem.Get<SharedContainerSystem>();
+            var system = IoCManager.Resolve<IEntitySystemManager>();
+            _container = system.GetEntitySystem<SharedContainerSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
             var eventBus = _entityManager.EventBus;
 
-            EntitySystem.Get<SharedTransformSystem>().OnEntityMove += OnEntityMove;
+            system.GetEntitySystem<SharedTransformSystem>().OnEntityMove += OnEntityMove;
 
             eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, OnParentChange);
             eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, OnAnchored);
@@ -156,7 +157,8 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
-            EntitySystem.Get<SharedTransformSystem>().OnEntityMove -= OnEntityMove;
+            var system = IoCManager.Resolve<IEntitySystemManager>();
+            system.GetEntitySystem<SharedTransformSystem>().OnEntityMove -= OnEntityMove;
             _entityManager.EntityDeleted -= OnEntityDeleted;
             _entityManager.EntityInitialized -= OnEntityInit;
             _mapManager.MapCreated -= OnMapCreated;
@@ -253,7 +255,11 @@ namespace Robust.Shared.GameObjects
             RemoveFromEntityTrees(ev.Entity);
             var xform = _entityManager.GetComponent<TransformComponent>(ev.Entity);
 
-            if (xform.Anchored) return;
+            if (xform.Anchored ||
+                _mapManager.IsGrid(ev.Entity) ||
+                _mapManager.IsMap(ev.Entity) ||
+                // TODO: I don't want AttachParents events before entity initialised thanks.
+                _entityManager.GetComponent<MetaDataComponent>(ev.Entity).EntityLifeStage < EntityLifeStage.Initialized) return;
 
             UpdateEntityTree(ev.Entity, xform);
         }
@@ -791,6 +797,8 @@ namespace Robust.Shared.GameObjects
 
         private void OnEntityMove(EntityMoveEvent ev)
         {
+            // TODO: The fuckoff huge optimisation we can do is to simply not store entities with collision in EntityLookup
+
             // Maps and grids get ignored for this; these can be returned via alternative means (grids via gridtrees).
             if (ev.Component.Anchored) return;
 

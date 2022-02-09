@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using NUnit.Framework;
+using Robust.Server.Containers;
+using Robust.Server.GameObjects;
 using Robust.Shared.Analyzers;
+using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.IoC.Exceptions;
@@ -48,11 +52,24 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
          */
 
-        [OneTimeSetUp]
-        public void Setup()
+        /*
+        protected override void OverrideIoC()
         {
-            IoCManager.Resolve<IEntitySystemManager>().Initialize();
+            base.OverrideIoC();
+            var mock = new Mock<IEntitySystemManager>();
+            var eSysA = new ESystemDepA();
+            var eSysB = new ESystemDepB();
+            var containerSystem = new ContainerSystem();
+            var xSystem = new TransformSystem();
+
+            mock.Setup(m => m.GetEntitySystem<ESystemDepA>()).Returns(eSysA);
+            mock.Setup(m => m.GetEntitySystem<ESystemDepB>()).Returns(eSysB);
+            mock.Setup(m => m.GetEntitySystem<SharedContainerSystem>()).Returns(containerSystem);
+            mock.Setup(m => m.GetEntitySystem<SharedTransformSystem>()).Returns(xSystem);
+
+            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
         }
+        */
 
         [Test]
         public void GetsByTypeOrSupertype()

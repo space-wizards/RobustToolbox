@@ -70,15 +70,18 @@ entities:
             var gridFixtures = new GridFixtureSystem();
             var fixtures = new FixtureSystem();
             var con = new ContainerSystem();
+            var xsystem = new TransformSystem();
 
+            // This test is damn painful; believe me I tried to make it an integration test.
             // MOCKS WHY
             mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
             mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
             mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
             mock.Setup(m => m.GetEntitySystem<SharedContainerSystem>()).Returns(con);
             mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
+            mock.Setup(m => m.GetEntitySystem<SharedTransformSystem>()).Returns(xsystem);
 
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
+                                                                                             IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
             //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
 
             // Mocking moment...

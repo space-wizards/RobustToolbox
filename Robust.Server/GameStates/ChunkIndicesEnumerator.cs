@@ -18,7 +18,7 @@ public struct ChunkIndicesEnumerator
         _topRight = ((viewPos + range) / chunkSize).Floored();
 
         _x = _bottomLeft.X;
-        _y = _topRight.Y;
+        _y = _bottomLeft.Y;
     }
 
     public bool MoveNext([NotNullWhen(true)] out Vector2i? chunkIndices)

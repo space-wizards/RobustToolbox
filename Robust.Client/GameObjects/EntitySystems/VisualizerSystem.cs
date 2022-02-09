@@ -17,6 +17,6 @@ public abstract class VisualizerSystem<T> : EntitySystem
         SubscribeLocalEvent<T, AppearanceChangeEvent>(OnAppearanceChange);
     }
 
-    protected abstract void OnComponentInit(EntityUid uid, T component, ComponentInit args);
-    protected abstract void OnAppearanceChange(EntityUid uid, T component, ref AppearanceChangeEvent args);
+    protected virtual void OnComponentInit(EntityUid uid, T component, ComponentInit args) {}
+    protected virtual void OnAppearanceChange(EntityUid uid, T component, ref AppearanceChangeEvent args) {}
 }

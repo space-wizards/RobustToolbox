@@ -7,6 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class SpriteView : Control
     {
         private Vector2 _scale = (1, 1);

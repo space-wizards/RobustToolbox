@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class ContainerButton : BaseButton
     {
         public const string StylePropertyStyleBox = "stylebox";

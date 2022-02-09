@@ -4,7 +4,7 @@
     ///     Raised when an entity parent is changed.
     /// </summary>
     [ByRefEvent]
-    public class EntParentChangedMessage : EntityEventArgs
+    public sealed class EntParentChangedMessage : EntityEventArgs
     {
         /// <summary>
         ///     Entity that was adopted. The transform component has a property with the new parent.

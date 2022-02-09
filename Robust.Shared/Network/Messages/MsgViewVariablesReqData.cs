@@ -11,7 +11,7 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent client to server to request data from the server.
     /// </summary>
-    public class MsgViewVariablesReqData : NetMessage
+    public sealed class MsgViewVariablesReqData : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

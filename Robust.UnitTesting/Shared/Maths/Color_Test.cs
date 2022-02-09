@@ -9,7 +9,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(Color))]
-    public class Color_Test
+    public sealed class Color_Test
     {
         static IEnumerable<byte> BytesSource = new byte[]
         {

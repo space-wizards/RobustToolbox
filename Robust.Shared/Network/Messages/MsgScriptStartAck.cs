@@ -4,7 +4,7 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgScriptStartAck : NetMessage
+    public sealed class MsgScriptStartAck : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

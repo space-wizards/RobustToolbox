@@ -3,6 +3,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Server.ViewVariables;
 using Robust.Server.ViewVariables.Traits;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
@@ -10,7 +11,7 @@ namespace Robust.UnitTesting.Server.ViewVariables
 {
     [Parallelizable]
     [TestFixture]
-    internal class ViewVariablesTraitMembersTest
+    internal sealed class ViewVariablesTraitMembersTest
     {
         [Test]
         public void Test()
@@ -40,22 +41,24 @@ namespace Robust.UnitTesting.Server.ViewVariables
 
             Assert.That(group0.groupMembers[0].Name, Is.EqualTo("Y"));
             Assert.That(group0.groupMembers[1].Name, Is.EqualTo("Z"));
-            
+
             Assert.That(group1.groupMembers[0].Name, Is.EqualTo("X"));
         }
 
 #pragma warning disable 649
+        [Virtual]
         private class A
         {
             [ViewVariables] public int X;
         }
 
+        [Virtual]
         private class B : A
         {
             public int Hidden { get; set; }
         }
 
-        private class C : B
+        private sealed class C : B
         {
             [ViewVariables] public int Y { get; set; }
             [ViewVariables] public string? Z { get; set; }

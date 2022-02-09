@@ -11,7 +11,7 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent from client to server to request to open a session.
     /// </summary>
-    public class MsgViewVariablesReqSession : NetMessage
+    public sealed class MsgViewVariablesReqSession : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

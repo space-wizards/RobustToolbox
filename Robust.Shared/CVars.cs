@@ -479,6 +479,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> GameDeleteEmptyGrids =
             CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
 
+        /// <summary>
+        /// Automatically pause simulation if there are no players connected to the game server.
+        /// </summary>
+        public static readonly CVarDef<bool> GameAutoPauseEmpty =
+            CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
+
         /*
          * LOG
          */
@@ -699,6 +705,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
             CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Force ANGLE to create a GLES2 context (not a compatible GLES3 context).
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleForceEs2 =
+            CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.

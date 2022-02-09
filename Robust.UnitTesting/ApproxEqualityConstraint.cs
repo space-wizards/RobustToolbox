@@ -3,7 +3,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting
 {
-    public class ApproxEqualityConstraint : Constraint
+    public sealed class ApproxEqualityConstraint : Constraint
     {
         public object Expected { get; }
         public double? Tolerance { get; }

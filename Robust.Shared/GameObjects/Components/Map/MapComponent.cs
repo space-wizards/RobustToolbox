@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
     [NetworkedComponent()]
-    public class MapComponent : Component, IMapComponent
+    public sealed class MapComponent : Component, IMapComponent
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
@@ -71,7 +71,7 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a <see cref="MapGridComponentState"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    internal class MapComponentState : ComponentState
+    internal sealed class MapComponentState : ComponentState
     {
         public MapId MapId { get; }
         public bool LightingEnabled { get; }

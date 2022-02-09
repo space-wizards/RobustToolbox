@@ -6,7 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgRay : EntityEventArgs
+    public sealed class MsgRay : EntityEventArgs
     {
         public Vector2 RayOrigin { get; set; }
         public Vector2 RayHit { get; set; }

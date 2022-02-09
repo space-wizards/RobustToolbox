@@ -12,7 +12,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     /// An entity system that displays temporary effects to the user
     /// </summary>
-    public class EffectSystem : EntitySystem
+    public sealed class EffectSystem : EntitySystem
     {
         [Dependency] private readonly IGameTiming _timing = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -37,7 +37,7 @@ namespace Robust.Server.GameObjects
             {
                 if (player.Status != SessionStatus.InGame || player == excludedSession)
                     continue;
-                
+
                 RaiseNetworkEvent(effect, player.ConnectedClient);
             }
         }
@@ -54,7 +54,7 @@ namespace Robust.Server.GameObjects
         /// <summary>
         /// Comparer that keeps the device dictionary sorted by powernet priority
         /// </summary>
-        public class EffectMessageComparer : IComparer<EffectSystemMessage>
+        public sealed class EffectMessageComparer : IComparer<EffectSystemMessage>
         {
             public int Compare(EffectSystemMessage? x, EffectSystemMessage? y)
             {

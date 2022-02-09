@@ -26,12 +26,12 @@ internal partial class MapManager
 
     private void InitializeGridTrees()
     {
-        _entityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
-        _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
-        _entityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
+        EntityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
+        EntityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
+        EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
     }
 
     private void OnMapCreatedGridTree(MapEventArgs e)
@@ -94,6 +94,7 @@ internal partial class MapManager
     private void RemoveGrid(MapGrid grid, MapId mapId)
     {
         _gridTrees[mapId].DestroyProxy(grid.MapProxy);
+        _movedGrids[mapId].Remove(grid);
         grid.MapProxy = DynamicTree.Proxy.Free;
     }
 
@@ -107,6 +108,7 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
+        _movedGrids[grid.ParentMapId].Add(grid);
     }
 
     private void OnGridRotate(EntityUid uid, MapGridComponent component, ref RotateEvent args)
@@ -119,6 +121,7 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
+        _movedGrids[grid.ParentMapId].Add(grid);
     }
 
     private void OnGridMapChange(EntityUid uid, MapGridComponent component, EntMapIdChangedMessage args)

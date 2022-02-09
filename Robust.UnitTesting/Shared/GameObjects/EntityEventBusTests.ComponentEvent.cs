@@ -10,7 +10,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    public partial class EntityEventBusTests
+    public sealed partial class EntityEventBusTests
     {
         [Test]
         public void SubscribeCompEvent()
@@ -227,23 +227,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(c, Is.True, "C did not fire");
         }
 
-        private class DummyComponent : Component
+        private sealed class DummyComponent : Component
         {
         }
 
-        private class OrderAComponent : Component
+        private sealed class OrderAComponent : Component
         {
         }
 
-        private class OrderBComponent : Component
+        private sealed class OrderBComponent : Component
         {
         }
 
-        private class OrderCComponent : Component
+        private sealed class OrderCComponent : Component
         {
         }
 
-        private class TestEvent : EntityEventArgs
+        private sealed class TestEvent : EntityEventArgs
         {
             public int TestNumber { get; }
 

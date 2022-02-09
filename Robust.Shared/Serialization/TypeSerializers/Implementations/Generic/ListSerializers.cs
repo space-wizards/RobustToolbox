@@ -13,7 +13,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
-    public class ListSerializers<T> :
+    public sealed class ListSerializers<T> :
         ITypeSerializer<List<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyList<T>, SequenceDataNode>,
         ITypeSerializer<IReadOnlyCollection<T>, SequenceDataNode>,

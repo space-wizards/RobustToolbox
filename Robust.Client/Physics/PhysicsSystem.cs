@@ -9,7 +9,7 @@ using Robust.Shared.Timing;
 namespace Robust.Client.Physics
 {
     [UsedImplicitly]
-    public class PhysicsSystem : SharedPhysicsSystem
+    public sealed class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientGameStateManager _gameState = default!;

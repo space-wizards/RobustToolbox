@@ -5,7 +5,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgStateAck : NetMessage
+    public sealed class MsgStateAck : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 

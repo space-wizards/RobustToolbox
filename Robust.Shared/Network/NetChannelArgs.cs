@@ -6,6 +6,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// Arguments for NetChannel events.
     /// </summary>
+    [Virtual]
     public class NetChannelArgs : EventArgs
     {
         /// <summary>
@@ -26,7 +27,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// Arguments for incoming connection event.
     /// </summary>
-    public class NetConnectingArgs : EventArgs
+    public sealed class NetConnectingArgs : EventArgs
     {
         public bool IsDenied => DenyReason != null;
 
@@ -65,7 +66,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// Arguments for a failed connection attempt.
     /// </summary>
-    public class NetConnectFailArgs : EventArgs
+    public sealed class NetConnectFailArgs : EventArgs
     {
         public NetConnectFailArgs(string reason)
         {
@@ -75,7 +76,7 @@ namespace Robust.Shared.Network
         public string Reason { get; }
     }
 
-    public class NetDisconnectedArgs : NetChannelArgs
+    public sealed class NetDisconnectedArgs : NetChannelArgs
     {
         public NetDisconnectedArgs(INetChannel channel, string reason) : base(channel)
         {

@@ -20,7 +20,7 @@ namespace Robust.Shared.IoC
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Field)]
-    public class DependencyAttribute : Attribute
+    public sealed class DependencyAttribute : Attribute
     {
     }
 }

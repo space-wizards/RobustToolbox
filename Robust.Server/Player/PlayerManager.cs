@@ -26,7 +26,7 @@ namespace Robust.Server.Player
     /// <summary>
     ///     This class will manage connected player sessions.
     /// </summary>
-    public class PlayerManager : IPlayerManager
+    public sealed class PlayerManager : IPlayerManager
     {
         private static readonly Gauge PlayerCountMetric = Metrics
             .CreateGauge("robust_player_count", "Number of players on the server.");
@@ -511,7 +511,7 @@ namespace Robust.Server.Player
         }
     }
 
-    public class SessionStatusEventArgs : EventArgs
+    public sealed class SessionStatusEventArgs : EventArgs
     {
         public SessionStatusEventArgs(IPlayerSession session, SessionStatus oldStatus, SessionStatus newStatus)
         {

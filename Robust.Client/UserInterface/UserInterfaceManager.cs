@@ -838,9 +838,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static void _doGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,
+        private static void _doGuiInput(
+            Control? control,
+            GUIBoundKeyEventArgs guiEvent,
+            Action<Control, GUIBoundKeyEventArgs> action,
             bool ignoreStop = false)
-            where T : GUIBoundKeyEventArgs
         {
             while (control != null)
             {

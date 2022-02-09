@@ -27,7 +27,7 @@ namespace Robust.Client.Player
         void ApplyPlayerStates(IReadOnlyCollection<PlayerState> list);
     }
 
-    public class LocalPlayerChangedEventArgs : EventArgs
+    public sealed class LocalPlayerChangedEventArgs : EventArgs
     {
         public readonly LocalPlayer? OldPlayer;
         public readonly LocalPlayer? NewPlayer;

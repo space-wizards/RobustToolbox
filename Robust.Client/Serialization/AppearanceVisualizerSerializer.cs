@@ -14,7 +14,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Client.Serialization
 {
     [TypeSerializer]
-    public class AppearanceVisualizerSerializer : ITypeSerializer<AppearanceVisualizer, MappingDataNode>
+    public sealed class AppearanceVisualizerSerializer : ITypeSerializer<AppearanceVisualizer, MappingDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,

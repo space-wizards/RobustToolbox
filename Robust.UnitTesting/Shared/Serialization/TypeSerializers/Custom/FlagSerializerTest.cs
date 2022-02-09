@@ -14,7 +14,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
 {
     [TestFixture]
     [TestOf(typeof(FlagSerializer<>))]
-    public class FlagSerializerTest : SerializationTest
+    public sealed class FlagSerializerTest : SerializationTest
     {
         [Test]
         public void SingleFlagTest()
@@ -65,7 +65,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
             Assert.That(value.Flag, Is.EqualTo(TestFlags.Negative));
         }
 
-        private class TestFlags
+        private sealed class TestFlags
         {
             public const int Negative = 1 << 31;
         }
@@ -82,7 +82,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
         }
 
         [DataDefinition]
-        private class TestDefinition
+        private sealed class TestDefinition
         {
             [DataField("flag", customTypeSerializer: typeof(FlagSerializer<TestFlags>))]
             public int Flag { get; set; }

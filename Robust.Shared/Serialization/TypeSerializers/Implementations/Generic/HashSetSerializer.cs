@@ -15,7 +15,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
-    public class HashSetSerializer<T> :
+    public sealed class HashSetSerializer<T> :
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {

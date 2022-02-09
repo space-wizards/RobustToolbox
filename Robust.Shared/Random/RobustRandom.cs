@@ -1,6 +1,6 @@
 namespace Robust.Shared.Random
 {
-    public class RobustRandom : IRobustRandom
+    public sealed class RobustRandom : IRobustRandom
     {
         private readonly System.Random _random = new();
 

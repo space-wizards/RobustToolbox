@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Players;
-using Robust.Shared.Serialization;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
@@ -21,68 +18,38 @@ namespace Robust.Shared.GameObjects;
 [ComponentProtoName("Appearance")]
 public abstract class AppearanceComponent : Component
 {
-    [ViewVariables]
-    private Dictionary<object, object> _appearanceData = new();
+    [ViewVariables] internal bool AppearanceDirty;
 
-    public override ComponentState GetComponentState()
-    {
-        return new AppearanceComponentState(_appearanceData);
-    }
-
-    public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-    {
-        if (curState is not AppearanceComponentState actualState)
-            return;
-
-        var stateDiff = _appearanceData.Count != actualState.Data.Count;
-
-        if (!stateDiff)
-        {
-            foreach (var (key, value) in _appearanceData)
-            {
-                if (!actualState.Data.TryGetValue(key, out var stateValue) ||
-                    !value.Equals(stateValue))
-                {
-                    stateDiff = true;
-                    break;
-                }
-            }
-        }
-
-        if (!stateDiff) return;
-
-        _appearanceData = actualState.Data;
-        MarkDirty();
-    }
+    [ViewVariables] internal Dictionary<object, object> AppearanceData = new();
 
     public void SetData(string key, object value)
     {
-        if (_appearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
+        if (AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
 
-        _appearanceData[key] = value;
+        AppearanceData[key] = value;
         Dirty();
-        MarkDirty();
+        EntitySystem.Get<SharedAppearanceSystem>().MarkDirty(this);
     }
 
     public void SetData(Enum key, object value)
     {
-        if (_appearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
+        if (AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
 
-        _appearanceData[key] = value;
+        AppearanceData[key] = value;
         Dirty();
-        MarkDirty();
+        EntitySystem.Get<SharedAppearanceSystem>().MarkDirty(this);
     }
 
     public T GetData<T>(string key)
     {
-        return (T)_appearanceData[key];
+        return (T)AppearanceData[key];
     }
 
     public T GetData<T>(Enum key)
     {
-        return (T)_appearanceData[key];
+        return (T)AppearanceData[key];
     }
 
     public bool TryGetData<T>(Enum key, [NotNullWhen(true)] out T data)
@@ -95,11 +62,9 @@ public abstract class AppearanceComponent : Component
         return TryGetDataPrivate(key, out data);
     }
 
-    protected virtual void MarkDirty() { }
-
     private bool TryGetDataPrivate<T>(object key, [NotNullWhen(true)] out T data)
     {
-        if (_appearanceData.TryGetValue(key, out var dat))
+        if (AppearanceData.TryGetValue(key, out var dat))
         {
             data = (T)dat;
             return true;
@@ -107,16 +72,5 @@ public abstract class AppearanceComponent : Component
 
         data = default!;
         return false;
-    }
-
-    [Serializable, NetSerializable]
-    protected class AppearanceComponentState : ComponentState
-    {
-        public readonly Dictionary<object, object> Data;
-
-        public AppearanceComponentState(Dictionary<object, object> data)
-        {
-            Data = data;
-        }
     }
 }

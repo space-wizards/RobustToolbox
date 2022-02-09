@@ -770,6 +770,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnEntityMove(ref EntityMoveEvent ev)
         {
+            // Maps and grids get ignored for this; these can be returned via alternative means (grids via gridtrees).
             if (ev.Component.Anchored) return;
 
             var lookup = _entityManager.GetComponent<EntityLookupComponent>(ev.MoverCoordinates.EntityId);

@@ -126,42 +126,52 @@ namespace Robust.Server.GameStates
             // people not in the game don't get states
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
+            //todo cullingdisabled
             var (seenEnts, chunkEnts, localEnts, globalEnts) = _pvs.GetSeenEnts(players);
             const int CompBatchSize = 100;
             var compBatches = (int) MathF.Ceiling((float) seenEnts.Count / CompBatchSize);
-            var compBatchesCollection = new HashSet<EntityUid>[compBatches];
-            for (int i = 0; i < compBatchesCollection.Length; i++)
-            {
-                compBatchesCollection[i] = new HashSet<EntityUid>();
-            }
-
-            var current = 0;
-            var count = 0;
-            foreach (var euid in seenEnts)
-            {
-                compBatchesCollection[current].Add(euid);
-                count++;
-                if (count == CompBatchSize)
-                {
-                    current++;
-                    count = 0;
-                }
-            }
-
+            var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>(seenEnts.Count);
             var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
-            var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>();
-            Parallel.ForEach(compBatchesCollection, set =>
+            Parallel.For(0, compBatches, i =>
             {
-                foreach (var uid in set)
+                var start = i * CompBatchSize;
+                var end = Math.Min(start + CompBatchSize, seenEnts.Count);
+
+                if(start == 0) System.Console.WriteLine();
+
+                for (var j = start; j < end; ++j)
                 {
+                    var uid = seenEnts[j];
                     compCache[uid] = (transformQuery.GetComponent(uid), metadataQuery.GetComponent(uid));
                 }
             });
 
             const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
+
+            var entityStates = new Dictionary<IPlayerSession, (List<EntityState>?, List<EntityUid>?)>();
+
+            Parallel.For(0, batches, i =>
+            {
+                var start = i * BatchSize;
+                var end = Math.Min(start + BatchSize, players.Length);
+
+                for (var j = start; j < end; ++j)
+                {
+                    var session = players[j];
+
+                    if (!_ackedStates.TryGetValue(session.ConnectedClient.ConnectionId, out var lastAck))
+                    {
+                        DebugTools.Assert("Why does this channel not have an entry?");
+                    }
+
+                    var state = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkEnts,
+                        localEnts, globalEnts, compCache);
+                    entityStates.Add(session, state);
+                }
+            });
 
             Parallel.For(0, batches, i =>
             {
@@ -196,7 +206,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick);
+                var (entStates, deletions) = entityStates[session];
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 

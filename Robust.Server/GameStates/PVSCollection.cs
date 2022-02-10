@@ -406,9 +406,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
 public abstract record IndexLocation;
 
-public abstract record ChunkLocation : IndexLocation;
-public record MapChunkLocation(MapId MapId, Vector2i ChunkIndices) : ChunkLocation;
-public record GridChunkLocation(GridId GridId, Vector2i ChunkIndices) : ChunkLocation;
+public record MapChunkLocation(MapId MapId, Vector2i ChunkIndices) : IndexLocation;
+public record GridChunkLocation(GridId GridId, Vector2i ChunkIndices) : IndexLocation;
 public record GlobalOverride : IndexLocation;
 public record LocalOverride(ICommonSession Session) : IndexLocation;
 

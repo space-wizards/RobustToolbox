@@ -73,7 +73,9 @@ namespace Robust.Shared.GameObjects
         IEnumerable<EntityUid> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         bool IsIntersecting(EntityUid entityOne, EntityUid entityTwo);
-
+        
+        bool UpdateEntityTree(EntityUid entity, TransformComponent xform, Box2? worldAABB = null);
+        
         void RemoveFromEntityTrees(EntityUid entity);
 
         Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);

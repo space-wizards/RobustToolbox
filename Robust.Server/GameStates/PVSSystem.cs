@@ -260,6 +260,94 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
+    public (HashSet<EntityUid> seenEntities, Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
+        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides) GetSeenEnts(
+            IPlayerSession[] sessions)
+    {
+        var seenEnts = new HashSet<EntityUid>();
+        var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>();
+        var globalOverrides = new HashSet<EntityUid>();
+        var localOverrides = new Dictionary<IPlayerSession, HashSet<EntityUid>>();
+        var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
+        var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
+        var globalOverridesEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
+        while(globalOverridesEnumerator.MoveNext())
+        {
+            seenEnts.Add(globalOverridesEnumerator.Current);
+            globalOverrides.Add(globalOverridesEnumerator.Current);
+        }
+        globalOverridesEnumerator.Dispose();
+
+        foreach (var session in sessions)
+        {
+            sessionChunkEnts[session] = new HashSet<(EntityUid, uint)>();
+            localOverrides[session] = new HashSet<EntityUid>();
+
+            var localOverridesEnumerator = _entityPvsCollection.GetElementsForSession(session);
+            while (localOverridesEnumerator.MoveNext())
+            {
+                seenEnts.Add(localOverridesEnumerator.Current);
+                localOverrides[session].Add(localOverridesEnumerator.Current);
+            }
+            localOverridesEnumerator.Dispose();
+
+            var viewers = GetSessionViewers(session);
+
+            foreach (var viewerUid in viewers)
+            {
+                var (viewBox, mapId) = CalcViewBounds(in viewerUid, transformQuery);
+
+                uint visMask = EyeComponent.DefaultVisibilityMask;
+                if (eyeQuery.TryGetComponent(viewerUid, out var eyeComp))
+                    visMask = eyeComp.VisibilityMask;
+
+                //todo vieweruid as localoverride
+                seenEnts.Add(viewerUid);
+
+                var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
+
+                while (mapChunkEnumerator.MoveNext(out var chunkIndices))
+                {
+                    if (_entityPvsCollection.TryGetChunk(mapId, chunkIndices.Value, out var chunk))
+                    {
+                        foreach (var entityUid in chunk)
+                        {
+                            seenEnts.Add(entityUid);
+                            sessionChunkEnts[session].Add((entityUid, visMask));
+                        }
+                    }
+                }
+
+                _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
+                while (gridEnumerator.MoveNext(out var mapGrid))
+                {
+                    var gridXform = transformQuery.GetComponent(mapGrid.GridEntityId);
+
+                    var gridChunkEnumerator =
+                        new ChunkIndicesEnumerator(gridXform.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
+
+                    while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                    {
+                        if (_entityPvsCollection.TryGetChunk(mapGrid.Index, gridChunkIndices.Value, out var chunk))
+                        {
+                            foreach (var entityUid in chunk)
+                            {
+                                seenEnts.Add(entityUid);
+                                sessionChunkEnts[session].Add((entityUid, visMask));
+                            }
+                        }
+                    }
+                }
+            }
+
+            viewers.Clear();
+            _viewerEntsPool.Return(viewers);
+        }
+
+        return (seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
+    }
+
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(ICommonSession session,
         GameTick fromTick, GameTick toTick)
     {

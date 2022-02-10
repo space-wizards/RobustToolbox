@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.CodeAnalysis;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -124,6 +125,40 @@ namespace Robust.Server.GameStates
 
             // people not in the game don't get states
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
+
+            var (seenEnts, chunkEnts, localEnts, globalEnts) = _pvs.GetSeenEnts(players);
+            const int CompBatchSize = 100;
+            var compBatches = (int) MathF.Ceiling((float) seenEnts.Count / CompBatchSize);
+            var compBatchesCollection = new HashSet<EntityUid>[compBatches];
+            for (int i = 0; i < compBatchesCollection.Length; i++)
+            {
+                compBatchesCollection[i] = new HashSet<EntityUid>();
+            }
+
+            var current = 0;
+            var count = 0;
+            foreach (var euid in seenEnts)
+            {
+                compBatchesCollection[current].Add(euid);
+                count++;
+                if (count == CompBatchSize)
+                {
+                    current++;
+                    count = 0;
+                }
+            }
+
+            var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+
+            var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>();
+            Parallel.ForEach(compBatchesCollection, set =>
+            {
+                foreach (var uid in set)
+                {
+                    compCache[uid] = (transformQuery.GetComponent(uid), metadataQuery.GetComponent(uid));
+                }
+            });
 
             const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);

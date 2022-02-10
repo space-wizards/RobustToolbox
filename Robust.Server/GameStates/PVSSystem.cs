@@ -302,8 +302,8 @@ internal sealed partial class PVSSystem : EntitySystem
                 if (eyeQuery.TryGetComponent(viewerUid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                //todo vieweruid as localoverride
                 seenEnts.Add(viewerUid);
+                localOverrides[session].Add(viewerUid);
 
                 var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 

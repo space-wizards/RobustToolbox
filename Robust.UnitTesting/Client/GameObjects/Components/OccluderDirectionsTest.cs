@@ -7,6 +7,10 @@ using Robust.Shared.Maths;
 
 namespace Robust.UnitTesting.Client.GameObjects.Components;
 
+/// <summary>
+/// Asserts that content can correctly override an occluder's directions instead of relying on the default anchoring behaviour.
+/// The directions are used for connecting occluders together.
+/// </summary>
 [TestFixture]
 public sealed class OccluderDirectionsTest : RobustIntegrationTest
 {

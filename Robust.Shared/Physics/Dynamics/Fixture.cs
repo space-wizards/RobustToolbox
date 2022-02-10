@@ -190,7 +190,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("layer", customTypeSerializer: typeof(FlagSerializer<CollisionLayer>))]
-        private int _collisionLayer;
+        internal int _collisionLayer;
 
         /// <summary>
         ///  Bitmask of the layers this component collides with.
@@ -211,7 +211,7 @@ namespace Robust.Shared.Physics.Dynamics
         }
 
         [DataField("mask", customTypeSerializer: typeof(FlagSerializer<CollisionMask>))]
-        private int _collisionMask;
+        internal int _collisionMask;
 
         public float Area
         {

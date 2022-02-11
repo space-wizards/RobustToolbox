@@ -8,7 +8,7 @@ namespace Robust.Shared.Network
 {
     public partial class NetManager
     {
-        private class NetChannel : INetChannel
+        private sealed class NetChannel : INetChannel
         {
             private readonly NetManager _manager;
             private readonly NetConnection _connection;

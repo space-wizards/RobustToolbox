@@ -6,7 +6,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.Graphics
 {
-    internal class OverlayManager : IOverlayManagerInternal
+    internal sealed class OverlayManager : IOverlayManagerInternal
     {
         private readonly Dictionary<Type, Overlay> _overlays = new Dictionary<Type, Overlay>();
         public IEnumerable<Overlay> AllOverlays => _overlays.Values;

@@ -5,7 +5,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.ViewVariables
 {
-    internal class ViewVariablesManagerShared
+    internal abstract class ViewVariablesManagerShared
     {
         private readonly Dictionary<Type, HashSet<object>> _cachedTraits = new();
 

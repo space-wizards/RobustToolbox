@@ -10,7 +10,7 @@ using Robust.Shared.Physics.Dynamics.Joints;
 namespace Robust.UnitTesting.Shared.Physics;
 
 [TestFixture]
-public class JointDeletion_Test : RobustIntegrationTest
+public sealed class JointDeletion_Test : RobustIntegrationTest
 {
     [Test]
     public async Task JointDeletionTest()

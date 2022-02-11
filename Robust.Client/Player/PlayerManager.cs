@@ -18,7 +18,7 @@ namespace Robust.Client.Player
     ///     Why not just attach the inputs directly? It's messy! This makes the whole thing nicely encapsulated.
     ///     This class also communicates with the server to let the server control what entity it is attached to.
     /// </summary>
-    public class PlayerManager : IPlayerManager
+    public sealed class PlayerManager : IPlayerManager
     {
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;

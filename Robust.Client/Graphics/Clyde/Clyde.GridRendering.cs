@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -214,7 +214,7 @@ namespace Robust.Client.Graphics.Clyde
             _mapChunkData.Remove(gridId);
         }
 
-        private class MapChunkData
+        private sealed class MapChunkData
         {
             public bool Dirty;
             public readonly uint VAO;

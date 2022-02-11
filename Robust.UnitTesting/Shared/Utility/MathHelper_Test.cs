@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Utility
 {
     [TestFixture, Parallelizable]
     [TestOf(typeof(MathHelper))]
-    public class MathHelper_Test
+    public sealed class MathHelper_Test
     {
         public static IEnumerable<(long val, long result)> LongNextPowerOfTwoData = new (long, long)[]
         {

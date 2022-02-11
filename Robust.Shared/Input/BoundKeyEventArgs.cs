@@ -6,6 +6,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     Event data values for a bound key state change.
     /// </summary>
+    [Virtual]
     public class BoundKeyEventArgs : EventArgs
     {
         /// <summary>

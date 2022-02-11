@@ -6,7 +6,7 @@ namespace Robust.Client.UserInterface
     // TODO: Code a XAML compiler transformer to remove references to this type at compile time.
     // And just replace them with the Loc.GetString() call.
     [PublicAPI]
-    public class LocExtension
+    public sealed class LocExtension
     {
         public string Key { get; }
 

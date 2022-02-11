@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Resources
 {
     [TestFixture]
     [TestOf(typeof(WritableDirProvider))]
-    public class WritableDirProviderTest
+    public sealed class WritableDirProviderTest
     {
         private string _testDirPath = default!;
         private DirectoryInfo _testDir = default!;

@@ -11,7 +11,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     ///     Taken from content.
     /// </summary>
     [Prototype("seed")]
-    public class SeedDataDefinition : IPrototype
+    public sealed class SeedDataDefinition : IPrototype
     {
         public const string Prototype = @"
 - type: seed

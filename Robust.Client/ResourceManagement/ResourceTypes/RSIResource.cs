@@ -542,6 +542,7 @@ namespace Robust.Client.ResourceManagement
     }
 
     [Serializable]
+    [Virtual]
     public class RSILoadException : Exception
     {
         public RSILoadException()

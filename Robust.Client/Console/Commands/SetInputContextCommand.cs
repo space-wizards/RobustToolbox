@@ -6,7 +6,7 @@ using Robust.Shared.IoC;
 namespace Robust.Client.Console.Commands
 {
     [UsedImplicitly]
-    public class SetInputContextCommand : IConsoleCommand
+    public sealed class SetInputContextCommand : IConsoleCommand
     {
         public string Command => "setinputcontext";
         public string Description => "Sets the active input context.";

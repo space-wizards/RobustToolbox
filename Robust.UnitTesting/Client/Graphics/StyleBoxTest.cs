@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Client.Graphics
     [TestFixture]
     [Parallelizable(ParallelScope.All)]
     [TestOf(typeof(StyleBox))]
-    public class StyleBoxTest
+    public sealed class StyleBoxTest
     {
         [Test]
         public void TestGetEnvelopBox()

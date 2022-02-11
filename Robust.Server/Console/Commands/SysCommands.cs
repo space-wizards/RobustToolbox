@@ -10,7 +10,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
-    class RestartCommand : IConsoleCommand
+    sealed class RestartCommand : IConsoleCommand
     {
         public string Command => "restart";
         public string Description => "Gracefully restarts the server (not just the round).";
@@ -22,7 +22,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class ShutdownCommand : IConsoleCommand
+    sealed class ShutdownCommand : IConsoleCommand
     {
         public string Command => "shutdown";
         public string Description => "Gracefully shuts down the server.";
@@ -34,7 +34,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class SaveConfig : IConsoleCommand
+    public sealed class SaveConfig : IConsoleCommand
     {
         public string Command => "saveconfig";
         public string Description => "Saves the server configuration to the config file";
@@ -46,7 +46,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class NetworkAuditCommand : IConsoleCommand
+    sealed class NetworkAuditCommand : IConsoleCommand
     {
         public string Command => "netaudit";
         public string Description => "Prints into about NetMsg security.";
@@ -72,7 +72,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class HelpCommand : IConsoleCommand
+    sealed class HelpCommand : IConsoleCommand
     {
         public string Command => "help";
 
@@ -107,7 +107,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class ShowTimeCommand : IConsoleCommand
+    sealed class ShowTimeCommand : IConsoleCommand
     {
         public string Command => "showtime";
         public string Description => "Shows the server time.";
@@ -120,7 +120,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal class GcCommand : IConsoleCommand
+    internal sealed class GcCommand : IConsoleCommand
     {
         public string Command => "gc";
         public string Description => "Run the GC.";
@@ -142,7 +142,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal class GcModeCommand : IConsoleCommand
+    internal sealed class GcModeCommand : IConsoleCommand
     {
 
         public string Command => "gc_mode";
@@ -186,7 +186,7 @@ namespace Robust.Server.Console.Commands
 
     }
 
-    internal class SerializeStatsCommand : IConsoleCommand
+    internal sealed class SerializeStatsCommand : IConsoleCommand
     {
 
         public string Command => "szr_stats";

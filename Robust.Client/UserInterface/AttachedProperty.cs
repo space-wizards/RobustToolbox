@@ -15,6 +15,7 @@ namespace Robust.Client.UserInterface
     ///     without having to modify the base <see cref="Control" /> class to add it.
     ///     This is useful for storing data for specific controls like <see cref="LayoutContainer" />
     /// </summary>
+    [Virtual]
     public class AttachedProperty
     {
         /// <summary>

@@ -5,7 +5,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Sequence
 {
-    public class SequenceDataNode : DataNode<SequenceDataNode>
+    public sealed class SequenceDataNode : DataNode<SequenceDataNode>
     {
         private readonly List<DataNode> _nodes = new();
 

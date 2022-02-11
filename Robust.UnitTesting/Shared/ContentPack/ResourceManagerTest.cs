@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 namespace Robust.UnitTesting.Shared.ContentPack
 {
     [TestFixture]
-    public class ResourceManagerTest : RobustUnitTest
+    public sealed class ResourceManagerTest : RobustUnitTest
     {
         private static Stream ZipStream => typeof(ResourceManagerTest).Assembly
             .GetManifestResourceStream("Robust.UnitTesting.Shared.ContentPack.ZipTest.zip")!;

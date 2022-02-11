@@ -3,7 +3,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client
 {
-    public class GameControllerOptions
+    public sealed class GameControllerOptions
     {
         /// <summary>
         ///     Whether content sandboxing will be enabled & enforced.

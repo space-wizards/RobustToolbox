@@ -9,7 +9,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Benchmarks.Serialization
 {
-    public class BenchmarkIntSerializer : ITypeSerializer<int, ValueDataNode>
+    public sealed class BenchmarkIntSerializer : ITypeSerializer<int, ValueDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)

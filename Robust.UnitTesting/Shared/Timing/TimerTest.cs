@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Timing
 {
     [TestFixture]
     [TestOf(typeof(Timer))]
-    public class TimerTest : RobustUnitTest
+    public sealed class TimerTest : RobustUnitTest
     {
         private LogCatcher _catcher = default!;
 

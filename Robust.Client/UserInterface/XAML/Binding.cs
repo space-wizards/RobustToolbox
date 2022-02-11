@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 namespace Avalonia.Data
 {
     [UsedImplicitly]
-    public class Binding
+    public sealed class Binding
     {
         public Binding()
         {

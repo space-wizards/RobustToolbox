@@ -7,7 +7,7 @@ namespace Robust.Server.Bql
     [BaseTypeRequired(typeof(BqlQuerySelector))]
     [MeansImplicitUse]
     [PublicAPI]
-    public class RegisterBqlQuerySelectorAttribute : Attribute
+    public sealed class RegisterBqlQuerySelectorAttribute : Attribute
     {
 
     }

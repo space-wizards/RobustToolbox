@@ -5,13 +5,13 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgConCmdReg : NetMessage
+    public sealed class MsgConCmdReg : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.String;
 
         public Command[] Commands { get; set; }
 
-        public class Command
+        public sealed class Command
         {
             public string Name { get; set; }
             public string Description { get; set; }

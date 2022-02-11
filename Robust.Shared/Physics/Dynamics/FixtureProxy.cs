@@ -25,7 +25,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public class FixtureProxy
+    public sealed class FixtureProxy
     {
         /// <summary>
         ///     Grid-based AABB of this proxy.

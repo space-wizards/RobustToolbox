@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
@@ -26,14 +27,37 @@ internal partial class MapManager
     /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
     public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 aabb, bool approx = false)
     {
+        if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<IMapGrid>();
+
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+
+        return FindGridsIntersecting(mapId, aabb, xformQuery, physicsQuery, approx);
+    }
+
+    /// <summary>
+    /// Returns the grids intersecting this AABB.
+    /// </summary>
+    public IEnumerable<IMapGrid> FindGridsIntersecting(
+        MapId mapId,
+        Box2 aabb,
+        EntityQuery<TransformComponent> xformQuery,
+        EntityQuery<PhysicsComponent> physicsQuery,
+        bool approx = false)
+    {
         if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<IMapGrid>();
 
         var grids = new List<MapGrid>();
+        var state = (gridTree, grids);
 
-        gridTree.FastQuery(ref aabb, (ref MapGrid data) =>
-        {
-            grids.Add(data);
-        });
+        gridTree.Query(ref state,
+            static (ref (B2DynamicTree<MapGrid> gridTree, List<MapGrid> grids) tuple, DynamicTree.Proxy proxy) =>
+            {
+                // Paul's gonna seethe over nullable suppression but if the user data is null here you're gonna have bigger problems.
+                tuple.grids.Add(tuple.gridTree.GetUserData(proxy)!);
+                return true;
+            }, in aabb);
+
 
         if (!approx)
         {
@@ -41,13 +65,13 @@ internal partial class MapManager
             {
                 var grid = grids[i];
 
-                var xformComp = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
-                var (worldPos, worldRot, invMatrix) = xformComp.GetWorldPositionRotationInvMatrix();
+                var xformComp = xformQuery.GetComponent(grid.GridEntityId);
+                var (worldPos, worldRot, invMatrix) = xformComp.GetWorldPositionRotationInvMatrix(xformQuery);
                 var localAABB = invMatrix.TransformBox(aabb);
 
                 var intersects = false;
 
-                if (EntityManager.HasComponent<PhysicsComponent>(grid.GridEntityId))
+                if (physicsQuery.HasComponent(grid.GridEntityId))
                 {
                     grid.GetLocalMapChunks(localAABB, out var enumerator);
 

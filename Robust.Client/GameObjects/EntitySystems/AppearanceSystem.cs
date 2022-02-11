@@ -84,12 +84,14 @@ namespace Robust.Client.GameObjects
         {
             if (!Resolve(uid, ref appearanceComponent, false)) return;
 
-            // Give it AppearanceData so we can still keep the friend attribute on the component.
-            EntityManager.EventBus.RaiseLocalEvent(uid, new AppearanceChangeEvent
+            var ev = new AppearanceChangeEvent
             {
                 Component = appearanceComponent,
                 AppearanceData = appearanceComponent.AppearanceData,
-            });
+            };
+
+            // Give it AppearanceData so we can still keep the friend attribute on the component.
+            EntityManager.EventBus.RaiseLocalEvent(uid, ref ev);
 
             // Eventually visualizers would be nuked and we'd just make them components instead.
             foreach (var visualizer in appearanceComponent.Visualizers)
@@ -100,9 +102,10 @@ namespace Robust.Client.GameObjects
     }
 
     /// <summary>
-    /// Raised whenever the appearance data for an entity changes.
+    ///     Raised whenever the appearance data for an entity changes.
     /// </summary>
-    public sealed class AppearanceChangeEvent : EntityEventArgs
+    [ByRefEvent]
+    public struct AppearanceChangeEvent
     {
         public AppearanceComponent Component = default!;
         public IReadOnlyDictionary<object, object> AppearanceData = default!;

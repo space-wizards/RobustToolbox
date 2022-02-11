@@ -40,13 +40,14 @@ namespace Robust.Client.GameObjects
 
         public void AnchorStateChanged()
         {
-            SendDirty();
+            var xform = _entityManager.GetComponent<TransformComponent>(Owner);
+            SendDirty(xform);
 
-            if(!_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
+            if(!xform.Anchored)
                 return;
 
-            var grid = _mapManager.GetGrid(_entityManager.GetComponent<TransformComponent>(Owner).GridID);
-            _lastPosition = (_entityManager.GetComponent<TransformComponent>(Owner).GridID, grid.TileIndicesFor(_entityManager.GetComponent<TransformComponent>(Owner).Coordinates));
+            var grid = _mapManager.GetGrid(xform.GridID);
+            _lastPosition = (xform.GridID, grid.TileIndicesFor(xform.Coordinates));
         }
 
         protected override void Shutdown()
@@ -56,9 +57,10 @@ namespace Robust.Client.GameObjects
             SendDirty();
         }
 
-        private void SendDirty()
+        private void SendDirty(TransformComponent? xform = null)
         {
-            if (_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
+            xform ??= _entityManager.GetComponent<TransformComponent>(Owner);
+            if (xform.Anchored)
             {
                 _entityManager.EventBus.RaiseEvent(EventSource.Local,
                     new OccluderDirtyEvent(Owner, _lastPosition));

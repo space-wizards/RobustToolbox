@@ -46,7 +46,7 @@ entitiesImmutableList:
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
             protoMan.RegisterType(typeof(EntityPrototype));
-            protoMan.LoadString(Prototypes);
+            protoMan.LoadFromString(Prototypes);
             protoMan.Resync();
         }
 

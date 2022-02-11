@@ -34,7 +34,7 @@ namespace Robust.UnitTesting.Shared.GameObjects.Systems
                 .NewSimulation()
                 .RegisterPrototypes(f=>
                 {
-                    f.LoadString(Prototypes);
+                    f.LoadFromString(Prototypes);
                 })
                 .InitializeInstance();
 

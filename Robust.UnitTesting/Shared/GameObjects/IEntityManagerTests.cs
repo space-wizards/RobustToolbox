@@ -22,7 +22,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
         {
             var sim = RobustServerSimulation
                 .NewSimulation()
-                .RegisterPrototypes(protoMan => protoMan.LoadString(PROTOTYPE))
+                .RegisterPrototypes(protoMan => protoMan.LoadFromString(PROTOTYPE))
                 .InitializeInstance();
 
             var mapManager = sim.Resolve<IMapManager>();

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -38,11 +38,12 @@ namespace Robust.Shared.Prototypes
         [Dependency] protected readonly ITaskManager TaskManager = default!;
         [Dependency] private readonly ISerializationManager _serializationManager = default!;
 
-        private readonly Dictionary<string, Type> _prototypeTypes = new();
+        private readonly Dictionary<string, Type> _types = new();
         private readonly Dictionary<Type, int> _prototypePriorities = new();
 
         private bool _initialized;
         private bool _hasEverBeenReloaded;
+        private int mappingErrors;
 
         #region IPrototypeManager members
 
@@ -50,8 +51,13 @@ namespace Robust.Shared.Prototypes
         private readonly Dictionary<Type, Dictionary<string, DeserializationResult>> _prototypeResults = new();
         private readonly Dictionary<Type, PrototypeInheritanceTree> _inheritanceTrees = new();
 
-        private readonly HashSet<string> _ignoredPrototypeTypes = new();
+        private readonly HashSet<Type> LoadBeforeList = new ();
+        private readonly HashSet<Type> LoadNormalList = new ();
+        private readonly HashSet<Type> LoadAfterList = new ();
 
+        private readonly HashSet<ErrorNode> ErrorNodes = new ();
+
+        private readonly HashSet<string> _ignoredPrototypeTypes = new();
         public virtual void Initialize()
         {
             if (_initialized)
@@ -59,8 +65,9 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException($"{nameof(PrototypeManager)} has already been initialized.");
             }
 
+            mappingErrors = 0;
+            ReloadTypes();
             _initialized = true;
-            ReloadPrototypeTypes();
         }
 
         public IEnumerable<T> EnumeratePrototypes<T>() where T : class, IPrototype
@@ -117,7 +124,8 @@ namespace Robust.Shared.Prototypes
 
         public void Clear()
         {
-            _prototypeTypes.Clear();
+            mappingErrors = 0;
+            _types.Clear();
             _prototypes.Clear();
             _prototypeResults.Clear();
             _inheritanceTrees.Clear();
@@ -131,7 +139,7 @@ namespace Robust.Shared.Prototypes
         protected void ReloadPrototypes(IEnumerable<ResourcePath> filePaths)
         {
 #if !FULL_RELEASE
-            var changed = filePaths.SelectMany(f => LoadFile(f.ToRootedPath(), true)).ToList();
+            var changed = filePaths.SelectMany(f => LoadFromFile(f.ToRootedPath(), true)).ToList();
             ReloadPrototypes(changed);
 #endif
         }
@@ -208,6 +216,7 @@ namespace Robust.Shared.Prototypes
 #endif
         }
 
+        #region Inheritance Tree
         public void Resync()
         {
             var trees = _inheritanceTrees.Keys.ToList();
@@ -276,174 +285,6 @@ namespace Robust.Shared.Prototypes
             _prototypes[type][id] = (IPrototype) populatedRes.RawValue!;
         }
 
-        /// <inheritdoc />
-        public List<IPrototype> LoadDirectory(ResourcePath path, bool overwrite = false)
-        {
-            var changedPrototypes = new List<IPrototype>();
-
-            _hasEverBeenReloaded = true;
-            var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
-
-            foreach (var resourcePath in streams)
-            {
-                var filePrototypes = LoadFile(resourcePath, overwrite);
-                changedPrototypes.AddRange(filePrototypes);
-            }
-
-            return changedPrototypes;
-        }
-
-        public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
-        {
-            var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
-                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
-
-            var dict = new Dictionary<string, HashSet<ErrorNode>>();
-            foreach (var resourcePath in streams)
-            {
-                using var reader = ReadFile(resourcePath);
-
-                if (reader == null)
-                {
-                    continue;
-                }
-
-                var yamlStream = new YamlStream();
-                yamlStream.Load(reader);
-
-                for (var i = 0; i < yamlStream.Documents.Count; i++)
-                {
-                    var rootNode = (YamlSequenceNode) yamlStream.Documents[i].RootNode;
-                    foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
-                    {
-                        var type = node.GetNode("type").AsString();
-                        if (!_prototypeTypes.ContainsKey(type))
-                        {
-                            if (_ignoredPrototypeTypes.Contains(type))
-                            {
-                                continue;
-                            }
-
-                            throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
-                        }
-
-                        var mapping = node.ToDataNodeCast<MappingDataNode>();
-                        mapping.Remove("type");
-                        var errorNodes = _serializationManager.ValidateNode(_prototypeTypes[type], mapping).GetErrors()
-                            .ToHashSet();
-                        if (errorNodes.Count == 0) continue;
-                        if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
-                            dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
-                        dict[resourcePath.ToString()].UnionWith(errorNodes);
-                    }
-                }
-            }
-
-            return dict;
-        }
-
-        private StreamReader? ReadFile(ResourcePath file, bool @throw = true)
-        {
-            var retries = 0;
-
-            // This might be shit-code, but its pjb-responded-idk-when-asked shit-code.
-            while (true)
-            {
-                try
-                {
-                    var reader = new StreamReader(Resources.ContentFileRead(file), EncodingHelpers.UTF8);
-                    return reader;
-                }
-                catch (IOException e)
-                {
-                    if (retries > 10)
-                    {
-                        if (@throw)
-                        {
-                            throw;
-                        }
-
-                        Logger.Error($"Error reloading prototypes in file {file}.", e);
-                        return null;
-                    }
-
-                    retries++;
-                    Thread.Sleep(10);
-                }
-            }
-        }
-
-        public HashSet<IPrototype> LoadFile(ResourcePath file, bool overwrite = false)
-        {
-            var changedPrototypes = new HashSet<IPrototype>();
-
-            try
-            {
-                using var reader = ReadFile(file, !overwrite);
-
-                if (reader == null)
-                {
-                    return changedPrototypes;
-                }
-
-                var yamlStream = new YamlStream();
-                yamlStream.Load(reader);
-
-                LoadedData?.Invoke(yamlStream, file.ToString());
-
-                for (var i = 0; i < yamlStream.Documents.Count; i++)
-                {
-                    try
-                    {
-                        var documentPrototypes = LoadFromDocument(yamlStream.Documents[i], overwrite);
-                        changedPrototypes.UnionWith(documentPrototypes);
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.ErrorS("eng", $"Exception whilst loading prototypes from {file}#{i}:\n{e}");
-                    }
-                }
-            }
-            catch (YamlException e)
-            {
-                var sawmill = Logger.GetSawmill("eng");
-                sawmill.Error("YamlException whilst loading prototypes from {0}: {1}", file, e.Message);
-            }
-
-            return changedPrototypes;
-        }
-
-        public List<IPrototype> LoadFromStream(TextReader stream, bool overwrite = false)
-        {
-            var changedPrototypes = new List<IPrototype>();
-            _hasEverBeenReloaded = true;
-            var yaml = new YamlStream();
-            yaml.Load(stream);
-
-            for (var i = 0; i < yaml.Documents.Count; i++)
-            {
-                try
-                {
-                    var documentPrototypes = LoadFromDocument(yaml.Documents[i], overwrite);
-                    changedPrototypes.AddRange(documentPrototypes);
-                }
-                catch (Exception e)
-                {
-                    throw new PrototypeLoadException($"Failed to load prototypes from document#{i}", e);
-                }
-            }
-
-            LoadedData?.Invoke(yaml, "anonymous prototypes YAML stream");
-
-            return changedPrototypes;
-        }
-
-        public List<IPrototype> LoadString(string str, bool overwrite = false)
-        {
-            return LoadFromStream(new StringReader(str), overwrite);
-        }
-
         public void RemoveString(string prototypes)
         {
             var reader = new StringReader(prototypes);
@@ -457,7 +298,7 @@ namespace Robust.Shared.Prototypes
                 foreach (var node in root.Cast<YamlMappingNode>())
                 {
                     var typeString = node.GetNode("type").AsString();
-                    var type = _prototypeTypes[typeString];
+                    var type = _types[typeString];
 
                     var id = node.GetNode("id").AsString();
 
@@ -470,62 +311,203 @@ namespace Robust.Shared.Prototypes
                 }
             }
         }
+        #endregion
 
-        #endregion IPrototypeManager members
-
-        private void ReloadPrototypeTypes()
+        public Dictionary<string, HashSet<ErrorNode>> ValidateDirectory(ResourcePath path)
         {
-            Clear();
-            foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
+            var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
+                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+
+            var dict = new Dictionary<string, HashSet<ErrorNode>>();
+
+            foreach (var resourcePath in streams)
             {
-                RegisterType(type);
+                LoadFromFile(resourcePath, false, true);
+
+                if (!ErrorNodes.Any())
+                    continue;
+
+                if (!dict.TryGetValue(resourcePath.ToString(), out var hashSet))
+                    dict[resourcePath.ToString()] = new HashSet<ErrorNode>();
+
+                dict[resourcePath.ToString()].UnionWith(ErrorNodes);
+
             }
+
+            return dict;
         }
 
-        private HashSet<IPrototype> LoadFromDocument(YamlDocument document, bool overwrite = false)
+    #region Prototype Loading
+
+
+        /// <summary>
+        /// Loads Prototypes from a path.
+        /// </summary>
+        /// <param name="path">path to files to load as prototype.</param>
+        /// <param name="overwrite">Overwrite if prototype already is loaded and exists</param>
+        /// <returns>HashSet of Loaded Prototypes</returns>
+        public List<IPrototype> LoadDirectory(ResourcePath path, bool overwrite = false)
         {
-            var changedPrototypes = new HashSet<IPrototype>();
-            var rootNode = (YamlSequenceNode) document.RootNode;
+            var changedPrototypes = new List<IPrototype>();
 
-            foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+            _hasEverBeenReloaded = true;
+            var streams = Resources.ContentFindFiles(path).ToList().AsParallel()
+                .Where(filePath => filePath.Extension == "yml" && !filePath.Filename.StartsWith("."));
+
+            foreach (var resourcePath in streams)
             {
-                var type = node.GetNode("type").AsString();
-                if (!_prototypeTypes.ContainsKey(type))
-                {
-                    if (_ignoredPrototypeTypes.Contains(type))
-                    {
-                        continue;
-                    }
-
-                    throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
-                }
-
-                var prototypeType = _prototypeTypes[type];
-                var res = _serializationManager.Read(prototypeType, node.ToDataNode(), skipHook: true);
-                var prototype = (IPrototype) res.RawValue!;
-
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(prototype.ID))
-                {
-                    throw new PrototypeLoadException($"Duplicate ID: '{prototype.ID}'");
-                }
-
-                _prototypeResults[prototypeType][prototype.ID] = res;
-                if (prototype is IInheritingPrototype inheritingPrototype)
-                {
-                    _inheritanceTrees[prototypeType].AddId(prototype.ID, inheritingPrototype.Parent, true);
-                }
-                else
-                {
-                    //we call it here since it wont get called when pushing inheritance
-                    res.CallAfterDeserializationHook();
-                }
-
-                _prototypes[prototypeType][prototype.ID] = prototype;
-                changedPrototypes.Add(prototype);
+                var filePrototypes = LoadFromFile(resourcePath, overwrite);
+                changedPrototypes.AddRange(filePrototypes);
             }
 
             return changedPrototypes;
         }
+
+        /// <summary>
+        /// Loads Prototypes from a file.
+        /// </summary>
+        /// <param name="file">file to load as prototype.</param>
+        /// <param name="overwrite">Overwrite if prototype already is loaded and exists</param>
+        ///      /// <param name="validateMapping">toggle true to receive a count of total mapping errors</param>
+        /// <returns>HashSet of Loaded Prototypes</returns>
+        public HashSet<IPrototype> LoadFromFile(ResourcePath file, bool overwrite = false, bool validateMapping = false)
+        {
+            HashSet<IPrototype> LoadedPrototypes = new();
+            try
+            {
+                try
+                {
+                    var reader = new StreamReader(Resources.ContentFileRead(file), EncodingHelpers.UTF8);
+
+                    var yamlStream = new YamlStream();
+                    yamlStream.Load(reader);
+
+                    LoadedPrototypes = LoadFromDocument(yamlStream, overwrite, validateMapping, actionMessage: file.ToString());
+                }
+                catch (IOException e)
+                {
+                    Logger.Error($"Error loading prototypes in file {file}.", e);
+                }
+            }
+            catch (YamlException e)
+            {
+                var sawmill = Logger.GetSawmill("eng");
+                sawmill.Error("Caught YamlException whilst loading prototypes from a File {0}: {1}", file.Filename, e.Message);
+            }
+
+            return LoadedPrototypes;
+        }
+
+        /// <summary>
+        /// Loads Prototypes from a string.
+        /// </summary>
+        /// <param name="str">Input string to load as prototype.</param>
+        /// <param name="overwrite">Overwrite if prototype already is loaded and exists</param>
+        /// <param name="actionMessage">String that will be included in the LoadedData Event</param>
+        /// <returns>HashSet of Loaded Prototypes</returns>
+        public HashSet<IPrototype> LoadFromString(string str, bool overwrite = false, string actionMessage = "")
+        {
+            var yamlStream = new YamlStream();
+            yamlStream.Load(new StringReader(str));
+
+            return LoadFromDocument(yamlStream, overwrite, actionMessage: actionMessage);
+        }
+
+        /// <summary>
+        /// Loads YAML Prototypes via a Yaml Stream
+        /// </summary>
+        /// <param name="yamlStream">YamlStream to process</param>
+        /// <param name="mappingErrors">a count of mapping errors. is 0 until you toggle validateMapping on.</param>
+        /// <param name="validateMapping">toggle true to receive a count of total mapping errors</param>
+        /// <param name="overwrite">Overwrite if prototype already is loaded and exists.</param>
+        /// <param name="actionMessage">String that will be included in the LoadedData Event</param>
+        /// <returns>HashSet of Loaded Prototypes</returns>
+        /// <exception cref="PrototypeLoadException">Thrown when Prototype failed to load</exception>
+        private HashSet<IPrototype> LoadFromDocument(YamlStream yamlStream, bool overwrite = false,
+            bool validateMapping = false, string actionMessage = "")
+        {
+            var loadedPrototypes = new HashSet<IPrototype>();
+
+
+            for (var i = 0; i < yamlStream.Documents.Count(); i++)
+            {
+                var prototypeDocument = yamlStream.Documents[i];
+                var rootNode = (YamlSequenceNode) prototypeDocument.RootNode;
+
+                foreach (YamlMappingNode node in rootNode.Cast<YamlMappingNode>())
+                {
+                    var type = node.GetNode("type").AsString();
+                    if (!_types.ContainsKey(type))
+                    {
+                        if (_ignoredPrototypeTypes.Contains(type))
+                        {
+                            continue;
+                        }
+
+                        throw new PrototypeLoadException($"Unknown prototype type: '{type}'");
+                    }
+
+                    var prototypeType = _types[type];
+
+                    var res = _serializationManager.Read(prototypeType, node.ToDataNode(), skipHook: true);
+                    var prototype = (IPrototype) res.RawValue!;
+
+                    if (!overwrite && _prototypes[prototypeType].ContainsKey(prototype.ID))
+                    {
+                        throw new PrototypeLoadException($"Duplicate ID: '{prototype.ID}'");
+                    }
+
+                    _prototypeResults[prototypeType][prototype.ID] = res;
+                    if (prototype is IInheritingPrototype inheritingPrototype)
+                    {
+                        _inheritanceTrees[prototypeType].AddId(prototype.ID, inheritingPrototype.Parent, true);
+                    }
+                    else
+                    {
+                        //we call it here since it wont get called when pushing inheritance
+                        res.CallAfterDeserializationHook();
+                    }
+
+                    _prototypes[prototypeType][prototype.ID] = prototype;
+                    loadedPrototypes.Add(prototype);
+
+                    if (validateMapping)
+                    {
+                        var mapping = node.ToDataNodeCast<MappingDataNode>();
+                        mapping.Remove("type");
+                        var errorNodes = _serializationManager.ValidateNode(_types[type], mapping).GetErrors()
+                            .ToHashSet();
+                        mappingErrors = errorNodes.Count;
+
+                    }
+                }
+            }
+            LoadedData?.Invoke(yamlStream, actionMessage);
+            return loadedPrototypes;
+        }
+        #endregion
+        #endregion IPrototypeManager members
+
+        private void ReloadTypes()
+        {
+            Clear();
+            foreach (var type in _reflectionManager.GetAllChildren<IPrototype>())
+            {
+                var prototypeAttributes = (PrototypeAttribute?) Attribute.GetCustomAttribute(type, typeof(PrototypeAttribute));
+
+                if ( prototypeAttributes!.LoadBefore != string.Empty)
+                    LoadBeforeList.Add(type);
+                else if (prototypeAttributes!.LoadAfter != string.Empty)
+                    LoadAfterList.Add(type);
+                else
+                    LoadNormalList.Add(type);
+
+                RegisterType(type);
+            }
+        }
+
+
+
 
         public bool HasIndex<T>(string id) where T : class, IPrototype
         {
@@ -557,19 +539,19 @@ namespace Robust.Shared.Prototypes
         /// <inheritdoc />
         public bool HasVariant(string variant)
         {
-            return _prototypeTypes.ContainsKey(variant);
+            return _types.ContainsKey(variant);
         }
 
         /// <inheritdoc />
         public Type GetVariantType(string variant)
         {
-            return _prototypeTypes[variant];
+            return _types[variant];
         }
 
         /// <inheritdoc />
         public bool TryGetVariantType(string variant, [NotNullWhen(true)] out Type? prototype)
         {
-            return _prototypeTypes.TryGetValue(variant, out prototype);
+            return _types.TryGetValue(variant, out prototype);
         }
 
         /// <inheritdoc />
@@ -627,14 +609,14 @@ namespace Robust.Shared.Prototypes
                     "No " + nameof(PrototypeAttribute) + " to give it a type string.");
             }
 
-            if (_prototypeTypes.ContainsKey(attribute.Type))
+            if (_types.ContainsKey(attribute.Type))
             {
                 throw new InvalidImplementationException(type,
                     typeof(IPrototype),
-                    $"Duplicate prototype type ID: {attribute.Type}. Current: {_prototypeTypes[attribute.Type]}");
+                    $"Duplicate prototype type ID: {attribute.Type}. Current: {_types[attribute.Type]}");
             }
 
-            _prototypeTypes[attribute.Type] = type;
+            _types[attribute.Type] = type;
             _prototypePriorities[type] = attribute.LoadPriority;
 
             if (typeof(IPrototype).IsAssignableFrom(type))

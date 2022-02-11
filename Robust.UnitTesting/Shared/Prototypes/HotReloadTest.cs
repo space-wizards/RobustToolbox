@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -47,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             IoCManager.Resolve<ISerializationManager>().Initialize();
             _prototypes = (PrototypeManager) IoCManager.Resolve<IPrototypeManager>();
             _prototypes.RegisterType(typeof(EntityPrototype));
-            _prototypes.LoadString(InitialPrototypes);
+            _prototypes.LoadFromString(InitialPrototypes);
             _prototypes.Resync();
 
             _maps = IoCManager.Resolve<IMapManager>();
@@ -75,8 +76,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(entityComponent.Value, Is.EqualTo(5));
             Assert.False(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestTwoComponent>(entity));
 
-            var changedPrototypes = _prototypes.LoadString(ReloadedPrototypes, true);
-            _prototypes.ReloadPrototypes(changedPrototypes);
+            var changedPrototypes = _prototypes.LoadFromString(ReloadedPrototypes, true);
+            _prototypes.ReloadPrototypes(changedPrototypes.ToList());
 
             Assert.True(reloaded);
             reloaded = false;
@@ -87,8 +88,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
             // New components are added
             Assert.True(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestTwoComponent>(entity));
 
-            changedPrototypes = _prototypes.LoadString(InitialPrototypes, true);
-            _prototypes.ReloadPrototypes(changedPrototypes);
+            changedPrototypes = _prototypes.LoadFromString(InitialPrototypes, true);
+            _prototypes.ReloadPrototypes(changedPrototypes.ToList());
 
             Assert.True(reloaded);
             reloaded = false;

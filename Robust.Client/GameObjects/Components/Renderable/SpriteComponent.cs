@@ -211,6 +211,7 @@ namespace Robust.Client.GameObjects
                     layer.Color = layerDatum.Color;
                     layer.Rotation = layerDatum.Rotation;
                     layer._offset = layerDatum.Offset;
+                    layer.RotateOffset = layerDatum.RotateOffset;
                     // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
                     layer.Visible = anyTextureAttempted && layerDatum.Visible;
                     layer.Scale = layerDatum.Scale;
@@ -1271,7 +1272,9 @@ namespace Robust.Client.GameObjects
 
                 var numDirs = GetLayerDirectionCount(layer);
                 var layerRotation = worldRotation + layer.Rotation;
-                var layerPosition = worldPosition + layerRotation.RotateVec(layer._offset + offset);
+                var layerPosition = worldPosition + (layer.RotateOffset
+                    ? layerRotation.RotateVec(layer._offset + offset)
+                    : layer._offset + offset);
 
                 CalcModelMatrix(numDirs, eyeRotation, layerRotation, layerPosition, out var modelMatrix);
                 Matrix3.Multiply(ref spriteMatrix, ref modelMatrix, out var transformMatrix);
@@ -1657,6 +1660,12 @@ namespace Robust.Client.GameObjects
             }
 
             internal Vector2 _offset;
+
+            /// <summary>
+            ///     Should this layer's offset change with layer rotation?
+            /// </summary>
+            [ViewVariables]
+            public bool RotateOffset = true;
 
             [ViewVariables]
             public DirectionOffset DirOffset { get; set; }

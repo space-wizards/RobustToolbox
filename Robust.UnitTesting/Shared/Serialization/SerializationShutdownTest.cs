@@ -4,7 +4,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
     [NonParallelizable]
-    public class SerializationShutdownTest : SerializationTest
+    public sealed class SerializationShutdownTest : SerializationTest
     {
         [Test]
         public void SerializationInitializeShutdownInitializeTest()

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class ValidatedSequenceNode : ValidationNode
+    public sealed class ValidatedSequenceNode : ValidationNode
     {
         public ValidatedSequenceNode(List<ValidationNode> sequence)
         {

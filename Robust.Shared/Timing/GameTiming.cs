@@ -7,6 +7,7 @@ namespace Robust.Shared.Timing
     /// <summary>
     ///     This holds main loop timing information and helper functions.
     /// </summary>
+    [Virtual]
     public class GameTiming : IGameTiming
     {
         // number of sample frames to store for profiling
@@ -115,6 +116,11 @@ namespace Robust.Shared.Timing
         ///     The current simulation tick being processed.
         /// </summary>
         public GameTick CurTick { get; set; } = new(1); // Time always starts on the first tick
+
+        /// <summary>
+        ///     Timespan for the last tick.
+        /// </summary>
+        public TimeSpan LastTick { get; set; }
 
         private byte _tickRate;
         private TimeSpan _tickRemainder;

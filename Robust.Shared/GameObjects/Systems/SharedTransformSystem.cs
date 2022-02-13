@@ -22,23 +22,6 @@ namespace Robust.Shared.GameObjects
             UpdatesOutsidePrediction = true;
 
             _mapManager.TileChanged += MapManagerOnTileChanged;
-            SubscribeLocalEvent<TransformComponent, EntityDirtyEvent>(OnTransformDirty);
-        }
-
-        private void OnTransformDirty(EntityUid uid, TransformComponent component, ref EntityDirtyEvent args)
-        {
-            if (!component.Anchored ||
-                !component.ParentUid.IsValid() ||
-                MetaData(uid).EntityLifeStage < EntityLifeStage.Initialized)
-                return;
-
-            // Anchor dirty
-            // May not even need this in future depending what happens with chunk anchoring (paulVS plz).
-            var gridComp = EntityManager.GetComponent<IMapGridComponent>(component.ParentUid);
-
-            var grid = (IMapGridInternal) gridComp.Grid;
-            DebugTools.Assert(component.GridID == gridComp.GridIndex);
-            grid.AnchoredEntDirty(grid.TileIndicesFor(component.Coordinates));
         }
 
         public override void Shutdown()

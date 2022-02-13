@@ -2,7 +2,7 @@
 
 namespace Robust.Client.Placement.Modes
 {
-    public class PlaceFree : PlacementMode
+    public sealed class PlaceFree : PlacementMode
     {
         public PlaceFree(PlacementManager pMan) : base(pMan) { }
 

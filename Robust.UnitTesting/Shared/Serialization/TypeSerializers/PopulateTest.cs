@@ -6,7 +6,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
-    public class PopulateNullableStructTest : SerializationTest
+    public sealed class PopulateNullableStructTest : SerializationTest
     {
         [DataDefinition]
         private struct TestStruct : IPopulateDefaultValues

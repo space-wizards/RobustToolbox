@@ -13,6 +13,7 @@ namespace Robust.Shared.Configuration
     /// <summary>
     ///     Stores and manages global configuration variables.
     /// </summary>
+    [Virtual]
     internal class ConfigurationManager : IConfigurationManagerInternal
     {
         private const char TABLE_DELIMITER = '.';
@@ -468,7 +469,7 @@ namespace Robust.Shared.Configuration
         /// <summary>
         ///     Holds the data for a single configuration variable.
         /// </summary>
-        protected class ConfigVar
+        protected sealed class ConfigVar
         {
             /// <summary>
             ///     Constructs a CVar.
@@ -532,6 +533,7 @@ namespace Robust.Shared.Configuration
     }
 
     [Serializable]
+    [Virtual]
     public class InvalidConfigurationException : Exception
     {
         public InvalidConfigurationException()

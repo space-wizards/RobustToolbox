@@ -2,18 +2,18 @@
 
 namespace Robust.Client.UserInterface.XAML
 {
-    public class ContentAttribute : Attribute
+    public sealed class ContentAttribute : Attribute
     {
     }
 
-    public class UsableDuringInitializationAttribute : Attribute
+    public sealed class UsableDuringInitializationAttribute : Attribute
     {
         public UsableDuringInitializationAttribute(bool usable)
         {
         }
     }
 
-    public class DeferredContentAttribute : Attribute
+    public sealed class DeferredContentAttribute : Attribute
     {
     }
 

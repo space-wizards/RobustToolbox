@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.Animations;
 using Robust.Shared.GameStates;
@@ -54,7 +55,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         internal bool ActivelyLerping { get; set; }
 
-        [ViewVariables] internal readonly SortedSet<EntityUid> _children = new();
+        [ViewVariables] internal readonly HashSet<EntityUid> _children = new();
 
         [Dependency] private readonly IMapManager _mapManager = default!;
 
@@ -468,6 +469,8 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] public IEnumerable<EntityUid> ChildEntities => _children;
 
+        public TransformChildrenEnumerator ChildEnumerator => new(_children.GetEnumerator());
+
         [ViewVariables] public int ChildCount => _children.Count;
 
         [ViewVariables]
@@ -725,17 +728,27 @@ namespace Robust.Shared.GameObjects
 
             var oldMapId = MapID;
 
+            //Set Paused state
+            var mapPaused = _mapManager.IsMapPaused(newMapId);
+            var metaData = _entMan.GetComponent<MetaDataComponent>(Owner);
+            metaData.EntityPaused = mapPaused;
+
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, _entMan);
+            UpdateChildMapIdsRecursive(MapID, _entMan, mapPaused);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan, bool mapPaused)
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
+            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
 
             foreach (var child in _children)
             {
+                //Set Paused state
+                var metaData = metaEnts.GetComponent(child);
+                metaData.EntityPaused = mapPaused;
+
                 var concrete = xforms.GetComponent(child);
                 var old = concrete.MapID;
 
@@ -744,7 +757,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan, mapPaused);
                 }
             }
         }
@@ -1045,7 +1058,7 @@ namespace Robust.Shared.GameObjects
         ///     Serialized state of a TransformComponent.
         /// </summary>
         [Serializable, NetSerializable]
-        internal class TransformComponentState : ComponentState
+        internal sealed class TransformComponentState : ComponentState
         {
             /// <summary>
             ///     Current parent entity of this entity.
@@ -1148,6 +1161,33 @@ namespace Robust.Shared.GameObjects
         ///     New AABB of the entity.
         /// </summary>
         public readonly Box2? WorldAABB;
+    }
+
+    public struct TransformChildrenEnumerator : IDisposable
+    {
+        private HashSet<EntityUid>.Enumerator _children;
+
+        public TransformChildrenEnumerator(HashSet<EntityUid>.Enumerator children)
+        {
+            _children = children;
+        }
+
+        public bool MoveNext([NotNullWhen(true)] out EntityUid? child)
+        {
+            if (!_children.MoveNext())
+            {
+                child = null;
+                return false;
+            }
+
+            child = _children.Current;
+            return true;
+        }
+
+        public void Dispose()
+        {
+            _children.Dispose();
+        }
     }
 
     /// <summary>

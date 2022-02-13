@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects
     /// Updates the layer animation for every visible sprite.
     /// </summary>
     [UsedImplicitly]
-    public class SpriteSystem : EntitySystem
+    public sealed class SpriteSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly RenderingTreeSystem _treeSystem = default!;
@@ -53,9 +53,11 @@ namespace Robust.Client.GameObjects
                 return;
             }
 
+            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+
             foreach (var comp in _treeSystem.GetRenderTrees(currentMap, pvsBounds))
             {
-                var bounds = EntityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(pvsBounds);
 
                 comp.SpriteTree.QueryAabb(ref frameTime, (ref float state, in SpriteComponent value) =>
                 {

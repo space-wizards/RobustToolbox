@@ -9,6 +9,7 @@ namespace Robust.Client.UserInterface.CustomControls
     /// <summary>
     ///     A viewport container shows a viewport.
     /// </summary>
+    [Virtual]
     public class ViewportContainer : Control, IViewportControl
     {
         private readonly IClyde _displayManager;

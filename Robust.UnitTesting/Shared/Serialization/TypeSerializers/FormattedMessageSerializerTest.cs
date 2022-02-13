@@ -10,7 +10,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers;
 
 [TestFixture]
 [TestOf(typeof(FormattedMessageSerializer))]
-public class FormattedMessageSerializerTest : SerializationTest
+public sealed class FormattedMessageSerializerTest : SerializationTest
 {
     [Test]
     [TestCase("message")]

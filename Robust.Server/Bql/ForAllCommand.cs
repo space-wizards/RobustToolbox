@@ -7,7 +7,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Server.Bql
 {
-    public class ForAllCommand : IConsoleCommand
+    public sealed class ForAllCommand : IConsoleCommand
     {
         public string Command => "forall";
         public string Description => "Runs a command over all entities with a given component";

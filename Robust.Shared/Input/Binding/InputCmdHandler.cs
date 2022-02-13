@@ -38,7 +38,7 @@ namespace Robust.Shared.Input.Binding
             };
         }
 
-        private class StateInputCmdHandler : InputCmdHandler
+        private sealed class StateInputCmdHandler : InputCmdHandler
         {
             public StateInputCmdDelegate? EnabledDelegate;
             public StateInputCmdDelegate? DisabledDelegate;
@@ -81,7 +81,7 @@ namespace Robust.Shared.Input.Binding
 
     public delegate bool PointerInputCmdDelegate2(in PointerInputCmdHandler.PointerInputCmdArgs args);
 
-    public class PointerInputCmdHandler : InputCmdHandler
+    public sealed class PointerInputCmdHandler : InputCmdHandler
     {
         private PointerInputCmdDelegate2 _callback;
         private bool _ignoreUp;
@@ -144,7 +144,7 @@ namespace Robust.Shared.Input.Binding
         }
     }
 
-    public class PointerStateInputCmdHandler : InputCmdHandler
+    public sealed class PointerStateInputCmdHandler : InputCmdHandler
     {
         private PointerInputCmdDelegate _enabled;
         private PointerInputCmdDelegate _disabled;
@@ -180,7 +180,7 @@ namespace Robust.Shared.Input.Binding
     /// Consumes both up and down states without calling any handler delegates. Primarily used on the client to
     /// prevent an input message from being sent to the server.
     /// </summary>
-    public class NullInputCmdHandler : InputCmdHandler
+    public sealed class NullInputCmdHandler : InputCmdHandler
     {
         /// <inheritdoc />
         public override bool HandleCmdMessage(ICommonSession? session, InputCmdMessage message)

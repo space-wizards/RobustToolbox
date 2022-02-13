@@ -10,7 +10,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 namespace Robust.UnitTesting.Shared.Prototypes
 {
     [TestFixture]
-    public class HotReloadTest : RobustUnitTest
+    public sealed class HotReloadTest : RobustUnitTest
     {
         private const string DummyId = "Dummy";
         public const string HotReloadTestComponentOneId = "HotReloadTestOne";
@@ -101,13 +101,13 @@ namespace Robust.UnitTesting.Shared.Prototypes
         }
     }
 
-    public class HotReloadTestOneComponent : Component
+    public sealed class HotReloadTestOneComponent : Component
     {
         [DataField("value")]
         public int Value { get; }
     }
 
-    public class HotReloadTestTwoComponent : Component
+    public sealed class HotReloadTestTwoComponent : Component
     {
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedValue : DeserializationResult
+    public sealed class DeserializedValue : DeserializationResult
     {
         public DeserializedValue(object? value)
         {
@@ -26,7 +26,7 @@
         }
     }
 
-    public class DeserializedValue<T> : DeserializationResult<T>
+    public sealed class DeserializedValue<T> : DeserializationResult<T>
     {
         public DeserializedValue(T value)
         {

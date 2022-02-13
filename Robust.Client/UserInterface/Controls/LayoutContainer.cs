@@ -7,6 +7,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.UserInterface.Controls
 {
     [PublicAPI]
+    [Virtual]
     public class LayoutContainer : Container
     {
         /// <summary>

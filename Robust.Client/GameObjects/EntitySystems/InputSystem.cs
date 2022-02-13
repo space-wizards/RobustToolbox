@@ -117,8 +117,15 @@ namespace Robust.Client.GameObjects
 
             _conHost.RegisterCommand("incmd",
                 "Inserts an input command into the simulation",
-                "incmd <KeyFunction>",
+                "incmd <KeyFunction> <d|u KeyState> <wxPos> <wyPos>",
                 GenerateInputCommand);
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            _conHost.UnregisterCommand("incmd");
         }
 
         private void GenerateInputCommand(IConsoleShell shell, string argstr, string[] args)

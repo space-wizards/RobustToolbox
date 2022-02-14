@@ -156,8 +156,6 @@ namespace Robust.Server.GameStates
             const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
 
-            _pvs.ReturnToPool(chunkEnts, localEnts, globalEnts);
-
             Parallel.For(0, batches, i =>
             {
                 var start = i * BatchSize;
@@ -177,6 +175,8 @@ namespace Robust.Server.GameStates
                     }
                 }
             });
+
+            _pvs.ReturnToPool(chunkEnts, localEnts, globalEnts);
 
             void SendStateUpdate(IPlayerSession session)
             {

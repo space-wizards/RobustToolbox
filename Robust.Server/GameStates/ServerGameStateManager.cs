@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -131,6 +133,10 @@ namespace Robust.Server.GameStates
             const int CompBatchSize = 100;
             var compBatches = (int) MathF.Ceiling((float) seenEnts.Count / CompBatchSize);
             var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>(seenEnts.Count);
+            foreach (var uid in seenEnts)
+            {
+                compCache[uid] = default!;
+            }
             var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
 
@@ -151,7 +157,11 @@ namespace Robust.Server.GameStates
             const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
 
-            var entityStates = new Dictionary<IPlayerSession, (List<EntityState>?, List<EntityUid>?)>();
+            var entityStates = new Dictionary<IPlayerSession, (List<EntityState>?, List<EntityUid>?)>(players.Length);
+            foreach (var player in players)
+            {
+                entityStates[player] = (null, null);
+            }
 
             Parallel.For(0, batches, i =>
             {
@@ -169,9 +179,11 @@ namespace Robust.Server.GameStates
 
                     var state = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkEnts,
                         localEnts, globalEnts, compCache);
-                    entityStates.Add(session, state);
+                    entityStates[session] = state;
                 }
             });
+
+            _pvs.ReturnToPool(seenEnts, chunkEnts, localEnts, globalEnts);
 
             Parallel.For(0, batches, i =>
             {

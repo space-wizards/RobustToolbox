@@ -62,11 +62,12 @@ internal sealed partial class PVSSystem : EntitySystem
     public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
     private readonly List<IPVSCollection> _pvsCollections = new();
 
-    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
-        new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
-            new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
-    private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
-        = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
+    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
+        = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
+    private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
+        = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
+    private readonly ObjectPool<HashSet<(EntityUid, uint)>> _seenChunkEntitiesPool
+        = new DefaultObjectPool<HashSet<(EntityUid, uint)>>(new SetPolicy<(EntityUid, uint)>(), MaxVisPoolSize);
 
     public override void Initialize()
     {
@@ -260,14 +261,29 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
+    public void ReturnToPool(Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
+        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides)
+    {
+        foreach (var (_, val) in seenChunkEntities)
+        {
+            _seenChunkEntitiesPool.Return(val);
+        }
+        foreach (var (_, val) in localOverrides)
+        {
+            _uidSetPool.Return(val);
+        }
+    }
+
     public (List<EntityUid> seenEntities, Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
         Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides) GetSeenEnts(
             IPlayerSession[] sessions)
     {
         var seenEnts = new List<EntityUid>();
-        var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>();
         var globalOverrides = new HashSet<EntityUid>();
-        var localOverrides = new Dictionary<IPlayerSession, HashSet<EntityUid>>();
+
+        var numSessions = sessions.Length;
+        var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>(numSessions);
+        var localOverrides = new Dictionary<IPlayerSession, HashSet<EntityUid>>(numSessions);
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
@@ -281,8 +297,8 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var session in sessions)
         {
-            sessionChunkEnts[session] = new HashSet<(EntityUid, uint)>();
-            localOverrides[session] = new HashSet<EntityUid>();
+            sessionChunkEnts[session] = _seenChunkEntitiesPool.Get();
+            localOverrides[session] = _uidSetPool.Get();
 
             var localOverridesEnumerator = _entityPvsCollection.GetElementsForSession(session);
             while (localOverridesEnumerator.MoveNext())
@@ -349,8 +365,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 }
             }
 
-            viewers.Clear();
-            _viewerEntsPool.Return(viewers);
+            _uidSetPool.Return(viewers);
         }
 
         return (seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
@@ -636,7 +651,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
     {
-        var viewers = _viewerEntsPool.Get();
+        var viewers = _uidSetPool.Get();
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
@@ -664,6 +679,20 @@ internal sealed partial class PVSSystem : EntitySystem
         var map = xform.MapID;
 
         return (view, map);
+    }
+
+    public class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>
+    {
+        public override HashSet<T> Create()
+        {
+            return new HashSet<T>();
+        }
+
+        public override bool Return(HashSet<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
     }
 }
 

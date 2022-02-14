@@ -81,14 +81,14 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     private readonly List<(GameTick tick, TIndex index)> _deletionHistory = new();
 
     /// <summary>
-    /// An index containing the <see cref="IndexLocation"/>s of all <see cref="TIndex"/>.
+    /// An index containing the <see cref="IIndexLocation"/>s of all <see cref="TIndex"/>.
     /// </summary>
-    private readonly Dictionary<TIndex, IndexLocation> _indexLocations = new();
+    private readonly Dictionary<TIndex, IIndexLocation> _indexLocations = new();
 
     /// <summary>
     /// Buffer of all locationchanges since the last process call
     /// </summary>
-    private readonly Dictionary<TIndex, IndexLocation> _locationChangeBuffer = new();
+    private readonly Dictionary<TIndex, IIndexLocation> _locationChangeBuffer = new();
     /// <summary>
     /// Buffer of all indexremovals since the last process call
     /// </summary>
@@ -103,7 +103,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         var changedIndices = new HashSet<TIndex>(_locationChangeBuffer.Keys);
 
-        var changedChunkLocations = new HashSet<IndexLocation>();
+        var changedChunkLocations = new HashSet<IIndexLocation>();
         foreach (var (index, tick) in _removalBuffer)
         {
             //changes dont need to be computed if we are removing the index anyways
@@ -154,7 +154,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public HashSet<TIndex>.Enumerator GetElementsForSession(ICommonSession session) => _localOverrides[session].GetEnumerator();
 
-    private void AddIndexInternal(TIndex index, IndexLocation location)
+    private void AddIndexInternal(TIndex index, IIndexLocation location)
     {
         switch (location)
         {
@@ -186,7 +186,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         _indexLocations.Add(index, location);
     }
 
-    private IndexLocation? RemoveIndexInternal(TIndex index)
+    private IIndexLocation? RemoveIndexInternal(TIndex index)
     {
         // the index might be gone due to disconnects/grid-/map-deletions
         if (!_indexLocations.TryGetValue(index, out var location))
@@ -392,7 +392,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }
 
-    private void RegisterUpdate(TIndex index, IndexLocation location)
+    private void RegisterUpdate(TIndex index, IIndexLocation location)
     {
         if(_indexLocations.TryGetValue(index, out var oldLocation) && oldLocation == location) return;
 
@@ -404,11 +404,42 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
 #region IndexLocations
 
-public abstract record IndexLocation;
+public interface IIndexLocation {};
 
-public record MapChunkLocation(MapId MapId, Vector2i ChunkIndices) : IndexLocation;
-public record GridChunkLocation(GridId GridId, Vector2i ChunkIndices) : IndexLocation;
-public record GlobalOverride : IndexLocation;
-public record LocalOverride(ICommonSession Session) : IndexLocation;
+public struct MapChunkLocation : IIndexLocation
+{
+    public MapChunkLocation(MapId mapId, Vector2i chunkIndices)
+    {
+        MapId = mapId;
+        ChunkIndices = chunkIndices;
+    }
+
+    public MapId MapId { get; init; }
+    public Vector2i ChunkIndices { get; init; }
+}
+
+public struct GridChunkLocation : IIndexLocation
+{
+    public GridChunkLocation(GridId gridId, Vector2i chunkIndices)
+    {
+        GridId = gridId;
+        ChunkIndices = chunkIndices;
+    }
+
+    public GridId GridId { get; init; }
+    public Vector2i ChunkIndices { get; init; }
+}
+
+public struct GlobalOverride : IIndexLocation { }
+
+public struct LocalOverride : IIndexLocation
+{
+    public LocalOverride(ICommonSession session)
+    {
+        Session = session;
+    }
+
+    public ICommonSession Session { get; init; }
+}
 
 #endregion

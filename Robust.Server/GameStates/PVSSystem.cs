@@ -69,6 +69,8 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly ObjectPool<HashSet<(EntityUid, uint)>> _seenChunkEntitiesPool
         = new DefaultObjectPool<HashSet<(EntityUid, uint)>>(new SetPolicy<(EntityUid, uint)>(), MaxVisPoolSize);
 
+    public int _previousEntCount = 0;
+
     public override void Initialize()
     {
         base.Initialize();
@@ -279,7 +281,7 @@ internal sealed partial class PVSSystem : EntitySystem
         Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides) GetSeenEnts(
             IPlayerSession[] sessions)
     {
-        var seenEnts = new List<EntityUid>();
+        var seenEnts = new List<EntityUid>(_previousEntCount);
         var globalOverrides = _uidSetPool.Get();
 
         var numSessions = sessions.Length;
@@ -369,6 +371,7 @@ internal sealed partial class PVSSystem : EntitySystem
             _uidSetPool.Return(viewers);
         }
 
+        _previousEntCount = seenEnts.Count;
         return (seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
     }
 

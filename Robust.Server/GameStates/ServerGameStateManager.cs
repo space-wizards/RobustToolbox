@@ -131,8 +131,9 @@ namespace Robust.Server.GameStates
             //todo cullingdisabled
             var (seenEnts, chunkEnts, localEnts, globalEnts) = _pvs.GetSeenEnts(players);
             const int CompBatchSize = 100;
-            var compBatches = (int) MathF.Ceiling((float) seenEnts.Count / CompBatchSize);
-            var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>(seenEnts.Count);
+            var seenEntsCount = seenEnts.Count;
+            var compBatches = (int) MathF.Ceiling((float) seenEntsCount / CompBatchSize);
+            var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>(seenEntsCount);
             foreach (var uid in seenEnts)
             {
                 compCache[uid] = default!;
@@ -143,7 +144,7 @@ namespace Robust.Server.GameStates
             Parallel.For(0, compBatches, i =>
             {
                 var start = i * CompBatchSize;
-                var end = Math.Min(start + CompBatchSize, seenEnts.Count);
+                var end = Math.Min(start + CompBatchSize, seenEntsCount);
 
                 for (var j = start; j < end; ++j)
                 {

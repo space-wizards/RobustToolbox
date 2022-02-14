@@ -262,8 +262,9 @@ internal sealed partial class PVSSystem : EntitySystem
     #endregion
 
     public void ReturnToPool(Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
-        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides)
+        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides)
     {
+        _uidSetPool.Return(globalOverrides);
         foreach (var (_, val) in seenChunkEntities)
         {
             _seenChunkEntitiesPool.Return(val);
@@ -279,7 +280,7 @@ internal sealed partial class PVSSystem : EntitySystem
             IPlayerSession[] sessions)
     {
         var seenEnts = new List<EntityUid>();
-        var globalOverrides = new HashSet<EntityUid>();
+        var globalOverrides = _uidSetPool.Get();
 
         var numSessions = sessions.Length;
         var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>(numSessions);

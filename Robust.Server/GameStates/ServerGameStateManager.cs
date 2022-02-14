@@ -145,8 +145,6 @@ namespace Robust.Server.GameStates
                 var start = i * CompBatchSize;
                 var end = Math.Min(start + CompBatchSize, seenEnts.Count);
 
-                if(start == 0) System.Console.WriteLine();
-
                 for (var j = start; j < end; ++j)
                 {
                     var uid = seenEnts[j];
@@ -183,7 +181,7 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            _pvs.ReturnToPool(seenEnts, chunkEnts, localEnts, globalEnts);
+            _pvs.ReturnToPool(chunkEnts, localEnts, globalEnts);
 
             Parallel.For(0, batches, i =>
             {

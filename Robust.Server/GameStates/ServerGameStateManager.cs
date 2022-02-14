@@ -129,27 +129,22 @@ namespace Robust.Server.GameStates
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             //todo cullingdisabled
-            var (seenEnts, chunkEnts, localEnts, globalEnts) = _pvs.GetSeenEnts(players);
-            const int CompBatchSize = 100;
-            var seenEntsCount = seenEnts.Count;
-            var compBatches = (int) MathF.Ceiling((float) seenEntsCount / CompBatchSize);
-            var compCache = new Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)>(seenEntsCount);
-            foreach (var uid in seenEnts)
+            var (chunks, playerChunks) = _pvs.GetChunks(players);
+            const int ChunkBatchSize = 2;
+            var chunksCount = chunks.Count;
+            var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
+            var chunkCache = new Dictionary<EntityUid, MetaDataComponent>?[chunks.Count];
+            var transformQuery = new EntityQuery<TransformComponent>();
+            var metadataQuery = new EntityQuery<MetaDataComponent>();
+            Parallel.For(0, chunkBatches, i =>
             {
-                compCache[uid] = default!;
-            }
-            var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
-
-            Parallel.For(0, compBatches, i =>
-            {
-                var start = i * CompBatchSize;
-                var end = Math.Min(start + CompBatchSize, seenEntsCount);
+                var start = i * ChunkBatchSize;
+                var end = Math.Min(start + ChunkBatchSize, chunksCount);
 
                 for (var j = start; j < end; ++j)
                 {
-                    var uid = seenEnts[j];
-                    compCache[uid] = (transformQuery.GetComponent(uid), metadataQuery.GetComponent(uid));
+                    var (visMask, chunkIndexLocation) = chunks[j];
+                    chunkCache[j] = _pvs.CalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery);
                 }
             });
 
@@ -176,8 +171,6 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            _pvs.ReturnToPool(chunkEnts, localEnts, globalEnts);
-
             void SendStateUpdate(IPlayerSession session)
             {
                 // KILL IT WITH FIRE
@@ -191,8 +184,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkEnts,
-                    localEnts, globalEnts, compCache);
+                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache, playerChunks[session], metadataQuery);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 

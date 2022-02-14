@@ -56,6 +56,9 @@ internal sealed partial class PVSSystem : EntitySystem
     /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
+    /// <summary>
+    /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw along its entire connection.
+    /// </summary>
     private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerSeenSets = new();
 
     private PVSCollection<EntityUid> _entityPvsCollection = default!;
@@ -66,12 +69,6 @@ internal sealed partial class PVSSystem : EntitySystem
         = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
-    private readonly ObjectPool<Dictionary<uint, HashSet<EntityUid>>> _seenChunkEntitiesPool
-        = new DefaultObjectPool<Dictionary<uint, HashSet<EntityUid>>>(new DefaultPooledObjectPolicy<Dictionary<uint, HashSet<EntityUid>>>(), MaxVisPoolSize);
-
-    //this list gets reused in getseenents, do not touch!!! - paul
-    public List<EntityUid> _seenEnts = new();
-    public int _previousSeenEntsCount = 0;
 
     public override void Initialize()
     {
@@ -265,69 +262,19 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
-    public void ReturnToPool(Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>> seenChunkEntities,
-        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides)
+    public (List<(uint, IChunkIndexLocation)> , Dictionary<IPlayerSession, HashSet<int>>) GetChunks(IPlayerSession[] sessions)
     {
-        _uidSetPool.Return(globalOverrides);
-        foreach (var val in seenChunkEntities.Values)
-        {
-            foreach (var valValue in val.Values)
-            {
-                _uidSetPool.Return(valValue);
-            }
-            val.Clear();
-            _seenChunkEntitiesPool.Return(val);
-        }
-        foreach (var val in localOverrides.Values)
-        {
-            _uidSetPool.Return(val);
-        }
-    }
-
-    public (List<EntityUid> seenEntities, Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>> seenChunkEntities,
-        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides) GetSeenEnts(
-            IPlayerSession[] sessions)
-    {
-        var globalOverrides = _uidSetPool.Get();
-        _seenEnts.Clear();
-        _seenEnts.EnsureCapacity(_previousSeenEntsCount);
-
-        var numSessions = sessions.Length;
-        var sessionChunkEnts = new Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>>(numSessions);
-        var localOverrides = new Dictionary<IPlayerSession, HashSet<EntityUid>>(numSessions);
+        var chunkList = new List<(uint, IChunkIndexLocation)>();
+        var playerChunks = new Dictionary<IPlayerSession, HashSet<int>>();
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
-        var globalOverridesEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
-        while(globalOverridesEnumerator.MoveNext())
-        {
-            _seenEnts.Add(globalOverridesEnumerator.Current);
-            globalOverrides.Add(globalOverridesEnumerator.Current);
-        }
-        globalOverridesEnumerator.Dispose();
-
         foreach (var session in sessions)
         {
-            sessionChunkEnts[session] = _seenChunkEntitiesPool.Get();
-            localOverrides[session] = _uidSetPool.Get();
-
-            var localOverridesEnumerator = _entityPvsCollection.GetElementsForSession(session);
-            while (localOverridesEnumerator.MoveNext())
-            {
-                _seenEnts.Add(localOverridesEnumerator.Current);
-                localOverrides[session].Add(localOverridesEnumerator.Current);
-            }
-            localOverridesEnumerator.Dispose();
-
-            var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
-            RaiseLocalEvent(ref expandEvent);
-            _seenEnts.AddRange(expandEvent.Entities);
-            localOverrides[session].UnionWith(expandEvent.Entities);
+            playerChunks[session] = new HashSet<int>();
 
             var viewers = GetSessionViewers(session);
 
-            _seenEnts.AddRange(viewers);
-            localOverrides[session].UnionWith(viewers);
             foreach (var viewerUid in viewers)
             {
                 var (viewBox, mapId) = CalcViewBounds(in viewerUid, transformQuery);
@@ -336,17 +283,20 @@ internal sealed partial class PVSSystem : EntitySystem
                 if (eyeQuery.TryGetComponent(viewerUid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                if (!sessionChunkEnts[session].ContainsKey(visMask))
-                    sessionChunkEnts[session][visMask] = _uidSetPool.Get();
-
                 var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
                 while (mapChunkEnumerator.MoveNext(out var chunkIndices))
                 {
-                    if (_entityPvsCollection.TryGetChunk(mapId, chunkIndices.Value, out var chunk))
+                    var entry = (visMask, new MapChunkLocation(mapId, chunkIndices.Value));
+                    var indexOf = chunkList.IndexOf(entry);
+                    if (indexOf == -1)
                     {
-                        _seenEnts.AddRange(chunk);
-                        sessionChunkEnts[session][visMask].UnionWith(chunk);
+                        playerChunks[session].Add(chunkList.Count);
+                        chunkList.Add(entry);
+                    }
+                    else
+                    {
+                        playerChunks[session].Add(indexOf);
                     }
                 }
 
@@ -360,10 +310,16 @@ internal sealed partial class PVSSystem : EntitySystem
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        if (_entityPvsCollection.TryGetChunk(mapGrid.Index, gridChunkIndices.Value, out var chunk))
+                        var entry = (visMask, new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value));
+                        var indexOf = chunkList.IndexOf(entry);
+                        if (indexOf == -1)
                         {
-                            _seenEnts.AddRange(chunk);
-                            sessionChunkEnts[session][visMask].UnionWith(chunk);
+                            playerChunks[session].Add(chunkList.Count);
+                            chunkList.Add(entry);
+                        }
+                        else
+                        {
+                            playerChunks[session].Add(indexOf);
                         }
                     }
                 }
@@ -372,14 +328,60 @@ internal sealed partial class PVSSystem : EntitySystem
             _uidSetPool.Return(viewers);
         }
 
-        _previousSeenEntsCount = _seenEnts.Count;
-        return (_seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
+        return (chunkList, playerChunks);
+    }
+
+    public Dictionary<EntityUid, MetaDataComponent>? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
+    {
+        var chunk = chunkLocation switch
+        {
+            GridChunkLocation gridChunkLocation => _entityPvsCollection.TryGetChunk(gridChunkLocation.GridId,
+                gridChunkLocation.ChunkIndices, out var gridChunk)
+                ? gridChunk
+                : null,
+            MapChunkLocation mapChunkLocation => _entityPvsCollection.TryGetChunk(mapChunkLocation.MapId,
+                mapChunkLocation.ChunkIndices, out var mapChunk)
+                ? mapChunk
+                : null
+        };
+        if (chunk == null) return null;
+        var chunkSet = new Dictionary<EntityUid, MetaDataComponent>();
+        foreach (var uid in chunk)
+        {
+            AddToChunkSetRecursively(in uid, visMask, chunkSet, transform, metadata);
+        }
+
+        return chunkSet;
+    }
+
+    private bool AddToChunkSetRecursively(in EntityUid uid, uint visMask, Dictionary<EntityUid, MetaDataComponent> set, EntityQuery<TransformComponent> transform,
+        EntityQuery<MetaDataComponent> metadata)
+    {
+        //are we valid?
+        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
+        if (!uid.IsValid()) return false;
+
+        var mComp = metadata.GetComponent(uid);
+
+        // TODO: Don't need to know about parents so no longer need to use bool for this method.
+        // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
+        if ((visMask & mComp.VisibilityMask) != mComp.VisibilityMask)
+            return false;
+
+        var parent = transform.GetComponent(uid).ParentUid;
+
+        if (parent.IsValid() && //is it not a worldentity?
+            !set.ContainsKey(parent) && //was the parent not yet added to toSend?
+            !AddToChunkSetRecursively(in parent, visMask, set, transform, metadata)) //did we just fail to add the parent?
+            return false; //we failed? suppose we dont get added either
+
+        //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        set.Add(uid, mComp);
+        return true;
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick, Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>> seenChunkEntities,
-        Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides,
-        Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)> compPacks)
+        GameTick fromTick, GameTick toTick, Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntitiesSent = 0;
@@ -390,24 +392,33 @@ internal sealed partial class PVSSystem : EntitySystem
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
         visibleEnts.Clear();
 
-        foreach (var uid in globalOverrides)
+        var globalEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
+        while (globalEnumerator.MoveNext())
         {
+            var uid = globalEnumerator.Current;
             TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, compPacks, dontSkip: true);
+                ref entitiesSent, mQuery, dontSkip: true);
         }
+        globalEnumerator.Dispose();
 
-        foreach (var uid in localOverrides[session])
+        var localEnumerator = _entityPvsCollection.GetElementsForSession(session);
+        while (localEnumerator.MoveNext())
         {
+            var uid = localEnumerator.Current;
             TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, compPacks, dontSkip: true);
+                ref entitiesSent, mQuery, dontSkip: true);
         }
+        localEnumerator.Dispose();
 
-        foreach (var (visMask, set) in seenChunkEntities[session])
+        foreach (var i in chunkIndices)
         {
-            foreach (var uid in set)
+            var chunk = chunkCache[i];
+            if(chunk == null) continue;
+            foreach (var (uid, metadata) in chunk)
             {
                 TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                    ref entitiesSent, compPacks, visMask);
+                    ref entitiesSent, mQuery, metadata);
+
             }
         }
 
@@ -461,39 +472,16 @@ internal sealed partial class PVSSystem : EntitySystem
         GameTick fromTick,
         ref int newEntitiesSent,
         ref int totalEnteredEntities,
-        Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)> compPacks,
-        uint? visMask = null,
-        bool dontSkip = false,
-        bool trustParent = false)
+        EntityQuery<MetaDataComponent> metadataQuery,
+        MetaDataComponent? metaDataComponent = null,
+        bool dontSkip = false)
     {
-        //are we valid yet?
+        //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
         //did we already get added?
-        if (toSend.ContainsKey(uid)) return true;
-
-        var pack = compPacks[uid];
-
-        // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null)
-        {
-            // TODO: Don't need to know about parents so no longer need to use bool for this method.
-
-            // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
-            if ((visMask & pack.Metadata.VisibilityMask) != pack.Metadata.VisibilityMask)
-                return false;
-        }
-
-        var parent = pack.Transform.ParentUid;
-
-        if (!trustParent && //do we have it on good authority the parent exists?
-            parent.IsValid() && //is it not a worldentity?
-            !toSend.ContainsKey(parent) && //was the parent not yet added to toSend?
-            !TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, compPacks, visMask)) //did we just fail to add the parent?
-            return false; //we failed? suppose we dont get added either
-
-        //did we already get added through the parent call?
+        //todo paul can this happen?
         if (toSend.ContainsKey(uid)) return true;
 
         //are we new?
@@ -524,7 +512,9 @@ internal sealed partial class PVSSystem : EntitySystem
             return true;
         }
 
-        if (pack.Metadata.EntityLastModifiedTick < fromTick)
+        metaDataComponent ??= metadataQuery.GetComponent(uid);
+
+        if (metaDataComponent.EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);

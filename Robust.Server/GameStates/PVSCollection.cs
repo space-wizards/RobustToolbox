@@ -406,7 +406,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
 public interface IIndexLocation {};
 
-public struct MapChunkLocation : IIndexLocation
+public interface IChunkIndexLocation{ };
+
+public struct MapChunkLocation : IIndexLocation, IChunkIndexLocation
 {
     public MapChunkLocation(MapId mapId, Vector2i chunkIndices)
     {
@@ -418,7 +420,7 @@ public struct MapChunkLocation : IIndexLocation
     public Vector2i ChunkIndices { get; init; }
 }
 
-public struct GridChunkLocation : IIndexLocation
+public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation
 {
     public GridChunkLocation(GridId gridId, Vector2i chunkIndices)
     {

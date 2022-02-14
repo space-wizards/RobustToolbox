@@ -2034,6 +2034,7 @@ namespace Robust.Client.GameObjects
             return results;
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             var icon = IconComponent.GetPrototypeIcon(prototype, resourceCache);

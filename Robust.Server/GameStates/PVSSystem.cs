@@ -377,7 +377,7 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick, Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
+        GameTick fromTick, GameTick toTick, Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>> seenChunkEntities,
         Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides,
         Dictionary<EntityUid, (TransformComponent Transform, MetaDataComponent Metadata)> compPacks)
     {
@@ -402,10 +402,13 @@ internal sealed partial class PVSSystem : EntitySystem
                 ref entitiesSent, compPacks, dontSkip: true);
         }
 
-        foreach (var (uid, visMask) in seenChunkEntities[session])
+        foreach (var (visMask, set) in seenChunkEntities[session])
         {
-            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, compPacks, visMask);
+            foreach (var uid in set)
+            {
+                TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                    ref entitiesSent, compPacks, visMask);
+            }
         }
 
         var entityStates = new List<EntityState>();

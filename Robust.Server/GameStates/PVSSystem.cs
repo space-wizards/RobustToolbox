@@ -69,7 +69,8 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly ObjectPool<HashSet<(EntityUid, uint)>> _seenChunkEntitiesPool
         = new DefaultObjectPool<HashSet<(EntityUid, uint)>>(new SetPolicy<(EntityUid, uint)>(), MaxVisPoolSize);
 
-    public int _previousEntCount = 0;
+    //this list gets reused in getseenents, do not touch!!! - paul
+    public List<EntityUid> _seenEnts = new();
 
     public override void Initialize()
     {
@@ -281,8 +282,8 @@ internal sealed partial class PVSSystem : EntitySystem
         Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides) GetSeenEnts(
             IPlayerSession[] sessions)
     {
-        var seenEnts = new List<EntityUid>(_previousEntCount);
         var globalOverrides = _uidSetPool.Get();
+        _seenEnts.Clear();
 
         var numSessions = sessions.Length;
         var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>(numSessions);
@@ -293,7 +294,7 @@ internal sealed partial class PVSSystem : EntitySystem
         var globalOverridesEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
         while(globalOverridesEnumerator.MoveNext())
         {
-            seenEnts.Add(globalOverridesEnumerator.Current);
+            _seenEnts.Add(globalOverridesEnumerator.Current);
             globalOverrides.Add(globalOverridesEnumerator.Current);
         }
         globalOverridesEnumerator.Dispose();
@@ -306,7 +307,7 @@ internal sealed partial class PVSSystem : EntitySystem
             var localOverridesEnumerator = _entityPvsCollection.GetElementsForSession(session);
             while (localOverridesEnumerator.MoveNext())
             {
-                seenEnts.Add(localOverridesEnumerator.Current);
+                _seenEnts.Add(localOverridesEnumerator.Current);
                 localOverrides[session].Add(localOverridesEnumerator.Current);
             }
             localOverridesEnumerator.Dispose();
@@ -315,7 +316,7 @@ internal sealed partial class PVSSystem : EntitySystem
             RaiseLocalEvent(ref expandEvent);
             foreach (var entityUid in expandEvent.Entities)
             {
-                seenEnts.Add(entityUid);
+                _seenEnts.Add(entityUid);
                 localOverrides[session].Add(entityUid);
             }
 
@@ -329,7 +330,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 if (eyeQuery.TryGetComponent(viewerUid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                seenEnts.Add(viewerUid);
+                _seenEnts.Add(viewerUid);
                 localOverrides[session].Add(viewerUid);
 
                 var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
@@ -340,7 +341,7 @@ internal sealed partial class PVSSystem : EntitySystem
                     {
                         foreach (var entityUid in chunk)
                         {
-                            seenEnts.Add(entityUid);
+                            _seenEnts.Add(entityUid);
                             sessionChunkEnts[session].Add((entityUid, visMask));
                         }
                     }
@@ -360,7 +361,7 @@ internal sealed partial class PVSSystem : EntitySystem
                         {
                             foreach (var entityUid in chunk)
                             {
-                                seenEnts.Add(entityUid);
+                                _seenEnts.Add(entityUid);
                                 sessionChunkEnts[session].Add((entityUid, visMask));
                             }
                         }
@@ -371,8 +372,7 @@ internal sealed partial class PVSSystem : EntitySystem
             _uidSetPool.Return(viewers);
         }
 
-        _previousEntCount = seenEnts.Count;
-        return (seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
+        return (_seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,

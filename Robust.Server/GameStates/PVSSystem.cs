@@ -66,8 +66,8 @@ internal sealed partial class PVSSystem : EntitySystem
         = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
-    private readonly ObjectPool<HashSet<(EntityUid, uint)>> _seenChunkEntitiesPool
-        = new DefaultObjectPool<HashSet<(EntityUid, uint)>>(new SetPolicy<(EntityUid, uint)>(), MaxVisPoolSize);
+    private readonly ObjectPool<Dictionary<uint, HashSet<EntityUid>>> _seenChunkEntitiesPool
+        = new DefaultObjectPool<Dictionary<uint, HashSet<EntityUid>>>(new DefaultPooledObjectPolicy<Dictionary<uint, HashSet<EntityUid>>>(), MaxVisPoolSize);
 
     //this list gets reused in getseenents, do not touch!!! - paul
     public List<EntityUid> _seenEnts = new();
@@ -265,21 +265,26 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
-    public void ReturnToPool(Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
+    public void ReturnToPool(Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>> seenChunkEntities,
         Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides)
     {
         _uidSetPool.Return(globalOverrides);
-        foreach (var (_, val) in seenChunkEntities)
+        foreach (var val in seenChunkEntities.Values)
         {
+            foreach (var valValue in val.Values)
+            {
+                _uidSetPool.Return(valValue);
+            }
+            val.Clear();
             _seenChunkEntitiesPool.Return(val);
         }
-        foreach (var (_, val) in localOverrides)
+        foreach (var val in localOverrides.Values)
         {
             _uidSetPool.Return(val);
         }
     }
 
-    public (List<EntityUid> seenEntities, Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>> seenChunkEntities,
+    public (List<EntityUid> seenEntities, Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>> seenChunkEntities,
         Dictionary<IPlayerSession, HashSet<EntityUid>> localOverrides, HashSet<EntityUid> globalOverrides) GetSeenEnts(
             IPlayerSession[] sessions)
     {
@@ -288,7 +293,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _seenEnts.EnsureCapacity(_previousSeenEntsCount);
 
         var numSessions = sessions.Length;
-        var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>(numSessions);
+        var sessionChunkEnts = new Dictionary<IPlayerSession, Dictionary<uint, HashSet<EntityUid>>>(numSessions);
         var localOverrides = new Dictionary<IPlayerSession, HashSet<EntityUid>>(numSessions);
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
@@ -316,14 +321,13 @@ internal sealed partial class PVSSystem : EntitySystem
 
             var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
             RaiseLocalEvent(ref expandEvent);
-            foreach (var entityUid in expandEvent.Entities)
-            {
-                _seenEnts.Add(entityUid);
-                localOverrides[session].Add(entityUid);
-            }
+            _seenEnts.AddRange(expandEvent.Entities);
+            localOverrides[session].UnionWith(expandEvent.Entities);
 
             var viewers = GetSessionViewers(session);
 
+            _seenEnts.AddRange(viewers);
+            localOverrides[session].UnionWith(viewers);
             foreach (var viewerUid in viewers)
             {
                 var (viewBox, mapId) = CalcViewBounds(in viewerUid, transformQuery);
@@ -332,8 +336,8 @@ internal sealed partial class PVSSystem : EntitySystem
                 if (eyeQuery.TryGetComponent(viewerUid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
 
-                _seenEnts.Add(viewerUid);
-                localOverrides[session].Add(viewerUid);
+                if (!sessionChunkEnts[session].ContainsKey(visMask))
+                    sessionChunkEnts[session][visMask] = _uidSetPool.Get();
 
                 var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
 
@@ -341,11 +345,8 @@ internal sealed partial class PVSSystem : EntitySystem
                 {
                     if (_entityPvsCollection.TryGetChunk(mapId, chunkIndices.Value, out var chunk))
                     {
-                        foreach (var entityUid in chunk)
-                        {
-                            _seenEnts.Add(entityUid);
-                            sessionChunkEnts[session].Add((entityUid, visMask));
-                        }
+                        _seenEnts.AddRange(chunk);
+                        sessionChunkEnts[session][visMask].UnionWith(chunk);
                     }
                 }
 
@@ -361,11 +362,8 @@ internal sealed partial class PVSSystem : EntitySystem
                     {
                         if (_entityPvsCollection.TryGetChunk(mapGrid.Index, gridChunkIndices.Value, out var chunk))
                         {
-                            foreach (var entityUid in chunk)
-                            {
-                                _seenEnts.Add(entityUid);
-                                sessionChunkEnts[session].Add((entityUid, visMask));
-                            }
+                            _seenEnts.AddRange(chunk);
+                            sessionChunkEnts[session][visMask].UnionWith(chunk);
                         }
                     }
                 }

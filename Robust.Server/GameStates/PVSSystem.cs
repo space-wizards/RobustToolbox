@@ -71,6 +71,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     //this list gets reused in getseenents, do not touch!!! - paul
     public List<EntityUid> _seenEnts = new();
+    public int _previousSeenEntsCount = 0;
 
     public override void Initialize()
     {
@@ -284,6 +285,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var globalOverrides = _uidSetPool.Get();
         _seenEnts.Clear();
+        _seenEnts.EnsureCapacity(_previousSeenEntsCount);
 
         var numSessions = sessions.Length;
         var sessionChunkEnts = new Dictionary<IPlayerSession, HashSet<(EntityUid, uint)>>(numSessions);
@@ -372,6 +374,7 @@ internal sealed partial class PVSSystem : EntitySystem
             _uidSetPool.Return(viewers);
         }
 
+        _previousSeenEntsCount = _seenEnts.Count;
         return (_seenEnts, sessionChunkEnts, localOverrides, globalOverrides);
     }
 

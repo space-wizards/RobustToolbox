@@ -131,7 +131,7 @@ namespace Robust.Shared.Maths
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly Vector2i Ceiling()
+        public readonly Vector2i Ceiled()
         {
             return new((int) MathF.Ceiling(X), (int) MathF.Ceiling(Y));
         }

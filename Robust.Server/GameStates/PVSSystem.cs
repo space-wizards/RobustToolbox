@@ -288,15 +288,15 @@ internal sealed partial class PVSSystem : EntitySystem
             viewerEntities[i] = new EntityUid[viewers.Count];
             viewers.CopyTo(viewerEntities[i]);
 
-            foreach (var viewerUid in viewers)
-            {
-                var (viewBox, mapId) = CalcViewBounds(in viewerUid, transformQuery);
+        foreach (var eyeEuid in viewers)
+        {
+            var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
-                uint visMask = EyeComponent.DefaultVisibilityMask;
-                if (eyeQuery.TryGetComponent(viewerUid, out var eyeComp))
-                    visMask = eyeComp.VisibilityMask;
+            uint visMask = EyeComponent.DefaultVisibilityMask;
+            if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
+                visMask = eyeComp.VisibilityMask;
 
-                var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
+            var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
 
                 while (mapChunkEnumerator.MoveNext(out var chunkIndices))
                 {
@@ -313,13 +313,13 @@ internal sealed partial class PVSSystem : EntitySystem
                     }
                 }
 
-                _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
+                _mapManager.FindGridsIntersectingEnumerator(mapId, new Box2(viewPos - range, viewPos + range), out var gridEnumerator, true);
                 while (gridEnumerator.MoveNext(out var mapGrid))
                 {
-                    var gridXform = transformQuery.GetComponent(mapGrid.GridEntityId);
+                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
 
                     var gridChunkEnumerator =
-                        new ChunkIndicesEnumerator(gridXform.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
+                        new ChunkIndicesEnumerator(localPos, range, ChunkSize);
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
@@ -704,14 +704,10 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     // Read Safe
-    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
+    private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
-
-        var view = Box2.UnitCentered.Scale(_viewSize).Translated(xform.WorldPosition);
-        var map = xform.MapID;
-
-        return (view, map);
+        return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
     }
 
     public class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>

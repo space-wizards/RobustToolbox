@@ -66,9 +66,18 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly List<IPVSCollection> _pvsCollections = new();
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
-        = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
+        = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
+            new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
+
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<Dictionary<EntityUid, MetaDataComponent>> _chunkCachePool =
+        new DefaultObjectPool<Dictionary<EntityUid, MetaDataComponent>>(
+            new DictPolicy<EntityUid, MetaDataComponent>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<HashSet<int>> _playerChunkPool =
+        new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
 
     public override void Initialize()
     {
@@ -273,7 +282,7 @@ internal sealed partial class PVSSystem : EntitySystem
         for (int i = 0; i < sessions.Length; i++)
         {
             var session = sessions[i];
-            playerChunks[i] = new HashSet<int>();
+            playerChunks[i] = _playerChunkPool.Get();
 
             var viewers = GetSessionViewers(session);
             viewerEntities[i] = new EntityUid[viewers.Count];
@@ -349,13 +358,27 @@ internal sealed partial class PVSSystem : EntitySystem
                 : null
         };
         if (chunk == null) return null;
-        var chunkSet = new Dictionary<EntityUid, MetaDataComponent>();
+        var chunkSet = _chunkCachePool.Get();
         foreach (var uid in chunk)
         {
             AddToChunkSetRecursively(in uid, visMask, chunkSet, transform, metadata);
         }
 
         return chunkSet;
+    }
+
+    public void ReturnToPool(Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int>[] playerChunks)
+    {
+        foreach (var chunk in chunkCache)
+        {
+            if(chunk == null) continue;
+            _chunkCachePool.Return(chunk);
+        }
+
+        foreach (var playerChunk in playerChunks)
+        {
+            _playerChunkPool.Return(playerChunk);
+        }
     }
 
     private bool AddToChunkSetRecursively(in EntityUid uid, uint visMask, Dictionary<EntityUid, MetaDataComponent> set, EntityQuery<TransformComponent> transform,
@@ -396,7 +419,6 @@ internal sealed partial class PVSSystem : EntitySystem
         var visibleEnts = _visSetPool.Get();
         var seenSet = _playerSeenSets[session];
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        visibleEnts.Clear();
 
         var globalEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
         while (globalEnumerator.MoveNext())
@@ -700,6 +722,20 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         public override bool Return(HashSet<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    public class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
+    {
+        public override Dictionary<T1, T2> Create()
+        {
+            return new Dictionary<T1, T2>();
+        }
+
+        public override bool Return(Dictionary<T1, T2> obj)
         {
             obj.Clear();
             return true;

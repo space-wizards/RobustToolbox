@@ -202,12 +202,6 @@ namespace Robust.Shared.Map
         /// </summary>
         private void InitializeMapPausing()
         {
-            MapDestroyed += (_, args) =>
-            {
-                ClearMapPause(args.Map);
-                SetMapPreInit(args.Map);
-            };
-
             _conhost.RegisterCommand("pausemap",
                 "Pauses a map, pausing all simulation processing on it.",
                 "pausemap <map ID>",

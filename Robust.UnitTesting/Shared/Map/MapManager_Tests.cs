@@ -1,45 +1,21 @@
-using Moq;
 using NUnit.Framework;
-using Robust.Server.GameObjects;
-using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, TestOf(typeof(MapManager))]
-    sealed class MapManager_Tests : RobustUnitTest
+    public sealed class MapManagerTests
     {
-        public override UnitTestProject Project => UnitTestProject.Server;
-
-        protected override void OverrideIoC()
+        private static ISimulation SimulationFactory()
         {
-            base.OverrideIoC();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .InitializeInstance();
 
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-        }
-
-        [SetUp]
-        public void Setup()
-        {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            mapMan.Startup();
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            mapMan.Shutdown();
+            return sim;
         }
 
         /// <summary>
@@ -48,7 +24,8 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void Restart_ExistingMap_IsRemoved()
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
 
             var mapID = new MapId(11);
             mapMan.CreateMap(mapID);
@@ -64,7 +41,8 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void Restart_ExistingGrid_IsRemoved()
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
 
             var mapID = new MapId(11);
             var gridId = new GridId(7);
@@ -82,8 +60,9 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void Restart_NullspaceMap_IsEmptied()
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            var entMan = IoCManager.Resolve<IEntityManager>();
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
@@ -105,9 +84,11 @@ namespace Robust.UnitTesting.Shared.Map
         public void SetMapEntity_WithExistingEntity_ExistingEntityDeleted()
         {
             // Arrange
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
+
             var mapID = new MapId(11);
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            var entMan = IoCManager.Resolve<IEntityManager>();
 
             mapMan.CreateMap(new MapId(7));
             mapMan.CreateMap(mapID);
@@ -132,8 +113,9 @@ namespace Robust.UnitTesting.Shared.Map
         public void SpawnEntityAt_IntoNullspace_Success()
         {
             // Arrange
-            var mapMan = IoCManager.Resolve<IMapManager>();
-            var entMan = IoCManager.Resolve<IEntityManager>();
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
 
             mapMan.CreateNewMapEntity(MapId.Nullspace);
 
@@ -141,20 +123,22 @@ namespace Robust.UnitTesting.Shared.Map
             var newEntity = entMan.SpawnEntity(null, MapCoordinates.Nullspace);
 
             // Assert
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(newEntity).MapID, Is.EqualTo(MapId.Nullspace));
+            Assert.That(entMan.GetComponent<TransformComponent>(newEntity).MapID, Is.EqualTo(MapId.Nullspace));
         }
 
         [Test]
         public void Restart_MapEntity_IsRemoved()
         {
-            var mapMan = IoCManager.Resolve<IMapManager>();
+            var sim = SimulationFactory();
+            var entMan = sim.Resolve<IEntityManager>();
+            var mapMan = sim.Resolve<IMapManager>();
 
             var entity = mapMan.CreateNewMapEntity(MapId.Nullspace);
 
             mapMan.Restart();
 
             Assert.That(mapMan.MapExists(MapId.Nullspace), Is.True);
-            Assert.That((!IoCManager.Resolve<IEntityManager>().EntityExists(entity) ? EntityLifeStage.Deleted : IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
+            Assert.That((!entMan.EntityExists(entity) ? EntityLifeStage.Deleted : entMan.GetComponent<MetaDataComponent>(entity).EntityLifeStage) >= EntityLifeStage.Deleted, Is.True);
             Assert.That(mapMan.GetMapEntityId(MapId.Nullspace), Is.EqualTo(EntityUid.Invalid));
         }
     }

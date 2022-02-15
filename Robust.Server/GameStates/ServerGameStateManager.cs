@@ -129,13 +129,13 @@ namespace Robust.Server.GameStates
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
             //todo cullingdisabled
-            var (chunks, playerChunks) = _pvs.GetChunks(players);
+            var (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
             const int ChunkBatchSize = 2;
             var chunksCount = chunks.Count;
             var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
             var chunkCache = new Dictionary<EntityUid, MetaDataComponent>?[chunks.Count];
-            var transformQuery = new EntityQuery<TransformComponent>();
-            var metadataQuery = new EntityQuery<MetaDataComponent>();
+            var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
             Parallel.For(0, chunkBatches, i =>
             {
                 var start = i * ChunkBatchSize;
@@ -158,11 +158,9 @@ namespace Robust.Server.GameStates
 
                 for (var j = start; j < end; ++j)
                 {
-                    var session = players[j];
-
                     try
                     {
-                        SendStateUpdate(session);
+                        SendStateUpdate(j);
                     }
                     catch (Exception e) // Catch EVERY exception
                     {
@@ -171,8 +169,10 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            void SendStateUpdate(IPlayerSession session)
+            void SendStateUpdate(int sessionIndex)
             {
+                var session = players[sessionIndex];
+
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
                     IoCManager.InitThread(new DependencyCollection(parentDeps), true);
@@ -184,7 +184,7 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache, playerChunks[session], metadataQuery);
+                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache, playerChunks[sessionIndex], metadataQuery, viewerEntities[sessionIndex]);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 

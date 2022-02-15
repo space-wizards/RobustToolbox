@@ -262,18 +262,22 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
-    public (List<(uint, IChunkIndexLocation)> , Dictionary<IPlayerSession, HashSet<int>>) GetChunks(IPlayerSession[] sessions)
+    public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
         var chunkList = new List<(uint, IChunkIndexLocation)>();
-        var playerChunks = new Dictionary<IPlayerSession, HashSet<int>>();
+        var playerChunks = new HashSet<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var viewerEntities = new EntityUid[sessions.Length][];
 
-        foreach (var session in sessions)
+        for (int i = 0; i < sessions.Length; i++)
         {
-            playerChunks[session] = new HashSet<int>();
+            var session = sessions[i];
+            playerChunks[i] = new HashSet<int>();
 
             var viewers = GetSessionViewers(session);
+            viewerEntities[i] = new EntityUid[viewers.Count];
+            viewers.CopyTo(viewerEntities[i]);
 
             foreach (var viewerUid in viewers)
             {
@@ -291,12 +295,12 @@ internal sealed partial class PVSSystem : EntitySystem
                     var indexOf = chunkList.IndexOf(entry);
                     if (indexOf == -1)
                     {
-                        playerChunks[session].Add(chunkList.Count);
+                        playerChunks[i].Add(chunkList.Count);
                         chunkList.Add(entry);
                     }
                     else
                     {
-                        playerChunks[session].Add(indexOf);
+                        playerChunks[i].Add(indexOf);
                     }
                 }
 
@@ -314,12 +318,12 @@ internal sealed partial class PVSSystem : EntitySystem
                         var indexOf = chunkList.IndexOf(entry);
                         if (indexOf == -1)
                         {
-                            playerChunks[session].Add(chunkList.Count);
+                            playerChunks[i].Add(chunkList.Count);
                             chunkList.Add(entry);
                         }
                         else
                         {
-                            playerChunks[session].Add(indexOf);
+                            playerChunks[i].Add(indexOf);
                         }
                     }
                 }
@@ -328,7 +332,7 @@ internal sealed partial class PVSSystem : EntitySystem
             _uidSetPool.Return(viewers);
         }
 
-        return (chunkList, playerChunks);
+        return (chunkList, playerChunks, viewerEntities);
     }
 
     public Dictionary<EntityUid, MetaDataComponent>? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
@@ -361,6 +365,8 @@ internal sealed partial class PVSSystem : EntitySystem
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
+        if (set.ContainsKey(uid)) return false;
+
         var mComp = metadata.GetComponent(uid);
 
         // TODO: Don't need to know about parents so no longer need to use bool for this method.
@@ -381,7 +387,7 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick, Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery)
+        GameTick fromTick, GameTick toTick, Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntitiesSent = 0;
@@ -409,6 +415,12 @@ internal sealed partial class PVSSystem : EntitySystem
                 ref entitiesSent, mQuery, dontSkip: true);
         }
         localEnumerator.Dispose();
+
+        foreach (var viewerEntity in viewerEntities)
+        {
+            TryAddToVisibleEnts(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, dontSkip: true);
+        }
 
         foreach (var i in chunkIndices)
         {

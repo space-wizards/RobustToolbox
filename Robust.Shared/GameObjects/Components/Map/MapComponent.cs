@@ -16,6 +16,7 @@ namespace Robust.Shared.GameObjects
         bool LightingEnabled { get; set; }
         MapId WorldMap { get; }
         bool MapPaused { get; set; }
+        bool MapPreInit { get; set; }
     }
 
     /// <inheritdoc cref="IMapComponent"/>
@@ -42,6 +43,9 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         public bool MapPaused { get; set; } = false;
+
+        /// <inheritdoc />
+        public bool MapPreInit { get; set; } = false;
 
         /// <inheritdoc />
         public override ComponentState GetComponentState()

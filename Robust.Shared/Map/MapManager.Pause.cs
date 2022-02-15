@@ -1,17 +1,13 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
-using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Map
 {
     internal partial class MapManager
     {
-        [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new();
-
         /// <inheritdoc />
         public void SetMapPaused(MapId mapId, bool paused)
         {
@@ -58,7 +54,7 @@ namespace Robust.Shared.Map
             if (IsMapInitialized(mapId))
                 throw new ArgumentException("That map is already initialized.");
 
-            _unInitializedMaps.Remove(mapId);
+            ClearMapPreInit(mapId);
 
             var mapEnt = GetMapEntityId(mapId);
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
@@ -100,7 +96,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void AddUninitializedMap(MapId mapId)
         {
-            _unInitializedMaps.Add(mapId);
+            SetMapPreInit(mapId);
         }
 
         private void SetMapPause(MapId mapId)
@@ -113,7 +109,7 @@ namespace Robust.Shared.Map
             mapComp.MapPaused = true;
         }
 
-        private bool GetMapPause(MapId mapId)
+        private bool CheckMapPause(MapId mapId)
         {
             if(mapId == MapId.Nullspace)
                 return false;
@@ -137,10 +133,44 @@ namespace Robust.Shared.Map
             mapComp.MapPaused = false;
         }
 
+        private void SetMapPreInit(MapId mapId)
+        {
+            if(mapId == MapId.Nullspace)
+                return;
+
+            var mapEuid = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            mapComp.MapPreInit = true;
+        }
+
+        private bool CheckMapPreInit(MapId mapId)
+        {
+            if(mapId == MapId.Nullspace)
+                return false;
+
+            var mapEuid = GetMapEntityId(mapId);
+
+            if (mapEuid == EntityUid.Invalid)
+                return false;
+
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            return mapComp.MapPreInit;
+        }
+
+        private void ClearMapPreInit(MapId mapId)
+        {
+            if(mapId == MapId.Nullspace)
+                return;
+
+            var mapEuid = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            mapComp.MapPreInit = false;
+        }
+
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {
-            return GetMapPause(mapId) || _unInitializedMaps.Contains(mapId);
+            return CheckMapPause(mapId) || CheckMapPreInit(mapId);
         }
 
         /// <inheritdoc />
@@ -164,7 +194,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public bool IsMapInitialized(MapId mapId)
         {
-            return !_unInitializedMaps.Contains(mapId);
+            return !CheckMapPreInit(mapId);
         }
 
         /// <summary>
@@ -175,7 +205,7 @@ namespace Robust.Shared.Map
             MapDestroyed += (_, args) =>
             {
                 ClearMapPause(args.Map);
-                _unInitializedMaps.Add(args.Map);
+                SetMapPreInit(args.Map);
             };
 
             _conhost.RegisterCommand("pausemap",

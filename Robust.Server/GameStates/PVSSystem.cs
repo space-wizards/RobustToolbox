@@ -35,7 +35,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Is view culling enabled, or will we send the whole map?
     /// </summary>
-    private bool _cullingEnabled;
+    public bool CullingEnabled { get; private set; }
 
     /// <summary>
     /// How many new entities we can send per tick (dont wanna nuke the clients mailbox).
@@ -132,7 +132,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void SetPvs(bool value)
     {
-        _cullingEnabled = value;
+        CullingEnabled = value;
     }
 
     private void OnNewEntityBudgetChanged(int obj)
@@ -582,15 +582,16 @@ internal sealed partial class PVSSystem : EntitySystem
         return true;
     }
 
-    //todo paul add this back in
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    private List<EntityState>? GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
+    public (List<EntityState>? updates, List<EntityUid>? deletions) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
     {
-        List<EntityState> stateEntities;
+        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
+        // no point sending an empty collection
+        if (deletions.Count == 0) deletions = default;
 
-        stateEntities = new List<EntityState>();
+        var stateEntities = new List<EntityState>();
         var seenEnts = new HashSet<EntityUid>();
         var slowPath = false;
         var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
@@ -632,7 +633,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (!slowPath)
         {
-            return stateEntities.Count == 0 ? default : stateEntities;
+            if (stateEntities.Count == 0) stateEntities = default;
+
+            return (stateEntities, deletions);
         }
 
         stateEntities = new List<EntityState>(EntityManager.EntityCount);
@@ -647,7 +650,9 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         // no point sending an empty collection
-        return stateEntities.Count == 0 ? default : stateEntities;
+        if (stateEntities.Count == 0) stateEntities = default;
+
+        return (stateEntities, deletions);
     }
 
     /// <summary>

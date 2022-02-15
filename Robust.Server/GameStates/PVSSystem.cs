@@ -520,7 +520,7 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool TryAddToVisibleEnts(
+    private void TryAddToVisibleEnts(
         in EntityUid uid,
         HashSet<EntityUid> seenSet,
         Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
@@ -534,11 +534,11 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!uid.IsValid()) return false;
+        if (!uid.IsValid()) return;
 
         //did we already get added?
         //todo paul can this happen?
-        if (toSend.ContainsKey(uid)) return true;
+        if (toSend.ContainsKey(uid)) return;
 
         //are we new?
         var @new = !seenSet.Contains(uid);
@@ -547,7 +547,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (entered)
         {
             if (!dontSkip && totalEnteredEntities >= _entityBudget)
-                return false;
+                return;
 
             totalEnteredEntities++;
         }
@@ -556,7 +556,7 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             //we just entered pvs, do we still have enough budget to send us?
             if(!dontSkip && newEntitiesSent >= _newEntityBudget)
-                return false;
+                return;
 
             newEntitiesSent++;
             seenSet.Add(uid);
@@ -565,7 +565,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (entered)
         {
             toSend.Add(uid, PVSEntityVisiblity.Entered);
-            return true;
+            return;
         }
 
         metaDataComponent ??= metadataQuery.GetComponent(uid);
@@ -574,12 +574,12 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);
-            return true;
+            return;
         }
 
         //add us
         toSend.Add(uid, PVSEntityVisiblity.StayedChanged);
-        return true;
+        return;
     }
 
     /// <summary>

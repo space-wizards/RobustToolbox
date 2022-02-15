@@ -229,7 +229,8 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            _pvs.ReturnToPool(chunkCache, playerChunks);
+            if(_pvs.CullingEnabled)
+                _pvs.ReturnToPool(chunkCache, playerChunks);
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 

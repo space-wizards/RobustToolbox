@@ -10,13 +10,11 @@ namespace Robust.Shared.Map
 {
     internal partial class MapManager
     {
-        [ViewVariables] private readonly HashSet<MapId> _pausedMaps = new();
         [ViewVariables] private readonly HashSet<MapId> _unInitializedMaps = new();
 
         /// <inheritdoc />
         public void SetMapPaused(MapId mapId, bool paused)
         {
-            // Snowflake nullspace, it cannot be paused.
             if(mapId == MapId.Nullspace)
                 return;
 
@@ -107,17 +105,36 @@ namespace Robust.Shared.Map
 
         private void SetMapPause(MapId mapId)
         {
-            _pausedMaps.Add(mapId);
+            if(mapId == MapId.Nullspace)
+                return;
+
+            var mapEuid = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            mapComp.MapPaused = true;
         }
 
         private bool GetMapPause(MapId mapId)
         {
-            return _pausedMaps.Contains(mapId);
+            if(mapId == MapId.Nullspace)
+                return false;
+
+            var mapEuid = GetMapEntityId(mapId);
+
+            if (mapEuid == EntityUid.Invalid)
+                return false;
+
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            return mapComp.MapPaused;
         }
 
-        private void ClearMapPause(MapId map)
+        private void ClearMapPause(MapId mapId)
         {
-            _pausedMaps.Remove(map);
+            if(mapId == MapId.Nullspace)
+                return;
+
+            var mapEuid = GetMapEntityId(mapId);
+            var mapComp = EntityManager.GetComponent<IMapComponent>(mapEuid);
+            mapComp.MapPaused = false;
         }
 
         /// <inheritdoc />

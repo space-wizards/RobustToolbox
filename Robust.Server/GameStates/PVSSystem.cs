@@ -737,7 +737,7 @@ internal sealed partial class PVSSystem : EntitySystem
         return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
     }
 
-    public class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>
+    public sealed class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>
     {
         public override HashSet<T> Create()
         {
@@ -751,7 +751,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    public class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
+    public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
     {
         public override Dictionary<T1, T2> Create()
         {

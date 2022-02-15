@@ -20,7 +20,7 @@ namespace Robust.Shared.GameObjects
 
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
-    [NetworkedComponent()]
+    [NetworkedComponent]
     public sealed class MapComponent : Component, IMapComponent
     {
         [Dependency] private readonly IEntityManager _entMan = default!;

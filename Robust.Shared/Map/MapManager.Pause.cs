@@ -16,16 +16,20 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetMapPaused(MapId mapId, bool paused)
         {
+            // Snowflake nullspace, it cannot be paused.
+            if(mapId == MapId.Nullspace)
+                return;
+
             if(!MapExists(mapId))
                 throw new ArgumentException("That map does not exist.");
 
             if (paused)
             {
-                _pausedMaps.Add(mapId);
+                SetMapPause(mapId);
             }
             else
             {
-                _pausedMaps.Remove(mapId);
+                ClearMapPause(mapId);
             }
 
             var mapEnt = GetMapEntityId(mapId);
@@ -101,10 +105,25 @@ namespace Robust.Shared.Map
             _unInitializedMaps.Add(mapId);
         }
 
+        private void SetMapPause(MapId mapId)
+        {
+            _pausedMaps.Add(mapId);
+        }
+
+        private bool GetMapPause(MapId mapId)
+        {
+            return _pausedMaps.Contains(mapId);
+        }
+
+        private void ClearMapPause(MapId map)
+        {
+            _pausedMaps.Remove(map);
+        }
+
         /// <inheritdoc />
         public bool IsMapPaused(MapId mapId)
         {
-            return _pausedMaps.Contains(mapId) || _unInitializedMaps.Contains(mapId);
+            return GetMapPause(mapId) || _unInitializedMaps.Contains(mapId);
         }
 
         /// <inheritdoc />
@@ -138,7 +157,7 @@ namespace Robust.Shared.Map
         {
             MapDestroyed += (_, args) =>
             {
-                _pausedMaps.Remove(args.Map);
+                ClearMapPause(args.Map);
                 _unInitializedMaps.Add(args.Map);
             };
 

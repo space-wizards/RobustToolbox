@@ -408,7 +408,7 @@ public interface IIndexLocation {};
 
 public interface IChunkIndexLocation{ };
 
-public struct MapChunkLocation : IIndexLocation, IChunkIndexLocation
+public struct MapChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatable<MapChunkLocation>
 {
     public MapChunkLocation(MapId mapId, Vector2i chunkIndices)
     {
@@ -418,9 +418,24 @@ public struct MapChunkLocation : IIndexLocation, IChunkIndexLocation
 
     public MapId MapId { get; init; }
     public Vector2i ChunkIndices { get; init; }
+
+    public bool Equals(MapChunkLocation other)
+    {
+        return MapId.Equals(other.MapId) && ChunkIndices.Equals(other.ChunkIndices);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is MapChunkLocation other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(MapId, ChunkIndices);
+    }
 }
 
-public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation
+public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation, IEquatable<GridChunkLocation>
 {
     public GridChunkLocation(GridId gridId, Vector2i chunkIndices)
     {
@@ -430,6 +445,21 @@ public struct GridChunkLocation : IIndexLocation, IChunkIndexLocation
 
     public GridId GridId { get; init; }
     public Vector2i ChunkIndices { get; init; }
+
+    public bool Equals(GridChunkLocation other)
+    {
+        return GridId.Equals(other.GridId) && ChunkIndices.Equals(other.ChunkIndices);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is GridChunkLocation other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(GridId, ChunkIndices);
+    }
 }
 
 public struct GlobalOverride : IIndexLocation { }

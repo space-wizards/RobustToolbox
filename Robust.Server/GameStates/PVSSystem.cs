@@ -279,6 +279,10 @@ internal sealed partial class PVSSystem : EntitySystem
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
 
+        // Keep track of the index of each chunk we use for a faster index lookup.
+        var mapIndices = new Dictionary<uint, Dictionary<MapChunkLocation, int>>(4);
+        var gridIndices = new Dictionary<uint, Dictionary<GridChunkLocation, int>>(4);
+
         for (int i = 0; i < sessions.Length; i++)
         {
             var session = sessions[i];
@@ -288,29 +292,45 @@ internal sealed partial class PVSSystem : EntitySystem
             viewerEntities[i] = new EntityUid[viewers.Count];
             viewers.CopyTo(viewerEntities[i]);
 
-        foreach (var eyeEuid in viewers)
-        {
-            var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+            foreach (var eyeEuid in viewers)
+            {
+                var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
-            uint visMask = EyeComponent.DefaultVisibilityMask;
-            if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
-                visMask = eyeComp.VisibilityMask;
+                uint visMask = EyeComponent.DefaultVisibilityMask;
+                if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
+                    visMask = eyeComp.VisibilityMask;
 
-            var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
+                // Get the nyoom dictionary for index lookups.
+                if (!mapIndices.TryGetValue(visMask, out var mapDict))
+                {
+                    mapDict = new Dictionary<MapChunkLocation, int>(32);
+                    mapIndices[visMask] = mapDict;
+                }
+
+                var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
 
                 while (mapChunkEnumerator.MoveNext(out var chunkIndices))
                 {
-                    var entry = (visMask, new MapChunkLocation(mapId, chunkIndices.Value));
-                    var indexOf = chunkList.IndexOf(entry);
-                    if (indexOf == -1)
-                    {
-                        playerChunks[i].Add(chunkList.Count);
-                        chunkList.Add(entry);
-                    }
-                    else
+                    var chunkLocation = new MapChunkLocation(mapId, chunkIndices.Value);
+                    var entry = (visMask, chunkLocation);
+
+                    if (mapDict.TryGetValue(chunkLocation, out var indexOf))
                     {
                         playerChunks[i].Add(indexOf);
                     }
+                    else
+                    {
+                        playerChunks[i].Add(chunkList.Count);
+                        mapDict.Add(chunkLocation, chunkList.Count);
+                        chunkList.Add(entry);
+                    }
+                }
+
+                // Get the nyoom dictionary for index lookups.
+                if (!gridIndices.TryGetValue(visMask, out var gridDict))
+                {
+                    gridDict = new Dictionary<GridChunkLocation, int>(32);
+                    gridIndices[visMask] = gridDict;
                 }
 
                 _mapManager.FindGridsIntersectingEnumerator(mapId, new Box2(viewPos - range, viewPos + range), out var gridEnumerator, true);
@@ -323,20 +343,22 @@ internal sealed partial class PVSSystem : EntitySystem
 
                     while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        var entry = (visMask, new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value));
-                        var indexOf = chunkList.IndexOf(entry);
-                        if (indexOf == -1)
-                        {
-                            playerChunks[i].Add(chunkList.Count);
-                            chunkList.Add(entry);
-                        }
-                        else
+                        var chunkLocation = new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value);
+                        var entry = (visMask, chunkLocation);
+
+                        if (gridDict.TryGetValue(chunkLocation, out var indexOf))
                         {
                             playerChunks[i].Add(indexOf);
                         }
+                        else
+                        {
+                            playerChunks[i].Add(chunkList.Count);
+                            gridDict.Add(chunkLocation, chunkList.Count);
+                            chunkList.Add(entry);
+                        }
                     }
                 }
-            }
+                }
 
             _uidSetPool.Return(viewers);
         }

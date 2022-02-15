@@ -4,7 +4,7 @@ using Robust.Shared.Serialization;
 
 namespace Robust.Shared.GameObjects;
 
-internal abstract class SharedAppearanceSystem : EntitySystem
+public abstract class SharedAppearanceSystem : EntitySystem
 {
     public virtual void MarkDirty(AppearanceComponent component) {}
 }

@@ -29,14 +29,13 @@ namespace Robust.Server.Console.Commands
             var mapId = new MapId(int.Parse(args[0]));
 
             var mapMgr = IoCManager.Resolve<IMapManager>();
-            var pauseMgr = IoCManager.Resolve<IPauseManager>();
 
             if (!mapMgr.MapExists(mapId))
             {
                 mapMgr.CreateMap(mapId);
                 if (args.Length >= 2 && args[1] == "false")
                 {
-                    pauseMgr.AddUninitializedMap(mapId);
+                    mapMgr.AddUninitializedMap(mapId);
                 }
 
                 shell.WriteLine($"Map with ID {mapId} created.");
@@ -318,7 +317,6 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            var pauseManager = IoCManager.Resolve<IPauseManager>();
 
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
@@ -329,13 +327,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (pauseManager.IsMapInitialized(mapId))
+            if (mapManager.IsMapInitialized(mapId))
             {
                 shell.WriteError("Map is already initialized!");
                 return;
             }
 
-            pauseManager.DoMapInitialize(mapId);
+            mapManager.DoMapInitialize(mapId);
         }
     }
 
@@ -348,15 +346,14 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
-            var pauseManager = IoCManager.Resolve<IPauseManager>();
 
             var msg = new StringBuilder();
 
             foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
                 msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
-                    mapId, pauseManager.IsMapInitialized(mapId),
-                    pauseManager.IsMapPaused(mapId),
+                    mapId, mapManager.IsMapInitialized(mapId),
+                    mapManager.IsMapPaused(mapId),
                     string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)),
                     mapManager.GetMapEntityId(mapId));
             }

@@ -323,7 +323,7 @@ namespace Robust.Client.GameObjects
         {
             private readonly IPlayerManager _playerManager;
 
-            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+            public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
             private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;

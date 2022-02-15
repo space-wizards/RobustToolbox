@@ -74,8 +74,11 @@ namespace Robust.Client.GameObjects
                 EntityManager.TryGetComponent(sender, out ClientOccluderComponent? iconSmooth)
                 && iconSmooth.Initialized)
             {
-                var grid1 = _mapManager.GetGrid(EntityManager.GetComponent<TransformComponent>(sender).GridID);
-                var coords = EntityManager.GetComponent<TransformComponent>(sender).Coordinates;
+                var xform = EntityManager.GetComponent<TransformComponent>(sender);
+                if (!_mapManager.TryGetGrid(xform.GridID, out var grid1))
+                    return;
+
+                var coords = xform.Coordinates;
 
                 _dirtyEntities.Enqueue(sender);
                 AddValidEntities(grid1.GetInDir(coords, Direction.North));

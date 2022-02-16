@@ -13,8 +13,11 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="DiscordRichPresence" Version="1.0.175" />
-    <PackageReference Include="JetBrains.Annotations" Version="2020.3.0" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="5.0.3" />
+    <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Features" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.0.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="6.0.2" />
     <PackageReference Include="nfluidsynth" Version="0.3.1" />
     <PackageReference Include="NVorbis" Version="0.10.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.4" />

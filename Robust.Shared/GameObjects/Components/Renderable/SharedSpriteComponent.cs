@@ -77,7 +77,7 @@ namespace Robust.Shared.GameObjects
             [DataField("color")]
             public Color Color = Color.White;
             [DataField("map")]
-            public List<string>? MapKeys;
+            public HashSet<string>? MapKeys;
 
             public static PrototypeLayerData New()
             {

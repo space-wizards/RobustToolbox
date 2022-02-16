@@ -1949,7 +1949,10 @@ namespace Robust.Client.GameObjects
                 // via GetLayerDrawMatrix() to this layer's bounding box.
 
                 var rsiState = GetActualState();
-                var dir = GetDirection(rsiState, angle);
+
+                var dir = (rsiState == null || rsiState.Directions == RSI.State.DirectionType.Dir1)
+                    ? RSIDirection.South
+                    : angle.ToRsiDirection(rsiState.Directions);
 
                 // special case for simple layers. The vast majority of layers are like this.
                 if (_rotation == Angle.Zero)
@@ -1971,7 +1974,7 @@ namespace Robust.Client.GameObjects
                 }
 
                 // Welp we have some non-zero _rotation, so lets just apply the generalized layer transform and get the bounding box from where;
-                GetLayerDrawMatrix(angle, dir, rsiState, out var layerDrawMatrix);
+                GetLayerDrawMatrix(dir, out var layerDrawMatrix);
                 return layerDrawMatrix.TransformBox(Box2.CentredAroundZero(PixelSize / EyeManager.PixelsPerMeter));
             }
 
@@ -1991,21 +1994,10 @@ namespace Robust.Client.GameObjects
             }
 
             /// <summary>
-            ///     Get RSI state direction based on an entity's apparent angle on screen (world rotation + eye rotation)
-            /// </summary
-            internal RSIDirection GetDirection(RSI.State? state, Angle angle)
-            {
-                if (state == null || state.Directions == RSI.State.DirectionType.Dir1)
-                    return RSIDirection.South;
-
-                return angle.ToRsiDirection(state.Directions);
-            }
-
-            /// <summary>
             ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
             ///     relevant RSI direction.
             /// </summary>
-            public void GetLayerDrawMatrix(Angle angle, RSIDirection dir, RSI.State? rsiState, out Matrix3 layerDrawMatrix)
+            public void GetLayerDrawMatrix(RSIDirection dir, out Matrix3 layerDrawMatrix)
             {
                 if (_parent.NoRotation)
                     layerDrawMatrix = LocalMatrix;
@@ -2022,10 +2014,13 @@ namespace Robust.Client.GameObjects
                     return;
 
                 var rsiState = GetActualState();
-                var dir = GetDirection(rsiState, angle);
+
+                var dir = (rsiState == null || rsiState.Directions == RSI.State.DirectionType.Dir1)
+                    ? RSIDirection.South
+                    : angle.ToRsiDirection(rsiState.Directions);
 
                 // Set the drawing transform for this  layer
-                GetLayerDrawMatrix(angle, dir, rsiState, out var layerMatrix);
+                GetLayerDrawMatrix(dir, out var layerMatrix);
                 Matrix3.Multiply(ref layerMatrix, ref spriteMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 

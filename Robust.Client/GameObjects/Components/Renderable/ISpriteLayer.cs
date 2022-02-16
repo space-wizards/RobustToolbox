@@ -25,8 +25,6 @@ namespace Robust.Client.GameObjects
 
         RSI.State.Direction EffectiveDirection(Angle worldRotation);
 
-        Vector2 LocalToLayer(Vector2 localPos);
-
         /// <summary>
         ///     Layer size in pixels.
         ///     Don't account layer scale or sprite world transform.

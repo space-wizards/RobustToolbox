@@ -31,6 +31,7 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IResourceCache resourceCache = default!;
         [Dependency] private readonly IPrototypeManager prototypes = default!;
         [Dependency] private readonly IEntityManager entities = default!;
+        [Dependency] private readonly IEyeManager eyeManager = default!;
 
         [DataField("visible")]
         private bool _visible = true;
@@ -1553,35 +1554,53 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc/>
-        public Box2 CalculateBoundingBox(Vector2 worldPos)
+        public Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null)
         {
             // fast check for empty sprites
-            if (Layers.Count == 0)
-                return new Box2(worldPos, worldPos);
+            if (!Visible || Layers.Count == 0)
+            {
+                return new Box2Rotated(new Box2(worldPosition, worldPosition), Angle.Zero, worldPosition);
+            }
+
+            // We need to modify world rotation so that it lies between 0 and 2pi.
+            // This matters for 4 or 8 directional sprites deciding which quadrant (octant?) they lie in.
+            // the 0->2pi convention is set by the sprite-rendering code that selects the layers.
+            // See RenderInternal().
+
+            worldRotation = worldRotation.Reduced();
+            if (worldRotation.Theta < 0)
+                worldRotation = new Angle(worldRotation.Theta + Math.Tau);
+
+            eye ??= eyeManager.CurrentEye;
+
+            // Need relative angle on screen for determining the sprite rsi direction.
+            Angle relativeRotation = NoRotation
+                ? Angle.Zero
+                : worldRotation + eye.Rotation; 
 
             // we need to calculate bounding box taking into account all nested layers
-            // because layers can have offsets, scale or rotation we need to calculate a new BB
-            // based on lowest bottomLeft and hightest topRight points from all layers
-            var box = Layers[0].CalculateBoundingBox();
+            // because layers can have offsets, scale or rotation, we need to calculate a new BB
+            // based on lowest bottomLeft and highest topRight points from all layers
+            var box = Layers[0].CalculateBoundingBox(relativeRotation);
 
             for (int i = 1; i < Layers.Count; i++)
             {
                 var layer = Layers[i];
-                var layerBB = layer.CalculateBoundingBox();
+                if (!layer.Visible) continue;
+                var layerBB = layer.CalculateBoundingBox(relativeRotation);
 
                 box = box.Union(layerBB);
             }
 
-            // apply sprite transformations and calculate sprite bounding box
-            // we can optimize it a bit, if sprite doesn't have rotation
-            var spriteBox = box.Scale(Scale);
-            var spriteHasRotation = !Rotation.EqualsApprox(Angle.Zero);
-            var spriteBB = spriteHasRotation ?
-                new Box2Rotated(spriteBox, Rotation).CalcBoundingBox() : spriteBox;
+            if (Scale != Vector2.One)
+                box = box.Scale(Scale);
 
-            // move it all to world transform system (with sprite offset)
-            var worldBB = spriteBB.Translated(Offset + worldPos);
-            return worldBB;
+            Vector2 position = worldRotation.RotateVec(Offset) + worldPosition;
+            Angle finalRotation = NoRotation
+                ? Rotation - eye.Rotation
+                : Rotation + worldRotation;
+
+            return new Box2Rotated(box.Translated(position), finalRotation, position);
         }
 
         internal void UpdateBounds()
@@ -1923,10 +1942,29 @@ namespace Robust.Client.GameObjects
             }
 
             /// <inheritdoc/>
-            public Box2 CalculateBoundingBox()
+            public Box2 CalculateBoundingBox(Angle worldRotation)
             {
                 // TODO: scale & rotation for layers is currently unimplemented.
-                return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter);
+                // TODO: also layer offsets... its here, but I'm not sure if it is defined properly for 4 / 8 dir sprites.
+
+                // We need to account for the fact that each layer can have (up to 8) directions. We **could** do a
+                // Box2 -> RotatedBox -> Bounding box calculation. but we can also do it manually, given that 99% of the
+                // time its a 90 degree rotations and for 8 dir sprites, it could be a 45 degree rotation, which is also
+                // trivial.
+
+                switch (EffectiveDirection(worldRotation))
+                {
+                    case RSI.State.Direction.South:
+                    case RSI.State.Direction.North:
+                        return Box2.CenteredAround(Offset, PixelSize / EyeManager.PixelsPerMeter); ;
+                    case RSI.State.Direction.East:
+                    case RSI.State.Direction.West: // rotate 90 degrees
+                        return Box2.CenteredAround(Offset, (PixelSize.Y / EyeManager.PixelsPerMeter, PixelSize.X / EyeManager.PixelsPerMeter));
+                    default:
+                        // any rectangle rotated 45 degrees will get a square bounding box with sides:
+                        var size = (PixelSize.Y + PixelSize.X) / MathF.Sqrt(2) / EyeManager.PixelsPerMeter;
+                        return Box2.CenteredAround(Offset, (size, size));
+                }
             }
         }
 

@@ -45,7 +45,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
+        private readonly Dictionary<Vector2i, MapChunk> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
         private readonly IEntityManager _entityManager;
@@ -261,7 +261,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
-            var chunks = new HashSet<IMapChunkInternal>();
+            var chunks = new HashSet<MapChunk>();
 
             foreach (var (gridIndices, tile) in tiles)
             {
@@ -369,7 +369,7 @@ namespace Robust.Shared.Map
         public int ChunkCount => _chunks.Count;
 
         /// <inheritdoc />
-        public IMapChunkInternal GetChunk(int xIndex, int yIndex)
+        public MapChunk GetChunk(int xIndex, int yIndex)
         {
             return GetChunk(new Vector2i(xIndex, yIndex));
         }
@@ -389,7 +389,7 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IMapChunkInternal GetChunk(Vector2i chunkIndices)
+        public MapChunk GetChunk(Vector2i chunkIndices)
         {
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
@@ -404,21 +404,21 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks()
+        public IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks()
         {
             return _chunks;
         }
 
         internal struct ChunkEnumerator
         {
-            private Dictionary<Vector2i, IMapChunkInternal> _chunks;
+            private Dictionary<Vector2i, MapChunk> _chunks;
             private Vector2i _chunkLB;
             private Vector2i _chunkRT;
 
             private int _xIndex;
             private int _yIndex;
 
-            internal ChunkEnumerator(Dictionary<Vector2i, IMapChunkInternal> chunks, Box2 localAABB, int chunkSize)
+            internal ChunkEnumerator(Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
             {
                 _chunks = chunks;
 
@@ -429,7 +429,7 @@ namespace Robust.Shared.Map
                 _yIndex = _chunkLB.Y;
             }
 
-            public bool MoveNext([NotNullWhen(true)] out IMapChunkInternal? chunk)
+            public bool MoveNext([NotNullWhen(true)] out MapChunk? chunk)
             {
                 if (_yIndex > _chunkRT.Y)
                 {
@@ -583,7 +583,7 @@ namespace Robust.Shared.Map
             RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
         }
 
-        private (IMapChunkInternal, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
+        private (MapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
         {
             var gridChunkIndices = GridTileToChunkIndices(pos);
             var chunk = GetChunk(gridChunkIndices);

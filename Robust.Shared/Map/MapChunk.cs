@@ -10,8 +10,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
-    /// <inheritdoc />
-    internal sealed class MapChunk : IMapChunkInternal
+    /// <summary>
+    ///     A square section of a <see cref="IMapGrid"/>.
+    /// </summary>
+    internal sealed class MapChunk : IEnumerable<TileRef>
     {
         /// <summary>
         /// New SnapGrid cells are allocated with this capacity.
@@ -35,10 +37,11 @@ namespace Robust.Shared.Map
 
         public List<Fixture> Fixtures { get; set; } = new();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// The last game simulation tick that a tile on this chunk was modified.
+        /// </summary>
         public GameTick LastTileModifiedTick { get; private set; }
 
-        /// <inheritdoc />
         public GameTick LastAnchoredModifiedTick { get; set; }
 
         /// <summary>
@@ -59,19 +62,32 @@ namespace Robust.Shared.Map
             _snapGrid = new SnapGridCell[ChunkSize, ChunkSize];
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The number of tiles per side of the square chunk.
+        /// </summary>
         public ushort ChunkSize { get; }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The X index of this chunk inside the <see cref="IMapGrid"/>.
+        /// </summary>
         public int X => _gridIndices.X;
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The Y index of this chunk inside the <see cref="IMapGrid"/>.
+        /// </summary>
         public int Y => _gridIndices.Y;
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     The positional indices of this chunk in the <see cref="IMapGrid"/>.
+        /// </summary>
         public Vector2i Indices => _gridIndices;
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns the tile at the given indices.
+        /// </summary>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
         public TileRef GetTileRef(ushort xIndex, ushort yIndex)
         {
             if (xIndex >= ChunkSize)
@@ -84,7 +100,11 @@ namespace Robust.Shared.Map
             return new TileRef(_grid.ParentMapId, _grid.Index, indices, _tiles[xIndex, yIndex]);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns the tile reference at the given indices.
+        /// </summary>
+        /// <param name="indices">The tile indices relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
         public TileRef GetTileRef(Vector2i indices)
         {
             if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
@@ -106,7 +126,12 @@ namespace Robust.Shared.Map
             return _tiles[xIndex, yIndex];
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Returns all of the tiles in the chunk, while optionally filtering empty files.
+        ///     Returned order is guaranteed to be row-major.
+        /// </summary>
+        /// <param name="ignoreEmpty">Will empty (space) tiles be added to the collection?</param>
+        /// <returns></returns>
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
             for (var x = 0; x < ChunkSize; x++)
@@ -122,7 +147,12 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Replaces a single tile inside of the chunk.
+        /// </summary>
+        /// <param name="xIndex">The X tile index relative to the chunk.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk.</param>
+        /// <param name="tile">The new tile to insert.</param>
         public void SetTile(ushort xIndex, ushort yIndex, Tile tile)
         {
             if (xIndex >= ChunkSize)
@@ -191,7 +221,11 @@ namespace Robust.Shared.Map
             return GetEnumerator();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Transforms Tile indices relative to the grid into tile indices relative to this chunk.
+        /// </summary>
+        /// <param name="gridTile">Tile indices relative to the grid.</param>
+        /// <returns>Tile indices relative to this chunk.</returns>
         public Vector2i GridTileToChunkTile(Vector2i gridTile)
         {
             var size = ChunkSize;
@@ -200,7 +234,11 @@ namespace Robust.Shared.Map
             return new Vector2i(x, y);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        ///     Translates chunk tile indices to grid tile indices.
+        /// </summary>
+        /// <param name="chunkTile">The indices relative to the chunk origin.</param>
+        /// <returns>The indices relative to the grid origin.</returns>
         public Vector2i ChunkTileToGridTile(Vector2i chunkTile)
         {
             return chunkTile + _gridIndices * ChunkSize;
@@ -271,6 +309,9 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <summary>
+        /// Like <see cref="GetAllAnchoredEnts"/>... but fast.
+        /// </summary>
         public void FastGetAllAnchoredEnts(EntityUidQueryCallback callback)
         {
             foreach (var cell in _snapGrid)
@@ -313,6 +354,14 @@ namespace Robust.Shared.Map
             return _cachedBounds;
         }
 
+
+        /// <summary>
+        /// Calculate the bounds of this chunk.
+        /// </summary>
+        /// <remarks>
+        /// TODO: We can rely on the fixture instead for the bounds in the future but we also need to
+        /// update the rendering to account for it. Better working on accurate grid bounds after rotation IMO.
+        /// </remarks>
         public Box2Rotated CalcWorldBounds(Vector2? gridPos = null, Angle? gridRot = null)
         {
             gridRot ??= _grid.WorldRotation;
@@ -331,13 +380,19 @@ namespace Robust.Shared.Map
             return scaledLocalBounds;
         }
 
+        /// <summary>
+        /// Calculate the AABB for this chunk.
+        /// </summary>
         public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
         {
             var bounds = CalcWorldBounds(gridPos, gridRot);
             return bounds.CalcBoundingBox();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Tests if a point is on top of a non-empty tile.
+        /// </summary>
+        /// <param name="localIndices">Local tile indices</param>
         public bool CollidesWithChunk(Vector2i localIndices)
         {
             return _tiles[localIndices.X, localIndices.Y].TypeId != Tile.Empty.TypeId;

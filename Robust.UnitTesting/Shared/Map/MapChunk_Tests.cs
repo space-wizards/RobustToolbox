@@ -358,7 +358,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(result, Is.False);
         }
 
-        public IMapChunkInternal MapChunkFactory(int xChunkIndex, int yChunkIndex)
+        public MapChunk MapChunkFactory(int xChunkIndex, int yChunkIndex)
         {
             var mapGrid = new Mock<IMapGridInternal>();
             mapGrid.SetupGet(f=>f.CurTick).Returns(new GameTick(11));

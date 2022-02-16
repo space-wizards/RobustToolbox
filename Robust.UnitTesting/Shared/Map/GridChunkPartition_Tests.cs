@@ -58,7 +58,7 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(bounds, Is.EqualTo(new Box2i(1, 0, 3, 3)));
         }
 
-        private static IMapChunkInternal ChunkFactory(ushort size, int[] tiles)
+        private static MapChunk ChunkFactory(ushort size, int[] tiles)
         {
             var fakeGrid = new Mock<IMapGridInternal>();
 

@@ -27,7 +27,7 @@ namespace Robust.Shared.Map
         /// <param name="xIndex">The X index of the chunk in this grid.</param>
         /// <param name="yIndex">The Y index of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
-        IMapChunkInternal GetChunk(int xIndex, int yIndex);
+        MapChunk GetChunk(int xIndex, int yIndex);
 
         /// <summary>
         /// Removes the chunk with the specified origin.
@@ -40,7 +40,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
-        IMapChunkInternal GetChunk(Vector2i chunkIndices);
+        MapChunk GetChunk(Vector2i chunkIndices);
 
         /// <summary>
         /// Returns whether a chunk exists with the specified indices.
@@ -51,10 +51,10 @@ namespace Robust.Shared.Map
         ///     Returns all chunks in this grid. This will not generate new chunks.
         /// </summary>
         /// <returns>All chunks in the grid.</returns>
-        IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks();
+        IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks();
 
         /// <summary>
-        ///     Returns all the <see cref="IMapChunkInternal"/> intersecting the worldAABB.
+        ///     Returns all the <see cref="MapChunk"/> intersecting the worldAABB.
         /// </summary>
         void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
 

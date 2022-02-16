@@ -18,8 +18,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<GridId, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
-        private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
-        private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
+        private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
+        private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
         {
@@ -78,7 +78,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateChunkMesh(IMapGrid grid, IMapChunk chunk)
+        private void _updateChunkMesh(IMapGrid grid, MapChunk chunk)
         {
             var data = _mapChunkData[grid.Index];
 
@@ -122,7 +122,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private MapChunkData _initChunkBuffers(IMapGrid grid, IMapChunk chunk)
+        private MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
@@ -159,7 +159,7 @@ namespace Robust.Client.Graphics.Clyde
             return datum;
         }
 
-        private bool _isChunkDirty(IMapGrid grid, IMapChunk chunk)
+        private bool _isChunkDirty(IMapGrid grid, MapChunk chunk)
         {
             var data = _mapChunkData[grid.Index];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;

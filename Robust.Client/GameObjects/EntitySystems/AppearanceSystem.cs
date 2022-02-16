@@ -131,7 +131,7 @@ namespace Robust.Client.GameObjects
     [ByRefEvent]
     public struct AppearanceChangeEvent
     {
-        public AppearanceComponent Component = default!;
-        public IReadOnlyDictionary<object, object> AppearanceData = default!;
+        public AppearanceComponent Component;
+        public IReadOnlyDictionary<object, object> AppearanceData;
     }
 }

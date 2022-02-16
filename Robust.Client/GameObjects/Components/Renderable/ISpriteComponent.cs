@@ -218,8 +218,8 @@ namespace Robust.Client.GameObjects
         int GetLayerDirectionCount(ISpriteLayer layer);
 
         /// <summary>
-        ///     Calculate sprite bounding box in world-space coordinates.
+        ///     Calculate the rotated sprite bounding box in world-space coordinates.
         /// </summary>
-        Box2 CalculateBoundingBox(Vector2 worldPos);
+        Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null);
     }
 }

@@ -37,6 +37,6 @@ namespace Robust.Client.GameObjects
         ///     Calculate layer bounding box in sprite local-space coordinates.
         /// </summary>
         /// <returns>Bounding box in sprite local-space coordinates.</returns>
-        Box2 CalculateBoundingBox();
+        Box2 CalculateBoundingBox(Angle worldAngle);
     }
 }

@@ -3,7 +3,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedDefinition<T> : DeserializationResult<T>, IDeserializedDefinition where T : notnull, new()
+    public sealed class DeserializedDefinition<T> : DeserializationResult<T>, IDeserializedDefinition where T : notnull, new()
     {
         public DeserializedDefinition(T value, DeserializedFieldEntry[] mapping)
         {

@@ -4,7 +4,7 @@
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgConCmd : NetMessage
+    public sealed class MsgConCmd : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Core;
 

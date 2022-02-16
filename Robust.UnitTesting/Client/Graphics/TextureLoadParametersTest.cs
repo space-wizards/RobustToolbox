@@ -6,7 +6,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.UnitTesting.Client.Graphics
 {
     [TestFixture]
-    public class TextureLoadParametersTest
+    public sealed class TextureLoadParametersTest
     {
         [Test]
         public void TestLoadEmptyYaml()

@@ -3,7 +3,7 @@ using Robust.Shared.Map;
 
 namespace Robust.Client.Placement
 {
-    public class PlacementHijack
+    public abstract class PlacementHijack
     {
         public PlacementManager Manager { get; internal set; } = default!;
         public virtual bool CanRotate { get; } = true;

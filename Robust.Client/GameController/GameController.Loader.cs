@@ -7,7 +7,7 @@ namespace Robust.Client
 {
     internal partial class GameController
     {
-        internal class LoaderEntryPoint : ILoaderEntryPoint
+        internal sealed class LoaderEntryPoint : ILoaderEntryPoint
         {
             public void Main(IMainArgs args)
             {

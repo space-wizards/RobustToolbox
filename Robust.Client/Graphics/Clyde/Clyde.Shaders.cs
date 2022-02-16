@@ -34,7 +34,7 @@ namespace Robust.Client.Graphics.Clyde
 
         private readonly ConcurrentQueue<ClydeHandle> _deadShaderInstances = new();
 
-        private class LoadedShader
+        private sealed class LoadedShader
         {
             public GLShaderProgram Program = default!;
             public bool HasLighting = true;
@@ -42,7 +42,7 @@ namespace Robust.Client.Graphics.Clyde
             public string? Name;
         }
 
-        private class LoadedShaderInstance
+        private sealed class LoadedShaderInstance
         {
             public ClydeHandle ShaderHandle;
 

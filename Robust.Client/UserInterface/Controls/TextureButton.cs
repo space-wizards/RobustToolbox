@@ -5,6 +5,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class TextureButton : BaseButton
     {
         private Vector2 _scale = (1, 1);

@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 namespace Robust.Client.Debugging
 {
     /// <inheritdoc />
-    public class DebugDrawing : IDebugDrawing
+    public sealed class DebugDrawing : IDebugDrawing
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;

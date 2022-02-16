@@ -52,7 +52,7 @@ namespace Robust.Shared.GameObjects
     ///     Raised whenever the server receives a BUI message from a client relating to a UI that requires input
     ///     validation.
     /// </summary>
-    public class BoundUserInterfaceMessageAttempt : CancellableEntityEventArgs
+    public sealed class BoundUserInterfaceMessageAttempt : CancellableEntityEventArgs
     {
         public readonly ICommonSession Sender;
         public readonly EntityUid Target;
@@ -73,7 +73,7 @@ namespace Robust.Shared.GameObjects
 
 
     [NetSerializable, Serializable]
-    public class BoundUserInterfaceMessage : EntityEventArgs
+    public abstract class BoundUserInterfaceMessage : EntityEventArgs
     {
         /// <summary>
         ///     The UI of this message.
@@ -135,7 +135,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public class BoundUIClosedEvent : BoundUserInterfaceMessage
+    public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
     {
         public BoundUIClosedEvent(object uiKey, EntityUid uid, ICommonSession session)
         {

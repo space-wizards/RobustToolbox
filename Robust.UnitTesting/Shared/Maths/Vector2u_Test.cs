@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [TestFixture]
     [Parallelizable]
     [TestOf(typeof(Vector2u))]
-    public class Vector2u_Test
+    public sealed class Vector2u_Test
     {
         // This test basically only exists because RSI loading needs it.
         [Test]

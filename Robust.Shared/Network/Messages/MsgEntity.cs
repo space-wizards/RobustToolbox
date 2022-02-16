@@ -12,7 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgEntity : NetMessage
+    public sealed class MsgEntity : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.EntityEvent;
 

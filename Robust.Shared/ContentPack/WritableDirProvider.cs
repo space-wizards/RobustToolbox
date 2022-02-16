@@ -6,7 +6,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.ContentPack
 {
     /// <inheritdoc />
-    internal class WritableDirProvider : IWritableDirProvider
+    internal sealed class WritableDirProvider : IWritableDirProvider
     {
         /// <inheritdoc />
         public string RootDir { get; }

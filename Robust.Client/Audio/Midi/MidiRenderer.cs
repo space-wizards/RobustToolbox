@@ -180,7 +180,7 @@ namespace Robust.Client.Audio.Midi
         internal void InternalDispose();
     }
 
-    internal class MidiRenderer : IMidiRenderer
+    internal sealed class MidiRenderer : IMidiRenderer
     {
         [Dependency] private readonly IClydeAudio _clydeAudio = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;

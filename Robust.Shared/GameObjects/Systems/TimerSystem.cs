@@ -3,7 +3,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.GameObjects
 {
-    public class TimerSystem : EntitySystem
+    public sealed class TimerSystem : EntitySystem
     {
         public override void Update(float frameTime)
         {

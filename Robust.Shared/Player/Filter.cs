@@ -13,7 +13,7 @@ namespace Robust.Shared.Player
     ///     Contains a set of recipients for a networked method call.
     /// </summary>
     [PublicAPI]
-    public class Filter
+    public sealed class Filter
     {
         private HashSet<ICommonSession> _recipients = new();
 

@@ -2,7 +2,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Server.GameObjects
 {
-    public class VisibilitySystem : EntitySystem
+    public sealed class VisibilitySystem : EntitySystem
     {
         public override void Initialize()
         {

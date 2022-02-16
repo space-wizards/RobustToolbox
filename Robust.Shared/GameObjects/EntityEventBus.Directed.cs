@@ -222,7 +222,7 @@ namespace Robust.Shared.GameObjects
             _eventTables.Unsubscribe(typeof(TComp), typeof(TEvent));
         }
 
-        private class EventTables : IDisposable
+        private sealed class EventTables : IDisposable
         {
             private const string ValueDispatchError = "Tried to dispatch a value event to a by-reference subscription.";
             private const string RefDispatchError = "Tried to dispatch a ref event to a by-value subscription.";

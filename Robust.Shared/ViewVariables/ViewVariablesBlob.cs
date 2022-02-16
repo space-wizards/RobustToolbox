@@ -22,7 +22,7 @@ namespace Robust.Shared.ViewVariables
     ///     Contains the fundamental metadata for an object, such as type, <see cref="Object.ToString"/> output, and the list of "traits".
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlobMetadata : ViewVariablesBlob
+    public sealed class ViewVariablesBlobMetadata : ViewVariablesBlob
     {
         /// <summary>
         ///     A list of traits for this remote object.
@@ -56,7 +56,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requested by <see cref="ViewVariablesRequestMembers"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlobMembers : ViewVariablesBlob
+    public sealed class ViewVariablesBlobMembers : ViewVariablesBlob
     {
         /// <summary>
         ///     A list of VV-accessible the remote object has.
@@ -68,6 +68,7 @@ namespace Robust.Shared.ViewVariables
         ///     Token used to indicate "this is a reference, but I can't send the actual reference over".
         /// </summary>
         [Serializable, NetSerializable]
+        [Virtual]
         public class ReferenceToken
         {
             /// <summary>
@@ -86,7 +87,7 @@ namespace Robust.Shared.ViewVariables
         ///     Token used to indicate "this is a prototype reference, but I can't send the actual reference over".
         /// </summary>
         [Serializable, NetSerializable]
-        public class PrototypeReferenceToken : ReferenceToken
+        public sealed class PrototypeReferenceToken : ReferenceToken
         {
             /// <summary>
             ///     The ID of the prototype.
@@ -110,7 +111,7 @@ namespace Robust.Shared.ViewVariables
         ///     Sent if the value is a server-side only value type.
         /// </summary>
         [Serializable, NetSerializable]
-        public class ServerValueTypeToken
+        public sealed class ServerValueTypeToken
         {
             /// <summary>
             ///     The <see cref="Object.ToString"/> output of the remote object.
@@ -125,7 +126,7 @@ namespace Robust.Shared.ViewVariables
         }
 
         [Serializable, NetSerializable]
-        public class ServerKeyValuePairToken
+        public sealed class ServerKeyValuePairToken
         {
             public object Key { get; set; }
             public object Value { get; set; }
@@ -135,7 +136,7 @@ namespace Robust.Shared.ViewVariables
         ///     Data for a specific property.
         /// </summary>
         [Serializable, NetSerializable]
-        public class MemberData
+        public sealed class MemberData
         {
             /// <summary>
             ///     Whether the property can be edited by this client.
@@ -176,13 +177,13 @@ namespace Robust.Shared.ViewVariables
     ///     Requested by <see cref="ViewVariablesRequestEntityComponents"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlobEntityComponents : ViewVariablesBlob
+    public sealed class ViewVariablesBlobEntityComponents : ViewVariablesBlob
     {
         public List<Entry> ComponentTypes { get; set; } = new();
 
         // This might as well be a ValueTuple but I couldn't get that to work.
         [Serializable, NetSerializable]
-        public class Entry : IComparable<Entry>
+        public sealed class Entry : IComparable<Entry>
         {
             public int CompareTo(Entry other)
             {
@@ -202,7 +203,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requested by <see cref="ViewVariablesRequestAllValidComponents"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlobAllValidComponents : ViewVariablesBlob
+    public sealed class ViewVariablesBlobAllValidComponents : ViewVariablesBlob
     {
         public List<string> ComponentTypes { get; set; } = new();
     }
@@ -212,7 +213,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requested by <see cref="ViewVariablesRequestAllPrototypes"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlobAllPrototypes : ViewVariablesBlob
+    public sealed class ViewVariablesBlobAllPrototypes : ViewVariablesBlob
     {
         public List<string> Prototypes { get; set; } = new();
         public string Variant { get; set; } = string.Empty;
@@ -223,7 +224,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requested by <see cref="ViewVariablesRequestEnumerable"/>
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesBlobEnumerable : ViewVariablesBlob
+    public sealed class ViewVariablesBlobEnumerable : ViewVariablesBlob
     {
         /// <summary>
         ///     The list of objects inside the range specified by the
@@ -245,7 +246,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requests the server to send us a <see cref="ViewVariablesRequestMembers"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesRequestMetadata : ViewVariablesRequest
+    public sealed class ViewVariablesRequestMetadata : ViewVariablesRequest
     {
     }
 
@@ -253,7 +254,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requests the server to send us a <see cref="ViewVariablesRequestMembers"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesRequestMembers : ViewVariablesRequest
+    public sealed class ViewVariablesRequestMembers : ViewVariablesRequest
     {
     }
 
@@ -261,7 +262,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requests the server to send us a <see cref="ViewVariablesBlobEntityComponents"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesRequestEntityComponents : ViewVariablesRequest
+    public sealed class ViewVariablesRequestEntityComponents : ViewVariablesRequest
     {
 
     }
@@ -270,7 +271,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requests the server to send us a <see cref="ViewVariablesBlobAllValidComponents"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesRequestAllValidComponents : ViewVariablesRequest
+    public sealed class ViewVariablesRequestAllValidComponents : ViewVariablesRequest
     {
     }
 
@@ -278,7 +279,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requests the server to send us a <see cref="ViewVariablesBlobAllPrototypes"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesRequestAllPrototypes : ViewVariablesRequest
+    public sealed class ViewVariablesRequestAllPrototypes : ViewVariablesRequest
     {
         public string Variant { get; }
 
@@ -292,7 +293,7 @@ namespace Robust.Shared.ViewVariables
     ///     Requests the server to send us a <see cref="ViewVariablesBlobEnumerable"/> containing data in the specified range.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesRequestEnumerable : ViewVariablesRequest
+    public sealed class ViewVariablesRequestEnumerable : ViewVariablesRequest
     {
         public ViewVariablesRequestEnumerable(int fromIndex, int toIndex, bool refresh)
         {

@@ -18,10 +18,5 @@ namespace Robust.Shared.Map
         /// The last game simulation tick that a tile on this chunk was modified.
         /// </summary>
         GameTick LastTileModifiedTick { get; }
-
-        /// <summary>
-        /// The last game simulation tick that an anchored entity on this chunk was modified.
-        /// </summary>
-        GameTick LastAnchoredModifiedTick { get; set; }
     }
 }

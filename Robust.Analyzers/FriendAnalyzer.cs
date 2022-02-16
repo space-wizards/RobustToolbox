@@ -14,15 +14,15 @@ namespace Robust.Analyzers
     {
         const string FriendAttribute = "Robust.Shared.Analyzers.FriendAttribute";
 
-        public const string DiagnosticId = "RA0002";
-
-        private const string Title = "Tried to access friend-only member";
-        private const string MessageFormat = "Tried to access member \"{0}\" in class \"{1}\" which can only be accessed by friend classes";
-        private const string Description = "Make sure to specify the accessing class in the friends attribute.";
-        private const string Category = "Usage";
-
         [SuppressMessage("ReSharper", "RS2008")]
-        private static readonly DiagnosticDescriptor Rule = new (DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, true, Description);
+        private static readonly DiagnosticDescriptor Rule = new (
+            Diagnostics.IdFriend,
+            "Tried to access friend-only member",
+            "Tried to access member \"{0}\" in class \"{1}\" which can only be accessed by friend classes",
+            "Usage",
+            DiagnosticSeverity.Error,
+            true,
+            "Make sure to specify the accessing class in the friends attribute.");
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

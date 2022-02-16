@@ -220,8 +220,9 @@ internal sealed partial class PVSSystem : EntitySystem
         }
         else if (e.NewStatus == SessionStatus.Disconnected)
         {
-            _visSetPool.Return(_playerVisibleSets[e.Session]);
+            var playerVisSet = _playerVisibleSets[e.Session];
             _playerVisibleSets.Remove(e.Session);
+            _visSetPool.Return(playerVisSet);
             _playerSeenSets.Remove(e.Session);
             foreach (var pvsCollection in _pvsCollections)
             {

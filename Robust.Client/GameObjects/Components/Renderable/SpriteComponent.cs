@@ -1414,13 +1414,13 @@ namespace Robust.Client.GameObjects
 
             Visible = thestate.Visible;
             DrawDepth = thestate.DrawDepth;
-            Color = thestate.Color;
-            RenderOrder = thestate.RenderOrder;
-
             scale = thestate.Scale;
             rotation = thestate.Rotation;
             offset = thestate.Offset;
             UpdateLocalMatrix();
+            Color = thestate.Color;
+            RenderOrder = thestate.RenderOrder;
+
 
             if (thestate.BaseRsiPath != null && BaseRSI != null)
             {
@@ -1555,8 +1555,10 @@ namespace Robust.Client.GameObjects
                 box = box.Union(layerBB);
             }
 
-            // Next, what we should do is take box2 and apply the sprites LocalMatrix, and then apply the entity's matrix
-            // BUT Matrix3.TransformBox only does bounding boxes. So we transform our box manually into a rotated box:
+            // Next, what we do is take the box2 and apply the sprite's transform, and then the entity's transform. We
+            // could do this via Matrix3.TransformBox, but that only yields bounding boxes. So instead we manually
+            // transform our box by the combination of these matrices:
+
             if (Scale != Vector2.One)
                 box = box.Scale(Scale);
 
@@ -1699,15 +1701,14 @@ namespace Robust.Client.GameObjects
                 AnimationTimeLeft = toClone.AnimationTimeLeft;
                 AnimationTime = toClone.AnimationTime;
                 AnimationFrame = toClone.AnimationFrame;
-                Visible = toClone.Visible;
-                Color = toClone.Color;
-                DirOffset = toClone.DirOffset;
-                AutoAnimated = toClone.AutoAnimated;
-
                 _scale = toClone.Scale;
                 _rotation = toClone.Rotation;
                 _offset = toClone.Offset;
                 UpdateLocalMatrix();
+                Visible = toClone.Visible;
+                Color = toClone.Color;
+                DirOffset = toClone.DirOffset;
+                AutoAnimated = toClone.AutoAnimated;
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -1760,7 +1761,7 @@ namespace Robust.Client.GameObjects
                 set => SetAutoAnimated(value);
             }
 
-            public RSI.State.Direction EffectiveDirection(Angle worldRotation)
+            public RSIDirection EffectiveDirection(Angle worldRotation)
             {
                 if (State == default)
                 {
@@ -1781,16 +1782,16 @@ namespace Robust.Client.GameObjects
                 return default;
             }
 
-            public RSI.State.Direction EffectiveDirection(RSI.State state, Angle worldRotation,
+            public RSIDirection EffectiveDirection(RSI.State state, Angle worldRotation,
                 Direction? overrideDirection)
             {
                 if (state.Directions == RSI.State.DirectionType.Dir1)
                 {
-                    return RSI.State.Direction.South;
+                    return RSIDirection.South;
                 }
                 else
                 {
-                    RSI.State.Direction dir;
+                    RSIDirection dir;
                     if (overrideDirection != null)
                     {
                         dir = overrideDirection.Value.Convert(state.Directions);
@@ -1955,29 +1956,22 @@ namespace Robust.Client.GameObjects
                 {
                     var textureSize = PixelSize / EyeManager.PixelsPerMeter;
 
-                    // this is basically the "rsiDirectionMatrix" but done explicitly.
+                    // this switch block is basically an explicit version of the `rsiDirectionMatrix` in `GetLayerDrawMatrix()`.
                     var box = dir switch
                     {
+                        // No rotation:
                         RSIDirection.South or RSIDirection.North => Box2.CenteredAround(Offset, textureSize),
-                        RSIDirection.East or RSIDirection.West => Box2.CenteredAround(Offset, (textureSize.Y, textureSize.X)), // rotate 90 degrees
-                        _ => Box2.CenteredAround(Offset, Vector2.One * (textureSize.X + textureSize.Y) / MathF.Sqrt(2))
+                        // rotate 90 degrees:
+                        RSIDirection.East or RSIDirection.West => Box2.CenteredAround(Offset, (textureSize.Y, textureSize.X)),
+                        // rotated 45 degrees (any 45 degree rotated rectangle has a square bounding box with sides of length (x+y)/sqrt(2) )
+                        _ => Box2.CenteredAround(Offset, Vector2.One * (textureSize.X + textureSize.Y) / MathF.Sqrt(2)) 
                     };
 
                     return _scale == Vector2.One ? box : box.Scale(_scale);
                 }
 
-                // welp if we have arbitrary rotation, lets just apply general layer transform;
-                Matrix3 layerDrawMatrix;
-                if (_parent.NoRotation)
-                {
-                    layerDrawMatrix = LocalMatrix;
-                }
-                else
-                {
-                    var rsiDirectionMatrix = Matrix3.CreateTransform(Vector2.Zero, -dir.Convert().ToAngle());
-                    Matrix3.Multiply(ref rsiDirectionMatrix, ref LocalMatrix, out layerDrawMatrix);
-                }
-
+                // Welp we have some non-zero _rotation, so lets just apply the generalized layer transform and get the bounding box from where;
+                GetLayerDrawMatrix(angle, dir, rsiState, out var layerDrawMatrix);
                 return layerDrawMatrix.TransformBox(Box2.CentredAroundZero(PixelSize / EyeManager.PixelsPerMeter));
             }
 
@@ -2011,15 +2005,10 @@ namespace Robust.Client.GameObjects
             ///     Given the apparent rotation of an entity on screen (world + eye rotation), get layer's matrix for drawing &
             ///     relevant RSI direction.
             /// </summary>
-            public void GetLayerDrawMatrix(Angle angle, out Matrix3 layerDrawMatrix, out RSIDirection dir, out RSI.State? rsiState)
+            public void GetLayerDrawMatrix(Angle angle, RSIDirection dir, RSI.State? rsiState, out Matrix3 layerDrawMatrix)
             {
-                rsiState = GetActualState();
-                dir = GetDirection(rsiState, angle);
-
                 if (_parent.NoRotation)
-                {
                     layerDrawMatrix = LocalMatrix;
-                }
                 else
                 {
                     var rsiDirectionMatrix = Matrix3.CreateTransform(Vector2.Zero, -dir.Convert().ToAngle());
@@ -2032,23 +2021,22 @@ namespace Robust.Client.GameObjects
                 if (!Visible)
                     return;
 
-                GetLayerDrawMatrix(angle,
-                    out var layerMatrix,
-                    out var dir,
-                    out var state);
+                var rsiState = GetActualState();
+                var dir = GetDirection(rsiState, angle);
 
+                // Set the drawing transform for this  layer
+                GetLayerDrawMatrix(angle, dir, rsiState, out var layerMatrix);
                 Matrix3.Multiply(ref layerMatrix, ref spriteMatrix, out var transformMatrix);
                 drawingHandle.SetTransform(in transformMatrix);
 
-                // The actual drawn direction can differ from the one that the angle would usually result in
-                if (overrideDirection != null && state != null)
-                    dir = overrideDirection.Value.Convert(state.Directions);
+                // The direction used to draw the sprite can differ from the one that the angle would naively suggest,
+                // due to direction overrides or offsets.
+                if (overrideDirection != null && rsiState != null)
+                    dir = overrideDirection.Value.Convert(rsiState.Directions);
                 dir = dir.OffsetRsiDir(DirOffset);
 
-                // get the correct directional texture from the state
-                var texture = GetRenderTexture(state, dir);
-
-                // and draw it.
+                // Get the correct directional texture from the state, and draw it!
+                var texture = GetRenderTexture(rsiState, dir);
                 RenderTexture(drawingHandle, texture);
             }
 

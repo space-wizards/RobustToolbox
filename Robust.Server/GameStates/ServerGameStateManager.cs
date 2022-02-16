@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared.Enums;
@@ -125,6 +128,35 @@ namespace Robust.Server.GameStates
             // people not in the game don't get states
             var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
 
+            //todo paul oh my god make this less shit
+            EntityQuery<MetaDataComponent> metadataQuery = default!;
+            HashSet<int>[] playerChunks = default!;
+            EntityUid[][] viewerEntities = default!;
+            Dictionary<EntityUid, MetaDataComponent>?[] chunkCache = default!;
+
+            if (_pvs.CullingEnabled)
+            {
+                List<(uint, IChunkIndexLocation)> chunks;
+                (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
+                const int ChunkBatchSize = 2;
+                var chunksCount = chunks.Count;
+                var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
+                chunkCache = new Dictionary<EntityUid, MetaDataComponent>?[chunks.Count];
+                var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+                Parallel.For(0, chunkBatches, i =>
+                {
+                    var start = i * ChunkBatchSize;
+                    var end = Math.Min(start + ChunkBatchSize, chunksCount);
+
+                    for (var j = start; j < end; ++j)
+                    {
+                        var (visMask, chunkIndexLocation) = chunks[j];
+                        chunkCache[j] = _pvs.CalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery);
+                    }
+                });
+            }
+
             const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
 
@@ -135,11 +167,9 @@ namespace Robust.Server.GameStates
 
                 for (var j = start; j < end; ++j)
                 {
-                    var session = players[j];
-
                     try
                     {
-                        SendStateUpdate(session);
+                        SendStateUpdate(j);
                     }
                     catch (Exception e) // Catch EVERY exception
                     {
@@ -148,8 +178,10 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            void SendStateUpdate(IPlayerSession session)
+            void SendStateUpdate(int sessionIndex)
             {
+                var session = players[sessionIndex];
+
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
                     IoCManager.InitThread(new DependencyCollection(parentDeps), true);
@@ -161,7 +193,10 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick);
+                var (entStates, deletions) = _pvs.CullingEnabled
+                    ? _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache,
+                        playerChunks[sessionIndex], metadataQuery, viewerEntities[sessionIndex])
+                    : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 
@@ -194,6 +229,8 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
+            if(_pvs.CullingEnabled)
+                _pvs.ReturnToPool(chunkCache, playerChunks);
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 

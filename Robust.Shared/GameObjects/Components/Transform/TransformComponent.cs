@@ -155,12 +155,18 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var parent = _parent;
+                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+                var rotation = _localRotation;
+
+                while (parent.IsValid())
                 {
-                    return Parent!.WorldRotation + _localRotation;
+                    var parentXform = xformQuery.GetComponent(parent);
+                    rotation += parentXform._localRotation;
+                    parent = parentXform.ParentUid;
                 }
 
-                return _localRotation;
+                return rotation;
             }
             set
             {
@@ -211,15 +217,21 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+                var parent = _parent;
+                var myMatrix = _localMatrix;
+
+                while (parent.IsValid())
                 {
-                    var parentMatrix = Parent!.WorldMatrix;
-                    var myMatrix = GetLocalMatrix();
+                    var parentXform = xformQuery.GetComponent(parent);
+                    var parentMatrix = parentXform._localMatrix;
+                    parent = parentXform.ParentUid;
+
                     Matrix3.Multiply(ref myMatrix, ref parentMatrix, out var result);
-                    return result;
+                    myMatrix = result;
                 }
 
-                return GetLocalMatrix();
+                return myMatrix;
             }
         }
 
@@ -230,15 +242,21 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                if (_parent.IsValid())
+                var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+                var parent = _parent;
+                var myMatrix = _invLocalMatrix;
+
+                while (parent.IsValid())
                 {
-                    var matP = Parent!.InvWorldMatrix;
-                    var myMatrix = GetLocalMatrixInv();
-                    Matrix3.Multiply(ref matP, ref myMatrix, out var result);
-                    return result;
+                    var parentXform = xformQuery.GetComponent(parent);
+                    var parentMatrix = parentXform._invLocalMatrix;
+                    parent = parentXform.ParentUid;
+
+                    Matrix3.Multiply(ref parentMatrix, ref myMatrix, out var result);
+                    myMatrix = result;
                 }
 
-                return GetLocalMatrixInv();
+                return myMatrix;
             }
         }
 
@@ -314,15 +332,16 @@ namespace Robust.Shared.GameObjects
 
                 if (!sameParent)
                 {
+                    var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                     changedParent = true;
-                    var newParent = _entMan.GetComponent<TransformComponent>(value.EntityId);
+                    var newParent = xformQuery.GetComponent(value.EntityId);
 
                     DebugTools.Assert(newParent != this,
                         $"Can't parent a {nameof(TransformComponent)} to itself.");
 
                     // That's already our parent, don't bother attaching again.
 
-                    var oldParent = Parent;
+                    var oldParent = _parent.IsValid() ? xformQuery.GetComponent(_parent) : null;
                     var uid = Owner;
                     oldParent?._children.Remove(uid);
                     newParent._children.Add(uid);
@@ -343,7 +362,8 @@ namespace Robust.Shared.GameObjects
                 // This may not in fact be the right thing.
                 if (changedParent || !DeferUpdates)
                     RebuildMatrices();
-                Dirty();
+
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -507,7 +527,7 @@ namespace Robust.Shared.GameObjects
             // Children MAY be initialized here before their parents are.
             // We do this whole dance to handle this recursively,
             // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
-            static MapId FindMapIdAndSet(TransformComponent p, IEntityManager entMan)
+            static MapId FindMapIdAndSet(TransformComponent p, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
             {
                 if (p._mapIdInitialized)
                 {
@@ -517,7 +537,7 @@ namespace Robust.Shared.GameObjects
                 MapId value;
                 if (p._parent.IsValid())
                 {
-                    value = FindMapIdAndSet((TransformComponent) p.Parent!, entMan);
+                    value = FindMapIdAndSet(xformQuery.GetComponent(p._parent), entMan, xformQuery);
                 }
                 else
                 {
@@ -537,9 +557,11 @@ namespace Robust.Shared.GameObjects
                 return value;
             }
 
+            var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
+
             if (!_mapIdInitialized)
             {
-                FindMapIdAndSet(this, _entMan);
+                FindMapIdAndSet(this, _entMan, xformQuery);
 
                 _mapIdInitialized = true;
             }
@@ -728,17 +750,27 @@ namespace Robust.Shared.GameObjects
 
             var oldMapId = MapID;
 
+            //Set Paused state
+            var mapPaused = _mapManager.IsMapPaused(newMapId);
+            var metaData = _entMan.GetComponent<MetaDataComponent>(Owner);
+            metaData.EntityPaused = mapPaused;
+
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, _entMan);
+            UpdateChildMapIdsRecursive(MapID, _entMan, mapPaused);
         }
 
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan)
+        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan, bool mapPaused)
         {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
+            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
 
             foreach (var child in _children)
             {
+                //Set Paused state
+                var metaData = metaEnts.GetComponent(child);
+                metaData.EntityPaused = mapPaused;
+
                 var concrete = xforms.GetComponent(child);
                 var old = concrete.MapID;
 
@@ -747,7 +779,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan, mapPaused);
                 }
             }
         }
@@ -800,14 +832,14 @@ namespace Robust.Shared.GameObjects
         {
             var parent = _parent;
             var worldRot = _localRotation;
-            var worldMatrix = GetLocalMatrix();
+            var worldMatrix = _localMatrix;
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
             {
                 var xform = xforms.GetComponent(parent);
                 worldRot += xform.LocalRotation;
-                var parentMatrix = xform.GetLocalMatrix();
+                var parentMatrix = xform._localMatrix;
                 Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
                 worldMatrix = result;
                 parent = xform.ParentUid;
@@ -861,8 +893,8 @@ namespace Robust.Shared.GameObjects
         {
             var parent = _parent;
             var worldRot = _localRotation;
-            var invMatrix = GetLocalMatrixInv();
-            var worldMatrix = GetLocalMatrix();
+            var invMatrix = _invLocalMatrix;
+            var worldMatrix = _localMatrix;
 
             // By doing these all at once we can elide multiple IsValid + GetComponent calls
             while (parent.IsValid())
@@ -870,11 +902,11 @@ namespace Robust.Shared.GameObjects
                 var xform = xformQuery.GetComponent(parent);
                 worldRot += xform.LocalRotation;
 
-                var parentMatrix = xform.GetLocalMatrix();
+                var parentMatrix = xform._localMatrix;
                 Matrix3.Multiply(ref worldMatrix, ref parentMatrix, out var result);
                 worldMatrix = result;
 
-                var parentInvMatrix = xform.GetLocalMatrixInv();
+                var parentInvMatrix = xform._invLocalMatrix;
                 Matrix3.Multiply(ref parentInvMatrix, ref invMatrix, out var invResult);
                 invMatrix = invResult;
 
@@ -1003,16 +1035,6 @@ namespace Robust.Shared.GameObjects
                 _nextRotation = null;
                 LerpParent = EntityUid.Invalid;
             }
-        }
-
-        public Matrix3 GetLocalMatrix()
-        {
-            return _localMatrix;
-        }
-
-        public Matrix3 GetLocalMatrixInv()
-        {
-            return _invLocalMatrix;
         }
 
         private void RebuildMatrices()

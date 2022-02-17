@@ -342,7 +342,7 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
             chunk.SetTile(3, 5, new Tile(1));
 
-            var result = chunk.CollidesWithChunk(new Vector2i(3, 5));
+            var result = chunk.GetTile(3, 5).TypeId != Tile.Empty.TypeId;
 
             Assert.That(result, Is.True);
         }
@@ -353,7 +353,7 @@ namespace Robust.UnitTesting.Shared.Map
             var chunk = MapChunkFactory(7, 9);
             chunk.SetTile(3, 5, new Tile(1));
 
-            var result = chunk.CollidesWithChunk(new Vector2i(3, 6));
+            var result = chunk.GetTile(3, 6).TypeId != Tile.Empty.TypeId;
 
             Assert.That(result, Is.False);
         }

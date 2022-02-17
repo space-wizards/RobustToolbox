@@ -346,15 +346,6 @@ namespace Robust.Shared.Map
             return scaledLocalBounds.CalcBoundingBox();
         }
 
-        /// <summary>
-        /// Tests if a point is on top of a non-empty tile.
-        /// </summary>
-        /// <param name="localIndices">Local tile indices</param>
-        public bool CollidesWithChunk(Vector2i localIndices)
-        {
-            return GetTile((ushort) localIndices.X, (ushort) localIndices.Y).TypeId != Tile.Empty.TypeId;
-        }
-
         /// <inheritdoc />
         public override string ToString()
         {

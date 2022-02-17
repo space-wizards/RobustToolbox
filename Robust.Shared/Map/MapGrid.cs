@@ -756,7 +756,7 @@ namespace Robust.Shared.Map
                 return false;
 
             var cTileIndices = chunk.GridTileToChunkTile(indices);
-            return chunk.CollidesWithChunk(cTileIndices);
+            return chunk.GetTile((ushort) cTileIndices.X, (ushort) cTileIndices.Y).TypeId != Tile.Empty.TypeId;
         }
 
         /// <inheritdoc />

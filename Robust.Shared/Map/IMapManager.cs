@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
+using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
     /// <summary>
     ///     This manages all of the grids in the world.
     /// </summary>
-    public interface IMapManager
+    public interface IMapManager : IPauseManager
     {
         /// <summary>
         ///     The default <see cref="MapId" /> that is always available. Equivalent to SS13 Null space.

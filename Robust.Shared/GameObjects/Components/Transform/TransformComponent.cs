@@ -531,7 +531,7 @@ namespace Robust.Shared.GameObjects
             // Children MAY be initialized here before their parents are.
             // We do this whole dance to handle this recursively,
             // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
-            static MapId FindMapIdAndSet(TransformComponent p, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
+            static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
             {
                 if (xform._mapIdInitialized)
                 {
@@ -542,7 +542,7 @@ namespace Robust.Shared.GameObjects
 
                 if (xform._parent.IsValid())
                 {
-                    value = FindMapIdAndSet(xformQuery.GetComponent(p._parent), entMan, xformQuery);
+                    value = FindMapIdAndSet(xformQuery.GetComponent(xform._parent), entMan, xformQuery);
                 }
                 else
                 {

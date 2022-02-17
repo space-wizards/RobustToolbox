@@ -24,6 +24,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
+    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
     public const float ChunkSize = 8;
 
@@ -90,7 +91,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _mapManager.OnGridRemoved += OnGridRemoved;
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
-        SubscribeLocalEvent<TransformComponent, ComponentInit>(OnTransformInit);
+        SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
@@ -182,18 +183,26 @@ internal sealed partial class PVSSystem : EntitySystem
     private void OnEntityMove(ref MoveEvent ev)
     {
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        UpdateEntityRecursive(ev.Sender, xformQuery, ev.Component);
+        var coordinates = _transform.GetMoverCoordinates(ev.Component);
+        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
 
-    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
+        // use Startup because GridId is not set during the eventbus init yet!
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        UpdateEntityRecursive(uid, xformQuery, component);
+        var coordinates = _transform.GetMoverCoordinates(component);
+        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, TransformComponent xform)
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover)
     {
-        _entityPvsCollection.UpdateIndex(uid, xform.Coordinates);
+        if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
+        {
+            coordinates = _transform.GetMoverCoordinates(xform);
+        }
+
+        _entityPvsCollection.UpdateIndex(uid, coordinates);
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
@@ -202,7 +211,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value, xformQuery, xformQuery.GetComponent(child.Value));
+            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
         }
     }
 

@@ -352,13 +352,13 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         var gridId = coordinates.GetGridId(_entityManager);
         if (gridId != GridId.Invalid)
         {
-            var gridIndices = GetChunkIndices(_mapManager.GetGrid(gridId).LocalToGrid(coordinates));
+            var gridIndices = GetChunkIndices(coordinates.Position);
             UpdateIndex(index, gridId, gridIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
             return;
         }
 
         var mapCoordinates = coordinates.ToMap(_entityManager);
-        var mapIndices = GetChunkIndices(mapCoordinates.Position);
+        var mapIndices = GetChunkIndices(coordinates.Position);
         UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 

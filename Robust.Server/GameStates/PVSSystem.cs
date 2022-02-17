@@ -195,7 +195,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, bool mover)
     {
-        // TODO: Need to vibe using EntityQuery<T> here for transforms / grid / map checks.
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
             coordinates = _transform.GetMoverCoordinates(xform);

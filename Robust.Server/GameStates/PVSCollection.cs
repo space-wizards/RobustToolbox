@@ -357,9 +357,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             return;
         }
 
-        var mapId = coordinates.GetMapId(_entityManager);
+        var mapCoordinates = coordinates.ToMap(_entityManager);
         var mapIndices = GetChunkIndices(coordinates.Position);
-        UpdateIndex(index, mapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+        UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 
     /// <summary>

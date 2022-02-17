@@ -190,58 +190,56 @@ namespace Robust.Client.GameObjects
             EntityQuery<PointLightComponent> pointQuery,
             EntityQuery<SpriteComponent> spriteQuery)
         {
-            // TODO: Since we are recursing down,
-            // we could cache ShowContents data here to speed it up for children.
-            // Am lazy though.
-            UpdateEntity(entity, pointQuery, spriteQuery);
+            // Recursively go up parents and containers to see whether both sprites and lights need to be occluded
+            // Could maybe optimise this more by checking nearest parent that has sprite / light and whether it's container
+            // occluded but this probably isn't a big perf issue.
+            var xform = xformQuery.GetComponent(entity);
+            var parent = xform.ParentUid;
+            var child = entity;
+            var spriteOccluded = false;
+            var lightOccluded = false;
 
-            var childEnumerator = xformQuery.GetComponent(entity).ChildEnumerator;
-
-            while (childEnumerator.MoveNext(out var child))
+            while (parent.IsValid() && !spriteOccluded && !lightOccluded)
             {
-                UpdateEntityRecursively(child.Value, xformQuery, pointQuery, spriteQuery);
+                var parentXform = xformQuery.GetComponent(parent);
+                if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))
+                {
+                    spriteOccluded = spriteOccluded || !container.ShowContents;
+                    lightOccluded = lightOccluded || container.OccludesLight;
+                }
+
+                child = parent;
+                parent = parentXform.ParentUid;
             }
+
+            // Okay now recursively update ourselves and our children
+            UpdateEntity(entity, xform, xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
         }
 
         private void UpdateEntity(
             EntityUid entity,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
             EntityQuery<PointLightComponent> pointQuery,
-            EntityQuery<SpriteComponent> spriteQuery)
+            EntityQuery<SpriteComponent> spriteQuery,
+            bool spriteOccluded,
+            bool lightOccluded)
         {
             if (spriteQuery.TryGetComponent(entity, out var sprite))
             {
-                sprite.ContainerOccluded = false;
-
-                // We have to recursively scan for containers upwards in case of nested containers.
-                var tempParent = entity;
-                while (tempParent.TryGetContainer(out var container))
-                {
-                    if (!container.ShowContents)
-                    {
-                        sprite.ContainerOccluded = true;
-                        break;
-                    }
-
-                    tempParent = container.Owner;
-                }
+                sprite.ContainerOccluded = spriteOccluded;
             }
 
             if (pointQuery.TryGetComponent(entity, out var light))
             {
-                light.ContainerOccluded = false;
+                light.ContainerOccluded = lightOccluded;
+            }
 
-                // We have to recursively scan for containers upwards in case of nested containers.
-                var tempParent = entity;
-                while (tempParent.TryGetContainer(out var container))
-                {
-                    if (container.OccludesLight)
-                    {
-                        light.ContainerOccluded = true;
-                        break;
-                    }
+            var childEnumerator = xform.ChildEnumerator;
 
-                    tempParent = container.Owner;
-                }
+            while (childEnumerator.MoveNext(out var child))
+            {
+                UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
             }
         }
     }

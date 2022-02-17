@@ -182,18 +182,20 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(ev.Component);
-        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, false);
+        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
 
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component);
-        UpdateEntityRecursive(uid, component, coordinates, false);
+        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, bool mover)
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover)
     {
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
@@ -209,7 +211,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value, Transform(child.Value), coordinates, true);
+            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
         }
     }
 

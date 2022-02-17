@@ -136,27 +136,6 @@ namespace Robust.Shared.Map
         }
 
         /// <summary>
-        ///     Returns all of the tiles in the chunk, while optionally filtering empty files.
-        ///     Returned order is guaranteed to be row-major.
-        /// </summary>
-        /// <param name="ignoreEmpty">Will empty (space) tiles be added to the collection?</param>
-        /// <returns></returns>
-        public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
-        {
-            for (ushort x = 0; x < ChunkSize; x++)
-            {
-                for (ushort y = 0; y < ChunkSize; y++)
-                {
-                    if (ignoreEmpty && GetTile(x, y).IsEmpty)
-                        continue;
-
-                    var indices = ChunkTileToGridTile(new Vector2i(x, y));
-                    yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, GetTile(x, y));
-                }
-            }
-        }
-
-        /// <summary>
         ///     Replaces a single tile inside of the chunk.
         /// </summary>
         /// <param name="xIndex">The X tile index relative to the chunk.</param>
@@ -223,7 +202,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="chunkTile">The indices relative to the chunk origin.</param>
         /// <returns>The indices relative to the grid origin.</returns>
-        private Vector2i ChunkTileToGridTile(Vector2i chunkTile)
+        public Vector2i ChunkTileToGridTile(Vector2i chunkTile)
         {
             return chunkTile + _gridIndices * ChunkSize;
         }

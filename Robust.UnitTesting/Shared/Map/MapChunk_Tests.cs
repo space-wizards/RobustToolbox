@@ -149,56 +149,6 @@ namespace Robust.UnitTesting.Shared.Map
         }
 
         [Test]
-        public void GetAllTilesNotEmpty()
-        {
-            var chunk = MapChunkFactory(7, 9);
-            chunk.SetTile(5, 4, new Tile(5, 7));
-            chunk.SetTile(3, 5, new Tile(1, 3));
-
-            var tiles = chunk.GetAllTiles().ToList();
-
-            Assert.That(tiles.Count, Is.EqualTo(2));
-
-            // Order is guaranteed to be row-major (because C# is), the Y value is contiguous in memory
-            Assert.That(tiles[0],
-                Is.EqualTo(new TileRef(new MapId(11),
-                    new GridId(13),
-                    new Vector2i(8 * 7 + 3, 8 * 9 + 5),
-                    new Tile(1, 3))));
-
-            Assert.That(tiles[1],
-                Is.EqualTo(new TileRef(new MapId(11),
-                    new GridId(13),
-                    new Vector2i(8 * 7 + 5, 8 * 9 + 4),
-                    new Tile(5, 7))));
-        }
-
-        [Test]
-        public void GetAllTilesEmpty()
-        {
-            var chunk = MapChunkFactory(7, 9);
-            chunk.SetTile(5, 4, new Tile(5, 7));
-            chunk.SetTile(3, 5, new Tile(1, 3));
-
-            var tiles = chunk.GetAllTiles(false).ToList();
-
-            Assert.That(tiles.Count, Is.EqualTo(8*8));
-
-            // Order is guaranteed to be row-major (because C# is), the Y value is contiguous in memory
-            Assert.That(tiles[8*3+5],
-                Is.EqualTo(new TileRef(new MapId(11),
-                    new GridId(13),
-                    new Vector2i(8 * 7 + 3, 8 * 9 + 5),
-                    new Tile(1, 3))));
-
-            Assert.That(tiles[8*5+4],
-                Is.EqualTo(new TileRef(new MapId(11),
-                    new GridId(13),
-                    new Vector2i(8 * 7 + 5, 8 * 9 + 4),
-                    new Tile(5, 7))));
-        }
-
-        [Test]
         public void SetTileNotifiesGrid()
         {
             var mapGrid = new Mock<IMapGridInternal>();
@@ -227,35 +177,6 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1, 3));
 
             mapGrid.Verify(f => f.NotifyTileChanged(It.Ref<TileRef>.IsAny, It.Ref<Tile>.IsAny), Times.Once);
-        }
-
-        [Test]
-        public void EnumerateTiles()
-        {
-            var chunk = MapChunkFactory(7, 9);
-            chunk.SetTile(5, 4, new Tile(5, 7));
-            chunk.SetTile(3, 5, new Tile(1, 3));
-
-            var tiles = new List<TileRef>();
-            foreach (var tileRef in chunk.GetAllTiles())
-            {
-                tiles.Add(tileRef);
-            }
-
-            Assert.That(tiles.Count, Is.EqualTo(2));
-
-            // Order is guaranteed to be row-major (because C# is), the Y value is contiguous in memory
-            Assert.That(tiles[0],
-                Is.EqualTo(new TileRef(new MapId(11),
-                    new GridId(13),
-                    new Vector2i(8 * 7 + 3, 8 * 9 + 5),
-                    new Tile(1, 3))));
-
-            Assert.That(tiles[1],
-                Is.EqualTo(new TileRef(new MapId(11),
-                    new GridId(13),
-                    new Vector2i(8 * 7 + 5, 8 * 9 + 4),
-                    new Tile(5, 7))));
         }
 
         [Test]

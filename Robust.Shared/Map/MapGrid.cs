@@ -209,10 +209,19 @@ namespace Robust.Shared.Map
         {
             foreach (var kvChunk in _chunks)
             {
-                foreach (var tileRef in kvChunk.Value.GetAllTiles())
+                var chunk = kvChunk.Value;
+                for (ushort x = 0; x < ChunkSize; x++)
                 {
-                    if (!ignoreSpace || !tileRef.Tile.IsEmpty)
-                        yield return tileRef;
+                    for (ushort y = 0; y < ChunkSize; y++)
+                    {
+                        var tile = chunk.GetTile(x, y);
+
+                        if (ignoreSpace && tile.IsEmpty)
+                            continue;
+
+                        var (gridX, gridY) = new Vector2i(x, y) + chunk.Indices * ChunkSize;
+                        yield return new TileRef(ParentMapId, Index, gridX, gridY, tile);
+                    }
                 }
             }
         }

@@ -762,21 +762,22 @@ namespace Robust.Shared.GameObjects
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            UpdateChildMapIdsRecursive(MapID, _entMan, mapPaused);
-        }
-
-        private void UpdateChildMapIdsRecursive(MapId newMapId, IEntityManager entMan, bool mapPaused)
-        {
             var xforms = _entMan.GetEntityQuery<TransformComponent>();
             var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xforms, metaEnts);
+        }
+
+        private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
+        {
+            var childEnumerator = ChildEnumerator;
 
             while (childEnumerator.MoveNext(out var child))
             {
                 //Set Paused state
-                var metaData = metaEnts.GetComponent(child);
+                var metaData = metaQuery.GetComponent(child.Value);
                 metaData.EntityPaused = mapPaused;
 
-                var concrete = xforms.GetComponent(child);
+                var concrete = xformQuery.GetComponent(child.Value);
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
@@ -784,7 +785,7 @@ namespace Robust.Shared.GameObjects
 
                 if (concrete.ChildCount != 0)
                 {
-                    concrete.UpdateChildMapIdsRecursive(newMapId, entMan, mapPaused);
+                    concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery);
                 }
             }
         }

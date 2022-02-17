@@ -265,7 +265,7 @@ namespace Robust.Shared.Serialization.Manager
             for (var i = 0; i < node.Sequence.Count; i++)
             {
                 var subNode = node.Sequence[i];
-                var result = Read(type, subNode, context, skipHook);
+                var result = Read(type, subNode, context, skipHook, TODO);
 
                 results[i] = result;
                 array[i] = (T) result.RawValue!;
@@ -502,19 +502,22 @@ namespace Robust.Shared.Serialization.Manager
             return result;
         }
 
-        public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null,
+            bool skipHook = false, object? value)
         {
             return GetOrCreateReader(type, node)(type, node, context, skipHook);
         }
 
-        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false,
+            object? value)
         {
-            return Read(type, node, context, skipHook).RawValue;
+            return Read(type, node, context, skipHook, TODO).RawValue;
         }
 
-        public T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null,
+            bool skipHook = false, T? value1)
         {
-            var value = Read(type, node, context, skipHook);
+            var value = Read(type, node, context, skipHook, TODO);
 
             if (value.RawValue == null)
             {
@@ -524,15 +527,16 @@ namespace Robust.Shared.Serialization.Manager
             return (T?) value.RawValue;
         }
 
-        public T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value)
         {
-            return ReadValueCast<T>(typeof(T), node, context, skipHook);
+            return ReadValueCast<T>(typeof(T), node, context, skipHook, TODO);
         }
 
-        public DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node, ISerializationContext? context = null,
-            bool skipHook = false)
+        public DeserializationResult ReadWithTypeSerializer(Type type, Type serializer, DataNode node,
+            ISerializationContext? context = null,
+            bool skipHook = false, object? value)
         {
-            return ReadWithSerializerRaw(value, node, serializer, context, skipHook);
+            return ReadWithSerializerRaw(type, node, serializer, context, skipHook);
         }
     }
 }

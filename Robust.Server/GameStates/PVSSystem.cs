@@ -24,6 +24,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
+    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
     public const float ChunkSize = 8;
 
@@ -181,14 +182,14 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        var coordinates = GetMoverCoordinates(ev.Component);
+        var coordinates = _transform.GetMoverCoordinates(ev.Component);
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, false);
     }
 
     private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
-        var coordinates = GetMoverCoordinates(component);
+        var coordinates = _transform.GetMoverCoordinates(component);
         UpdateEntityRecursive(uid, component, coordinates, false);
     }
 
@@ -197,7 +198,7 @@ internal sealed partial class PVSSystem : EntitySystem
         // TODO: Need to vibe using EntityQuery<T> here for transforms / grid / map checks.
         if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
         {
-            coordinates = GetMoverCoordinates(xform);
+            coordinates = _transform.GetMoverCoordinates(xform);
         }
 
         _entityPvsCollection.UpdateIndex(uid, coordinates);
@@ -211,30 +212,6 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             UpdateEntityRecursive(child.Value, Transform(child.Value), coordinates, true);
         }
-    }
-
-    public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
-    {
-        // If they're parented directly to the map or grid then just return the coordinates.
-        if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
-        {
-            var mapUid = _mapManager.GetMapEntityId(xform.MapID);
-            var coordinates = xform.Coordinates;
-
-            // Parented directly to the map.
-            if (xform.ParentUid == mapUid)
-                return coordinates;
-
-            return new EntityCoordinates(mapUid, coordinates.ToMapPos(EntityManager));
-        }
-
-        // Parented directly to the grid
-        if (grid.GridEntityId == xform.ParentUid)
-            return xform.Coordinates;
-
-        // Parented to grid so convert their pos back to the grid.
-        var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(xform.WorldPosition);
-        return new EntityCoordinates(grid.GridEntityId, gridPos);
     }
 
     private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)

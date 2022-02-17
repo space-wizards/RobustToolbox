@@ -100,5 +100,29 @@ namespace Robust.Shared.GameObjects
                 }
             }
         }
+
+        public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
+        {
+            // If they're parented directly to the map or grid then just return the coordinates.
+            if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+            {
+                var mapUid = _mapManager.GetMapEntityId(xform.MapID);
+                var coordinates = xform.Coordinates;
+
+                // Parented directly to the map.
+                if (xform.ParentUid == mapUid)
+                    return coordinates;
+
+                return new EntityCoordinates(mapUid, coordinates.ToMapPos(EntityManager));
+            }
+
+            // Parented directly to the grid
+            if (grid.GridEntityId == xform.ParentUid)
+                return xform.Coordinates;
+
+            // Parented to grid so convert their pos back to the grid.
+            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(xform.WorldPosition);
+            return new EntityCoordinates(grid.GridEntityId, gridPos);
+        }
     }
 }

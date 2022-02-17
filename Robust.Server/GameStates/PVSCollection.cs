@@ -37,7 +37,6 @@ public interface IPVSCollection
 public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
 {
     [Shared.IoC.Dependency] private readonly IEntityManager _entityManager = default!;
-    [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector2i GetChunkIndices(Vector2 coordinates)

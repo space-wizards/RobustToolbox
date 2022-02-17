@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -12,6 +13,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Benchmarks.Serialization.Read
 {
     [MemoryDiagnoser]
+    [Virtual]
     public class SerializationReadBenchmark : SerializationBenchmark
     {
         public SerializationReadBenchmark()

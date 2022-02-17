@@ -2,6 +2,7 @@
 using System.Linq;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -13,6 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Benchmarks.Serialization.Copy
 {
     [MemoryDiagnoser]
+    [Virtual]
     public class SerializationCopyBenchmark : SerializationBenchmark
     {
         public SerializationCopyBenchmark()

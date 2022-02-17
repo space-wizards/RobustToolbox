@@ -14,7 +14,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
-    public class DictionarySerializer<TKey, TValue> :
+    public sealed class DictionarySerializer<TKey, TValue> :
         ITypeSerializer<Dictionary<TKey, TValue>, MappingDataNode>,
         ITypeSerializer<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>,
         ITypeSerializer<SortedDictionary<TKey, TValue>, MappingDataNode> where TKey : notnull

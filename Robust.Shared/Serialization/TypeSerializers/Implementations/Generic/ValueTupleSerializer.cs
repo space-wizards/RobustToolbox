@@ -13,7 +13,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
 {
     [TypeSerializer]
-    public class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
+    public sealed class ValueTupleSerializer<T1, T2> : ITypeSerializer<ValueTuple<T1, T2>, MappingDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,

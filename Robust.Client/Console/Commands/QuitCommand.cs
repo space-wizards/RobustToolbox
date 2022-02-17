@@ -4,7 +4,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Client.Console.Commands
 {
-    class HardQuitCommand : IConsoleCommand
+    sealed class HardQuitCommand : IConsoleCommand
     {
         public string Command => "hardquit";
         public string Description => "Kills the game client instantly.";
@@ -16,7 +16,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    class QuitCommand : IConsoleCommand
+    sealed class QuitCommand : IConsoleCommand
     {
         public string Command => "quit";
         public string Description => "Shuts down the game client gracefully.";

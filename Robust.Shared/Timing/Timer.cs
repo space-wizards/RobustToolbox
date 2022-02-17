@@ -6,7 +6,7 @@ using Robust.Shared.IoC;
 
 namespace Robust.Shared.Timing
 {
-    public class Timer
+    public sealed class Timer
     {
         /// <summary>
         /// Counts the time (in milliseconds) before firing again.

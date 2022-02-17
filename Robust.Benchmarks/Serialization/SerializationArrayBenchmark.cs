@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -7,6 +8,7 @@ using Robust.Shared.Serialization.Markdown.Value;
 namespace Robust.Benchmarks.Serialization
 {
     [MemoryDiagnoser]
+    [Virtual]
     public class SerializationArrayBenchmark : SerializationBenchmark
     {
         public SerializationArrayBenchmark()

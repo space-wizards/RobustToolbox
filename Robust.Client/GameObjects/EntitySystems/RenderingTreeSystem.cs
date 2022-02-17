@@ -377,13 +377,10 @@ namespace Robust.Client.GameObjects
         private Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
-
             var xform = xforms.GetComponent(value.Owner);
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
-            var tree = GetRenderTree(value.Owner, xforms);
 
-            return tree == null ? bounds.CalcBoundingBox() : xforms.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(bounds);
+            return SpriteAabbFunc(value, worldPos, worldRot, xforms);
         }
 
         private Box2 LightAabbFunc(in PointLightComponent value)
@@ -400,7 +397,7 @@ namespace Robust.Client.GameObjects
 
         private Box2 SpriteAabbFunc(SpriteComponent value, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xforms)
         {
-            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
+            var bounds = value.CalculateRotatedBoundingBox(worldPos, worldRot);
             var tree = GetRenderTree(value.Owner, xforms);
 
             return tree == null ? bounds.CalcBoundingBox() : xforms.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(bounds);

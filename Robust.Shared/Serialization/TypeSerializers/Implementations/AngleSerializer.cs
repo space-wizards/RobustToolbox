@@ -13,7 +13,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
+    public sealed class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,

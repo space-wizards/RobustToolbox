@@ -15,7 +15,7 @@ namespace Robust.Shared.Utility
     ///     Don't do it.
     /// </remarks>
     /// <typeparam name="T">The type of the contents of the list. This must be an unmanaged type.</typeparam>
-    public class RefList<T> : IList<T>
+    public sealed class RefList<T> : IList<T>
     {
         private T[] _array;
         private int _size;

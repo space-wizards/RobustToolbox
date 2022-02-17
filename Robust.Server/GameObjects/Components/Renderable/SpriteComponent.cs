@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [ComponentReference(typeof(SharedSpriteComponent))]
-    public class SpriteComponent : SharedSpriteComponent, ISerializationHooks
+    public sealed class SpriteComponent : SharedSpriteComponent, ISerializationHooks
     {
         const string LayerSerializationCache = "spritelayersrv";
 

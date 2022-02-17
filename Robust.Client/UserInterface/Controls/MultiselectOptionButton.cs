@@ -12,6 +12,7 @@ namespace Robust.Client.UserInterface.Controls
     /// </summary>
     /// <typeparam name="TKey">type to use as the unique key for each option. Functions similarly
     /// to dictionary key, so the type should make sure to respect dictionary key semantics.</typeparam>
+    [Virtual]
     public class MultiselectOptionButton<TKey> : ContainerButton where TKey : notnull
     {
         public const string StyleClassOptionButton = "optionButton";
@@ -289,7 +290,7 @@ namespace Robust.Client.UserInterface.Controls
             TogglePopup(false);
         }
 
-        public class ItemPressedEventArgs : EventArgs
+        public sealed class ItemPressedEventArgs : EventArgs
         {
             public readonly MultiselectOptionButton<TKey> Button;
             /// <summary>

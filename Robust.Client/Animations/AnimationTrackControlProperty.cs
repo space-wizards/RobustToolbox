@@ -3,7 +3,7 @@ using Robust.Shared.Animations;
 
 namespace Robust.Client.Animations
 {
-    public class AnimationTrackControlProperty : AnimationTrackProperty
+    public sealed class AnimationTrackControlProperty : AnimationTrackProperty
     {
         public string? Property { get; set; }
 

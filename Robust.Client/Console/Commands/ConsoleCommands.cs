@@ -6,7 +6,7 @@ using Robust.Shared.Console;
 
 namespace Robust.Client.Console.Commands
 {
-    class ClearCommand : IConsoleCommand
+    sealed class ClearCommand : IConsoleCommand
     {
         public string Command => "cls";
         public string Help => "Clears the debug console of all messages.";
@@ -18,7 +18,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    class FillCommand : IConsoleCommand
+    sealed class FillCommand : IConsoleCommand
     {
         public string Command => "fill";
         public string Help => "Fills the console with some nonsense for debugging.";

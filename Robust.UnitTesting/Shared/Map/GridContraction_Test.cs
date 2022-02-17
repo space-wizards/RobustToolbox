@@ -8,7 +8,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture]
-    public class GridContraction_Test : RobustIntegrationTest
+    public sealed class GridContraction_Test : RobustIntegrationTest
     {
         [Test]
         public async Task TestGridDeletes()

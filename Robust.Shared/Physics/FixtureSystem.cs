@@ -218,20 +218,9 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var edge = body.ContactEdges;
-
-            while (edge != null)
+            foreach (var (_, contact) in fixture.Contacts.ToArray())
             {
-                var contact = edge.Contact!;
-                edge = edge.Next;
-
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixture == fixtureA || fixture == fixtureB)
-                {
-                    body.PhysicsMap?.ContactManager.Destroy(contact);
-                }
+                body.PhysicsMap?.ContactManager.Destroy(contact);
             }
 
             var broadphase = body.Broadphase;

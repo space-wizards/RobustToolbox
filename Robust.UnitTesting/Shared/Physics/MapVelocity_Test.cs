@@ -8,7 +8,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.UnitTesting.Shared.Physics
 {
-    public class MapVelocity_Test : RobustIntegrationTest
+    public sealed class MapVelocity_Test : RobustIntegrationTest
     {
         private const string DummyEntity = "Dummy";
 

@@ -8,7 +8,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes
         AttributeTargets.Enum |
         AttributeTargets.Interface,
         Inherited = false)]
-    public class CopyByRefAttribute : Attribute
+    public sealed class CopyByRefAttribute : Attribute
     {
     }
 }

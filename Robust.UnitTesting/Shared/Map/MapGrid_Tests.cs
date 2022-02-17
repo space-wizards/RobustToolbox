@@ -8,44 +8,37 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
-using Robust.Shared.Physics.Broadphase;
-using MapGrid = Robust.Shared.Map.MapGrid;
+using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, TestOf(typeof(MapGrid))]
-    class MapGrid_Tests : RobustUnitTest
+    sealed class MapGrid_Tests
     {
-        protected override void OverrideIoC()
+        private static ISimulation SimulationFactory()
         {
-            base.OverrideIoC();
+            var sim = RobustServerSimulation
+                .NewSimulation()
+                .InitializeInstance();
 
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
-
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-        }
-
-        [OneTimeSetUp]
-        public void Setup()
-        {
-            IoCManager.Resolve<IComponentFactory>().GenerateNetIds();
+            return sim;
         }
 
         [Test]
         public void GetTileRefCoords()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+
             grid.SetTile(new Vector2i(-9, -1), new Tile(1, 2));
 
             var result = grid.GetTileRef(new Vector2i(-9, -1));
 
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(new MapId(5), new GridId(1), new Vector2i(-9,-1), new Tile(1, 2))));
+            Assert.That(result, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9,-1), new Tile(1, 2))));
         }
 
         /// <summary>
@@ -54,7 +47,11 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void BoundsExpansion()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+            grid.WorldPosition = new Vector2(3, 5);
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
@@ -74,7 +71,11 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void BoundsContract()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+            grid.WorldPosition = new Vector2(3, 5);
 
             grid.SetTile(new Vector2i(-1, -2), new Tile(1));
             grid.SetTile(new Vector2i(1, 2), new Tile(1));
@@ -93,7 +94,10 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void GridTileToChunkIndices()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
 
             var result = grid.GridTileToChunkIndices(new Vector2i(-9, -1));
 
@@ -106,7 +110,10 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void ToLocalCentered()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
 
             var result = grid.GridTileToLocal(new Vector2i(0, 0)).Position;
 
@@ -117,7 +124,10 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void TryGetTileRefNoTile()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
 
             var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
 
@@ -129,7 +139,11 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void TryGetTileRefTileExists()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+
             grid.SetTile(new Vector2i(-9, -1), new Tile(1, 2));
 
             var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
@@ -137,13 +151,17 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(foundTile, Is.True);
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(new MapId(5), new GridId(1), new Vector2i(-9, -1), new Tile(1, 2))));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9, -1), new Tile(1, 2))));
         }
 
         [Test]
         public void PointCollidesWithGrid()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+
             grid.SetTile(new Vector2i(19, 23), new Tile(1));
 
             var result = grid.CollidesWithGrid(new Vector2i(19, 23));
@@ -154,31 +172,16 @@ namespace Robust.UnitTesting.Shared.Map
         [Test]
         public void PointNotCollideWithGrid()
         {
-            var grid = MapGridFactory(new GridId(1));
+            var sim = SimulationFactory();
+            var mapMan = sim.Resolve<IMapManager>();
+            var mapId = mapMan.CreateMap();
+            var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
+
             grid.SetTile(new Vector2i(19, 23), new Tile(1));
 
             var result = grid.CollidesWithGrid(new Vector2i(19, 24));
 
             Assert.That(result, Is.False);
-        }
-
-        private static IMapGridInternal MapGridFactory(GridId id)
-        {
-            var mapId = new MapId(5);
-            var mapMan = IoCManager.Resolve<IMapManager>();
-
-            if(mapMan.MapExists(mapId))
-                mapMan.DeleteMap(mapId);
-
-            mapMan.CreateMap(mapId);
-
-            if(mapMan.GridExists(id))
-                mapMan.DeleteGrid(id);
-
-            var newGrid = mapMan.CreateGrid(mapId, id, 8);
-            newGrid.WorldPosition = new Vector2(3, 5);
-
-            return (IMapGridInternal)newGrid;
         }
     }
 }

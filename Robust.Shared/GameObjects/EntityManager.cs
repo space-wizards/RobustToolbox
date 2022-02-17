@@ -11,6 +11,7 @@ namespace Robust.Shared.GameObjects
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
     /// <inheritdoc />
+    [Virtual]
     public partial class EntityManager : IEntityManager
     {
         #region Dependencies
@@ -19,7 +20,6 @@ namespace Robust.Shared.GameObjects
         [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
         [IoC.Dependency] private readonly IMapManager _mapManager = default!;
         [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-        [IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
 
         #endregion Dependencies
 
@@ -437,7 +437,7 @@ namespace Robust.Shared.GameObjects
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_pauseManager.IsMapInitialized(mapId))
+                if (_mapManager.IsMapInitialized(mapId))
                     entity.RunMapInit();
             }
             catch (Exception e)

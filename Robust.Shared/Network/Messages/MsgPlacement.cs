@@ -9,7 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgPlacement : NetMessage
+    public sealed class MsgPlacement : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

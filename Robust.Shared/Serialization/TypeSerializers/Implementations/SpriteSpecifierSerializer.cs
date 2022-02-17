@@ -38,13 +38,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             try
             {
-                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, value);
+                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Texture?)value);
             }
             catch { /* ignored */ }
 
             try
             {
-                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, value);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (EntityPrototype?) value);
             }
             catch { /* ignored */ }
 
@@ -85,7 +85,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
         {
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, value);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Rsi?) value);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,

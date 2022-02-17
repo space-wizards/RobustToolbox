@@ -40,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context, value);
+                    context);
 
                 builder.Add((string) result.RawValue!);
                 mappings.Add(result);

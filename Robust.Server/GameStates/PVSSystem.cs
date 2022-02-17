@@ -193,7 +193,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void UpdateEntityRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, TransformComponent? transformComponent = null)
     {
-        if(!Resolve(uid, ref transformComponent))
+        if (transformComponent == null && !xformQuery.TryGetComponent(uid, out transformComponent))
             return;
 
         _entityPvsCollection.UpdateIndex(uid, transformComponent.Coordinates);

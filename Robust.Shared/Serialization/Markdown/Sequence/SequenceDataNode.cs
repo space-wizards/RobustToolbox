@@ -1,11 +1,12 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.Serialization.Markdown.Value;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Sequence
 {
-    public sealed class SequenceDataNode : DataNode<SequenceDataNode>
+    public sealed class SequenceDataNode : DataNode<SequenceDataNode>, IList<DataNode>
     {
         private readonly List<DataNode> _nodes = new();
 
@@ -65,17 +66,36 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
 
         public IReadOnlyList<DataNode> Sequence => _nodes;
 
-        public DataNode this[int index] => _nodes[index];
+        public int IndexOf(DataNode item) => _nodes.IndexOf(item);
+
+        public void Insert(int index, DataNode item) => _nodes.Insert(index, item);
+
+        public void RemoveAt(int index) => _nodes.RemoveAt(index);
+
+        public DataNode this[int index]
+        {
+            get => _nodes[index];
+            set => _nodes[index] = value;
+        }
 
         public void Add(DataNode node)
         {
             _nodes.Add(node);
         }
 
-        public void Remove(DataNode node)
+        public void Clear() => _nodes.Clear();
+
+        public bool Contains(DataNode item) => _nodes.Contains(item);
+
+        public void CopyTo(DataNode[] array, int arrayIndex) => _nodes.CopyTo(array, arrayIndex);
+
+        public bool Remove(DataNode node)
         {
-            _nodes.Remove(node);
+            return _nodes.Remove(node);
         }
+
+        public int Count => _nodes.Count;
+        public bool IsReadOnly => false;
 
         public T Cast<T>(int index) where T : DataNode
         {
@@ -99,6 +119,8 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return newSequence;
         }
 
+        public IEnumerator<DataNode> GetEnumerator() => _nodes.GetEnumerator();
+
         public override int GetHashCode()
         {
             var code = new HashCode();
@@ -108,6 +130,11 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             }
 
             return code.ToHashCode();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
 
         public override SequenceDataNode? Except(SequenceDataNode node)

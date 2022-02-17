@@ -18,7 +18,8 @@ namespace Robust.Shared.Serialization.Manager
             Type type,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false);
+            bool skipHook = false,
+            object? value = null);
 
         private readonly ConcurrentDictionary<(Type value, Type node), ReadDelegate> _readers = new();
 
@@ -44,6 +45,7 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var valueParam = Expression.Parameter(typeof(object), "value");
 
                 MethodCallExpression call;
 
@@ -140,7 +142,7 @@ namespace Robust.Shared.Serialization.Manager
                             nameof(ReadSelfSerialize),
                             new[] { value },
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
-                            instantiatorConst)
+                            instantiatorConst, valueParam)
                     };
                 }
                 else if (instance.TryGetTypeReader(value, nodeType, out var reader))
@@ -165,7 +167,8 @@ namespace Robust.Shared.Serialization.Manager
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
                             readerConst,
                             contextParam,
-                            skipHookParam),
+                            skipHookParam,
+                            valueParam),
                         _ => Expression.Call(
                             instanceConst,
                             nameof(ReadWithTypeReader),
@@ -318,7 +321,7 @@ namespace Robust.Shared.Serialization.Manager
 
         private DeserializationResult ReadSelfSerialize<TValue>(
             ValueDataNode node,
-            InstantiationDelegate<object> instantiator)
+            InstantiationDelegate<object> instantiator, object? rawValue = null)
             where TValue : ISelfSerialize
         {
             if (node.Value == "null")
@@ -326,7 +329,7 @@ namespace Robust.Shared.Serialization.Manager
                 return new DeserializedValue<TValue?>(default);
             }
 
-            var value = (TValue) instantiator();
+            var value = (TValue) (rawValue ?? instantiator());
             value.Deserialize(node.Value);
 
             return new DeserializedValue<TValue?>(value);
@@ -352,14 +355,15 @@ namespace Robust.Shared.Serialization.Manager
             ValueDataNode node,
             ITypeReader<TValue, ValueDataNode> reader,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? value = null)
         {
             if (node.Value == "null")
             {
                 return new DeserializedValue<TValue?>(default);
             }
 
-            return ReadWithTypeReader(node, reader, context, skipHook);
+            return ReadWithTypeReader(node, reader, context, skipHook, value);
         }
 
         private DeserializationResult ReadWithTypeReaderNullableStruct<TValue>(
@@ -381,7 +385,8 @@ namespace Robust.Shared.Serialization.Manager
             TNode node,
             ITypeReader<TValue, TNode> reader,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? value = null)
             where TNode : DataNode
         {
             if (context != null &&

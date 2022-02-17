@@ -1,9 +1,13 @@
+using System.Globalization;
+using JetBrains.Annotations;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Value
 {
     public sealed class ValueDataNode : DataNode<ValueDataNode>
     {
+        public ValueDataNode() : this(string.Empty) {}
+
         public ValueDataNode(string value) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
             Value = value;
@@ -45,6 +49,24 @@ namespace Robust.Shared.Serialization.Markdown.Value
         public override string ToString()
         {
             return Value;
+        }
+
+        [Pure]
+        public int AsInt()
+        {
+            return int.Parse(Value, CultureInfo.InvariantCulture);
+        }
+
+        [Pure]
+        public float AsFloat()
+        {
+            return float.Parse(Value, CultureInfo.InvariantCulture);
+        }
+
+        [Pure]
+        public bool AsBool()
+        {
+            return bool.Parse(Value);
         }
     }
 }

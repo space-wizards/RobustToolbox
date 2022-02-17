@@ -168,7 +168,7 @@ namespace Robust.Client.GameObjects
                 // This container is expecting an entity... but it got parented to some other entity???
                 // Ah well, the sever should send a new container state that updates expected entities so just ignore it for now.
                 return;
-            }    
+            }
 
             RemoveExpectedEntity(message.Entity);
 
@@ -253,7 +253,10 @@ namespace Robust.Client.GameObjects
                 parent = parentXform.ParentUid;
             }
 
-            // Okay now recursively update ourselves and our children
+            // Alright so
+            // This is the CBT bit.
+            // The issue is we need to go through the children and re-check whether they are or are not contained.
+            // if they are contained then the occlusion values may need updating for all those children
             UpdateEntity(entity, xform, xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
         }
 
@@ -278,9 +281,31 @@ namespace Robust.Client.GameObjects
 
             var childEnumerator = xform.ChildEnumerator;
 
-            while (childEnumerator.MoveNext(out var child))
+            // Try to avoid TryComp if we already know stuff is occluded.
+            if ((!spriteOccluded || !lightOccluded) && TryComp<ContainerManagerComponent>(entity, out var manager))
             {
-                UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    // Thank god it's by value and not by ref.
+                    var childSpriteOccluded = spriteOccluded;
+                    var childLightOccluded = lightOccluded;
+
+                    // We already know either sprite or light is not occluding so need to check container.
+                    if (manager.TryGetContainer(child.Value, out var container))
+                    {
+                        childSpriteOccluded = childSpriteOccluded || !container.ShowContents;
+                        childLightOccluded = childLightOccluded || container.OccludesLight;
+                    }
+
+                    UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, childSpriteOccluded, childLightOccluded);
+                }
+            }
+            else
+            {
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
+                }
             }
         }
     }

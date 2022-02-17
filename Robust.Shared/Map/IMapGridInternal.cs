@@ -67,5 +67,15 @@ namespace Robust.Shared.Map
         /// Calculate the world space AABB for this chunk.
         /// </summary>
         Box2 CalcWorldAABB(MapChunk mapChunk);
+
+        /// <summary>
+        ///     Returns the tile at the given chunk indices.
+        /// </summary>
+        /// <param name="mapChunk"></param>
+        /// <param name="grid"></param>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
+        TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex);
     }
 }

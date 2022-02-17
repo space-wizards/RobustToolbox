@@ -201,7 +201,27 @@ namespace Robust.Shared.Map
             }
 
             var chunkTileIndices = output.GridTileToChunkTile(tileCoordinates);
-            return output.GetTileRef((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+            return GetTileRef(output, (ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+        }
+
+        /// <summary>
+        ///     Returns the tile at the given chunk indices.
+        /// </summary>
+        /// <param name="mapChunk"></param>
+        /// <param name="grid"></param>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
+        public TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex)
+        {
+            if (xIndex >= mapChunk.ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
+
+            if (yIndex >= mapChunk.ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
+
+            var indices = mapChunk.ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
+            return new TileRef(ParentMapId, Index, indices, mapChunk.GetTile(xIndex, yIndex));
         }
 
         /// <inheritdoc />
@@ -298,7 +318,7 @@ namespace Robust.Shared.Map
                     if (_chunks.TryGetValue(gridChunk, out var chunk))
                     {
                         var chunkTile = chunk.GridTileToChunkTile(new Vector2i(x, y));
-                        var tile = chunk.GetTileRef((ushort)chunkTile.X, (ushort)chunkTile.Y);
+                        var tile = GetTileRef(chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
 
                         if (ignoreEmpty && tile.Tile.IsEmpty)
                             continue;
@@ -780,7 +800,7 @@ namespace Robust.Shared.Map
             }
 
             var cTileIndices = chunk.GridTileToChunkTile(indices);
-            tile = chunk.GetTileRef(cTileIndices);
+            tile = GetTileRef(chunk, (ushort)cTileIndices.X, (ushort)cTileIndices.Y);
             return true;
         }
 

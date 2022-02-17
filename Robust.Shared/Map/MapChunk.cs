@@ -86,38 +86,6 @@ namespace Robust.Shared.Map
         public Vector2i Indices => _gridIndices;
 
         /// <summary>
-        ///     Returns the tile at the given indices.
-        /// </summary>
-        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
-        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
-        /// <returns>A reference to a tile.</returns>
-        public TileRef GetTileRef(ushort xIndex, ushort yIndex)
-        {
-            if (xIndex >= ChunkSize)
-                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
-
-            if (yIndex >= ChunkSize)
-                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
-
-            var indices = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
-            return new TileRef(_grid.ParentMapId, _grid.Index, indices, GetTile(xIndex, yIndex));
-        }
-
-        /// <summary>
-        ///     Returns the tile reference at the given indices.
-        /// </summary>
-        /// <param name="indices">The tile indices relative to the chunk origin.</param>
-        /// <returns>A reference to a tile.</returns>
-        public TileRef GetTileRef(Vector2i indices)
-        {
-            if (indices.X >= ChunkSize || indices.X < 0 || indices.Y >= ChunkSize || indices.Y < 0)
-                throw new ArgumentOutOfRangeException(nameof(indices), "Tile indices out of bounds.");
-
-            var chunkIndices = ChunkTileToGridTile(indices);
-            return new TileRef(_grid.ParentMapId, _grid.Index, chunkIndices, GetTile((ushort) indices.X, (ushort) indices.Y));
-        }
-
-        /// <summary>
         /// Returns the tile at the given chunk indices.
         /// </summary>
         /// <param name="xIndex">The X tile index relative to the chunk origin.</param>

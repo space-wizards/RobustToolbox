@@ -308,7 +308,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
                         for (ushort y = 0; y < grid.ChunkSize; y++)
                         {
                             var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTileRef(x, y).Tile != tile)
+                            if (chunk.GetTile(x, y) != tile)
                             {
                                 chunk.SetTile(x, y, tile);
                                 modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));

@@ -41,19 +41,19 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         _chunkDeletionHistory.Remove(gridId);
     }
 
-    public override void ChunkRemoved(MapChunk chunk)
+    public override void ChunkRemoved(GridId gridId, MapChunk chunk)
     {
-        base.ChunkRemoved(chunk);
-        if (!_chunkDeletionHistory.TryGetValue(chunk.GridId, out var chunks))
+        base.ChunkRemoved(gridId, chunk);
+        if (!_chunkDeletionHistory.TryGetValue(gridId, out var chunks))
         {
             chunks = new List<(GameTick tick, Vector2i indices)>();
-            _chunkDeletionHistory[chunk.GridId] = chunks;
+            _chunkDeletionHistory[gridId] = chunks;
         }
 
         chunks.Add((GameTiming.CurTick, chunk.Indices));
 
         // Seemed easier than having this method on GridFixtureSystem
-        if (!TryGetGrid(chunk.GridId, out var grid) ||
+        if (!TryGetGrid(gridId, out var grid) ||
             !EntityManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
             chunk.Fixtures.Count == 0)
             return;
@@ -324,7 +324,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
                 {
                     var chunk = grid.GetChunk(chunkData.Index);
                     chunk.SuppressCollisionRegeneration = false;
-                    chunk.RegenerateCollision();
+                    grid.RegenerateCollision(chunk);
                 }
 
                 foreach (var chunkData in gridDatum.DeletedChunkData)

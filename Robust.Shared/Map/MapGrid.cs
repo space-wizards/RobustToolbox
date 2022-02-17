@@ -168,33 +168,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <summary>
-        /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
-        /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
-        /// </summary>
-        public void UpdateAABB()
-        {
-            LocalBounds = new Box2();
-            foreach (var chunk in _chunks.Values)
-            {
-                var chunkBounds = chunk.CalcLocalBounds();
-
-                if(chunkBounds.Size.Equals(Vector2i.Zero))
-                    continue;
-
-                if (LocalBounds.Size == Vector2.Zero)
-                {
-                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = gridBounds;
-                }
-                else
-                {
-                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = LocalBounds.Union(gridBounds);
-                }
-            }
-        }
-
         /// <inheritdoc />
         public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
         {
@@ -274,7 +247,7 @@ namespace Robust.Shared.Map
             foreach (var chunk in chunks)
             {
                 chunk.SuppressCollisionRegeneration = false;
-                chunk.RegenerateCollision();
+                RegenerateCollision(chunk);
             }
         }
 
@@ -380,7 +353,7 @@ namespace Robust.Shared.Map
 
             _chunks.Remove(origin);
 
-            _mapManager.ChunkRemoved((MapChunk) chunk);
+            _mapManager.ChunkRemoved(Index, chunk);
 
             if (_chunks.Count == 0)
             {
@@ -815,6 +788,66 @@ namespace Robust.Shared.Map
         }
 
         #endregion Transforms
+
+        /// <summary>
+        /// Regenerates the chunk local bounds of this chunk.
+        /// </summary>
+        public void RegenerateCollision(MapChunk mapChunk)
+        {
+            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
+            if (mapChunk.FilledTiles == 0)
+            {
+                RemoveChunk(mapChunk.Indices);
+            }
+
+            // generate collision rectangles for this chunk based on filled tiles.
+            GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
+            mapChunk.CachedBounds = localBounds;
+
+            LocalBounds = new Box2();
+            foreach (var chunk in _chunks.Values)
+            {
+                var chunkBounds = chunk.CachedBounds;
+
+                if(chunkBounds.Size.Equals(Vector2i.Zero))
+                    continue;
+
+                if (LocalBounds.Size == Vector2.Zero)
+                {
+                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                    LocalBounds = gridBounds;
+                }
+                else
+                {
+                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                    LocalBounds = LocalBounds.Union(gridBounds);
+                }
+            }
+
+            // TryGet because unit tests YAY
+            if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
+                system.RegenerateCollision(GridEntityId, mapChunk, rectangles);
+        }
+
+        /// <summary>
+        /// Calculate the world space AABB for this chunk.
+        /// </summary>
+        public Box2 CalcWorldAABB(MapChunk mapChunk)
+        {
+            var rotation = WorldRotation;
+            var position = WorldPosition;
+            var chunkPosition = mapChunk.Indices;
+            var tileScale = TileSize;
+            var chunkScale = mapChunk.ChunkSize;
+
+            var worldPos = position + rotation.RotateVec(chunkPosition * tileScale * chunkScale);
+
+            return new Box2Rotated(
+                ((Box2)mapChunk.CachedBounds
+                    .Scale(tileScale))
+                .Translated(worldPos),
+                rotation, worldPos).CalcBoundingBox();
+        }
     }
 
     /// <summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -134,6 +134,18 @@ namespace Robust.Shared.Maths
         public override readonly string ToString()
         {
             return $"({Left}, {Bottom}, {Right}, {Top})";
+        }
+
+        /// <summary>
+        /// Multiplies each side of the box by the scalar.
+        /// </summary>
+        public Box2i Scale(int scalar)
+        {
+            return new Box2i(
+                Left * scalar,
+                Bottom * scalar,
+                Right * scalar,
+                Top * scalar);
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
@@ -19,11 +18,6 @@ namespace Robust.Shared.Map
         /// </summary>
         private const int SnapCellStartingCapacity = 1;
 
-        /// <summary>
-        /// GridId of the grid this chunk belongs to.
-        /// </summary>
-        public GridId GridId => _grid.Index;
-
         private readonly IMapGridInternal _grid;
         private readonly Vector2i _gridIndices;
 
@@ -38,7 +32,10 @@ namespace Robust.Shared.Map
         /// </remarks>
         internal int FilledTiles { get; private set; }
 
-        private Box2i _cachedBounds;
+        /// <summary>
+        /// Chunk-local AABB of this chunk.
+        /// </summary>
+        public Box2i CachedBounds { get; set; }
 
         /// <summary>
         /// Physics fixtures that make up this grid chunk.
@@ -205,7 +202,7 @@ namespace Robust.Shared.Map
 
             if (!SuppressCollisionRegeneration && oldValidTiles != FilledTiles)
             {
-                RegenerateCollision();
+                this._grid.RegenerateCollision(this);
             }
         }
 
@@ -291,60 +288,6 @@ namespace Robust.Shared.Map
         /// property is set to <see langword="false"/>.
         /// </summary>
         public bool SuppressCollisionRegeneration { get; set; }
-
-        /// <summary>
-        /// Regenerates the chunk local bounds of this chunk.
-        /// </summary>
-        public void RegenerateCollision()
-        {
-            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
-            if (FilledTiles == 0)
-            {
-                var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(GridId);
-
-                grid.RemoveChunk(_gridIndices);
-            }
-
-            // generate collision rectangles for this chunk based on filled tiles.
-            GridChunkPartition.PartitionChunk(this, out _cachedBounds, out var rectangles);
-
-            _grid.UpdateAABB();
-
-            // TryGet because unit tests YAY
-            if (FilledTiles > 0 && EntitySystem.TryGet(out SharedGridFixtureSystem? system))
-                system.RegenerateCollision(this, rectangles);
-        }
-
-        /// <summary>
-        /// Calculates the chunk space bounds of this map chunk.
-        /// </summary>
-        /// <returns></returns>
-        public Box2i CalcLocalBounds()
-        {
-            return _cachedBounds;
-        }
-
-        /// <summary>
-        /// Calculate the world space AABB for this chunk.
-        /// </summary>
-        public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
-        {
-            Vector2? gridPos1 = gridPos;
-            Angle? gridRot1 = gridRot;
-            gridRot1 ??= _grid.WorldRotation;
-            gridPos1 ??= _grid.WorldPosition;
-            var worldPos = gridPos1.Value + gridRot1.Value.RotateVec(Indices * _grid.TileSize * ChunkSize);
-
-            var localBounds = CalcLocalBounds();
-            var ts = _grid.TileSize;
-
-            var scaledLocalBounds = new Box2Rotated(new Box2(
-                localBounds.Left * ts,
-                localBounds.Bottom * ts,
-                localBounds.Right * ts,
-                localBounds.Top * ts).Translated(worldPos), gridRot1.Value, worldPos);
-            return scaledLocalBounds.CalcBoundingBox();
-        }
 
         /// <inheritdoc />
         public override string ToString()

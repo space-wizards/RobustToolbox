@@ -18,8 +18,6 @@ namespace Robust.Shared.Map
 
         void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
 
-        void UpdateAABB();
-
         /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
         ///     then a new one is generated that is filled with empty space.
@@ -59,5 +57,15 @@ namespace Robust.Shared.Map
         void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
 
         void GetMapChunks(Box2Rotated worldArea, out MapGrid.ChunkEnumerator enumerator);
+
+        /// <summary>
+        /// Regenerates the chunk local bounds of this chunk.
+        /// </summary>
+        void RegenerateCollision(MapChunk mapChunk);
+
+        /// <summary>
+        /// Calculate the world space AABB for this chunk.
+        /// </summary>
+        Box2 CalcWorldAABB(MapChunk mapChunk);
     }
 }

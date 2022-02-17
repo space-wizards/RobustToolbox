@@ -292,7 +292,7 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1));
             chunk.SetTile(5, 7, new Tile(1));
 
-            var bounds = chunk.CalcLocalBounds();
+            var bounds = chunk.CachedBounds;
 
             Assert.That(bounds.Left, Is.EqualTo(3));
             Assert.That(bounds.Bottom, Is.EqualTo(5));
@@ -310,7 +310,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             chunk.SetTile(3, 5, Tile.Empty);
 
-            var bounds = chunk.CalcLocalBounds();
+            var bounds = chunk.CachedBounds;
 
             Assert.That(bounds.Left, Is.EqualTo(5));
             Assert.That(bounds.Bottom, Is.EqualTo(7));
@@ -328,7 +328,7 @@ namespace Robust.UnitTesting.Shared.Map
 
             chunk.SetTile(5, 7, Tile.Empty);
 
-            var bounds = chunk.CalcLocalBounds();
+            var bounds = chunk.CachedBounds;
 
             Assert.That(bounds.Left, Is.EqualTo(3));
             Assert.That(bounds.Bottom, Is.EqualTo(5));

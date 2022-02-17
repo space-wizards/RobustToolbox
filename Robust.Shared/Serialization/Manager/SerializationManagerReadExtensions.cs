@@ -7,23 +7,21 @@ namespace Robust.Shared.Serialization.Manager
 {
     public static class SerializationManagerReadExtensions
     {
-        public static T ReadValueOrThrow<T>(
-            this ISerializationManager manager,
+        public static T ReadValueOrThrow<T>(this ISerializationManager manager,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, T? value = default)
         {
-            return manager.ReadValue<T>(node, context, skipHook) ?? throw new NullReferenceException();
+            return manager.ReadValue<T>(node, context, skipHook, value) ?? throw new NullReferenceException();
         }
 
-        public static T ReadValueOrThrow<T>(
-            this ISerializationManager manager,
+        public static T ReadValueOrThrow<T>(this ISerializationManager manager,
             Type type,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, T? value = default)
         {
-            return manager.ReadValueCast<T>(type, node, context, skipHook) ?? throw new NullReferenceException();
+            return manager.ReadValueCast<T>(type, node, context, skipHook, value) ?? throw new NullReferenceException();
         }
 
         public static object ReadValueOrThrow(
@@ -31,18 +29,18 @@ namespace Robust.Shared.Serialization.Manager
             Type type,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, object? value = null)
         {
-            return manager.ReadValue(type, node, context, skipHook) ?? throw new NullReferenceException();
+            return manager.ReadValue(type, node, context, skipHook, value) ?? throw new NullReferenceException();
         }
 
         public static (DeserializationResult result, object? value) ReadWithValue(
             this ISerializationManager manager,
             Type type, DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, object? value = null)
         {
-            var result = manager.Read(type, node, context, skipHook);
+            var result = manager.Read(type, node, context, skipHook, value);
             return (result, result.RawValue);
         }
 
@@ -50,9 +48,9 @@ namespace Robust.Shared.Serialization.Manager
             this ISerializationManager manager,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, object? value = null)
         {
-            var result = manager.Read(typeof(T), node, context, skipHook);
+            var result = manager.Read(typeof(T), node, context, skipHook, value);
 
             if (result.RawValue == null)
             {
@@ -62,14 +60,13 @@ namespace Robust.Shared.Serialization.Manager
             return (result, (T) result.RawValue);
         }
 
-        public static (DeserializationResult result, T? value) ReadWithValueCast<T>(
-            this ISerializationManager manager,
+        public static (DeserializationResult result, T? value) ReadWithValueCast<T>(this ISerializationManager manager,
             Type type,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, T? value = default)
         {
-            var result = manager.Read(type, node, context, skipHook);
+            var result = manager.Read(type, node, context, skipHook, value);
 
             if (result.RawValue == null)
             {
@@ -84,9 +81,9 @@ namespace Robust.Shared.Serialization.Manager
             this ISerializationManager manager,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, T? value = default)
         {
-            var result = manager.Read(typeof(T), node, context, skipHook);
+            var result = manager.Read(typeof(T), node, context, skipHook, value);
 
             if (result.RawValue == null)
             {
@@ -101,9 +98,9 @@ namespace Robust.Shared.Serialization.Manager
             Type type,
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false, T? value = default)
         {
-            var result = manager.Read(type, node, context, skipHook);
+            var result = manager.Read(type, node, context, skipHook, value);
 
             if (result.RawValue == null)
             {

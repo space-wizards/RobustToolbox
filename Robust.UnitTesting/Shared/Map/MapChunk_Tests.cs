@@ -237,7 +237,7 @@ namespace Robust.UnitTesting.Shared.Map
             chunk.SetTile(3, 5, new Tile(1, 3));
 
             var tiles = new List<TileRef>();
-            foreach (var tileRef in chunk)
+            foreach (var tileRef in chunk.GetAllTiles())
             {
                 tiles.Add(tileRef);
             }

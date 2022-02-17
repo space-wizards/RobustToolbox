@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -13,7 +12,7 @@ namespace Robust.Shared.Map
     /// <summary>
     ///     A square section of a <see cref="IMapGrid"/>.
     /// </summary>
-    internal sealed class MapChunk : IEnumerable<TileRef>
+    internal sealed class MapChunk
     {
         /// <summary>
         /// New SnapGrid cells are allocated with this capacity.
@@ -208,33 +207,6 @@ namespace Robust.Shared.Map
             {
                 RegenerateCollision();
             }
-        }
-
-        /// <summary>
-        ///     Returns an enumerator that iterates through all grid tiles.
-        /// </summary>
-        /// <returns></returns>
-        public IEnumerator<TileRef> GetEnumerator()
-        {
-            for (ushort x = 0; x < ChunkSize; x++)
-            {
-                for (ushort y = 0; y < ChunkSize; y++)
-                {
-                    if (GetTile(x, y).IsEmpty)
-                        continue;
-
-                    var gridTile = ChunkTileToGridTile(new Vector2i(x, y));
-                    yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, GetTile(x, y));
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Returns an enumerator that iterates through all grid tiles.
-        /// </summary>
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         /// <summary>

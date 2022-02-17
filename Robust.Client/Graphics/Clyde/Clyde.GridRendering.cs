@@ -91,7 +91,7 @@ namespace Robust.Client.Graphics.Clyde
             Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
             var i = 0;
-            foreach (var tile in chunk)
+            foreach (var tile in chunk.GetAllTiles())
             {
                 var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
                 if (regionMaybe == null)

@@ -236,7 +236,7 @@ namespace Robust.Shared.Map
         {
             foreach (var kvChunk in _chunks)
             {
-                foreach (var tileRef in kvChunk.Value)
+                foreach (var tileRef in kvChunk.Value.GetAllTiles())
                 {
                     if (!ignoreSpace || !tileRef.Tile.IsEmpty)
                         yield return tileRef;

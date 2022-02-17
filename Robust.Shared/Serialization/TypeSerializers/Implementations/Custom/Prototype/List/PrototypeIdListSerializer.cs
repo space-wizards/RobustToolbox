@@ -67,9 +67,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context)
+            ISerializationContext? context, List<string>? list)
         {
-            var list = new List<string>();
+            list ??= new List<string>();
             var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
@@ -79,7 +79,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context);
+                    context, value);
 
                 list.Add((string) result.RawValue!);
                 mappings.Add(result);

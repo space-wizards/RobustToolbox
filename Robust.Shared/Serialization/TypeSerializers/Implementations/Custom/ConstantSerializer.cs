@@ -19,7 +19,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int value = default)
         {
             var constType = serializationManager.GetConstantTypeFromTag(typeof(TTag));
             return new DeserializedValue((int) Enum.Parse(constType, node.Value));

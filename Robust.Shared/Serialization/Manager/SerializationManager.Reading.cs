@@ -395,7 +395,7 @@ namespace Robust.Shared.Serialization.Manager
                 reader = (ITypeReader<TValue, TNode>) readerUnCast;
             }
 
-            return reader.Read(this, node, DependencyCollection, skipHook, context);
+            return reader.Read(this, node, DependencyCollection, skipHook, context, TODO);
         }
 
         private DeserializationResult ReadGenericNullable<TValue>(
@@ -430,7 +430,7 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((typeof(TValue), typeof(ValueDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, ValueDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context);
+                return reader.Read(this, node, DependencyCollection, skipHook, context, TODO);
             }
 
             if (definition == null)
@@ -479,7 +479,7 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((type, typeof(MappingDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, MappingDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context);
+                return reader.Read(this, node, DependencyCollection, skipHook, context, TODO);
             }
 
             if (definition == null)

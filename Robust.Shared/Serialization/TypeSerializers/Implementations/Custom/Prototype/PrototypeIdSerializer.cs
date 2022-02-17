@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, string? value = default)
         {
             return new DeserializedValue<string>(node.Value);
         }

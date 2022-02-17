@@ -33,9 +33,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new ValidatedSequenceNode(list);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            HashSet<string>? set = null)
         {
-            var set = new HashSet<string>();
+            set ??= new HashSet<string>();
             var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)

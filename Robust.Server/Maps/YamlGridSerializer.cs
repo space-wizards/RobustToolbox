@@ -28,7 +28,7 @@ namespace Robust.Server.Maps
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapChunk? value)
         {
             throw new NotImplementedException();
         }
@@ -129,7 +129,7 @@ namespace Robust.Server.Maps
         {
         }
         public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapGrid? value)
         {
             var info = node.Get<MappingDataNode>("settings");
             var chunks = node.Get<SequenceDataNode>("chunks");

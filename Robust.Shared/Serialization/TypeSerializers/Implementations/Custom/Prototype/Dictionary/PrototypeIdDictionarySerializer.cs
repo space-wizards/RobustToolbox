@@ -64,23 +64,26 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
         DeserializationResult ITypeReader<Dictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
+            Dictionary<string, TValue>? value)
         {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context);
+            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context, value);
         }
 
         DeserializationResult ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
+            SortedDictionary<string, TValue>? value)
         {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context);
+            return ((ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context, value);
         }
 
         DeserializationResult ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
+            IReadOnlyDictionary<string, TValue>? value)
         {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context);
+            return ((ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context, value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, Dictionary<string, TValue> value,

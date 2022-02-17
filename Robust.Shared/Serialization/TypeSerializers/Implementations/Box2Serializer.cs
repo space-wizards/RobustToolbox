@@ -18,7 +18,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, Box2 value = default)
         {
             var args = node.Value.Split(',');
 

@@ -7,11 +7,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
 {
     public interface ITypeReader<TType, TNode> : ITypeValidator<TType, TNode> where TNode : DataNode
     {
-        DeserializationResult Read(
-            ISerializationManager serializationManager,
+        DeserializationResult Read(ISerializationManager serializationManager,
             TNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null);
+            ISerializationContext? context = null, TType? value = default);
     }
 }

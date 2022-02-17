@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
@@ -29,8 +30,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context)
+            ISerializationContext? context, IReadOnlyCollection<string>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<string>)}. Ignoring...");
+
             var list = new List<string>();
             var mappings = new List<DeserializationResult>();
 

@@ -32,7 +32,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, Type? value = default)
         {
             if (Shortcuts.TryGetValue(node.Value, out var shortcutType))
                 return new DeserializedValue<Type>(shortcutType);

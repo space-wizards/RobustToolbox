@@ -927,7 +927,7 @@ namespace Robust.Server.Maps
             public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
-                ISerializationContext? context = null)
+                ISerializationContext? context = null, GridId value)
             {
                 // This is the code that deserializes the Grids index into the GridId. This has to happen between Grid allocation
                 // and when grids are bound to their entities.
@@ -1014,7 +1014,7 @@ namespace Robust.Server.Maps
                 ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
-                ISerializationContext? context)
+                ISerializationContext? context, EntityUid value)
             {
                 if (node.Value == "null")
                 {

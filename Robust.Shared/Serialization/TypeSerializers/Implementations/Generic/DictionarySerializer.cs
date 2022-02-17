@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Result;
@@ -38,9 +39,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager,
-            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
+            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
+            Dictionary<TKey, TValue>? dict)
         {
-            var dict = new Dictionary<TKey, TValue>();
+            dict ??= new Dictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
@@ -112,8 +114,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node,
                 IDependencyCollection dependencies,
-                bool skipHook, ISerializationContext? context)
+                bool skipHook, ISerializationContext? context, IReadOnlyDictionary<TKey, TValue>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
+
             var dict = new Dictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
@@ -133,9 +138,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
                 ISerializationManager serializationManager, MappingDataNode node,
                 IDependencyCollection dependencies,
-                bool skipHook, ISerializationContext? context)
+                bool skipHook, ISerializationContext? context, SortedDictionary<TKey, TValue>? dict)
         {
-            var dict = new SortedDictionary<TKey, TValue>();
+            dict ??= new SortedDictionary<TKey, TValue>();
             var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)

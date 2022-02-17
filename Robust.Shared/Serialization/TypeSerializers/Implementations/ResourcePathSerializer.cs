@@ -21,7 +21,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, ResourcePath? value = default)
         {
             return new DeserializedValue<ResourcePath>(new ResourcePath(node.Value));
         }

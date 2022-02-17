@@ -144,7 +144,7 @@ namespace Robust.Shared.Serialization.Manager
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Read(this, node, DependencyCollection, skipHook, context);
+            return serializer.Read(this, node, DependencyCollection, skipHook, context, TODO);
         }
 
         private DataNode WriteWithSerializerRaw(

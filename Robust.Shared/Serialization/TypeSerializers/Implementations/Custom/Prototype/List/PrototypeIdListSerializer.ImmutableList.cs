@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Result;
@@ -23,8 +24,12 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            ImmutableList<string>? rawValue = null)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<string>)}. Ignoring...");
+
             var builder = ImmutableList.CreateBuilder<string>();
             var mappings = new List<DeserializationResult>();
 
@@ -35,7 +40,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context);
+                    context, value);
 
                 builder.Add((string) result.RawValue!);
                 mappings.Add(result);

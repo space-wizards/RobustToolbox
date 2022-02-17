@@ -22,7 +22,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, sbyte value = default)
         {
             return new DeserializedValue<sbyte>(sbyte.Parse(node.Value, CultureInfo.InvariantCulture));
         }

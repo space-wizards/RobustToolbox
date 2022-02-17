@@ -80,7 +80,7 @@ namespace Robust.Server.Maps
         }
     }
 
-    internal class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
+    internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
     {
         private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
         {

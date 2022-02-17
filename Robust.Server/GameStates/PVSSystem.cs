@@ -191,17 +191,14 @@ internal sealed partial class PVSSystem : EntitySystem
         UpdateEntityRecursive(uid, xformQuery, component);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, TransformComponent? transformComponent = null)
+    private void UpdateEntityRecursive(EntityUid uid, EntityQuery<TransformComponent> xformQuery, TransformComponent xform)
     {
-        if (transformComponent == null && !xformQuery.TryGetComponent(uid, out transformComponent))
-            return;
-
-        _entityPvsCollection.UpdateIndex(uid, transformComponent.Coordinates);
+        _entityPvsCollection.UpdateIndex(uid, xform.Coordinates);
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
-        var children = transformComponent.ChildEnumerator;
+        var children = xform.ChildEnumerator;
 
         while (children.MoveNext(out var child))
         {

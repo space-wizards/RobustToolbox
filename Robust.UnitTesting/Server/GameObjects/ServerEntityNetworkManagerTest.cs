@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.UnitTesting.Server.GameObjects
 {
-    public class ServerEntityNetworkManagerTest
+    public sealed class ServerEntityNetworkManagerTest
     {
         [Test]
         public void TestMessageSort()

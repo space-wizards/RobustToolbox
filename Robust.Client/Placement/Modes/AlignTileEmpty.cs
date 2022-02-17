@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes
 {
-    public class AlignTileEmpty : PlacementMode
+    public sealed class AlignTileEmpty : PlacementMode
     {
         public override bool HasLineMode => true;
         public override bool HasGridMode => true;

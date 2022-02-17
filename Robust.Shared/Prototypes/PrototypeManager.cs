@@ -182,7 +182,7 @@ namespace Robust.Shared.Prototypes
     [BaseTypeRequired(typeof(IPrototype))]
     [MeansImplicitUse]
     [MeansDataDefinition]
-    public class PrototypeAttribute : Attribute
+    public sealed class PrototypeAttribute : Attribute
     {
         private readonly string type;
         public string Type => type;
@@ -195,6 +195,7 @@ namespace Robust.Shared.Prototypes
         }
     }
 
+    [Virtual]
     public class PrototypeManager : IPrototypeManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
@@ -816,6 +817,7 @@ namespace Robust.Shared.Prototypes
     }
 
     [Serializable]
+    [Virtual]
     public class PrototypeLoadException : Exception
     {
         public PrototypeLoadException()
@@ -836,6 +838,7 @@ namespace Robust.Shared.Prototypes
     }
 
     [Serializable]
+    [Virtual]
     public class UnknownPrototypeException : Exception
     {
         public override string Message => "Unknown prototype: " + Prototype;

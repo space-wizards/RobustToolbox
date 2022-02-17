@@ -16,7 +16,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Serializable]
-    class EntityState_Tests
+    sealed class EntityState_Tests
     {
         /// <summary>
         ///     Used to measure the size of <see cref="object"/>s in bytes. This is not actually a test,

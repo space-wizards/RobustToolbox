@@ -26,6 +26,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Collision.Shapes;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
@@ -56,6 +57,7 @@ namespace Robust.Shared.Physics.Dynamics
         [DataField("id")]
         public string ID { get; set; } = string.Empty;
 
+        [ViewVariables]
         [field: NonSerialized]
         public FixtureProxy[] Proxies { get; set; } = Array.Empty<FixtureProxy>();
 
@@ -70,6 +72,13 @@ namespace Robust.Shared.Physics.Dynamics
         [ViewVariables]
         [field:NonSerialized]
         public PhysicsComponent Body { get; internal set; } = default!;
+
+        /// <summary>
+        /// All of the other fixtures this fixture has a contact with.
+        /// </summary>
+        [ViewVariables]
+        [NonSerialized]
+        public Dictionary<Fixture, Contact> Contacts = new();
 
         /// <summary>
         /// Contact friction between 2 bodies. Not tile-friction for top-down.

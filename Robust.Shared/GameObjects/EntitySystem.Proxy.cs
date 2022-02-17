@@ -163,7 +163,16 @@ public partial class EntitySystem
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected void Dirty(EntityUid uid)
     {
-        EntityManager.DirtyEntity(uid);
+        EntityManager.Dirty(uid);
+    }
+
+    /// <summary>
+    ///     Marks a component as dirty.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected void Dirty(Component component)
+    {
+        EntityManager.Dirty(component);
     }
 
     /// <summary>

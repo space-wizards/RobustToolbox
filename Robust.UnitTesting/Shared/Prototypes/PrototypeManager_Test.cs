@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using NUnit.Framework;
 using Robust.Server.GameObjects;
 using Robust.Shared.GameObjects;
@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 {
     [UsedImplicitly]
     [TestFixture]
-    public class PrototypeManager_Test : RobustUnitTest
+    public sealed class PrototypeManager_Test : RobustUnitTest
     {
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
@@ -37,7 +37,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var prototype = manager.Index<EntityPrototype>("wrench");
             Assert.That(prototype.Name, Is.EqualTo("Not a wrench. Tricked!"));
 
-            var mapping = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            var mapping = prototype.Components["TestBasicPrototype"] as TestBasicPrototypeComponent;
             Assert.That(mapping!.Foo, Is.EqualTo("bar!"));
         }
 
@@ -64,9 +64,9 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void TestYamlHelpersPrototype()
         {
             var prototype = manager.Index<EntityPrototype>("yamltester");
-            Assert.That(prototype.Components, Contains.Key("TestBasicPrototypeComponent"));
+            Assert.That(prototype.Components, Contains.Key("TestBasicPrototype"));
 
-            var componentData = prototype.Components["TestBasicPrototypeComponent"] as TestBasicPrototypeComponent;
+            var componentData = prototype.Components["TestBasicPrototype"] as TestBasicPrototypeComponent;
 
             Assert.NotNull(componentData);
             Assert.That(componentData!.Str, Is.EqualTo("hi!"));
@@ -125,7 +125,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   id: wrench
   name: Not a wrench. Tricked!
   components:
-  - type: TestBasicPrototypeComponent
+  - type: TestBasicPrototype
     foo: bar!
 
 - type: entity
@@ -144,7 +144,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 - type: entity
   id: yamltester
   components:
-  - type: TestBasicPrototypeComponent
+  - type: TestBasicPrototype
     str: hi!
     int: 10
     float: 10
@@ -183,9 +183,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public class TestBasicPrototypeComponent : Component
+    public sealed class TestBasicPrototypeComponent : Component
     {
-        public override string Name => "TestBasicPrototypeComponent";
 
         [DataField("foo")] public string Foo = null!;
 

@@ -7,10 +7,8 @@ namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [Friend(typeof(VisibilitySystem))]
-    public class VisibilityComponent : Component
+    public sealed class VisibilityComponent : Component
     {
-        public override string Name => "Visibility";
-
         /// <summary>
         ///     The visibility layer for the entity.
         ///     Players whose visibility masks don't match this won't get state updates for it.

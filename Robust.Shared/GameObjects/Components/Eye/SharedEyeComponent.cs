@@ -7,10 +7,8 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent()]
-    public class SharedEyeComponent : Component
+    public abstract class SharedEyeComponent : Component
     {
-        public override string Name => "Eye";
-
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual bool DrawFov { get; set; }
 
@@ -22,7 +20,7 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables(VVAccess.ReadWrite)]
         public virtual Angle Rotation { get; set; }
-        
+
         /// <summary>
         ///     The visibility mask for this eye.
         ///     The player will be able to get updates for entities whose layers match the mask.
@@ -32,7 +30,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [NetSerializable, Serializable]
-    public class EyeComponentState : ComponentState
+    public sealed class EyeComponentState : ComponentState
     {
         public bool DrawFov { get; }
         public Vector2 Zoom { get; }

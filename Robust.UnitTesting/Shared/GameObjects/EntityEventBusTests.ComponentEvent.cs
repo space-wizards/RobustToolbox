@@ -10,7 +10,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    public partial class EntityEventBusTests
+    public sealed partial class EntityEventBusTests
     {
         [Test]
         public void SubscribeCompEvent()
@@ -179,9 +179,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
                 entManMock.Setup(m => m.GetComponent(entUid, typeof(T))).Returns(inst);
             }
 
-            Setup<OrderComponentA>(out var instA);
-            Setup<OrderComponentB>(out var instB);
-            Setup<OrderComponentC>(out var instC);
+            Setup<OrderAComponent>(out var instA);
+            Setup<OrderBComponent>(out var instB);
+            Setup<OrderCComponent>(out var instC);
 
             entManMock.Setup(m => m.ComponentFactory).Returns(compFacMock.Object);
             var bus = new EntityEventBus(entManMock.Object);
@@ -207,9 +207,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             void HandlerC(EntityUid uid, Component comp, TestEvent ev) => c = true;
 
-            bus.SubscribeLocalEvent<OrderComponentA, TestEvent>(HandlerA, typeof(OrderComponentA), before: new []{typeof(OrderComponentB), typeof(OrderComponentC)});
-            bus.SubscribeLocalEvent<OrderComponentB, TestEvent>(HandlerB, typeof(OrderComponentB), after: new []{typeof(OrderComponentC)});
-            bus.SubscribeLocalEvent<OrderComponentC, TestEvent>(HandlerC, typeof(OrderComponentC));
+            bus.SubscribeLocalEvent<OrderAComponent, TestEvent>(HandlerA, typeof(OrderAComponent), before: new []{typeof(OrderBComponent), typeof(OrderCComponent)});
+            bus.SubscribeLocalEvent<OrderBComponent, TestEvent>(HandlerB, typeof(OrderBComponent), after: new []{typeof(OrderCComponent)});
+            bus.SubscribeLocalEvent<OrderCComponent, TestEvent>(HandlerC, typeof(OrderCComponent));
 
             // add a component to the system
             entManMock.Raise(m=>m.EntityAdded += null, entManMock.Object, entUid);
@@ -227,28 +227,23 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.That(c, Is.True, "C did not fire");
         }
 
-        private class DummyComponent : Component
+        private sealed class DummyComponent : Component
         {
-            public override string Name => "Dummy";
         }
 
-        private class OrderComponentA : Component
+        private sealed class OrderAComponent : Component
         {
-            public override string Name => "OrderComponentA";
         }
 
-        private class OrderComponentB : Component
+        private sealed class OrderBComponent : Component
         {
-            public override string Name => "OrderComponentB";
         }
 
-        private class OrderComponentC : Component
+        private sealed class OrderCComponent : Component
         {
-            public override string Name => "OrderComponentC";
         }
 
-
-        private class TestEvent : EntityEventArgs
+        private sealed class TestEvent : EntityEventArgs
         {
             public int TestNumber { get; }
 

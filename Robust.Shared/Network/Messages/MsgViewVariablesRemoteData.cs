@@ -11,7 +11,7 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent server to client to contain object data read by VV.
     /// </summary>
-    public class MsgViewVariablesRemoteData : NetMessage
+    public sealed class MsgViewVariablesRemoteData : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

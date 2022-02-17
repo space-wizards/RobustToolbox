@@ -112,7 +112,6 @@ namespace Robust.Shared.Physics
             {
                 var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 
-                _broadphaseSystem.UpdateBroadphaseCache(body.Broadphase);
                 _broadphaseSystem.CreateProxies(fixture, worldPos, worldRot);
             }
 
@@ -143,6 +142,20 @@ namespace Robust.Shared.Physics
         {
             // TODO: Make it take in density instead?
             var fixture = new Fixture(body, shape) {Mass = mass};
+            CreateFixture(body, fixture);
+        }
+
+        /// <summary>
+        /// Creates a <see cref="Fixture"/> from this shape and adds it to the specified <see cref="PhysicsComponent"/> with mass.
+        /// </summary>
+        public void CreateFixture(PhysicsComponent body, IPhysShape shape, float mass, int collisionLayer, int collisionMask)
+        {
+            // TODO: Make it take in density instead?
+            var fixture = new Fixture(body, shape) {
+                Mass = mass,
+                CollisionLayer = collisionLayer,
+                CollisionMask = collisionMask
+            };
             CreateFixture(body, fixture);
         }
 
@@ -205,20 +218,9 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            var edge = body.ContactEdges;
-
-            while (edge != null)
+            foreach (var (_, contact) in fixture.Contacts.ToArray())
             {
-                var contact = edge.Contact!;
-                edge = edge.Next;
-
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixture == fixtureA || fixture == fixtureB)
-                {
-                    body.PhysicsMap?.ContactManager.Destroy(contact);
-                }
+                body.PhysicsMap?.ContactManager.Destroy(contact);
             }
 
             var broadphase = body.Broadphase;

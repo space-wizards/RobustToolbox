@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -16,7 +16,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(ComponentRegistrySerializer))]
-    public class ComponentRegistrySerializerTest : SerializationTest
+    public sealed class ComponentRegistrySerializerTest : SerializationTest
     {
         [OneTimeSetUp]
         public new void OneTimeSetup()
@@ -56,8 +56,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         }
     }
 
-    public class TestComponent : Component
+    public sealed class TestComponent : Component
     {
-        public override string Name => "Test";
     }
 }

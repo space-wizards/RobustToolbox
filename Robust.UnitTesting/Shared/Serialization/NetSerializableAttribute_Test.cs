@@ -7,7 +7,7 @@ using Robust.Shared.Serialization;
 namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
-    class NetSerializableAttribute_Test : RobustUnitTest
+    sealed class NetSerializableAttribute_Test : RobustUnitTest
     {
         private IReflectionManager _reflection = default!;
 

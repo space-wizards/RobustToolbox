@@ -26,8 +26,6 @@ namespace Robust.Shared.Physics
         // (e.g. grids)
         // Content generally shouldn't care about its existence.
 
-        public override string Name => "Fixtures";
-
         [ViewVariables]
         public int FixtureCount => Fixtures.Count;
 

@@ -152,6 +152,15 @@ namespace Robust.Shared.GameObjects
         T EnsureComponent<T>(EntityUid uid) where T : Component, new();
 
         /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <param name="component">The output component after being ensured.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>The component in question</returns>
+        bool EnsureComponent<T>(EntityUid uid, out T component) where T : Component, new();
+
+        /// <summary>
         ///     Returns the component of a specific type.
         /// </summary>
         /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
@@ -233,6 +242,11 @@ namespace Robust.Shared.GameObjects
         bool TryGetComponent([NotNullWhen(true)] EntityUid? uid, ushort netId, [NotNullWhen(true)] out IComponent? component);
 
         /// <summary>
+        /// Returns a cached struct enumerator with the specified component.
+        /// </summary>
+        EntityQuery<TComp1> GetEntityQuery<TComp1>() where TComp1 : Component;
+
+        /// <summary>
         ///     Returns ALL component type instances on an entity. A single component instance
         ///     can have multiple component types.
         /// </summary>
@@ -273,13 +287,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="player">The player to generate the state for.</param>
         /// <returns>True if the player should get the component state.</returns>
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
-
-        /// <summary>
-        ///     Returns ALL component instances of a specified type.
-        /// </summary>
-        /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
-        /// <returns>All components that have the specified type.</returns>
-        EntityManager.EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component;
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

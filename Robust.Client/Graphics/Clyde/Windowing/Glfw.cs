@@ -104,6 +104,7 @@ namespace Robust.Client.Graphics.Clyde
             }
 
             [Serializable]
+            [Virtual]
             public class GlfwException : Exception
             {
                 public GlfwException()

@@ -9,13 +9,10 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedEyeComponent))]
-    public class EyeComponent : SharedEyeComponent
+    public sealed class EyeComponent : SharedEyeComponent
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
-
-        /// <inheritdoc />
-        public override string Name => "Eye";
 
         [ViewVariables]
         private Eye? _eye = default!;

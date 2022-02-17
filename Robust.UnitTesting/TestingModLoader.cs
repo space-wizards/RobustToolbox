@@ -51,7 +51,8 @@ namespace Robust.UnitTesting
         {
             // Only used for ILVerify, not necessary.
         }
-
+#pragma warning disable CS0067 // Needed by interface
         public event ExtraModuleLoad? ExtraModuleLoaders;
+#pragma warning restore CS0067
     }
 }

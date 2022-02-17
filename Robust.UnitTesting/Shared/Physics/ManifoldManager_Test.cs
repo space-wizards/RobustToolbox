@@ -9,7 +9,7 @@ namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
     [TestOf(typeof(IManifoldManager))]
-    public class ManifoldManager_Test : RobustUnitTest
+    public sealed class ManifoldManager_Test : RobustUnitTest
     {
         private IManifoldManager _manifoldManager = default!;
 

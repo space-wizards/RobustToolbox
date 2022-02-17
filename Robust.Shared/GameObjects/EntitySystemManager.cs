@@ -19,7 +19,7 @@ using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.GameObjects
 {
-    public class EntitySystemManager : IEntitySystemManager
+    public sealed class EntitySystemManager : IEntitySystemManager
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -321,6 +321,11 @@ namespace Robust.Shared.GameObjects
             _extraLoadedTypes.Add(typeof(T));
         }
 
+        public object GetEntitySystem(Type sysType)
+        {
+            return _systemDependencyCollection.ResolveType(sysType);
+        }
+
         private static bool NeedsUpdate(Type type)
         {
             if (!typeof(EntitySystem).IsAssignableFrom(type))
@@ -361,7 +366,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public class SystemChangedArgs : EventArgs
+    public sealed class SystemChangedArgs : EventArgs
     {
         public IEntitySystem System { get; }
 

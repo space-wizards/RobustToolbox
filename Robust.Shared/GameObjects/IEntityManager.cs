@@ -49,6 +49,7 @@ namespace Robust.Shared.GameObjects
         event EventHandler<EntityUid>? EntityInitialized;
         event EventHandler<EntityUid>? EntityStarted;
         event EventHandler<EntityUid>? EntityDeleted;
+        event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
 
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
 
@@ -85,7 +86,9 @@ namespace Robust.Shared.GameObjects
         /// <returns></returns>
         IEnumerable<EntityUid> GetEntities();
 
-        public void DirtyEntity(EntityUid uid);
+        public void Dirty(EntityUid uid);
+
+        public void Dirty(Component component);
 
         public void QueueDeleteEntity(EntityUid uid);
 

@@ -14,7 +14,7 @@ using Robust.Shared.Network.Messages;
 
 namespace Robust.Server.Placement
 {
-    public class PlacementManager : IPlacementManager
+    public sealed class PlacementManager : IPlacementManager
     {
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;

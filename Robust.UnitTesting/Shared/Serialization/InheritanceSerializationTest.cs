@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
     [TestOf(typeof(DataDefinition))]
-    public class InheritanceSerializationTest : RobustUnitTest
+    public sealed class InheritanceSerializationTest : RobustUnitTest
     {
         private const string BaseEntityId = "BaseEntity";
         private const string InheritorEntityId = "InheritorEntityId";
@@ -48,9 +48,9 @@ namespace Robust.UnitTesting.Shared.Serialization
         {
             var componentFactory = IoCManager.Resolve<IComponentFactory>();
 
-            componentFactory.RegisterClass<BaseComponent>();
-            componentFactory.RegisterClass<InheritorComponent>();
-            componentFactory.RegisterClass<FinalComponent>();
+            componentFactory.RegisterClass<TestBaseComponent>();
+            componentFactory.RegisterClass<TestInheritorComponent>();
+            componentFactory.RegisterClass<TestFinalComponent>();
             componentFactory.GenerateNetIds();
 
             var serializationManager = IoCManager.Resolve<ISerializationManager>();
@@ -74,41 +74,40 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             var baseEntity = entityManager.SpawnEntity(BaseEntityId, coordinates);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(baseEntity, out BaseComponent? baseComponent));
+            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(baseEntity, out TestBaseComponent? baseComponent));
             Assert.That(baseComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
 
             var inheritorEntity = entityManager.SpawnEntity(InheritorEntityId, coordinates);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(inheritorEntity, out InheritorComponent? inheritorComponent));
+            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(inheritorEntity, out TestInheritorComponent? inheritorComponent));
             Assert.That(inheritorComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
             Assert.That(inheritorComponent!.InheritorField, Is.EqualTo(InheritorComponentFieldValue));
 
             var finalEntity = entityManager.SpawnEntity(FinalEntityId, coordinates);
 
-            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(finalEntity, out FinalComponent? finalComponent));
+            Assert.That(IoCManager.Resolve<IEntityManager>().TryGetComponent(finalEntity, out TestFinalComponent? finalComponent));
             Assert.That(finalComponent!.BaseField, Is.EqualTo(BaseComponentFieldValue));
             Assert.That(finalComponent!.InheritorField, Is.EqualTo(InheritorComponentFieldValue));
             Assert.That(finalComponent!.FinalField, Is.EqualTo(FinalComponentFieldValue));
         }
     }
 
-    public class BaseComponent : Component
+    [Virtual]
+    public class TestBaseComponent : Component
     {
-        public override string Name => "TestBase";
 
         [DataField("baseField")] public string? BaseField;
     }
 
-    public class InheritorComponent : BaseComponent
+    [Virtual]
+    public class TestInheritorComponent : TestBaseComponent
     {
-        public override string Name => "TestInheritor";
 
         [DataField("inheritorField")] public string? InheritorField;
     }
 
-    public class FinalComponent : InheritorComponent
+    public sealed class TestFinalComponent : TestInheritorComponent
     {
-        public override string Name => "TestFinal";
 
         [DataField("finalField")] public string? FinalField;
     }

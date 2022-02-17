@@ -21,16 +21,19 @@
 */
 
 using Robust.Shared.Maths;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics
 {
-    public class FixtureProxy
+    public sealed class FixtureProxy
     {
         /// <summary>
         ///     Grid-based AABB of this proxy.
         /// </summary>
+        [ViewVariables]
         public Box2 AABB;
 
+        [ViewVariables]
         public int ChildIndex;
 
         /// <summary>
@@ -41,6 +44,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         ///     ID of this proxy in the broadphase dynamictree.
         /// </summary>
+        [ViewVariables]
         public DynamicTree.Proxy ProxyId = DynamicTree.Proxy.Free;
 
         public FixtureProxy(Box2 aabb, Fixture fixture, int childIndex)

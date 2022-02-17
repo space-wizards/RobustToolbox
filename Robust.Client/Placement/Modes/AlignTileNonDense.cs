@@ -2,7 +2,7 @@
 
 namespace Robust.Client.Placement.Modes
 {
-    public class AlignTileNonDense : PlacementMode
+    public sealed class AlignTileNonDense : PlacementMode
     {
         public override bool HasLineMode => true;
         public override bool HasGridMode => true;

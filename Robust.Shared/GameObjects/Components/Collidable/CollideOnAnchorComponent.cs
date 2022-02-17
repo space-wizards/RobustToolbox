@@ -9,8 +9,6 @@ namespace Robust.Shared.GameObjects
     [RegisterComponent]
     public sealed class CollideOnAnchorComponent : Component
     {
-        public override string Name => "CollideOnAnchor";
-
         /// <summary>
         /// Whether we toggle collision on or off when anchoring (and vice versa when unanchoring).
         /// </summary>

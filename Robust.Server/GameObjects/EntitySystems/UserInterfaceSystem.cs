@@ -6,13 +6,14 @@ using JetBrains.Annotations;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class UserInterfaceSystem : SharedUserInterfaceSystem
+    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         private const float MaxWindowRange = 2;
         private const float MaxWindowRangeSquared = MaxWindowRange * MaxWindowRange;
@@ -45,12 +46,44 @@ namespace Robust.Server.GameObjects
             RaiseNetworkEvent(msg, session.ConnectedClient);
         }
 
+        /// <summary>
+        ///     Validates the received message, and then pass it onto systems/components
+        /// </summary>
         private void OnMessageReceived(BoundUIWrapMessage msg, EntitySessionEventArgs args)
         {
             var uid = msg.Entity;
-            if (!EntityManager.TryGetComponent<ServerUserInterfaceComponent>(uid, out var uiComp))
+            if (!TryComp(uid, out ServerUserInterfaceComponent? uiComp) || args.SenderSession is not IPlayerSession session)
                 return;
 
+            if (!uiComp.TryGetBoundUserInterface(msg.UiKey, out var ui))
+            {
+                Logger.DebugS("go.comp.ui", "Got BoundInterfaceMessageWrapMessage for unknown UI key: {0}", msg.UiKey);
+                return;
+            }
+
+            if (!ui.SessionHasOpen(session))
+            {
+                Logger.DebugS("go.comp.ui", $"UI {msg.UiKey} got BoundInterfaceMessageWrapMessage from a client who was not subscribed: {session}", msg.UiKey);
+                return;
+            }
+
+            // if they want to close the UI, we can go home early.
+            if (msg.Message is CloseBoundInterfaceMessage)
+            {
+                ui.CloseShared(session);
+                return;
+            }
+
+            // verify that the user is allowed to press buttons on this UI:
+            if (ui.RequireInputValidation)
+            {
+                var attempt = new BoundUserInterfaceMessageAttempt(args.SenderSession, uid, msg.UiKey);
+                RaiseLocalEvent(attempt);
+                if (attempt.Cancelled)
+                    return;
+            }
+
+            // get the wrapped message and populate it with the sender & UI key information.
             var message = msg.Message;
             message.Session = args.SenderSession;
             message.Entity = uid;
@@ -59,7 +92,10 @@ namespace Robust.Server.GameObjects
             // Raise as object so the correct type is used.
             RaiseLocalEvent(uid, (object)message);
 
-            uiComp.ReceiveMessage((IPlayerSession) args.SenderSession, msg);
+            // Once we have populated our message's wrapped message, we will wrap it up into a message that can be sent
+            // to old component-code.
+            var WrappedUnwrappedMessageMessageMessage = new ServerBoundUserInterfaceMessage(message, session);
+            ui.ReceiveMessage(WrappedUnwrappedMessageMessageMessage);
         }
 
         /// <inheritdoc />

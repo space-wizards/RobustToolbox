@@ -19,7 +19,7 @@ using Robust.Shared.Utility;
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public class MapLoaderTest : RobustUnitTest
+    public sealed class MapLoaderTest : RobustUnitTest
     {
         private const string MapData = @"
 meta:
@@ -138,8 +138,6 @@ entities:
         [DataDefinition]
         private sealed class MapDeserializeTestComponent : Component
         {
-            public override string Name => "MapDeserializeTest";
-
             [DataField("foo")] public int Foo { get; set; } = -1;
             [DataField("bar")] public int Bar { get; set; } = -1;
             [DataField("baz")] public int Baz { get; set; } = -1;

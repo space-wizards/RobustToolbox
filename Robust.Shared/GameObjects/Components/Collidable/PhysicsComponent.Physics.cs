@@ -42,16 +42,13 @@ namespace Robust.Shared.GameObjects
 {
     [ComponentReference(typeof(ILookupWorldBox2Component))]
     [ComponentReference(typeof(IPhysBody))]
-    [NetworkedComponent()]
+    [NetworkedComponent(), ComponentProtoName("Physics")]
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
-
-        /// <inheritdoc />
-        public override string Name => "Physics";
 
         /// <summary>
         ///     Has this body been added to an island previously in this tick.
@@ -81,41 +78,12 @@ namespace Robust.Shared.GameObjects
 
         public int FixtureCount => _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Count;
 
-        [ViewVariables]
-        public int ContactCount
-        {
-            get
-            {
-                var count = 0;
-                var edge = ContactEdges;
-                while (edge != null)
-                {
-                    edge = edge.Next;
-                    count++;
-                }
-
-                return count;
-            }
-        }
-
-        public IEnumerable<Contact> Contacts
-        {
-            get
-            {
-                var edge = ContactEdges;
-
-                while (edge != null)
-                {
-                    yield return edge.Contact!;
-                    edge = edge.Next;
-                }
-            }
-        }
+        [ViewVariables] public int ContactCount => Contacts.Count;
 
         /// <summary>
         ///     Linked-list of all of our contacts.
         /// </summary>
-        internal ContactEdge? ContactEdges { get; set; } = null;
+        internal LinkedList<Contact> Contacts = new();
 
         public bool IgnorePaused { get; set; }
 
@@ -139,8 +107,8 @@ namespace Robust.Shared.GameObjects
                 if (_bodyType == BodyType.Static)
                 {
                     SetAwake(false);
-                    _linVelocity = Vector2.Zero;
-                    _angVelocity = 0.0f;
+                    _linearVelocity = Vector2.Zero;
+                    _angularVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
                 else
@@ -205,7 +173,7 @@ namespace Robust.Shared.GameObjects
                 _sleepTime = 0.0f;
             }
 
-            Dirty();
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -226,7 +194,7 @@ namespace Robust.Shared.GameObjects
                     Awake = true;
 
                 _sleepingAllowed = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -260,7 +228,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _linVelocity, _angVelocity, _bodyType);
+            return new PhysicsComponentState(_canCollide, _sleepingAllowed, _fixedRotation, _bodyStatus, _linearVelocity, _angularVelocity, _bodyType);
         }
 
         /// <inheritdoc />
@@ -277,7 +245,7 @@ namespace Robust.Shared.GameObjects
             // So transform doesn't apply MapId in the HandleComponentState because ??? so MapId can still be 0.
             // Fucking kill me, please. You have no idea deep the rabbit hole of shitcode goes to make this work.
 
-            Dirty();
+            Dirty(_entMan);
             LinearVelocity = newState.LinearVelocity;
             // Logger.Debug($"{IGameTiming.TickStampStatic}: [{Owner}] {LinearVelocity}");
             AngularVelocity = newState.AngularVelocity;
@@ -292,10 +260,10 @@ namespace Robust.Shared.GameObjects
         public void ResetDynamics()
         {
             Torque = 0;
-            _angVelocity = 0;
+            _angularVelocity = 0;
             Force = Vector2.Zero;
-            _linVelocity = Vector2.Zero;
-            Dirty();
+            _linearVelocity = Vector2.Zero;
+            Dirty(_entMan);
         }
 
         public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
@@ -306,7 +274,25 @@ namespace Robust.Shared.GameObjects
 
             var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in Fixtures)
+            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
+            {
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
+            }
+
+            return bounds;
+        }
+
+        public Box2 GetWorldAABB(Vector2 worldPos, Angle worldRot, EntityQuery<FixturesComponent> fixtures)
+        {
+            var transform = new Transform(worldPos, (float) worldRot.Theta);
+
+            var bounds = new Box2(transform.Position, transform.Position);
+
+            foreach (var fixture in fixtures.GetComponent(Owner).Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {
@@ -331,12 +317,12 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (_canCollide == value ||
-                    value && Owner.IsInContainer())
+                    value && Owner.IsInContainer(_entMan))
                     return;
 
                 _canCollide = value;
                 _entMan.EventBus.RaiseEvent(EventSource.Local, new CollisionChangeMessage(this, Owner, _canCollide));
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -404,7 +390,7 @@ namespace Robust.Shared.GameObjects
                     _inertia = value - Mass * Vector2.Dot(_localCenter, _localCenter);
                     DebugTools.Assert(_inertia > 0.0f);
                     InvI = 1.0f / _inertia;
-                    Dirty();
+                    Dirty(_entMan);
                 }
             }
         }
@@ -435,9 +421,9 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _fixedRotation = value;
-                _angVelocity = 0.0f;
+                _angularVelocity = 0.0f;
                 ResetMassData();
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -501,7 +487,7 @@ namespace Robust.Shared.GameObjects
 
                 _friction = value;
                 // TODO
-                // Dirty();
+                // Dirty(_entMan);
             }
         }
 
@@ -523,7 +509,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _linearDamping = value;
-                // Dirty();
+                // Dirty(_entMan);
             }
         }
 
@@ -547,7 +533,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _angularDamping = value;
-                // Dirty();
+                // Dirty(_entMan);
             }
         }
 
@@ -561,8 +547,8 @@ namespace Robust.Shared.GameObjects
         {
             get
             {
-                var linearVelocity = _linVelocity;
-                var angularVelocity = _angVelocity;
+                var linearVelocity = _linearVelocity;
+                var angularVelocity = _angularVelocity;
                 var entMan = _entMan;
                 var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
@@ -587,7 +573,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LinearVelocity
         {
-            get => _linVelocity;
+            get => _linearVelocity;
             set
             {
                 // Curse you Q
@@ -599,15 +585,15 @@ namespace Robust.Shared.GameObjects
                 if (Vector2.Dot(value, value) > 0.0f)
                     Awake = true;
 
-                if (_linVelocity.EqualsApprox(value, 0.0001f))
+                if (_linearVelocity.EqualsApprox(value, 0.0001f))
                     return;
 
-                _linVelocity = value;
-                Dirty();
+                _linearVelocity = value;
+                Dirty(_entMan);
             }
         }
 
-        private Vector2 _linVelocity;
+        internal Vector2 _linearVelocity;
 
         /// <summary>
         /// Get the body's LinearVelocity in map terms.
@@ -615,22 +601,32 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
         /// </remarks>
+        [ViewVariables]
         public Vector2 MapLinearVelocity
         {
             get
             {
-                var velocity = _linVelocity;
-                var entMan = _entMan;
-                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
+                var entManager = IoCManager.Resolve<IEntityManager>();
+                var physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
+                var xforms = entManager.GetEntityQuery<TransformComponent>();
+                var physics = entManager.GetEntityQuery<PhysicsComponent>();
+                var xform = xforms.GetComponent(Owner);
+                var parent = xform.ParentUid;
+                var localPos = xform.LocalPosition;
 
-                while (parent != null)
+                var velocity = _linearVelocity;
+
+                while (parent.IsValid())
                 {
-                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
+                    var parentXform = xforms.GetComponent(parent);
+
+                    if (physics.TryGetComponent(parent, out var body))
                     {
-                        velocity += body.LinearVelocity;
+                        velocity += physicsSystem.GetLinearVelocityFromLocalPoint(body, localPos);
                     }
 
-                    parent = parent.Parent;
+                    velocity = parentXform.LocalRotation.RotateVec(velocity);
+                    parent = parentXform.ParentUid;
                 }
 
                 return velocity;
@@ -643,7 +639,7 @@ namespace Robust.Shared.GameObjects
         [ViewVariables(VVAccess.ReadWrite)]
         public float AngularVelocity
         {
-            get => _angVelocity;
+            get => _angularVelocity;
             set
             {
                 // TODO: This and linearvelocity asserts
@@ -655,15 +651,15 @@ namespace Robust.Shared.GameObjects
                 if (value * value > 0.0f)
                     Awake = true;
 
-                if (MathHelper.CloseToPercent(_angVelocity, value, 0.0001f))
+                if (MathHelper.CloseToPercent(_angularVelocity, value, 0.0001f))
                     return;
 
-                _angVelocity = value;
-                Dirty();
+                _angularVelocity = value;
+                Dirty(_entMan);
             }
         }
 
-        private float _angVelocity;
+        private float _angularVelocity;
 
         /// <summary>
         /// Get the body's AngularVelocity in map terms.
@@ -671,11 +667,12 @@ namespace Robust.Shared.GameObjects
         /// <remarks>
         /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
         /// </remarks>
+        [ViewVariables]
         public float MapAngularVelocity
         {
             get
             {
-                var velocity = _angVelocity;
+                var velocity = _angularVelocity;
                 var entMan = _entMan;
                 var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
 
@@ -716,7 +713,7 @@ namespace Robust.Shared.GameObjects
                     return;
 
                 _bodyStatus = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -816,15 +813,16 @@ namespace Robust.Shared.GameObjects
         // TOOD: Need SetTransformIgnoreContacts so we can teleport body and /ignore contacts/
         public void DestroyContacts()
         {
-            ContactEdge? contactEdge = ContactEdges;
-            while (contactEdge != null)
+            var node = Contacts.First;
+
+            while (node != null)
             {
-                var contactEdge0 = contactEdge;
-                contactEdge = contactEdge.Next;
-                PhysicsMap?.ContactManager.Destroy(contactEdge0.Contact!);
+                var contact = node.Value;
+                node = node.Next;
+                PhysicsMap?.ContactManager.Destroy(contact);
             }
 
-            ContactEdges = null;
+            DebugTools.Assert(Contacts.Count == 0);
         }
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
@@ -958,7 +956,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     ///     Directed event raised when an entity's physics BodyType changes.
     /// </summary>
-    public class PhysicsBodyTypeChangedEvent : EntityEventArgs
+    public sealed class PhysicsBodyTypeChangedEvent : EntityEventArgs
     {
         /// <summary>
         ///     New BodyType of the entity.

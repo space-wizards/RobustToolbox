@@ -11,8 +11,6 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public abstract class SharedUserInterfaceComponent : Component
     {
-        public sealed override string Name => "UserInterface";
-
         [DataDefinition]
         public sealed class PrototypeData : ISerializationHooks
         {
@@ -23,6 +21,17 @@ namespace Robust.Shared.GameObjects
 
             [DataField("type", readOnly: true, required: true)]
             public string ClientType { get; set; } = default!;
+
+            // TODO BUI move to content?
+            // I've tried to keep the name general, but really this is a bool for: can ghosts/stunned/dead people press buttons on this UI?
+            /// <summary>
+            ///     Determines whether the server should verify that a client is capable of performing generic UI interactions when receiving UI messages.
+            /// </summary>
+            /// <remarks>
+            ///     Avoids requiring each system to individually validate client inputs. However, perhaps some BUIs are supposed to be bypass accessibility checks
+            /// </remarks>
+            [DataField("requireInputValidation")]
+            public bool RequireInputValidation = true;
 
             void ISerializationHooks.AfterDeserialization()
             {
@@ -39,6 +48,24 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    /// <summary>
+    ///     Raised whenever the server receives a BUI message from a client relating to a UI that requires input
+    ///     validation.
+    /// </summary>
+    public sealed class BoundUserInterfaceMessageAttempt : CancellableEntityEventArgs
+    {
+        public readonly ICommonSession Sender;
+        public readonly EntityUid Target;
+        public readonly object UiKey;
+
+        public BoundUserInterfaceMessageAttempt(ICommonSession sender, EntityUid target, object uiKey)
+        {
+            Sender = sender;
+            Target = target;
+            UiKey = uiKey;
+        }
+    }
+
     [NetSerializable, Serializable]
     public abstract class BoundUserInterfaceState
     {
@@ -46,7 +73,7 @@ namespace Robust.Shared.GameObjects
 
 
     [NetSerializable, Serializable]
-    public class BoundUserInterfaceMessage : EntityEventArgs
+    public abstract class BoundUserInterfaceMessage : EntityEventArgs
     {
         /// <summary>
         ///     The UI of this message.
@@ -108,7 +135,7 @@ namespace Robust.Shared.GameObjects
         }
     }
 
-    public class BoundUIClosedEvent : BoundUserInterfaceMessage
+    public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
     {
         public BoundUIClosedEvent(object uiKey, EntityUid uid, ICommonSession session)
         {

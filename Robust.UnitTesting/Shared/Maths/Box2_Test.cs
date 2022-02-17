@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(Box2))]
-    public class Box2_Test
+    public sealed class Box2_Test
     {
         private static IEnumerable<(float left, float bottom, float right, float top)> Sources =>
             new (float, float, float, float)[]

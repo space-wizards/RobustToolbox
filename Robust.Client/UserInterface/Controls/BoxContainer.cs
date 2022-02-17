@@ -7,6 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A container that lays out its children sequentially.
     /// </summary>
+    [Virtual]
     public class BoxContainer : Container
     {
         private LayoutOrientation _orientation;

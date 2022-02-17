@@ -364,6 +364,16 @@ namespace Robust.Client.Graphics.Clyde
                         D3D_FEATURE_LEVEL_9_1
                     };
 
+                    if (Clyde._cfg.GetCVar(CVars.DisplayAngleForceEs2))
+                    {
+                        featureLevels = stackalloc D3D_FEATURE_LEVEL[]
+                        {
+                            // Don't allow FL 11_0 so ANGLE is forced to init GLES2.
+                            D3D_FEATURE_LEVEL_9_3,
+                            D3D_FEATURE_LEVEL_9_1
+                        };
+                    }
+
                     fixed (ID3D11Device** device = &_device)
                     fixed (D3D_FEATURE_LEVEL* fl = &featureLevels[0])
                     {

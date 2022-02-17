@@ -134,8 +134,8 @@ namespace Robust.Client
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.Resync();
-            _mapManager.Initialize();
             _entityManager.Initialize();
+            _mapManager.Initialize();
             _gameStateManager.Initialize();
             _placementManager.Initialize();
             _viewVariablesManager.Initialize();
@@ -339,6 +339,14 @@ namespace Robust.Client
 
             if (_loaderArgs != null)
             {
+                if (_loaderArgs.ApiMounts is { } mounts)
+                {
+                    foreach (var (api, prefix) in mounts)
+                    {
+                        _resourceCache.MountLoaderApi(api, "", new ResourcePath(prefix));
+                    }
+                }
+
                 _stringSerializer.EnableCaching = false;
                 _resourceCache.MountLoaderApi(_loaderArgs.FileApi, "Resources/");
                 _modLoader.VerifierExtraLoadHandler = VerifierExtraLoadHandler;
@@ -502,7 +510,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
-            logManager.GetSawmill("loc").Level = LogLevel.Error;
+            logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG

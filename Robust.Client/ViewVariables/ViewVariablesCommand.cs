@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.ViewVariables
 {
     [UsedImplicitly]
-    public class ViewVariablesCommand : IConsoleCommand
+    public sealed class ViewVariablesCommand : IConsoleCommand
     {
         public string Command => "vv";
         public string Description => "Opens View Variables.";
@@ -69,6 +69,29 @@ namespace Robust.Client.ViewVariables
                 return;
             }
 
+            // Client side entity system.
+            if (valArg.StartsWith("CE"))
+            {
+                valArg = valArg.Substring(2);
+                var reflection = IoCManager.Resolve<IReflectionManager>();
+
+                if (!reflection.TryLooseGetType(valArg, out var type))
+                {
+                    shell.WriteLine("Unable to find that type.");
+                    return;
+                }
+
+                vvm.OpenVV(IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem(type));
+            }
+
+            if (valArg.StartsWith("SE"))
+            {
+                // Server-side Entity system selector.
+                var selector = new ViewVariablesEntitySystemSelector(valArg.Substring(2));
+                vvm.OpenVV(selector);
+                return;
+            }
+
             if (valArg.StartsWith("guihover"))
             {
                 // UI element.
@@ -103,7 +126,7 @@ namespace Robust.Client.ViewVariables
         /// <summary>
         ///     Test class to test local VV easily without connecting to the server.
         /// </summary>
-        private class VVTest : IEnumerable<object>
+        private sealed class VVTest : IEnumerable<object>
         {
             [ViewVariables(VVAccess.ReadWrite)] private int x = 10;
 

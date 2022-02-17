@@ -4,10 +4,8 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Server.GameObjects
 {
-    public class ActorComponent : Component
+    public sealed class ActorComponent : Component
     {
-        public override string Name => "Actor";
-
         [ViewVariables]
         public IPlayerSession PlayerSession { get; internal set; } = default!;
     }

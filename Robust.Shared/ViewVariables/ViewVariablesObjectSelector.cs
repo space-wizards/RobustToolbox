@@ -17,6 +17,7 @@ namespace Robust.Shared.ViewVariables
     ///     Specifies an entity with a certain entity UID.
     /// </summary>
     [Serializable, NetSerializable]
+    [Virtual]
     public class ViewVariablesEntitySelector : ViewVariablesObjectSelector
     {
         public ViewVariablesEntitySelector(EntityUid entity)
@@ -32,7 +33,7 @@ namespace Robust.Shared.ViewVariables
     ///     Specifies a component of a specified entity.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesComponentSelector : ViewVariablesEntitySelector
+    public sealed class ViewVariablesComponentSelector : ViewVariablesEntitySelector
     {
         public ViewVariablesComponentSelector(EntityUid uid, string componentType) : base(uid)
         {
@@ -47,7 +48,7 @@ namespace Robust.Shared.ViewVariables
     ///     Specifies a specific property of an object currently opened in a remote VV session.
     /// </summary>
     [Serializable, NetSerializable]
-    public class ViewVariablesSessionRelativeSelector : ViewVariablesObjectSelector
+    public sealed class ViewVariablesSessionRelativeSelector : ViewVariablesObjectSelector
     {
         public ViewVariablesSessionRelativeSelector(uint sessionId, object[] propertyIndex)
         {
@@ -75,9 +76,20 @@ namespace Robust.Shared.ViewVariables
     }
 
     [Serializable, NetSerializable]
-    public class ViewVariablesIoCSelector : ViewVariablesObjectSelector
+    public sealed class ViewVariablesIoCSelector : ViewVariablesObjectSelector
     {
         public ViewVariablesIoCSelector(string typeName)
+        {
+            TypeName = typeName;
+        }
+
+        public string TypeName { get; }
+    }
+
+    [Serializable, NetSerializable]
+    public sealed class ViewVariablesEntitySystemSelector : ViewVariablesObjectSelector
+    {
+        public ViewVariablesEntitySystemSelector(string typeName)
         {
             TypeName = typeName;
         }

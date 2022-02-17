@@ -207,10 +207,10 @@ namespace Robust.Client.Debugging
 
                     const float AlphaModifier = 0.2f;
 
-                    foreach (var fixture in physBody.Fixtures)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
                     {
-                        // Invalid shape - Box2D doesn't check for IsSensor
-                        if (physBody.BodyType == BodyType.Dynamic && fixture.Mass == 0f)
+                        // Invalid shape - Box2D doesn't check for IsSensor but we will for sanity.
+                        if (physBody.BodyType == BodyType.Dynamic && fixture.Mass == 0f && fixture.Hard)
                         {
                             DrawShape(worldHandle, fixture, xform, Color.Red.WithAlpha(AlphaModifier));
                         }
@@ -274,7 +274,7 @@ namespace Robust.Client.Debugging
                     const float AlphaModifier = 0.2f;
                     Box2? aabb = null;
 
-                    foreach (var fixture in physBody.Fixtures)
+                    foreach (var fixture in _entityManager.GetComponent<FixturesComponent>(physBody.Owner).Fixtures.Values)
                     {
                         for (var i = 0; i < fixture.Shape.ChildCount; i++)
                         {

@@ -7,7 +7,7 @@ namespace Robust.UnitTesting
     /// <summary>
     ///     Utility class for testing that logs are indeed being thrown.
     /// </summary>
-    public class LogCatcher : ILogHandler
+    public sealed class LogCatcher : ILogHandler
     {
         /// <summary>
         ///     Read only list of every log message that was caught since the last flush.

@@ -77,7 +77,7 @@ namespace Robust.Shared.Input
     }
 
     /// <inheritdoc />
-    internal class InputContextContainer : IInputContextContainer
+    internal sealed class InputContextContainer : IInputContextContainer
     {
         /// <summary>
         ///     Default 'root' context unique name that always exists in the set.
@@ -231,7 +231,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     Event arguments for an input context change.
     /// </summary>
-    public class ContextChangedEventArgs : EventArgs
+    public sealed class ContextChangedEventArgs : EventArgs
     {
         /// <summary>
         ///     The new context that became active.

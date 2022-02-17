@@ -35,7 +35,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 {
     [Serializable, NetSerializable]
     [DataDefinition]
-    public class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
+    public sealed class PolygonShape : IPhysShape, ISerializationHooks, IApproxEquatable<PolygonShape>
     {
         [ViewVariables]
         public int VertexCount => Vertices.Length;

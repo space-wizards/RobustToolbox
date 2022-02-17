@@ -1,4 +1,4 @@
-﻿using Robust.Client.Graphics;
+using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
 using Robust.Shared.GameObjects;
@@ -12,9 +12,8 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
-    public class IconComponent : Component, ISerializationHooks
+    public sealed class IconComponent : Component, ISerializationHooks
     {
-        public override string Name => "Icon";
         public IDirectionalTextureProvider? Icon { get; private set; }
 
         [DataField("sprite")]

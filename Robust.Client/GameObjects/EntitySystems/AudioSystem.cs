@@ -17,7 +17,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : SharedAudioSystem, IAudioSystem
+    public sealed class AudioSystem : SharedAudioSystem, IAudioSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -253,9 +253,15 @@ namespace Robust.Client.GameObjects
         /// </summary>
         /// <param name="stream">The audio stream to play.</param>
         /// <param name="audioParams"></param>
-        private IPlayingAudioStream Play(AudioStream stream, AudioParams? audioParams = null)
+        private IPlayingAudioStream? Play(AudioStream stream, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
+
+            if (source == null)
+            {
+                return null;
+            }
+
             ApplyAudioParams(audioParams, source);
 
             source.SetGlobal();
@@ -303,6 +309,12 @@ namespace Robust.Client.GameObjects
             AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
+
+            if (source == null)
+            {
+                return null;
+            }
+
             if (!source.SetPosition(EntityManager.GetComponent<TransformComponent>(entity).WorldPosition))
             {
                 return Play(stream, fallbackCoordinates, fallbackCoordinates, audioParams);
@@ -356,6 +368,12 @@ namespace Robust.Client.GameObjects
             EntityCoordinates fallbackCoordinates, AudioParams? audioParams = null)
         {
             var source = _clyde.CreateAudioSource(stream);
+
+            if (source == null)
+            {
+                return null;
+            }
+
             if (!source.SetPosition(fallbackCoordinates.Position))
             {
                 source.Dispose();
@@ -402,7 +420,7 @@ namespace Robust.Client.GameObjects
             source.IsLooping = audioParams.Value.Loop;
         }
 
-        private class PlayingStream : IPlayingAudioStream
+        private sealed class PlayingStream : IPlayingAudioStream
         {
             public uint? NetIdentifier;
             public IClydeAudioSource Source = default!;

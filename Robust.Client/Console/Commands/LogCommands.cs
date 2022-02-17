@@ -4,7 +4,7 @@ using Robust.Shared.Console;
 
 namespace Robust.Client.Console.Commands
 {
-    class LogSetLevelCommand : IConsoleCommand
+    sealed class LogSetLevelCommand : IConsoleCommand
     {
         public string Command => "loglevel";
         public string Description => "Changes the log level for a provided sawmill.";
@@ -40,7 +40,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    class TestLog : IConsoleCommand
+    sealed class TestLog : IConsoleCommand
     {
         public string Command => "testlog";
         public string Description => "Writes a test log to a sawmill.";

@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 {
     [TestFixture]
     [TestOf(typeof(CenterContainer))]
-    public class CenterContainerTest : RobustUnitTest
+    public sealed class CenterContainerTest : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 

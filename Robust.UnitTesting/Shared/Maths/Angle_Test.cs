@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(Angle))]
-    public class Angle_Test
+    public sealed class Angle_Test
     {
         private const double Epsilon = 1.0e-8;
 

@@ -1,5 +1,3 @@
-using System.Linq;
-using Robust.Shared.Containers;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 
@@ -11,6 +9,7 @@ namespace Robust.Shared.GameObjects
         {
             base.Initialize();
             SubscribeLocalEvent<CollisionWakeComponent, EntityInitializedMessage>(HandleInitialize);
+            SubscribeLocalEvent<CollisionWakeComponent, ComponentRemove>(HandleRemove);
 
             SubscribeLocalEvent<CollisionWakeComponent, PhysicsWakeMessage>(HandleWake);
             SubscribeLocalEvent<CollisionWakeComponent, PhysicsSleepMessage>(HandleSleep);
@@ -22,8 +21,26 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<CollisionWakeComponent, EntParentChangedMessage>(HandleParentChange);
         }
 
+        private void HandleRemove(EntityUid uid, CollisionWakeComponent component, ComponentRemove args)
+        {
+            if (!Terminating(uid) && TryComp(uid, out PhysicsComponent? physics))
+            {
+                physics.CanCollide = true;
+            }
+        }
+
+        private bool CanRaiseEvent(EntityUid uid)
+        {
+            var meta = MetaData(uid);
+
+            if (meta.EntityLifeStage >= EntityLifeStage.Terminating) return false;
+            return true;
+        }
+
         private void HandleParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
         {
+            if (!CanRaiseEvent(uid)) return;
+
             component.RaiseStateChange();
         }
 
@@ -34,6 +51,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleJointRemove(EntityUid uid, CollisionWakeComponent component, JointRemovedEvent args)
         {
+            if (!CanRaiseEvent(uid)) return;
+
             component.RaiseStateChange();
         }
 
@@ -49,6 +68,8 @@ namespace Robust.Shared.GameObjects
 
         private void HandleSleep(EntityUid uid, CollisionWakeComponent component, PhysicsSleepMessage args)
         {
+            if (!CanRaiseEvent(uid)) return;
+
             component.RaiseStateChange();
         }
 

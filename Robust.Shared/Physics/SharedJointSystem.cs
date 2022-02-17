@@ -360,24 +360,26 @@ namespace Robust.Shared.Physics
             Logger.DebugS("physics", $"Removed joint {joint.ID}");
 
             // Wake up connected bodies.
-            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
+                MetaData(bodyAUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
                 bodyA.Awake = true;
             }
 
-            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB))
+            if (EntityManager.TryGetComponent<PhysicsComponent>(bodyBUid, out var bodyB) &&
+                MetaData(bodyBUid).EntityLifeStage < EntityLifeStage.Terminating)
             {
                 bodyB.Awake = true;
             }
 
             if (!jointComponentA.Deleted)
             {
-                jointComponentA.Dirty();
+                jointComponentA.Dirty(EntityManager);
             }
 
             if (!jointComponentB.Deleted)
             {
-                jointComponentB.Dirty();
+                jointComponentB.Dirty(EntityManager);
             }
 
             if (jointComponentA.Deleted && jointComponentB.Deleted)
@@ -407,17 +409,20 @@ namespace Robust.Shared.Physics
             var bodyA = joint.BodyA;
             var bodyB = joint.BodyB;
 
-            var edge = bodyB.ContactEdges;
-            while (edge != null)
+            var node = bodyB.Contacts.First;
+
+            while (node != null)
             {
-                if (edge.Other == bodyA)
+                var contact = node.Value;
+                node = node.Next;
+
+                if (contact.FixtureA?.Body == bodyA ||
+                    contact.FixtureB?.Body == bodyA)
                 {
                     // Flag the contact for filtering at the next time step (where either
                     // body is awake).
-                    edge.Contact!.FilterFlag = true;
+                    contact.FilterFlag = true;
                 }
-
-                edge = edge.Next;
             }
         }
     }

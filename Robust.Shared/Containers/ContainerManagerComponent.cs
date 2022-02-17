@@ -18,16 +18,14 @@ namespace Robust.Shared.Containers
     /// </summary>
     [ComponentReference(typeof(IContainerManager))]
     [NetworkedComponent]
-    public class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
+    [ComponentProtoName("ContainerContainer")]
+    public sealed class ContainerManagerComponent : Component, IContainerManager, ISerializationHooks
     {
         [Dependency] private readonly IDynamicTypeFactoryInternal _dynFactory = default!;
 
         [ViewVariables]
         [DataField("containers")]
         public Dictionary<string, IContainer> Containers = new();
-
-        /// <inheritdoc />
-        public sealed override string Name => "ContainerContainer";
 
         void ISerializationHooks.AfterDeserialization()
         {
@@ -203,7 +201,7 @@ namespace Robust.Shared.Containers
         }
 
         [Serializable, NetSerializable]
-        internal class ContainerManagerComponentState : ComponentState
+        internal sealed class ContainerManagerComponentState : ComponentState
         {
             public List<ContainerData> ContainerSet;
 

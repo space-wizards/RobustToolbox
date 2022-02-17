@@ -9,6 +9,7 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class ItemList : Control, IList<ItemList.Item>
     {
         private bool _isAtBottom = true;
@@ -523,20 +524,20 @@ namespace Robust.Client.UserInterface.Controls
             _scrollBar.Visible = _totalContentHeight + ActualBackground.MinimumSize.Y > PixelHeight;
         }
 
-        public class ItemListEventArgs : EventArgs
+        public abstract class ItemListEventArgs : EventArgs
         {
             /// <summary>
             ///     The ItemList this event originated from.
             /// </summary>
             public ItemList ItemList { get; }
 
-            public ItemListEventArgs(ItemList list)
+            protected ItemListEventArgs(ItemList list)
             {
                 ItemList = list;
             }
         }
 
-        public class ItemListSelectedEventArgs : ItemListEventArgs
+        public sealed class ItemListSelectedEventArgs : ItemListEventArgs
         {
             /// <summary>
             ///     The index of the item that was selected.
@@ -549,7 +550,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public class ItemListDeselectedEventArgs : ItemListEventArgs
+        public sealed class ItemListDeselectedEventArgs : ItemListEventArgs
         {
             /// <summary>
             ///     The index of the item that was selected.
@@ -562,7 +563,7 @@ namespace Robust.Client.UserInterface.Controls
             }
         }
 
-        public class ItemListHoverEventArgs : ItemListEventArgs
+        public sealed class ItemListHoverEventArgs : ItemListEventArgs
         {
             /// <summary>
             ///     The index of the item that was selected.

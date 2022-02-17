@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 
@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture]
     [TestOf(typeof(ComponentFactory))]
-    public class ComponentFactory_Tests : RobustUnitTest
+    public sealed class ComponentFactory_Tests : RobustUnitTest
     {
         private const string TestComponentName = "A";
         private const string LowercaseTestComponentName = "a";
@@ -108,9 +108,9 @@ namespace Robust.UnitTesting.Shared.GameObjects
             Assert.True(componentFactory.TryGetRegistration(LowercaseTestComponentName, out _, true));
         }
 
-        private class TestComponent : Component
+        [ComponentProtoName(TestComponentName)]
+        private sealed class TestComponent : Component
         {
-            public override string Name => TestComponentName;
         }
     }
 }

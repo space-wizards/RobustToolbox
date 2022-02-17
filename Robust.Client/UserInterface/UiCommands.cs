@@ -5,7 +5,7 @@ using Robust.Shared.Reflection;
 
 namespace Robust.Client.UserInterface
 {
-    class ChangeSceneCommpand : IConsoleCommand
+    sealed class ChangeSceneCommpand : IConsoleCommand
     {
         public string Command => "scene";
         public string Help => "scene <className>";

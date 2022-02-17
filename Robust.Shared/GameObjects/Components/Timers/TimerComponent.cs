@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,11 +9,9 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Shared.GameObjects
 {
-    public class TimerComponent : Component
+    public sealed class TimerComponent : Component
     {
         [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
-
-        public override string Name => "Timer";
 
         private readonly List<(Timer timer, CancellationToken source)>
             _timers = new();

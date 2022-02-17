@@ -30,7 +30,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console.Commands
 {
-    internal class DumpEntitiesCommand : IConsoleCommand
+    internal sealed class DumpEntitiesCommand : IConsoleCommand
     {
         public string Command => "dumpentities";
         public string Help => "Dump entity list";
@@ -47,7 +47,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GetComponentRegistrationCommand : IConsoleCommand
+    internal sealed class GetComponentRegistrationCommand : IConsoleCommand
     {
         public string Command => "getcomponentregistration";
         public string Help => "Usage: getcomponentregistration <componentName>";
@@ -93,7 +93,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleMonitorCommand : IConsoleCommand
+    internal sealed class ToggleMonitorCommand : IConsoleCommand
     {
         public string Command => "monitor";
 
@@ -148,7 +148,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ExceptionCommand : IConsoleCommand
+    internal sealed class ExceptionCommand : IConsoleCommand
     {
         public string Command => "fuck";
         public string Help => "Throws an exception";
@@ -160,7 +160,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ShowPositionsCommand : IConsoleCommand
+    internal sealed class ShowPositionsCommand : IConsoleCommand
     {
         public string Command => "showpos";
         public string Help => "";
@@ -173,7 +173,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ShowRayCommand : IConsoleCommand
+    internal sealed class ShowRayCommand : IConsoleCommand
     {
         public string Command => "showrays";
         public string Help => "Usage: showrays <raylifetime>";
@@ -200,7 +200,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class DisconnectCommand : IConsoleCommand
+    internal sealed class DisconnectCommand : IConsoleCommand
     {
         public string Command => "disconnect";
         public string Help => "";
@@ -212,7 +212,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class EntityInfoCommand : IConsoleCommand
+    internal sealed class EntityInfoCommand : IConsoleCommand
     {
         public string Command => "entfo";
 
@@ -264,7 +264,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class SnapGridGetCell : IConsoleCommand
+    internal sealed class SnapGridGetCell : IConsoleCommand
     {
         public string Command => "sggcell";
         public string Help => "sggcell <gridID> <vector2i>\nThat vector2i param is in the form x<int>,y<int>.";
@@ -313,7 +313,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class SetPlayerName : IConsoleCommand
+    internal sealed class SetPlayerName : IConsoleCommand
     {
         public string Command => "overrideplayername";
         public string Description => "Changes the name used when attempting to connect to the server.";
@@ -333,7 +333,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class LoadResource : IConsoleCommand
+    internal sealed class LoadResource : IConsoleCommand
     {
         public string Command => "ldrsc";
         public string Description => "Pre-caches a resource.";
@@ -370,7 +370,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ReloadResource : IConsoleCommand
+    internal sealed class ReloadResource : IConsoleCommand
     {
         public string Command => "rldrsc";
         public string Description => "Reloads a resource.";
@@ -404,7 +404,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GridTileCount : IConsoleCommand
+    internal sealed class GridTileCount : IConsoleCommand
     {
         public string Command => "gridtc";
         public string Description => "Gets the tile count of a grid";
@@ -438,7 +438,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GuiDumpCommand : IConsoleCommand
+    internal sealed class GuiDumpCommand : IConsoleCommand
     {
         public string Command => "guidump";
         public string Description => "Dump GUI tree to /guidump.txt in user data.";
@@ -512,7 +512,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class UITestCommand : IConsoleCommand
+    internal sealed class UITestCommand : IConsoleCommand
     {
         public string Command => "uitest";
         public string Description => "Open a dummy UI testing window";
@@ -644,7 +644,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class SetClipboardCommand : IConsoleCommand
+    internal sealed class SetClipboardCommand : IConsoleCommand
     {
         public string Command => "setclipboard";
         public string Description => "Sets the system clipboard";
@@ -657,7 +657,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GetClipboardCommand : IConsoleCommand
+    internal sealed class GetClipboardCommand : IConsoleCommand
     {
         public string Command => "getclipboard";
         public string Description => "Gets the system clipboard";
@@ -670,7 +670,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleLight : IConsoleCommand
+    internal sealed class ToggleLight : IConsoleCommand
     {
         public string Command => "togglelight";
         public string Description => "Toggles light rendering.";
@@ -684,7 +684,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleFOV : IConsoleCommand
+    internal sealed class ToggleFOV : IConsoleCommand
     {
         public string Command => "togglefov";
         public string Description => "Toggles fov for client.";
@@ -698,7 +698,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleHardFOV : IConsoleCommand
+    internal sealed class ToggleHardFOV : IConsoleCommand
     {
         public string Command => "togglehardfov";
         public string Description => "Toggles hard fov for client (for debugging space-station-14#2353).";
@@ -712,7 +712,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ToggleShadows : IConsoleCommand
+    internal sealed class ToggleShadows : IConsoleCommand
     {
         public string Command => "toggleshadows";
         public string Description => "Toggles shadow rendering.";
@@ -725,7 +725,7 @@ namespace Robust.Client.Console.Commands
                 mgr.DrawShadows = !mgr.DrawShadows;
         }
     }
-    internal class ToggleLightBuf : IConsoleCommand
+    internal sealed class ToggleLightBuf : IConsoleCommand
     {
         public string Command => "togglelightbuf";
         public string Description => "Toggles lighting rendering. This includes shadows but not FOV.";
@@ -739,7 +739,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GcCommand : IConsoleCommand
+    internal sealed class GcCommand : IConsoleCommand
     {
         public string Command => "gc";
         public string Description => "Run the GC.";
@@ -761,7 +761,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GcFullCommand : IConsoleCommand
+    internal sealed class GcFullCommand : IConsoleCommand
     {
         public string Command => "gcf";
         public string Description => "Run the GC, fully, compacting LOH and everything.";
@@ -774,7 +774,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GcModeCommand : IConsoleCommand
+    internal sealed class GcModeCommand : IConsoleCommand
     {
 
         public string Command => "gc_mode";
@@ -816,7 +816,7 @@ namespace Robust.Client.Console.Commands
 
     }
 
-    internal class SerializeStatsCommand : IConsoleCommand
+    internal sealed class SerializeStatsCommand : IConsoleCommand
     {
 
         public string Command => "szr_stats";
@@ -836,7 +836,7 @@ namespace Robust.Client.Console.Commands
 
     }
 
-    internal class ChunkInfoCommand : IConsoleCommand
+    internal sealed class ChunkInfoCommand : IConsoleCommand
     {
         public string Command => "chunkinfo";
         public string Description => "Gets info about a chunk under your mouse cursor.";
@@ -865,7 +865,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class ReloadShadersCommand : IConsoleCommand
+    internal sealed class ReloadShadersCommand : IConsoleCommand
     {
 
         public string Command => "rldshader";
@@ -1036,7 +1036,7 @@ namespace Robust.Client.Console.Commands
 
     }
 
-    internal class ClydeDebugLayerCommand : IConsoleCommand
+    internal sealed class ClydeDebugLayerCommand : IConsoleCommand
     {
         public string Command => "cldbglyr";
         public string Description => "Toggle fov and light debug layers";
@@ -1061,7 +1061,7 @@ namespace Robust.Client.Console.Commands
         }
     }
 
-    internal class GetKeyInfoCommand : IConsoleCommand
+    internal sealed class GetKeyInfoCommand : IConsoleCommand
     {
         public string Command => "keyinfo";
         public string Description => "Keys key info for a key";

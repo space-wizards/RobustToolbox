@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Runtime;
+using System.Linq;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -20,6 +20,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Enums;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -94,6 +95,7 @@ namespace Robust.Server
         private Func<ILogHandler>? _logHandlerFactory;
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
+        private bool _autoPause;
 
         private string? _shutdownReason;
 
@@ -127,7 +129,7 @@ namespace Robust.Server
 
             _shutdownReason = reason;
 
-            _mainLoop.Running = false;
+            if (_mainLoop != null) _mainLoop.Running = false;
             if (_logHandler != null)
             {
                 _log.RootSawmill.RemoveHandler(_logHandler);
@@ -319,7 +321,8 @@ namespace Robust.Server
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
 
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
-            IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
+            _playerManager.Initialize(MaxPlayers);
+            _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
 
@@ -487,10 +490,10 @@ namespace Robust.Server
 
             _mainLoop.Tick += (sender, args) => Update(args);
 
-            _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
+            _mainLoop.Update += (sender, args) => FrameUpdate(args);
 
             // set GameLoop.Running to false to return from this function.
-            _time.Paused = false;
+            _time.Paused = _autoPause;
         }
 
         internal void FinishMainLoop()
@@ -506,7 +509,13 @@ namespace Robust.Server
         {
             SetupMainLoop();
 
-            _mainLoop.Run();
+            // If the server has been given a reason to shut down before the main loop has started,
+            // Don't start the main loop. This only works if a reason is passed to Shutdown(...)
+            if (_shutdownReason != null)
+            {
+                Logger.Fatal("Shutdown has been requested before the main loop has been started, complying.");
+            }
+            else _mainLoop.Run();
 
             FinishMainLoop();
         }
@@ -537,6 +546,49 @@ namespace Robust.Server
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
+
+            cfgMgr.OnValueChanged(CVars.GameAutoPauseEmpty, UpdateAutoPause, true);
+        }
+
+        private void UpdateAutoPause(bool doAutoPause)
+        {
+            _autoPause = doAutoPause;
+            if (doAutoPause)
+            {
+                if (!_time.Paused && CheckIfShouldAutoPause())
+                {
+                    Logger.DebugS("srv", "game.auto_pause_empty changed, pausing");
+                    _time.Paused = true;
+                }
+            }
+            else if (_time.Paused)
+            {
+                Logger.DebugS("srv", "game.auto_pause_empty changed, unpausing");
+                _time.Paused = false;
+            }
+        }
+
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (!_autoPause)
+                return;
+
+            if (e.NewStatus == SessionStatus.Connected && _time.Paused)
+            {
+                Logger.DebugS("srv", "Client connecting, unpausing automatically.");
+                _time.Paused = false;
+            }
+
+            if (e.NewStatus == SessionStatus.Disconnected && CheckIfShouldAutoPause())
+            {
+                Logger.DebugS("srv", "Last client disconnected, pausing automatically.");
+                _time.Paused = true;
+            }
+        }
+
+        private bool CheckIfShouldAutoPause()
+        {
+            return _playerManager.Sessions.All(s => s.Status == SessionStatus.Disconnected);
         }
 
         // called right before main loop returns, do all saving/cleanup in here
@@ -545,6 +597,7 @@ namespace Robust.Server
             _modLoader.Shutdown();
 
             _playerManager.Shutdown();
+            _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
             // shut down networking, kicking all players.
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
@@ -628,7 +681,11 @@ namespace Robust.Server
             {
                 _stateManager.SendGameStateUpdate();
             }
+        }
 
+        private void FrameUpdate(FrameEventArgs frameEventArgs)
+        {
+            ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
         }

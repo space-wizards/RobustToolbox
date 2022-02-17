@@ -1,9 +1,11 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Manager;
 
 namespace Robust.Benchmarks.Serialization.Initialize
 {
     [MemoryDiagnoser]
+    [Virtual]
     public class SerializationInitializeBenchmark : SerializationBenchmark
     {
         [IterationCleanup]

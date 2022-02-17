@@ -11,8 +11,6 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent()]
     public abstract class SharedSpriteComponent : Component
     {
-        public override string Name => "Sprite";
-
         public abstract bool Visible { get; set; }
 
         /// <summary>
@@ -21,7 +19,7 @@ namespace Robust.Shared.GameObjects
         public static readonly ResourcePath TextureRoot = new("/Textures");
 
         [Serializable, NetSerializable]
-        protected class SpriteComponentState : ComponentState
+        protected sealed class SpriteComponentState : ComponentState
         {
             public readonly bool Visible;
             public readonly int DrawDepth;
@@ -58,7 +56,7 @@ namespace Robust.Shared.GameObjects
 
         [Serializable, NetSerializable]
         [DataDefinition]
-        public class PrototypeLayerData
+        public sealed class PrototypeLayerData
         {
             [DataField("shader")]
             public string? Shader;
@@ -79,7 +77,7 @@ namespace Robust.Shared.GameObjects
             [DataField("color")]
             public Color Color = Color.White;
             [DataField("map")]
-            public List<string>? MapKeys;
+            public HashSet<string>? MapKeys;
 
             public static PrototypeLayerData New()
             {

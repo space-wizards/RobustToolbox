@@ -14,7 +14,7 @@ namespace Robust.Shared.GameObjects
     ///     Serialized state of a <see cref="MetaDataComponent"/>.
     /// </summary>
     [Serializable, NetSerializable]
-    public class MetaDataComponentState : ComponentState
+    public sealed class MetaDataComponentState : ComponentState
     {
         /// <summary>
         ///     The in-game name of this entity.
@@ -48,7 +48,7 @@ namespace Robust.Shared.GameObjects
     ///     Contains meta data about this entity that isn't component specific.
     /// </summary>
     [NetworkedComponent]
-    public class MetaDataComponent : Component
+    public sealed class MetaDataComponent : Component
     {
         [DataField("name")]
         private string? _entityName;
@@ -56,9 +56,6 @@ namespace Robust.Shared.GameObjects
         private string? _entityDescription;
         private EntityPrototype? _entityPrototype;
         private bool _entityPaused;
-
-        /// <inheritdoc />
-        public override string Name => "MetaData";
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
         [ViewVariables]
@@ -150,9 +147,11 @@ namespace Robust.Shared.GameObjects
             get => _entityPaused;
             set
             {
+                if (_entityPaused == value)
+                    return;
+                
                 var entMan = IoCManager.Resolve<IEntityManager>();
-
-                if (_entityPaused == value || value && entMan.HasComponent<IgnorePauseComponent>(Owner))
+                if (value && entMan.HasComponent<IgnorePauseComponent>(Owner))
                     return;
 
                 _entityPaused = value;

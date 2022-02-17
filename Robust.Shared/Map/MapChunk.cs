@@ -104,7 +104,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
             var indices = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
-            return new TileRef(_grid.ParentMapId, _grid.Index, indices, _tiles[xIndex, yIndex]);
+            return new TileRef(_grid.ParentMapId, _grid.Index, indices, GetTile(xIndex, yIndex));
         }
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(indices), "Tile indices out of bounds.");
 
             var chunkIndices = ChunkTileToGridTile(indices);
-            return new TileRef(_grid.ParentMapId, _grid.Index, chunkIndices, _tiles[indices.X, indices.Y]);
+            return new TileRef(_grid.ParentMapId, _grid.Index, chunkIndices, GetTile((ushort) indices.X, (ushort) indices.Y));
         }
 
         /// <summary>
@@ -147,15 +147,15 @@ namespace Robust.Shared.Map
         /// <returns></returns>
         public IEnumerable<TileRef> GetAllTiles(bool ignoreEmpty = true)
         {
-            for (var x = 0; x < ChunkSize; x++)
+            for (ushort x = 0; x < ChunkSize; x++)
             {
-                for (var y = 0; y < ChunkSize; y++)
+                for (ushort y = 0; y < ChunkSize; y++)
                 {
-                    if (ignoreEmpty && _tiles[x, y].IsEmpty)
+                    if (ignoreEmpty && GetTile(x, y).IsEmpty)
                         continue;
 
                     var indices = ChunkTileToGridTile(new Vector2i(x, y));
-                    yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, _tiles[x, y]);
+                    yield return new TileRef(_grid.ParentMapId, _grid.Index, indices.X, indices.Y, GetTile(x, y));
                 }
             }
         }
@@ -216,15 +216,15 @@ namespace Robust.Shared.Map
         /// <returns></returns>
         public IEnumerator<TileRef> GetEnumerator()
         {
-            for (var x = 0; x < ChunkSize; x++)
+            for (ushort x = 0; x < ChunkSize; x++)
             {
-                for (var y = 0; y < ChunkSize; y++)
+                for (ushort y = 0; y < ChunkSize; y++)
                 {
-                    if (_tiles[x, y].IsEmpty)
+                    if (GetTile(x, y).IsEmpty)
                         continue;
 
                     var gridTile = ChunkTileToGridTile(new Vector2i(x, y));
-                    yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, _tiles[x, y]);
+                    yield return new TileRef(_grid.ParentMapId, _grid.Index, gridTile.X, gridTile.Y, GetTile(x, y));
                 }
             }
         }
@@ -380,7 +380,7 @@ namespace Robust.Shared.Map
         /// <param name="localIndices">Local tile indices</param>
         public bool CollidesWithChunk(Vector2i localIndices)
         {
-            return _tiles[localIndices.X, localIndices.Y].TypeId != Tile.Empty.TypeId;
+            return GetTile((ushort) localIndices.X, (ushort) localIndices.Y).TypeId != Tile.Empty.TypeId;
         }
 
         /// <inheritdoc />

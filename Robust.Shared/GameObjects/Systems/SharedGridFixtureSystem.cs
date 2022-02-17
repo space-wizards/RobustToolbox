@@ -65,7 +65,7 @@ namespace Robust.Shared.GameObjects
 
             var gridEnt = grid.GridEntityId;
 
-            DebugTools.Assert(chunk.ValidTiles > 0);
+            DebugTools.Assert(chunk.FilledTiles > 0);
 
             if (!EntityManager.TryGetComponent(gridEnt, out PhysicsComponent? physicsComponent))
             {

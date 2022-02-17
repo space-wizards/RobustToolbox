@@ -20,6 +20,9 @@ namespace Robust.Shared.Map
         /// </summary>
         private const int SnapCellStartingCapacity = 1;
 
+        /// <summary>
+        /// GridId of the grid this chunk belongs to.
+        /// </summary>
         public GridId GridId => _grid.Index;
 
         private readonly IMapGridInternal _grid;
@@ -28,21 +31,25 @@ namespace Robust.Shared.Map
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
 
-        // We'll keep a running count of how many tiles are non-empty.
-        // If this ever hits 0 then we know the chunk can be deleted.
-        // The alternative is that every time we SetTile we iterate every tile in the chunk.
-        internal int ValidTiles { get; private set; }
+        /// <summary>
+        /// Keeps a running count of the number of filled tiles in this chunk.
+        /// </summary>
+        /// <remarks>
+        /// This will always be between 1 and <see cref="ChunkSize"/>^2.
+        /// </remarks>
+        internal int FilledTiles { get; private set; }
 
         private Box2i _cachedBounds;
 
-        public List<Fixture> Fixtures { get; set; } = new();
+        /// <summary>
+        /// Physics fixtures that make up this grid chunk.
+        /// </summary>
+        public List<Fixture> Fixtures { get; } = new();
 
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.
         /// </summary>
         public GameTick LastTileModifiedTick { get; private set; }
-
-        public GameTick LastAnchoredModifiedTick { get; set; }
 
         /// <summary>
         ///     Constructs an instance of a MapGrid chunk.
@@ -114,7 +121,13 @@ namespace Robust.Shared.Map
             return new TileRef(_grid.ParentMapId, _grid.Index, chunkIndices, _tiles[indices.X, indices.Y]);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns the tile at the given chunk indices.
+        /// </summary>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException">The index is less than or greater than the size of the chunk.</exception>
         public Tile GetTile(ushort xIndex, ushort yIndex)
         {
             if (xIndex >= ChunkSize)
@@ -166,21 +179,21 @@ namespace Robust.Shared.Map
                 return;
 
             var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
-            var oldValidTiles = ValidTiles;
+            var oldValidTiles = FilledTiles;
 
             if (oldIsEmpty != tile.IsEmpty)
             {
                 if (oldIsEmpty)
                 {
-                    ValidTiles += 1;
+                    FilledTiles += 1;
                 }
                 else
                 {
-                    ValidTiles -= 1;
+                    FilledTiles -= 1;
                 }
             }
 
-            DebugTools.Assert(ValidTiles >= 0);
+            DebugTools.Assert(FilledTiles >= 0);
             var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
             var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
             var oldTile = _tiles[xIndex, yIndex];
@@ -191,7 +204,7 @@ namespace Robust.Shared.Map
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
             _grid.NotifyTileChanged(newTileRef, oldTile);
 
-            if (!SuppressCollisionRegeneration && oldValidTiles != ValidTiles)
+            if (!SuppressCollisionRegeneration && oldValidTiles != FilledTiles)
             {
                 RegenerateCollision();
             }
@@ -216,6 +229,9 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <summary>
+        ///     Returns an enumerator that iterates through all grid tiles.
+        /// </summary>
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
@@ -228,9 +244,8 @@ namespace Robust.Shared.Map
         /// <returns>Tile indices relative to this chunk.</returns>
         public Vector2i GridTileToChunkTile(Vector2i gridTile)
         {
-            var size = ChunkSize;
-            var x = MathHelper.Mod(gridTile.X, size);
-            var y = MathHelper.Mod(gridTile.Y, size);
+            var x = MathHelper.Mod(gridTile.X, ChunkSize);
+            var y = MathHelper.Mod(gridTile.Y, ChunkSize);
             return new Vector2i(x, y);
         }
 
@@ -239,12 +254,14 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="chunkTile">The indices relative to the chunk origin.</param>
         /// <returns>The indices relative to the grid origin.</returns>
-        public Vector2i ChunkTileToGridTile(Vector2i chunkTile)
+        private Vector2i ChunkTileToGridTile(Vector2i chunkTile)
         {
             return chunkTile + _gridIndices * ChunkSize;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Returns the anchored cell at the given tile indices.
+        /// </summary>
         public IEnumerable<EntityUid> GetSnapGridCell(ushort xCell, ushort yCell)
         {
             if (xCell >= ChunkSize)
@@ -264,7 +281,9 @@ namespace Robust.Shared.Map
             return list;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Adds an entity to the anchor cell at the given tile indices.
+        /// </summary>
         public void AddToSnapGridCell(ushort xCell, ushort yCell, EntityUid euid)
         {
             if (xCell >= ChunkSize)
@@ -278,10 +297,11 @@ namespace Robust.Shared.Map
 
             DebugTools.Assert(!cell.Center.Contains(euid));
             cell.Center.Add(euid);
-            LastAnchoredModifiedTick = _grid.CurTick;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Removes an entity from the anchor cell at the given tile indices.
+        /// </summary>
         public void RemoveFromSnapGridCell(ushort xCell, ushort yCell, EntityUid euid)
         {
             if (xCell >= ChunkSize)
@@ -292,81 +312,56 @@ namespace Robust.Shared.Map
 
             ref var cell = ref _snapGrid[xCell, yCell];
             cell.Center?.Remove(euid);
-            LastAnchoredModifiedTick = _grid.CurTick;
-        }
-
-        public IEnumerable<EntityUid> GetAllAnchoredEnts()
-        {
-            foreach (var cell in _snapGrid)
-            {
-                if (cell.Center is null)
-                    continue;
-
-                foreach (var euid in cell.Center)
-                {
-                    yield return euid;
-                }
-            }
         }
 
         /// <summary>
-        /// Like <see cref="GetAllAnchoredEnts"/>... but fast.
+        /// Setting this property to <see langword="true"/> suppresses collision regeneration on the chunk until the
+        /// property is set to <see langword="false"/>.
         /// </summary>
-        public void FastGetAllAnchoredEnts(EntityUidQueryCallback callback)
-        {
-            foreach (var cell in _snapGrid)
-            {
-                if (cell.Center is null)
-                    continue;
-
-                foreach (var euid in cell.Center)
-                {
-                    callback(euid);
-                }
-            }
-        }
-
         public bool SuppressCollisionRegeneration { get; set; }
 
+        /// <summary>
+        /// Regenerates the chunk local bounds of this chunk.
+        /// </summary>
         public void RegenerateCollision()
         {
             // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
-            if (ValidTiles == 0)
+            if (FilledTiles == 0)
             {
                 var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(GridId);
 
                 grid.RemoveChunk(_gridIndices);
             }
 
-            // generate collision rects
+            // generate collision rectangles for this chunk based on filled tiles.
             GridChunkPartition.PartitionChunk(this, out _cachedBounds, out var rectangles);
 
             _grid.UpdateAABB();
 
             // TryGet because unit tests YAY
-            if (ValidTiles > 0 && EntitySystem.TryGet(out SharedGridFixtureSystem? system))
+            if (FilledTiles > 0 && EntitySystem.TryGet(out SharedGridFixtureSystem? system))
                 system.RegenerateCollision(this, rectangles);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Calculates the chunk space bounds of this map chunk.
+        /// </summary>
+        /// <returns></returns>
         public Box2i CalcLocalBounds()
         {
             return _cachedBounds;
         }
 
-
         /// <summary>
-        /// Calculate the bounds of this chunk.
+        /// Calculate the world space AABB for this chunk.
         /// </summary>
-        /// <remarks>
-        /// TODO: We can rely on the fixture instead for the bounds in the future but we also need to
-        /// update the rendering to account for it. Better working on accurate grid bounds after rotation IMO.
-        /// </remarks>
-        public Box2Rotated CalcWorldBounds(Vector2? gridPos = null, Angle? gridRot = null)
+        public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
         {
-            gridRot ??= _grid.WorldRotation;
-            gridPos ??= _grid.WorldPosition;
-            var worldPos = gridPos.Value + gridRot.Value.RotateVec(Indices * _grid.TileSize * ChunkSize);
+            Vector2? gridPos1 = gridPos;
+            Angle? gridRot1 = gridRot;
+            gridRot1 ??= _grid.WorldRotation;
+            gridPos1 ??= _grid.WorldPosition;
+            var worldPos = gridPos1.Value + gridRot1.Value.RotateVec(Indices * _grid.TileSize * ChunkSize);
 
             var localBounds = CalcLocalBounds();
             var ts = _grid.TileSize;
@@ -375,18 +370,8 @@ namespace Robust.Shared.Map
                 localBounds.Left * ts,
                 localBounds.Bottom * ts,
                 localBounds.Right * ts,
-                localBounds.Top * ts).Translated(worldPos), gridRot.Value, worldPos);
-
-            return scaledLocalBounds;
-        }
-
-        /// <summary>
-        /// Calculate the AABB for this chunk.
-        /// </summary>
-        public Box2 CalcWorldAABB(Vector2? gridPos = null, Angle? gridRot = null)
-        {
-            var bounds = CalcWorldBounds(gridPos, gridRot);
-            return bounds.CalcBoundingBox();
+                localBounds.Top * ts).Translated(worldPos), gridRot1.Value, worldPos);
+            return scaledLocalBounds.CalcBoundingBox();
         }
 
         /// <summary>
@@ -408,20 +393,5 @@ namespace Robust.Shared.Map
         {
             public List<EntityUid>? Center;
         }
-    }
-
-    internal sealed class RegenerateChunkCollisionEvent : EntityEventArgs
-    {
-        public MapChunk Chunk { get; }
-
-        public RegenerateChunkCollisionEvent(MapChunk chunk)
-        {
-            Chunk = chunk;
-        }
-    }
-
-    internal sealed class ChunkRemovedEvent : EntityEventArgs
-    {
-        public MapChunk Chunk = default!;
     }
 }

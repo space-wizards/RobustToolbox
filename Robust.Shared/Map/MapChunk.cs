@@ -125,15 +125,15 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
             // same tile, no point to continue
-            if (_tiles[xIndex, yIndex].TypeId == tile.TypeId)
+            if (_tiles[xIndex, yIndex] == tile)
                 return;
 
-            var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
+            var oldTile = _tiles[xIndex, yIndex];
             var oldFilledTiles = FilledTiles;
 
-            if (oldIsEmpty != tile.IsEmpty)
+            if (oldTile.IsEmpty != tile.IsEmpty)
             {
-                if (oldIsEmpty)
+                if (oldTile.IsEmpty)
                 {
                     FilledTiles += 1;
                 }
@@ -146,7 +146,6 @@ namespace Robust.Shared.Map
             var shapeChanged = oldFilledTiles != FilledTiles;
             DebugTools.Assert(FilledTiles >= 0);
 
-            var oldTile = _tiles[xIndex, yIndex];
             _tiles[xIndex, yIndex] = tile;
 
             var tileIndices = new Vector2i(xIndex, yIndex);

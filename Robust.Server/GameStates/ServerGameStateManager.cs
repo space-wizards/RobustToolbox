@@ -130,9 +130,10 @@ namespace Robust.Server.GameStates
 
             //todo paul oh my god make this less shit
             EntityQuery<MetaDataComponent> metadataQuery = default!;
+            EntityQuery<TransformComponent> transformQuery = default!;
             HashSet<int>[] playerChunks = default!;
             EntityUid[][] viewerEntities = default!;
-            Dictionary<EntityUid, MetaDataComponent>?[] chunkCache = default!;
+            (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache = default!;
 
             if (_pvs.CullingEnabled)
             {
@@ -141,8 +142,9 @@ namespace Robust.Server.GameStates
                 const int ChunkBatchSize = 2;
                 var chunksCount = chunks.Count;
                 var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
-                chunkCache = new Dictionary<EntityUid, MetaDataComponent>?[chunks.Count];
-                var transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                chunkCache =
+                    new (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[chunksCount];
+                transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
                 metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
                 Parallel.For(0, chunkBatches, i =>
                 {
@@ -195,7 +197,7 @@ namespace Robust.Server.GameStates
 
                 var (entStates, deletions) = _pvs.CullingEnabled
                     ? _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache,
-                        playerChunks[sessionIndex], metadataQuery, viewerEntities[sessionIndex])
+                        playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
                     : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);

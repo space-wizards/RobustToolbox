@@ -80,6 +80,9 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly ObjectPool<HashSet<int>> _playerChunkPool =
         new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
 
+    private readonly ObjectPool<List<EntityUid>> _chunkOrderPool =
+        new DefaultObjectPool<List<EntityUid>>(new ListPolicy<EntityUid>(), MaxVisPoolSize);
+
     public override void Initialize()
     {
         base.Initialize();
@@ -367,7 +370,7 @@ internal sealed partial class PVSSystem : EntitySystem
                         }
                     }
                 }
-                }
+            }
 
             _uidSetPool.Return(viewers);
         }
@@ -375,7 +378,7 @@ internal sealed partial class PVSSystem : EntitySystem
         return (chunkList, playerChunks, viewerEntities);
     }
 
-    public Dictionary<EntityUid, MetaDataComponent>? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
+    public (Dictionary<EntityUid, MetaDataComponent> mData, List<EntityUid> order)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
     {
         var chunk = chunkLocation switch
         {
@@ -390,20 +393,22 @@ internal sealed partial class PVSSystem : EntitySystem
         };
         if (chunk == null) return null;
         var chunkSet = _chunkCachePool.Get();
+        var order = _chunkOrderPool.Get();
         foreach (var uid in chunk)
         {
-            AddToChunkSetRecursively(in uid, visMask, chunkSet, transform, metadata);
+            AddToChunkSetRecursively(in uid, visMask, order, chunkSet, transform, metadata);
         }
 
-        return chunkSet;
+        return (chunkSet, order);
     }
 
-    public void ReturnToPool(Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int>[] playerChunks)
+    public void ReturnToPool((Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache, HashSet<int>[] playerChunks)
     {
         foreach (var chunk in chunkCache)
         {
-            if(chunk == null) continue;
-            _chunkCachePool.Return(chunk);
+            if(!chunk.HasValue) continue;
+            _chunkCachePool.Return(chunk.Value.metadata);
+            _chunkOrderPool.Return(chunk.Value.order);
         }
 
         foreach (var playerChunk in playerChunks)
@@ -412,7 +417,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    private bool AddToChunkSetRecursively(in EntityUid uid, uint visMask, Dictionary<EntityUid, MetaDataComponent> set, EntityQuery<TransformComponent> transform,
+    private bool AddToChunkSetRecursively(in EntityUid uid, uint visMask, List<EntityUid> order, Dictionary<EntityUid, MetaDataComponent> set, EntityQuery<TransformComponent> transform,
         EntityQuery<MetaDataComponent> metadata)
     {
         //are we valid?
@@ -432,16 +437,17 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (parent.IsValid() && //is it not a worldentity?
             !set.ContainsKey(parent) && //was the parent not yet added to toSend?
-            !AddToChunkSetRecursively(in parent, visMask, set, transform, metadata)) //did we just fail to add the parent?
+            !AddToChunkSetRecursively(in parent, visMask, order, set, transform, metadata)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
         //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        order.Add(uid);
         set.Add(uid, mComp);
         return true;
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick, Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityUid[] viewerEntities)
+        GameTick fromTick, GameTick toTick, (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery, EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntitiesSent = 0;
@@ -451,12 +457,23 @@ internal sealed partial class PVSSystem : EntitySystem
         var seenSet = _playerSeenSets[session];
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
+        foreach (var i in chunkIndices)
+        {
+            var cache = chunkCache[i];
+            if(!cache.HasValue) continue;
+            foreach (var uid in cache.Value.order)
+            {
+                TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                    ref entitiesSent, mQuery, tQuery, cache.Value.metadata[uid]);
+            }
+        }
+
         var globalEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
         while (globalEnumerator.MoveNext())
         {
             var uid = globalEnumerator.Current;
             TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, dontSkip: true);
+                ref entitiesSent, mQuery, tQuery, dontSkip: true, manualParents: true);
         }
         globalEnumerator.Dispose();
 
@@ -465,26 +482,14 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             var uid = localEnumerator.Current;
             TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, dontSkip: true);
+                ref entitiesSent, mQuery, tQuery, dontSkip: true, manualParents: true);
         }
         localEnumerator.Dispose();
 
         foreach (var viewerEntity in viewerEntities)
         {
             TryAddToVisibleEnts(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, dontSkip: true);
-        }
-
-        foreach (var i in chunkIndices)
-        {
-            var chunk = chunkCache[i];
-            if(chunk == null) continue;
-            foreach (var (uid, metadata) in chunk)
-            {
-                TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                    ref entitiesSent, mQuery, metadata);
-
-            }
+                ref entitiesSent, mQuery, tQuery, dontSkip: true, manualParents: true);
         }
 
         var entityStates = new List<EntityState>();
@@ -538,16 +543,25 @@ internal sealed partial class PVSSystem : EntitySystem
         ref int newEntitiesSent,
         ref int totalEnteredEntities,
         EntityQuery<MetaDataComponent> metadataQuery,
+        EntityQuery<TransformComponent> transformQuery,
         MetaDataComponent? metaDataComponent = null,
-        bool dontSkip = false)
+        bool dontSkip = false,
+        bool manualParents = false)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return;
 
         //did we already get added?
-        //todo paul can this happen?
         if (toSend.ContainsKey(uid)) return;
+
+        if (manualParents)
+        {
+            var parent = transformQuery.GetComponent(uid).ParentUid;
+            TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend,
+                fromTick, ref newEntitiesSent, ref totalEnteredEntities, metadataQuery, transformQuery, dontSkip: dontSkip,
+                manualParents: true);
+        }
 
         //are we new?
         var @new = !seenSet.Contains(uid);
@@ -754,6 +768,20 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         public override bool Return(HashSet<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    public sealed class ListPolicy<T> : PooledObjectPolicy<List<T>>
+    {
+        public override List<T> Create()
+        {
+            return new();
+        }
+
+        public override bool Return(List<T> obj)
         {
             obj.Clear();
             return true;

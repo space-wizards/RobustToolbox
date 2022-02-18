@@ -20,7 +20,7 @@ namespace Robust.Benchmarks.Serialization
         }
 
         public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int _ = default)
         {
             return new DeserializedValue<int>(int.Parse(node.Value, CultureInfo.InvariantCulture));
         }

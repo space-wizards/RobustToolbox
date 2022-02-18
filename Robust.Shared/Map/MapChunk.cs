@@ -18,11 +18,15 @@ namespace Robust.Shared.Map
         /// </summary>
         private const int SnapCellStartingCapacity = 1;
 
-        private readonly IMapGridInternal _grid;
         private readonly Vector2i _gridIndices;
 
         private readonly Tile[,] _tiles;
         private readonly SnapGridCell[,] _snapGrid;
+
+        /// <summary>
+        /// Invoked when a tile is modified on this chunk.
+        /// </summary>
+        public event TileModifiedDelegate? TileModified;
 
         /// <summary>
         /// Keeps a running count of the number of filled tiles in this chunk.
@@ -45,19 +49,22 @@ namespace Robust.Shared.Map
         /// <summary>
         /// The last game simulation tick that a tile on this chunk was modified.
         /// </summary>
-        public GameTick LastTileModifiedTick { get; private set; }
+        public GameTick LastTileModifiedTick { get; set; }
+
+        /// <summary>
+        /// Setting this property to <see langword="true"/> suppresses collision regeneration on the chunk until the
+        /// property is set to <see langword="false"/>.
+        /// </summary>
+        public bool SuppressCollisionRegeneration { get; set; }
 
         /// <summary>
         ///     Constructs an instance of a MapGrid chunk.
         /// </summary>
-        /// <param name="grid"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <param name="chunkSize"></param>
-        public MapChunk(IMapGridInternal grid, int x, int y, ushort chunkSize)
+        public MapChunk(int x, int y, ushort chunkSize)
         {
-            _grid = grid;
-            LastTileModifiedTick = grid.CurTick;
             _gridIndices = new Vector2i(x, y);
             ChunkSize = chunkSize;
 
@@ -122,7 +129,7 @@ namespace Robust.Shared.Map
                 return;
 
             var oldIsEmpty = _tiles[xIndex, yIndex].IsEmpty;
-            var oldValidTiles = FilledTiles;
+            var oldFilledTiles = FilledTiles;
 
             if (oldIsEmpty != tile.IsEmpty)
             {
@@ -136,21 +143,14 @@ namespace Robust.Shared.Map
                 }
             }
 
+            var shapeChanged = oldFilledTiles != FilledTiles;
             DebugTools.Assert(FilledTiles >= 0);
-            var gridTile = ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
-            var newTileRef = new TileRef(_grid.ParentMapId, _grid.Index, gridTile, tile);
-            var oldTile = _tiles[xIndex, yIndex];
-            LastTileModifiedTick = _grid.CurTick;
 
+            var oldTile = _tiles[xIndex, yIndex];
             _tiles[xIndex, yIndex] = tile;
 
-            // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
-            _grid.NotifyTileChanged(newTileRef, oldTile);
-
-            if (!SuppressCollisionRegeneration && oldValidTiles != FilledTiles)
-            {
-                this._grid.RegenerateCollision(this);
-            }
+            var tileIndices = new Vector2i(xIndex, yIndex);
+            TileModified?.Invoke(this, tileIndices, tile, oldTile, shapeChanged);
         }
 
         /// <summary>
@@ -230,12 +230,6 @@ namespace Robust.Shared.Map
             cell.Center?.Remove(euid);
         }
 
-        /// <summary>
-        /// Setting this property to <see langword="true"/> suppresses collision regeneration on the chunk until the
-        /// property is set to <see langword="false"/>.
-        /// </summary>
-        public bool SuppressCollisionRegeneration { get; set; }
-
         /// <inheritdoc />
         public override string ToString()
         {
@@ -247,4 +241,14 @@ namespace Robust.Shared.Map
             public List<EntityUid>? Center;
         }
     }
+
+    /// <summary>
+    /// Event delegate for <see cref="MapChunk.TileModified"/>.
+    /// </summary>
+    /// <param name="mapChunk">Chunk that the tile was on.</param>
+    /// <param name="tileIndices">hunk Indices of the tile that was modified.</param>
+    /// <param name="newTile">New version of the tile.</param>
+    /// <param name="oldTile">Old version of the tile.</param>
+    /// <param name="chunkShapeChanged">If changing this tile changed the shape of the chunk.</param>
+    internal delegate void TileModifiedDelegate(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool chunkShapeChanged);
 }

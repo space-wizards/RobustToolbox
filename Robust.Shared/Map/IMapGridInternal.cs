@@ -1,22 +1,14 @@
 using System.Collections.Generic;
-using System.Text;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
     internal interface IMapGridInternal : IMapGrid
     {
-        GameTick LastTileModifiedTick { get; }
-
-        GameTick CurTick { get; }
-
         /// <summary>
         ///     The total number of chunks contained on this grid.
         /// </summary>
         int ChunkCount { get; }
-
-        void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
 
         /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
@@ -56,6 +48,9 @@ namespace Robust.Shared.Map
         /// </summary>
         void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
 
+        /// <summary>
+        ///     Returns all the <see cref="MapChunk"/> intersecting the rotated world box.
+        /// </summary>
         void GetMapChunks(Box2Rotated worldArea, out MapGrid.ChunkEnumerator enumerator);
 
         /// <summary>
@@ -72,7 +67,6 @@ namespace Robust.Shared.Map
         ///     Returns the tile at the given chunk indices.
         /// </summary>
         /// <param name="mapChunk"></param>
-        /// <param name="grid"></param>
         /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
         /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
         /// <returns>A reference to a tile.</returns>

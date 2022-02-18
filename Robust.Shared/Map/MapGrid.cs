@@ -28,9 +28,6 @@ namespace Robust.Shared.Map
         public GameTick LastTileModifiedTick { get; private set; }
 
         /// <inheritdoc />
-        public GameTick CurTick => _mapManager.GameTiming.CurTick;
-
-        /// <inheritdoc />
         [ViewVariables]
         public MapId ParentMapId { get; set; }
 
@@ -59,7 +56,6 @@ namespace Robust.Shared.Map
         /// <param name="entityManager"></param>
         /// <param name="gridIndex">Index identifier of this grid.</param>
         /// <param name="chunkSize">The dimension of this square chunk.</param>
-        /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
         /// <param name="parentMapId">Parent map identifier.</param>
         internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, MapId parentMapId)
         {
@@ -81,8 +77,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         [ViewVariables]
         public Box2 LocalBounds { get; private set; }
-
-        public bool SuppressCollisionRegeneration { get; set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -168,13 +162,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <inheritdoc />
-        public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
-        {
-            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
-            _mapManager.RaiseOnTileChanged(tileRef, oldTile);
-        }
-
         #region TileAccess
 
         /// <inheritdoc />
@@ -208,7 +195,6 @@ namespace Robust.Shared.Map
         ///     Returns the tile at the given chunk indices.
         /// </summary>
         /// <param name="mapChunk"></param>
-        /// <param name="grid"></param>
         /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
         /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
         /// <returns>A reference to a tile.</returns>
@@ -280,6 +266,7 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
@@ -376,6 +363,7 @@ namespace Robust.Shared.Map
             return GetChunk(new Vector2i(xIndex, yIndex));
         }
 
+        /// <inheritdoc />
         public void RemoveChunk(Vector2i origin)
         {
             if (!_chunks.TryGetValue(origin, out var chunk)) return;
@@ -396,7 +384,10 @@ namespace Robust.Shared.Map
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
-            return _chunks[chunkIndices] = new MapChunk(this, chunkIndices.X, chunkIndices.Y, ChunkSize);
+            var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
+            newChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            newChunk.TileModified += OnTileModified;
+            return _chunks[chunkIndices] = newChunk;
         }
 
         /// <inheritdoc />
@@ -458,12 +449,14 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
         public void GetMapChunks(Box2 worldAABB, out ChunkEnumerator enumerator)
         {
             var localArea = InvWorldMatrix.TransformBox(worldAABB);
             enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
         }
 
+        /// <inheritdoc />
         public void GetMapChunks(Box2Rotated worldArea, out ChunkEnumerator enumerator)
         {
             var matrix = InvWorldMatrix;
@@ -876,6 +869,21 @@ namespace Robust.Shared.Map
                     .Scale(tileScale))
                 .Translated(worldPos),
                 rotation, worldPos).CalcBoundingBox();
+        }
+
+        private void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool shapeChanged)
+        {
+            // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
+            var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
+            var newTileRef = new TileRef(ParentMapId, Index, gridTile, newTile);
+            mapChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
+
+            if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)
+            {
+                RegenerateCollision(mapChunk);
+            }
         }
     }
 

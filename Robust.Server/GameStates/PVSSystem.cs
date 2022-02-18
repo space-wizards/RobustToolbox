@@ -367,7 +367,7 @@ internal sealed partial class PVSSystem : EntitySystem
                         }
                     }
                 }
-                }
+            }
 
             _uidSetPool.Return(viewers);
         }
@@ -441,7 +441,13 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick, Dictionary<EntityUid, MetaDataComponent>?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityUid[] viewerEntities)
+        GameTick fromTick,
+        GameTick toTick,
+        Dictionary<EntityUid, MetaDataComponent>?[] chunkCache,
+        HashSet<int> chunkIndices,
+        EntityQuery<MetaDataComponent> mQuery,
+        EntityQuery<TransformComponent> xformQuery,
+        EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntitiesSent = 0;
@@ -471,6 +477,18 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var viewerEntity in viewerEntities)
         {
+            var xform = xformQuery.GetComponent(viewerEntity);
+            var parent = xform.ParentUid;
+
+            while (parent.IsValid())
+            {
+                TryAddToVisibleEnts(in parent, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                    ref entitiesSent, mQuery, dontSkip: true);
+
+                var parentXform = xformQuery.GetComponent(parent);
+                parent = parentXform.ParentUid;
+            }
+
             TryAddToVisibleEnts(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
                 ref entitiesSent, mQuery, dontSkip: true);
         }

@@ -477,8 +477,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         foreach (var viewerEntity in viewerEntities)
         {
-            var xform = xformQuery.GetComponent(viewerEntity);
-            var parent = xform.ParentUid;
+            var parent = viewerEntity;
 
             while (parent.IsValid())
             {
@@ -488,9 +487,6 @@ internal sealed partial class PVSSystem : EntitySystem
                 var parentXform = xformQuery.GetComponent(parent);
                 parent = parentXform.ParentUid;
             }
-
-            TryAddToVisibleEnts(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, dontSkip: true);
         }
 
         foreach (var i in chunkIndices)

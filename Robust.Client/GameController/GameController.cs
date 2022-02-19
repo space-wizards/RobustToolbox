@@ -455,6 +455,7 @@ namespace Robust.Client
         private void Tick(FrameEventArgs frameEventArgs)
         {
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            _console.CommandBufferExecute();
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
 

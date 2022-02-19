@@ -4,11 +4,15 @@ using Robust.Client.Input;
 using Robust.Client.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
+using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Input;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Players;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
@@ -21,6 +25,8 @@ namespace Robust.Client.GameObjects
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IClientGameStateManager _stateManager = default!;
+        [Dependency] private readonly IConsoleHost _conHost = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         private readonly IPlayerCommandStates _cmdStates = new PlayerCommandStates();
 
@@ -108,6 +114,43 @@ namespace Robust.Client.GameObjects
         public override void Initialize()
         {
             SubscribeLocalEvent<PlayerAttachSysMessage>(OnAttachedEntityChanged);
+
+            _conHost.RegisterCommand("incmd",
+                "Inserts an input command into the simulation",
+                "incmd <KeyFunction> <d|u KeyState> <wxPos> <wyPos>",
+                GenerateInputCommand);
+        }
+
+        public override void Shutdown()
+        {
+            base.Shutdown();
+
+            _conHost.UnregisterCommand("incmd");
+        }
+
+        private void GenerateInputCommand(IConsoleShell shell, string argstr, string[] args)
+        {
+            var localPlayer = _playerManager.LocalPlayer;
+            if(localPlayer is null)
+                return;
+
+            var pent = localPlayer.ControlledEntity;
+            if(pent is null)
+                return;
+
+            BoundKeyFunction keyFunction = new BoundKeyFunction(args[0]);
+            BoundKeyState state = args[1] == "u" ? BoundKeyState.Up: BoundKeyState.Down;
+
+            var pxform = Transform(pent.Value);
+            var wPos = pxform.WorldPosition + new Vector2(float.Parse(args[2]), float.Parse(args[3]));
+            var coords = EntityCoordinates.FromMap(EntityManager, pent.Value, new MapCoordinates(wPos, pxform.MapID));
+
+            var funcId = _inputManager.NetworkBindMap.KeyFunctionID(keyFunction);
+
+            var message = new FullInputCmdMessage(_timing.CurTick, _timing.TickFraction, funcId, state,
+                coords, new ScreenCoordinates(0, 0, default), EntityUid.Invalid);
+
+            HandleInputCommand(localPlayer.Session, keyFunction, message);
         }
 
         private void OnAttachedEntityChanged(PlayerAttachSysMessage message)

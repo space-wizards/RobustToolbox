@@ -7,6 +7,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Players;
 using Robust.Shared.Reflection;
+using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Console
@@ -17,12 +18,15 @@ namespace Robust.Shared.Console
         protected const string SawmillName = "con";
 
         [Dependency] protected readonly ILogManager LogManager = default!;
-        [Dependency] protected readonly IReflectionManager ReflectionManager = default!;
+        [Dependency] private readonly IReflectionManager ReflectionManager = default!;
         [Dependency] protected readonly INetManager NetManager = default!;
         [Dependency] private readonly IDynamicTypeFactoryInternal _typeFactory = default!;
+        [Dependency] private readonly IGameTiming _timing = default!;
 
         [ViewVariables]
         protected readonly Dictionary<string, IConsoleCommand> AvailableCommands = new();
+
+        private readonly CommandBuffer _commandBuffer = new CommandBuffer();
 
         /// <inheritdoc />
         public bool IsServer => NetManager.IsServer;
@@ -114,6 +118,36 @@ namespace Robust.Shared.Console
         public void ExecuteCommand(string command)
         {
             ExecuteCommand(null, command);
+        }
+
+        /// <inheritdoc />
+        public void AppendCommand(string command)
+        {
+            _commandBuffer.Append(command);
+        }
+
+        /// <inheritdoc />
+        public void InsertCommand(string command)
+        {
+            _commandBuffer.Insert(command);
+        }
+
+        /// <inheritdoc />
+        public void CommandBufferExecute()
+        {
+            _commandBuffer.Tick(_timing.TickRate);
+
+            while (_commandBuffer.TryGetCommand(out var cmd))
+            {
+                try
+                {
+                    ExecuteCommand(cmd);
+                }
+                catch (Exception e)
+                {
+                    LocalShell.WriteError(e.Message);
+                }
+            }
         }
 
         /// <summary>

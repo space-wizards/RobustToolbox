@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
@@ -23,6 +24,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
+    [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
@@ -501,7 +503,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             var @new = visiblity == PVSEntityVisiblity.Entered;
 
-            var state = GetEntityState(session, entityUid, @new ? GameTick.Zero : fromTick);
+            var state = GetEntityState(session, entityUid, @new ? GameTick.Zero : fromTick, mQuery);
 
             //this entity is not new & nothing changed
             if(!@new && state.Empty) continue;
@@ -637,7 +639,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
+                    stateEntities.Add(GetEntityState(player, uid, GameTick.Zero, metadataQuery));
             }
 
             foreach (var uid in dirty)
@@ -650,7 +652,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                 if (md.EntityLastModifiedTick >= fromTick)
-                    stateEntities.Add(GetEntityState(player, uid, fromTick));
+                    stateEntities.Add(GetEntityState(player, uid, fromTick, metadataQuery));
             }
         }
 
@@ -669,7 +671,7 @@ internal sealed partial class PVSSystem : EntitySystem
             DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
             if (md.EntityLastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, md.Owner, fromTick));
+                stateEntities.Add(GetEntityState(player, md.Owner, fromTick, metadataQuery));
         }
 
         // no point sending an empty collection
@@ -685,10 +687,14 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
     /// <returns>New entity State for the given entity.</returns>
-    private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick)
+    private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick, EntityQuery<MetaDataComponent> mQuery)
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
+        // Whether this entity has any component states that are only for a specific session.
+        // TODO: This GetComp is probably expensive, less expensive than before, but ideally we'd cache it somewhere or something from a previous getcomp
+        // Probably still needs tweaking but checking for add / changed states up front should do most of the work.
+        var specificStates = (mQuery.GetComponent(entityUid).Flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {
@@ -703,10 +709,22 @@ internal sealed partial class PVSSystem : EntitySystem
 
             DebugTools.Assert(component.LastModifiedTick >= component.CreationTick);
 
-            if (!EntityManager.CanGetComponentState(bus, component, player))
+            var addState = false;
+            var changeState = false;
+
+            // We'll check the properties first; if we ever have specific states then doing the struct event is expensive.
+            if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+                addState = true;
+            else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero && component.LastModifiedTick >= fromTick)
+                changeState = true;
+
+            if (!addState && !changeState)
                 continue;
 
-            if (component.CreationTick != GameTick.Zero && component.CreationTick >= fromTick && !component.Deleted)
+            if (specificStates && !EntityManager.CanGetComponentState(bus, component, player))
+                continue;
+
+            if (addState)
             {
                 ComponentState? state = null;
                 if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
@@ -717,14 +735,14 @@ internal sealed partial class PVSSystem : EntitySystem
                 // ReSharper disable once PossibleInvalidOperationException
                 changed.Add(ComponentChange.Added(netId, state));
             }
-            else if (component.NetSyncEnabled && component.LastModifiedTick != GameTick.Zero &&
-                     component.LastModifiedTick >= fromTick)
+            else
             {
+                DebugTools.Assert(changeState);
                 changed.Add(ComponentChange.Changed(netId, EntityManager.GetComponentState(bus, component)));
             }
         }
 
-        foreach (var netId in ((IServerEntityManager)EntityManager).GetDeletedComponents(entityUid, fromTick))
+        foreach (var netId in _serverEntManager.GetDeletedComponents(entityUid, fromTick))
         {
             changed.Add(ComponentChange.Removed(netId));
         }

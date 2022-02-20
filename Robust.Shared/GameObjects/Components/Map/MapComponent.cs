@@ -15,12 +15,13 @@ namespace Robust.Shared.GameObjects
     {
         bool LightingEnabled { get; set; }
         MapId WorldMap { get; }
-        void ClearMapId();
+        bool MapPaused { get; internal set; }
+        bool MapPreInit { get; internal set; }
     }
 
     /// <inheritdoc cref="IMapComponent"/>
     [ComponentReference(typeof(IMapComponent))]
-    [NetworkedComponent()]
+    [NetworkedComponent]
     public sealed class MapComponent : Component, IMapComponent
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -40,10 +41,22 @@ namespace Robust.Shared.GameObjects
             internal set => _mapIndex = value;
         }
 
+        internal bool MapPaused { get; set; } = false;
+
         /// <inheritdoc />
-        public void ClearMapId()
+        bool IMapComponent.MapPaused
         {
-            _mapIndex = MapId.Nullspace;
+            get => this.MapPaused;
+            set => this.MapPaused = value;
+        }
+
+        internal bool MapPreInit { get; set; } = false;
+
+        /// <inheritdoc />
+        bool IMapComponent.MapPreInit
+        {
+            get => this.MapPreInit;
+            set => this.MapPreInit = value;
         }
 
         /// <inheritdoc />

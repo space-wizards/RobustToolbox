@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 {
     [TestFixture]
     [TestOf(typeof(DataDefinition))]
-    public class InheritanceSerializationTest : RobustUnitTest
+    public sealed class InheritanceSerializationTest : RobustUnitTest
     {
         private const string BaseEntityId = "BaseEntity";
         private const string InheritorEntityId = "InheritorEntityId";
@@ -92,19 +92,21 @@ namespace Robust.UnitTesting.Shared.Serialization
         }
     }
 
+    [Virtual]
     public class TestBaseComponent : Component
     {
 
         [DataField("baseField")] public string? BaseField;
     }
 
+    [Virtual]
     public class TestInheritorComponent : TestBaseComponent
     {
 
         [DataField("inheritorField")] public string? InheritorField;
     }
 
-    public class TestFinalComponent : TestInheritorComponent
+    public sealed class TestFinalComponent : TestInheritorComponent
     {
 
         [DataField("finalField")] public string? FinalField;

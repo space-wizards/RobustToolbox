@@ -3,7 +3,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
 {
-    public class StyleBoxFlat : StyleBox
+    public sealed class StyleBoxFlat : StyleBox
     {
         public Color BackgroundColor { get; set; }
         public Color BorderColor { get; set; }

@@ -5,7 +5,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    class VVPropEditorEnum : VVPropEditor
+    sealed class VVPropEditorEnum : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

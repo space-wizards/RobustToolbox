@@ -13,12 +13,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
+    [Virtual]
     internal class ComponentFactory : IComponentFactory
     {
         private readonly IDynamicTypeFactoryInternal _typeFactory;
         private readonly IReflectionManager _reflectionManager;
 
-        private class ComponentRegistration : IComponentRegistration
+        private sealed class ComponentRegistration : IComponentRegistration
         {
             public string Name { get; }
             public ushort? NetID { get; set; }
@@ -496,6 +497,7 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable]
+    [Virtual]
     public class UnknownComponentException : Exception
     {
         public UnknownComponentException()
@@ -512,7 +514,9 @@ namespace Robust.Shared.GameObjects
           StreamingContext context) : base(info, context) { }
     }
 
+    [Virtual]
     public class ComponentRegistrationLockException : Exception { }
 
+    [Virtual]
     public class InvalidComponentNameException : Exception { public InvalidComponentNameException(string message) : base(message) { } }
 }

@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Physics;
 /// Mainly useful for grid dynamic tree.
 /// </summary>
 [TestFixture]
-public class GridDeletion_Test : RobustIntegrationTest
+public sealed class GridDeletion_Test : RobustIntegrationTest
 {
     [Test]
     public async Task GridDeletionTest()

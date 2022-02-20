@@ -62,7 +62,7 @@ namespace Robust.Shared.Configuration
     }
 
     /// <inheritdoc cref="INetConfigurationManager"/>
-    internal class NetConfigurationManager : ConfigurationManager, INetConfigurationManager
+    internal sealed class NetConfigurationManager : ConfigurationManager, INetConfigurationManager
     {
         [Dependency] private readonly INetManager _netManager = null!;
         [Dependency] private readonly IGameTiming _timing = null!;

@@ -14,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [TestFixture]
-    public class ImmutableListSerializationTest : RobustUnitTest
+    public sealed class ImmutableListSerializationTest : RobustUnitTest
     {
         [OneTimeSetUp]
         public void Setup()

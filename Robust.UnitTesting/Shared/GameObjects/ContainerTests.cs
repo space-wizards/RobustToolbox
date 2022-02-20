@@ -11,7 +11,7 @@ using Robust.Shared.Network;
 
 namespace Robust.UnitTesting.Shared.GameObjects
 {
-    public class ContainerTests : RobustIntegrationTest
+    public sealed class ContainerTests : RobustIntegrationTest
     {
         /// <summary>
         /// Tests container states with children that do not exist on the client

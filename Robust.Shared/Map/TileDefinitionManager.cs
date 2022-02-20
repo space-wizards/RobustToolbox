@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Map
 {
+    [Virtual]
     internal class TileDefinitionManager : ITileDefinitionManager
     {
         protected readonly List<ITileDefinition> TileDefs;

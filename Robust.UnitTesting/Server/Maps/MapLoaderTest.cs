@@ -19,7 +19,7 @@ using Robust.Shared.Utility;
 namespace Robust.UnitTesting.Server.Maps
 {
     [TestFixture]
-    public class MapLoaderTest : RobustUnitTest
+    public sealed class MapLoaderTest : RobustUnitTest
     {
         private const string MapData = @"
 meta:

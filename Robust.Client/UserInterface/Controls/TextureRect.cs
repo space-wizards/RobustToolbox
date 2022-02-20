@@ -8,6 +8,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     Simple control that draws a single texture using a variety of possible stretching modes.
     /// </summary>
     /// <seealso cref="AnimatedTextureRect"/>
+    [Virtual]
     public class TextureRect : Control
     {
         public const string StylePropertyTexture = "texture";

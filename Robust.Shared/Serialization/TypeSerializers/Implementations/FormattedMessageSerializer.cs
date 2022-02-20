@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
+    public sealed class FormattedMessageSerializer : ITypeSerializer<FormattedMessage, ValueDataNode>
     {
         public DeserializationResult Read(ISerializationManager serializationManager,
             ValueDataNode node, IDependencyCollection dependencies, bool skipHook,

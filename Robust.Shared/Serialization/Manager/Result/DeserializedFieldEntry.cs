@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedFieldEntry
+    public sealed class DeserializedFieldEntry
     {
         public DeserializedFieldEntry(bool mapped, InheritanceBehavior inheritanceBehavior, DeserializationResult? result = null)
         {

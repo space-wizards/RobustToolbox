@@ -58,7 +58,7 @@ namespace Robust.Client.Audio.Midi
         void Shutdown();
     }
 
-    internal class MidiManager : IMidiManager
+    internal sealed class MidiManager : IMidiManager
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IResourceManagerInternal _resourceManager = default!;
@@ -392,7 +392,7 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     This class is used to load soundfonts.
         /// </summary>
-        private class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
+        private sealed class ResourceLoaderCallbacks : SoundFontLoaderCallbacks
         {
             private readonly Dictionary<int, Stream> _openStreams = new();
             private int _nextStreamId = 1;

@@ -16,7 +16,7 @@ namespace Robust.Client.GameStates
     /// <summary>
     ///     Visual debug overlay for the network diagnostic graph.
     /// </summary>
-    internal class NetGraphOverlay : Overlay
+    internal sealed class NetGraphOverlay : Overlay
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
@@ -239,7 +239,7 @@ namespace Robust.Client.GameStates
             base.DisposeBehavior();
         }
 
-        private class NetShowGraphCommand : IConsoleCommand
+        private sealed class NetShowGraphCommand : IConsoleCommand
         {
             public string Command => "net_graph";
             public string Help => "net_graph <0|1>";
@@ -275,7 +275,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetWatchEntCommand : IConsoleCommand
+        private sealed class NetWatchEntCommand : IConsoleCommand
         {
             public string Command => "net_watchent";
             public string Help => "net_watchent <0|EntityUid>";

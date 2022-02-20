@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.Manager;
 namespace Robust.UnitTesting.Server.GameObjects
 {
     [TestFixture]
-    public class ThrowingEntityDeletion_Test : RobustUnitTest
+    public sealed class ThrowingEntityDeletion_Test : RobustUnitTest
     {
         private IServerEntityManager EntityManager = default!;
         private IComponentFactory _componentFactory = default!;

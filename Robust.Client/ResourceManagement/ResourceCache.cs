@@ -10,7 +10,7 @@ using Robust.LoaderApi;
 
 namespace Robust.Client.ResourceManagement
 {
-    internal partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
+    internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInternal, IDisposable
     {
         private readonly Dictionary<Type, Dictionary<ResourcePath, BaseResource>> CachedResources =
             new();
@@ -164,7 +164,7 @@ namespace Robust.Client.ResourceManagement
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposed)
             {

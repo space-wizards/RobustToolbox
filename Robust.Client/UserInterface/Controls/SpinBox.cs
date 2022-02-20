@@ -7,6 +7,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Number input LineEdit with increment buttons.
     /// </summary>
+    [Virtual]
     public class SpinBox : BoxContainer
     {
         public const string LeftButtonStyle = "spinbox-left";
@@ -194,7 +195,7 @@ namespace Robust.Client.UserInterface.Controls
         }
     }
 
-    public class ValueChangedEventArgs : EventArgs
+    public sealed class ValueChangedEventArgs : EventArgs
     {
         public readonly int Value;
 

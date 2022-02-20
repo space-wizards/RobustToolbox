@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedDictionary<TDict, TKey, TValue> :
+    public sealed class DeserializedDictionary<TDict, TKey, TValue> :
         DeserializationResult<TDict>
         where TKey : notnull
         where TDict : IReadOnlyDictionary<TKey, TValue>

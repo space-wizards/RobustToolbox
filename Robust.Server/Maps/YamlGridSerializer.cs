@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
@@ -77,7 +76,7 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static void DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, ref GridId? gridId, YamlMappingNode info,
+        public static MapGrid DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, YamlMappingNode info,
             YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
             ITileDefinitionManager tileDefinitionManager)
         {
@@ -97,14 +96,15 @@ namespace Robust.Server.Maps
                     sgsz = float.Parse(val, CultureInfo.InvariantCulture);
             }
 
-            var grid = mapMan.CreateGridNoEntity(mapId, gridId);
-
-            gridId = grid.Index;
+            //TODO: Pass in options
+            var grid = mapMan.CreateUnboundGrid(mapId);
 
             foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
             {
                 DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
             }
+
+            return grid;
         }
 
         private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)

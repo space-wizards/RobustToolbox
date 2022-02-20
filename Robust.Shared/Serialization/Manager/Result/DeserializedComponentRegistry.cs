@@ -7,7 +7,7 @@ using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedComponentRegistry : DeserializationResult<ComponentRegistry>
+    public sealed class DeserializedComponentRegistry : DeserializationResult<ComponentRegistry>
     {
         public DeserializedComponentRegistry(
             ComponentRegistry value,

@@ -15,7 +15,7 @@ namespace Robust.Shared.Utility
 
     }
 
-    public class RobustILGenerator
+    public sealed class RobustILGenerator
     {
         private ILGenerator _generator;
         private List<(object, object?)> _log = new();
@@ -39,44 +39,44 @@ namespace Robust.Shared.Utility
             _log.Add((opcode, arg));
         }
 
-        public virtual LocalBuilder DeclareLocal(Type localType)
+        public LocalBuilder DeclareLocal(Type localType)
         {
             return DeclareLocal(localType, false);
         }
 
-        public virtual LocalBuilder DeclareLocal(Type localType, bool pinned)
+        public LocalBuilder DeclareLocal(Type localType, bool pinned)
         {
             var loc = _generator.DeclareLocal(localType, pinned);
             _locals.Add((localType, loc.LocalIndex));
             return loc;
         }
 
-        public virtual void ThrowException([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type excType)
+        public void ThrowException([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type excType)
         {
             //this just calls emit
             _generator.ThrowException(excType);
         }
 
-        public virtual Label DefineLabel()
+        public Label DefineLabel()
         {
             var label = _generator.DefineLabel();
             //Log("DefineLabel", label);
             return label;
         }
 
-        public virtual void MarkLabel(Label loc)
+        public void MarkLabel(Label loc)
         {
             _generator.MarkLabel(loc);
             Log("MarkLabel", loc.GetHashCode());
         }
 
-        public virtual void Emit(OpCode opcode)
+        public void Emit(OpCode opcode)
         {
             _generator.Emit(opcode);
             Log(opcode);
         }
 
-        public virtual void Emit(OpCode opcode, byte arg)
+        public void Emit(OpCode opcode, byte arg)
         {
             _generator.Emit(opcode, arg);
             Log(opcode, arg);
@@ -88,19 +88,19 @@ namespace Robust.Shared.Utility
             Log(opcode, arg);
         }
 
-        public virtual void Emit(OpCode opcode, short arg)
+        public void Emit(OpCode opcode, short arg)
         {
             _generator.Emit(opcode, arg);
             Log(opcode, arg);
         }
 
-        public virtual void Emit(OpCode opcode, int arg)
+        public void Emit(OpCode opcode, int arg)
         {
             _generator.Emit(opcode, arg);
             Log(opcode, arg);
         }
 
-        public virtual void Emit(OpCode opcode, MethodInfo meth)
+        public void Emit(OpCode opcode, MethodInfo meth)
         {
             _generator.Emit(opcode, meth);
             Log(opcode, meth);
@@ -116,73 +116,73 @@ namespace Robust.Shared.Utility
         // }
         //
 
-        public virtual void EmitCall(OpCode opcode, MethodInfo methodInfo, params Type[]? optionalParameterTypes)
+        public void EmitCall(OpCode opcode, MethodInfo methodInfo, params Type[]? optionalParameterTypes)
         {
             _generator.EmitCall(opcode, methodInfo, optionalParameterTypes);
             Log(opcode, methodInfo);
         }
 
-        public virtual void Emit(OpCode opcode, SignatureHelper signature)
+        public void Emit(OpCode opcode, SignatureHelper signature)
         {
             _generator.Emit(opcode, signature);
             Log(opcode, signature);
         }
 
-        public virtual void Emit(OpCode opcode, ConstructorInfo con)
+        public void Emit(OpCode opcode, ConstructorInfo con)
         {
             _generator.Emit(opcode, con);
             Log(opcode, con);
         }
 
-        public virtual void Emit(OpCode opcode, Type cls)
+        public void Emit(OpCode opcode, Type cls)
         {
             _generator.Emit(opcode, cls);
             Log(opcode, cls);
         }
 
-        public virtual void Emit(OpCode opcode, long arg)
+        public void Emit(OpCode opcode, long arg)
         {
             _generator.Emit(opcode, arg);
             Log(opcode, arg);
         }
 
-        public virtual void Emit(OpCode opcode, float arg)
+        public void Emit(OpCode opcode, float arg)
         {
             _generator.Emit(opcode, arg);
             Log(opcode, arg);
         }
 
-        public virtual void Emit(OpCode opcode, double arg)
+        public void Emit(OpCode opcode, double arg)
         {
             _generator.Emit(opcode, arg);
             Log(opcode, arg);
         }
 
-        public virtual void Emit(OpCode opcode, Label label)
+        public void Emit(OpCode opcode, Label label)
         {
             _generator.Emit(opcode, label);
             Log(opcode, label.GetHashCode());
         }
 
-        public virtual void Emit(OpCode opcode, Label[] labels)
+        public void Emit(OpCode opcode, Label[] labels)
         {
             _generator.Emit(opcode, labels);
             Log(opcode, labels);
         }
 
-        public virtual void Emit(OpCode opcode, FieldInfo field)
+        public void Emit(OpCode opcode, FieldInfo field)
         {
             _generator.Emit(opcode, field);
             Log(opcode, field);
         }
 
-        public virtual void Emit(OpCode opcode, string str)
+        public void Emit(OpCode opcode, string str)
         {
             _generator.Emit(opcode, str);
             Log(opcode, str);
         }
 
-        public virtual void Emit(OpCode opcode, LocalBuilder local)
+        public void Emit(OpCode opcode, LocalBuilder local)
         {
             _generator.Emit(opcode, local);
             Log(opcode, local);

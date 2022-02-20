@@ -2,7 +2,7 @@
 
 namespace Robust.Shared.Serialization.Manager.Result
 {
-    public class DeserializedArray : DeserializationResult
+    public sealed class DeserializedArray : DeserializationResult
     {
         public DeserializedArray(Array array, DeserializationResult[] mappings)
         {

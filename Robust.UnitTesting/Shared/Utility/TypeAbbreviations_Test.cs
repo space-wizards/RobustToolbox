@@ -5,9 +5,9 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.TestTypeAbbreviation
 {
-    public class Foo<T> {}
+    public sealed class Foo<T> {}
 
-    public class Bar {}
+    public sealed class Bar {}
 }
 
 namespace Robust.UnitTesting.Shared.Utility
@@ -15,7 +15,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestFixture]
     [Parallelizable(ParallelScope.Fixtures | ParallelScope.All)]
     [TestOf(typeof(TypeAbbreviation))]
-    public class TypeAbbreviations_Test
+    public sealed class TypeAbbreviations_Test
     {
         private static IEnumerable<(string name, string expected)> NameTestCases { get; } = new[]
         {

@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Maths
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
     [TestOf(typeof(Circle))]
-    public class Circle_Test
+    public sealed class Circle_Test
     {
         private static IEnumerable<float> Coordinates => new float[] { -1, 0, 1 };
 

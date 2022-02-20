@@ -15,7 +15,7 @@ using Robust.Shared.Enums;
 
 namespace Robust.Client.GameObjects
 {
-    public class EffectSystem : EntitySystem
+    public sealed class EffectSystem : EntitySystem
     {
         [Dependency] private readonly IGameTiming gameTiming = default!;
         [Dependency] private readonly IResourceCache resourceCache = default!;
@@ -94,7 +94,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private class Effect
+        private sealed class Effect
         {
             /// <summary>
             /// Effect Sprite
@@ -323,7 +323,7 @@ namespace Robust.Client.GameObjects
         {
             private readonly IPlayerManager _playerManager;
 
-            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+            public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
             private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;

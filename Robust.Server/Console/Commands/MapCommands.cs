@@ -12,7 +12,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Server.Console.Commands
 {
-    class AddMapCommand : IConsoleCommand
+    sealed class AddMapCommand : IConsoleCommand
     {
         public string Command => "addmap";
 
@@ -29,14 +29,13 @@ namespace Robust.Server.Console.Commands
             var mapId = new MapId(int.Parse(args[0]));
 
             var mapMgr = IoCManager.Resolve<IMapManager>();
-            var pauseMgr = IoCManager.Resolve<IPauseManager>();
 
             if (!mapMgr.MapExists(mapId))
             {
                 mapMgr.CreateMap(mapId);
                 if (args.Length >= 2 && args[1] == "false")
                 {
-                    pauseMgr.AddUninitializedMap(mapId);
+                    mapMgr.AddUninitializedMap(mapId);
                 }
 
                 shell.WriteLine($"Map with ID {mapId} created.");
@@ -47,7 +46,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class RemoveMapCommand : IConsoleCommand
+    sealed class RemoveMapCommand : IConsoleCommand
     {
         public string Command => "rmmap";
         public string Description => "Removes a map from the world. You cannot remove nullspace.";
@@ -75,7 +74,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class SaveBp : IConsoleCommand
+    public sealed class SaveBp : IConsoleCommand
     {
         public string Command => "savebp";
         public string Description => "Serializes a grid to disk.";
@@ -111,7 +110,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class LoadBp : IConsoleCommand
+    public sealed class LoadBp : IConsoleCommand
     {
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
@@ -156,7 +155,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class SaveMap : IConsoleCommand
+    public sealed class SaveMap : IConsoleCommand
     {
         public string Command => "savemap";
         public string Description => "Serializes a map to disk.";
@@ -188,7 +187,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class LoadMap : IConsoleCommand
+    public sealed class LoadMap : IConsoleCommand
     {
         public string Command => "loadmap";
         public string Description => "Loads a map from disk into the game.";
@@ -223,7 +222,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class LocationCommand : IConsoleCommand
+    sealed class LocationCommand : IConsoleCommand
     {
         public string Command => "loc";
         public string Description => "Prints the absolute location of the player's entity to console.";
@@ -244,7 +243,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class TpGridCommand : IConsoleCommand
+    sealed class TpGridCommand : IConsoleCommand
     {
         public string Command => "tpgrid";
         public string Description => "Teleports a grid to a new location.";
@@ -275,7 +274,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    class RemoveGridCommand : IConsoleCommand
+    sealed class RemoveGridCommand : IConsoleCommand
     {
         public string Command => "rmgrid";
         public string Description => "Removes a grid from a map. You cannot remove the default grid.";
@@ -318,7 +317,6 @@ namespace Robust.Server.Console.Commands
             }
 
             var mapManager = IoCManager.Resolve<IMapManager>();
-            var pauseManager = IoCManager.Resolve<IPauseManager>();
 
             var arg = args[0];
             var mapId = new MapId(int.Parse(arg, CultureInfo.InvariantCulture));
@@ -329,13 +327,13 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            if (pauseManager.IsMapInitialized(mapId))
+            if (mapManager.IsMapInitialized(mapId))
             {
                 shell.WriteError("Map is already initialized!");
                 return;
             }
 
-            pauseManager.DoMapInitialize(mapId);
+            mapManager.DoMapInitialize(mapId);
         }
     }
 
@@ -348,15 +346,14 @@ namespace Robust.Server.Console.Commands
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
             var mapManager = IoCManager.Resolve<IMapManager>();
-            var pauseManager = IoCManager.Resolve<IPauseManager>();
 
             var msg = new StringBuilder();
 
             foreach (var mapId in mapManager.GetAllMapIds().OrderBy(id => id.Value))
             {
                 msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
-                    mapId, pauseManager.IsMapInitialized(mapId),
-                    pauseManager.IsMapPaused(mapId),
+                    mapId, mapManager.IsMapInitialized(mapId),
+                    mapManager.IsMapPaused(mapId),
                     string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)),
                     mapManager.GetMapEntityId(mapId));
             }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class ErrorNode : ValidationNode, IEquatable<ErrorNode>
+    public sealed class ErrorNode : ValidationNode, IEquatable<ErrorNode>
     {
         public ErrorNode(DataNode node, string errorReason, bool alwaysRelevant = true)
         {

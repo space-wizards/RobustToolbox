@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
-    internal class MapGrid : IMapGridInternal
+    internal sealed class MapGrid : IMapGridInternal
     {
         /// <summary>
         ///     Game tick that the map was created.
@@ -69,14 +69,6 @@ namespace Robust.Shared.Map
             ChunkSize = chunkSize;
             ParentMapId = parentMapId;
             LastTileModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
-        }
-
-        /// <summary>
-        ///     Disposes the grid.
-        /// </summary>
-        public void Dispose()
-        {
-            // Nothing for now.
         }
 
         /// <inheritdoc />
@@ -376,8 +368,6 @@ namespace Robust.Shared.Map
         /// </summary>
         public int ChunkCount => _chunks.Count;
 
-        public GameTick LastAnchoredModifiedTick { get; private set; }
-
         /// <inheritdoc />
         public IMapChunkInternal GetChunk(int xIndex, int yIndex)
         {
@@ -571,7 +561,6 @@ namespace Robust.Shared.Map
                 return false;
 
             chunk.AddToSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y, euid);
-            LastAnchoredModifiedTick = _entityManager.CurrentTick;
             return true;
         }
 
@@ -586,7 +575,6 @@ namespace Robust.Shared.Map
         {
             var (chunk, chunkTile) = ChunkAndOffsetForTile(pos);
             chunk.RemoveFromSnapGridCell((ushort)chunkTile.X, (ushort) chunkTile.Y, euid);
-            LastAnchoredModifiedTick = _entityManager.CurrentTick;
         }
 
         /// <inheritdoc />
@@ -683,15 +671,6 @@ namespace Robust.Shared.Map
                         yield return cell;
                     }
                 }
-        }
-
-        /// <inheritdoc />
-        public void AnchoredEntDirty(Vector2i pos)
-        {
-            LastAnchoredModifiedTick = _entityManager.CurrentTick;
-
-            var chunk = GetChunk(GridTileToChunkIndices(pos));
-            chunk.LastAnchoredModifiedTick = LastAnchoredModifiedTick;
         }
 
         #endregion

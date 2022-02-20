@@ -16,7 +16,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Client-side processing of all input commands through the simulation.
     /// </summary>
-    public class InputSystem : SharedInputSystem
+    public sealed class InputSystem : SharedInputSystem
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -163,7 +163,7 @@ namespace Robust.Client.GameObjects
     /// <summary>
     ///     Entity system message that is raised when the player changes attached entities.
     /// </summary>
-    public class PlayerAttachSysMessage : EntityEventArgs
+    public sealed class PlayerAttachSysMessage : EntityEventArgs
     {
         /// <summary>
         ///     New entity the player is attached to.
@@ -180,7 +180,7 @@ namespace Robust.Client.GameObjects
         }
     }
 
-    public class PlayerAttachedEvent : EntityEventArgs
+    public sealed class PlayerAttachedEvent : EntityEventArgs
     {
         public PlayerAttachedEvent(EntityUid entity)
         {
@@ -190,7 +190,7 @@ namespace Robust.Client.GameObjects
         public EntityUid Entity { get; }
     }
 
-    public class PlayerDetachedEvent : EntityEventArgs
+    public sealed class PlayerDetachedEvent : EntityEventArgs
     {
         public PlayerDetachedEvent(EntityUid entity)
         {

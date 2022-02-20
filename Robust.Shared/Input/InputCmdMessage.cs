@@ -68,7 +68,7 @@ namespace Robust.Shared.Input
     ///     An Input Command for a function that has a state.
     /// </summary>
     [Serializable, NetSerializable]
-    public class StateInputCmdMessage : InputCmdMessage
+    public sealed class StateInputCmdMessage : InputCmdMessage
     {
         /// <summary>
         ///     New state of the Input Function.
@@ -92,6 +92,7 @@ namespace Robust.Shared.Input
     ///     A OneShot Input Command that does not have a state.
     /// </summary>
     [Serializable, NetSerializable]
+    [Virtual]
     public class EventInputCmdMessage : InputCmdMessage
     {
         /// <summary>
@@ -107,7 +108,7 @@ namespace Robust.Shared.Input
     ///     A OneShot Input Command that also contains pointer info.
     /// </summary>
     [Serializable, NetSerializable]
-    public class PointerInputCmdMessage : EventInputCmdMessage
+    public sealed class PointerInputCmdMessage : EventInputCmdMessage
     {
         /// <summary>
         ///     Local Coordinates of the pointer when the command was created.
@@ -147,7 +148,7 @@ namespace Robust.Shared.Input
     ///     An input command that has both state and pointer info.
     /// </summary>
     [Serializable, NetSerializable]
-    public class FullInputCmdMessage : InputCmdMessage
+    public sealed class FullInputCmdMessage : InputCmdMessage
     {
         /// <summary>
         ///     New state of the Input Function.

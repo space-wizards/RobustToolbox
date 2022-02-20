@@ -11,7 +11,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Map
 {
     /// <inheritdoc />
-    internal class MapChunk : IMapChunkInternal
+    internal sealed class MapChunk : IMapChunkInternal
     {
         /// <summary>
         /// New SnapGrid cells are allocated with this capacity.

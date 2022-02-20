@@ -34,8 +34,6 @@ internal sealed partial class PVSSystem : EntitySystem
     /// </summary>
     private const int MaxVisPoolSize = 1024;
 
-    public bool CullingEnabled => _cullingEnabled;
-
     /// <summary>
     /// Is view culling enabled, or will we send the whole map?
     /// </summary>
@@ -654,7 +652,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 stateEntities.Add(GetEntityState(player, md.Owner, GameTick.Zero));
             }
 
-            return stateEntities.Count == 0 ? default : stateEntities;
+            return (stateEntities.Count == 0 ? default : stateEntities, deletions);
         }
 
         // Just get the relevant entities that have been dirtied

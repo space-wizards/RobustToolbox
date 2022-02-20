@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameStates;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects;
@@ -27,6 +28,8 @@ public abstract class AppearanceComponent : Component
         if (AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
 
+        DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
+
         AppearanceData[key] = value;
         Dirty();
         EntitySystem.Get<SharedAppearanceSystem>().MarkDirty(this);
@@ -36,6 +39,8 @@ public abstract class AppearanceComponent : Component
     {
         if (AppearanceData.TryGetValue(key, out var existing) && existing.Equals(value))
             return;
+
+        DebugTools.Assert(value.GetType().IsValueType || value is ICloneable, "Appearance data values must be cloneable.");
 
         AppearanceData[key] = value;
         Dirty();

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
@@ -50,8 +51,31 @@ namespace Robust.Client.GameObjects
 
             if (!stateDiff) return;
 
-            component.AppearanceData = actualState.Data;
+            component.AppearanceData = CloneAppearanceData(actualState.Data);
             MarkDirty(component);
+        }
+
+        /// <summary>
+        ///     Take in an appearance data dictionary and attempt to clone it.
+        /// </summary>
+        /// <remarks>
+        ///     As some appearance data values are not simple value-type objects, this is not just a shallow clone.
+        /// </remarks>
+        private Dictionary<object, object> CloneAppearanceData(Dictionary<object, object> data)
+        {
+            Dictionary<object, object> newDict = new(data.Count);
+
+            foreach (var (key, value) in data)
+            {
+                if (value.GetType().IsValueType)
+                    newDict[key] = value;
+                else if (value is ICloneable cloneable)
+                    newDict[key] = cloneable.Clone();
+                else
+                    throw new NotSupportedException("Invalid object in appearance data dictionary. Appearance data must be cloneable");
+            }
+
+            return newDict;
         }
 
         public override void MarkDirty(AppearanceComponent component)
@@ -107,7 +131,7 @@ namespace Robust.Client.GameObjects
     [ByRefEvent]
     public struct AppearanceChangeEvent
     {
-        public AppearanceComponent Component = default!;
-        public IReadOnlyDictionary<object, object> AppearanceData = default!;
+        public AppearanceComponent Component;
+        public IReadOnlyDictionary<object, object> AppearanceData;
     }
 }

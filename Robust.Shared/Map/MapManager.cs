@@ -13,9 +13,8 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 {
     [field: Dependency] public IGameTiming GameTiming { get; } = default!;
     [field: Dependency] public IEntityManager EntityManager { get; } = default!;
-    
+
     [Dependency] private readonly IConsoleHost _conhost = default!;
-    [Dependency] private readonly IEntityLookup _entityLookup = default!;
 
     /// <inheritdoc />
     public void Initialize()

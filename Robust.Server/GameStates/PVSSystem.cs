@@ -25,6 +25,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
+    [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
     public const float ChunkSize = 8;
 
@@ -38,7 +39,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Is view culling enabled, or will we send the whole map?
     /// </summary>
-    private bool _cullingEnabled;
+    public bool CullingEnabled { get; private set; }
 
     /// <summary>
     /// How many new entities we can send per tick (dont wanna nuke the clients mailbox).
@@ -65,17 +66,31 @@ internal sealed partial class PVSSystem : EntitySystem
     /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
     private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
+    /// <summary>
+    /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw along its entire connection.
+    /// </summary>
     private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerSeenSets = new();
 
     private PVSCollection<EntityUid> _entityPvsCollection = default!;
     public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
     private readonly List<IPVSCollection> _pvsCollections = new();
 
-    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool =
-        new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
-            new DefaultPooledObjectPolicy<Dictionary<EntityUid, PVSEntityVisiblity>>(), MaxVisPoolSize);
-    private readonly ObjectPool<HashSet<EntityUid>> _viewerEntsPool
-        = new DefaultObjectPool<HashSet<EntityUid>>(new DefaultPooledObjectPolicy<HashSet<EntityUid>>(), MaxVisPoolSize);
+    private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
+        = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
+            new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
+        = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<Dictionary<EntityUid, MetaDataComponent>> _chunkCachePool =
+        new DefaultObjectPool<Dictionary<EntityUid, MetaDataComponent>>(
+            new DictPolicy<EntityUid, MetaDataComponent>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<HashSet<int>> _playerChunkPool =
+        new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
+
+    private readonly ObjectPool<List<EntityUid>> _chunkOrderPool =
+        new DefaultObjectPool<List<EntityUid>>(new ListPolicy<EntityUid>(), MaxVisPoolSize);
 
     public override void Initialize()
     {
@@ -88,7 +103,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _mapManager.OnGridRemoved += OnGridRemoved;
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
-        SubscribeLocalEvent<TransformComponent, ComponentInit>(OnTransformInit);
+        SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
@@ -130,7 +145,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void SetPvs(bool value)
     {
-        _cullingEnabled = value;
+        CullingEnabled = value;
     }
 
     private void OnNewEntityBudgetChanged(int obj)
@@ -193,29 +208,36 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private void OnEntityMove(ref MoveEvent ev)
     {
-        UpdateEntityRecursive(ev.Sender, ev.Component);
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var coordinates = _transform.GetMoverCoordinates(ev.Component);
+        UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
 
-    private void OnTransformInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
     {
-        UpdateEntityRecursive(uid, component);
+        // use Startup because GridId is not set during the eventbus init yet!
+        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var coordinates = _transform.GetMoverCoordinates(component);
+        UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }
 
-    private void UpdateEntityRecursive(EntityUid uid, TransformComponent? transformComponent = null)
+    private void UpdateEntityRecursive(EntityUid uid, TransformComponent xform, EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery, bool mover)
     {
-        if(!Resolve(uid, ref transformComponent))
-            return;
+        if (mover && !xform.LocalPosition.Equals(Vector2.Zero))
+        {
+            coordinates = _transform.GetMoverCoordinates(xform);
+        }
 
-        _entityPvsCollection.UpdateIndex(uid, transformComponent.Coordinates);
+        _entityPvsCollection.UpdateIndex(uid, coordinates);
 
         // since elements are cached grid-/map-relative, we dont need to update a given grids/maps children
         if(_mapManager.IsGrid(uid) || _mapManager.IsMap(uid)) return;
 
-        var children = transformComponent.ChildEnumerator;
+        var children = xform.ChildEnumerator;
 
         while (children.MoveNext(out var child))
         {
-            UpdateEntityRecursive(child.Value);
+            UpdateEntityRecursive(child.Value, xformQuery.GetComponent(child.Value), coordinates, xformQuery, true);
         }
     }
 
@@ -232,8 +254,9 @@ internal sealed partial class PVSSystem : EntitySystem
         }
         else if (e.NewStatus == SessionStatus.Disconnected)
         {
-            _visSetPool.Return(_playerVisibleSets[e.Session]);
+            var playerVisSet = _playerVisibleSets[e.Session];
             _playerVisibleSets.Remove(e.Session);
+            _visSetPool.Return(playerVisSet);
             _playerSeenSets.Remove(e.Session);
             foreach (var pvsCollection in _pvsCollections)
             {
@@ -283,114 +306,214 @@ internal sealed partial class PVSSystem : EntitySystem
 
     #endregion
 
-    public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(ICommonSession session,
-        GameTick fromTick, GameTick toTick)
+    public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
-        DebugTools.Assert(session.Status == SessionStatus.InGame);
-        var newEntitiesSent = 0;
-        var entitiesSent = 0;
-
-        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
-        if (!_cullingEnabled)
-        {
-            var allStates = GetAllEntityStates(session, fromTick, toTick);
-            return (allStates, deletions);
-        }
-
-        var playerVisibleSet = _playerVisibleSets[session];
-        var visibleEnts = _visSetPool.Get();
-        var seenSet = _playerSeenSets[session];
-
-        visibleEnts.Clear();
-
+        var chunkList = new List<(uint, IChunkIndexLocation)>();
+        var playerChunks = new HashSet<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-        var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
+        var viewerEntities = new EntityUid[sessions.Length][];
 
-        var globalOverridesEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
-        while(globalOverridesEnumerator.MoveNext())
+        // Keep track of the index of each chunk we use for a faster index lookup.
+        var mapIndices = new Dictionary<uint, Dictionary<MapChunkLocation, int>>(4);
+        var gridIndices = new Dictionary<uint, Dictionary<GridChunkLocation, int>>(4);
+
+        for (int i = 0; i < sessions.Length; i++)
         {
-            var uid = globalOverridesEnumerator.Current;
-            //todo paul reenable budgetcheck here once you fix mapmanager
-            TryAddToVisibleEnts(
-                in uid,
-                seenSet,
-                playerVisibleSet,
-                visibleEnts,
-                fromTick,
-                ref newEntitiesSent,
-                ref entitiesSent,
-                metadataQuery,
-                transformQuery,
-                dontSkip: true);
-        }
-        globalOverridesEnumerator.Dispose();
+            var session = sessions[i];
+            playerChunks[i] = _playerChunkPool.Get();
 
-        var localOverridesEnumerator = _entityPvsCollection.GetElementsForSession(session);
-        while (localOverridesEnumerator.MoveNext())
-        {
-            var uid = localOverridesEnumerator.Current;
-            //todo paul reenable budgetcheck here once you fix mapmanager
-            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, dontSkip: true);
-        }
-        localOverridesEnumerator.Dispose();
+            var viewers = GetSessionViewers(session);
+            viewerEntities[i] = new EntityUid[viewers.Count];
+            viewers.CopyTo(viewerEntities[i]);
 
-        var expandEvent = new ExpandPvsEvent((IPlayerSession) session, new List<EntityUid>());
-        RaiseLocalEvent(ref expandEvent);
-        foreach (var entityUid in expandEvent.Entities)
-        {
-            TryAddToVisibleEnts(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery);
-        }
-
-        var viewers = GetSessionViewers(session);
-
-        foreach (var eyeEuid in viewers)
-        {
-            var (viewBox, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
-
-            uint visMask = EyeComponent.DefaultVisibilityMask;
-            if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
-                visMask = eyeComp.VisibilityMask;
-
-            //todo at some point just register the viewerentities as localoverrides
-            TryAddToVisibleEnts(in eyeEuid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask, dontSkip: true);
-
-            var mapChunkEnumerator = new ChunkIndicesEnumerator(viewBox, ChunkSize);
-
-            while (mapChunkEnumerator.MoveNext(out var chunkIndices))
+            foreach (var eyeEuid in viewers)
             {
-                if(_entityPvsCollection.TryGetChunk(mapId, chunkIndices.Value, out var chunk))
+                var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+
+                uint visMask = EyeComponent.DefaultVisibilityMask;
+                if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
+                    visMask = eyeComp.VisibilityMask;
+
+                // Get the nyoom dictionary for index lookups.
+                if (!mapIndices.TryGetValue(visMask, out var mapDict))
                 {
-                    foreach (var index in chunk)
+                    mapDict = new Dictionary<MapChunkLocation, int>(32);
+                    mapIndices[visMask] = mapDict;
+                }
+
+                var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
+
+                while (mapChunkEnumerator.MoveNext(out var chunkIndices))
+                {
+                    var chunkLocation = new MapChunkLocation(mapId, chunkIndices.Value);
+                    var entry = (visMask, chunkLocation);
+
+                    if (mapDict.TryGetValue(chunkLocation, out var indexOf))
                     {
-                        TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask);
+                        playerChunks[i].Add(indexOf);
+                    }
+                    else
+                    {
+                        playerChunks[i].Add(chunkList.Count);
+                        mapDict.Add(chunkLocation, chunkList.Count);
+                        chunkList.Add(entry);
                     }
                 }
-            }
 
-            _mapManager.FindGridsIntersectingEnumerator(mapId, viewBox, out var gridEnumerator, true);
-            while (gridEnumerator.MoveNext(out var mapGrid))
-            {
-                var gridXform = transformQuery.GetComponent(mapGrid.GridEntityId);
-
-                var gridChunkEnumerator =
-                    new ChunkIndicesEnumerator(gridXform.InvWorldMatrix.TransformBox(viewBox), ChunkSize);
-
-                while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
+                // Get the nyoom dictionary for index lookups.
+                if (!gridIndices.TryGetValue(visMask, out var gridDict))
                 {
-                    if (_entityPvsCollection.TryGetChunk(mapGrid.Index, gridChunkIndices.Value, out var chunk))
+                    gridDict = new Dictionary<GridChunkLocation, int>(32);
+                    gridIndices[visMask] = gridDict;
+                }
+
+                _mapManager.FindGridsIntersectingEnumerator(mapId, new Box2(viewPos - range, viewPos + range), out var gridEnumerator, true);
+                while (gridEnumerator.MoveNext(out var mapGrid))
+                {
+                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
+
+                    var gridChunkEnumerator =
+                        new ChunkIndicesEnumerator(localPos, range, ChunkSize);
+
+                    while (gridChunkEnumerator.MoveNext(out var gridChunkIndices))
                     {
-                        foreach (var index in chunk)
+                        var chunkLocation = new GridChunkLocation(mapGrid.Index, gridChunkIndices.Value);
+                        var entry = (visMask, chunkLocation);
+
+                        if (gridDict.TryGetValue(chunkLocation, out var indexOf))
                         {
-                            TryAddToVisibleEnts(in index, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent, ref entitiesSent, metadataQuery, transformQuery, visMask);
+                            playerChunks[i].Add(indexOf);
+                        }
+                        else
+                        {
+                            playerChunks[i].Add(chunkList.Count);
+                            gridDict.Add(chunkLocation, chunkList.Count);
+                            chunkList.Add(entry);
                         }
                     }
                 }
             }
+
+            _uidSetPool.Return(viewers);
         }
 
-        viewers.Clear();
-        _viewerEntsPool.Return(viewers);
+        return (chunkList, playerChunks, viewerEntities);
+    }
+
+    public (Dictionary<EntityUid, MetaDataComponent> mData, List<EntityUid> order)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
+    {
+        var chunk = chunkLocation switch
+        {
+            GridChunkLocation gridChunkLocation => _entityPvsCollection.TryGetChunk(gridChunkLocation.GridId,
+                gridChunkLocation.ChunkIndices, out var gridChunk)
+                ? gridChunk
+                : null,
+            MapChunkLocation mapChunkLocation => _entityPvsCollection.TryGetChunk(mapChunkLocation.MapId,
+                mapChunkLocation.ChunkIndices, out var mapChunk)
+                ? mapChunk
+                : null
+        };
+        if (chunk == null) return null;
+        var chunkSet = _chunkCachePool.Get();
+        var order = _chunkOrderPool.Get();
+        foreach (var uid in chunk)
+        {
+            AddToChunkSetRecursively(in uid, visMask, order, chunkSet, transform, metadata);
+        }
+
+        return (chunkSet, order);
+    }
+
+    public void ReturnToPool((Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache, HashSet<int>[] playerChunks)
+    {
+        foreach (var chunk in chunkCache)
+        {
+            if(!chunk.HasValue) continue;
+            _chunkCachePool.Return(chunk.Value.metadata);
+            _chunkOrderPool.Return(chunk.Value.order);
+        }
+
+        foreach (var playerChunk in playerChunks)
+        {
+            _playerChunkPool.Return(playerChunk);
+        }
+    }
+
+    private bool AddToChunkSetRecursively(in EntityUid uid, uint visMask, List<EntityUid> order, Dictionary<EntityUid, MetaDataComponent> set, EntityQuery<TransformComponent> transform,
+        EntityQuery<MetaDataComponent> metadata)
+    {
+        //are we valid?
+        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
+        if (!uid.IsValid()) return false;
+
+        if (set.ContainsKey(uid)) return false;
+
+        var mComp = metadata.GetComponent(uid);
+
+        // TODO: Don't need to know about parents so no longer need to use bool for this method.
+        // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
+        if ((visMask & mComp.VisibilityMask) != mComp.VisibilityMask)
+            return false;
+
+        var parent = transform.GetComponent(uid).ParentUid;
+
+        if (parent.IsValid() && //is it not a worldentity?
+            !set.ContainsKey(parent) && //was the parent not yet added to toSend?
+            !AddToChunkSetRecursively(in parent, visMask, order, set, transform, metadata)) //did we just fail to add the parent?
+            return false; //we failed? suppose we dont get added either
+
+        //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        order.Add(uid);
+        set.Add(uid, mComp);
+        return true;
+    }
+
+    public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
+        GameTick fromTick, GameTick toTick, (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery, EntityUid[] viewerEntities)
+    {
+        DebugTools.Assert(session.Status == SessionStatus.InGame);
+        var newEntitiesSent = 0;
+        var entitiesSent = 0;
+        var playerVisibleSet = _playerVisibleSets[session];
+        var visibleEnts = _visSetPool.Get();
+        var seenSet = _playerSeenSets[session];
+        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
+
+        foreach (var i in chunkIndices)
+        {
+            var cache = chunkCache[i];
+            if(!cache.HasValue) continue;
+            foreach (var uid in cache.Value.order)
+            {
+                TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                    ref entitiesSent, mQuery, tQuery, cache.Value.metadata[uid]);
+            }
+        }
+
+        var globalEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
+        while (globalEnumerator.MoveNext())
+        {
+            var uid = globalEnumerator.Current;
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, dontSkip: true, manualParents: true);
+        }
+        globalEnumerator.Dispose();
+
+        var localEnumerator = _entityPvsCollection.GetElementsForSession(session);
+        while (localEnumerator.MoveNext())
+        {
+            var uid = localEnumerator.Current;
+            TryAddToVisibleEnts(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, dontSkip: true, manualParents: true);
+        }
+        localEnumerator.Dispose();
+
+        foreach (var viewerEntity in viewerEntities)
+        {
+            TryAddToVisibleEnts(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, dontSkip: true, manualParents: true);
+        }
 
         var entityStates = new List<EntityState>();
 
@@ -434,7 +557,7 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private bool TryAddToVisibleEnts(
+    private void TryAddToVisibleEnts(
         in EntityUid uid,
         HashSet<EntityUid> seenSet,
         Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
@@ -444,39 +567,24 @@ internal sealed partial class PVSSystem : EntitySystem
         ref int totalEnteredEntities,
         EntityQuery<MetaDataComponent> metadataQuery,
         EntityQuery<TransformComponent> transformQuery,
-        uint? visMask = null,
+        MetaDataComponent? metaDataComponent = null,
         bool dontSkip = false,
-        bool trustParent = false)
+        bool manualParents = false)
     {
-        //are we valid yet?
+        //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!uid.IsValid()) return false;
+        if (!uid.IsValid()) return;
 
         //did we already get added?
-        if (toSend.ContainsKey(uid)) return true;
+        if (toSend.ContainsKey(uid)) return;
 
-        var metadata = metadataQuery.GetComponent(uid);
-
-        // if we are invisible, we are not going into the visSet, so don't worry about parents, and children are not going in
-        if (visMask != null)
+        if (manualParents)
         {
-            // TODO: Don't need to know about parents so no longer need to use bool for this method.
-
-            // If the eye is missing ANY layer this entity or any of its parents belongs to, it is considered invisible.
-            if ((visMask & metadata.VisibilityMask) != metadata.VisibilityMask)
-                return false;
+            var parent = transformQuery.GetComponent(uid).ParentUid;
+            TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend,
+                fromTick, ref newEntitiesSent, ref totalEnteredEntities, metadataQuery, transformQuery, dontSkip: dontSkip,
+                manualParents: true);
         }
-
-        var parent = transformQuery.GetComponent(uid).ParentUid;
-
-        if (!trustParent && //do we have it on good authority the parent exists?
-            parent.IsValid() && //is it not a worldentity?
-            !toSend.ContainsKey(parent) && //was the parent not yet added to toSend?
-            !TryAddToVisibleEnts(in parent, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent, ref totalEnteredEntities, metadataQuery, transformQuery, visMask)) //did we just fail to add the parent?
-            return false; //we failed? suppose we dont get added either
-
-        //did we already get added through the parent call?
-        if (toSend.ContainsKey(uid)) return true;
 
         //are we new?
         var @new = !seenSet.Contains(uid);
@@ -485,7 +593,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (entered)
         {
             if (!dontSkip && totalEnteredEntities >= _entityBudget)
-                return false;
+                return;
 
             totalEnteredEntities++;
         }
@@ -494,7 +602,7 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             //we just entered pvs, do we still have enough budget to send us?
             if(!dontSkip && newEntitiesSent >= _newEntityBudget)
-                return false;
+                return;
 
             newEntitiesSent++;
             seenSet.Add(uid);
@@ -503,29 +611,33 @@ internal sealed partial class PVSSystem : EntitySystem
         if (entered)
         {
             toSend.Add(uid, PVSEntityVisiblity.Entered);
-            return true;
+            return;
         }
 
-        if (metadata.EntityLastModifiedTick < fromTick)
+        metaDataComponent ??= metadataQuery.GetComponent(uid);
+
+        if (metaDataComponent.EntityLastModifiedTick < fromTick)
         {
             //entity has been sent before and hasnt been updated since
             toSend.Add(uid, PVSEntityVisiblity.StayedUnchanged);
-            return true;
+            return;
         }
 
         //add us
         toSend.Add(uid, PVSEntityVisiblity.StayedChanged);
-        return true;
+        return;
     }
 
     /// <summary>
     ///     Gets all entity states that have been modified after and including the provided tick.
     /// </summary>
-    private List<EntityState>? GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
+    public (List<EntityState>? updates, List<EntityUid>? deletions) GetAllEntityStates(ICommonSession player, GameTick fromTick, GameTick toTick)
     {
-        List<EntityState> stateEntities;
+        var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
+        // no point sending an empty collection
+        if (deletions.Count == 0) deletions = default;
 
-        stateEntities = new List<EntityState>();
+        var stateEntities = new List<EntityState>();
         var seenEnts = new HashSet<EntityUid>();
         var slowPath = false;
         var metadataQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
@@ -588,7 +700,9 @@ internal sealed partial class PVSSystem : EntitySystem
 
         if (!slowPath)
         {
-            return stateEntities.Count == 0 ? default : stateEntities;
+            if (stateEntities.Count == 0) stateEntities = default;
+
+            return (stateEntities, deletions);
         }
 
         stateEntities = new List<EntityState>(EntityManager.EntityCount);
@@ -603,7 +717,9 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         // no point sending an empty collection
-        return stateEntities.Count == 0 ? default : stateEntities;
+        if (stateEntities.Count == 0) stateEntities = default;
+
+        return (stateEntities, deletions);
     }
 
     /// <summary>
@@ -662,7 +778,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
     {
-        var viewers = _viewerEntsPool.Get();
+        var viewers = _uidSetPool.Get();
         if (session.Status != SessionStatus.InGame)
             return viewers;
 
@@ -682,14 +798,52 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     // Read Safe
-    private (Box2 view, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
+    private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
+        return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
+    }
 
-        var view = Box2.UnitCentered.Scale(_viewSize).Translated(xform.WorldPosition);
-        var map = xform.MapID;
+    public sealed class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>
+    {
+        public override HashSet<T> Create()
+        {
+            return new HashSet<T>();
+        }
 
-        return (view, map);
+        public override bool Return(HashSet<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    public sealed class ListPolicy<T> : PooledObjectPolicy<List<T>>
+    {
+        public override List<T> Create()
+        {
+            return new();
+        }
+
+        public override bool Return(List<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
+    {
+        public override Dictionary<T1, T2> Create()
+        {
+            return new Dictionary<T1, T2>();
+        }
+
+        public override bool Return(Dictionary<T1, T2> obj)
+        {
+            obj.Clear();
+            return true;
+        }
     }
 }
 

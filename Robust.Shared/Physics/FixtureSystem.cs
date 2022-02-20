@@ -375,9 +375,7 @@ namespace Robust.Shared.Physics
         public void FixtureUpdate(FixturesComponent component, PhysicsComponent? body = null)
         {
             if (!Resolve(component.Owner, ref body))
-            {
                 return;
-            }
 
             var mask = 0;
             var layer = 0;
@@ -396,7 +394,7 @@ namespace Robust.Shared.Physics
             body.CollisionMask = mask;
             body.CollisionLayer = layer;
             body.Hard = hard;
-            component.Dirty();
+            Dirty(component);
         }
 
         [Serializable, NetSerializable]

@@ -48,7 +48,7 @@ namespace Robust.Shared.Console.Commands
                     continue;
                 }
 
-                shell.ExecuteCommand(line);
+                shell.ConsoleHost.AppendCommand(line);
             }
         }
     }

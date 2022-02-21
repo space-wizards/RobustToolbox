@@ -230,7 +230,7 @@ namespace Robust.Client.ResourceManagement
 
             using (var manifestFile = cache.ContentFileRead(manifestPath))
             {
-                if (manifestFile.Length <= 4096)
+                if (manifestFile.CanSeek && manifestFile.Length <= 4096)
                 {
                     // Most RSIs are actually tiny so if that's the case just load them into a stackalloc buffer.
                     // Avoids a ton of allocations with stream reader etc

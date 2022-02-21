@@ -447,7 +447,10 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     public (List<EntityState>? updates, List<EntityUid>? deletions) CalculateEntityStates(IPlayerSession session,
-        GameTick fromTick, GameTick toTick, (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache, HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery, EntityUid[] viewerEntities)
+        GameTick fromTick, GameTick toTick,
+        (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache,
+        HashSet<int> chunkIndices, EntityQuery<MetaDataComponent> mQuery, EntityQuery<TransformComponent> tQuery,
+        EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
         var newEntitiesSent = 0;

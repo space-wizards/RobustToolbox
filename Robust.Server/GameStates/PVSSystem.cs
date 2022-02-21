@@ -424,7 +424,7 @@ internal sealed partial class PVSSystem : EntitySystem
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return false;
 
-        if (set.ContainsKey(uid)) return false;
+        if (set.ContainsKey(uid)) return true;
 
         var mComp = metadata.GetComponent(uid);
 

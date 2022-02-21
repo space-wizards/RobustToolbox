@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Shared.Console;
 
-public class CommandBuffer
+public sealed class CommandBuffer
 {
     private const string DelayMarker = "-DELAY-";
 

@@ -21,7 +21,7 @@ internal interface INetworkedMapManager : IMapManagerInternal
     void ApplyGameStatePost(GameStateMapData? data);
 }
 
-internal class NetworkedMapManager : MapManager, INetworkedMapManager
+internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
     private readonly Dictionary<GridId, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
     private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();

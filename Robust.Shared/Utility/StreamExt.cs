@@ -22,6 +22,21 @@ namespace Robust.Shared.Utility
             }
         }
 
+        internal static MemoryStream ConsumeToMemoryStream(this Stream stream)
+        {
+            var ms = stream.CopyToMemoryStream();
+            stream.Dispose();
+            return ms;
+        }
+
+        internal static MemoryStream CopyToMemoryStream(this Stream stream)
+        {
+            var ms = new MemoryStream();
+            stream.CopyTo(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+            return ms;
+        }
+
         /// <exception cref="EndOfStreamException">
         /// Thrown if not exactly <paramref name="amount"/> bytes could be read.
         /// </exception>

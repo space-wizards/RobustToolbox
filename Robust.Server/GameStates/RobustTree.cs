@@ -73,24 +73,24 @@ public sealed class RobustTree<T> where T : notnull
         throw new InvalidOperationException("Node neither had a parent nor was a RootNode.");
     }
 
-    public TreeNode Set(T child, T? parent = default)
+    public TreeNode Set(T rootNode)
     {
-        if (parent == null)
+        //root node, for now
+        if (_nodeIndex.TryGetValue(rootNode, out var node))
         {
-            //root node, for now
-            if (_nodeIndex.TryGetValue(child, out var node))
-            {
-                if(!_rootNodes.Contains(child))
-                    throw new InvalidOperationException("Node already exists as non-root node.");
-                return node;
-            }
-
-            node = new TreeNode(child, _setProvider());
-            _nodeIndex.Add(child, node);
-            _rootNodes.Add(child);
+            if(!_rootNodes.Contains(rootNode))
+                throw new InvalidOperationException("Node already exists as non-root node.");
             return node;
         }
 
+        node = new TreeNode(rootNode, _setProvider());
+        _nodeIndex.Add(rootNode, node);
+        _rootNodes.Add(rootNode);
+        return node;
+    }
+
+    public TreeNode Set(T child, T parent)
+    {
         if (!_nodeIndex.TryGetValue(parent, out var parentNode))
             parentNode = Set(parent);
 

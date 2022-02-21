@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Robust.Server.GameStates;
 
@@ -13,12 +14,21 @@ public sealed class RobustTree<T> where T : notnull
     private Func<HashSet<TreeNode>> _setProvider;
     private Action<HashSet<TreeNode>> _setConsumer;
 
-    public RobustTree() : this(static () => new HashSet<TreeNode>(), static (_) => {}) { }
-
-    public RobustTree(Func<HashSet<TreeNode>> setProvider, Action<HashSet<TreeNode>> setConsumer)
+    public RobustTree(Func<HashSet<TreeNode>>? setProvider = null, Action<HashSet<TreeNode>>? setConsumer = null)
     {
-        _setProvider = setProvider;
-        _setConsumer = setConsumer;
+        _setProvider = setProvider ?? (static () => new());
+        _setConsumer = setConsumer ?? (static (_) => {});
+    }
+
+    public void Clear()
+    {
+        foreach (var value in _nodeIndex.Values)
+        {
+            _setConsumer(value.Children);
+        }
+        _nodeIndex.Clear();
+        _parents.Clear();
+        _rootNodes.Clear();
     }
 
     public void Remove(T value, bool mend = false)
@@ -108,6 +118,23 @@ public sealed class RobustTree<T> where T : notnull
         parentNode.Children.Add(existingNode);
         _parents.Add(child, parent);
         return existingNode;
+    }
+
+    // todo paul optimize this maybe as its basically all this is used for.
+    public HashSet<TreeNode> GetRootNodes()
+    {
+        var nodes = _setProvider();
+        foreach (var node in _rootNodes)
+        {
+            nodes.Add(_nodeIndex[node]);
+        }
+
+        return nodes;
+    }
+
+    public void ReturnRootNodes(HashSet<TreeNode> rootNodes)
+    {
+        _setConsumer(rootNodes);
     }
 
     public struct TreeNode

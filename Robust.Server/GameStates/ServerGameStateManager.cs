@@ -133,7 +133,7 @@ namespace Robust.Server.GameStates
             EntityQuery<TransformComponent> transformQuery = default!;
             HashSet<int>[] playerChunks = default!;
             EntityUid[][] viewerEntities = default!;
-            (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[] chunkCache = default!;
+            (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache = default!;
 
             if (_pvs.CullingEnabled)
             {
@@ -143,7 +143,7 @@ namespace Robust.Server.GameStates
                 var chunksCount = chunks.Count;
                 var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
                 chunkCache =
-                    new (Dictionary<EntityUid, MetaDataComponent> metadata, List<EntityUid> order)?[chunksCount];
+                    new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
                 transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
                 metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
                 Parallel.For(0, chunkBatches, i =>

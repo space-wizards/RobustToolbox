@@ -63,7 +63,7 @@ internal partial class MapManager
 
     private GridId _highestGridId = GridId.Invalid;
 
-    public virtual void ChunkRemoved(MapChunk chunk) { }
+    public virtual void ChunkRemoved(GridId gridId, MapChunk chunk) { }
 
     public EntityUid GetGridEuid(GridId id)
     {

@@ -110,7 +110,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            // TODO Serialization: actually validate the id
             return !IoCManager.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);

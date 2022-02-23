@@ -1,5 +1,3 @@
-﻿using System.Collections.Generic;
-using Moq;
 using NUnit.Framework;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -58,11 +56,9 @@ namespace Robust.UnitTesting.Shared.Map
             Assert.That(bounds, Is.EqualTo(new Box2i(1, 0, 3, 3)));
         }
 
-        private static IMapChunkInternal ChunkFactory(ushort size, int[] tiles)
+        private static MapChunk ChunkFactory(ushort size, int[] tiles)
         {
-            var fakeGrid = new Mock<IMapGridInternal>();
-
-            var chunk = new MapChunk(fakeGrid.Object, 0, 0, size);
+            var chunk = new MapChunk(0, 0, size);
 
             for (var i = 0; i < tiles.Length; i++)
             {

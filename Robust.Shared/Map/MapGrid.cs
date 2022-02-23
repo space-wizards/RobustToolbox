@@ -28,9 +28,6 @@ namespace Robust.Shared.Map
         public GameTick LastTileModifiedTick { get; private set; }
 
         /// <inheritdoc />
-        public GameTick CurTick => _mapManager.GameTiming.CurTick;
-
-        /// <inheritdoc />
         [ViewVariables]
         public MapId ParentMapId { get; set; }
 
@@ -45,7 +42,7 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Grid chunks than make up this grid.
         /// </summary>
-        private readonly Dictionary<Vector2i, IMapChunkInternal> _chunks = new();
+        private readonly Dictionary<Vector2i, MapChunk> _chunks = new();
 
         private readonly IMapManagerInternal _mapManager;
         private readonly IEntityManager _entityManager;
@@ -59,7 +56,6 @@ namespace Robust.Shared.Map
         /// <param name="entityManager"></param>
         /// <param name="gridIndex">Index identifier of this grid.</param>
         /// <param name="chunkSize">The dimension of this square chunk.</param>
-        /// <param name="snapSize">Distance in world units between the lines on the conceptual snap grid.</param>
         /// <param name="parentMapId">Parent map identifier.</param>
         internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, MapId parentMapId)
         {
@@ -81,8 +77,6 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         [ViewVariables]
         public Box2 LocalBounds { get; private set; }
-
-        public bool SuppressCollisionRegeneration { get; set; }
 
         /// <inheritdoc />
         [ViewVariables]
@@ -168,40 +162,6 @@ namespace Robust.Shared.Map
             }
         }
 
-        /// <summary>
-        /// Expands the AABB for this grid when a new tile is added. If the tile is already inside the existing AABB,
-        /// nothing happens. If it is outside, the AABB is expanded to fit the new tile.
-        /// </summary>
-        public void UpdateAABB()
-        {
-            LocalBounds = new Box2();
-            foreach (var chunk in _chunks.Values)
-            {
-                var chunkBounds = chunk.CalcLocalBounds();
-
-                if(chunkBounds.Size.Equals(Vector2i.Zero))
-                    continue;
-
-                if (LocalBounds.Size == Vector2.Zero)
-                {
-                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = gridBounds;
-                }
-                else
-                {
-                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
-                    LocalBounds = LocalBounds.Union(gridBounds);
-                }
-            }
-        }
-
-        /// <inheritdoc />
-        public void NotifyTileChanged(in TileRef tileRef, in Tile oldTile)
-        {
-            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
-            _mapManager.RaiseOnTileChanged(tileRef, oldTile);
-        }
-
         #region TileAccess
 
         /// <inheritdoc />
@@ -228,7 +188,26 @@ namespace Robust.Shared.Map
             }
 
             var chunkTileIndices = output.GridTileToChunkTile(tileCoordinates);
-            return output.GetTileRef((ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+            return GetTileRef(output, (ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+        }
+
+        /// <summary>
+        ///     Returns the tile at the given chunk indices.
+        /// </summary>
+        /// <param name="mapChunk"></param>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
+        public TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex)
+        {
+            if (xIndex >= mapChunk.ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
+
+            if (yIndex >= mapChunk.ChunkSize)
+                throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
+
+            var indices = mapChunk.ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
+            return new TileRef(ParentMapId, Index, indices, mapChunk.GetTile(xIndex, yIndex));
         }
 
         /// <inheritdoc />
@@ -236,10 +215,19 @@ namespace Robust.Shared.Map
         {
             foreach (var kvChunk in _chunks)
             {
-                foreach (var tileRef in kvChunk.Value)
+                var chunk = kvChunk.Value;
+                for (ushort x = 0; x < ChunkSize; x++)
                 {
-                    if (!ignoreSpace || !tileRef.Tile.IsEmpty)
-                        yield return tileRef;
+                    for (ushort y = 0; y < ChunkSize; y++)
+                    {
+                        var tile = chunk.GetTile(x, y);
+
+                        if (ignoreSpace && tile.IsEmpty)
+                            continue;
+
+                        var (gridX, gridY) = new Vector2i(x, y) + chunk.Indices * ChunkSize;
+                        yield return new TileRef(ParentMapId, Index, gridX, gridY, tile);
+                    }
                 }
             }
         }
@@ -261,7 +249,7 @@ namespace Robust.Shared.Map
         /// <inheritdoc />
         public void SetTiles(List<(Vector2i GridIndices, Tile Tile)> tiles)
         {
-            var chunks = new HashSet<IMapChunkInternal>();
+            var chunks = new HashSet<MapChunk>();
 
             foreach (var (gridIndices, tile) in tiles)
             {
@@ -274,10 +262,11 @@ namespace Robust.Shared.Map
             foreach (var chunk in chunks)
             {
                 chunk.SuppressCollisionRegeneration = false;
-                chunk.RegenerateCollision();
+                RegenerateCollision(chunk);
             }
         }
 
+        /// <inheritdoc />
         public IEnumerable<TileRef> GetTilesIntersecting(Box2Rotated worldArea, bool ignoreEmpty = true,
             Predicate<TileRef>? predicate = null)
         {
@@ -316,7 +305,7 @@ namespace Robust.Shared.Map
                     if (_chunks.TryGetValue(gridChunk, out var chunk))
                     {
                         var chunkTile = chunk.GridTileToChunkTile(new Vector2i(x, y));
-                        var tile = chunk.GetTileRef((ushort)chunkTile.X, (ushort)chunkTile.Y);
+                        var tile = GetTileRef(chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
 
                         if (ignoreEmpty && tile.Tile.IsEmpty)
                             continue;
@@ -369,18 +358,19 @@ namespace Robust.Shared.Map
         public int ChunkCount => _chunks.Count;
 
         /// <inheritdoc />
-        public IMapChunkInternal GetChunk(int xIndex, int yIndex)
+        public MapChunk GetChunk(int xIndex, int yIndex)
         {
             return GetChunk(new Vector2i(xIndex, yIndex));
         }
 
+        /// <inheritdoc />
         public void RemoveChunk(Vector2i origin)
         {
             if (!_chunks.TryGetValue(origin, out var chunk)) return;
 
             _chunks.Remove(origin);
 
-            _mapManager.ChunkRemoved((MapChunk) chunk);
+            _mapManager.ChunkRemoved(Index, chunk);
 
             if (_chunks.Count == 0)
             {
@@ -389,12 +379,15 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IMapChunkInternal GetChunk(Vector2i chunkIndices)
+        public MapChunk GetChunk(Vector2i chunkIndices)
         {
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
-            return _chunks[chunkIndices] = new MapChunk(this, chunkIndices.X, chunkIndices.Y, ChunkSize);
+            var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
+            newChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            newChunk.TileModified += OnTileModified;
+            return _chunks[chunkIndices] = newChunk;
         }
 
         /// <inheritdoc />
@@ -404,21 +397,21 @@ namespace Robust.Shared.Map
         }
 
         /// <inheritdoc />
-        public IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks()
+        public IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks()
         {
             return _chunks;
         }
 
         internal struct ChunkEnumerator
         {
-            private Dictionary<Vector2i, IMapChunkInternal> _chunks;
+            private Dictionary<Vector2i, MapChunk> _chunks;
             private Vector2i _chunkLB;
             private Vector2i _chunkRT;
 
             private int _xIndex;
             private int _yIndex;
 
-            internal ChunkEnumerator(Dictionary<Vector2i, IMapChunkInternal> chunks, Box2 localAABB, int chunkSize)
+            internal ChunkEnumerator(Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
             {
                 _chunks = chunks;
 
@@ -429,7 +422,7 @@ namespace Robust.Shared.Map
                 _yIndex = _chunkLB.Y;
             }
 
-            public bool MoveNext([NotNullWhen(true)] out IMapChunkInternal? chunk)
+            public bool MoveNext([NotNullWhen(true)] out MapChunk? chunk)
             {
                 if (_yIndex > _chunkRT.Y)
                 {
@@ -456,12 +449,14 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
         public void GetMapChunks(Box2 worldAABB, out ChunkEnumerator enumerator)
         {
             var localArea = InvWorldMatrix.TransformBox(worldAABB);
             enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
         }
 
+        /// <inheritdoc />
         public void GetMapChunks(Box2Rotated worldArea, out ChunkEnumerator enumerator)
         {
             var matrix = InvWorldMatrix;
@@ -583,7 +578,7 @@ namespace Robust.Shared.Map
             RemoveFromSnapGridCell(TileIndicesFor(coords), euid);
         }
 
-        private (IMapChunkInternal, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
+        private (MapChunk, Vector2i) ChunkAndOffsetForTile(Vector2i pos)
         {
             var gridChunkIndices = GridTileToChunkIndices(pos);
             var chunk = GetChunk(gridChunkIndices);
@@ -756,7 +751,7 @@ namespace Robust.Shared.Map
                 return false;
 
             var cTileIndices = chunk.GridTileToChunkTile(indices);
-            return chunk.CollidesWithChunk(cTileIndices);
+            return chunk.GetTile((ushort) cTileIndices.X, (ushort) cTileIndices.Y).TypeId != Tile.Empty.TypeId;
         }
 
         /// <inheritdoc />
@@ -798,7 +793,7 @@ namespace Robust.Shared.Map
             }
 
             var cTileIndices = chunk.GridTileToChunkTile(indices);
-            tile = chunk.GetTileRef(cTileIndices);
+            tile = GetTileRef(chunk, (ushort)cTileIndices.X, (ushort)cTileIndices.Y);
             return true;
         }
 
@@ -815,6 +810,81 @@ namespace Robust.Shared.Map
         }
 
         #endregion Transforms
+
+        /// <summary>
+        /// Regenerates the chunk local bounds of this chunk.
+        /// </summary>
+        public void RegenerateCollision(MapChunk mapChunk)
+        {
+            // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
+            if (mapChunk.FilledTiles == 0)
+            {
+                RemoveChunk(mapChunk.Indices);
+            }
+
+            // generate collision rectangles for this chunk based on filled tiles.
+            GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
+            mapChunk.CachedBounds = localBounds;
+
+            LocalBounds = new Box2();
+            foreach (var chunk in _chunks.Values)
+            {
+                var chunkBounds = chunk.CachedBounds;
+
+                if(chunkBounds.Size.Equals(Vector2i.Zero))
+                    continue;
+
+                if (LocalBounds.Size == Vector2.Zero)
+                {
+                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                    LocalBounds = gridBounds;
+                }
+                else
+                {
+                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                    LocalBounds = LocalBounds.Union(gridBounds);
+                }
+            }
+
+            // TryGet because unit tests YAY
+            if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
+                system.RegenerateCollision(GridEntityId, mapChunk, rectangles);
+        }
+
+        /// <summary>
+        /// Calculate the world space AABB for this chunk.
+        /// </summary>
+        public Box2 CalcWorldAABB(MapChunk mapChunk)
+        {
+            var rotation = WorldRotation;
+            var position = WorldPosition;
+            var chunkPosition = mapChunk.Indices;
+            var tileScale = TileSize;
+            var chunkScale = mapChunk.ChunkSize;
+
+            var worldPos = position + rotation.RotateVec(chunkPosition * tileScale * chunkScale);
+
+            return new Box2Rotated(
+                ((Box2)mapChunk.CachedBounds
+                    .Scale(tileScale))
+                .Translated(worldPos),
+                rotation, worldPos).CalcBoundingBox();
+        }
+
+        private void OnTileModified(MapChunk mapChunk, Vector2i tileIndices, Tile newTile, Tile oldTile, bool shapeChanged)
+        {
+            // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
+            var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
+            var newTileRef = new TileRef(ParentMapId, Index, gridTile, newTile);
+            mapChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
+
+            if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)
+            {
+                RegenerateCollision(mapChunk);
+            }
+        }
     }
 
     /// <summary>

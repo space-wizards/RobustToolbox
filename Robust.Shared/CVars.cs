@@ -1006,6 +1006,17 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> ResTexturePreloadCache =
             CVarDef.Create("res.texture_preload_cache", true, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// Override seekability of resource streams returned by ResourceManager.
+        /// See <see cref="ContentPack.StreamSeekMode"/> for int values.
+        /// </summary>
+        /// <remarks>
+        /// This is intended to be a debugging tool primarily.
+        /// Non-default seek modes WILL result in worse performance.
+        /// </remarks>
+        public static readonly CVarDef<int> ResStreamSeekMode =
+            CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
+
         /*
          * DEBUG
          */

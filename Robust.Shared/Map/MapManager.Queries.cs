@@ -133,9 +133,10 @@ internal partial class MapManager
             if (!mapGrid.HasChunk(chunkIndices)) continue;
 
             var chunk = mapGrid.GetChunk(chunkIndices);
-            var chunkTile = chunk.GetTileRef(chunk.GridTileToChunkTile(tile));
+            Vector2i indices = chunk.GridTileToChunkTile(tile);
+            var chunkTile = chunk.GetTile((ushort)indices.X, (ushort)indices.Y);
 
-            if (chunkTile.Tile.IsEmpty) continue;
+            if (chunkTile.IsEmpty) continue;
             grid = mapGrid;
             return true;
         }

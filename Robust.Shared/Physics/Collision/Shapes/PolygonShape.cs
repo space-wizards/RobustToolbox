@@ -133,6 +133,9 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public ShapeType ShapeType => ShapeType.Polygon;
 
+        /// <inheritdoc />
+        public Box2 LocalBounds => CalcLocalBounds();
+
         public PolygonShape()
         {
             _radius = PhysicsConstants.PolygonRadius;
@@ -237,6 +240,22 @@ namespace Robust.Shared.Physics.Collision.Shapes
             for (var i = 1; i < Vertices.Length; ++i)
             {
                 var v = Transform.Mul(transform, Vertices[i]);
+                lower = Vector2.ComponentMin(lower, v);
+                upper = Vector2.ComponentMax(upper, v);
+            }
+
+            var r = new Vector2(_radius, _radius);
+            return new Box2(lower - r, upper + r);
+        }
+
+        private Box2 CalcLocalBounds()
+        {
+            var lower = Vertices[0];
+            var upper = lower;
+
+            for (var i = 1; i < Vertices.Length; ++i)
+            {
+                var v = Vertices[i];
                 lower = Vector2.ComponentMin(lower, v);
                 upper = Vector2.ComponentMax(upper, v);
             }

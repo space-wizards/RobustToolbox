@@ -571,4 +571,47 @@ public partial class EntitySystem
         => new($"Entity {uid} does not have a component of type {typeof(T)}");
 
     #endregion
+
+    #region Entity Query
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected EntityQuery<T> GetEntityQuery<T>() where T : Component
+    {
+        return EntityManager.GetEntityQuery<T>();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IEnumerable<TComp1> EntityQuery<TComp1>(bool includePaused = false) where TComp1 : Component
+    {
+        return EntityManager.EntityQuery<TComp1>(includePaused);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IEnumerable<(TComp1, TComp2)> EntityQuery<TComp1, TComp2>(bool includePaused = false)
+        where TComp1 : Component
+        where TComp2 : Component
+    {
+        return EntityManager.EntityQuery<TComp1, TComp2>(includePaused);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IEnumerable<(TComp1, TComp2, TComp3)> EntityQuery<TComp1, TComp2, TComp3>(bool includePaused = false)
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+    {
+        return EntityManager.EntityQuery<TComp1, TComp2, TComp3>(includePaused);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected IEnumerable<(TComp1, TComp2, TComp3, TComp4)> EntityQuery<TComp1, TComp2, TComp3, TComp4>(bool includePaused = false)
+        where TComp1 : Component
+        where TComp2 : Component
+        where TComp3 : Component
+        where TComp4 : Component
+    {
+        return EntityManager.EntityQuery<TComp1, TComp2, TComp3, TComp4>(includePaused);
+    }
+
+    #endregion
 }

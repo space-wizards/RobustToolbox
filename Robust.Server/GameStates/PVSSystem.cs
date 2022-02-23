@@ -552,9 +552,6 @@ internal sealed partial class PVSSystem : EntitySystem
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
         if (!uid.IsValid()) return;
 
-        //did we already get added?
-        if (toSend.ContainsKey(uid)) return;
-
         if (manualParents)
         {
             var parent = transformQuery.GetComponent(uid).ParentUid;
@@ -562,6 +559,10 @@ internal sealed partial class PVSSystem : EntitySystem
                 fromTick, ref newEntitiesSent, ref totalEnteredEntities, metadataQuery, transformQuery, dontSkip: dontSkip,
                 manualParents: true);
         }
+
+        //did we already get added?
+        //todo paul this is a shitty bandaid for the new parent, stayed child bug crashing ghost haunting
+        if (toSend.ContainsKey(uid)) return;
 
         //are we new?
         var @new = !seenSet.Contains(uid);

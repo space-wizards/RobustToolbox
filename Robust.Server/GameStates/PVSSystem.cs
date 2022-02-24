@@ -468,7 +468,7 @@ internal sealed partial class PVSSystem : EntitySystem
             foreach (var rootNode in rootNodes)
             {
                 RecursivelyAddTreeNode(in rootNode, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                    ref entitiesSent, cache.Value.metadata);
+                        ref entitiesSent, cache.Value.metadata);
             }
             cache.Value.tree.ReturnRootNodes(rootNodes);
         }
@@ -551,18 +551,24 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!node.Value.IsValid()) return;
+
+        // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
+        // we may find duplicate parents with children we haven't encountered before
+        // on different chunks (this is especially common with direct grid children)
+        if (node.Value.IsValid() && !toSend.ContainsKey(node.Value))
+        {
+            //are we new?
+            var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
+                ref totalEnteredEntities);
+
+            if (budgetFail) return;
+
+            AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
+        }
 
         //did we already get added?
-        if (toSend.ContainsKey(node.Value)) return;
+        // if (toSend.ContainsKey(node.Value)) return;
 
-        //are we new?
-        var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
-            ref totalEnteredEntities);
-
-        if (budgetFail) return;
-
-        AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
         foreach (var child in node.Children)
         {
             RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
@@ -589,7 +595,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (toSend.ContainsKey(uid)) return true;
 
         var parent = transQuery.GetComponent(uid).ParentUid;
-        if (!parent.IsValid() && !RecursivelyAddOverride(in parent, seenSet, previousVisibleEnts, toSend, fromTick,
+        if (parent.IsValid() && !RecursivelyAddOverride(in parent, seenSet, previousVisibleEnts, toSend, fromTick,
                 ref newEntitiesSent, ref totalEnteredEntities, metaQuery, transQuery))
             return false;
 

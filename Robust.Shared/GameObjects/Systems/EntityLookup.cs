@@ -73,9 +73,9 @@ namespace Robust.Shared.GameObjects
         IEnumerable<EntityUid> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         bool IsIntersecting(EntityUid entityOne, EntityUid entityTwo);
-        
+
         bool UpdateEntityTree(EntityUid entity, TransformComponent xform, Box2? worldAABB = null);
-        
+
         void RemoveFromEntityTrees(EntityUid entity);
 
         Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);
@@ -92,6 +92,8 @@ namespace Robust.Shared.GameObjects
     {
         private readonly IEntityManager _entityManager;
         private readonly IMapManager _mapManager;
+        private SharedContainerSystem _container = default!;
+        private SharedTransformSystem _transform = default!;
 
         private const int GrowthRate = 256;
 
@@ -136,6 +138,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Startup() called multiple times.");
             }
 
+            _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
@@ -238,16 +241,30 @@ namespace Robust.Shared.GameObjects
 
         private void OnEntityInit(object? sender, EntityUid uid)
         {
-            var xform = _entityManager.GetComponent<TransformComponent>(uid);
-            if (xform.Anchored) return;
-            UpdateEntityTree(uid, xform);
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+
+            if (!xformQuery.TryGetComponent(uid, out var xform) ||
+                xform.Anchored ||
+                _mapManager.IsMap(uid) ||
+                _mapManager.IsGrid(uid) ||
+                xform.MapID == MapId.Nullspace) return;
+
+            DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
+            DebugTools.Assert(xform.ChildCount == 0);
+
+            var lookup = GetLookupNew(uid, xform, xformQuery);
+            var coordinates = _transform.GetMoverCoordinates(xform);
+            DebugTools.Assert(coordinates.EntityId == lookup.Owner);
+            var aabb = GetLocalAABBNoContainer(uid, xform);
+
+            lookup.Tree.Add(uid, aabb.Translated(coordinates.Position));
         }
 
         private void OnMapCreated(object? sender, MapEventArgs eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
 
-            _mapManager.GetMapEntityId(eventArgs.Map).EnsureComponent<EntityLookupComponent>();
+            _entityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));
         }
 
         public void Update()
@@ -793,6 +810,30 @@ namespace Robust.Shared.GameObjects
             return null;
         }
 
+        private EntityLookupComponent GetLookupNew(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        {
+            if (xform.MapID == MapId.Nullspace)
+                throw new InvalidOperationException();
+
+            var parent = xform.ParentUid;
+            var lookupQuery = _entityManager.GetEntityQuery<EntityLookupComponent>();
+
+            // if it's map return null. Grids should return the map's broadphase.
+            if (lookupQuery.HasComponent(uid) &&
+                !parent.IsValid())
+            {
+                throw new InvalidOperationException();
+            }
+
+            while (parent.IsValid())
+            {
+                if (lookupQuery.TryGetComponent(parent, out var comp)) return comp;
+                parent = xformQuery.GetComponent(parent).ParentUid;
+            }
+
+            throw new InvalidOperationException();
+        }
+
         /// <inheritdoc />
         public bool UpdateEntityTree(EntityUid entity, TransformComponent xform, Box2? worldAABB = null)
         {
@@ -883,6 +924,23 @@ namespace Robust.Shared.GameObjects
             return _entityManager.TryGetComponent(ent, out ILookupWorldBox2Component? lookup) ?
                 lookup.GetWorldAABB(pos) :
                 new Box2(pos, pos);
+        }
+
+        private Box2 GetLocalAABBNoContainer(EntityUid uid, TransformComponent xform)
+        {
+            DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
+            Box2 localAABB;
+
+            if (_entityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
+            {
+                localAABB = worldLookup.GetLocalAABB();
+            }
+            else
+            {
+                localAABB = new Box2();
+            }
+
+            return localAABB;
         }
 
         #endregion

@@ -138,6 +138,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Startup() called multiple times.");
             }
 
+            _container = _entityManager.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
             _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
@@ -249,13 +250,15 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsGrid(uid) ||
                 xform.MapID == MapId.Nullspace) return;
 
-            DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
-            DebugTools.Assert(xform.ChildCount == 0);
-
             var lookup = GetLookupNew(uid, xform, xformQuery);
-            var coordinates = _transform.GetMoverCoordinates(xform);
+            var lookupXform = xformQuery.GetComponent(lookup.Owner);
+            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             DebugTools.Assert(coordinates.EntityId == lookup.Owner);
-            var aabb = GetLocalAABBNoContainer(uid, xform);
+
+            // If we're contained then LocalRotation should be 0 anyway.
+            var aabb = GetLookupAABB(uid, coordinates.Position, xform.WorldRotation - lookupXform.WorldRotation, xform, xformQuery);
+
+            // Any child entities should be handled by their own OnEntityInit
 
             lookup.Tree.Add(uid, aabb.Translated(coordinates.Position));
         }
@@ -926,18 +929,33 @@ namespace Robust.Shared.GameObjects
                 new Box2(pos, pos);
         }
 
-        private Box2 GetLocalAABBNoContainer(EntityUid uid, TransformComponent xform)
+        private Box2 GetLookupAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
-            DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
+            // If we're in a container then we just use the container's bounds.
+            if (_container.TryGetContainingContainer(uid, out var container, xform))
+            {
+                return GetLookupAABB(container.Owner, position, angle, xformQuery.GetComponent(container.Owner), xformQuery);
+            }
+
+            return GetLookupAABBNoContainer(uid, position, angle);
+        }
+
+        /// <summary>
+        /// Get the AABB of an entity relative to a <see cref="EntityLookupComponent"/>
+        /// </summary>
+        private Box2 GetLookupAABBNoContainer(EntityUid uid, Vector2 position, Angle angle)
+        {
+            // DebugTools.Assert(!_container.IsEntityInContainer(uid, xform));
             Box2 localAABB;
+            var transform = new Transform(position, angle);
 
             if (_entityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
             {
-                localAABB = worldLookup.GetLocalAABB();
+                localAABB = worldLookup.GetAABB(transform);
             }
             else
             {
-                localAABB = new Box2();
+                localAABB = new Box2Rotated(new Box2(transform.Position, transform.Position), transform.Quaternion2D.Angle, transform.Position).CalcBoundingBox();
             }
 
             return localAABB;

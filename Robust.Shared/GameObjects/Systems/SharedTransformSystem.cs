@@ -124,5 +124,41 @@ namespace Robust.Shared.GameObjects
             var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(xform.WorldPosition);
             return new EntityCoordinates(grid.GridEntityId, gridPos);
         }
+
+        public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
+        {
+            // GridID isn't ready during EntityInit so YAY
+            IMapGrid? grid = null;
+            var ent = coordinates.EntityId;
+
+            while (ent.IsValid())
+            {
+                if (_mapManager.TryGetGrid(ent, out grid))
+                    break;
+
+                ent = xformQuery.GetComponent(ent).ParentUid;
+            }
+
+            // If they're parented directly to the map or grid then just return the coordinates.
+            if (grid == null)
+            {
+                var mapPos = coordinates.ToMap(EntityManager);
+                var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
+
+                // Parented directly to the map.
+                if (coordinates.EntityId == mapUid)
+                    return coordinates;
+
+                return new EntityCoordinates(mapUid, mapPos.Position);
+            }
+
+            // Parented directly to the grid
+            if (grid.GridEntityId == coordinates.EntityId)
+                return coordinates;
+
+            // Parented to grid so convert their pos back to the grid.
+            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
+            return new EntityCoordinates(grid.GridEntityId, gridPos);
+        }
     }
 }

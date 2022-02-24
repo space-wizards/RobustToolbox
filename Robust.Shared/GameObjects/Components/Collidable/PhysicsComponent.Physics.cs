@@ -266,6 +266,22 @@ namespace Robust.Shared.GameObjects
             Dirty(_entMan);
         }
 
+        public Box2 GetAABB(Transform transform)
+        {
+            var bounds = new Box2(transform.Position, transform.Position);
+
+            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
+            {
+                for (var i = 0; i < fixture.Shape.ChildCount; i++)
+                {
+                    var boundy = fixture.Shape.ComputeAABB(transform, i);
+                    bounds = bounds.Union(boundy);
+                }
+            }
+
+            return bounds;
+        }
+
         public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
             worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;

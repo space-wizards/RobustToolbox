@@ -3,6 +3,7 @@ using Moq;
 using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
+using Robust.Server.GameStates;
 using Robust.Server.Maps;
 using Robust.Server.Physics;
 using Robust.Shared.Containers;
@@ -60,37 +61,14 @@ entities:
 
 ";
 
-        protected override void OverrideIoC()
-        {
-            base.OverrideIoC();
-            //var mockFormat = new Mock<ICustomFormatManager>();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            var gridFixtures = new GridFixtureSystem();
-            var fixtures = new FixtureSystem();
-            var con = new ContainerSystem();
-
-            // MOCKS WHY
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
-            mock.Setup(m => m.GetEntitySystem<GridFixtureSystem>()).Returns(gridFixtures);
-            mock.Setup(m => m.GetEntitySystem<SharedContainerSystem>()).Returns(con);
-            mock.Setup(m => m.GetEntitySystem<FixtureSystem>()).Returns(fixtures);
-
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-            //IoCManager.RegisterInstance<ICustomFormatManager>(mockFormat.Object, true);
-
-            // Mocking moment...
-            IoCManager.BuildGraph();
-            IoCManager.RegisterInstance<SharedBroadphaseSystem>(broady);
-            IoCManager.InjectDependencies(fixtures);
-        }
-
-
         [OneTimeSetUp]
         public void Setup()
         {
+            var syssy = IoCManager.Resolve<IEntitySystemManager>();
+            syssy.Clear();
+            syssy.LoadExtraSystemType<PVSSystem>();
+            syssy.Initialize();
+
             var compFactory = IoCManager.Resolve<IComponentFactory>();
             compFactory.RegisterClass<MapDeserializeTestComponent>();
             compFactory.GenerateNetIds();

@@ -39,6 +39,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   - type: Transform
   - type: Map
     index: 123
+  - type: EntityLookup
 ";
 
         private MapId MapA;
@@ -47,18 +48,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         private IMapGrid GridB = default!;
 
         private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), (0, 0));
-
-        protected override void OverrideIoC()
-        {
-            base.OverrideIoC();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
-
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-        }
 
         [OneTimeSetUp]
         public void Setup()

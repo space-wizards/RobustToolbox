@@ -89,8 +89,9 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Initialize, discover systems and initialize them through <see cref="IEntitySystem.Initialize"/>.
         /// </summary>
+        /// <param name="discover">Whether we should automatically find systems or have they been supplied already.</param>
         /// <seealso cref="IEntitySystem.Initialize"/>
-        void Initialize();
+        void Initialize(bool discover = true);
 
         /// <summary>
         /// Clean up, shut down all systems through <see cref="IEntitySystem.Shutdown"/> and remove them.

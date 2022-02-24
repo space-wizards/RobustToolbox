@@ -22,6 +22,7 @@ public sealed class RobustTree<T> where T : notnull
 
     public void Clear()
     {
+        // TODO: This is hella expensive
         foreach (var value in _nodeIndex.Values)
         {
             _setConsumer(value.Children);
@@ -137,7 +138,7 @@ public sealed class RobustTree<T> where T : notnull
         _setConsumer(rootNodes);
     }
 
-    public struct TreeNode
+    public readonly struct TreeNode : IEquatable<TreeNode>
     {
         public readonly T Value;
         public readonly HashSet<TreeNode> Children;
@@ -146,6 +147,21 @@ public sealed class RobustTree<T> where T : notnull
         {
             Value = value;
             Children = children;
+        }
+
+        public bool Equals(TreeNode other)
+        {
+            return Value.Equals(other.Value) && Children.Equals(other.Children);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is TreeNode other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Value, Children);
         }
     }
 }

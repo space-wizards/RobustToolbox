@@ -39,6 +39,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   - type: Transform
   - type: Map
     index: 123
+  # Due to the map getting initialised last this seemed easiest to fix the test while removing the mocks.
   - type: EntityLookup
 ";
 

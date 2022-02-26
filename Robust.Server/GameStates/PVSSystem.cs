@@ -549,20 +549,20 @@ internal sealed partial class PVSSystem : EntitySystem
         ref int totalEnteredEntities,
         Dictionary<EntityUid, MetaDataComponent> metaDataCache)
     {
-        //are we valid?
-        //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
-        if (!node.Value.IsValid()) return;
+        //are we valid? sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
+        //and did we already get added?
+        if (!toSend.ContainsKey(node.Value) && node.Value.IsValid())
+        {
+            //are we new?
+            var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
+                ref totalEnteredEntities);
 
-        //did we already get added?
-        if (toSend.ContainsKey(node.Value)) return;
+            if (budgetFail) return;
 
-        //are we new?
-        var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
-            ref totalEnteredEntities);
+            AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
+        }
 
-        if (budgetFail) return;
-
-        AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
+        //our children are important regardless! iterate them!
         foreach (var child in node.Children)
         {
             RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,

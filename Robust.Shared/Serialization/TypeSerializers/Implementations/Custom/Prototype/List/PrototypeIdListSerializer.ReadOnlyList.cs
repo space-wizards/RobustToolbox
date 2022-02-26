@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -35,7 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new List<string>(source);
         }
 
-        DeserializationResult ITypeReader<IReadOnlyList<string>, SequenceDataNode>.Read(
+        IReadOnlyList<string> ITypeReader<IReadOnlyList<string>, SequenceDataNode>.Read(
             ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
@@ -43,23 +42,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             ISerializationContext? context)
         {
             var list = new List<string>();
-            var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _prototypeSerializer.Read(
+                list.Add(_prototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context);
-
-                list.Add((string) result.RawValue!);
-                mappings.Add(result);
+                    context));
             }
 
-            return new DeserializedCollection<IReadOnlyList<string>, string>(list, mappings,
-                elements => new List<string>(elements));
+            return list;
         }
 
         ValidationNode ITypeValidator<IReadOnlyList<string>, SequenceDataNode>.Validate(

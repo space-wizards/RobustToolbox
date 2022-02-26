@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using Robust.Shared.Serialization.Manager.Definition;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -14,13 +14,35 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate DeserializationResult ReadDelegate(
+        private delegate object? ReadDelegate(
             Type type,
             DataNode node,
             ISerializationContext? context = null,
             bool skipHook = false);
 
         private readonly ConcurrentDictionary<(Type value, Type node), ReadDelegate> _readers = new();
+
+        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        {
+            return (T)Read(typeof(T), node, context, skipHook)!;
+        }
+
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        {
+            var val = GetOrCreateReader(type, node)(type, node, context, skipHook);
+            ReadNullCheck(type, val);
+            return val;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ReadNullCheck(Type type, object? val)
+        {
+            if (!type.IsNullable() && val == null)
+            {
+                throw new InvalidOperationException(
+                    $"{nameof(Read)}-Call returned a null value for non-nullable type {type}");
+            }
+        }
 
         private ReadDelegate GetOrCreateReader(Type value, DataNode node)
         {
@@ -58,7 +80,9 @@ namespace Robust.Shared.Serialization.Manager
                                 instanceConst,
                                 nameof(ReadArrayValue),
                                 new[] { elementType },
-                                Expression.Convert(nodeParam, typeof(ValueDataNode)));
+                                Expression.Convert(nodeParam, typeof(ValueDataNode)),
+                                contextParam,
+                                skipHookParam);
                             break;
                         case SequenceDataNode seqNode:
                             var isSealed = elementType.IsPrimitive || elementType.IsEnum ||
@@ -240,38 +264,37 @@ namespace Robust.Shared.Serialization.Manager
             }, (node, this));
         }
 
-        private DeserializationResult ReadArrayValue<T>(ValueDataNode value)
+        private T[]? ReadArrayValue<T>(
+            ValueDataNode value,
+            ISerializationContext? context = null,
+            bool skipHook = false)
         {
             if (value.Value == "null")
             {
-                return new DeserializedValue<T[]?>(null);
+                return null;
             }
 
-            throw new InvalidNodeTypeException("Cannot read an array from a value data node that is not null.");
+            var array = new T[1];
+            array[0] = Read<T>(value, context, skipHook);
+            return array;
         }
 
-        private DeserializationResult ReadArraySequence<T>(
+        private T[] ReadArraySequence<T>(
             SequenceDataNode node,
             ISerializationContext? context = null,
             bool skipHook = false)
         {
-            var type = typeof(T);
             var array = new T[node.Sequence.Count];
-            var results = new DeserializationResult[node.Sequence.Count];
 
             for (var i = 0; i < node.Sequence.Count; i++)
             {
-                var subNode = node.Sequence[i];
-                var result = Read(type, subNode, context, skipHook);
-
-                results[i] = result;
-                array[i] = (T) result.RawValue!;
+                array[i] = Read<T>(node.Sequence[i], context, skipHook);
             }
 
-            return new DeserializedArray(array, results);
+            return array;
         }
 
-        private DeserializationResult ReadArraySequenceSealed<T>(
+        private T[] ReadArraySequenceSealed<T>(
             SequenceDataNode node,
             ReadDelegate elementReader,
             ISerializationContext? context = null,
@@ -279,76 +302,70 @@ namespace Robust.Shared.Serialization.Manager
         {
             var type = typeof(T);
             var array = new T[node.Sequence.Count];
-            var results = new DeserializationResult[node.Sequence.Count];
 
             for (var i = 0; i < node.Sequence.Count; i++)
             {
                 var subNode = node.Sequence[i];
                 var result = elementReader(type, subNode, context, skipHook);
-
-                results[i] = result;
-                array[i] = (T) result.RawValue!;
+                ReadNullCheck(type, result);
+                array[i] = (T) result!;
             }
 
-            return new DeserializedArray(array, results);
+            return array;
         }
 
-        private DeserializationResult ReadEnumNullable<TEnum>(ValueDataNode node) where TEnum : struct
+        private TEnum? ReadEnumNullable<TEnum>(ValueDataNode node) where TEnum : struct
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TEnum?>(null);
+                return null;
             }
 
-            var value = Enum.Parse<TEnum>(node.Value, true);
-            return new DeserializedValue<TEnum?>(value);
+            return ReadEnumValue<TEnum>(node);
         }
 
-        private DeserializationResult ReadEnumValue<TEnum>(ValueDataNode node) where TEnum : struct
+        private TEnum ReadEnumValue<TEnum>(ValueDataNode node) where TEnum : struct
         {
-            var value = Enum.Parse<TEnum>(node.Value, true);
-            return new DeserializedValue<TEnum>(value);
+            return Enum.Parse<TEnum>(node.Value, true);
         }
 
-        private DeserializationResult ReadEnumSequence<TEnum>(SequenceDataNode node) where TEnum : struct
+        private TEnum ReadEnumSequence<TEnum>(SequenceDataNode node) where TEnum : struct
         {
-            var value = Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
-            return new DeserializedValue<TEnum>(value);
+            return Enum.Parse<TEnum>(string.Join(", ", node.Sequence), true);
         }
 
-        private DeserializationResult ReadSelfSerialize<TValue>(
+        private TValue? ReadSelfSerialize<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator)
             where TValue : ISelfSerialize
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue?>(default);
+                return null;
             }
 
             var value = (TValue) instantiator();
             value.Deserialize(node.Value);
 
-            return new DeserializedValue<TValue?>(value);
+            return value;
         }
 
-        private DeserializationResult ReadSelfSerializeNullableStruct<TValue>(
+        private TValue? ReadSelfSerializeNullableStruct<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator)
             where TValue : struct, ISelfSerialize
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue?>(null);
+                return null;
             }
 
             var value = (TValue) instantiator();
             value.Deserialize(node.Value);
-
-            return new DeserializedValue<TValue?>(value);
+            return value;
         }
 
-        private DeserializationResult ReadWithTypeReaderNullable<TValue>(
+        private TValue? ReadWithTypeReaderNullable<TValue>(
             ValueDataNode node,
             ITypeReader<TValue, ValueDataNode> reader,
             ISerializationContext? context = null,
@@ -356,13 +373,13 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue?>(default);
+                return null;
             }
 
             return ReadWithTypeReader(node, reader, context, skipHook);
         }
 
-        private DeserializationResult ReadWithTypeReaderNullableStruct<TValue>(
+        private TValue? ReadWithTypeReaderNullableStruct<TValue>(
             ValueDataNode node,
             ITypeReader<TValue, ValueDataNode> reader,
             ISerializationContext? context = null,
@@ -371,13 +388,13 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue?>(null);
+                return null;
             }
 
             return ReadWithTypeReader(node, reader, context, skipHook);
         }
 
-        private DeserializationResult ReadWithTypeReader<TValue, TNode>(
+        private TValue ReadWithTypeReader<TValue, TNode>(
             TNode node,
             ITypeReader<TValue, TNode> reader,
             ISerializationContext? context = null,
@@ -393,7 +410,7 @@ namespace Robust.Shared.Serialization.Manager
             return reader.Read(this, node, DependencyCollection, skipHook, context);
         }
 
-        private DeserializationResult ReadGenericNullable<TValue>(
+        private TValue? ReadGenericNullable<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
@@ -404,13 +421,13 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return new DeserializedValue<TValue?>(default);
+                return null;
             }
 
-            return ReadGenericValue<TValue?>(node, instantiator, definition, populate, hooks, context, skipHook);
+            return ReadGenericValue<TValue>(node, instantiator, definition, populate, hooks, context, skipHook);
         }
 
-        private DeserializationResult ReadGenericValue<TValue>(
+        private TValue ReadGenericValue<TValue>(
             ValueDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
@@ -448,6 +465,7 @@ namespace Robust.Shared.Serialization.Manager
             // If we get an empty ValueDataNode we just use an empty mapping
             var mapping = new MappingDataNode();
 
+            //todo make this just be read
             var result = definition.Populate(instance, mapping, this, context, skipHook);
 
             if (!skipHook && hooks)
@@ -458,7 +476,7 @@ namespace Robust.Shared.Serialization.Manager
             return result;
         }
 
-        private DeserializationResult ReadGenericMapping<TValue>(
+        private TValue ReadGenericMapping<TValue>(
             MappingDataNode node,
             InstantiationDelegate<object> instantiator,
             DataDefinition? definition,
@@ -497,34 +515,7 @@ namespace Robust.Shared.Serialization.Manager
             return result;
         }
 
-        public DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return GetOrCreateReader(type, node)(type, node, context, skipHook);
-        }
-
-        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return Read(type, node, context, skipHook).RawValue;
-        }
-
-        public T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            var value = Read(type, node, context, skipHook);
-
-            if (value.RawValue == null)
-            {
-                return default;
-            }
-
-            return (T?) value.RawValue;
-        }
-
-        public T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false)
-        {
-            return ReadValueCast<T>(typeof(T), node, context, skipHook);
-        }
-
-        public DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node, ISerializationContext? context = null,
+        public object? ReadWithTypeSerializer(Type value, Type serializer, DataNode node, ISerializationContext? context = null,
             bool skipHook = false)
         {
             return ReadWithSerializerRaw(value, node, serializer, context, skipHook);

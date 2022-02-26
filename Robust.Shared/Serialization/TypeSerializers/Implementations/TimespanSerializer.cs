@@ -4,7 +4,6 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -15,13 +14,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class TimespanSerializer : ITypeSerializer<TimeSpan, ValueDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public TimeSpan Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
         {
             var seconds = double.Parse(node.Value, CultureInfo.InvariantCulture);
-            return new DeserializedValue<TimeSpan>(TimeSpan.FromSeconds(seconds));
+            return TimeSpan.FromSeconds(seconds);
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

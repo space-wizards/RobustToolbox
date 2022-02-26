@@ -3,7 +3,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -62,21 +61,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return Validate(serializationManager, node, dependencies, context);
         }
 
-        DeserializationResult ITypeReader<Dictionary<string, TValue>, MappingDataNode>.Read(
+        Dictionary<string, TValue> ITypeReader<Dictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
         {
             return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context);
         }
 
-        DeserializationResult ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>.Read(
+        SortedDictionary<string, TValue> ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
         {
-            return _dictionarySerializer.Read(serializationManager, node, dependencies, skipHook, context);
+            return ((ITypeReader<SortedDictionary<string, TValue>, MappingDataNode>)_dictionarySerializer).Read(serializationManager, node, dependencies, skipHook, context);
         }
 
-        DeserializationResult ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>.Read(
+        IReadOnlyDictionary<string, TValue> ITypeReader<IReadOnlyDictionary<string, TValue>, MappingDataNode>.Read(
             ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
         {

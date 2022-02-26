@@ -1,7 +1,6 @@
 ﻿using System;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -19,11 +18,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return Enum.TryParse(flagType, node.Value, out _) ? new ValidatedValueNode(node) : new ErrorNode(node, "Failed parsing flag.", false);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public int Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
-            return new DeserializedValue((int)Enum.Parse(flagType, node.Value));
+            return (int)Enum.Parse(flagType, node.Value);
         }
 
         public DataNode Write(ISerializationManager serializationManager, int value, bool alwaysWrite = false,
@@ -80,7 +79,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
             return new ValidatedValueNode(node);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node,
+        public int Read(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
             var flagType = serializationManager.GetFlagTypeFromTag(typeof(TTag));
@@ -92,7 +91,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom
                 flags |= (int) Enum.Parse(flagType, valueDataNode.Value);
             }
 
-            return new DeserializedValue(flags);
+            return flags;
         }
     }
 }

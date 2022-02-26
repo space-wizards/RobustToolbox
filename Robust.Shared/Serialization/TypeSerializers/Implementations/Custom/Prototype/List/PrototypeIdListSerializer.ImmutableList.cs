@@ -3,7 +3,6 @@ using System.Collections.Immutable;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -22,27 +21,22 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return ValidateInternal(serializationManager, node, dependencies, context);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node,
+        public ImmutableList<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
             var builder = ImmutableList.CreateBuilder<string>();
-            var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _prototypeSerializer.Read(
+                builder.Add(_prototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context);
-
-                builder.Add((string) result.RawValue!);
-                mappings.Add(result);
+                    context));
             }
 
-            return new DeserializedCollection<ImmutableList<string>, string>(builder.ToImmutable(), mappings,
-                ImmutableList.CreateRange);
+            return builder.ToImmutable();
         }
 
         public DataNode Write(ISerializationManager serializationManager, ImmutableList<string> value, bool alwaysWrite = false,

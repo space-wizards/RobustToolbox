@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -12,7 +11,7 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate DeserializationResult ReadSerializerDelegate(
+        private delegate object? ReadSerializerDelegate(
             DataNode node,
             ISerializationContext? context = null,
             bool skipHook = false);
@@ -126,7 +125,7 @@ namespace Robust.Shared.Serialization.Manager
             }, (common, source, target, serializer));
         }
 
-        private DeserializationResult ReadWithSerializerRaw(
+        private object? ReadWithSerializerRaw(
             Type value,
             DataNode node,
             Type serializer,
@@ -136,7 +135,7 @@ namespace Robust.Shared.Serialization.Manager
             return GetOrCreateReadSerializerDelegate(value, node.GetType(), serializer)(node, context, skipHook);
         }
 
-        private DeserializationResult ReadWithSerializer<T, TNode, TSerializer>(
+        private T ReadWithSerializer<T, TNode, TSerializer>(
             TNode node,
             ISerializationContext? context = null,
             bool skipHook = false)

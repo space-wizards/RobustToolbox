@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Utility;
 

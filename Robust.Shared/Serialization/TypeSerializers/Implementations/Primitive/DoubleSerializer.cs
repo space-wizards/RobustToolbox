@@ -2,7 +2,6 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -21,10 +20,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
                 : new ErrorNode(node, $"Failed parsing double value: {node.Value}");
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public double Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
-            return new DeserializedValue<double>(double.Parse(node.Value, CultureInfo.InvariantCulture));
+            return double.Parse(node.Value, CultureInfo.InvariantCulture);
         }
 
         public DataNode Write(ISerializationManager serializationManager, double value, bool alwaysWrite = false,

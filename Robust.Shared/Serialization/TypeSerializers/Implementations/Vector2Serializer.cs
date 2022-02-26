@@ -3,7 +3,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -15,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class Vector2Serializer : ITypeSerializer<Vector2, ValueDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public Vector2 Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
@@ -27,9 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             var x = float.Parse(args[0], CultureInfo.InvariantCulture);
             var y = float.Parse(args[1], CultureInfo.InvariantCulture);
-            var vector = new Vector2(x, y);
-
-            return new DeserializedValue<Vector2>(vector);
+            return new Vector2(x, y);
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

@@ -7,7 +7,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -21,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager,
+        public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
@@ -29,7 +28,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             var factory = dependencies.Resolve<IComponentFactory>();
             var components = new ComponentRegistry();
-            var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
@@ -59,10 +57,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = serializationManager.ReadWithValueOrThrow<IComponent>(type, copy, skipHook: skipHook);
+                var read = (IComponent)serializationManager.Read(type, copy, skipHook: skipHook)!;
 
-                components[compType] = read.value;
-                mappings.Add(new DeserializedValue<string>(compType), read.result);
+                components[compType] = read;
             }
 
             var referenceTypes = new List<Type>();
@@ -82,7 +79,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
             }
 
-            return new DeserializedComponentRegistry(components, mappings);
+            return components;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager,

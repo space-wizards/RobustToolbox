@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -19,24 +18,20 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ITypeSerializer<HashSet<T>, SequenceDataNode>,
         ITypeSerializer<ImmutableHashSet<T>, SequenceDataNode>
     {
-        DeserializationResult ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
+        HashSet<T> ITypeReader<HashSet<T>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context)
         {
             var set = new HashSet<T>();
-            var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context, skipHook);
-
-                set.Add(value);
-                mappings.Add(result);
+                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
             }
 
-            return new DeserializedCollection<HashSet<T>, T>(set, mappings, elements => new HashSet<T>(elements));
+            return set;
         }
 
         ValidationNode ITypeValidator<ImmutableHashSet<T>, SequenceDataNode>.Validate(
@@ -83,7 +78,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return sequence;
         }
 
-        DeserializationResult ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
+        ImmutableHashSet<T> ITypeReader<ImmutableHashSet<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
@@ -91,17 +86,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             ISerializationContext? context)
         {
             var set = ImmutableHashSet.CreateBuilder<T>();
-            var mappings = new List<DeserializationResult>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var (value, result) = serializationManager.ReadWithValueOrThrow<T>(dataNode, context, skipHook);
-
-                set.Add(value);
-                mappings.Add(result);
+                set.Add(serializationManager.Read<T>(dataNode, context, skipHook));
             }
 
-            return new DeserializedCollection<ImmutableHashSet<T>, T>(set.ToImmutable(), mappings, elements => ImmutableHashSet.Create(elements.ToArray()));
+            return set.ToImmutable();
         }
 
         [MustUseReturnValue]

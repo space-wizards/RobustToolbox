@@ -4,7 +4,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -31,17 +30,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 : new ValidatedValueNode(node);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public Type Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
             if (Shortcuts.TryGetValue(node.Value, out var shortcutType))
-                return new DeserializedValue<Type>(shortcutType);
+                return shortcutType;
 
             var type = dependencies.Resolve<IReflectionManager>().GetType(node.Value);
 
             return type == null
                 ? throw new InvalidMappingException($"Type '{node.Value}' not found.")
-                : new DeserializedValue<Type>(type);
+                : type;
         }
 
         public DataNode Write(ISerializationManager serializationManager, Type value, bool alwaysWrite = false,

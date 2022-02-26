@@ -4,7 +4,6 @@ using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -15,7 +14,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
     [TypeSerializer]
     public sealed class AngleSerializer : ITypeSerializer<Angle, ValueDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public Angle Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)
@@ -27,7 +26,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                     CultureInfo.InvariantCulture))
                 : Angle.FromDegrees(double.Parse(nodeContents, CultureInfo.InvariantCulture));
 
-            return new DeserializedValue<Angle>(angle);
+            return angle;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,

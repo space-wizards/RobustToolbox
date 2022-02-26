@@ -18,7 +18,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -923,7 +922,7 @@ namespace Robust.Server.Maps
                 return true;
             }
 
-            public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+            public GridId Read(ISerializationManager serializationManager, ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
                 ISerializationContext? context = null)
@@ -931,7 +930,7 @@ namespace Robust.Server.Maps
                 // This is the code that deserializes the Grids index into the GridId. This has to happen between Grid allocation
                 // and when grids are bound to their entities.
 
-                if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
+                if (node.Value == "null") return GridId.Invalid;
 
                 var val = int.Parse(node.Value);
                 if (val >= Grids.Count)
@@ -940,10 +939,10 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return new DeserializedValue<GridId>(Grids[val].Index);
+                    return Grids[val].Index;
                 }
 
-                return new DeserializedValue<GridId>(GridId.Invalid);
+                return GridId.Invalid;
             }
 
             ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -1009,7 +1008,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            DeserializationResult ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
+            EntityUid ITypeReader<EntityUid, ValueDataNode>.Read(ISerializationManager serializationManager,
                 ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
@@ -1017,7 +1016,7 @@ namespace Robust.Server.Maps
             {
                 if (node.Value == "null")
                 {
-                    return new DeserializedValue<EntityUid>(EntityUid.Invalid);
+                    return EntityUid.Invalid;
                 }
 
                 var val = int.Parse(node.Value);
@@ -1029,7 +1028,7 @@ namespace Robust.Server.Maps
                 }
                 else
                 {
-                    return new DeserializedValue<EntityUid>(entity!.Value);
+                    return entity!.Value;
                 }
             }
 

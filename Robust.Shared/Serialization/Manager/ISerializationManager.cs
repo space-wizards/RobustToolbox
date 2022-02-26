@@ -1,6 +1,5 @@
 using System;
 using JetBrains.Annotations;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -59,16 +58,6 @@ namespace Robust.Shared.Serialization.Manager
 
         #endregion
 
-        /// <summary>
-        ///     Creates a deserialization result from a generic type and its fields,
-        ///     populating the object.
-        /// </summary>
-        /// <param name="fields">The fields to use for deserialization.</param>
-        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <typeparam name="T">The type to populate.</typeparam>
-        /// <returns>A result with the populated type.</returns>
-        DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false) where T : notnull, new();
-
         #region Populate
 
         /// <summary>
@@ -98,22 +87,12 @@ namespace Robust.Shared.Serialization.Manager
         /// <summary>
         ///     Deserializes a node into an object, populating it.
         /// </summary>
-        /// <param name="type">The type of object to populate.</param>
-        /// <param name="node">The node to deserialize.</param>
-        /// <param name="context">The context to use, if any.</param>
-        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <returns>A result with the deserialized object.</returns>
-        DeserializationResult Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
-
-        /// <summary>
-        ///     Deserializes a node into an object, populating it.
-        /// </summary>
         /// <param name="type">The type of object to deserialize into.</param>
         /// <param name="node">The node to deserialize.</param>
         /// <param name="context">The context to use, if any.</param>
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <returns>The deserialized object or null.</returns>
-        public object? ReadValue(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
         /// <summary>
         ///     Deserializes a node into an object of the given <see cref="type"/>,
@@ -135,9 +114,9 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
         /// <typeparam name="T">The type of object to create and populate.</typeparam>
         /// <returns>The deserialized object, or null.</returns>
-        T? ReadValue<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false);
+        T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false);
 
-        DeserializationResult ReadWithTypeSerializer(Type value, Type serializer, DataNode node,
+        object? ReadWithTypeSerializer(Type value, Type serializer, DataNode node,
             ISerializationContext? context = null, bool skipHook = false);
 
         #endregion

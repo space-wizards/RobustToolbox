@@ -3,7 +3,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -22,17 +21,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         ITypeSerializer<SpriteSpecifier, MappingDataNode>,
         ITypeSerializer<SpriteSpecifier, ValueDataNode>
     {
-        DeserializationResult ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
+        Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
-            return new DeserializedValue<Texture>(new Texture(path));
+            var path = serializationManager.Read<ResourcePath>(node, context, skipHook);
+            return new Texture(path);
         }
 
-        DeserializationResult ITypeReader<SpriteSpecifier, ValueDataNode>.Read(
-            ISerializationManager serializationManager, ValueDataNode node,
+        SpriteSpecifier ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager,
+            ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
@@ -52,15 +51,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 "SpriteSpecifier was neither a Texture nor an EntityPrototype but got provided a ValueDataNode");
         }
 
-        DeserializationResult ITypeReader<EntityPrototype, ValueDataNode>.Read(
-            ISerializationManager serializationManager, ValueDataNode node,
+        EntityPrototype ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager,
+            ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
-            return new DeserializedValue<EntityPrototype>(new EntityPrototype(node.Value));
+            return new EntityPrototype(node.Value);
         }
 
-        DeserializationResult ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
+        Rsi ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
@@ -75,13 +74,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context, skipHook);
-            return new DeserializedValue<Rsi>(new Rsi(path, valueDataNode.Value));
+            var path = serializationManager.Read<ResourcePath>(pathNode, context, skipHook);
+            return new Rsi(path, valueDataNode.Value);
         }
 
 
-        DeserializationResult ITypeReader<SpriteSpecifier, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
+        SpriteSpecifier ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager,
+            MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {

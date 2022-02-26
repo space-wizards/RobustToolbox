@@ -46,7 +46,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         public void DeserializeNullableNullTest()
         {
             var node = new ValueDataNode("null");
-            var color = Serialization.ReadValue<Color?>(node);
+            var color = Serialization.Read<Color?>(node);
 
             Assert.That(color, Is.Null);
         }
@@ -55,7 +55,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         public void DeserializeNullableNotNullTest()
         {
             var node = new ValueDataNode("#FFFFFFFF");
-            var color = Serialization.ReadValue<Color?>(node);
+            var color = Serialization.Read<Color?>(node);
 
             Assert.That(color, Is.Not.Null);
             Assert.That(color, Is.EqualTo(Color.White));
@@ -65,14 +65,14 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         public void DeserializeNullTest()
         {
             var node = new ValueDataNode("null");
-            Assert.That(() => Serialization.ReadValue<Color>(node), Throws.Exception);
+            Assert.That(() => Serialization.Read<Color>(node), Throws.Exception);
         }
 
         [Test]
         public void DeserializeNotNullTest()
         {
             var node = new ValueDataNode("#FFFFFFFF");
-            var color = Serialization.ReadValue<Color>(node);
+            var color = Serialization.Read<Color>(node);
 
             Assert.That(color, Is.EqualTo(Color.White));
         }

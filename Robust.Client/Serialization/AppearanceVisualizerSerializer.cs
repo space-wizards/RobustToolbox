@@ -4,7 +4,6 @@ using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -16,7 +15,7 @@ namespace Robust.Client.Serialization
     [TypeSerializer]
     public sealed class AppearanceVisualizerSerializer : ITypeSerializer<AppearanceVisualizer, MappingDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+        public AppearanceVisualizer Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
             ISerializationContext? context = null)

@@ -5,7 +5,6 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -37,22 +36,18 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return mappingNode;
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager,
+        public Dictionary<TKey, TValue> Read(ISerializationManager serializationManager,
             MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
-            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context, skipHook);
-                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context, skipHook);
-
-                dict.Add(keyVal, valueVal!);
-                mappedFields.Add(keyResult, valueResult);
+                dict.Add(serializationManager.Read<TKey>(key, context, skipHook),
+                    serializationManager.Read<TValue>(value, context, skipHook));
             }
 
-            return new DeserializedDictionary<Dictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+            return dict;
         }
 
         ValidationNode ITypeValidator<SortedDictionary<TKey, TValue>, MappingDataNode>.Validate(
@@ -108,46 +103,34 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        DeserializationResult
-            ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
-                ISerializationManager serializationManager, MappingDataNode node,
-                IDependencyCollection dependencies,
-                bool skipHook, ISerializationContext? context)
+        IReadOnlyDictionary<TKey, TValue> ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
+            ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies,
+            bool skipHook, ISerializationContext? context)
         {
             var dict = new Dictionary<TKey, TValue>();
-            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context, skipHook);
-                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context, skipHook);
-
-                dict.Add(keyVal, valueVal!);
-                mappedFields.Add(keyResult, valueResult);
+                dict.Add(serializationManager.Read<TKey>(key, context, skipHook), serializationManager.Read<TValue>(value, context, skipHook));
             }
 
-            return new DeserializedDictionary<IReadOnlyDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => dictInstance);
+            return dict;
         }
 
-        DeserializationResult
-            ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
-                ISerializationManager serializationManager, MappingDataNode node,
-                IDependencyCollection dependencies,
-                bool skipHook, ISerializationContext? context)
+        SortedDictionary<TKey, TValue> ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
+            ISerializationManager serializationManager, MappingDataNode node,
+            IDependencyCollection dependencies,
+            bool skipHook, ISerializationContext? context)
         {
             var dict = new SortedDictionary<TKey, TValue>();
-            var mappedFields = new Dictionary<DeserializationResult, DeserializationResult>();
 
             foreach (var (key, value) in node.Children)
             {
-                var (keyVal, keyResult) = serializationManager.ReadWithValueOrThrow<TKey>(key, context, skipHook);
-                var (valueResult, valueVal) = serializationManager.ReadWithValueCast<TValue>(typeof(TValue), value, context, skipHook);
-
-                dict.Add(keyVal, valueVal!);
-                mappedFields.Add(keyResult, valueResult);
+                dict.Add(serializationManager.Read<TKey>(key, context, skipHook), serializationManager.Read<TValue>(value, context, skipHook));
             }
 
-            return new DeserializedDictionary<SortedDictionary<TKey, TValue>, TKey, TValue>(dict, mappedFields, dictInstance => new SortedDictionary<TKey, TValue>(dictInstance));
+            return dict;
         }
 
         [MustUseReturnValue]

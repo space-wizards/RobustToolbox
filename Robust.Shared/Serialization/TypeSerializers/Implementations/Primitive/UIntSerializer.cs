@@ -2,7 +2,6 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
@@ -21,10 +20,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Primitive
                 : new ErrorNode(node, $"Failed parsing unsigned int value: {node.Value}");
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public uint Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
         {
-            return new DeserializedValue<uint>(uint.Parse(node.Value, CultureInfo.InvariantCulture));
+            return uint.Parse(node.Value, CultureInfo.InvariantCulture);
         }
 
         public DataNode Write(ISerializationManager serializationManager, uint value, bool alwaysWrite = false,

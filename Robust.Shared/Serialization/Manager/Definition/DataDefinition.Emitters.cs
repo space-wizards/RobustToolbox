@@ -11,20 +11,22 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private DeserializeDelegate EmitDeserializationDelegate()
+        private PopulateDelegateSignature EmitPopulateDelegate()
         {
-            DeserializedFieldEntry[] DeserializationDelegate(MappingDataNode mappingDataNode,
-                ISerializationManager serializationManager, ISerializationContext? serializationContext, bool skipHook)
+            object PopulateDelegate(
+                object target,
+                MappingDataNode mappingDataNode,
+                ISerializationManager serializationManager,
+                ISerializationContext? serializationContext,
+                bool skipHook,
+                object?[] defaultValues)
             {
-                var mappedInfo = new DeserializedFieldEntry[BaseFieldDefinitions.Length];
-
                 for (var i = 0; i < BaseFieldDefinitions.Length; i++)
                 {
                     var fieldDefinition = BaseFieldDefinitions[i];
 
                     if (fieldDefinition.Attribute.ServerOnly && !IoCManager.Resolve<INetManager>().IsServer)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(false, fieldDefinition.InheritanceBehavior);
                         continue;
                     }
 
@@ -32,7 +34,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     if (!mapped)
                     {
-                        mappedInfo[i] = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior);
+                        if (fieldDefinition.Attribute.Required)
+                            throw new InvalidOperationException("Required field wasn't mapped.");
                         continue;
                     }
 
@@ -44,52 +47,17 @@ namespace Robust.Shared.Serialization.Manager.Definition
                             skipHook)
                         : serializationManager.Read(type, node, serializationContext, skipHook);
 
-                    var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior, result);
-                    mappedInfo[i] = entry;
-                }
-
-                return mappedInfo;
-            }
-
-            return DeserializationDelegate;
-        }
-
-        private PopulateDelegateSignature EmitPopulateDelegate()
-        {
-            // TODO Serialization: validate mappings array count
-            var constructor =
-                typeof(DeserializedDefinition<>).MakeGenericType(Type).GetConstructor(new[] {Type, typeof(DeserializedFieldEntry[])}) ??
-                throw new NullReferenceException();
-
-            var valueParam = Expression.Parameter(typeof(object), "value");
-            var valueParamCast = Expression.Convert(valueParam, Type);
-
-            var mappingParam = Expression.Parameter(typeof(DeserializedFieldEntry[]), "mapping");
-
-            var newExp = Expression.New(constructor, valueParamCast, mappingParam);
-            var createDefinitionDelegate = Expression.Lambda<CreateDefinitionDelegate>(newExp, valueParam, mappingParam).Compile();
-
-            DeserializationResult PopulateDelegate(
-                object target,
-                DeserializedFieldEntry[] deserializedFields,
-                object?[] defaultValues)
-            {
-                for (var i = 0; i < BaseFieldDefinitions.Length; i++)
-                {
-                    var res = deserializedFields[i];
-                    if (!res.Mapped) continue;
-
                     var defValue = defaultValues[i];
 
-                    if (Equals(res.Result?.RawValue, defValue))
+                    if (Equals(result, defValue))
                     {
                         continue;
                     }
 
-                    FieldAssigners[i](ref target, res.Result?.RawValue);
+                    FieldAssigners[i](ref target, result);
                 }
 
-                return createDefinitionDelegate(target, deserializedFields);
+                return target;
             }
 
             return PopulateDelegate;

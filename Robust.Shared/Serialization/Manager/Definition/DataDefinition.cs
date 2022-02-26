@@ -15,7 +15,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public sealed partial class DataDefinition
     {
-        private readonly DeserializeDelegate _deserialize;
         private readonly PopulateDelegateSignature _populate;
         private readonly SerializeDelegateSignature _serialize;
         private readonly CopyDelegateSignature _copy;
@@ -40,7 +39,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
             BaseFieldDefinitions = fields.ToImmutableArray();
             DefaultValues = fieldDefs.Select(f => f.DefaultValue).ToArray();
 
-            _deserialize = EmitDeserializationDelegate();
             _populate = EmitPopulateDelegate();
             _serialize = EmitSerializeDelegate();
             _copy = EmitCopyDelegate();
@@ -70,20 +68,14 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         internal ImmutableArray<FieldDefinition> BaseFieldDefinitions { get; }
 
-        public DeserializationResult Populate(object target, DeserializedFieldEntry[] fields)
-        {
-            return _populate(target, fields, DefaultValues);
-        }
-
-        public DeserializationResult Populate(
+        public object Populate(
             object target,
             MappingDataNode mapping,
             ISerializationManager serialization,
             ISerializationContext? context,
             bool skipHook)
         {
-            var fields = _deserialize(mapping, serialization, context, skipHook);
-            return _populate(target, fields, DefaultValues);
+            return _populate(target, mapping, serialization, context, skipHook, DefaultValues);
         }
 
         public MappingDataNode Serialize(

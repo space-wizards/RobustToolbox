@@ -7,16 +7,12 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using Robust.Shared.Utility;
-using YamlDotNet.Core;
-using YamlDotNet.RepresentationModel;
 
 namespace Robust.Server.Maps
 {
@@ -28,7 +24,7 @@ namespace Robust.Server.Maps
             throw new NotImplementedException();
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+        public MapChunk Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapChunk? chunk = null)
         {
             var tileNode = (ValueDataNode)node["tiles"];
@@ -82,7 +78,7 @@ namespace Robust.Server.Maps
             chunk.SuppressCollisionRegeneration = false;
             mapManager.SuppressOnTileChanged = false;
 
-            return new DeserializedValue<MapChunk>(chunk);
+            return chunk;
         }
 
         public DataNode Write(ISerializationManager serializationManager, MapChunk value, bool alwaysWrite = false,
@@ -141,7 +137,7 @@ namespace Robust.Server.Maps
             throw new NotImplementedException();
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+        public MapGrid Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, MapGrid? grid = null)
         {
             var info = node.Get<MappingDataNode>("settings");
@@ -174,12 +170,12 @@ namespace Robust.Server.Maps
             foreach (var chunkNode in chunks.Cast<MappingDataNode>())
             {
                 var (chunkOffsetX, chunkOffsetY) =
-                    serializationManager.ReadValueCast<Vector2i>(typeof(Vector2i), chunkNode["ind"], context, skipHook);
+                    serializationManager.Read<Vector2i>(chunkNode["ind"], context, skipHook);
                 var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
                 serializationManager.Read(typeof(MapChunkSerializer), chunkNode, context, skipHook, chunk);
             }
 
-            return new DeserializedValue<MapGrid>(grid);
+            return grid;
         }
 
         public DataNode Write(ISerializationManager serializationManager, MapGrid value, bool alwaysWrite = false,

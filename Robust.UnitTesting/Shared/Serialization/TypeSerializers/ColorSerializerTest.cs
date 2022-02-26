@@ -36,7 +36,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             byte a = 55;
             var str = $"#{(r << 24) + (g << 16) + (b << 8) + a:X8}";
             var node = new ValueDataNode(str);
-            var deserializedColor = Serialization.ReadValueOrThrow<Color>(node);
+            var deserializedColor = Serialization.Read<Color>(node);
             var color = new Color(r, g, b, a);
 
             Assert.That(deserializedColor.ToString(), Is.EqualTo(color.ToString()));

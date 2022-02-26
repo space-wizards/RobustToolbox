@@ -49,7 +49,7 @@ namespace Robust.Client.Serialization
 
             var newNode = node.Copy();
             newNode.Remove("type");
-            return serializationManager.Read(type, newNode, context, skipHook, value);
+            return (AppearanceVisualizer) serializationManager.Read(type, newNode, context, skipHook, value)!;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,

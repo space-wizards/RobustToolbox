@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var top = 4;
             var str = $"{left},{bottom},{right},{top}";
             var node = new ValueDataNode(str);
-            var deserializedBox = Serialization.ReadValueOrThrow<Box2>(node);
+            var deserializedBox = Serialization.Read<Box2>(node);
             var box = new Box2(left, bottom, right, top);
 
             Assert.That(deserializedBox, Is.EqualTo(box));

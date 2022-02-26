@@ -58,31 +58,6 @@ namespace Robust.Shared.Serialization.Manager
 
         #endregion
 
-        #region Populate
-
-        /// <summary>
-        ///     Creates a deserialization result from a generic type and its definition,
-        ///     populating the object.
-        /// </summary>
-        /// <param name="obj">The object to populate.</param>
-        /// <param name="definition">The data to use for deserialization.</param>
-        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <typeparam name="T">The type of <see cref="obj"/> to populate.</typeparam>
-        /// <returns>A result with the populated object.</returns>
-        DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition, bool skipHook = false) where T : notnull, new();
-
-        /// <summary>
-        ///     Creates a deserialization result from an object and its definition,
-        ///     populating the object.
-        /// </summary>
-        /// <param name="obj">The object to populate.</param>
-        /// <param name="definition">The data to use for deserialization.</param>
-        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <returns>A result with the populated object.</returns>
-        DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false);
-
-        #endregion
-
         #region Read
         /// <summary>
         ///     Deserializes a node into an object, populating it.
@@ -95,20 +70,6 @@ namespace Robust.Shared.Serialization.Manager
         /// <returns>The deserialized object or null.</returns>
         public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false,
             object? value = null);
-
-        /// <summary>
-        ///     Deserializes a node into an object of the given <see cref="type"/>,
-        ///     directly casting it to the given generic type <see cref="T"/>.
-        /// </summary>
-        /// <param name="type">The type of object to deserialize into.</param>
-        /// <param name="node">The node to deserialize.</param>
-        /// <param name="context">The context to use, if any.</param>
-        /// <param name="skipHook">Whether or not to skip running <see cref="ISerializationHooks"/></param>
-        /// <param name="value">The value to read into. If none is supplied, a new object will be created.</param>
-        /// <typeparam name="T">The generic type to cast the resulting object to.</typeparam>
-        /// <returns>The deserialized casted object, or null.</returns>
-        T? ReadValueCast<T>(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false,
-            T? value = default);
 
         /// <summary>
         ///     Deserializes a node into a populated object of the given generic type <see cref="T"/>

@@ -4,15 +4,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
 {
     public partial class DataDefinition
     {
-        private delegate DeserializedFieldEntry[] DeserializeDelegate(
+        private delegate object PopulateDelegateSignature(
+            object target,
             MappingDataNode mappingDataNode,
             ISerializationManager serializationManager,
             ISerializationContext? context,
-            bool skipHook);
-
-        private delegate DeserializationResult PopulateDelegateSignature(
-            object target,
-            DeserializedFieldEntry[] deserializationResults,
+            bool skipHook,
             object?[] defaultValues);
 
         private delegate MappingDataNode SerializeDelegateSignature(
@@ -27,10 +24,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
             object target,
             ISerializationManager serializationManager,
             ISerializationContext? context);
-
-        private delegate DeserializationResult CreateDefinitionDelegate(
-            object value,
-            DeserializedFieldEntry[] mappings);
 
         private delegate TValue AccessField<TTarget, TValue>(ref TTarget target);
 

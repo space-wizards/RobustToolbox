@@ -23,14 +23,14 @@ namespace Robust.Shared.Serialization.Manager
 
         private readonly ConcurrentDictionary<(Type value, Type node), ReadDelegate> _readers = new();
 
-        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public T Read<T>(DataNode node, ISerializationContext? context = null, bool skipHook = false, T? value = default) //todo paul this default should be null
         {
-            return (T)Read(typeof(T), node, context, skipHook)!;
+            return (T)Read(typeof(T), node, context, skipHook, value)!;
         }
 
-        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false)
+        public object? Read(Type type, DataNode node, ISerializationContext? context = null, bool skipHook = false, object? value = null)
         {
-            var val = GetOrCreateReader(type, node)(type, node, context, skipHook);
+            var val = GetOrCreateReader(type, node)(type, node, context, skipHook, value);
             ReadNullCheck(type, val);
             return val;
         }
@@ -71,14 +71,13 @@ namespace Robust.Shared.Serialization.Manager
 
                 MethodCallExpression call;
 
-                //todo paul for now, arrays ignore value. maybe change this?
                 if (value.IsArray)
                 {
                     var elementType = value.GetElementType()!;
 
                     switch (node)
                     {
-                        case ValueDataNode when nullable:
+                        case ValueDataNode:
                             call = Expression.Call(
                                 instanceConst,
                                 nameof(ReadArrayValue),
@@ -345,12 +344,13 @@ namespace Robust.Shared.Serialization.Manager
 
         private TValue? ReadSelfSerialize<TValue>(
             ValueDataNode node,
-            InstantiationDelegate<object> instantiator, object? rawValue = null)
+            InstantiationDelegate<object> instantiator,
+            object? rawValue = null)
             where TValue : ISelfSerialize
         {
             if (node.Value == "null")
             {
-                return null;
+                return default; //todo paul this default should be null
             }
 
             var value = (TValue) (rawValue ?? instantiator());
@@ -383,7 +383,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return null;
+                return default; //todo paul this default should be null
             }
 
             return ReadWithTypeReader(node, reader, context, skipHook, value);
@@ -433,7 +433,7 @@ namespace Robust.Shared.Serialization.Manager
         {
             if (node.Value == "null")
             {
-                return null;
+                return default; //todo paul this default should be null
             }
 
             return ReadGenericValue<TValue>(node, instantiator, definition, populate, hooks, context, skipHook, value);
@@ -476,14 +476,15 @@ namespace Robust.Shared.Serialization.Manager
             }
 
             // If we get an empty ValueDataNode we just use an empty mapping
+            // this is needed to fire the setters & getters for default values
+            // todo paul: rethink default values, especially reference types
             var mapping = new MappingDataNode();
 
-            //todo make this just be read
-            var result = definition.Populate(instance, mapping, this, context, skipHook);
+            var result = (TValue)definition.Populate(instance, mapping, this, context, skipHook)!;
 
             if (!skipHook && hooks)
             {
-                ((ISerializationHooks) result.RawValue!).AfterDeserialization();
+                ((ISerializationHooks) result).AfterDeserialization();
             }
 
             return result;
@@ -519,11 +520,11 @@ namespace Robust.Shared.Serialization.Manager
                 ((IPopulateDefaultValues) instance).PopulateDefaultValues();
             }
 
-            var result = definition.Populate(instance, node, this, context, skipHook);
+            var result = (TValue)definition.Populate(instance, node, this, context, skipHook)!;
 
             if (!skipHook && hooks)
             {
-                ((ISerializationHooks) result.RawValue!).AfterDeserialization();
+                ((ISerializationHooks) result).AfterDeserialization();
             }
 
             return result;

@@ -303,32 +303,6 @@ namespace Robust.Shared.Serialization.Manager
             return ValidateNodeWith(typeof(TType), typeof(TSerializer), node, context);
         }
 
-        public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition, bool skipHook = false)
-            where T : notnull, new()
-        {
-            return PopulateDataDefinition(obj, (IDeserializedDefinition) definition, skipHook);
-        }
-
-        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false)
-        {
-            if (!TryGetDefinition(obj.GetType(), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
-
-            if (obj is IPopulateDefaultValues populateDefaultValues)
-            {
-                populateDefaultValues.PopulateDefaultValues();
-            }
-
-            var res = dataDefinition.Populate(obj, definition.Mapping);
-
-            if (!skipHook && res.RawValue is ISerializationHooks serializationHooksAfter)
-            {
-                serializationHooksAfter.AfterDeserialization();
-            }
-
-            return res;
-        }
-
         internal DataDefinition? GetDefinition(Type type)
         {
             return DataDefinitions.TryGetValue(type, out var dataDefinition)

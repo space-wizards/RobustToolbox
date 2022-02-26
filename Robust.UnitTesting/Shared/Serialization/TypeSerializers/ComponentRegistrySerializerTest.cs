@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 
             var mapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>();
 
-            var deserializedRegistry = Serialization.ReadValueOrThrow<ComponentRegistry>(mapping);
+            var deserializedRegistry = Serialization.Read<ComponentRegistry>(mapping);
 
             Assert.That(deserializedRegistry.Count, Is.EqualTo(1));
             Assert.That(deserializedRegistry.ContainsKey("Test"));

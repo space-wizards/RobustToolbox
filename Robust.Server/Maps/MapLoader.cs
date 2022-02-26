@@ -590,8 +590,7 @@ namespace Robust.Server.Maps
 
                 foreach (var yamlGrid in yamlGrids.Cast<MappingDataNode>())
                 {
-                    var res = _serializationManager.Read(typeof(MapGrid), yamlGrid, this);
-                    Grids.Add((MapGrid) res.RawValue!);
+                    Grids.Add(_serializationManager.Read<MapGrid>(yamlGrid, this));
                 }
             }
 
@@ -884,11 +883,9 @@ namespace Robust.Server.Maps
 
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    var mapData = (IDeserializedDefinition) serializationManager.Read(
+                    data = (IComponent) serializationManager.Read(
                         factory.GetRegistration(componentName).Type,
-                        mapping, this);
-                    var newData = serializationManager.PopulateDataDefinition(data, mapData);
-                    data = (IComponent) newData.RawValue!;
+                        mapping, this, value: data)!;
                 }
 
                 return data;
@@ -1024,7 +1021,7 @@ namespace Robust.Server.Maps
                 if (val >= Entities.Count || !UidEntityMap.ContainsKey(val) || !Entities.TryFirstOrNull(e => e == UidEntityMap[val], out var entity))
                 {
                     Logger.ErrorS("map", "Error in map file: found local entity UID '{0}' which does not exist.", val);
-                    return null!;
+                    return EntityUid.Invalid;
                 }
                 else
                 {

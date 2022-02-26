@@ -20,7 +20,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         public ResourcePath Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, ResourcePath? value = default)
         {
             return new ResourcePath(node.Value);
         }

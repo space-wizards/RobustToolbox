@@ -33,9 +33,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         }
 
         public HashSet<string> Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            HashSet<string>? set = null)
         {
-            var set = new HashSet<string>();
+            set ??= new HashSet<string>();
 
             foreach (var dataNode in node.Sequence)
             {

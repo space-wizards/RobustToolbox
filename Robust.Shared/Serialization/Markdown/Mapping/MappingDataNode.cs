@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -9,7 +10,7 @@ using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Serialization.Markdown.Mapping
 {
-    public sealed class MappingDataNode : DataNode<MappingDataNode>
+    public sealed class MappingDataNode : DataNode<MappingDataNode>, IDictionary<DataNode, DataNode>
     {
         // To fetch nodes by key name with YAML, we NEED a YamlScalarNode.
         // We use a thread local one to avoid allocating one every fetch, since we just replace the inner value.
@@ -64,14 +65,39 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return this;
         }
 
+        public bool ContainsKey(DataNode key) => _children.ContainsKey(key);
+
+        bool IDictionary<DataNode, DataNode>.Remove(DataNode key) => _children.Remove(key);
+
+        public bool TryGetValue(DataNode key, [NotNullWhen(true)] out DataNode? value) => TryGet(key, out value);
+
+        public DataNode this[DataNode key]
+        {
+            get => _children[key];
+            set => _children[key] = value;
+        }
+
+        public ICollection<DataNode> Keys => _children.Keys;
+        public ICollection<DataNode> Values => _children.Values;
+
         public DataNode Get(DataNode key)
         {
             return _children[key];
         }
 
+        public T Get<T>(DataNode key) where T : DataNode
+        {
+            return (T) Get(key);
+        }
+
         public DataNode Get(string key)
         {
             return Get(GetFetchNode(key));
+        }
+
+        public T Get<T>(string key) where T : DataNode
+        {
+            return Get<T>(GetFetchNode(key));
         }
 
         public bool TryGet(DataNode key, [NotNullWhen(true)] out DataNode? node)
@@ -85,7 +111,20 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return false;
         }
 
+        public bool TryGet<T>(DataNode key, [NotNullWhen(true)] out T? node) where T : DataNode
+        {
+            node = null;
+            if (!TryGet(key, out var rawNode)) return false;
+            node = (T) rawNode;
+            return true;
+        }
+
         public bool TryGet(string key, [NotNullWhen(true)] out DataNode? node)
+        {
+            return TryGet(GetFetchNode(key), out node);
+        }
+
+        public bool TryGet<T>(string key, [NotNullWhen(true)] out T? node) where T : DataNode
         {
             return TryGet(GetFetchNode(key), out node);
         }
@@ -99,6 +138,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
         {
             return Has(GetFetchNode(key));
         }
+
+        void IDictionary<DataNode, DataNode>.Add(DataNode key, DataNode value) => _children.Add(key, value);
 
         public MappingDataNode Remove(DataNode key)
         {
@@ -192,6 +233,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return mappingNode;
         }
 
+        public IEnumerator<KeyValuePair<DataNode, DataNode>> GetEnumerator() => _children.GetEnumerator();
+
         public override int GetHashCode()
         {
             var code = new HashCode();
@@ -203,5 +246,26 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
 
             return code.ToHashCode();
         }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(KeyValuePair<DataNode, DataNode> item) => _children.Add(item.Key, item.Value);
+
+        public void Clear() => _children.Clear();
+
+        public bool Contains(KeyValuePair<DataNode, DataNode> item) =>
+            ((IDictionary<DataNode, DataNode>) _children).Contains(item);
+
+        public void CopyTo(KeyValuePair<DataNode, DataNode>[] array, int arrayIndex) =>
+            ((IDictionary<DataNode, DataNode>) _children).CopyTo(array, arrayIndex);
+
+        public bool Remove(KeyValuePair<DataNode, DataNode> item) =>
+            ((IDictionary<DataNode, DataNode>) _children).Remove(item);
+
+        public int Count => _children.Count;
+        public bool IsReadOnly => false;
     }
 }

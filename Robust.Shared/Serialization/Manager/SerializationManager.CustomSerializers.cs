@@ -14,7 +14,8 @@ namespace Robust.Shared.Serialization.Manager
         private delegate object? ReadSerializerDelegate(
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false);
+            bool skipHook = false,
+            object? value = null);
 
         private delegate DataNode WriteSerializerDelegate(
             object value,
@@ -126,24 +127,26 @@ namespace Robust.Shared.Serialization.Manager
         }
 
         private object? ReadWithSerializerRaw(
-            Type value,
+            Type type,
             DataNode node,
             Type serializer,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? value = null)
         {
-            return GetOrCreateReadSerializerDelegate(value, node.GetType(), serializer)(node, context, skipHook);
+            return GetOrCreateReadSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook, value);
         }
 
         private T ReadWithSerializer<T, TNode, TSerializer>(
             TNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            T? value = default)
             where TSerializer : ITypeReader<T, TNode>
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Read(this, node, DependencyCollection, skipHook, context);
+            return serializer.Read(this, node, DependencyCollection, skipHook, context, value);
         }
 
         private DataNode WriteWithSerializerRaw(

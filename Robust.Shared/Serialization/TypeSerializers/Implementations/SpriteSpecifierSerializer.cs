@@ -24,7 +24,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, Texture? value)
         {
             var path = serializationManager.Read<ResourcePath>(node, context, skipHook);
             return new Texture(path);
@@ -33,17 +33,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         SpriteSpecifier ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
         {
             try
             {
-                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Texture?)value);
             }
             catch { /* ignored */ }
 
             try
             {
-                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (EntityPrototype?) value);
             }
             catch { /* ignored */ }
 
@@ -54,7 +54,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         EntityPrototype ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, EntityPrototype? value)
         {
             return new EntityPrototype(node.Value);
         }
@@ -62,7 +62,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         Rsi ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, Rsi? value)
         {
             if (!node.TryGet("sprite", out var pathNode))
             {
@@ -82,9 +82,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         SpriteSpecifier ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
         {
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Rsi?) value);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,

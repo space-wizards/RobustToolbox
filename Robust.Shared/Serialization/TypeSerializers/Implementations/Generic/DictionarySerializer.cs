@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -37,9 +38,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         }
 
         public Dictionary<TKey, TValue> Read(ISerializationManager serializationManager,
-            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context)
+            MappingDataNode node, IDependencyCollection dependencies, bool skipHook, ISerializationContext? context,
+            Dictionary<TKey, TValue>? dict)
         {
-            var dict = new Dictionary<TKey, TValue>();
+            dict ??= new Dictionary<TKey, TValue>();
 
             foreach (var (key, value) in node.Children)
             {
@@ -103,11 +105,15 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return InterfaceWrite(serializationManager, value.ToDictionary(k => k.Key, v => v.Value), alwaysWrite, context);
         }
 
-        IReadOnlyDictionary<TKey, TValue> ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+        IReadOnlyDictionary<TKey, TValue>
+            ITypeReader<IReadOnlyDictionary<TKey, TValue>, MappingDataNode>.Read(
+                ISerializationManager serializationManager, MappingDataNode node,
+                IDependencyCollection dependencies,
+                bool skipHook, ISerializationContext? context, IReadOnlyDictionary<TKey, TValue>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyDictionary<TKey, TValue>)}. Ignoring...");
+
             var dict = new Dictionary<TKey, TValue>();
 
             foreach (var (key, value) in node.Children)
@@ -118,12 +124,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             return dict;
         }
 
-        SortedDictionary<TKey, TValue> ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
-            IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+        SortedDictionary<TKey, TValue>
+            ITypeReader<SortedDictionary<TKey, TValue>, MappingDataNode>.Read(
+                ISerializationManager serializationManager, MappingDataNode node,
+                IDependencyCollection dependencies,
+                bool skipHook, ISerializationContext? context, SortedDictionary<TKey, TValue>? dict)
         {
-            var dict = new SortedDictionary<TKey, TValue>();
+            dict ??= new SortedDictionary<TKey, TValue>();
 
             foreach (var (key, value) in node.Children)
             {

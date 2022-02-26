@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using JetBrains.Annotations;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
@@ -62,9 +63,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context)
+            ISerializationContext? context, List<T>? list)
         {
-            var list = new List<T>();
+            list ??= new List<T>();
 
             foreach (var dataNode in node.Sequence)
             {
@@ -115,8 +116,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyList<T> ITypeReader<IReadOnlyList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, IReadOnlyList<T>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlySet<T>)}. Ignoring...");
+
             var list = new List<T>();
 
             foreach (var dataNode in node.Sequence)
@@ -130,8 +134,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         IReadOnlyCollection<T> ITypeReader<IReadOnlyCollection<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, IReadOnlyCollection<T>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(IReadOnlyCollection<T>)}. Ignoring...");
+
             var list = new List<T>();
 
             foreach (var dataNode in node.Sequence)
@@ -145,8 +152,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Generic
         ImmutableList<T> ITypeReader<ImmutableList<T>, SequenceDataNode>.Read(
             ISerializationManager serializationManager, SequenceDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, ImmutableList<T>? rawValue)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(ImmutableList<T>)}. Ignoring...");
+
             var list = ImmutableList.CreateBuilder<T>();
 
             foreach (var dataNode in node.Sequence)

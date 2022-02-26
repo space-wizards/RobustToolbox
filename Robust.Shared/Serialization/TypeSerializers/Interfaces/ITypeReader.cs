@@ -10,6 +10,6 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces
             TNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null);
+            ISerializationContext? context = null, TType? value = default);
     }
 }

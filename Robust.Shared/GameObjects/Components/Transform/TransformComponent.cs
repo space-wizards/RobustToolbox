@@ -210,7 +210,11 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = _entMan.GetComponent<TransformComponent>(value);
+            set
+            {
+                if (value == _parent) return;
+                Parent = _entMan.GetComponent<TransformComponent>(value);
+            }
         }
 
         /// <summary>

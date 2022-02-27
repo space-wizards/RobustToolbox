@@ -282,7 +282,7 @@ namespace Robust.Shared.GameObjects
 
             var transform = GetComponent<TransformComponent>(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
-            EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
+            EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(uid), false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var child in transform._children.ToArray())

@@ -138,7 +138,8 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
             eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
 
-            _entityManager.EntityDeleted += OnEntityDeleted;
+            eventBus.SubscribeEvent<EntityTerminatingEvent>(EventSource.Local, this, OnTerminate);
+
             _entityManager.EntityInitialized += OnEntityInit;
             _mapManager.MapCreated += OnMapCreated;
             Started = true;
@@ -150,7 +151,6 @@ namespace Robust.Shared.GameObjects
             if (!Started)
                 return;
 
-            _entityManager.EntityDeleted -= OnEntityDeleted;
             _entityManager.EntityInitialized -= OnEntityInit;
             _mapManager.MapCreated -= OnMapCreated;
             Started = false;
@@ -237,12 +237,12 @@ namespace Robust.Shared.GameObjects
             return _entityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(aabb);
         }
 
-        private void OnEntityDeleted(object? sender, EntityUid uid)
+        private void OnTerminate(EntityTerminatingEvent args)
         {
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(uid);
-            var lookup = GetLookupNew(uid, xform, xformQuery);
-            RemoveFromEntityTree(lookup, xform, xformQuery);
+            var xform = xformQuery.GetComponent(args.Owner);
+            var lookup = GetLookupNew(args.Owner, xform, xformQuery);
+            RemoveFromEntityTree(lookup, xform, xformQuery, false);
         }
 
         private void OnEntityInit(object? sender, EntityUid uid)
@@ -305,7 +305,7 @@ namespace Robust.Shared.GameObjects
             AddToEntityTree(lookup, args.Component, aabb, xformQuery);
         }
 
-        private void OnParentChange(EntParentChangedMessage args)
+        private void OnParentChange(ref EntParentChangedMessage args)
         {
             EntityLookupComponent? oldLookup = null;
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
@@ -402,13 +402,16 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Recursively iterates through this entity's children and removes them from the entitylookupcomponent.
         /// </summary>
-        private void RemoveFromEntityTree(EntityLookupComponent? lookup, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        private void RemoveFromEntityTree(EntityLookupComponent? lookup, TransformComponent xform, EntityQuery<TransformComponent> xformQuery, bool recursive = true)
         {
             // TODO: Move this out of the loop
             if (lookup == null) return;
 
-            var childEnumerator = xform.ChildEnumerator;
             lookup.Tree.Remove(xform.Owner);
+
+            if (!recursive) return;
+
+            var childEnumerator = xform.ChildEnumerator;
 
             while (childEnumerator.MoveNext(out var child))
             {

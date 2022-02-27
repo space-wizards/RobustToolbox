@@ -21,7 +21,7 @@ internal interface INetworkedMapManager : IMapManagerInternal
     void ApplyGameStatePost(GameStateMapData? data);
 }
 
-internal class NetworkedMapManager : MapManager, INetworkedMapManager
+internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
     private readonly Dictionary<GridId, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
     private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();
@@ -41,19 +41,19 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
         _chunkDeletionHistory.Remove(gridId);
     }
 
-    public override void ChunkRemoved(MapChunk chunk)
+    public override void ChunkRemoved(GridId gridId, MapChunk chunk)
     {
-        base.ChunkRemoved(chunk);
-        if (!_chunkDeletionHistory.TryGetValue(chunk.GridId, out var chunks))
+        base.ChunkRemoved(gridId, chunk);
+        if (!_chunkDeletionHistory.TryGetValue(gridId, out var chunks))
         {
             chunks = new List<(GameTick tick, Vector2i indices)>();
-            _chunkDeletionHistory[chunk.GridId] = chunks;
+            _chunkDeletionHistory[gridId] = chunks;
         }
 
         chunks.Add((GameTiming.CurTick, chunk.Indices));
 
         // Seemed easier than having this method on GridFixtureSystem
-        if (!TryGetGrid(chunk.GridId, out var grid) ||
+        if (!TryGetGrid(gridId, out var grid) ||
             !EntityManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
             chunk.Fixtures.Count == 0)
             return;
@@ -308,7 +308,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
                         for (ushort y = 0; y < grid.ChunkSize; y++)
                         {
                             var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTileRef(x, y).Tile != tile)
+                            if (chunk.GetTile(x, y) != tile)
                             {
                                 chunk.SetTile(x, y, tile);
                                 modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
@@ -324,7 +324,7 @@ internal class NetworkedMapManager : MapManager, INetworkedMapManager
                 {
                     var chunk = grid.GetChunk(chunkData.Index);
                     chunk.SuppressCollisionRegeneration = false;
-                    chunk.RegenerateCollision();
+                    grid.RegenerateCollision(chunk);
                 }
 
                 foreach (var chunkData in gridDatum.DeletedChunkData)

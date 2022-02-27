@@ -402,23 +402,18 @@ namespace Robust.Shared.Physics
         public void Refilter(Fixture fixture)
         {
             // TODO: Call this method whenever collisionmask / collisionlayer changes
-            if (fixture.Body == null) return;
+            // TODO: This should never becalled when body is null.
+            DebugTools.Assert(fixture.Body != null);
+            if (fixture.Body == null)
+            {
+                return;
+            }
 
             var body = fixture.Body;
 
-            var node = body.Contacts.First;
-
-            while (node != null)
+            foreach (var (_, contact) in fixture.Contacts)
             {
-                var contact = node.Value;
-                node = node.Next;
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixtureA == fixture || fixtureB == fixture)
-                {
-                    contact.FilterFlag = true;
-                }
+                contact.FilterFlag = true;
             }
 
             var broadphase = body.Broadphase;
@@ -426,7 +421,7 @@ namespace Robust.Shared.Physics
             // If nullspace or whatever ignore it.
             if (broadphase == null) return;
 
-            TouchProxies(EntityManager.GetComponent<TransformComponent>(fixture.Body.Owner).MapID, broadphase, fixture);
+            TouchProxies(Transform(fixture.Body.Owner).MapID, broadphase, fixture);
         }
 
         private void TouchProxies(MapId mapId, BroadphaseComponent broadphase, Fixture fixture)

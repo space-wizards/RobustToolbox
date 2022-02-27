@@ -659,6 +659,7 @@ namespace Robust.Server
 
             using (TickUsage.WithLabels("Timers").NewTimer())
             {
+                _consoleHost.CommandBufferExecute();
                 timerManager.UpdateTimers(frameEventArgs);
             }
 

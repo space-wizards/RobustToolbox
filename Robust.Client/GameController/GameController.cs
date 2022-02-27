@@ -455,6 +455,7 @@ namespace Robust.Client
         private void Tick(FrameEventArgs frameEventArgs)
         {
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            _console.CommandBufferExecute();
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
 
@@ -510,7 +511,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
-            logManager.GetSawmill("loc").Level = LogLevel.Error;
+            logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG

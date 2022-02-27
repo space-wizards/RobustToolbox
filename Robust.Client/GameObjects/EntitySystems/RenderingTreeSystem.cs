@@ -113,12 +113,18 @@ namespace Robust.Client.GameObjects
 
         private void AnythingMoved(ref MoveEvent args)
         {
-            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+            var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
+            var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
-            AnythingMovedSubHandler(args.Sender, xforms);
+            AnythingMovedSubHandler(args.Sender, xformQuery, pointQuery, spriteQuery);
         }
 
-        private void AnythingMovedSubHandler(EntityUid uid, EntityQuery<TransformComponent> xforms)
+        private void AnythingMovedSubHandler(
+            EntityUid uid,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SpriteComponent> spriteQuery)
         {
             // To avoid doing redundant updates (and we don't need to update a grid's children ever)
             if (!_checkedChildren.Add(uid) || EntityManager.HasComponent<RenderingTreeComponent>(uid)) return;
@@ -127,17 +133,19 @@ namespace Robust.Client.GameObjects
             // WHATEVER YOU DO, DON'T REPLACE THIS WITH SPAMMING EVENTS UNLESS YOU HAVE A GUARANTEE IT WON'T LAG THE GC.
             // (Struct-based events ok though)
             // Ironically this was lagging the GC lolz
-            if (EntityManager.TryGetComponent(uid, out SpriteComponent? sprite))
+            if (spriteQuery.TryGetComponent(uid, out var sprite))
                 QueueSpriteUpdate(sprite);
 
-            if (EntityManager.TryGetComponent(uid, out PointLightComponent? light))
+            if (pointQuery.TryGetComponent(uid, out var light))
                 QueueLightUpdate(light);
 
-            if (!xforms.TryGetComponent(uid, out var xform)) return;
+            if (!xformQuery.TryGetComponent(uid, out var xform)) return;
 
-            foreach (var child in xform.ChildEntities)
+            var childEnumerator = xform.ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
             {
-                AnythingMovedSubHandler(child, xforms);
+                AnythingMovedSubHandler(child.Value, xformQuery, pointQuery, spriteQuery);
             }
         }
 
@@ -369,13 +377,10 @@ namespace Robust.Client.GameObjects
         private Box2 SpriteAabbFunc(in SpriteComponent value)
         {
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
-
             var xform = xforms.GetComponent(value.Owner);
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
-            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
-            var tree = GetRenderTree(value.Owner, xforms);
 
-            return tree == null ? bounds.CalcBoundingBox() : xforms.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(bounds);
+            return SpriteAabbFunc(value, worldPos, worldRot, xforms);
         }
 
         private Box2 LightAabbFunc(in PointLightComponent value)
@@ -392,7 +397,7 @@ namespace Robust.Client.GameObjects
 
         private Box2 SpriteAabbFunc(SpriteComponent value, Vector2 worldPos, Angle worldRot, EntityQuery<TransformComponent> xforms)
         {
-            var bounds = new Box2Rotated(value.CalculateBoundingBox(worldPos), worldRot, worldPos);
+            var bounds = value.CalculateRotatedBoundingBox(worldPos, worldRot);
             var tree = GetRenderTree(value.Owner, xforms);
 
             return tree == null ? bounds.CalcBoundingBox() : xforms.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(bounds);

@@ -109,13 +109,13 @@ namespace Robust.Client.Console
             if (AvailableCommands.ContainsKey(commandName))
             {
                 var playerManager = IoCManager.Resolve<IPlayerManager>();
-
+#if !DEBUG
                 if (!_conGroup.CanCommand(commandName) && playerManager.LocalPlayer?.Session.Status > SessionStatus.Connecting)
                 {
                     WriteError(null, $"Insufficient perms for command: {commandName}");
                     return;
                 }
-
+#endif
                 var command1 = AvailableCommands[commandName];
                 args.RemoveAt(0);
                 var shell = new ConsoleShell(this, null);

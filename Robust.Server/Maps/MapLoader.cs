@@ -24,7 +24,6 @@ using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.Core;
 using YamlDotNet.RepresentationModel;
@@ -44,7 +43,6 @@ namespace Robust.Server.Maps
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly ITileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IServerEntityManagerInternal _serverEntityManager = default!;
-        [Dependency] private readonly IPauseManager _pauseManager = default!;
         [Dependency] private readonly IPrototypeManager _prototypeManager = default!;
 
         public event Action<YamlStream, string>? LoadedMapData;
@@ -54,7 +52,7 @@ namespace Robust.Server.Maps
         {
             var grid = _mapManager.GetGrid(gridId);
 
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _prototypeManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager);
             context.RegisterGrid(grid);
             var root = context.Serialize();
             var document = new YamlDocument(root);
@@ -100,7 +98,7 @@ namespace Robust.Server.Maps
                     throw new InvalidDataException("Cannot instance map with multiple grids as blueprint.");
                 }
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
                 grid = context.Grids[0];
@@ -120,7 +118,7 @@ namespace Robust.Server.Maps
                     _serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityLifeStage = EntityLifeStage.MapInitialized;
                 }
             }
-            else if (_pauseManager.IsMapInitialized(mapId))
+            else if (_mapManager.IsMapInitialized(mapId))
             {
                 foreach (var entity in context.Entities)
                 {
@@ -128,7 +126,7 @@ namespace Robust.Server.Maps
                 }
             }
 
-            if (_pauseManager.IsMapPaused(mapId))
+            if (_mapManager.IsMapPaused(mapId))
             {
                 foreach (var entity in context.Entities)
                 {
@@ -141,7 +139,7 @@ namespace Robust.Server.Maps
         public void SaveMap(MapId mapId, string yamlPath)
         {
             Logger.InfoS("map", $"Saving map {mapId} to {yamlPath}");
-            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager, _prototypeManager);
+            var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _prototypeManager);
             foreach (var grid in _mapManager.GetAllMapGrids(mapId))
             {
                 context.RegisterGrid(grid);
@@ -207,7 +205,7 @@ namespace Robust.Server.Maps
 
                 LoadedMapData?.Invoke(data.Stream, resPath.ToString());
 
-                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager, _pauseManager,
+                var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, (YamlMappingNode) data.RootNode, mapId, options);
                 context.Deserialize();
 
@@ -226,7 +224,6 @@ namespace Robust.Server.Maps
             private readonly IMapManagerInternal _mapManager;
             private readonly ITileDefinitionManager _tileDefinitionManager;
             private readonly IServerEntityManagerInternal _serverEntityManager;
-            private readonly IPauseManager _pauseManager;
             private readonly IPrototypeManager _prototypeManager;
 
             private readonly MapLoadOptions? _loadOptions;
@@ -260,12 +257,11 @@ namespace Robust.Server.Maps
             public bool MapIsPostInit { get; private set; }
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
-                IServerEntityManagerInternal entities, IPauseManager pauseManager, IPrototypeManager prototypeManager)
+                IServerEntityManagerInternal entities, IPrototypeManager prototypeManager)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
-                _pauseManager = pauseManager;
                 _prototypeManager = prototypeManager;
 
                 RootNode = new YamlMappingNode();
@@ -283,13 +279,12 @@ namespace Robust.Server.Maps
 
             public MapContext(IMapManagerInternal maps, ITileDefinitionManager tileDefs,
                 IServerEntityManagerInternal entities,
-                IPauseManager pauseManager, IPrototypeManager prototypeManager,
+                IPrototypeManager prototypeManager,
                 YamlMappingNode node, MapId targetMapId, MapLoadOptions options)
             {
                 _mapManager = maps;
                 _tileDefinitionManager = tileDefs;
                 _serverEntityManager = entities;
-                _pauseManager = pauseManager;
                 _loadOptions = options;
 
                 RootNode = node;
@@ -612,7 +607,7 @@ namespace Robust.Server.Maps
 
                     if (!MapIsPostInit)
                     {
-                        _pauseManager.AddUninitializedMap(TargetMap);
+                        _mapManager.AddUninitializedMap(TargetMap);
                     }
                 }
             }
@@ -719,7 +714,7 @@ namespace Robust.Server.Maps
                 var isPostInit = false;
                 foreach (var grid in Grids)
                 {
-                    if (_pauseManager.IsMapInitialized(grid.ParentMapId))
+                    if (_mapManager.IsMapInitialized(grid.ParentMapId))
                     {
                         isPostInit = true;
                         break;

@@ -70,7 +70,7 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve<IIslandManager>().Initialize();
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
-            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange, true);
+            configManager.OnValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
         private void HandlePhysicsMapInit(EntityUid uid, SharedPhysicsMapComponent component, ComponentInit args)
@@ -81,6 +81,7 @@ namespace Robust.Shared.GameObjects
             component.ContactManager = new();
             component.ContactManager.Initialize();
             component.ContactManager.MapId = component.MapId;
+            component.AutoClearForces = IoCManager.Resolve<IConfigurationManager>().GetCVar(CVars.AutoClearForces);
 
             component.ContactManager.KinematicControllerCollision += KinematicControllerCollision;
         }

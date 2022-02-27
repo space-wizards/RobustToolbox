@@ -22,6 +22,7 @@ namespace Robust.Client.Utility
                 .Texture;
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static RSI.State GetState(this SpriteSpecifier.Rsi rsiSpecifier, IResourceCache cache)
         {
             if (cache.TryGetResource<RSIResource>(
@@ -36,6 +37,7 @@ namespace Robust.Client.Utility
             return SpriteComponent.GetFallbackState(cache);
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static Texture Frame0(this SpriteSpecifier specifier)
         {
             return specifier.RsiStateLike().Default;
@@ -80,6 +82,7 @@ namespace Robust.Client.Utility
             return specifier.RsiStateLike();
         }
 
+        [Obsolete("Use SpriteSystem")]
         public static IRsiStateLike RsiStateLike(this SpriteSpecifier specifier)
         {
             var resC = IoCManager.Resolve<IResourceCache>();

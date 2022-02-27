@@ -5,6 +5,8 @@ using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Serialization;
 using static Robust.Shared.Containers.ContainerManagerComponent;
 
@@ -131,10 +133,49 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
+                    // If an entity is currently in the shadow realm, it means we probably left PVS and are now getting
+                    // back into range. We do not want to directly insert this entity, as IF the container and entity
+                    // transform states did not get sent simultaneously, the entity's transform will be modified by the
+                    // insert operation. This means it will then be reset to the shadow realm, causing it to be ejected
+                    // from the container. It would then subsequently be parented to the container without ever being
+                    // re-inserted, leading to the client seeing what should be hidden entities attached to
+                    // containers/players.
+                    if (Transform(entity).MapID == MapId.Nullspace)
+                    {
+                        AddExpectedEntity(entity, container);
+                        continue;
+                    }
+
                     if (!container.ContainedEntities.Contains(entity))
                         container.Insert(entity);
                 }
             }
+        }
+
+        protected override void HandleParentChanged(ref EntParentChangedMessage message)
+        {
+            base.HandleParentChanged(ref message);
+
+            // If an entity warped in from null-space (i.e., re-entered PVS) and got attached to a container, do the same checks as for newly initialized entities.
+            if (message.OldParent != null && message.OldParent.Value.IsValid())
+                return;
+
+            if (!ExpectedEntities.TryGetValue(message.Entity, out var container))
+                return;
+
+            if (Transform(message.Entity).ParentUid != container.Owner)
+            {
+                // This container is expecting an entity... but it got parented to some other entity???
+                // Ah well, the sever should send a new container state that updates expected entities so just ignore it for now.
+                return;
+            }
+
+            RemoveExpectedEntity(message.Entity);
+
+            if (container.Deleted)
+                return;
+
+            container.Insert(message.Entity);
         }
 
         private IContainer ContainerFactory(ContainerManagerComponent component, string containerType, string id)
@@ -169,68 +210,101 @@ namespace Robust.Client.GameObjects
         public override void FrameUpdate(float frameTime)
         {
             base.FrameUpdate(frameTime);
+            var pointQuery = EntityManager.GetEntityQuery<PointLightComponent>();
+            var spriteQuery = EntityManager.GetEntityQuery<SpriteComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var toUpdate in _updateQueue)
             {
-                if (EntityManager.Deleted(toUpdate))
-                {
+                if (Deleted(toUpdate))
                     continue;
-                }
 
-                UpdateEntityRecursively(toUpdate);
+                UpdateEntityRecursively(toUpdate, xformQuery, pointQuery, spriteQuery);
             }
 
             _updateQueue.Clear();
         }
 
-        private void UpdateEntityRecursively(EntityUid entity)
+        private void UpdateEntityRecursively(
+            EntityUid entity,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SpriteComponent> spriteQuery)
         {
-            // TODO: Since we are recursing down,
-            // we could cache ShowContents data here to speed it up for children.
-            // Am lazy though.
-            UpdateEntity(entity);
+            // Recursively go up parents and containers to see whether both sprites and lights need to be occluded
+            // Could maybe optimise this more by checking nearest parent that has sprite / light and whether it's container
+            // occluded but this probably isn't a big perf issue.
+            var xform = xformQuery.GetComponent(entity);
+            var parent = xform.ParentUid;
+            var child = entity;
+            var spriteOccluded = false;
+            var lightOccluded = false;
 
-            foreach (var child in EntityManager.GetComponent<TransformComponent>(entity).Children)
+            while (parent.IsValid() && !spriteOccluded && !lightOccluded)
             {
-                UpdateEntityRecursively(child.Owner);
+                var parentXform = xformQuery.GetComponent(parent);
+                if (TryComp<ContainerManagerComponent>(parent, out var manager) && manager.TryGetContainer(child, out var container))
+                {
+                    spriteOccluded = spriteOccluded || !container.ShowContents;
+                    lightOccluded = lightOccluded || container.OccludesLight;
+                }
+
+                child = parent;
+                parent = parentXform.ParentUid;
             }
+
+            // Alright so
+            // This is the CBT bit.
+            // The issue is we need to go through the children and re-check whether they are or are not contained.
+            // if they are contained then the occlusion values may need updating for all those children
+            UpdateEntity(entity, xform, xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
         }
 
-        private void UpdateEntity(EntityUid entity)
+        private void UpdateEntity(
+            EntityUid entity,
+            TransformComponent xform,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PointLightComponent> pointQuery,
+            EntityQuery<SpriteComponent> spriteQuery,
+            bool spriteOccluded,
+            bool lightOccluded)
         {
-            if (EntityManager.TryGetComponent(entity, out SpriteComponent? sprite))
+            if (spriteQuery.TryGetComponent(entity, out var sprite))
             {
-                sprite.ContainerOccluded = false;
-
-                // We have to recursively scan for containers upwards in case of nested containers.
-                var tempParent = entity;
-                while (tempParent.TryGetContainer(out var container))
-                {
-                    if (!container.ShowContents)
-                    {
-                        sprite.ContainerOccluded = true;
-                        break;
-                    }
-
-                    tempParent = container.Owner;
-                }
+                sprite.ContainerOccluded = spriteOccluded;
             }
 
-            if (EntityManager.TryGetComponent(entity, out PointLightComponent? light))
+            if (pointQuery.TryGetComponent(entity, out var light))
             {
-                light.ContainerOccluded = false;
+                light.ContainerOccluded = lightOccluded;
+            }
 
-                // We have to recursively scan for containers upwards in case of nested containers.
-                var tempParent = entity;
-                while (tempParent.TryGetContainer(out var container))
+            var childEnumerator = xform.ChildEnumerator;
+
+            // Try to avoid TryComp if we already know stuff is occluded.
+            if ((!spriteOccluded || !lightOccluded) && TryComp<ContainerManagerComponent>(entity, out var manager))
+            {
+                while (childEnumerator.MoveNext(out var child))
                 {
-                    if (container.OccludesLight)
+                    // Thank god it's by value and not by ref.
+                    var childSpriteOccluded = spriteOccluded;
+                    var childLightOccluded = lightOccluded;
+
+                    // We already know either sprite or light is not occluding so need to check container.
+                    if (manager.TryGetContainer(child.Value, out var container))
                     {
-                        light.ContainerOccluded = true;
-                        break;
+                        childSpriteOccluded = childSpriteOccluded || !container.ShowContents;
+                        childLightOccluded = childLightOccluded || container.OccludesLight;
                     }
 
-                    tempParent = container.Owner;
+                    UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, childSpriteOccluded, childLightOccluded);
+                }
+            }
+            else
+            {
+                while (childEnumerator.MoveNext(out var child))
+                {
+                    UpdateEntity(child.Value, xformQuery.GetComponent(child.Value), xformQuery, pointQuery, spriteQuery, spriteOccluded, lightOccluded);
                 }
             }
         }

@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -268,5 +267,67 @@ internal sealed class MapPauseTests
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.False);
+    }
+
+    /// <summary>
+    /// An unallocated MapId is always unpaused.
+    /// </summary>
+    [Test]
+    public void UnallocatedMap_IsUnPaused()
+    {
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
+
+        // some random unallocated MapId
+        var paused = mapMan.IsMapPaused(new MapId(12));
+
+        Assert.That(paused, Is.False);
+    }
+
+    /// <summary>
+    /// Nullspace is always unpaused, and setting it is a no-op.
+    /// </summary>
+    [Test]
+    public void Nullspace_Pause_IsUnPaused()
+    {
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
+
+        mapMan.SetMapPaused(MapId.Nullspace, true);
+
+        var paused = mapMan.IsMapPaused(MapId.Nullspace);
+        Assert.That(paused, Is.False);
+    }
+
+    /// <summary>
+    /// An allocated MapId without an allocated entity (Nullspace) is always unpaused.
+    /// </summary>
+    [Test]
+    public void Nullspace_IsUnPaused()
+    {
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
+
+        var paused = mapMan.IsMapPaused(MapId.Nullspace);
+
+        Assert.That(paused, Is.False);
+    }
+
+    /// <summary>
+    /// A freed MapId is always unpaused.
+    /// </summary>
+    [Test]
+    public void Unpaused_Freed_IsUnPaused()
+    {
+        var sim = SimulationFactory();
+        var entMan = sim.Resolve<IEntityManager>();
+        var mapMan = (IMapManagerInternal)sim.Resolve<IMapManager>();
+
+        var paused = mapMan.IsMapPaused(MapId.Nullspace);
+
+        Assert.That(paused, Is.False);
     }
 }

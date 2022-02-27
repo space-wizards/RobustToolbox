@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
@@ -42,23 +42,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
         public ShapeType ShapeType => ShapeType.Aabb;
 
         [DataField("bounds")]
+        [ViewVariables(VVAccess.ReadWrite)]
         private Box2 _localBounds = Box2.UnitCentered;
 
-        /// <summary>
-        /// Local AABB bounds of this shape.
-        /// </summary>
-        [ViewVariables(VVAccess.ReadWrite)]
-        public Box2 LocalBounds
-        {
-            get => _localBounds;
-            set
-            {
-                if (_localBounds == value)
-                    return;
-
-                _localBounds = value;
-            }
-        }
+        /// <inheritdoc />
+        public Box2 LocalBounds => _localBounds;
 
         public PhysShapeAabb(float radius)
         {

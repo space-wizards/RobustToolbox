@@ -14,7 +14,7 @@ namespace Robust.Shared.Map
 
         void OnComponentRemoved(MapGridComponent comp);
 
-        void ChunkRemoved(MapChunk chunk);
+        void ChunkRemoved(GridId gridId, MapChunk chunk);
 
         /// <summary>
         ///     Raises the OnTileChanged event.

@@ -566,9 +566,7 @@ internal sealed partial class PVSSystem : EntitySystem
             AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
         }
 
-        //did we already get added?
-        // if (toSend.ContainsKey(node.Value)) return;
-
+        //our children are important regardless! iterate them!
         foreach (var child in node.Children)
         {
             RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,

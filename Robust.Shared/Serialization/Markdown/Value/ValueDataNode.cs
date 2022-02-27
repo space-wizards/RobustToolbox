@@ -36,6 +36,11 @@ namespace Robust.Shared.Serialization.Markdown.Value
             return node.Value == Value ? null : Copy();
         }
 
+        public override ValueDataNode PushInheritance(ValueDataNode node)
+        {
+            return Copy();
+        }
+
         public override bool Equals(object? obj)
         {
             return obj is ValueDataNode node && node.Value == Value;

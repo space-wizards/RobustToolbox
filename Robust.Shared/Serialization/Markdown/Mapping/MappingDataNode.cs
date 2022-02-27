@@ -52,6 +52,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             set => Add(new ValueDataNode(index), value);
         }
 
+        //todo paul i dont think this is thread-safe
         private static ValueDataNode GetFetchNode(string key)
         {
             var node = FetchNode.Value!;
@@ -231,6 +232,19 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (mappingNode._children.Count == 0) return null;
 
             return mappingNode;
+        }
+
+        public override MappingDataNode PushInheritance(MappingDataNode node)
+        {
+            var newNode = Copy();
+            foreach (var (key, val) in node)
+            {
+                if(newNode.Has(key)) continue;
+
+                newNode[key.Copy()] = val.Copy();
+            }
+
+            return newNode;
         }
 
         public IEnumerator<KeyValuePair<DataNode, DataNode>> GetEnumerator() => _children.GetEnumerator();

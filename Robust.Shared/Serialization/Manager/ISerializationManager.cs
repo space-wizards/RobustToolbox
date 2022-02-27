@@ -198,5 +198,12 @@ namespace Robust.Shared.Serialization.Manager
         Type GetConstantTypeFromTag(Type tagType);
 
         #endregion
+
+        #region PushInheritance
+
+        DataNode PushInheritance(Type type, DataNode parent, DataNode child, ISerializationContext? context = null);
+        TNode PushInheritance<TType, TNode>(TNode parent, TNode child, ISerializationContext? context = null);
+
+        #endregion
     }
 }

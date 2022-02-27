@@ -18,7 +18,7 @@ using static Robust.Shared.Prototypes.EntityPrototype;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
+    public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>
     {
         public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
@@ -175,6 +175,11 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             }
 
             return target;
+        }
+
+        public SequenceDataNode PushInheritance(SequenceDataNode child, SequenceDataNode parent)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -158,5 +158,16 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
 
             return null;
         }
+
+        public override SequenceDataNode PushInheritance(SequenceDataNode node)
+        {
+            var newNode = Copy();
+            foreach (var val in node)
+            {
+                newNode.Add(val.Copy());
+            }
+
+            return newNode;
+        }
     }
 }

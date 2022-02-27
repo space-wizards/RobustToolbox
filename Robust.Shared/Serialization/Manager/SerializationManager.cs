@@ -540,6 +540,16 @@ namespace Robust.Shared.Serialization.Manager
             return (T?) copy;
         }
 
+        public DataNode PushInheritance(Type type, DataNode parent, DataNode child, ISerializationContext? context = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TNode PushInheritance<TType, TNode>(TNode parent, TNode child, ISerializationContext? context = null)
+        {
+            throw new NotImplementedException();
+        }
+
         private static Type ResolveConcreteType(Type baseType, string typeName)
         {
             var reflection = IoCManager.Resolve<IReflectionManager>();

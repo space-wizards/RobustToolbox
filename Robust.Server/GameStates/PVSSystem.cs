@@ -528,8 +528,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 continue;
 
             var @new = visiblity == PVSEntityVisiblity.Entered;
-
-            var state = GetEntityState(session, entityUid, @new ? GameTick.Zero : fromTick, mQuery);
+            var state = GetEntityState(session, entityUid, @new ? GameTick.Zero : fromTick, mQuery.GetComponent(entityUid).Flags);
 
             //this entity is not new & nothing changed
             if(!@new && state.Empty) continue;
@@ -697,7 +696,7 @@ internal sealed partial class PVSSystem : EntitySystem
             foreach (var md in EntityManager.EntityQuery<MetaDataComponent>(true))
             {
                 DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
-                stateEntities.Add(GetEntityState(player, md.Owner, GameTick.Zero));
+                stateEntities.Add(GetEntityState(player, md.Owner, GameTick.Zero, md.Flags));
             }
 
             return (stateEntities.Count == 0 ? default : stateEntities, deletions);
@@ -726,7 +725,7 @@ internal sealed partial class PVSSystem : EntitySystem
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                     if (md.EntityLastModifiedTick >= fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, GameTick.Zero));
+                        stateEntities.Add(GetEntityState(player, uid, GameTick.Zero, md.Flags));
                 }
 
                 foreach (var uid in dirty)
@@ -739,7 +738,7 @@ internal sealed partial class PVSSystem : EntitySystem
                     DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
                     if (md.EntityLastModifiedTick >= fromTick)
-                        stateEntities.Add(GetEntityState(player, uid, fromTick));
+                        stateEntities.Add(GetEntityState(player, uid, fromTick, md.Flags));
                 }
             }
         }
@@ -759,7 +758,7 @@ internal sealed partial class PVSSystem : EntitySystem
             DebugTools.Assert(md.EntityLifeStage >= EntityLifeStage.Initialized);
 
             if (md.EntityLastModifiedTick >= fromTick)
-                stateEntities.Add(GetEntityState(player, md.Owner, fromTick, metadataQuery));
+                stateEntities.Add(GetEntityState(player, md.Owner, fromTick, md.Flags));
         }
 
         // no point sending an empty collection
@@ -774,15 +773,16 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <param name="player">The player to generate this state for.</param>
     /// <param name="entityUid">Uid of the entity to generate the state from.</param>
     /// <param name="fromTick">Only provide delta changes from this tick.</param>
+    /// <param name="flags">Any applicable metadata flags</param>
     /// <returns>New entity State for the given entity.</returns>
-    private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick, EntityQuery<MetaDataComponent> mQuery)
+    private EntityState GetEntityState(ICommonSession player, EntityUid entityUid, GameTick fromTick, MetaDataFlags flags)
     {
         var bus = EntityManager.EventBus;
         var changed = new List<ComponentChange>();
         // Whether this entity has any component states that are only for a specific session.
         // TODO: This GetComp is probably expensive, less expensive than before, but ideally we'd cache it somewhere or something from a previous getcomp
         // Probably still needs tweaking but checking for add / changed states up front should do most of the work.
-        var specificStates = (mQuery.GetComponent(entityUid).Flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
+        var specificStates = (flags & MetaDataFlags.EntitySpecific) == MetaDataFlags.EntitySpecific;
 
         foreach (var (netId, component) in EntityManager.GetNetComponents(entityUid))
         {

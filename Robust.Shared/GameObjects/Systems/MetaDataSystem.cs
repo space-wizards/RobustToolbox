@@ -31,8 +31,10 @@ public sealed class MetaDataSystem : EntitySystem
             component._entityPrototype = _proto.Index<EntityPrototype>(state.PrototypeId);
     }
 
-    public void AddFlag(MetaDataComponent component, MetaDataFlags flags)
+    public void AddFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
+        if (!Resolve(uid, ref component)) return;
+
         component.Flags |= flags;
     }
 
@@ -40,8 +42,10 @@ public sealed class MetaDataSystem : EntitySystem
     /// Attempts to remove the specific flag from metadata.
     /// Other systems can choose not to allow the removal if it's still relevant.
     /// </summary>
-    public void RemoveFlag(MetaDataComponent component, MetaDataFlags flags)
+    public void RemoveFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
+        if (!Resolve(uid, ref component)) return;
+
         if ((component.Flags & flags) == 0x0) return;
 
         var ev = new MetaFlagRemoveAttemptEvent();
@@ -53,6 +57,9 @@ public sealed class MetaDataSystem : EntitySystem
     }
 }
 
+/// <summary>
+/// Raised if <see cref="MetaDataSystem"/> is trying to remove a particular flag.
+/// </summary>
 [ByRefEvent]
 public struct MetaFlagRemoveAttemptEvent
 {

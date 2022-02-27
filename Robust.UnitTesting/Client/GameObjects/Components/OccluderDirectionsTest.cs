@@ -14,6 +14,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components;
 [TestFixture]
 public sealed class OccluderDirectionsTest : RobustIntegrationTest
 {
+    /* See https://github.com/space-wizards/RobustToolbox/pull/2528 for why this is commented out as the technology isn't there yet.
     [Test]
     public async Task TestOccluderOverride()
     {
@@ -46,4 +47,5 @@ public sealed class OccluderDirectionsTest : RobustIntegrationTest
     }
 
     private sealed class OccluderOverrider : IEntityEventSubscriber {}
+    */
 }

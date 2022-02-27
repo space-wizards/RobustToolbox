@@ -229,12 +229,13 @@ namespace Robust.Shared.GameObjects
             // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
 
             var aabb = GetWorldAABB(entity);
-            var tree = GetLookup(entity);
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var tree = GetLookup(entity, xformQuery);
 
             if (tree == null)
                 return aabb;
 
-            return _entityManager.GetComponent<TransformComponent>(tree.Owner).InvWorldMatrix.TransformBox(aabb);
+            return xformQuery.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(aabb);
         }
 
         private void OnTerminate(EntityTerminatingEvent args)
@@ -276,6 +277,13 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsGrid(args.Sender) ||
                 _container.IsEntityInContainer(args.Sender, args.Component)) return;
 
+            // Probably a parent change or anchoring maybe.
+            if (args.OldPosition.EntityId != args.NewPosition.EntityId)
+            {
+
+                return;
+            }
+
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var lookup = GetLookupNew(args.Sender, args.Component, xformQuery);
 
@@ -307,16 +315,17 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(ref EntParentChangedMessage args)
         {
+            if (_mapManager.IsMap(args.Entity) ||
+                _mapManager.IsGrid(args.Entity) ||
+                _entityManager.GetComponent<MetaDataComponent>(args.Entity).EntityLifeStage < EntityLifeStage.Initialized) return;
+
             EntityLookupComponent? oldLookup = null;
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(args.Entity);
 
-            if (_mapManager.IsMap(args.Entity) ||
-                _mapManager.IsGrid(args.Entity)) return;
-
             if (args.OldParent != null)
             {
-                oldLookup = GetLookupNew(args.OldParent.Value, xform, xformQuery);
+                oldLookup = GetLookup(args.OldParent.Value, xformQuery);
             }
 
             var newLookup = GetLookupNew(args.Entity, xform, xformQuery);
@@ -886,11 +895,10 @@ namespace Robust.Shared.GameObjects
 
         #region Entity DynamicTree
 
-        private EntityLookupComponent? GetLookup(EntityUid entity)
+        private EntityLookupComponent? GetLookup(EntityUid entity, EntityQuery<TransformComponent> xformQuery)
         {
             // TODO: This should just be passed in when we cleanup EntityLookup a bit.
-            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var xform = xforms.GetComponent(entity);
+            var xform = xformQuery.GetComponent(entity);
 
             if (xform.MapID == MapId.Nullspace)
                 return null;
@@ -898,17 +906,16 @@ namespace Robust.Shared.GameObjects
             var lookups = _entityManager.GetEntityQuery<EntityLookupComponent>();
             var parent = xform.ParentUid;
 
-            // if it's map return null. Grids should return the map's broadphase.
-            if (lookups.HasComponent(entity) &&
-                !parent.IsValid())
+            // If it's map / grid just return it directly.
+            if (lookups.TryGetComponent(entity, out var lookup))
             {
-                return null;
+                return lookup;
             }
 
             while (parent.IsValid())
             {
                 if (lookups.TryGetComponent(parent, out var comp)) return comp;
-                parent = xforms.GetComponent(parent).ParentUid;
+                parent = xformQuery.GetComponent(parent).ParentUid;
             }
 
             return null;
@@ -947,11 +954,10 @@ namespace Robust.Shared.GameObjects
             var parent = xform.ParentUid;
             var lookupQuery = _entityManager.GetEntityQuery<EntityLookupComponent>();
 
-            // if it's map return null. Grids should return the map's broadphase.
-            if (lookupQuery.HasComponent(uid) &&
-                !parent.IsValid())
+            // If we're querying a map / grid just return it directly.
+            if (lookupQuery.TryGetComponent(uid, out var lookup))
             {
-                return null;
+                return lookup;
             }
 
             while (parent.IsValid())

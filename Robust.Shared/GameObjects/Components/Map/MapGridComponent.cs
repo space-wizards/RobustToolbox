@@ -78,7 +78,8 @@ namespace Robust.Shared.GameObjects
 
             if (result)
             {
-                xform.Parent = _entMan.GetComponent<TransformComponent>(Owner);
+                if (xform.ParentUid != Owner)
+                    xform.Parent = _entMan.GetComponent<TransformComponent>(Owner);
 
                 // anchor snapping
                 xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;

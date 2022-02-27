@@ -44,9 +44,8 @@ public sealed class MetaDataSystem : EntitySystem
     /// </summary>
     public void RemoveFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
-        if (!Resolve(uid, ref component)) return;
-
-        if ((component.Flags & flags) == 0x0) return;
+        if (!Resolve(uid, ref component) ||
+            (component.Flags & flags) == 0x0) return;
 
         var ev = new MetaFlagRemoveAttemptEvent();
         EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev);

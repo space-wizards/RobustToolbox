@@ -277,13 +277,6 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsGrid(args.Sender) ||
                 _container.IsEntityInContainer(args.Sender, args.Component)) return;
 
-            // Probably a parent change or anchoring maybe.
-            if (args.OldPosition.EntityId != args.NewPosition.EntityId)
-            {
-
-                return;
-            }
-
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var lookup = GetLookupNew(args.Sender, args.Component, xformQuery);
 

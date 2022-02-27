@@ -165,13 +165,13 @@ namespace Robust.Shared.GameObjects
             if (args.Anchored)
             {
                 var xform = xformQuery.GetComponent(args.Entity);
-                var lookup = GetLookupNew(args.Entity, xform, xformQuery);
+                var lookup = GetLookup(args.Entity, xform, xformQuery);
                 RemoveFromEntityTree(lookup, xform, xformQuery);
             }
             else if (_entityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
                 var xform = xformQuery.GetComponent(args.Entity);
-                var lookup = GetLookupNew(args.Entity, xform, xformQuery);
+                var lookup = GetLookup(args.Entity, xform, xformQuery);
 
                 if (lookup == null)
                     throw new InvalidOperationException();
@@ -242,7 +242,7 @@ namespace Robust.Shared.GameObjects
         {
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(args.Owner);
-            var lookup = GetLookupNew(args.Owner, xform, xformQuery);
+            var lookup = GetLookup(args.Owner, xform, xformQuery);
             RemoveFromEntityTree(lookup, xform, xformQuery, false);
         }
 
@@ -255,7 +255,7 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsMap(uid) ||
                 _mapManager.IsGrid(uid)) return;
 
-            var lookup = GetLookupNew(uid, xform, xformQuery);
+            var lookup = GetLookup(uid, xform, xformQuery);
 
             // If nullspace or the likes.
             if (lookup == null) return;
@@ -278,7 +278,7 @@ namespace Robust.Shared.GameObjects
                 _container.IsEntityInContainer(args.Sender, args.Component)) return;
 
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var lookup = GetLookupNew(args.Sender, args.Component, xformQuery);
+            var lookup = GetLookup(args.Sender, args.Component, xformQuery);
 
             if (lookup == null) return;
 
@@ -296,7 +296,7 @@ namespace Robust.Shared.GameObjects
 
             DebugTools.Assert(!_container.IsEntityInContainer(args.Sender, args.Component));
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var lookup = GetLookupNew(args.Sender, args.Component, xformQuery);
+            var lookup = GetLookup(args.Sender, args.Component, xformQuery);
 
             if (lookup == null) return;
 
@@ -321,7 +321,7 @@ namespace Robust.Shared.GameObjects
                 oldLookup = GetLookup(args.OldParent.Value, xformQuery);
             }
 
-            var newLookup = GetLookupNew(args.Entity, xform, xformQuery);
+            var newLookup = GetLookup(args.Entity, xform, xformQuery);
 
             // If parent is the same then no need to do anything as position should stay the same.
             if (oldLookup == newLookup) return;
@@ -890,56 +890,11 @@ namespace Robust.Shared.GameObjects
 
         private EntityLookupComponent? GetLookup(EntityUid entity, EntityQuery<TransformComponent> xformQuery)
         {
-            // TODO: This should just be passed in when we cleanup EntityLookup a bit.
             var xform = xformQuery.GetComponent(entity);
-
-            if (xform.MapID == MapId.Nullspace)
-                return null;
-
-            var lookups = _entityManager.GetEntityQuery<EntityLookupComponent>();
-            var parent = xform.ParentUid;
-
-            // If it's map / grid just return it directly.
-            if (lookups.TryGetComponent(entity, out var lookup))
-            {
-                return lookup;
-            }
-
-            while (parent.IsValid())
-            {
-                if (lookups.TryGetComponent(parent, out var comp)) return comp;
-                parent = xformQuery.GetComponent(parent).ParentUid;
-            }
-
-            return null;
+            return GetLookup(entity, xform, xformQuery);
         }
 
-        private EntityLookupComponent GetLookupNew(EntityCoordinates coordinates)
-        {
-            if (!coordinates.IsValid(_entityManager))
-                throw new InvalidOperationException();
-
-            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var lookups = _entityManager.GetEntityQuery<EntityLookupComponent>();
-            var parent = coordinates.EntityId;
-
-            // if it's map return null. Grids should return the map's broadphase.
-            if (lookups.HasComponent(parent) &&
-                !parent.IsValid())
-            {
-                throw new InvalidOperationException();
-            }
-
-            while (parent.IsValid())
-            {
-                if (lookups.TryGetComponent(parent, out var comp)) return comp;
-                parent = xforms.GetComponent(parent).ParentUid;
-            }
-
-            throw new InvalidOperationException();
-        }
-
-        private EntityLookupComponent? GetLookupNew(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        private EntityLookupComponent? GetLookup(EntityUid uid, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
             if (xform.MapID == MapId.Nullspace)
                 return null;

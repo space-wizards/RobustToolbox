@@ -158,18 +158,15 @@ namespace Robust.Shared.GameObjects
 
         private void OnAnchored(ref AnchorStateChangedEvent args)
         {
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
             if (args.Anchored)
             {
-                var xform = xformQuery.GetComponent(args.Entity);
-                var lookup = GetLookup(args.Entity, xform, xformQuery);
-                RemoveFromEntityTree(lookup, xform, xformQuery);
+                RemoveFromEntityTree(args.Entity);
             }
             else if (_entityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
+                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
                 var xform = xformQuery.GetComponent(args.Entity);
                 var lookup = GetLookup(args.Entity, xform, xformQuery);
 
@@ -186,6 +183,8 @@ namespace Robust.Shared.GameObjects
             }
             // else -> the entity is terminating. We can ignore this un-anchor event, as this entity will be removed by the tree via OnEntityDeleted.
         }
+
+        #region DynamicTree
 
         private void OnLookupShutdown(EntityUid uid, EntityLookupComponent component, ComponentShutdown args)
         {
@@ -211,7 +210,7 @@ namespace Robust.Shared.GameObjects
             }
 
             component.Tree = new DynamicTree<EntityUid>(
-                GetRelativeAABBFromEntity,
+                GetTreeAABB,
                 capacity: capacity,
                 growthFunc: x => x == GrowthRate ? GrowthRate * 8 : x * 2
             );
@@ -224,10 +223,9 @@ namespace Robust.Shared.GameObjects
             _entityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));
         }
 
-        private Box2 GetRelativeAABBFromEntity(in EntityUid entity)
+        private Box2 GetTreeAABB(in EntityUid entity)
         {
             // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
-
             var aabb = GetWorldAABB(entity);
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var tree = GetLookup(entity, xformQuery);
@@ -238,12 +236,13 @@ namespace Robust.Shared.GameObjects
             return xformQuery.GetComponent(tree.Owner).InvWorldMatrix.TransformBox(aabb);
         }
 
-        private void OnTerminate(EntityTerminatingEvent args)
+        #endregion
+
+        #region Entity events
+
+        private void OnTerminate(ref EntityTerminatingEvent args)
         {
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(args.Owner);
-            var lookup = GetLookup(args.Owner, xform, xformQuery);
-            RemoveFromEntityTree(lookup, xform, xformQuery, false);
+            RemoveFromEntityTree(args.Owner, false);
         }
 
         private void OnEntityInit(object? sender, EntityUid uid)
@@ -401,6 +400,14 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)
+        {
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(uid);
+            var lookup = GetLookup(uid, xform, xformQuery);
+            RemoveFromEntityTree(lookup, xform, xformQuery, recursive);
+        }
+
         /// <summary>
         /// Recursively iterates through this entity's children and removes them from the entitylookupcomponent.
         /// </summary>
@@ -420,6 +427,8 @@ namespace Robust.Shared.GameObjects
                 RemoveFromEntityTree(lookup, xformQuery.GetComponent(child.Value), xformQuery);
             }
         }
+
+        #endregion
 
         #region Spatial Queries
 

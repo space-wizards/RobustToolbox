@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -133,6 +134,7 @@ namespace Robust.Shared.GameObjects
             eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, OnRotate);
             eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, OnParentChange);
             eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, OnAnchored);
+            eventBus.SubscribeEvent<UpdateLookupBoundsEvent>(EventSource.Local, this, OnBoundsUpdate);
 
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
             eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
@@ -329,6 +331,12 @@ namespace Robust.Shared.GameObjects
                 AddToEntityTree(newLookup, xform, xformQuery);
         }
 
+        private void OnBoundsUpdate(ref UpdateLookupBoundsEvent ev)
+        {
+            // TODO: Just nuke the old one and add to new one.
+            throw new NotImplementedException();
+        }
+
         private void AddToEntityTree(
             EntityLookupComponent lookup,
             TransformComponent xform,
@@ -512,5 +520,19 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
+    }
+}
+
+/// <summary>
+/// Flags this entity for an update to their lookup bounds.
+/// </summary>
+[ByRefEvent]
+public readonly struct UpdateLookupBoundsEvent
+{
+    public readonly EntityUid Uid;
+
+    public UpdateLookupBoundsEvent(EntityUid uid)
+    {
+        Uid = uid;
     }
 }

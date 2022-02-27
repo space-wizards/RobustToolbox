@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
+                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
                 }
                 else
@@ -631,14 +631,14 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, worldAABB);
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
-                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
+                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
                 _oldLocalRotation = null;
             }

@@ -332,8 +332,6 @@ namespace Robust.Client.GameStates
             }
 
             _entities.TickUpdate((float) _timing.TickPeriod.TotalSeconds, noPredictions: !IsPredictionEnabled);
-
-            _lookup.Update();
         }
 
         private void ResetPredictedEntities(GameTick curTick)

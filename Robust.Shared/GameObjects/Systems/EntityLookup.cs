@@ -32,7 +32,6 @@ namespace Robust.Shared.GameObjects
 
         void Shutdown();
 
-        void Update();
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<EntityUid> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored);
@@ -73,10 +72,6 @@ namespace Robust.Shared.GameObjects
         IEnumerable<EntityUid> GetEntitiesInRange(MapId mapId, Box2 box, float range, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         bool IsIntersecting(EntityUid entityOne, EntityUid entityTwo);
-
-        bool UpdateEntityTree(EntityUid entity, TransformComponent xform, Box2? worldAABB = null);
-
-        void RemoveFromEntityTrees(EntityUid entity);
 
         Box2 GetWorldAabbFromEntity(in EntityUid ent, TransformComponent? xform = null);
 
@@ -161,18 +156,33 @@ namespace Robust.Shared.GameObjects
             Started = false;
         }
 
-        private void OnAnchored(ref AnchorStateChangedEvent @event)
+        private void OnAnchored(ref AnchorStateChangedEvent args)
         {
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+
             // This event needs to be handled immediately as anchoring is handled immediately
             // and any callers may potentially get duplicate entities that just changed state.
-            if (@event.Anchored)
+            if (args.Anchored)
             {
-                RemoveFromEntityTrees(@event.Entity);
+                var xform = xformQuery.GetComponent(args.Entity);
+                var lookup = GetLookupNew(args.Entity, xform, xformQuery);
+                RemoveFromEntityTree(lookup, xform, xformQuery);
             }
-            else if (_entityManager.TryGetComponent(@event.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
+            else if (_entityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
-                var xform = _entityManager.GetComponent<TransformComponent>(@event.Entity);
-                UpdateEntityTree(@event.Entity, xform);
+                var xform = xformQuery.GetComponent(args.Entity);
+                var lookup = GetLookupNew(args.Entity, xform, xformQuery);
+
+                if (lookup == null)
+                    throw new InvalidOperationException();
+
+                var lookupXform = xformQuery.GetComponent(lookup.Owner);
+                var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+                DebugTools.Assert(coordinates.EntityId == lookup.Owner);
+
+                // If we're contained then LocalRotation should be 0 anyway.
+                var aabb = GetLookupAABB(args.Entity, coordinates.Position, xform.WorldRotation - lookupXform.WorldRotation, xform, xformQuery);
+                AddToEntityTree(lookup, xform, aabb, xformQuery);
             }
             // else -> the entity is terminating. We can ignore this un-anchor event, as this entity will be removed by the tree via OnEntityDeleted.
         }
@@ -263,10 +273,9 @@ namespace Robust.Shared.GameObjects
         private void OnMove(ref MoveEvent args)
         {
             if (_mapManager.IsMap(args.Sender) ||
-                _mapManager.IsGrid(args.Sender)) return;
+                _mapManager.IsGrid(args.Sender) ||
+                _container.IsEntityInContainer(args.Sender, args.Component)) return;
 
-            // OnMove shouldn't trigger parent changes nor be issued if they get contained.
-            DebugTools.Assert(!_container.IsEntityInContainer(args.Sender, args.Component));
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var lookup = GetLookupNew(args.Sender, args.Component, xformQuery);
 
@@ -274,14 +283,15 @@ namespace Robust.Shared.GameObjects
 
             var lookupXform = xformQuery.GetComponent(lookup.Owner);
             var coordinates = _transform.GetMoverCoordinates(args.Component.Coordinates, xformQuery);
-            var aabb = GetLookupAABB(args.Sender, coordinates.Position, args.Component.WorldRotation - lookupXform.WorldRotation, lookupXform, xformQuery);
+            var aabb = GetLookupAABB(args.Sender, coordinates.Position, args.Component.WorldRotation - lookupXform.WorldRotation, xformQuery.GetComponent(args.Sender), xformQuery);
             AddToEntityTree(lookup, args.Component, aabb, xformQuery);
         }
 
         private void OnRotate(ref RotateEvent args)
         {
             if (_mapManager.IsMap(args.Sender) ||
-                _mapManager.IsGrid(args.Sender)) return;
+                _mapManager.IsGrid(args.Sender) ||
+                _container.IsEntityInContainer(args.Sender, args.Component)) return;
 
             DebugTools.Assert(!_container.IsEntityInContainer(args.Sender, args.Component));
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
@@ -291,18 +301,17 @@ namespace Robust.Shared.GameObjects
 
             var lookupXform = xformQuery.GetComponent(lookup.Owner);
             var coordinates = _transform.GetMoverCoordinates(args.Component.Coordinates, xformQuery);
-            var aabb = GetLookupAABB(args.Sender, coordinates.Position, args.Component.WorldRotation - lookupXform.WorldRotation, lookupXform, xformQuery);
+            var aabb = GetLookupAABB(args.Sender, coordinates.Position, args.Component.WorldRotation - lookupXform.WorldRotation, xformQuery.GetComponent(args.Sender), xformQuery);
             AddToEntityTree(lookup, args.Component, aabb, xformQuery);
         }
 
-        private void OnParentChange(ref EntParentChangedMessage args)
+        private void OnParentChange(EntParentChangedMessage args)
         {
             EntityLookupComponent? oldLookup = null;
             var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(args.Entity);
 
-            if (xform.Anchored ||
-                _mapManager.IsMap(args.Entity) ||
+            if (_mapManager.IsMap(args.Entity) ||
                 _mapManager.IsGrid(args.Entity)) return;
 
             if (args.OldParent != null)
@@ -322,7 +331,7 @@ namespace Robust.Shared.GameObjects
                 var lookupXform = xformQuery.GetComponent(newLookup.Owner);
                 var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
                 // If we're contained then LocalRotation should be 0 anyway.
-                var aabb = GetLookupAABB(args.Entity, coordinates.Position, xform.WorldRotation - lookupXform.WorldRotation, lookupXform, xformQuery);
+                var aabb = GetLookupAABB(args.Entity, coordinates.Position, xform.WorldRotation - lookupXform.WorldRotation, xform, xformQuery);
 
                 AddToEntityTree(newLookup, xform, aabb, xformQuery);
             }
@@ -983,9 +992,9 @@ namespace Robust.Shared.GameObjects
         private Box2 GetLookupAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
             // If we're in a container then we just use the container's bounds.
-            if (_container.TryGetContainingContainer(uid, out var container, xform))
+            if (_container.TryGetOuterContainer(uid, xform, out var container))
             {
-                return GetLookupAABB(container.Owner, position, angle, xformQuery.GetComponent(container.Owner), xformQuery);
+                return GetLookupAABBNoContainer(container.Owner, position, angle);
             }
 
             return GetLookupAABBNoContainer(uid, position, angle);

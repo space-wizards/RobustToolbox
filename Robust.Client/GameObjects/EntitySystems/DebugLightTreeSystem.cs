@@ -72,7 +72,7 @@ namespace Robust.Client.GameObjects
                 {
                     foreach (var light in tree.LightTree)
                     {
-                        var aabb = _lookup.GetWorldAabbFromEntity(light.Owner);
+                        var aabb = _lookup.GetWorldAABB(light.Owner);
                         if (!aabb.Intersects(worldBounds)) continue;
 
                         args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.1f));

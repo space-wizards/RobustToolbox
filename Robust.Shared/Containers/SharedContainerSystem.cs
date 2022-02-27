@@ -214,13 +214,19 @@ namespace Robust.Shared.Containers
         /// </summary>
         public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform, [NotNullWhen(true)] out IContainer? container)
         {
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            return TryGetOuterContainer(uid, xform, out container, xformQuery);
+        }
+
+        public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform,
+            [NotNullWhen(true)] out IContainer? container, EntityQuery<TransformComponent> xformQuery)
+        {
             container = null;
 
             if (!uid.IsValid())
                 return false;
 
             var conQuery = EntityManager.GetEntityQuery<ContainerManagerComponent>();
-            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var child = uid;
             var parent = xform.ParentUid;
 

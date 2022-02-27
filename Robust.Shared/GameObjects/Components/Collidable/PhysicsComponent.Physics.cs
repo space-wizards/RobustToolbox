@@ -302,24 +302,6 @@ namespace Robust.Shared.GameObjects
             return bounds;
         }
 
-        public Box2 GetWorldAABB(Vector2 worldPos, Angle worldRot, EntityQuery<FixturesComponent> fixtures)
-        {
-            var transform = new Transform(worldPos, (float) worldRot.Theta);
-
-            var bounds = new Box2(transform.Position, transform.Position);
-
-            foreach (var fixture in fixtures.GetComponent(Owner).Fixtures.Values)
-            {
-                for (var i = 0; i < fixture.Shape.ChildCount; i++)
-                {
-                    var boundy = fixture.Shape.ComputeAABB(transform, i);
-                    bounds = bounds.Union(boundy);
-                }
-            }
-
-            return bounds;
-        }
-
         /// <summary>
         ///     Enables or disabled collision processing of this component.
         /// </summary>

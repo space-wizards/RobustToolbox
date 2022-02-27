@@ -6,19 +6,15 @@ using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
-using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
-using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
-using GridFixtureSystem = Robust.Client.GameObjects.GridFixtureSystem;
 
 namespace Robust.UnitTesting
 {
@@ -91,7 +87,7 @@ namespace Robust.UnitTesting
             systems.Initialize();
 
             // TODO: Make this a system and it should be covered off by the above.
-            IoCManager.Resolve<IEntityLookup>().Startup();
+            // IoCManager.Resolve<IEntityLookup>().Startup();
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 

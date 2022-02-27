@@ -260,7 +260,7 @@ namespace Robust.Shared.GameObjects
 
             // Any child entities should be handled by their own OnEntityInit
 
-            lookup.Tree.Add(uid, aabb.Translated(coordinates.Position));
+            lookup.Tree.Add(uid, aabb);
         }
 
         private void OnMapCreated(object? sender, MapEventArgs eventArgs)

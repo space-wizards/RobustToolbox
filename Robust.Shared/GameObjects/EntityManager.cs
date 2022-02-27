@@ -82,6 +82,7 @@ namespace Robust.Shared.GameObjects
             if (Started)
                 throw new InvalidOperationException("Startup() called multiple times");
 
+            // TODO: Probably better to call this on its own given it's so infrequent.
             EntitySystemManager.Initialize();
             Started = true;
         }
@@ -276,7 +277,7 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted) 
+            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted)
                 return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);

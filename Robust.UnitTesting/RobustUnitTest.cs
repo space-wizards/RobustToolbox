@@ -77,7 +77,6 @@ namespace Robust.UnitTesting
             configurationManager.LoadCVarsFromAssembly(typeof(RobustUnitTest).Assembly);
 
             var systems = IoCManager.Resolve<IEntitySystemManager>();
-
             // Required systems
             systems.LoadExtraSystemType<ContainerSystem>();
             systems.LoadExtraSystemType<TransformSystem>();

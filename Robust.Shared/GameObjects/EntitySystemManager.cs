@@ -107,7 +107,8 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public void Initialize(bool discover = true)
         {
-            // TODO: This should throw
+            // Tempted to make this an assert
+            // However, EntityManager calls this directly so we'd need to remove that and manually call it.
             if (_initialized) return;
 
             var excludedTypes = new HashSet<Type>();
@@ -265,6 +266,7 @@ namespace Robust.Shared.GameObjects
 
         public void Clear()
         {
+            _extraLoadedTypes.Clear();
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();

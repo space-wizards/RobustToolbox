@@ -567,10 +567,13 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         //our children are important regardless! iterate them!
-        foreach (var child in node.Children)
+        if(node.Children != null)
         {
-            RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
-                ref totalEnteredEntities, metaDataCache);
+            foreach (var child in node.Children)
+            {
+                RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
+                    ref totalEnteredEntities, metaDataCache);
+            }
         }
     }
 

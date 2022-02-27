@@ -25,7 +25,8 @@ public sealed class RobustTree<T> where T : notnull
         // TODO: This is hella expensive
         foreach (var value in _nodeIndex.Values)
         {
-            _setConsumer(value.Children);
+            if(value.Children != null)
+                _setConsumer(value.Children);
         }
         _nodeIndex.Clear();
         _parents.Clear();
@@ -37,14 +38,18 @@ public sealed class RobustTree<T> where T : notnull
         if (!_nodeIndex.TryGetValue(value, out var node))
             throw new InvalidOperationException("Node doesnt exist.");
 
+
         if (_rootNodes.Contains(value))
         {
-            foreach (var child in node.Children)
+            if (node.Children != null)
             {
-                _parents.Remove(child.Value);
-                _rootNodes.Add(child.Value);
+                foreach (var child in node.Children)
+                {
+                    _parents.Remove(child.Value);
+                    _rootNodes.Add(child.Value);
+                }
+                _setConsumer(node.Children);
             }
-            _setConsumer(node.Children);
             _rootNodes.Remove(value);
             _nodeIndex.Remove(value);
             return;
@@ -52,21 +57,26 @@ public sealed class RobustTree<T> where T : notnull
 
         if (_parents.TryGetValue(value, out var parent))
         {
-            foreach (var child in node.Children)
+            if (node.Children != null)
             {
-                if (mend)
+                foreach (var child in node.Children)
                 {
-                    _parents[child.Value] = parent;
-                    _nodeIndex[parent].Children.Add(child);
+                    if (mend)
+                    {
+                        _parents[child.Value] = parent;
+                        var children = _nodeIndex[parent].Children ?? _setProvider();
+                        children.Add(child);
+                        _nodeIndex[parent] = new TreeNode(parent){Children = children};
+                    }
+                    else
+                    {
+                        _parents.Remove(child.Value);
+                        _rootNodes.Add(child.Value);
+                    }
                 }
-                else
-                {
-                    _parents.Remove(child.Value);
-                    _rootNodes.Add(child.Value);
-                }
-            }
 
-            _setConsumer(node.Children);
+                _setConsumer(node.Children);
+            }
             _parents.Remove(value);
             _nodeIndex.Remove(value);
         }
@@ -84,7 +94,7 @@ public sealed class RobustTree<T> where T : notnull
             return node;
         }
 
-        node = new TreeNode(rootNode, _setProvider());
+        node = new TreeNode(rootNode);
         _nodeIndex.Add(rootNode, node);
         _rootNodes.Add(rootNode);
         return node;
@@ -95,6 +105,7 @@ public sealed class RobustTree<T> where T : notnull
         if (!_nodeIndex.TryGetValue(parent, out var parentNode))
             parentNode = Set(parent);
 
+        parentNode.Children ??= _setProvider();
         if (_nodeIndex.TryGetValue(child, out var existingNode))
         {
             if (_rootNodes.Contains(child))
@@ -108,13 +119,13 @@ public sealed class RobustTree<T> where T : notnull
             if (!_parents.TryGetValue(child, out var previousParent) || _nodeIndex.TryGetValue(previousParent, out var previousParentNode))
                 throw new InvalidOperationException("Could not find old parent for non-root node.");
 
-            previousParentNode.Children.Remove(existingNode);
+            previousParentNode.Children?.Remove(existingNode);
             parentNode.Children.Add(existingNode);
             _parents[child] = parent;
             return existingNode;
         }
 
-        existingNode = new TreeNode(child, _setProvider());
+        existingNode = new TreeNode(child);
         _nodeIndex.Add(child, existingNode);
         parentNode.Children.Add(existingNode);
         _parents.Add(child, parent);
@@ -138,20 +149,19 @@ public sealed class RobustTree<T> where T : notnull
         _setConsumer(rootNodes);
     }
 
-    public readonly struct TreeNode : IEquatable<TreeNode>
+    public struct TreeNode : IEquatable<TreeNode>
     {
         public readonly T Value;
-        public readonly HashSet<TreeNode> Children;
+        public HashSet<TreeNode>? Children = null;
 
-        public TreeNode(T value, HashSet<TreeNode> children)
+        public TreeNode(T value)
         {
             Value = value;
-            Children = children;
         }
 
         public bool Equals(TreeNode other)
         {
-            return Value.Equals(other.Value) && Children.Equals(other.Children);
+            return Value.Equals(other.Value) && Children?.Equals(other.Children) == true;
         }
 
         public override bool Equals(object? obj)

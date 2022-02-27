@@ -622,7 +622,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
         /// </summary>
-        public void RunDeferred(Box2 worldAABB)
+        public void RunDeferred()
         {
             // if we resolved to (close enough) to the OG position then no update.
             if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&

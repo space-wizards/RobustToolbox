@@ -1137,24 +1137,18 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct MoveEvent
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
             Component = component;
-            WorldAABB = worldAABB;
         }
 
         public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
         public readonly TransformComponent Component;
-
-        /// <summary>
-        ///     New AABB of the entity.
-        /// </summary>
-        public readonly Box2? WorldAABB;
     }
 
     /// <summary>
@@ -1163,22 +1157,18 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct RotateEvent
     {
-        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
+        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, TransformComponent xform)
         {
             Sender = sender;
             OldRotation = oldRotation;
             NewRotation = newRotation;
-            WorldAABB = worldAABB;
+            Component = xform;
         }
 
         public readonly EntityUid Sender;
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
-
-        /// <summary>
-        ///     New AABB of the entity.
-        /// </summary>
-        public readonly Box2? WorldAABB;
+        public readonly TransformComponent Component;
     }
 
     public struct TransformChildrenEnumerator : IDisposable

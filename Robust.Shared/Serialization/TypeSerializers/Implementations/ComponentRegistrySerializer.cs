@@ -13,6 +13,7 @@ using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
@@ -177,9 +178,30 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             return target;
         }
 
-        public SequenceDataNode PushInheritance(SequenceDataNode child, SequenceDataNode parent)
+        public SequenceDataNode PushInheritance(ISerializationManager serializationManager, SequenceDataNode child,
+            SequenceDataNode parent,
+            IDependencyCollection dependencies)
         {
-            throw new NotImplementedException();
+            var componentFactory = dependencies.Resolve<IComponentFactory>();
+            var newCompReg = child.Copy();
+            var newCompRegDict = ToTypeIndexedDictionary(newCompReg, componentFactory);
+            var parentDict = ToTypeIndexedDictionary(parent, componentFactory);
+
+            foreach (var (type, mapping) in parentDict)
+            {
+                if (newCompRegDict.TryFirstOrNull(p => p.Key., out var childMapping))
+                {
+
+                    var newMapping = serializationManager.PushInheritance(type, )
+                }
+                else
+                {
+
+                }
+            }
         }
+
+        private Dictionary<IComponentRegistration, MappingDataNode> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory) =>
+            node.Cast<MappingDataNode>().ToDictionary(p => componentFactory.GetRegistration(p.Get<ValueDataNode>("type").Value), p => p);
     }
 }

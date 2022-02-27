@@ -86,26 +86,26 @@ namespace Robust.UnitTesting.Shared.Map
 
                 Assert.That(chunks.Count, Is.EqualTo(1));
                 var chunk = chunks[0];
-                var aabb = chunk.CalcWorldAABB();
+                var aabb = gridInternal.CalcWorldAABB(chunk);
                 var bounds = new Box2(new Vector2(0, 0), new Vector2(2, 10));
 
                 // With all cardinal directions these should align.
                 Assert.That(aabb, Is.EqualTo(bounds));
 
                 IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).LocalRotation = new Angle(Math.PI);
-                aabb = chunk.CalcWorldAABB();
+                aabb = gridInternal.CalcWorldAABB(chunk);
                 bounds = new Box2(new Vector2(-2, -10), new Vector2(0, 0));
 
                 Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
 
                 IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).LocalRotation = new Angle(-Math.PI / 2);
-                aabb = chunk.CalcWorldAABB();
+                aabb = gridInternal.CalcWorldAABB(chunk);
                 bounds = new Box2(new Vector2(0, -2), new Vector2(10, 0));
 
                 Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");
 
                 IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(gridEnt).LocalRotation = new Angle(-Math.PI / 4);
-                aabb = chunk.CalcWorldAABB();
+                aabb = gridInternal.CalcWorldAABB(chunk);
                 bounds = new Box2(new Vector2(0, -1.4142135f), new Vector2(8.485281f, 7.071068f));
 
                 Assert.That(aabb.EqualsApprox(bounds), $"Expected bounds of {aabb} and got {bounds}");

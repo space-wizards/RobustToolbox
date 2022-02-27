@@ -24,9 +24,16 @@ namespace Robust.Client.Map
 
         private readonly Dictionary<ushort, Box2> _tileRegions = new();
 
+        /// <inheritdoc />
         public Box2? TileAtlasRegion(Tile tile)
         {
-            if (_tileRegions.TryGetValue(tile.TypeId, out var region))
+            return TileAtlasRegion(tile.TypeId);
+        }
+
+        /// <inheritdoc />
+        public Box2? TileAtlasRegion(ushort tileType)
+        {
+            if (_tileRegions.TryGetValue(tileType, out var region))
             {
                 return region;
             }

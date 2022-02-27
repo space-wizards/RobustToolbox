@@ -861,7 +861,7 @@ namespace Robust.Client.Console.Commands
             var chunkIndex = grid.LocalToChunkIndices(grid.MapToGrid(mousePos));
             var chunk = internalGrid.GetChunk(chunkIndex);
 
-            shell.WriteLine($"worldBounds: {chunk.CalcWorldAABB()} localBounds: {chunk.CalcLocalBounds()}");
+            shell.WriteLine($"worldBounds: {internalGrid.CalcWorldAABB(chunk)} localBounds: {chunk.CachedBounds}");
         }
     }
 

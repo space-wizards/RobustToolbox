@@ -689,6 +689,7 @@ Types:
     CancellationToken: { All: True }
     CancellationTokenSource: { All: True }
     Interlocked: { All: True }
+    Monitor: { All: True }
   System.Web:
     HttpUtility:
       Methods:

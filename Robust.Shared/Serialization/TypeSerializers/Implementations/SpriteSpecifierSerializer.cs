@@ -38,13 +38,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
         {
             try
             {
-                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, node, dependencies, skipHook, context);
             }
             catch { /* ignored */ }
 
             try
             {
-                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
             }
             catch { /* ignored */ }
 
@@ -57,6 +57,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             bool skipHook, ISerializationContext? context)
         {
+            if (!IoCManager.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value))
+                throw new InvalidMappingException("Invalid Entity Prototype");
+
             return new DeserializedValue<EntityPrototype>(new EntityPrototype(node.Value));
         }
 
@@ -107,8 +110,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            // TODO Serialization: actually validate the id
-            return string.IsNullOrWhiteSpace(node.Value)
+            return !IoCManager.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);
         }

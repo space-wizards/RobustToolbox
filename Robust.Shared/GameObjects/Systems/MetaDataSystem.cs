@@ -63,4 +63,8 @@ public sealed class MetaDataSystem : EntitySystem
 public struct MetaFlagRemoveAttemptEvent
 {
     public bool Cancelled = false;
+
+    public MetaFlagRemoveAttemptEvent()
+    {
+    }
 }

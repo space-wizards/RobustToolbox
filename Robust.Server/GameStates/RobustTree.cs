@@ -64,9 +64,13 @@ public sealed class RobustTree<T> where T : notnull
                     if (mend)
                     {
                         _parents[child.Value] = parent;
-                        var children = _nodeIndex[parent].Children ?? _setProvider();
+                        var children = _nodeIndex[parent].Children;
+                        if (children == null)
+                        {
+                            children = _setProvider();
+                            _nodeIndex[parent] = _nodeIndex[parent].WithChildren(children);
+                        }
                         children.Add(child);
-                        _nodeIndex[parent] = new TreeNode(parent){Children = children};
                     }
                     else
                     {
@@ -105,12 +109,16 @@ public sealed class RobustTree<T> where T : notnull
         if (!_nodeIndex.TryGetValue(parent, out var parentNode))
             parentNode = Set(parent);
 
-        parentNode.Children ??= _setProvider();
+        if (parentNode.Children == null)
+        {
+            _nodeIndex[parent] = parentNode = parentNode.WithChildren(_setProvider());
+        }
+
         if (_nodeIndex.TryGetValue(child, out var existingNode))
         {
             if (_rootNodes.Contains(child))
             {
-                parentNode.Children.Add(existingNode);
+                parentNode.Children!.Add(existingNode);
                 _rootNodes.Remove(child);
                 _parents.Add(child, parent);
                 return existingNode;
@@ -120,14 +128,14 @@ public sealed class RobustTree<T> where T : notnull
                 throw new InvalidOperationException("Could not find old parent for non-root node.");
 
             previousParentNode.Children?.Remove(existingNode);
-            parentNode.Children.Add(existingNode);
+            parentNode.Children!.Add(existingNode);
             _parents[child] = parent;
             return existingNode;
         }
 
         existingNode = new TreeNode(child);
         _nodeIndex.Add(child, existingNode);
-        parentNode.Children.Add(existingNode);
+        parentNode.Children!.Add(existingNode);
         _parents.Add(child, parent);
         return existingNode;
     }
@@ -149,14 +157,15 @@ public sealed class RobustTree<T> where T : notnull
         _setConsumer(rootNodes);
     }
 
-    public struct TreeNode : IEquatable<TreeNode>
+    public readonly struct TreeNode : IEquatable<TreeNode>
     {
         public readonly T Value;
-        public HashSet<TreeNode>? Children = null;
+        public readonly HashSet<TreeNode>? Children;
 
-        public TreeNode(T value)
+        public TreeNode(T value, HashSet<TreeNode>? children = null)
         {
             Value = value;
+            Children = children;
         }
 
         public bool Equals(TreeNode other)
@@ -172,6 +181,11 @@ public sealed class RobustTree<T> where T : notnull
         public override int GetHashCode()
         {
             return HashCode.Combine(Value, Children);
+        }
+
+        public TreeNode WithChildren(HashSet<TreeNode> children)
+        {
+            return new TreeNode(Value, children);
         }
     }
 }

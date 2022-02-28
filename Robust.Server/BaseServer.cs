@@ -66,18 +66,17 @@ namespace Robust.Server
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IGameTiming _time = default!;
         [Dependency] private readonly IResourceManagerInternal _resources = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly ITimerManager timerManager = default!;
+        [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IServerGameStateManager _stateManager = default!;
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IRuntimeLog runtimeLog = default!;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly HubManager _hubManager = default!;
@@ -612,7 +611,7 @@ namespace Robust.Server
                 Directory.CreateDirectory(relPath);
                 var pathToWrite = Path.Combine(relPath,
                     "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
-                File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+                File.WriteAllText(pathToWrite, _runtimeLog.Display(), EncodingHelpers.UTF8);
             }
 
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
@@ -658,7 +657,7 @@ namespace Robust.Server
             using (TickUsage.WithLabels("Timers").NewTimer())
             {
                 _consoleHost.CommandBufferExecute();
-                timerManager.UpdateTimers(frameEventArgs);
+                _timerManager.UpdateTimers(frameEventArgs);
             }
 
             using (TickUsage.WithLabels("AsyncTasks").NewTimer())

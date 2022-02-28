@@ -9,7 +9,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects;
 
-public sealed partial class EntityLookup
+public sealed partial class EntityLookupSystem
 {
     // TODO: Need to nuke most of the below and cleanup when entitylookup gets optimised some more (physics + containers).
 

@@ -9,7 +9,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared
 {
-    [TestFixture, TestOf(typeof(IEntityLookup))]
+    [TestFixture, TestOf(typeof(EntityLookupSystem))]
     public sealed class EntityLookupTest
     {
         /// <summary>
@@ -20,7 +20,7 @@ namespace Robust.UnitTesting.Shared
         {
             var server = RobustServerSimulation.NewSimulation().InitializeInstance();
 
-            var lookup = server.Resolve<IEntityLookup>();
+            var lookup = server.Resolve<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
 

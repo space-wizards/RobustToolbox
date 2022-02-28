@@ -76,6 +76,7 @@ namespace Robust.UnitTesting
             // Required systems
             systems.LoadExtraSystemType<ContainerSystem>();
             systems.LoadExtraSystemType<TransformSystem>();
+            systems.LoadExtraSystemType<EntityLookupSystem>();
 
             var entMan = IoCManager.Resolve<IEntityManager>();
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -85,9 +86,6 @@ namespace Robust.UnitTesting
             entMan.Initialize();
             mapMan.Initialize();
             systems.Initialize();
-
-            // TODO: Make this a system and it should be covered off by the above.
-            // IoCManager.Resolve<IEntityLookup>().Startup();
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 

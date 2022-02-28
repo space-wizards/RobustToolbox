@@ -6,7 +6,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.GameObjects;
 
-public sealed partial class EntityLookup
+public sealed partial class EntityLookupSystem
 {
     #region Grid Methods
 

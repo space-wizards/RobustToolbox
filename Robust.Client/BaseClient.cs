@@ -26,7 +26,6 @@ namespace Robust.Client
         [Dependency] private readonly IPlayerManager _playMan = default!;
         [Dependency] private readonly INetConfigurationManager _configManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _entityLookup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IGameTiming _timing = default!;

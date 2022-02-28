@@ -53,6 +53,7 @@
     <Compile Update="UserInterface\CustomControls\DefaultWindow.xaml.cs">
       <DependentUpon>DefaultWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Remove="Debugging\IDebugDrawing.cs" />
   </ItemGroup>
   <Import Project="..\MSBuild\Robust.Engine.targets" />
   <PropertyGroup>

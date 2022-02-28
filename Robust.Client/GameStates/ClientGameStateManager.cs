@@ -45,7 +45,6 @@ namespace Robust.Client.GameStates
 
         [Dependency] private readonly IComponentFactory _compFactory = default!;
         [Dependency] private readonly IClientEntityManagerInternal _entities = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlayerManager _players = default!;
         [Dependency] private readonly IClientNetManager _network = default!;
         [Dependency] private readonly IBaseClient _client = default!;

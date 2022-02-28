@@ -222,7 +222,7 @@ namespace Robust.Server.Console.Commands
             if (mapManager.MapExists(mapId))
                 shell.WriteLine($"Map {mapId} has been loaded from {args[1]}.");
             else
-                shell.WriteLine($"Error while loading map from {args[1]}.");
+                shell.WriteError($"Error while loading map from {args[1]}.");
         }
     }
 

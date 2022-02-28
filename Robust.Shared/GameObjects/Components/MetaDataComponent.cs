@@ -50,11 +50,9 @@ namespace Robust.Shared.GameObjects
     [NetworkedComponent]
     public sealed class MetaDataComponent : Component
     {
-        [DataField("name")]
-        private string? _entityName;
-        [DataField("desc")]
-        private string? _entityDescription;
-        private EntityPrototype? _entityPrototype;
+        [DataField("name")] internal string? _entityName;
+        [DataField("desc")] internal string? _entityDescription;
+        internal EntityPrototype? _entityPrototype;
         private bool _entityPaused;
 
         // Every entity starts at tick 1, because they are conceptually created in the time between 0->1
@@ -134,6 +132,9 @@ namespace Robust.Shared.GameObjects
         [ViewVariables]
         public EntityLifeStage EntityLifeStage { get; internal set; }
 
+        [ViewVariables]
+        public MetaDataFlags Flags { get; internal set; }
+
         /// <summary>
         ///     The sum of our visibility layer and our parent's visibility layers.
         ///     Server-only.
@@ -149,7 +150,7 @@ namespace Robust.Shared.GameObjects
             {
                 if (_entityPaused == value)
                     return;
-                
+
                 var entMan = IoCManager.Resolve<IEntityManager>();
                 if (value && entMan.HasComponent<IgnorePauseComponent>(Owner))
                     return;
@@ -163,26 +164,6 @@ namespace Robust.Shared.GameObjects
         public bool EntityInitializing => EntityLifeStage == EntityLifeStage.Initializing;
         public bool EntityDeleted => EntityLifeStage >= EntityLifeStage.Deleted;
 
-
-        public override ComponentState GetComponentState()
-        {
-            return new MetaDataComponentState(_entityName, _entityDescription, EntityPrototype?.ID);
-        }
-
-        public override void HandleComponentState(ComponentState? curState, ComponentState? nextState)
-        {
-            base.HandleComponentState(curState, nextState);
-
-            if (!(curState is MetaDataComponentState state))
-                return;
-
-            _entityName = state.Name;
-            _entityDescription = state.Description;
-
-            if(state.PrototypeId != null)
-                _entityPrototype = IoCManager.Resolve<IPrototypeManager>().Index<EntityPrototype>(state.PrototypeId);
-        }
-
         internal override void ClearTicks()
         {
             // Do not clear modified ticks.
@@ -191,5 +172,15 @@ namespace Robust.Shared.GameObjects
             // (Creation can still be cleared though)
             ClearCreationTick();
         }
+    }
+
+    [Flags]
+    public enum MetaDataFlags : byte
+    {
+        None = 0,
+        /// <summary>
+        /// Whether the entity has states specific to a particular player.
+        /// </summary>
+        EntitySpecific = 1 << 0,
     }
 }

@@ -27,12 +27,6 @@ namespace Robust.Shared.GameObjects
     // TODO: Nuke IEntityLookup and just make a system
     public interface IEntityLookup
     {
-        // Not an EntitySystem given _entityManager has a dependency on it which means it's just easier to IoC it for tests.
-
-        void Startup();
-
-        void Shutdown();
-
         bool AnyEntitiesIntersecting(MapId mapId, Box2 box, LookupFlags flags = LookupFlags.IncludeAnchored);
 
         IEnumerable<EntityUid> GetEntitiesInMap(MapId mapId, LookupFlags flags = LookupFlags.IncludeAnchored);
@@ -84,12 +78,11 @@ namespace Robust.Shared.GameObjects
     }
 
     [UsedImplicitly]
-    public sealed partial class EntityLookup : IEntityLookup, IEntityEventSubscriber
+    public sealed partial class EntityLookup : EntitySystem, IEntityLookup
     {
-        private readonly IEntityManager _entityManager;
-        private readonly IMapManager _mapManager;
-        private SharedContainerSystem _container = default!;
-        private SharedTransformSystem _transform = default!;
+        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
+        [IoC.Dependency] private readonly SharedContainerSystem _container = default!;
+        [IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private const int GrowthRate = 256;
 
@@ -101,61 +94,33 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         private float _lookupEnlargementRange;
 
-        // TODO: Should combine all of the methods that check for IPhysBody and just use the one GetWorldAabbFromEntity method
-
-        // TODO: Combine GridTileLookupSystem and entity anchoring together someday.
-        // Queries are a bit of spaghet rn but ideally you'd just have:
-        // A) The fast tile-based one
-        // B) The physics-only one (given physics needs it to be fast af)
-        // C) A generic use one that covers anything not caught in the above.
-
-        public bool Started { get; private set; } = false;
-
-        public EntityLookup(IEntityManager entityManager, IMapManager mapManager)
+        public override void Initialize()
         {
-            _entityManager = entityManager;
-            _mapManager = mapManager;
-        }
-
-        public void Startup()
-        {
-            if (Started)
-            {
-                throw new InvalidOperationException("Startup() called multiple times.");
-            }
-
-            _container = _entityManager.EntitySysManager.GetEntitySystem<SharedContainerSystem>();
-            _transform = _entityManager.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            base.Initialize();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.LookupEnlargementRange, value => _lookupEnlargementRange = value, true);
 
-            var eventBus = _entityManager.EventBus;
-            eventBus.SubscribeEvent<MoveEvent>(EventSource.Local, this, OnMove);
-            eventBus.SubscribeEvent<RotateEvent>(EventSource.Local, this, OnRotate);
-            eventBus.SubscribeEvent<EntParentChangedMessage>(EventSource.Local, this, OnParentChange);
-            eventBus.SubscribeEvent<AnchorStateChangedEvent>(EventSource.Local, this, OnAnchored);
-            eventBus.SubscribeEvent<UpdateLookupBoundsEvent>(EventSource.Local, this, OnBoundsUpdate);
+            SubscribeLocalEvent<MoveEvent>(OnMove);
+            SubscribeLocalEvent<RotateEvent>(OnRotate);
+            SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
+            SubscribeLocalEvent<AnchorStateChangedEvent>(OnAnchored);
+            SubscribeLocalEvent<UpdateLookupBoundsEvent>(OnBoundsUpdate);
 
-            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
-            eventBus.SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
-            eventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
+            SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
+            SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
+            SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
 
-            eventBus.SubscribeEvent<EntityTerminatingEvent>(EventSource.Local, this, OnTerminate);
+            SubscribeLocalEvent<EntityTerminatingEvent>(OnTerminate);
 
-            _entityManager.EntityInitialized += OnEntityInit;
+            EntityManager.EntityInitialized += OnEntityInit;
             _mapManager.MapCreated += OnMapCreated;
-            Started = true;
         }
 
-        public void Shutdown()
+        public override void Shutdown()
         {
-            // If we haven't even started up, there's nothing to clean up then.
-            if (!Started)
-                return;
-
-            _entityManager.EntityInitialized -= OnEntityInit;
+            base.Shutdown();
+            EntityManager.EntityInitialized -= OnEntityInit;
             _mapManager.MapCreated -= OnMapCreated;
-            Started = false;
         }
 
         private void OnAnchored(ref AnchorStateChangedEvent args)
@@ -166,9 +131,9 @@ namespace Robust.Shared.GameObjects
             {
                 RemoveFromEntityTree(args.Entity);
             }
-            else if (_entityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
+            else if (EntityManager.TryGetComponent(args.Entity, out MetaDataComponent? meta) && meta.EntityLifeStage < EntityLifeStage.Terminating)
             {
-                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
                 var xform = xformQuery.GetComponent(args.Entity);
                 var lookup = GetLookup(args.Entity, xform, xformQuery);
 
@@ -195,14 +160,14 @@ namespace Robust.Shared.GameObjects
 
         private void OnGridInit(GridInitializeEvent ev)
         {
-            _entityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
+            EntityManager.EnsureComponent<EntityLookupComponent>(ev.EntityUid);
         }
 
         private void OnLookupAdd(EntityUid uid, EntityLookupComponent component, ComponentAdd args)
         {
             int capacity;
 
-            if (_entityManager.TryGetComponent(uid, out TransformComponent? xform))
+            if (EntityManager.TryGetComponent(uid, out TransformComponent? xform))
             {
                 capacity = (int) Math.Min(256, Math.Ceiling(xform.ChildCount / (float) GrowthRate) * GrowthRate);
             }
@@ -222,14 +187,14 @@ namespace Robust.Shared.GameObjects
         {
             if (eventArgs.Map == MapId.Nullspace) return;
 
-            _entityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));
+            EntityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));
         }
 
         private Box2 GetTreeAABB(in EntityUid entity)
         {
             // TODO: Should feed in AABB to lookup so it's not enlarged unnecessarily
             var aabb = GetWorldAABB(entity);
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var tree = GetLookup(entity, xformQuery);
 
             if (tree == null)
@@ -249,7 +214,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnEntityInit(object? sender, EntityUid uid)
         {
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
             if (!xformQuery.TryGetComponent(uid, out var xform) ||
                 xform.Anchored ||
@@ -287,7 +252,7 @@ namespace Robust.Shared.GameObjects
             // Even if the entity is contained it may have children that aren't so we still need to update.
             if (!CanMoveUpdate(uid, xform)) return;
 
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var lookup = GetLookup(uid, xform, xformQuery);
 
             if (lookup == null) return;
@@ -309,10 +274,10 @@ namespace Robust.Shared.GameObjects
         {
             if (_mapManager.IsMap(args.Entity) ||
                 _mapManager.IsGrid(args.Entity) ||
-                _entityManager.GetComponent<MetaDataComponent>(args.Entity).EntityLifeStage < EntityLifeStage.Initialized) return;
+                EntityManager.GetComponent<MetaDataComponent>(args.Entity).EntityLifeStage < EntityLifeStage.Initialized) return;
 
             EntityLookupComponent? oldLookup = null;
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(args.Entity);
 
             if (args.OldParent != null)
@@ -333,7 +298,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnBoundsUpdate(ref UpdateLookupBoundsEvent ev)
         {
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(ev.Uid);
 
             if (xform.Anchored || _container.IsEntityInContainer(ev.Uid, xform)) return;
@@ -397,7 +362,7 @@ namespace Robust.Shared.GameObjects
                 }
             }
             // If they're in a container then it just uses the parent's AABB.
-            else if (_entityManager.TryGetComponent<ContainerManagerComponent>(xform.Owner, out var conManager))
+            else if (EntityManager.TryGetComponent<ContainerManagerComponent>(xform.Owner, out var conManager))
             {
                 while (childEnumerator.MoveNext(out var child))
                 {
@@ -430,7 +395,7 @@ namespace Robust.Shared.GameObjects
 
         private void RemoveFromEntityTree(EntityUid uid, bool recursive = true)
         {
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(uid);
             var lookup = GetLookup(uid, xform, xformQuery);
             RemoveFromEntityTree(lookup, xform, xformQuery, recursive);
@@ -470,7 +435,7 @@ namespace Robust.Shared.GameObjects
                 return null;
 
             var parent = xform.ParentUid;
-            var lookupQuery = _entityManager.GetEntityQuery<EntityLookupComponent>();
+            var lookupQuery = EntityManager.GetEntityQuery<EntityLookupComponent>();
 
             // If we're querying a map / grid just return it directly.
             if (lookupQuery.TryGetComponent(uid, out var lookup))
@@ -512,7 +477,7 @@ namespace Robust.Shared.GameObjects
             Box2 localAABB;
             var transform = new Transform(position, angle);
 
-            if (_entityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
+            if (EntityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
             {
                 localAABB = worldLookup.GetAABB(transform);
             }
@@ -526,7 +491,7 @@ namespace Robust.Shared.GameObjects
 
         public Box2 GetWorldAABB(EntityUid uid, TransformComponent? xform = null)
         {
-            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             xform ??= xformQuery.GetComponent(uid);
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();
 

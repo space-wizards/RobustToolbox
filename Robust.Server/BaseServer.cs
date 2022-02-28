@@ -344,7 +344,6 @@ namespace Robust.Server
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
             _stateManager.Initialize();
 
             var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
@@ -603,7 +602,6 @@ namespace Robust.Server
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
-            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Cleanup();
 
             if (_config.GetCVar(CVars.LogRuntimeLog))

@@ -575,7 +575,6 @@ namespace Robust.Client
 
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
-            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
             _clydeAudio.Shutdown();

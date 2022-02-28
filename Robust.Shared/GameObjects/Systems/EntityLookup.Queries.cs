@@ -21,7 +21,7 @@ public sealed partial class EntityLookup
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
 
-        var lookup = _entityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
+        var lookup = EntityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
         var results = new HashSet<EntityUid>();
         var tileSize = grid.TileSize;
 
@@ -32,13 +32,13 @@ public sealed partial class EntityLookup
 
             lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
             {
-                if (_entityManager.Deleted(data)) return;
+                if (EntityManager.Deleted(data)) return;
                 results.Add(data);
             });
 
             foreach (var ent in grid.GetAnchoredEntities(index))
             {
-                if (_entityManager.Deleted(ent)) continue;
+                if (EntityManager.Deleted(ent)) continue;
                 results.Add(ent);
             }
         }
@@ -51,7 +51,7 @@ public sealed partial class EntityLookup
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
         if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
 
-        var lookup = _entityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
+        var lookup = EntityManager.GetComponent<EntityLookupComponent>(grid.GridEntityId);
         var tileSize = grid.TileSize;
 
         var aabb = GetLocalBounds(gridIndices, tileSize);
@@ -59,13 +59,13 @@ public sealed partial class EntityLookup
 
         lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
         {
-            if (_entityManager.Deleted(data)) return;
+            if (EntityManager.Deleted(data)) return;
             results.Add(data);
         });
 
         foreach (var ent in grid.GetAnchoredEntities(gridIndices))
         {
-            if (_entityManager.Deleted(ent)) continue;
+            if (EntityManager.Deleted(ent)) continue;
             results.Add(ent);
         }
 
@@ -98,7 +98,7 @@ public sealed partial class EntityLookup
 
         if (worldMatrix == null || angle == null)
         {
-            var gridXform = _entityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+            var gridXform = EntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
             var (_, wAng, wMat) = gridXform.GetWorldPositionRotationMatrix();
             worldMatrix = wMat;
             angle = wAng;

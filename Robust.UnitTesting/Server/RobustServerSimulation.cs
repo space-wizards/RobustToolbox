@@ -265,7 +265,6 @@ namespace Robust.UnitTesting.Server
 
             entityMan.Startup();
             mapManager.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 

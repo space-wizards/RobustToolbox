@@ -18,9 +18,11 @@ namespace Robust.UnitTesting.Shared
         [Test]
         public void TestAnchoring()
         {
-            var server = RobustServerSimulation.NewSimulation().InitializeInstance();
+            var sim = RobustServerSimulation.NewSimulation();
+            // sim.RegisterEntitySystems(m => m.LoadExtraSystemType<EntityLookupSystem>());
+            var server = sim.InitializeInstance();
 
-            var lookup = server.Resolve<EntityLookupSystem>();
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
             var entManager = server.Resolve<IEntityManager>();
             var mapManager = server.Resolve<IMapManager>();
 

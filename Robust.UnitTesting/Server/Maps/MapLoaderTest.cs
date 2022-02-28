@@ -66,7 +66,7 @@ entities:
         {
             // For some reason RobustUnitTest doesn't discover PVSSystem but this does here so ?
             var syssy = IoCManager.Resolve<IEntitySystemManager>();
-            syssy.Clear();
+            syssy.Shutdown();
             syssy.Initialize();
 
             var compFactory = IoCManager.Resolve<IComponentFactory>();

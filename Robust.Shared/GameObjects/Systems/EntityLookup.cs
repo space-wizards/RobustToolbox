@@ -333,8 +333,22 @@ namespace Robust.Shared.GameObjects
 
         private void OnBoundsUpdate(ref UpdateLookupBoundsEvent ev)
         {
-            // TODO: Just nuke the old one and add to new one.
-            throw new NotImplementedException();
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(ev.Uid);
+
+            if (xform.Anchored || _container.IsEntityInContainer(ev.Uid, xform)) return;
+
+            var lookup = GetLookup(ev.Uid, xform, xformQuery);
+
+            if (lookup == null) return;
+
+            var lookupXform = xformQuery.GetComponent(lookup.Owner);
+            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+            // If we're contained then LocalRotation should be 0 anyway.
+            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform) - _transform.GetWorldRotation(lookupXform), xform, xformQuery);
+
+            // TODO: Only container children need updating so could manually do this slightly better.
+            AddToEntityTree(lookup, xform, aabb, xformQuery);
         }
 
         private void AddToEntityTree(

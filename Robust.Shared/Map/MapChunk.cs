@@ -101,6 +101,7 @@ namespace Robust.Shared.Map
         /// <exception cref="ArgumentOutOfRangeException">The index is less than or greater than the size of the chunk.</exception>
         public Tile GetTile(ushort xIndex, ushort yIndex)
         {
+
             if (xIndex >= ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
 

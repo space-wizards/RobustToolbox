@@ -40,7 +40,7 @@
         /// <summary>
         ///     Number of variants this tile has. ALSO DETERMINES THE EXPECTED INPUT TEXTURE SIZE.
         /// </summary>
-        byte Variants => 1;
+        byte Variants { get; }
 
         /// <summary>
         ///     Assign a new value to <see cref="TileId"/>, used when registering the tile definition.

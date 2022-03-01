@@ -12,6 +12,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Client.Map
 {
@@ -97,7 +98,8 @@ namespace Robust.Client.Map
                 {
                     var point = new Vector2i(column * tileSize, row * tileSize);
 
-                    image.Blit(new UIBox2i(0, 0, image.Width, image.Height), sheet, point);
+                    var box = new UIBox2i(0, 0, tileSize, tileSize).Translated(new Vector2i(j * tileSize, 0));
+                    image.Blit(box, sheet, point);
 
                     var w = (float) sheet.Width;
                     var h = (float) sheet.Height;

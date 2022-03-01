@@ -101,13 +101,12 @@ namespace Robust.Client.Graphics.Clyde
                     if (tile.IsEmpty)
                         continue;
 
-                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId);
-                    if (regionMaybe == null)
+                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
+                    if (regionMaybe == null || regionMaybe.Count <= tile.Variant)
                     {
                         continue;
                     }
-
-                    var region = regionMaybe![tile.Variant];
+                    var region = regionMaybe[tile.Variant];
                     var gx = x + cScaled.X;
                     var gy = y + cScaled.Y;
 

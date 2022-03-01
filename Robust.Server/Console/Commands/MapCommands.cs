@@ -358,8 +358,8 @@ namespace Robust.Server.Console.Commands
                 msg.AppendFormat("{0}: init: {1}, paused: {2}, ent: {3}, grids: {4}\n",
                     mapId, mapManager.IsMapInitialized(mapId),
                     mapManager.IsMapPaused(mapId),
-                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)),
-                    mapManager.GetMapEntityId(mapId));
+                    mapManager.GetMapEntityId(mapId),
+                    string.Join(",", mapManager.GetAllMapGrids(mapId).Select(grid => grid.Index)));
             }
 
             shell.WriteLine(msg.ToString());
@@ -381,7 +381,7 @@ namespace Robust.Server.Console.Commands
             foreach (var grid in mapManager.GetAllGrids().OrderBy(grid => grid.Index.Value))
             {
                 msg.AppendFormat("{0}: map: {1}, ent: {2}, pos: {3} \n",
-                    grid.Index, grid.ParentMapId, grid.WorldPosition, grid.GridEntityId);
+                    grid.Index, grid.ParentMapId, grid.GridEntityId, grid.WorldPosition);
             }
 
             shell.WriteLine(msg.ToString());

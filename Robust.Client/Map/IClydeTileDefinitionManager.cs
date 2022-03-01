@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -18,12 +19,12 @@ namespace Robust.Client.Map
         ///     Gets the region inside the texture atlas to use to draw a tile.
         /// </summary>
         /// <returns>If null, do not draw the tile at all.</returns>
-        Box2? TileAtlasRegion(Tile tile);
+        List<Box2>? TileAtlasRegion(Tile tile);
 
         /// <summary>
         ///     Gets the region inside the texture atlas to use to draw a tile type.
         /// </summary>
         /// <returns>If null, do not draw the tile at all.</returns>
-        Box2? TileAtlasRegion(ushort tileType);
+        List<Box2>? TileAtlasRegion(ushort tileType);
     }
 }

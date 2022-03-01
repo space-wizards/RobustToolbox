@@ -107,7 +107,7 @@ namespace Robust.Client.Graphics.Clyde
                         continue;
                     }
 
-                    var region = regionMaybe.Value;
+                    var region = regionMaybe![tile.Variant];
                     var gx = x + cScaled.X;
                     var gy = y + cScaled.Y;
 

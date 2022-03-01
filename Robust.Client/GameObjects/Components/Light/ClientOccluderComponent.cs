@@ -142,5 +142,7 @@ namespace Robust.Client.GameObjects
         public bool Handled = false;
         public OccluderDir Directions = OccluderDir.None;
         public TransformComponent Component = default!;
+
+        public OccluderDirectionsEvent() {}
     }
 }

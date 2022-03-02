@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\Robust.Server\Robust.Server.csproj" />
       <ProjectReference Include="..\Robust.Shared\Robust.Shared.csproj" />
+      <ProjectReference Include="..\Robust.UnitTesting\Robust.UnitTesting.csproj" />
     </ItemGroup>
     <ItemGroup>
       <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />

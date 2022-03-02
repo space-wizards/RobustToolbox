@@ -282,10 +282,19 @@ namespace Robust.Shared.GameObjects
             return bounds;
         }
 
+        [Obsolete("Use the GetWorldAABB on EntityLookupSystem")]
         public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
-            worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
+            if (worldPos == null && worldRot == null)
+            {
+                (worldPos, worldRot) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
+            }
+            else
+            {
+                worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
+                worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
+            }
+
             var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
             var bounds = new Box2(transform.Position, transform.Position);

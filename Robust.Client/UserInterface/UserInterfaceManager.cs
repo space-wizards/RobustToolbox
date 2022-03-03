@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Robust.Client.Graphics;
@@ -18,6 +17,8 @@ using Robust.Shared.Input;
 using Robust.Shared.Input.Binding;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Profiling;
 using Robust.Shared.Prototypes;
@@ -107,6 +108,7 @@ namespace Robust.Client.UserInterface
         {
             _dependencies = new DependencyCollection(_rootDependencies);
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
+            _configurationManager.OnValueChanged(CVars.UIDragThreshold, v => _dragThresholdSquared = v * v, true);
             ThemeDefaults = new InterfaceThemeDummy();
             _initScaling();
             SetupControllers();

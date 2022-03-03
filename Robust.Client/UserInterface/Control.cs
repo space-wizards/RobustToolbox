@@ -42,7 +42,6 @@ namespace Robust.Client.UserInterface
 
         /// <summary>
         ///     The name of this control.
-        ///     Names must be unique between the siblings of the control.
         /// </summary>
         [ViewVariables]
         public string? Name { get; set; }
@@ -1014,14 +1013,6 @@ namespace Robust.Client.UserInterface
         protected virtual void FrameUpdate(FrameEventArgs args)
         {
             ProcessAnimations(args);
-        }
-
-        // These are separate from StandardCursorShape so that
-        // in the future we could have an API to override the styling.
-
-        public override string ToString()
-        {
-            return $"{Name} ({GetType().Name})";
         }
 
         /// <summary>

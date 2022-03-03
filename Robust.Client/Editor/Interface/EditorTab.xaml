@@ -1,0 +1,16 @@
+﻿<Control xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:gfx="clr-namespace:Robust.Client.Graphics"
+         x:Class="Robust.Client.Editor.Interface.EditorTab"
+         MinWidth="150"
+         MouseFilter="Stop">
+    <Button Name="Button" Access="Public" MouseFilter="Pass">
+        <BoxContainer Orientation="Horizontal">
+            <TextureRect Name="Icon" />
+
+            <Label Name="Title" HorizontalExpand="True" ClipText="True" />
+
+            <TextureButton Name="CloseButton" StyleClasses="windowCloseButton" VerticalAlignment="Center" />
+        </BoxContainer>
+    </Button>
+</Control>

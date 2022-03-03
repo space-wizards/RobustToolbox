@@ -85,12 +85,31 @@ namespace Robust.Client.UserInterface
 
         public Vector2 RelativePixelPosition { get; internal set; }
 
+        /// <summary>
+        /// Handler to be invoked if a drag gets detected from this input event.
+        /// If null, no drag should be detected.
+        /// </summary>
+        internal DragDropDetected? OnDragDropDetected { get; private set; }
+
         public GUIBoundKeyEventArgs(BoundKeyFunction function, BoundKeyState state, ScreenCoordinates pointerLocation,
             bool canFocus, Vector2 relativePosition, Vector2 relativePixelPosition)
             : base(function, state, pointerLocation, canFocus)
         {
             RelativePosition = relativePosition;
             RelativePixelPosition = relativePixelPosition;
+        }
+
+        /// <summary>
+        /// Specify that this input event is a candidate for starting a drag-drop operation.
+        /// </summary>
+        /// <remarks>
+        /// The drag-drop operation will be started if the user moves their mouse enough while holding this button.
+        /// </remarks>
+        public void HandleDragDetect(DragDropDetected dropDetected)
+        {
+            Handle();
+
+            OnDragDropDetected = dropDetected;
         }
     }
 

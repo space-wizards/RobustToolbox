@@ -1932,6 +1932,15 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> UIXamlJitPreload =
             CVarDef.Create("ui.xaml_jit_preload", false, CVar.CLIENTONLY);
 
+        /// <summary>
+        /// The amount of pixels you need to move while holding click before a drag is detected in UI.
+        /// </summary>
+        /// <remarks>
+        /// This is scaled to the window's UI scale.
+        /// </remarks>
+        public static readonly CVarDef<float> UIDragThreshold =
+            CVarDef.Create("ui.drag_threshold", 5f, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * FONT
          */

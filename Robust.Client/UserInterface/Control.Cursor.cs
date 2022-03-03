@@ -8,6 +8,9 @@ namespace Robust.Client.UserInterface
         private CursorShape _cursorShape;
         private ICursor? _customCursor;
 
+        // These are separate from StandardCursorShape so that
+        // in the future we could have an API to override the styling.
+
         /// <summary>
         ///     Default common cursor shapes available in the UI.
         /// </summary>

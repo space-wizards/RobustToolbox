@@ -1,0 +1,13 @@
+﻿<ed:EditorPanel xmlns="https://spacestation14.io"
+         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+         xmlns:ed="clr-namespace:Robust.Client.Editor.Interface"
+         xmlns:gfx="clr-namespace:Robust.Client.Graphics"
+         x:Class="Robust.Client.Editor.Testing.EditorDebugPanel">
+    <PanelContainer>
+        <PanelContainer.PanelOverride>
+            <gfx:StyleBoxFlat BackgroundColor="#FF0000" />
+        </PanelContainer.PanelOverride>
+
+        <Label Text="Foobar" Name="A" />
+    </PanelContainer>
+</ed:EditorPanel>

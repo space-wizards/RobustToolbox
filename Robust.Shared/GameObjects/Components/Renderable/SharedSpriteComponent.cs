@@ -78,6 +78,8 @@ namespace Robust.Shared.GameObjects
             public Color Color = Color.White;
             [DataField("map")]
             public HashSet<string>? MapKeys;
+            [DataField("drawDepth")]
+            public int DrawDepth;
 
             public static PrototypeLayerData New()
             {

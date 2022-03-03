@@ -176,7 +176,10 @@ namespace Robust.Client.GameObjects
         void LayerSetRSI(object layerKey, string rsiPath);
         void LayerSetRSI(int layer, ResourcePath rsiPath);
         void LayerSetRSI(object layerKey, ResourcePath rsiPath);
-
+        void LayerSetOffset(int layer, Vector2 offet);
+        void LayerSetOffset(object layerKey, Vector2 offet);
+        void LayerSetDrawDepthOverride(int layer, Dictionary<RSI.State.Direction, int>? depthOverride);
+        void LayerSetDrawDepthOverride(object layerKey, Dictionary<RSI.State.Direction, int>? depthOverride);
         void LayerSetScale(int layer, Vector2 scale);
         void LayerSetScale(object layerKey, Vector2 scale);
         void LayerSetRotation(int layer, Angle rotation);

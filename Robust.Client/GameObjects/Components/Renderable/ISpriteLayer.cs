@@ -15,6 +15,9 @@ namespace Robust.Client.GameObjects
 
         Angle Rotation { get; set; }
         Vector2 Scale { get; set; }
+        Vector2 Offset { get; set; }
+
+        int DrawDepth { get; set; }
 
         bool Visible { get; set; }
         Color Color { get; set; }

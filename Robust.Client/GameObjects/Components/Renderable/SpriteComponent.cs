@@ -713,6 +713,8 @@ namespace Robust.Client.GameObjects
 
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
             layer.Visible = anyTextureAttempted && layerDatum.Visible;
+
+            layer.DrawDepth = layerDatum.DrawDepth;
         }
 
         public void LayerSetData(object layerKey, PrototypeLayerData data)
@@ -1090,6 +1092,30 @@ namespace Robust.Client.GameObjects
             LayerSetRotation(layer, rotation);
         }
 
+        public void LayerSetDrawDepth(int layer, int drawDepth)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set draw depth! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            Layers[layer].DrawDepth = drawDepth;
+        }
+
+        public void LayerSetDrawDepth(object layerKey, int drawDepth)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set draw depth! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetDrawDepth(layer, drawDepth);
+        }
+
         public void LayerSetVisible(int layer, bool visible)
         {
             if (Layers.Count <= layer)
@@ -1137,6 +1163,31 @@ namespace Robust.Client.GameObjects
             }
 
             LayerSetColor(layer, color);
+        }
+
+        public void LayerSetDrawDepthOverride(int layer, Dictionary<RSIDirection, int>? depthOverride)
+        {
+            if (Layers.Count <= layer)
+            {
+                Logger.ErrorS(LogCategory, "Layer with index '{0}' does not exist, cannot set color! Trace:\n{1}",
+                    layer, Environment.StackTrace);
+                return;
+            }
+
+            var theLayer = Layers[layer];
+            theLayer.DrawDepthOverride = depthOverride;
+        }
+
+        public void LayerSetDrawDepthOverride(object layerKey, Dictionary<RSIDirection, int>? depthOverride)
+        {
+            if (!LayerMapTryGet(layerKey, out var layer))
+            {
+                Logger.ErrorS(LogCategory, "Layer with key '{0}' does not exist, cannot set color! Trace:\n{1}",
+                    layerKey, Environment.StackTrace);
+                return;
+            }
+
+            LayerSetDrawDepthOverride(layer, depthOverride);
         }
 
         public void LayerSetDirOffset(int layer, DirectionOffset offset)
@@ -1322,10 +1373,49 @@ namespace Robust.Client.GameObjects
             Matrix3.Multiply(ref LocalMatrix, ref entityMatrix, out var transform);
 
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
+
+            // Sort layers by draw depth. This can be dependent on the RSI direction, and so it isn't pre-sorted.
+            List<QueuedLayer> sortedLayers = new(Layers.Count);
             foreach (var layer in Layers)
             {
-                layer.Render(drawingHandle, ref transform, angle, overrideDirection);
+                if (!layer.Visible)
+                    continue;
+
+                var rsiState = layer.GetActualState();
+
+                var dir = (rsiState == null || rsiState.Directions == RSI.State.DirectionType.Dir1)
+                    ? RSIDirection.South
+                    : angle.ToRsiDirection(rsiState.Directions);
+
+                int depth;
+                if (layer.DrawDepthOverride == null || !layer.DrawDepthOverride.TryGetValue(dir, out depth))
+                    depth = layer.DrawDepth;
+
+                sortedLayers.Add(new(depth, layer, rsiState, dir));
             }
+            sortedLayers.Sort((x, y) => x.Depth.CompareTo(y.Depth));
+
+            // Render each layer
+            foreach (var entry in sortedLayers)
+            {
+                entry.Layer.Render(entry.RsiState, entry.Direction, drawingHandle, ref transform, overrideDirection);
+            }
+        }
+
+        internal readonly struct QueuedLayer
+        {
+            public QueuedLayer(int depth, Layer layer, RSI.State? rsiState, RSIDirection direction)
+            {
+                Depth = depth;
+                Layer = layer;
+                RsiState = rsiState;
+                Direction = direction;
+            }
+
+            public readonly int Depth;
+            public readonly Layer Layer;
+            public readonly RSI.State? RsiState;
+            public readonly RSIDirection Direction;
         }
 
         public static Angle CalcRectWorldAngle(Angle worldAngle, int numDirections)
@@ -1619,6 +1709,17 @@ namespace Robust.Client.GameObjects
             [ViewVariables] public float AnimationTime;
             [ViewVariables] public int AnimationFrame;
 
+            /// <summary>
+            ///     Determines the order in which layers are drawn. Not the same as the sprite component's draw depth.
+            /// </summary>
+            [ViewVariables] public int DrawDepth { get; set; }
+
+            /// <summary>
+            ///     This allows the draw depth to be override when the entity is facing a certain direction. Useful for things like in-hand or hair layers.
+            /// </summary>
+            [ViewVariables]
+            public Dictionary<RSIDirection, int>? DrawDepthOverride;
+
             public Matrix3 LocalMatrix = Matrix3.Identity;
 
             [ViewVariables(VVAccess.ReadWrite)]
@@ -1736,6 +1837,7 @@ namespace Robust.Client.GameObjects
                     State = State.Name,
                     Visible = Visible,
                     RsiPath = RSI?.Path?.ToString(),
+                    DrawDepth = DrawDepth,
                     //todo TexturePath = Textur
                     //todo MapKeys
                 };
@@ -2008,17 +2110,8 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
+            internal void Render(RSI.State? rsiState, RSIDirection dir, DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Direction? overrideDirection)
             {
-                if (!Visible)
-                    return;
-
-                var rsiState = GetActualState();
-
-                var dir = (rsiState == null || rsiState.Directions == RSI.State.DirectionType.Dir1)
-                    ? RSIDirection.South
-                    : angle.ToRsiDirection(rsiState.Directions);
-
                 // Set the drawing transform for this  layer
                 GetLayerDrawMatrix(dir, out var layerMatrix);
                 Matrix3.Multiply(ref layerMatrix, ref spriteMatrix, out var transformMatrix);

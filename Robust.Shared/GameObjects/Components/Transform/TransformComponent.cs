@@ -140,7 +140,7 @@ namespace Robust.Shared.GameObjects
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
+                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
                 }
                 else
@@ -210,7 +210,11 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = _entMan.GetComponent<TransformComponent>(value);
+            set
+            {
+                if (value == _parent) return;
+                Parent = _entMan.GetComponent<TransformComponent>(value);
+            }
         }
 
         /// <summary>
@@ -618,7 +622,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
         /// </summary>
-        public void RunDeferred(Box2 worldAABB)
+        public void RunDeferred()
         {
             // if we resolved to (close enough) to the OG position then no update.
             if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
@@ -631,14 +635,14 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, worldAABB);
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
-                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
+                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
                 _oldLocalRotation = null;
             }
@@ -1137,24 +1141,18 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct MoveEvent
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
             Component = component;
-            WorldAABB = worldAABB;
         }
 
         public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
         public readonly TransformComponent Component;
-
-        /// <summary>
-        ///     New AABB of the entity.
-        /// </summary>
-        public readonly Box2? WorldAABB;
     }
 
     /// <summary>
@@ -1163,22 +1161,18 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct RotateEvent
     {
-        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
+        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, TransformComponent xform)
         {
             Sender = sender;
             OldRotation = oldRotation;
             NewRotation = newRotation;
-            WorldAABB = worldAABB;
+            Component = xform;
         }
 
         public readonly EntityUid Sender;
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
-
-        /// <summary>
-        ///     New AABB of the entity.
-        /// </summary>
-        public readonly Box2? WorldAABB;
+        public readonly TransformComponent Component;
     }
 
     public struct TransformChildrenEnumerator : IDisposable

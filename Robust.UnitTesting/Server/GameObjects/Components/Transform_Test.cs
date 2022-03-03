@@ -2,6 +2,7 @@ using System.IO;
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
@@ -473,28 +474,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(node3Trans.WorldPosition, new ApproxEqualityConstraint(new Vector2(15, 15)));
         }
 
-        [Test]
-        public void TestMapIdInitOrder()
-        {
-            // Tests that if a child initializes before its parent, MapID still gets initialized correctly.
-
-            // Set private _parent field via reflection here.
-            // This basically simulates the field getting set in ExposeData(), with way less test boilerplate.
-            var field = typeof(TransformComponent).GetField("_parent", BindingFlags.NonPublic | BindingFlags.Instance)!;
-            var parent = EntityManager.CreateEntityUninitialized("mapDummy");
-            var child1 = EntityManager.CreateEntityUninitialized("dummy");
-            var child2 = EntityManager.CreateEntityUninitialized("dummy");
-
-            field.SetValue(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child1), parent);
-            field.SetValue(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child2), child1);
-
-            EntityManager.FinishEntityInitialization(child2);
-            EntityManager.FinishEntityInitialization(child1);
-            EntityManager.FinishEntityInitialization(parent);
-
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child2).MapID, Is.EqualTo(new MapId(123)));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child1).MapID, Is.EqualTo(new MapId(123)));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).MapID, Is.EqualTo(new MapId(123)));
-        }
+        /*
+         * There used to be a TestMapInitOrder test here. The problem is that the actual game will probably explode if
+         * you start initialising children before parents and the test only worked because of specific setup being done
+         * to prevent this in its use case.
+         */
     }
 }

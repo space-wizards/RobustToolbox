@@ -6,7 +6,6 @@ using NUnit.Framework;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
-using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.ContentPack;
@@ -18,7 +17,6 @@ using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Reflection;
 using Robust.Shared.Utility;
-using GridFixtureSystem = Robust.Client.GameObjects.GridFixtureSystem;
 
 namespace Robust.UnitTesting
 {
@@ -80,6 +78,7 @@ namespace Robust.UnitTesting
             // Required systems
             systems.LoadExtraSystemType<ContainerSystem>();
             systems.LoadExtraSystemType<TransformSystem>();
+            systems.LoadExtraSystemType<EntityLookupSystem>();
 
             var entMan = IoCManager.Resolve<IEntityManager>();
             var mapMan = IoCManager.Resolve<IMapManager>();
@@ -89,9 +88,6 @@ namespace Robust.UnitTesting
             entMan.Initialize();
             mapMan.Initialize();
             systems.Initialize();
-
-            // TODO: Make this a system and it should be covered off by the above.
-            IoCManager.Resolve<IEntityLookup>().Startup();
 
             IoCManager.Resolve<IReflectionManager>().LoadAssemblies(assemblies);
 

@@ -75,7 +75,7 @@ namespace Robust.Client.GameObjects
         public Vector2 Scale
         {
             get => scale;
-            set 
+            set
             {
                 scale = value;
                 UpdateLocalMatrix();
@@ -1539,7 +1539,7 @@ namespace Robust.Client.GameObjects
             // Need relative angle on screen for determining the sprite rsi direction.
             Angle relativeRotation = NoRotation
                 ? Angle.Zero
-                : worldRotation + eye.Rotation; 
+                : worldRotation + eye.Rotation;
 
             // we need to calculate bounding box taking into account all nested layers
             // because layers can have offsets, scale or rotation, we need to calculate a new BB
@@ -1967,7 +1967,7 @@ namespace Robust.Client.GameObjects
                         // rotate 90 degrees:
                         RSIDirection.East or RSIDirection.West => Box2.CenteredAround(Offset, (textureSize.Y, textureSize.X)),
                         // rotated 45 degrees (any 45 degree rotated rectangle has a square bounding box with sides of length (x+y)/sqrt(2) )
-                        _ => Box2.CenteredAround(Offset, Vector2.One * (textureSize.X + textureSize.Y) / MathF.Sqrt(2)) 
+                        _ => Box2.CenteredAround(Offset, Vector2.One * (textureSize.X + textureSize.Y) / MathF.Sqrt(2))
                     };
 
                     return _scale == Vector2.One ? box : box.Scale(_scale);

@@ -266,12 +266,8 @@ namespace Robust.Shared.GameObjects
             Dirty(_entMan);
         }
 
-        public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
+        public Box2 GetAABB(Transform transform)
         {
-            worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
-            worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
-            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
-
             var bounds = new Box2(transform.Position, transform.Position);
 
             foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
@@ -286,13 +282,24 @@ namespace Robust.Shared.GameObjects
             return bounds;
         }
 
-        public Box2 GetWorldAABB(Vector2 worldPos, Angle worldRot, EntityQuery<FixturesComponent> fixtures)
+        [Obsolete("Use the GetWorldAABB on EntityLookupSystem")]
+        public Box2 GetWorldAABB(Vector2? worldPos = null, Angle? worldRot = null)
         {
-            var transform = new Transform(worldPos, (float) worldRot.Theta);
+            if (worldPos == null && worldRot == null)
+            {
+                (worldPos, worldRot) = _entMan.GetComponent<TransformComponent>(Owner).GetWorldPositionRotation();
+            }
+            else
+            {
+                worldPos ??= _entMan.GetComponent<TransformComponent>(Owner).WorldPosition;
+                worldRot ??= _entMan.GetComponent<TransformComponent>(Owner).WorldRotation;
+            }
+
+            var transform = new Transform(worldPos.Value, (float) worldRot.Value.Theta);
 
             var bounds = new Box2(transform.Position, transform.Position);
 
-            foreach (var fixture in fixtures.GetComponent(Owner).Fixtures.Values)
+            foreach (var fixture in _entMan.GetComponent<FixturesComponent>(Owner).Fixtures.Values)
             {
                 for (var i = 0; i < fixture.Shape.ChildCount; i++)
                 {

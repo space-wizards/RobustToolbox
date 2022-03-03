@@ -168,7 +168,7 @@ namespace Robust.Client.Console.Commands
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            var mgr = IoCManager.Resolve<IDebugDrawing>();
+            var mgr = EntitySystem.Get<DebugDrawingSystem>();
             mgr.DebugPositions = !mgr.DebugPositions;
         }
     }

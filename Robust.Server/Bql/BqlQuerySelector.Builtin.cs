@@ -311,7 +311,7 @@ namespace Robust.Server.Bql
         public override IEnumerable<EntityUid> DoSelection(IEnumerable<EntityUid> input, IReadOnlyList<object> arguments, bool isInverted, IEntityManager entityManager)
         {
             var radius = (float)(double)arguments[0];
-            var entityLookup = IoCManager.Resolve<IEntityLookup>();
+            var entityLookup = EntitySystem.Get<EntityLookupSystem>();
 
             // TODO: Make this a foreach and reduce LINQ chain because it'll allocate a LOT
             //BUG: GetEntitiesInRange effectively uses manhattan distance. This is not intended, near is supposed to be circular.

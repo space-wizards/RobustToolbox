@@ -71,7 +71,7 @@ namespace Robust.Shared.Physics.Dynamics
 
         // TODO: Given physics bodies are a common thing to be listening for on moveevents it's probably beneficial to have 2 versions; one that includes the entity
         // and one that includes the body
-        private List<(TransformComponent Transform, PhysicsComponent Body)> _deferredUpdates = new();
+        private HashSet<TransformComponent> _deferredUpdates = new();
 
         /// <summary>
         ///     All bodies present on this map.
@@ -258,14 +258,10 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         public void ProcessQueue()
         {
-            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
-            var fixtures = _entityManager.GetEntityQuery<FixturesComponent>();
-
             // We'll store the WorldAABB on the MoveEvent given a lot of stuff ends up re-calculating it.
-            foreach (var (transform, physics) in _deferredUpdates)
+            foreach (var xform in _deferredUpdates)
             {
-                var worldAABB = _physics.GetWorldAABB(physics, transform, xforms, fixtures);
-                transform.RunDeferred(worldAABB);
+                xform.RunDeferred();
             }
 
             _deferredUpdates.Clear();

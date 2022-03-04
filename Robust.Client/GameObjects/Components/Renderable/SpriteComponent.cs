@@ -1375,7 +1375,7 @@ namespace Robust.Client.GameObjects
             var angle = worldRotation + eyeRotation; // angle on-screen. Used to decide the direction of 4/8 directional RSIs
 
             // Sort layers by draw depth. This can be dependent on the RSI direction, and so it isn't pre-sorted.
-            List<QueuedLayer> sortedLayers = new(Layers.Count);
+            List<LayerEntry> sortedLayers = new(Layers.Count);
             foreach (var layer in Layers)
             {
                 if (!layer.Visible)
@@ -1402,9 +1402,12 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        internal readonly struct QueuedLayer
+        /// <summary>
+        ///     Struct used for sorting layers & caching the `layer.GetActualState()` result.
+        /// </summary>
+        internal readonly struct LayerEntry
         {
-            public QueuedLayer(int depth, Layer layer, RSI.State? rsiState, RSIDirection direction)
+            public LayerEntry(int depth, Layer layer, RSI.State? rsiState, RSIDirection direction)
             {
                 Depth = depth;
                 Layer = layer;

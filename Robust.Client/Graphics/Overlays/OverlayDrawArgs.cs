@@ -1,6 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Robust.Client.UserInterface.CustomControls;
 using Robust.Shared.Enums;
+using Robust.Shared.Map;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -39,6 +40,11 @@ namespace Robust.Client.Graphics
         public readonly UIBox2i ViewportBounds;
 
         /// <summary>
+        /// <see cref="MapId"/> of the viewport's eye.
+        /// </summary>
+        public readonly MapId MapId;
+
+        /// <summary>
         ///     AABB enclosing the area visible in the viewport.
         /// </summary>
         public readonly Box2 WorldAABB;
@@ -57,6 +63,7 @@ namespace Robust.Client.Graphics
             IClydeViewport viewport,
             DrawingHandleBase drawingHandle,
             in UIBox2i viewportBounds,
+            in MapId mapId,
             in Box2 worldAabb,
             in Box2Rotated worldBounds)
         {
@@ -65,6 +72,7 @@ namespace Robust.Client.Graphics
             Viewport = viewport;
             DrawingHandle = drawingHandle;
             ViewportBounds = viewportBounds;
+            MapId = mapId;
             WorldAABB = worldAabb;
             WorldBounds = worldBounds;
         }

@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -26,9 +21,9 @@ namespace Robust.Shared.GameObjects
 
     public sealed partial class EntityLookupSystem : EntitySystem
     {
-        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
-        [IoC.Dependency] private readonly SharedContainerSystem _container = default!;
-        [IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly SharedContainerSystem _container = default!;
+        [Dependency] private readonly SharedTransformSystem _transform = default!;
 
         private const int GrowthRate = 256;
 
@@ -167,7 +162,8 @@ namespace Robust.Shared.GameObjects
             if (!xformQuery.TryGetComponent(uid, out var xform) ||
                 xform.Anchored ||
                 _mapManager.IsMap(uid) ||
-                _mapManager.IsGrid(uid)) return;
+                _mapManager.IsGrid(uid) ||
+                _container.IsEntityInContainer(uid, xform)) return;
 
             var lookup = GetLookup(uid, xform, xformQuery);
 
@@ -414,7 +410,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Get the AABB of an entity with the supplied position and angle. Tries to consider if the entity is in a container.
         /// </summary>
-        private Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+        internal Box2 GetAABB(EntityUid uid, Vector2 position, Angle angle, TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
         {
             // If we're in a container then we just use the container's bounds.
             if (_container.TryGetOuterContainer(uid, xform, out var container, xformQuery))

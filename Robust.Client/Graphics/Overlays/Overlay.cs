@@ -98,7 +98,7 @@ namespace Robust.Client.Graphics
                 handle = renderHandle.DrawingHandleWorld;
             }
 
-            var args = new OverlayDrawArgs(currentSpace, vpControl, vp, handle, screenBox, worldBox, worldBounds);
+            var args = new OverlayDrawArgs(currentSpace, vpControl, vp, handle, screenBox, vp.Eye!.Position.MapId, worldBox, worldBounds);
 
             Draw(args);
         }

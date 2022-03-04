@@ -142,7 +142,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var worldAABB = CalcWorldAABB(vp);
             var worldBounds = CalcWorldBounds(vp);
-            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, worldAABB, worldBounds);
+            var args = new OverlayDrawArgs(space, vpControl, vp, handle, bounds, vp.Eye!.Position.MapId, worldAABB, worldBounds);
 
             foreach (var overlay in list)
             {

@@ -80,6 +80,45 @@ public sealed partial class EntityLookupSystem
 
     #endregion
 
+    #region Lookups
+
+    /// <summary>
+    /// Gets the relevant <see cref="EntityLookupComponent"/> that intersects the specified area.
+    /// </summary>
+    public IEnumerable<EntityLookupComponent> FindLookupsIntersecting(MapId mapId, Box2 worldAABB)
+    {
+        if (mapId == MapId.Nullspace) yield break;
+
+        var lookupQuery = EntityManager.GetEntityQuery<EntityLookupComponent>();
+
+        yield return lookupQuery.GetComponent(_mapManager.GetMapEntityId(mapId));
+
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+        {
+            yield return lookupQuery.GetComponent(grid.GridEntityId);
+        }
+    }
+
+    /// <summary>
+    /// Gets the relevant <see cref="EntityLookupComponent"/> that intersects the specified area.
+    /// </summary>
+    public IEnumerable<EntityLookupComponent> FindLookupsIntersecting(MapId mapId, Box2Rotated worldBounds)
+    {
+        if (mapId == MapId.Nullspace) yield break;
+
+        var lookupQuery = EntityManager.GetEntityQuery<EntityLookupComponent>();
+
+        yield return lookupQuery.GetComponent(_mapManager.GetMapEntityId(mapId));
+
+        // Copy-paste with above but the query may differ slightly internally.
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+        {
+            yield return lookupQuery.GetComponent(grid.GridEntityId);
+        }
+    }
+
+    #endregion
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {

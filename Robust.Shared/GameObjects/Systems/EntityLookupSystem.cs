@@ -51,6 +51,8 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<AnchorStateChangedEvent>(OnAnchored);
             SubscribeLocalEvent<UpdateLookupBoundsEvent>(OnBoundsUpdate);
+            SubscribeLocalEvent<EntInsertedIntoContainerMessage>(OnContainerInsert);
+            SubscribeLocalEvent<EntRemovedFromContainerMessage>(OnContainerRemove);
 
             SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
             SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
@@ -222,9 +224,13 @@ namespace Robust.Shared.GameObjects
                 _mapManager.IsGrid(args.Entity) ||
                 EntityManager.GetComponent<MetaDataComponent>(args.Entity).EntityLifeStage < EntityLifeStage.Initialized) return;
 
-            EntityLookupComponent? oldLookup = null;
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(args.Entity);
+
+            // Parent change gets raised after container insert so we'll just drop it and let OnContainerInsert handle.
+            if (_container.IsEntityInContainer(args.Entity, xform)) return;
+
+            EntityLookupComponent? oldLookup = null;
 
             if (args.OldParent != null)
             {
@@ -240,6 +246,27 @@ namespace Robust.Shared.GameObjects
 
             if (newLookup != null)
                 AddToEntityTree(newLookup, xform, xformQuery);
+        }
+
+        private void OnContainerRemove(EntRemovedFromContainerMessage ev)
+        {
+            // This gets handled before parent change so that should just early out from lookups matching.
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(ev.Entity);
+            var lookup = GetLookup(ev.Entity, xform, xformQuery);
+
+            if (lookup == null) return;
+
+            AddToEntityTree(lookup, xform, xformQuery);
+        }
+
+        private void OnContainerInsert(EntInsertedIntoContainerMessage ev)
+        {
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(ev.Entity);
+            var lookup = GetLookup(ev.Entity, xform, xformQuery);
+
+            RemoveFromEntityTree(lookup, xform, xformQuery);
         }
 
         private void OnBoundsUpdate(ref UpdateLookupBoundsEvent ev)
@@ -266,14 +293,13 @@ namespace Robust.Shared.GameObjects
             EntityLookupComponent lookup,
             TransformComponent xform,
             EntityQuery<TransformComponent> xformQuery,
-            bool recursive = true,
-            bool contained = false)
+            bool recursive = true)
         {
             var lookupXform = xformQuery.GetComponent(lookup.Owner);
             var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
             // If we're contained then LocalRotation should be 0 anyway.
             var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform) - _transform.GetWorldRotation(lookupXform), xform, xformQuery);
-            AddToEntityTree(lookup, xform, aabb, xformQuery, recursive, contained);
+            AddToEntityTree(lookup, xform, aabb, xformQuery, recursive);
         }
 
         private void AddToEntityTree(
@@ -281,8 +307,7 @@ namespace Robust.Shared.GameObjects
             TransformComponent xform,
             Box2 aabb,
             EntityQuery<TransformComponent> xformQuery,
-            bool recursive = true,
-            bool contained = false)
+            bool recursive = true)
         {
             // If entity is in nullspace then no point keeping track of data structure.
             if (lookup == null) return;
@@ -296,34 +321,20 @@ namespace Robust.Shared.GameObjects
 
             // TODO: Pass this down instead son.
             var lookupXform = xformQuery.GetComponent(lookup.Owner);
-            // TODO: Just don't store contained stuff, it's way too expensive for updates and makes the tree much bigger.
 
-            // Recursively update children.
-            if (contained)
-            {
-                // Just re-use the topmost AABB.
-                while (childEnumerator.MoveNext(out var child))
-                {
-                    AddToEntityTree(lookup, xformQuery.GetComponent(child.Value), aabb, xformQuery, contained: true);
-                }
-            }
-            // If they're in a container then it just uses the parent's AABB.
-            else if (EntityManager.TryGetComponent<ContainerManagerComponent>(xform.Owner, out var conManager))
+            // If they're in a container then don't add to entitylookup due to the additional cost.
+            // It's cheaper to just query these components at runtime given PVS no longer uses EntityLookupSystem.
+            if (EntityManager.TryGetComponent<ContainerManagerComponent>(xform.Owner, out var conManager))
             {
                 while (childEnumerator.MoveNext(out var child))
                 {
-                    if (conManager.ContainsEntity(child.Value))
-                    {
-                        AddToEntityTree(lookup, xformQuery.GetComponent(child.Value), aabb, xformQuery, contained: true);
-                    }
-                    else
-                    {
-                        var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-                        var childXform = xformQuery.GetComponent(child.Value);
-                        // TODO: If we have 0 position and not contained can optimise these further, but future problem.
-                        var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, childXform.WorldRotation - lookupXform.WorldRotation);
-                        AddToEntityTree(lookup, childXform, childAABB, xformQuery);
-                    }
+                    if (conManager.ContainsEntity(child.Value)) continue;
+
+                    var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+                    var childXform = xformQuery.GetComponent(child.Value);
+                    // TODO: If we have 0 position and not contained can optimise these further, but future problem.
+                    var childAABB = GetAABBNoContainer(child.Value, coordinates.Position, childXform.WorldRotation - lookupXform.WorldRotation);
+                    AddToEntityTree(lookup, childXform, childAABB, xformQuery);
                 }
             }
             else

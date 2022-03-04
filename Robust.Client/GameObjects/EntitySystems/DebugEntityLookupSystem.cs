@@ -91,9 +91,10 @@ public sealed class EntityLookupOverlay : Overlay
                 var xform = xformQuery.GetComponent(ent);
 
                 //DebugTools.Assert(!ent.IsInContainer(_entityManager));
+                var (entPos, entRot) = xform.GetWorldPositionRotation();
 
-                var lookupPos = invMatrix.Transform(xform.WorldPosition);
-                var lookupRot = xform.WorldRotation - rotation;
+                var lookupPos = invMatrix.Transform(entPos);
+                var lookupRot = entRot - rotation;
 
                 var aabb = _lookup.GetAABB(ent, lookupPos, lookupRot, xform, xformQuery);
 

@@ -528,6 +528,15 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; private set; }
 
+        /// <summary>
+        ///     If true, this entity is not simply parented to <see cref="ParentUid"/>, but is also contained inside
+        ///     of a <see cref="IContainer"/>.
+        /// </summary>
+        /// <remarks>
+        ///     Networking for this bool is handled implicitly via container networking.
+        /// </remarks>
+        public bool IsInContainer { get; internal set; }
+
         protected override void Initialize()
         {
             base.Initialize();
@@ -929,7 +938,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Returns whether the entity of this transform contains the entity argument
+        ///     Returns whether the given entity is a child of this transform or one of its descendants.
         /// </summary>
         public bool ContainsEntity(TransformComponent entityTransform)
         {
@@ -938,7 +947,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (this == entityTransform.Parent) //Is this the direct container of the entity
+            if (this == entityTransform.Parent) //Is this the direct parent of the entity
             {
                 return true;
             }
@@ -946,7 +955,7 @@ namespace Robust.Shared.GameObjects
             {
                 return
                     ContainsEntity(entityTransform
-                        .Parent); //Recursively search up the entities containers for this object
+                        .Parent); //Recursively search up the parents for this object
             }
         }
 

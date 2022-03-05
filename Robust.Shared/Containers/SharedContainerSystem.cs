@@ -1,8 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 
 namespace Robust.Shared.Containers
 {
@@ -29,16 +27,30 @@ namespace Robust.Shared.Containers
             return containerManager.MakeContainer<T>(id);
         }
 
-        public T EnsureContainer<T>(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
+        public T EnsureContainer<T>(EntityUid uid, string id, out bool alreadyExisted, ContainerManagerComponent? containerManager = null)
             where T : IContainer
         {
             if (!Resolve(uid, ref containerManager, false))
                 containerManager = EntityManager.AddComponent<ContainerManagerComponent>(uid);
 
             if (TryGetContainer(uid, id, out var container, containerManager))
-                return (T)container;
+            {
+                alreadyExisted = true;
+                if (container is T cast)
+                    return cast;
 
+                throw new InvalidOperationException(
+                    $"The container exists but is of a different type: {container.GetType()}");
+            }
+
+            alreadyExisted = false;
             return MakeContainer<T>(uid, id, containerManager);
+        }
+
+        public T EnsureContainer<T>(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
+           where T : IContainer
+        {
+            return EnsureContainer<T>(uid, id, out _, containerManager);
         }
 
         public IContainer GetContainer(EntityUid uid, string id, ContainerManagerComponent? containerManager = null)
@@ -66,9 +78,9 @@ namespace Robust.Shared.Containers
             return false;
         }
 
-        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null)
+        public bool TryGetContainingContainer(EntityUid uid, EntityUid containedUid, [NotNullWhen(true)] out IContainer? container, ContainerManagerComponent? containerManager = null, bool skipExistCheck = false)
         {
-            if (Resolve(uid, ref containerManager, false) && EntityManager.EntityExists(containedUid))
+            if (Resolve(uid, ref containerManager, false) && (skipExistCheck || EntityManager.EntityExists(containedUid)))
                 return containerManager.TryGetContainer(containedUid, out container);
 
             container = null;
@@ -112,15 +124,18 @@ namespace Robust.Shared.Containers
             if (!Resolve(uid, ref transform, false))
                 return false;
 
-            if (!transform.ParentUid.IsValid())
+            if (!transform.IsInContainer)
                 return false;
 
-            return TryGetContainingContainer(transform.ParentUid, uid, out container);
+            return TryGetContainingContainer(transform.ParentUid, uid, out container, skipExistCheck: true);
         }
 
         public bool IsEntityInContainer(EntityUid uid, TransformComponent? transform = null)
         {
-            return TryGetContainingContainer(uid, out _, transform);
+            if (!Resolve(uid, ref transform, false))
+                return false;
+
+            return transform.IsInContainer;
         }
 
         /// <summary>

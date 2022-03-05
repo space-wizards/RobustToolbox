@@ -16,24 +16,17 @@ namespace Robust.Shared.Containers
     public static class ContainerHelpers
     {
         /// <summary>
-        /// Am I inside a container?
+        /// Am I inside a container? Only checks the direct parent.
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <returns>If the entity is inside of a container.</returns>
-        public static bool IsInContainer(this EntityUid entity, IEntityManager? entMan = null)
+        [Obsolete("Use ContainerSystem.IsEntityInContainer() instead")]
+        public static bool IsInContainer(this EntityUid entity,
+            IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(entity));
-
-            // Notice the recursion starts at the Owner of the passed in entity, this
-            // allows containers inside containers (toolboxes in lockers).
-            if (entMan.GetComponent<TransformComponent>(entity).ParentUid is not EntityUid { Valid: true} parent)
-                return false;
-
-            if (TryGetManagerComp(parent, out var containerComp, entMan))
-                return containerComp.ContainsEntity(entity);
-
-            return false;
+            return entMan.GetComponent<TransformComponent>(entity).IsInContainer;
         }
 
         /// <summary>
@@ -61,6 +54,7 @@ namespace Robust.Shared.Containers
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <param name="container">The container that this entity is inside of.</param>
         /// <returns>If a container was found.</returns>
+        [Obsolete("Use ContainerSystem.TryGetContainingContainer() instead")]
         public static bool TryGetContainer(this EntityUid entity, [NotNullWhen(true)] out IContainer? container, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
@@ -195,6 +189,7 @@ namespace Robust.Shared.Containers
         /// <returns>The new container.</returns>
         /// <exception cref="ArgumentException">Thrown if there already is a container with the specified ID.</exception>
         /// <seealso cref="IContainerManager.MakeContainer{T}(string)" />
+        [Obsolete("Use ContainerSystem.MakeContainer() instead")]
         public static T CreateContainer<T>(this EntityUid entity, string containerId, IEntityManager? entMan = null)
             where T : IContainer
         {
@@ -203,6 +198,7 @@ namespace Robust.Shared.Containers
             return containermanager.MakeContainer<T>(containerId);
         }
 
+        [Obsolete("Use ContainerSystem.EnsureContainer() instead")]
         public static T EnsureContainer<T>(this EntityUid entity, string containerId, IEntityManager? entMan = null)
             where T : IContainer
         {
@@ -210,6 +206,7 @@ namespace Robust.Shared.Containers
             return EnsureContainer<T>(entity, containerId, out _, entMan);
         }
 
+        [Obsolete("Use ContainerSystem.EnsureContainer() instead")]
         public static T EnsureContainer<T>(this EntityUid entity, string containerId, out bool alreadyExisted, IEntityManager? entMan = null)
             where T : IContainer
         {

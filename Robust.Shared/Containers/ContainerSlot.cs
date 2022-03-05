@@ -79,17 +79,17 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan, TransformComponent xform)
         {
             ContainedEntity = toinsert;
-            base.InternalInsert(toinsert, entMan);
+            base.InternalInsert(toinsert, entMan, xform);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
+        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan, TransformComponent? xform)
         {
             ContainedEntity = null;
-            base.InternalRemove(toremove, entMan);
+            base.InternalRemove(toremove, entMan, xform);
         }
 
         /// <inheritdoc />

@@ -94,7 +94,7 @@ namespace Robust.Shared.Containers
         /// Thrown if this container is a child of the entity,
         /// which would cause infinite loops.
         /// </exception>
-        bool Insert(EntityUid toinsert, IEntityManager? entMan = null);
+        bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null);
 
         /// <summary>
         /// Checks if the entity can be removed from this container.
@@ -110,7 +110,7 @@ namespace Robust.Shared.Containers
         /// <param name="toremove">The entity to attempt to remove.</param>
         /// <param name="entMan"></param>
         /// <returns>True if the entity was removed, false otherwise.</returns>
-        bool Remove(EntityUid toremove, IEntityManager? entMan = null);
+        bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null);
 
         /// <summary>
         /// Forcefully removes an entity from the container. Normally you would want to use <see cref="Remove" />,
@@ -118,7 +118,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toRemove">The entity to attempt to remove.</param>
         /// <param name="entMan"></param>
-        void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null);
+        void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, TransformComponent? xform = null);
 
         /// <summary>
         /// Checks if the entity is contained in this container.

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
@@ -12,7 +11,6 @@ using Robust.Shared.Maths;
 using Robust.Shared.Utility;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Robust.Client.Map
 {
@@ -24,16 +22,18 @@ namespace Robust.Client.Map
 
         public Texture TileTextureAtlas => _tileTextureAtlas ?? Texture.Transparent;
 
-        private readonly Dictionary<ushort, List<Box2>> _tileRegions = new();
+        private readonly Dictionary<ushort, Box2[]> _tileRegions = new();
+
+        public Box2 ErrorTileRegion { get; private set; }
 
         /// <inheritdoc />
-        public List<Box2>? TileAtlasRegion(Tile tile)
+        public Box2[]? TileAtlasRegion(Tile tile)
         {
             return TileAtlasRegion(tile.TypeId);
         }
 
         /// <inheritdoc />
-        public List<Box2>? TileAtlasRegion(ushort tileType)
+        public Box2[]? TileAtlasRegion(ushort tileType)
         {
             if (_tileRegions.TryGetValue(tileType, out var region))
             {
@@ -60,7 +60,7 @@ namespace Robust.Client.Map
 
             const int tileSize = EyeManager.PixelsPerMeter;
 
-            int tileCount = defList.Aggregate(0, (i, definition) => i + definition.Variants);
+            var tileCount = defList.Aggregate(0, (i, definition) => i + definition.Variants) + 1;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(tileCount));
             var dimensionY = (int) Math.Ceiling((float) tileCount / dimensionX);
@@ -69,6 +69,22 @@ namespace Robust.Client.Map
             var imgHeight = dimensionY * tileSize;
             var sheet = new Image<Rgba32>(imgWidth, imgHeight);
 
+            // Add in the missing tile texture sprite as tile texture 0.
+            {
+                var w = (float) sheet.Width;
+                var h = (float) sheet.Height;
+                ErrorTileRegion = Box2.FromDimensions(
+                    0, (h - 0 - EyeManager.PixelsPerMeter) / h,
+                    tileSize / w, tileSize / h);
+                Image<Rgba32> image;
+                using (var stream = _resourceCache.ContentFileRead("/Textures/noTile.png"))
+                {
+                    image = Image.Load<Rgba32>(stream);
+                }
+
+                image.Blit(new UIBox2i(0, 0, tileSize, tileSize), sheet, Vector2i.Zero);
+            }
+
             if (imgWidth >= 2048 || imgHeight >= 2048)
             {
                 // Sanity warning, some machines don't have textures larger than this and need multiple atlases.
@@ -76,7 +92,7 @@ namespace Robust.Client.Map
                     $"Tile texture atlas is ({imgWidth} x {imgHeight}), larger than 2048 x 2048. If you really need {tileCount} tiles, file an issue on RobustToolbox.");
             }
 
-            var column = 0;
+            var column = 1;
             var row = 0;
             foreach (var def in defList)
             {
@@ -92,7 +108,7 @@ namespace Robust.Client.Map
                         $"Unable to load {new ResourcePath(def.Path) / $"{def.SpriteName}.png"}, due to being unable to use tile texture with a dimension other than {tileSize}x({tileSize} * Variants).");
                 }
 
-                var regionList = new List<Box2>(def.Variants);
+                var regionList = new Box2[def.Variants];
 
                 for (var j = 0; j < def.Variants; j++)
                 {
@@ -104,9 +120,9 @@ namespace Robust.Client.Map
                     var w = (float) sheet.Width;
                     var h = (float) sheet.Height;
 
-                    regionList.Add(Box2.FromDimensions(
+                    regionList[j] = Box2.FromDimensions(
                         point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
-                        tileSize / w, tileSize / h));
+                        tileSize / w, tileSize / h);
                     column++;
 
                     if (column >= dimensionX)
@@ -120,6 +136,7 @@ namespace Robust.Client.Map
             }
 
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+            sheet.Save("C:\\Users\\brade\\fuck.png");
         }
     }
 }

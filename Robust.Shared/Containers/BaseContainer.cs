@@ -55,7 +55,7 @@ namespace Robust.Shared.Containers
         protected BaseContainer() { }
 
         /// <inheritdoc />
-        public bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null)
+        public bool Insert(EntityUid toinsert, IEntityManager? entMan = null, TransformComponent? transform = null, TransformComponent? ownerTransform = null, MetaDataComponent? meta = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(transform == null || transform.Owner == toinsert);
@@ -75,7 +75,7 @@ namespace Robust.Shared.Containers
             // Attach to parent first so we can check IsInContainer more easily.
             ownerTransform ??= entMan.GetComponent<TransformComponent>(Owner);
             transform.AttachParent(ownerTransform);
-            InternalInsert(toinsert, entMan, transform);
+            InternalInsert(toinsert, entMan, meta);
 
             // This is an edge case where the parent grid is the container being inserted into, so AttachParent would not unanchor.
             if (transform.Anchored)
@@ -126,7 +126,7 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null)
+        public bool Remove(EntityUid toremove, IEntityManager? entMan = null, TransformComponent? xform = null, MetaDataComponent? meta = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
@@ -136,7 +136,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(xform == null || xform.Owner == toremove);
 
             if (!CanRemove(toremove, entMan)) return false;
-            InternalRemove(toremove, entMan, xform);
+            InternalRemove(toremove, entMan, meta);
 
             xform ??= entMan.GetComponent<TransformComponent>(toremove);
             xform.AttachParentToContainerOrGrid(entMan);
@@ -144,16 +144,15 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, TransformComponent? xform = null)
+        public void ForceRemove(EntityUid toRemove, IEntityManager? entMan = null, MetaDataComponent? meta = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toRemove);
             IoCManager.Resolve(ref entMan);
             DebugTools.Assert(entMan.EntityExists(toRemove));
-            DebugTools.Assert(xform == null || xform.Owner == toRemove);
 
-            InternalRemove(toRemove, entMan, xform);
+            InternalRemove(toRemove, entMan, meta);
         }
 
         /// <inheritdoc />
@@ -195,11 +194,13 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan, TransformComponent xform)
+        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta)
         {
             DebugTools.Assert(!Deleted);
+            DebugTools.Assert(meta == null || meta.Owner == toinsert);
 
-            xform.IsInContainer = true;
+            meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
+            meta.Flags |= MetaDataFlags.InContainer;    
             entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
             entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
             Manager.Dirty(entMan);
@@ -210,15 +211,16 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toremove"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalRemove(EntityUid toremove, IEntityManager entMan, TransformComponent? xform)
+        protected virtual void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);
             DebugTools.AssertNotNull(toremove);
             DebugTools.Assert(entMan.EntityExists(toremove));
+            DebugTools.Assert(meta == null || meta.Owner == toremove);
 
-            xform ??= entMan.GetComponent<TransformComponent>(toremove);
-            xform.IsInContainer = false;
+            meta ??= entMan.GetComponent<MetaDataComponent>(toremove);
+            meta.Flags &= ~MetaDataFlags.InContainer;
             entMan.EventBus.RaiseLocalEvent(Owner, new EntRemovedFromContainerMessage(toremove, this));
             entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toremove));
             Manager.Dirty(entMan);

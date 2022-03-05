@@ -528,15 +528,6 @@ namespace Robust.Shared.GameObjects
 
         [ViewVariables] internal EntityUid LerpParent { get; private set; }
 
-        /// <summary>
-        ///     If true, this entity is not simply parented to <see cref="ParentUid"/>, but is also contained inside
-        ///     of a <see cref="IContainer"/>.
-        /// </summary>
-        /// <remarks>
-        ///     Networking for this bool is handled implicitly via container networking.
-        /// </remarks>
-        public bool IsInContainer { get; internal set; }
-
         protected override void Initialize()
         {
             base.Initialize();

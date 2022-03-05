@@ -196,7 +196,7 @@ namespace Robust.Shared.GameObjects
         private void UpdatePosition(EntityUid uid, TransformComponent xform)
         {
             // Even if the entity is contained it may have children that aren't so we still need to update.
-            if (!CanMoveUpdate(uid, xform)) return;
+            if (!CanMoveUpdate(uid)) return;
 
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var lookup = GetLookup(uid, xform, xformQuery);
@@ -209,11 +209,11 @@ namespace Robust.Shared.GameObjects
             AddToEntityTree(lookup, xform, aabb, xformQuery);
         }
 
-        private bool CanMoveUpdate(EntityUid uid, TransformComponent xform)
+        private bool CanMoveUpdate(EntityUid uid)
         {
             return !_mapManager.IsMap(uid) &&
                      !_mapManager.IsGrid(uid) &&
-                     !_container.IsEntityInContainer(uid, xform);
+                     !_container.IsEntityInContainer(uid);
         }
 
         private void OnParentChange(ref EntParentChangedMessage args)
@@ -247,7 +247,7 @@ namespace Robust.Shared.GameObjects
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var xform = xformQuery.GetComponent(ev.Uid);
 
-            if (xform.Anchored || _container.IsEntityInContainer(ev.Uid, xform)) return;
+            if (xform.Anchored || _container.IsEntityInContainer(ev.Uid)) return;
 
             var lookup = GetLookup(ev.Uid, xform, xformQuery);
 

@@ -53,7 +53,8 @@ namespace Robust.Shared.GameObjects
         {
             var entity = moveEvent.Sender;
 
-            if (Deleted(entity) ||
+            if (!TryComp(entity, out MetaDataComponent? meta) ||
+                meta.EntityDeleted ||
                 maps.HasComponent(entity) ||
                 grids.HasComponent(entity))
             {
@@ -63,7 +64,7 @@ namespace Robust.Shared.GameObjects
             var xform = xforms.GetComponent(entity);
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if (_container.IsEntityInContainer(entity, xform)) return;
+            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) return;
 
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
 

@@ -292,17 +292,17 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+            protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta)
             {
                 _containerList.Add(toinsert);
-                base.InternalInsert(toinsert, entMan);
+                base.InternalInsert(toinsert, entMan, meta);
             }
 
             /// <inheritdoc />
-            protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
+            protected override void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta)
             {
                 _containerList.Remove(toremove);
-                base.InternalRemove(toremove, entMan);
+                base.InternalRemove(toremove, entMan, meta);
             }
 
             /// <inheritdoc />

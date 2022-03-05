@@ -111,7 +111,7 @@ namespace Robust.Shared.GameObjects
             if (body.CanCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
             
-            if (!xform.ParentUid.IsValid() || !_container.IsEntityInContainer(uid, xform))
+            if (!xform.ParentUid.IsValid() || !_container.IsEntityInContainer(uid))
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 

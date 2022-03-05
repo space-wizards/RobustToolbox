@@ -118,24 +118,28 @@ namespace Robust.Shared.Containers
 
         #region Container Helpers
 
-        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, TransformComponent? transform = null)
+        public bool TryGetContainingContainer(EntityUid uid, [NotNullWhen(true)] out IContainer? container, MetaDataComponent? meta = null, TransformComponent? transform = null)
         {
             container = null;
-            if (!Resolve(uid, ref transform, false))
+
+            if (!Resolve(uid, ref meta, false))
                 return false;
 
-            if (!transform.IsInContainer)
+            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.None)
+                return false;
+
+            if (!Resolve(uid, ref transform, false))
                 return false;
 
             return TryGetContainingContainer(transform.ParentUid, uid, out container, skipExistCheck: true);
         }
 
-        public bool IsEntityInContainer(EntityUid uid, TransformComponent? transform = null)
+        public bool IsEntityInContainer(EntityUid uid, MetaDataComponent? meta = null)
         {
-            if (!Resolve(uid, ref transform, false))
+            if (!Resolve(uid, ref meta, false))
                 return false;
 
-            return transform.IsInContainer;
+            return (meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer;
         }
 
         /// <summary>

@@ -25,8 +25,7 @@ namespace Robust.Shared.Containers
             IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
-            DebugTools.Assert(entMan.EntityExists(entity));
-            return entMan.GetComponent<TransformComponent>(entity).IsInContainer;
+            return (entMan.GetComponent<MetaDataComponent>(entity).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer;
         }
 
         /// <summary>

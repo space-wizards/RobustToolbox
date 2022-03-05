@@ -136,7 +136,6 @@ namespace Robust.Client.Map
             }
 
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
-            sheet.Save("C:\\Users\\brade\\fuck.png");
         }
     }
 }

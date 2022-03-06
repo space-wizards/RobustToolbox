@@ -194,7 +194,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toinsert"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta)
+        protected virtual void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.Assert(meta == null || meta.Owner == toinsert);
@@ -211,7 +211,7 @@ namespace Robust.Shared.Containers
         /// </summary>
         /// <param name="toremove"></param>
         /// <param name="entMan"></param>
-        protected virtual void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta)
+        protected virtual void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta = null)
         {
             DebugTools.Assert(!Deleted);
             DebugTools.AssertNotNull(Manager);

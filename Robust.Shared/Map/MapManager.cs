@@ -61,10 +61,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #endif
     }
 
-        /// <summary>
-        ///     Old tile that was replaced.
-        /// </summary>
-        public Tile OldTile { get; }
     /// <inheritdoc />
     public void Restart()
     {

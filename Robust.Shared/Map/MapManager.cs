@@ -67,6 +67,8 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     {
         Logger.DebugS("map", "Restarting...");
 
+        // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
+        // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.
         DeleteAllMaps();
         EnsureNullspaceExistsAndClear();
     }

@@ -74,7 +74,7 @@ namespace Robust.Client.Map
                 var w = (float) sheet.Width;
                 var h = (float) sheet.Height;
                 ErrorTileRegion = Box2.FromDimensions(
-                    0, (h - 0 - EyeManager.PixelsPerMeter) / h,
+                    0, (h - EyeManager.PixelsPerMeter) / h,
                     tileSize / w, tileSize / h);
                 Image<Rgba32> image;
                 using (var stream = _resourceCache.ContentFileRead("/Textures/noTile.png"))

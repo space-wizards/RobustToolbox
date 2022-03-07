@@ -186,7 +186,7 @@ namespace Robust.Client.Graphics.Clyde
             // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
         }
 
-        private void _updateOnGridModified(object? sender, GridChangedEventArgs args)
+        private void _updateOnGridModified(GridModifiedEvent args)
         {
             foreach (var (pos, _) in args.Modified)
             {
@@ -196,21 +196,23 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateTileMapOnUpdate(object? sender, TileChangedEventArgs args)
+        private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 
-        private void _updateOnGridCreated(MapId mapId, GridId gridId)
+        private void _updateOnGridCreated(GridStartupEvent ev)
         {
+            var gridId = ev.GridId;
             Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
-        private void _updateOnGridRemoved(MapId mapId, GridId gridId)
+        private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
+            var gridId = ev.GridId;
             Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
 
             var data = _mapChunkData[gridId];

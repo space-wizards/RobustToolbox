@@ -21,16 +21,10 @@ namespace Robust.Shared.GameObjects
 
             UpdatesOutsidePrediction = true;
 
-            _mapManager.TileChanged += MapManagerOnTileChanged;
+            SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
         }
 
-        public override void Shutdown()
-        {
-            _mapManager.TileChanged -= MapManagerOnTileChanged;
-            base.Shutdown();
-        }
-
-        private void MapManagerOnTileChanged(object? sender, TileChangedEventArgs e)
+        private void MapManagerOnTileChanged(TileChangedEvent e)
         {
             if(e.NewTile.Tile != Tile.Empty)
                 return;

@@ -22,7 +22,7 @@ namespace Robust.Client.Graphics.Clyde
     /// <summary>
     ///     Responsible for most things rendering on OpenGL mode.
     /// </summary>
-    internal sealed partial class Clyde : IClydeInternal, IPostInjectInit
+    internal sealed partial class Clyde : IClydeInternal, IPostInjectInit, IEntityEventSubscriber
     {
         [Dependency] private readonly IClydeTileDefinitionManager _tileDefinitionManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -134,14 +134,17 @@ namespace Robust.Client.Graphics.Clyde
 
         public void PostInject()
         {
-            _mapManager.TileChanged += _updateTileMapOnUpdate;
-            _mapManager.OnGridCreated += _updateOnGridCreated;
-            _mapManager.OnGridRemoved += _updateOnGridRemoved;
-            _mapManager.GridChanged += _updateOnGridModified;
-
             // This cvar does not modify the actual GL version requested or anything,
             // it overrides the version we detect to detect GL features.
             RegisterBlockCVars();
+        }
+
+        public void RegisterGridEcsEvents()
+        {
+            _entityManager.EventBus.SubscribeEvent<TileChangedEvent>(EventSource.Local, this, _updateTileMapOnUpdate);
+            _entityManager.EventBus.SubscribeEvent<GridStartupEvent>(EventSource.Local, this, _updateOnGridCreated);
+            _entityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, _updateOnGridRemoved);
+            _entityManager.EventBus.SubscribeEvent<GridModifiedEvent>(EventSource.Local, this, _updateOnGridModified);
         }
 
         private void GLInitBindings(bool gles)

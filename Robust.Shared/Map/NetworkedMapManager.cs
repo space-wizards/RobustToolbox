@@ -222,6 +222,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         if (compChange.State is not MapComponentState mapCompState || mapCompState.MapId != mapId)
                             continue;
 
+                        DebugTools.Assert(compChange.Created, $"new map {mapId} is in CreatedMaps, but compState isn't marked as created.");
                         mapEuid = entityState.Uid;
                         goto BreakMapEntSearch;
                     }
@@ -255,6 +256,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         if (compState.State is not MapGridComponentState gridCompState || gridCompState.GridIndex != gridId)
                             continue;
 
+                        DebugTools.Assert(compState.Created, $"new grid {gridId} is in CreatedGrids, but compState isn't marked as created.");
                         gridEuid = entityState.Uid;
                         goto BreakGridEntSearch;
                     }

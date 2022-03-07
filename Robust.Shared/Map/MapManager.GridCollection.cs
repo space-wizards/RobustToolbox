@@ -322,6 +322,8 @@ internal partial class MapManager
             return;
 
         TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
+        var euid = GetGridEuid(tileRef.GridIndex);
+        EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(tileRef, oldTile));
     }
 
     protected IMapGrid CreateGrid(MapId currentMapId, GridId gridId, ushort chunkSize, EntityUid euid)
@@ -339,6 +341,8 @@ internal partial class MapManager
     protected void InvokeGridChanged(object? sender, GridChangedEventArgs ev)
     {
         GridChanged?.Invoke(sender, ev);
+        var args = new GridModifiedEvent(ev.Grid, ev.Modified);
+        EntityManager.EventBus.RaiseLocalEvent(ev.Grid.GridEntityId, args);
     }
 
     private IMapGridInternal CreateGridImpl(MapId currentMapId, GridId? gridId, ushort chunkSize, bool createEntity,

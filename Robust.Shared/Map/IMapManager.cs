@@ -12,11 +12,6 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager : IPauseManager
     {
-        /// <summary>
-        ///     The default <see cref="MapId" /> that is always available. Equivalent to SS13 Null space.
-        /// </summary>
-        MapId DefaultMap { get; }
-
         IEnumerable<IMapGrid> GetAllGrids();
 
         /// <summary>

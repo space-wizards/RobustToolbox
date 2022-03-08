@@ -188,9 +188,6 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public MapId DefaultMap => MapId.Nullspace;
-
-    /// <inheritdoc />
     public event EventHandler<MapEventArgs>? MapCreated;
 
     /// <inheritdoc />

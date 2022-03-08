@@ -122,13 +122,13 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         }
 
         // - Grid Creation data --
-        var gridCreations = new Dictionary<GridId, GameStateMapData.GridCreationDatum>();
+        var gridCreations = new List<GridId>();
 
         foreach (MapGrid grid in GetAllGrids())
         {
             if (grid.CreatedTick < fromTick || grid.ParentMapId == MapId.Nullspace)
                 continue;
-            gridCreations.Add(grid.Index, new GameStateMapData.GridCreationDatum(grid.ChunkSize));
+            gridCreations.Add(grid.Index);
         }
 
         // no point sending empty collections
@@ -144,7 +144,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             return default;
 
         return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(), mapCreations?.ToArray(),
-            gridCreations?.ToArray<KeyValuePair<GridId, GameStateMapData.GridCreationDatum>>());
+            gridCreations?.ToArray<GridId>());
     }
 
     public void CullDeletionHistory(GameTick upToTick)
@@ -203,12 +203,13 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         {
             DebugTools.Assert(data.GridData is not null, "Received new grids, but GridData was null.");
 
-            foreach (var (gridId, creationDatum) in data.CreatedGrids)
+            foreach (var gridId in data.CreatedGrids)
             {
                 if (GridExists(gridId))
                     continue;
 
                 EntityUid gridEuid = default;
+                ushort chunkSize = 0;
 
                 //get shared euid of map comp entity
                 foreach (var entityState in entityStates)
@@ -220,6 +221,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
                         DebugTools.Assert(compState.Created, $"new grid {gridId} is in CreatedGrids, but compState isn't marked as created.");
                         gridEuid = entityState.Uid;
+                        chunkSize = gridCompState.ChunkSize;
                         goto BreakGridEntSearch;
                     }
                 }
@@ -227,6 +229,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 BreakGridEntSearch:
 
                 DebugTools.Assert(gridEuid != default, $"Could not find corresponding entity state for new grid {gridId}.");
+                DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridId}.");
 
                 MapId gridMapId = default;
                 foreach (var kvData in data.GridData!)
@@ -240,7 +243,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
                 DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridId}.");
 
-                CreateGrid(gridMapId, gridId, creationDatum.ChunkSize, gridEuid);
+                CreateGrid(gridMapId, gridId, chunkSize, gridEuid);
             }
         }
 

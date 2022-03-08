@@ -11,25 +11,14 @@ namespace Robust.Shared.GameStates
     {
         // Dict of the new maps
         public readonly MapId[]? CreatedMaps;
-        public readonly KeyValuePair<GridId, GridCreationDatum>[]? CreatedGrids;
+        public readonly GridId[]? CreatedGrids;
         public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, MapId[]? createdMaps, KeyValuePair<GridId, GridCreationDatum>[]? createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, MapId[]? createdMaps, GridId[]? createdGrids)
         {
             GridData = gridData;
             CreatedMaps = createdMaps;
             CreatedGrids = createdGrids;
-        }
-
-        [Serializable, NetSerializable]
-        public struct GridCreationDatum
-        {
-            public readonly ushort ChunkSize;
-
-            public GridCreationDatum(ushort chunkSize)
-            {
-                ChunkSize = chunkSize;
-            }
         }
 
         [Serializable, NetSerializable]

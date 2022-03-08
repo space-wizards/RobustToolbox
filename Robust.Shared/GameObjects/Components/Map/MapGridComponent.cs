@@ -43,6 +43,9 @@ namespace Robust.Shared.GameObjects
             internal set => _gridIndex = value;
         }
 
+        [DataField("chunkSize")]
+        private ushort _chunkSize = 16;
+
         /// <inheritdoc />
         [ViewVariables]
         public IMapGrid Grid
@@ -115,7 +118,7 @@ namespace Robust.Shared.GameObjects
         /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
-            return new MapGridComponentState(_gridIndex);
+            return new MapGridComponentState(_gridIndex, _chunkSize);
         }
 
         /// <inheritdoc />
@@ -127,6 +130,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             _gridIndex = state.GridIndex;
+            _chunkSize = state.ChunkSize;
         }
     }
 
@@ -142,12 +146,19 @@ namespace Robust.Shared.GameObjects
         public GridId GridIndex { get; }
 
         /// <summary>
+        ///     The size of the chunks in the map grid.
+        /// </summary>
+        public ushort ChunkSize { get; }
+
+        /// <summary>
         ///     Constructs a new instance of <see cref="MapGridComponentState"/>.
         /// </summary>
         /// <param name="gridIndex">Index of the grid this component is linked to.</param>
-        public MapGridComponentState(GridId gridIndex)
+        /// <param name="chunkSize">The size of the chunks in the map grid.</param>
+        public MapGridComponentState(GridId gridIndex, ushort chunkSize)
         {
             GridIndex = gridIndex;
+            ChunkSize = chunkSize;
         }
     }
 }

@@ -18,25 +18,15 @@ internal interface INetworkedMapManager : IMapManagerInternal
     // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
     // but old ones can be deleted after.
     void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates);
-    void ApplyGameStatePost(GameStateMapData? data);
 }
 
 internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
     private readonly Dictionary<GridId, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
-    private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();
-    private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new();
-
-    public override void DeleteMap(MapId mapId)
-    {
-        base.DeleteMap(mapId);
-        _mapDeletionHistory.Add((GameTiming.CurTick, mapId));
-    }
 
     public override void DeleteGrid(GridId gridId)
     {
         base.DeleteGrid(gridId);
-        _gridDeletionHistory.Add((GameTiming.CurTick, gridId));
         // No point syncing chunk removals anymore!
         _chunkDeletionHistory.Remove(gridId);
     }
@@ -121,26 +111,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             gridDatums.Add(grid.Index, gridDatum);
         }
 
-        // -- Map Deletion Data --
-        var mapDeletionsData = new List<MapId>();
-
-        foreach (var (tick, mapId) in _mapDeletionHistory)
-        {
-            if (tick < fromTick)
-                continue;
-            mapDeletionsData.Add(mapId);
-        }
-
-        // -- Grid Deletion Data
-        var gridDeletionsData = new List<GridId>();
-
-        foreach (var (tick, gridId) in _gridDeletionHistory)
-        {
-            if (tick < fromTick)
-                continue;
-            gridDeletionsData.Add(gridId);
-        }
-
         // -- Map Creations --
         var mapCreations = new List<MapId>();
 
@@ -164,21 +134,16 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         // no point sending empty collections
         if (gridDatums.Count == 0)
             gridDatums = default;
-        if (gridDeletionsData.Count == 0)
-            gridDeletionsData = default;
-        if (mapDeletionsData.Count == 0)
-            mapDeletionsData = default;
         if (mapCreations.Count == 0)
             mapCreations = default;
         if (gridCreations.Count == 0)
             gridCreations = default;
 
         // no point even creating an empty map state if no data
-        if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
+        if (gridDatums == null && mapCreations == null && gridCreations == null)
             return default;
 
-        return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(), gridDeletionsData?.ToArray(),
-            mapDeletionsData?.ToArray(), mapCreations?.ToArray(),
+        return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(), mapCreations?.ToArray(),
             gridCreations?.ToArray<KeyValuePair<GridId, GameStateMapData.GridCreationDatum>>());
     }
 
@@ -190,9 +155,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             if (chunks.Count == 0)
                 _chunkDeletionHistory.Remove(gridId);
         }
-
-        _mapDeletionHistory.RemoveAll(t => t.tick < upToTick);
-        _gridDeletionHistory.RemoveAll(t => t.tick < upToTick);
     }
 
     public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
@@ -336,30 +298,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             }
 
             SuppressOnTileChanged = false;
-        }
-    }
-
-    public void ApplyGameStatePost(GameStateMapData? data)
-    {
-        if (data == null) // if there is no data, there is nothing to do!
-            return;
-
-        if (data.DeletedGrids != null)
-        {
-            foreach (var grid in data.DeletedGrids)
-            {
-                if (GridExists(grid))
-                    DeleteGrid(grid);
-            }
-        }
-
-        if (data.DeletedMaps != null)
-        {
-            foreach (var map in data.DeletedMaps)
-            {
-                if (MapExists(map))
-                    DeleteMap(map);
-            }
         }
     }
 }

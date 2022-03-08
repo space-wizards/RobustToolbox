@@ -13,14 +13,10 @@ namespace Robust.Shared.GameStates
         public readonly MapId[]? CreatedMaps;
         public readonly KeyValuePair<GridId, GridCreationDatum>[]? CreatedGrids;
         public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
-        public readonly GridId[]? DeletedGrids;
-        public readonly MapId[]? DeletedMaps;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, GridId[]? deletedGrids, MapId[]? deletedMaps, MapId[]? createdMaps, KeyValuePair<GridId, GridCreationDatum>[]? createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, MapId[]? createdMaps, KeyValuePair<GridId, GridCreationDatum>[]? createdGrids)
         {
             GridData = gridData;
-            DeletedGrids = deletedGrids;
-            DeletedMaps = deletedMaps;
             CreatedMaps = createdMaps;
             CreatedGrids = createdGrids;
         }

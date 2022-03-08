@@ -188,5 +188,6 @@ namespace Robust.Shared.Map
         IMapGrid GetGrid(EntityUid euid);
         bool TryGetGrid(EntityUid euid, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(EntityUid euid);
+        IEnumerable<IMapComponent> GetAllMapComponents();
     }
 }

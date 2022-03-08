@@ -31,7 +31,6 @@ internal partial class MapManager
 {
     private readonly Dictionary<MapId, EntityUid> _mapEntities = new();
     private readonly HashSet<MapId> _maps = new();
-    protected readonly Dictionary<MapId, GameTick> MapCreationTick = new(); //TODO: MapComponent.CreationTick?
     private MapId _highestMapId = MapId.Nullspace;
 
     /// <inheritdoc />
@@ -70,7 +69,6 @@ internal partial class MapManager
             OnMapDestroyedGridTree(args);
             MapDestroyed?.Invoke(this, args);
             _maps.Remove(mapId);
-            MapCreationTick.Remove(mapId);
         }
 
         _mapEntities.Remove(mapId);
@@ -177,6 +175,11 @@ internal partial class MapManager
         return _maps;
     }
 
+    public IEnumerable<IMapComponent> GetAllMapComponents()
+    {
+        return EntityManager.EntityQuery<IMapComponent>(true);
+    }
+
     public bool IsMap(EntityUid uid)
     {
         return EntityManager.HasComponent<IMapComponent>(uid);
@@ -208,7 +211,6 @@ internal partial class MapManager
             _highestMapId = actualId;
 
         _maps.Add(actualId);
-        MapCreationTick.Add(actualId, GameTiming.CurTick);
         Logger.InfoS("map", $"Creating new map {actualId}");
 
         if (actualId != MapId.Nullspace) // nullspace isn't bound to an entity

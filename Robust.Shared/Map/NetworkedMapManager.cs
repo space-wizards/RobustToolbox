@@ -114,11 +114,12 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         // -- Map Creations --
         var mapCreations = new List<MapId>();
 
-        foreach (var (mapId, tick) in MapCreationTick)
+        foreach (var mapComp in GetAllMapComponents())
         {
-            if (tick < fromTick || mapId == MapId.Nullspace)
+            if (mapComp.CreationTick < fromTick || mapComp.WorldMap == MapId.Nullspace)
                 continue;
-            mapCreations.Add(mapId);
+
+            mapCreations.Add(mapComp.WorldMap);
         }
 
         // - Grid Creation data --

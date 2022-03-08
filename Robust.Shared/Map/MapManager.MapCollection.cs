@@ -44,6 +44,20 @@ internal partial class MapManager
         if (!_maps.Contains(mapId))
             throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapId}'");
 
+        if (_mapEntities.TryGetValue(mapId, out var ent))
+        {
+            EntityManager.DeleteEntity(ent);
+        }
+        else
+        {
+            // unbound map
+            TrueDeleteMap(mapId);
+        }
+    }
+
+    /// <inheritdoc />
+    public void TrueDeleteMap(MapId mapId)
+    {
         // grids are cached because Delete modifies collection
         foreach (var grid in GetAllMapGrids(mapId).ToList())
         {
@@ -59,11 +73,7 @@ internal partial class MapManager
             MapCreationTick.Remove(mapId);
         }
 
-        if (_mapEntities.TryGetValue(mapId, out var ent))
-        {
-            EntityManager.DeleteEntity(ent);
-            _mapEntities.Remove(mapId);
-        }
+        _mapEntities.Remove(mapId);
 
         Logger.InfoS("map", $"Deleting map {mapId}");
     }

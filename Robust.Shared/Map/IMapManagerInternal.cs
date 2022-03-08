@@ -28,5 +28,6 @@ namespace Robust.Shared.Map
         void TrueGridDelete(MapGrid grid);
         MapGrid CreateUnboundGrid(MapId mapId);
         void BindGrid(MapGridComponent gridComponent, MapGrid mapGrid);
+        void TrueDeleteMap(MapId mapId);
     }
 }

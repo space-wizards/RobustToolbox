@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
-using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -30,7 +29,6 @@ public sealed class MapEventArgs : EventArgs
 internal partial class MapManager
 {
     private readonly Dictionary<MapId, EntityUid> _mapEntities = new();
-    private readonly HashSet<MapId> _maps = new();
     private MapId _highestMapId = MapId.Nullspace;
 
     /// <inheritdoc />
@@ -40,10 +38,10 @@ internal partial class MapManager
         DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-        if (!_maps.Contains(mapId))
-            throw new InvalidOperationException($"Attempted to delete nonexistant map '{mapId}'");
+        if (!_mapEntities.TryGetValue(mapId, out var ent))
+            throw new InvalidOperationException($"Attempted to delete nonexistent map '{mapId}'");
 
-        if (_mapEntities.TryGetValue(mapId, out var ent))
+        if (ent != EntityUid.Invalid)
         {
             EntityManager.DeleteEntity(ent);
         }
@@ -68,14 +66,17 @@ internal partial class MapManager
             var args = new MapEventArgs(mapId);
             OnMapDestroyedGridTree(args);
             MapDestroyed?.Invoke(this, args);
-            _maps.Remove(mapId);
+            _mapEntities.Remove(mapId);
         }
-
-        _mapEntities.Remove(mapId);
+        else
+        {
+            _mapEntities[mapId] = EntityUid.Invalid;
+        }
 
         Logger.InfoS("map", $"Deleting map {mapId}");
     }
 
+    /// <inheritdoc />
     public MapId CreateMap(MapId? mapId = null)
     {
         return CreateMap(mapId, default);
@@ -84,9 +85,10 @@ internal partial class MapManager
     /// <inheritdoc />
     public bool MapExists(MapId mapId)
     {
-        return _maps.Contains(mapId);
+        return _mapEntities.ContainsKey(mapId);
     }
 
+    /// <inheritdoc />
     public EntityUid CreateNewMapEntity(MapId mapId)
     {
 #if DEBUG
@@ -109,7 +111,7 @@ internal partial class MapManager
         DebugTools.Assert(_dbgGuardRunning);
 #endif
 
-        if (!_maps.Contains(mapId))
+        if (!_mapEntities.ContainsKey(mapId))
             throw new InvalidOperationException($"Map {mapId} does not exist.");
 
         foreach (var kvEntity in _mapEntities)
@@ -124,6 +126,7 @@ internal partial class MapManager
         // remove existing graph
         if (_mapEntities.TryGetValue(mapId, out var oldEntId))
         {
+            //Note: EntityUid.Invalid gets passed in here
             //Note: This prevents setting a subgraph as the root, since the subgraph will be deleted
             EntityManager.DeleteEntity(oldEntId);
         }
@@ -149,6 +152,7 @@ internal partial class MapManager
         _mapEntities[mapId] = newMapEntity;
     }
 
+    /// <inheritdoc />
     public EntityUid GetMapEntityId(MapId mapId)
     {
         if (_mapEntities.TryGetValue(mapId, out var entId))
@@ -165,26 +169,31 @@ internal partial class MapManager
         return _mapEntities[mapId];
     }
 
+    /// <inheritdoc />
     public bool HasMapEntity(MapId mapId)
     {
         return _mapEntities.ContainsKey(mapId);
     }
 
+    /// <inheritdoc />
     public IEnumerable<MapId> GetAllMapIds()
     {
-        return _maps;
+        return _mapEntities.Keys;
     }
 
+    /// <inheritdoc />
     public IEnumerable<IMapComponent> GetAllMapComponents()
     {
         return EntityManager.EntityQuery<IMapComponent>(true);
     }
 
+    /// <inheritdoc />
     public bool IsMap(EntityUid uid)
     {
         return EntityManager.HasComponent<IMapComponent>(uid);
     }
 
+    /// <inheritdoc />
     public MapId NextMapId()
     {
         return _highestMapId = new MapId(_highestMapId.Value + 1);
@@ -210,7 +219,6 @@ internal partial class MapManager
         if (_highestMapId.Value < actualId.Value)
             _highestMapId = actualId;
 
-        _maps.Add(actualId);
         Logger.InfoS("map", $"Creating new map {actualId}");
 
         if (actualId != MapId.Nullspace) // nullspace isn't bound to an entity
@@ -244,6 +252,10 @@ internal partial class MapManager
                 Logger.DebugS("map", $"Binding map {actualId} to entity {newEnt}");
             }
         }
+        else
+        {
+            _mapEntities.Add(MapId.Nullspace, EntityUid.Invalid);
+        }
 
         var args = new MapEventArgs(actualId);
         OnMapCreatedGridTree(args);
@@ -254,38 +266,21 @@ internal partial class MapManager
 
     private void EnsureNullspaceExistsAndClear()
     {
-        if (!_maps.Contains(MapId.Nullspace))
+        if (!MapExists(MapId.Nullspace))
             CreateMap(MapId.Nullspace);
         else
         {
-            if (!_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId))
+            // nullspace ent may not have been allocated, but the mapId does exist, so we are done here
+            if (!_mapEntities.TryGetValue(MapId.Nullspace, out var mapEntId) || mapEntId == EntityUid.Invalid)
                 return;
 
-            // Notice we do not clear off any added comps to the nullspace map entity, would it be better to just delete
-            // and recreate the entity, letting recursive entity deletion perform this foreach loop?
-
-            foreach (var childEuid in EntityManager.GetComponent<TransformComponent>(mapEntId).ChildEntities)
+            // the point of this is to completely clear the map without remaking the allocated entity, which would invalidate the
+            // euid which I'm sure some code has cached. Notice this does not touch the map ent itself, so any comps added to it are not removed,
+            // so i guess don't do that?
+            foreach (var childTransform in EntityManager.GetComponent<TransformComponent>(mapEntId).Children.ToArray())
             {
-                EntityManager.DeleteEntity(childEuid);
+                EntityManager.DeleteEntity(childTransform.Owner);
             }
-        }
-    }
-
-    private void DeleteAllMaps()
-    {
-        foreach (var map in _maps.ToArray())
-        {
-            if (map != MapId.Nullspace)
-                DeleteMap(map);
-        }
-
-        if (_mapEntities.TryGetValue(MapId.Nullspace, out var entId))
-        {
-            Logger.InfoS("map", $"Deleting map entity {entId}");
-            EntityManager.DeleteEntity(entId);
-
-            if (_mapEntities.Remove(MapId.Nullspace))
-                Logger.InfoS("map", "Removing nullspace map entity.");
         }
     }
 }

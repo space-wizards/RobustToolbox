@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using Robust.Shared.Containers;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
@@ -46,6 +47,7 @@ namespace Robust.Shared.GameObjects
     public sealed class PhysicsComponent : Component, IPhysBody, ISerializationHooks, ILookupWorldBox2Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
+        [Dependency] private readonly IEntitySystemManager _sysMan = default!;
 
         [DataField("status", readOnly: true)]
         private BodyStatus _bodyStatus = BodyStatus.OnGround;
@@ -119,7 +121,7 @@ namespace Robust.Shared.GameObjects
                 Force = Vector2.Zero;
                 Torque = 0.0f;
 
-                EntitySystem.Get<SharedBroadphaseSystem>().RegenerateContacts(this);
+                _sysMan.GetEntitySystem<SharedBroadphaseSystem>().RegenerateContacts(this);
 
                 _entMan.EventBus.RaiseLocalEvent(Owner, new PhysicsBodyTypeChangedEvent(_bodyType, oldType), false);
             }
@@ -445,6 +447,7 @@ namespace Robust.Shared.GameObjects
         ///     AKA Sweep.LocalCenter in Box2D.
         ///     Not currently in use as this is set after mass data gets set (when fixtures update).
         /// </remarks>
+        [ViewVariables]
         public Vector2 LocalCenter
         {
             get => _localCenter;
@@ -548,35 +551,13 @@ namespace Robust.Shared.GameObjects
         private float _angularDamping = 0.2f;
 
         /// <summary>
-        /// Get the linear and angular velocities at the same time.
-        /// </summary>
-        public (Vector2 Linear, float Angular) MapVelocities
-        {
-            get
-            {
-                var linearVelocity = _linearVelocity;
-                var angularVelocity = _angularVelocity;
-                var entMan = _entMan;
-                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
-
-                while (parent != null)
-                {
-                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
-                    {
-                        linearVelocity += body.LinearVelocity;
-                        angularVelocity += body.AngularVelocity;
-                    }
-
-                    parent = parent.Parent;
-                }
-
-                return (linearVelocity, angularVelocity);
-            }
-        }
-
-        /// <summary>
         ///     Current linear velocity of the entity in meters per second.
         /// </summary>
+        /// <remarks>
+        ///     This is the velocity relative to the parent, but is defined in terms of map coordinates. I.e., if the
+        ///     entity's parents are all stationary, this is the rate of change of this entity's world position (not
+        ///     local position).
+        /// </remarks>
         [ViewVariables(VVAccess.ReadWrite)]
         public Vector2 LinearVelocity
         {
@@ -601,44 +582,6 @@ namespace Robust.Shared.GameObjects
         }
 
         internal Vector2 _linearVelocity;
-
-        /// <summary>
-        /// Get the body's LinearVelocity in map terms.
-        /// </summary>
-        /// <remarks>
-        /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
-        /// </remarks>
-        [ViewVariables]
-        public Vector2 MapLinearVelocity
-        {
-            get
-            {
-                var entManager = IoCManager.Resolve<IEntityManager>();
-                var physicsSystem = EntitySystem.Get<SharedPhysicsSystem>();
-                var xforms = entManager.GetEntityQuery<TransformComponent>();
-                var physics = entManager.GetEntityQuery<PhysicsComponent>();
-                var xform = xforms.GetComponent(Owner);
-                var parent = xform.ParentUid;
-                var localPos = xform.LocalPosition;
-
-                var velocity = _linearVelocity;
-
-                while (parent.IsValid())
-                {
-                    var parentXform = xforms.GetComponent(parent);
-
-                    if (physics.TryGetComponent(parent, out var body))
-                    {
-                        velocity += physicsSystem.GetLinearVelocityFromLocalPoint(body, localPos);
-                    }
-
-                    velocity = parentXform.LocalRotation.RotateVec(velocity);
-                    parent = parentXform.ParentUid;
-                }
-
-                return velocity;
-            }
-        }
 
         /// <summary>
         ///     Current angular velocity of the entity in radians per sec.
@@ -667,35 +610,6 @@ namespace Robust.Shared.GameObjects
         }
 
         private float _angularVelocity;
-
-        /// <summary>
-        /// Get the body's AngularVelocity in map terms.
-        /// </summary>
-        /// <remarks>
-        /// Consider using <see cref="MapVelocities"/> if you need linear and angular at the same time.
-        /// </remarks>
-        [ViewVariables]
-        public float MapAngularVelocity
-        {
-            get
-            {
-                var velocity = _angularVelocity;
-                var entMan = _entMan;
-                var parent = entMan.GetComponent<TransformComponent>(Owner).Parent;
-
-                while (parent != null)
-                {
-                    if (entMan.TryGetComponent(parent.Owner, out PhysicsComponent? body))
-                    {
-                        velocity += body.AngularVelocity;
-                    }
-
-                    parent = parent.Parent;
-                }
-
-                return velocity;
-            }
-        }
 
         /// <summary>
         ///     Current momentum of the entity in kilogram meters per second
@@ -735,7 +649,7 @@ namespace Robust.Shared.GameObjects
 
         public IEnumerable<PhysicsComponent> GetBodiesIntersecting()
         {
-            foreach (var entity in EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(_entMan.GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
+            foreach (var entity in _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetCollidingEntities(_entMan.GetComponent<TransformComponent>(Owner).MapID, GetWorldAABB()))
             {
                 yield return entity;
             }
@@ -834,7 +748,7 @@ namespace Robust.Shared.GameObjects
 
         IEnumerable<IPhysBody> IPhysBody.GetCollidingEntities(Vector2 offset, bool approx)
         {
-            return EntitySystem.Get<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
+            return _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetCollidingEntities(this, offset, approx);
         }
 
         public void ResetMassData(FixturesComponent? fixtures = null)
@@ -853,7 +767,7 @@ namespace Robust.Shared.GameObjects
             // Temporary until ECS don't @ me.
             fixtures ??= IoCManager.Resolve<IEntityManager>().GetComponent<FixturesComponent>(Owner);
             var localCenter = Vector2.Zero;
-            var shapeManager = EntitySystem.Get<FixtureSystem>();
+            var shapeManager = _sysMan.GetEntitySystem<FixtureSystem>();
 
             foreach (var (_, fixture) in fixtures.Fixtures)
             {
@@ -958,6 +872,12 @@ namespace Robust.Shared.GameObjects
 
             return true;
         }
+
+        // View variables conveniences properties.
+        [ViewVariables]
+        private Vector2 _mapLinearVelocity => _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetMapLinearVelocity(Owner, this);
+        [ViewVariables]
+        private float _mapAngularVelocity => _sysMan.GetEntitySystem<SharedPhysicsSystem>().GetMapAngularVelocity(Owner, this);
     }
 
     /// <summary>

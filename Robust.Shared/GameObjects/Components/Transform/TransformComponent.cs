@@ -339,6 +339,7 @@ namespace Robust.Shared.GameObjects
 
                 if (!sameParent)
                 {
+                    var oldWorldRotation = WorldRotation;
                     var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                     changedParent = true;
                     var newParent = xformQuery.GetComponent(value.EntityId);
@@ -356,6 +357,7 @@ namespace Robust.Shared.GameObjects
                     // offset position from world to parent
                     _parent = value.EntityId;
                     ChangeMapId(newParent.MapID, xformQuery);
+                    WorldRotation = oldWorldRotation;
 
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
@@ -761,14 +763,13 @@ namespace Robust.Shared.GameObjects
 
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
-            var metaData = _entMan.GetComponent<MetaDataComponent>(Owner);
+            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
+            var metaData = metaEnts.GetComponent(Owner);
             metaData.EntityPaused = mapPaused;
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            var xforms = _entMan.GetEntityQuery<TransformComponent>();
-            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xforms, metaEnts);
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
         }
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)

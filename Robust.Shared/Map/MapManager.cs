@@ -24,7 +24,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         DebugTools.Assert(!_dbgGuardRunning);
         _dbgGuardInit = true;
 #endif
-        InitializeGridTrees();
         InitializeMapPausing();
     }
 
@@ -38,6 +37,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         Logger.DebugS("map", "Starting...");
 
+        StartupGridTrees();
         EnsureNullspaceExistsAndClear();
 
         DebugTools.Assert(_grids.Count == 0);
@@ -53,6 +53,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         Logger.DebugS("map", "Stopping...");
 
         DeleteAllMaps();
+        ShutdownGridTrees();
 
 #if DEBUG
         DebugTools.Assert(_grids.Count == 0);
@@ -66,8 +67,10 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
     {
         Logger.DebugS("map", "Restarting...");
 
-        Shutdown();
-        Startup();
+        // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
+        // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.
+        DeleteAllMaps();
+        EnsureNullspaceExistsAndClear();
     }
 
 #if DEBUG

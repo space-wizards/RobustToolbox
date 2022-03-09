@@ -111,17 +111,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             gridDatums.Add(grid.Index, gridDatum);
         }
 
-        // -- Map Creations --
-        var mapCreations = new List<MapId>();
-
-        foreach (var mapComp in GetAllMapComponents())
-        {
-            if (mapComp.CreationTick < fromTick || mapComp.WorldMap == MapId.Nullspace)
-                continue;
-
-            mapCreations.Add(mapComp.WorldMap);
-        }
-
         // - Grid Creation data --
         var gridCreations = new List<GridId>();
 
@@ -135,16 +124,14 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         // no point sending empty collections
         if (gridDatums.Count == 0)
             gridDatums = default;
-        if (mapCreations.Count == 0)
-            mapCreations = default;
         if (gridCreations.Count == 0)
             gridCreations = default;
 
         // no point even creating an empty map state if no data
-        if (gridDatums == null && mapCreations == null && gridCreations == null)
+        if (gridDatums == null && gridCreations == null)
             return default;
 
-        return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(), mapCreations?.ToArray(),
+        return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(),
             gridCreations?.ToArray<GridId>());
     }
 
@@ -158,49 +145,51 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         }
     }
 
+    private readonly List<(MapId mapId, EntityUid euid)> _newMaps = new();
+    private List<(MapId mapId, EntityUid euid, GridId gridId, int chunkSize)> _newGrids = new();
+
     public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
     {
-        // There was no map data this tick, so nothing to do.
-        if (data == null)
-            return;
-
         // First we need to figure out all the NEW MAPS.
-        if (data.CreatedMaps != null)
         {
-            DebugTools.Assert(!entityStates.IsEmpty, "Received new maps, but no entity state.");
-
-            foreach (var mapId in data.CreatedMaps)
+            // search for any newly created map components
+            foreach (var entityState in entityStates)
             {
-                // map already exists from a previous state.
-                if (MapExists(mapId))
-                    continue;
-
-                EntityUid mapEuid = default;
-
-                //get shared euid of map comp entity
-                foreach (var entityState in entityStates)
+                foreach (var compChange in entityState.ComponentChanges.Span)
                 {
-                    foreach (var compChange in entityState.ComponentChanges.Span)
+                    if (!compChange.Created)
+                        continue;
+
+                    if (compChange.State is MapComponentState mapCompState)
                     {
-                        if (compChange.State is not MapComponentState mapCompState || mapCompState.MapId != mapId)
+                        var mapEuid = entityState.Uid;
+                        var mapId = mapCompState.MapId;
+
+                        // map already exists from a previous state.
+                        if (MapExists(mapId))
                             continue;
 
-                        DebugTools.Assert(compChange.Created, $"new map {mapId} is in CreatedMaps, but compState isn't marked as created.");
-                        mapEuid = entityState.Uid;
-                        goto BreakMapEntSearch;
+                        _newMaps.Add((mapId, mapEuid));
+                    }
+                    else if (compChange.State is MapGridComponentState gridCompState)
+                    {
+                        var gridEuid = entityState.Uid;
+                        var gridId = gridCompState.GridIndex;
+                        var chunkSize = gridCompState.ChunkSize;
                     }
                 }
-
-                BreakMapEntSearch:
-
-                DebugTools.Assert(mapEuid != default, $"Could not find corresponding entity state for new map {mapId}.");
-
-                CreateMap(mapId, mapEuid);
             }
+
+            foreach (var tuple in _newMaps)
+            {
+                CreateMap(tuple.mapId, tuple.euid);
+            }
+
+            _newMaps.Clear();
         }
 
         // Then make all the grids.
-        if (data.CreatedGrids != null)
+        if (data != null && data.CreatedGrids != null)
         {
             DebugTools.Assert(data.GridData is not null, "Received new grids, but GridData was null.");
 
@@ -249,7 +238,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         }
 
         // Process all grid updates.
-        if (data.GridData != null)
+        if (data != null && data.GridData != null)
         {
             SuppressOnTileChanged = true;
             // Ok good all the grids and maps exist now.

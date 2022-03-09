@@ -10,14 +10,12 @@ namespace Robust.Shared.GameStates
     public sealed class GameStateMapData
     {
         // Dict of the new maps
-        public readonly MapId[]? CreatedMaps;
         public readonly GridId[]? CreatedGrids;
         public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, MapId[]? createdMaps, GridId[]? createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, GridId[]? createdGrids)
         {
             GridData = gridData;
-            CreatedMaps = createdMaps;
             CreatedGrids = createdGrids;
         }
 

@@ -60,7 +60,7 @@ namespace Robust.Client.Map
 
             const int tileSize = EyeManager.PixelsPerMeter;
 
-            var tileCount = defList.Aggregate(0, (i, definition) => i + definition.Variants) + 1;
+            var tileCount = defList.Select(x => (int)x.Variants).Sum() + 1;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(tileCount));
             var dimensionY = (int) Math.Ceiling((float) tileCount / dimensionX);

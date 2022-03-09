@@ -39,6 +39,7 @@ public readonly struct Tile : IEquatable<Tile>
     /// </summary>
     /// <param name="typeId">Internal type ID.</param>
     /// <param name="flags">Flags used by toolbox's rendering.</param>
+    /// <param name="variant">The visual variant this tile is using.</param>
     public Tile(ushort typeId, TileRenderFlag flags = 0, byte variant = 0)
     {
         TypeId = typeId;

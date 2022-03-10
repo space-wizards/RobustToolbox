@@ -155,7 +155,6 @@ public abstract partial class SharedPhysicsSystem
         // for the new velocities (that need to be updated), we can just use the existing function:
         var (newLinear, newAngular) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
 
-
         // for the old velocities, we need to re-implement this function while using the old parent and old local position:
         if (args.OldParent is not EntityUid { Valid: true} parent)
         {
@@ -167,7 +166,6 @@ public abstract partial class SharedPhysicsSystem
 
         TransformComponent? parentXform = xformQuery.GetComponent(parent);
         var localPos = parentXform.InvWorldMatrix.Transform(xform.WorldPosition);
-        var worldRot = xform.WorldRotation;
 
         var oldLinear = physics.LinearVelocity;
         var oldAngular = physics.AngularVelocity;
@@ -199,9 +197,5 @@ public abstract partial class SharedPhysicsSystem
         // world-rotation is required
         physics.LinearVelocity += oldLinear - newLinear;
         physics.AngularVelocity += oldAngular - newAngular;
-
-        var (lin, ang) = GetMapVelocities(uid, physics, xform, xformQuery, physicsQuery);
-        Logger.Info($"new map: {lin}   /   {GetMapLinearVelocity(uid, physics, xform, xformQuery, physicsQuery)}");
-        Logger.Info($"new lin: {physics.LinearVelocity}");
     }
 }

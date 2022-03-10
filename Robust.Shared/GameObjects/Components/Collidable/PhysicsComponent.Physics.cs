@@ -601,7 +601,10 @@ namespace Robust.Shared.GameObjects
                 if (value * value > 0.0f)
                     Awake = true;
 
-                if (MathHelper.CloseToPercent(_angularVelocity, value, 0.0001f))
+                // CloseToPercent tolerance needs to be small enough such that an angular velocity just above
+                // sleep-tolerance can damp down to sleeping.
+
+                if (MathHelper.CloseToPercent(_angularVelocity, value, 0.00001f))
                     return;
 
                 _angularVelocity = value;

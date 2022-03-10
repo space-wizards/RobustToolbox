@@ -655,6 +655,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void AttachToGridOrMap()
         {
+            bool TerminatingOrDeleted(EntityUid uid)
+            {
+                return !_entMan.TryGetComponent(uid, out MetaDataComponent? meta)
+                       || meta.EntityLifeStage >= EntityLifeStage.Terminating;
+            }
+
             // nothing to do
             var oldParent = Parent;
             if (oldParent == null)
@@ -665,11 +671,13 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
             {
                 newMapEntity = mapGrid.GridEntityId;
             }
-            else if (_mapManager.HasMapEntity(mapPos.MapId))
+            else if (_mapManager.HasMapEntity(mapPos.MapId)
+                     && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
+                     && !TerminatingOrDeleted(mapEnt))
             {
                 newMapEntity = _mapManager.GetMapEntityIdOrThrow(mapPos.MapId);
             }

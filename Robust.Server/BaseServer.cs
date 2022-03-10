@@ -126,7 +126,7 @@ namespace Robust.Server
             else
                 Logger.InfoS("srv", $"{reason}, shutting down...");
 
-            _shutdownReason = reason;
+            _shutdownReason = reason ?? "Shutting down";
 
             if (_mainLoop != null) _mainLoop.Running = false;
             if (_logHandler != null)

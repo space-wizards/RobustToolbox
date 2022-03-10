@@ -61,5 +61,7 @@ namespace Robust.Client.Graphics
 
         /// <returns>Null if not running on X11.</returns>
         uint? GetX11WindowId();
+
+        void RegisterGridEcsEvents();
     }
 }

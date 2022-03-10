@@ -53,7 +53,11 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
-            MapManager.MapCreated += HandleMapCreated;
+            SubscribeLocalEvent<MapChangedEvent>(ev =>
+            {
+                if (ev.Created)
+                    HandleMapCreated(ev);
+            });
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<CollisionChangeMessage>(HandlePhysicsUpdateMessage);
@@ -127,13 +131,11 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
 
-            MapManager.MapCreated -= HandleMapCreated;
-
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.AutoClearForces, OnAutoClearChange);
         }
 
-        protected abstract void HandleMapCreated(object? sender, MapEventArgs eventArgs);
+        protected abstract void HandleMapCreated(MapChangedEvent eventArgs);
 
         private void HandleMapChange(EntMapIdChangedMessage message)
         {

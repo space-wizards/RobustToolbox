@@ -584,7 +584,7 @@ namespace Robust.Server.Maps
                 foreach (var yamlGrid in yamlGrids)
                 {
                     var grid = YamlGridSerializer.DeserializeGrid(
-                        _mapManager, TargetMap,
+                        _mapManager,
                         (YamlMappingNode) yamlGrid["settings"],
                         (YamlSequenceNode) yamlGrid["chunks"],
                         _tileMap!,

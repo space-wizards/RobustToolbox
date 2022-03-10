@@ -114,11 +114,11 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         // - Grid Creation data --
         var gridCreations = new List<GridId>();
 
-        foreach (MapGrid grid in GetAllGrids())
+        foreach (var gridComp in EntityManager.EntityQuery<IMapGridComponent>(true))
         {
-            if (grid.CreatedTick < fromTick || grid.ParentMapId == MapId.Nullspace)
+            if (gridComp.CreationTick < fromTick || gridComp.Grid.ParentMapId == MapId.Nullspace)
                 continue;
-            gridCreations.Add(grid.Index);
+            gridCreations.Add(gridComp.Grid.Index);
         }
 
         // no point sending empty collections

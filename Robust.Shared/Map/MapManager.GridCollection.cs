@@ -362,7 +362,7 @@ internal partial class MapManager
         if (_highestGridId.Value < actualId.Value)
             _highestGridId = actualId;
 
-        var grid = new MapGrid(this, EntityManager, actualId, chunkSize, currentMapId);
+        var grid = new MapGrid(this, EntityManager, actualId, chunkSize);
 
         if (actualId != GridId.Invalid && createEntity) // nullspace default grid is not bound to an entity
         {

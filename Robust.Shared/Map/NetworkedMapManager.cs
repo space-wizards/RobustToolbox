@@ -146,11 +146,11 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
     }
 
     private readonly List<(MapId mapId, EntityUid euid)> _newMaps = new();
-    private List<(MapId mapId, EntityUid euid, GridId gridId, int chunkSize)> _newGrids = new();
+    private List<(MapId mapId, EntityUid euid, GridId gridId, ushort chunkSize)> _newGrids = new();
 
     public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
     {
-        // First we need to figure out all the NEW MAPS.
+        // Setup new maps and grids
         {
             // search for any newly created map components
             foreach (var entityState in entityStates)
@@ -171,70 +171,48 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
                         _newMaps.Add((mapId, mapEuid));
                     }
-                    else if (compChange.State is MapGridComponentState gridCompState)
+                    else if (data != null && data.GridData != null && compChange.State is MapGridComponentState gridCompState)
                     {
                         var gridEuid = entityState.Uid;
                         var gridId = gridCompState.GridIndex;
                         var chunkSize = gridCompState.ChunkSize;
-                    }
-                }
-            }
 
-            foreach (var tuple in _newMaps)
-            {
-                CreateMap(tuple.mapId, tuple.euid);
-            }
-
-            _newMaps.Clear();
-        }
-
-        // Then make all the grids.
-        if (data != null && data.CreatedGrids != null)
-        {
-            DebugTools.Assert(data.GridData is not null, "Received new grids, but GridData was null.");
-
-            foreach (var gridId in data.CreatedGrids)
-            {
-                if (GridExists(gridId))
-                    continue;
-
-                EntityUid gridEuid = default;
-                ushort chunkSize = 0;
-
-                //get shared euid of map comp entity
-                foreach (var entityState in entityStates)
-                {
-                    foreach (var compState in entityState.ComponentChanges.Span)
-                    {
-                        if (compState.State is not MapGridComponentState gridCompState || gridCompState.GridIndex != gridId)
+                        // grid already exists from a previous state
+                        if(GridExists(gridId))
                             continue;
 
-                        DebugTools.Assert(compState.Created, $"new grid {gridId} is in CreatedGrids, but compState isn't marked as created.");
-                        gridEuid = entityState.Uid;
-                        chunkSize = gridCompState.ChunkSize;
-                        goto BreakGridEntSearch;
+                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridId}.");
+
+                        MapId gridMapId = default;
+                        foreach (var kvData in data.GridData)
+                        {
+                            if (kvData.Key != gridId)
+                                continue;
+
+                            gridMapId = kvData.Value.Coordinates.MapId;
+                            break;
+                        }
+
+                        DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridId}.");
+
+                        _newGrids.Add((gridMapId, gridEuid, gridId, chunkSize));
                     }
                 }
-
-                BreakGridEntSearch:
-
-                DebugTools.Assert(gridEuid != default, $"Could not find corresponding entity state for new grid {gridId}.");
-                DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridId}.");
-
-                MapId gridMapId = default;
-                foreach (var kvData in data.GridData!)
-                {
-                    if (kvData.Key != gridId)
-                        continue;
-
-                    gridMapId = kvData.Value.Coordinates.MapId;
-                    break;
-                }
-
-                DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridId}.");
-
-                CreateGrid(gridMapId, gridId, chunkSize, gridEuid);
             }
+
+            // create all the new maps
+            foreach (var (mapId, euid) in _newMaps)
+            {
+                CreateMap(mapId, euid);
+            }
+            _newMaps.Clear();
+
+            // create all the new grids
+            foreach (var (mapId, euid, gridId, chunkSize) in _newGrids)
+            {
+                CreateGrid(mapId, gridId, chunkSize, euid);
+            }
+            _newGrids.Clear();
         }
 
         // Process all grid updates.

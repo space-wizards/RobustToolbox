@@ -139,6 +139,9 @@ public abstract partial class SharedPhysicsSystem
 
     private void HandleParentChangeVelocity(EntityUid uid, PhysicsComponent physics, ref EntParentChangedMessage args, TransformComponent xform)
     {
+        if (physics.LifeStage != ComponentLifeStage.Running)
+            return;
+
         if (_container.IsEntityInContainer(uid, xform))
             return;
 

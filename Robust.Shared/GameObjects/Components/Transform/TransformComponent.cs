@@ -110,7 +110,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -135,7 +135,7 @@ namespace Robust.Shared.GameObjects
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 _localRotation = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -339,7 +339,6 @@ namespace Robust.Shared.GameObjects
 
                 if (!sameParent)
                 {
-                    var oldWorldRotation = WorldRotation;
                     var xformQuery = _entMan.GetEntityQuery<TransformComponent>();
                     changedParent = true;
                     var newParent = xformQuery.GetComponent(value.EntityId);
@@ -357,7 +356,10 @@ namespace Robust.Shared.GameObjects
                     // offset position from world to parent
                     _parent = value.EntityId;
                     ChangeMapId(newParent.MapID, xformQuery);
-                    WorldRotation = oldWorldRotation;
+
+                    // preserve world rotation
+                    if (LifeStage == ComponentLifeStage.Running)
+                        LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
 
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
@@ -422,7 +424,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {

@@ -34,7 +34,7 @@ namespace Robust.Client.Physics
 
             var diff = _gameTiming.TickRemainder - _lastRem;
             _lastRem = _gameTiming.TickRemainder;
-            SimulateWorld((float)diff.TotalSeconds, true);
+            SimulateWorld((float) diff.TotalSeconds, true);
         }
 
         protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)

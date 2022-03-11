@@ -16,7 +16,8 @@ namespace Robust.Shared.Containers
     public static class ContainerHelpers
     {
         /// <summary>
-        /// Am I inside a container? Only checks the direct parent.
+        /// Am I inside a container? Only checks the direct parent. To see if the entity, or any parent entity, is
+        /// inside a container, use <see cref="ContainerSystem.IsEntityOrParentInContainer"/>
         /// </summary>
         /// <param name="entity">Entity that might be inside a container.</param>
         /// <returns>If the entity is inside of a container.</returns>

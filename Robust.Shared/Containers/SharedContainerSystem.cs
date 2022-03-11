@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.GameObjects;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Containers
 {
@@ -134,12 +135,53 @@ namespace Robust.Shared.Containers
             return TryGetContainingContainer(transform.ParentUid, uid, out container, skipExistCheck: true);
         }
 
+        /// <summary>
+        ///     Checks whether the given entity is inside of a container. This will only check if this entity's direct
+        ///     parent is containing it. To recursively if the entity, or any parent, is inside a container, use <see
+        ///     cref="IsEntityOrParentInContainer"/>
+        /// </summary>
+        /// <returns>If the entity is inside of a container.</returns>
         public bool IsEntityInContainer(EntityUid uid, MetaDataComponent? meta = null)
         {
             if (!Resolve(uid, ref meta, false))
                 return false;
 
             return (meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer;
+        }
+
+        /// <summary>
+        ///     Recursively if the entity, or any parent entity, is inside of a container.
+        /// </summary>
+        /// <returns>If the entity is inside of a container.</returns>
+        public bool IsEntityOrParentInContainer(
+            EntityUid uid,
+            MetaDataComponent? meta = null,
+            TransformComponent? xform = null,
+            EntityQuery<MetaDataComponent>? metas = null,
+            EntityQuery<TransformComponent>? xforms = null)
+        {
+            DebugTools.Assert(meta == null || meta.Owner == uid);
+            DebugTools.Assert(xform == null || xform.Owner == uid);
+
+            if (meta == null)
+            {
+                metas ??= EntityManager.GetEntityQuery<MetaDataComponent>();
+                meta = metas.Value.GetComponent(uid);
+            }
+
+            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer)
+                return true;
+
+            if (xform == null)
+            {
+                xforms ??= EntityManager.GetEntityQuery<TransformComponent>();
+                xform = xforms.Value.GetComponent(uid);
+            }
+
+            if (!xform.ParentUid.Valid)
+                return false;
+
+            return IsEntityOrParentInContainer(xform.ParentUid, metas: metas, xforms: xforms);
         }
 
         /// <summary>

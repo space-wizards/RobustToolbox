@@ -22,7 +22,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.Placement
 {
-    public sealed partial class PlacementManager : IPlacementManager, IDisposable
+    public sealed partial class PlacementManager : IPlacementManager, IDisposable, IEntityEventSubscriber
     {
         [Dependency] private readonly IClientNetManager NetworkManager = default!;
         [Dependency] public readonly IPlayerManager PlayerManager = default!;
@@ -185,7 +185,7 @@ namespace Robust.Client.Placement
                 _modeDictionary.Add(type.Name, type);
             }
 
-            MapManager.TileChanged += HandleTileChanged;
+            EntityManager.EventBus.SubscribeEvent<TileChangedEvent>(EventSource.Local, this, HandleTileChanged);
 
             _drawOverlay = new PlacementOverlay(this);
             _overlayManager.AddOverlay(_drawOverlay);
@@ -328,7 +328,7 @@ namespace Robust.Client.Placement
             }
         }
 
-        private void HandleTileChanged(object? sender, TileChangedEventArgs args)
+        private void HandleTileChanged(TileChangedEvent args)
         {
             var coords = MapManager.GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
             _pendingTileChanges.RemoveAll(c => c.Item1 == coords);

@@ -68,8 +68,14 @@ namespace Robust.Shared.Physics
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
-            _mapManager.MapCreated += OnMapCreated;
-            _mapManager.MapDestroyed += OnMapDestroyed;
+
+            SubscribeLocalEvent<MapChangedEvent>(ev =>
+            {
+                if (ev.Created)
+                    OnMapCreated(ev);
+                else
+                    OnMapDestroyed(ev);
+            });
         }
 
         private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;
@@ -671,13 +677,11 @@ namespace Robust.Shared.Physics
             base.Shutdown();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
-            _mapManager.MapCreated -= OnMapCreated;
-            _mapManager.MapDestroyed -= OnMapDestroyed;
         }
 
         #region Broadphase management
 
-        private void OnMapCreated(object? sender, MapEventArgs e)
+        private void OnMapCreated(MapChangedEvent e)
         {
             if (e.Map == MapId.Nullspace) return;
 
@@ -685,7 +689,7 @@ namespace Robust.Shared.Physics
             _moveBuffer[e.Map] = new Dictionary<FixtureProxy, Box2>(64);
         }
 
-        private void OnMapDestroyed(object? sender, MapEventArgs e)
+        private void OnMapDestroyed(MapChangedEvent e)
         {
             _moveBuffer.Remove(e.Map);
         }

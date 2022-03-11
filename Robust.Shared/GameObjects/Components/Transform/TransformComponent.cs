@@ -703,7 +703,7 @@ namespace Robust.Shared.GameObjects
             WorldPosition = mapPos.Position;
             DeferUpdates = false;
 
-            Dirty();
+            Dirty(_entMan);
         }
 
         public void DetachParentToNull()
@@ -742,7 +742,7 @@ namespace Robust.Shared.GameObjects
             // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
             MapIdChanged(oldMapId);
-            Dirty();
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -1039,7 +1039,7 @@ namespace Robust.Shared.GameObjects
                     RebuildMatrices();
                 }
 
-                Dirty();
+                Dirty(_entMan);
             }
 
             if (nextState is TransformComponentState nextTransform)

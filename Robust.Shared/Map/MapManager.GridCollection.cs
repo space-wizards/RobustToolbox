@@ -314,15 +314,18 @@ internal partial class MapManager
 
     protected MapGrid CreateGrid(MapId currentMapId, GridId? forcedGridId, ushort chunkSize, EntityUid forcedGridEuid)
     {
-        var actualId = GenerateGridId(forcedGridId);
-        var grid = new MapGrid(this, EntityManager, actualId, chunkSize);
-
         var gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
-        var gridComp = EntityManager.AddComponent<MapGridComponent>(gridEnt);
 
-        gridComp.Grid = grid;
-        gridComp.GridIndex = grid.Index;
-        grid.GridEntityId = gridEnt;
+        MapGrid grid;
+        using (var preInit = EntityManager.AddComponentUninitialized<MapGridComponent>(gridEnt))
+        {
+            var actualId = GenerateGridId(forcedGridId);
+            grid = new MapGrid(this, EntityManager, actualId, chunkSize);
+
+            preInit.Comp.Grid = grid;
+            preInit.Comp.GridIndex = grid.Index;
+            grid.GridEntityId = gridEnt;
+        }
 
         _grids.Add(grid.Index, grid.GridEntityId);
         Logger.DebugS("map", $"Binding new grid {grid.Index} to entity {grid.GridEntityId}");
@@ -331,7 +334,7 @@ internal partial class MapManager
         //are applied. After they are applied the parent may be different, but the MapId will
         //be the same. This causes TransformComponent.ParentUid of a grid to be unsafe to
         //use in transform states anytime before the state parent is properly set.
-        EntityUid fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
+        var fallbackParentEuid = GetMapEntityIdOrThrow(currentMapId);
         EntityManager.GetComponent<TransformComponent>(gridEnt).AttachParent(fallbackParentEuid);
 
         EntityManager.InitializeComponents(grid.GridEntityId);

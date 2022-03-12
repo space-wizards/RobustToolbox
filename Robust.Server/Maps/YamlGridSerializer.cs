@@ -78,7 +78,7 @@ namespace Robust.Server.Maps
 
         public static MapGrid DeserializeGrid(IMapManagerInternal mapMan, YamlMappingNode info,
             YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
-            ITileDefinitionManager tileDefinitionManager)
+            ITileDefinitionManager tileDefinitionManager, GridId forcedGridId)
         {
             ushort csz = 0;
             ushort tsz = 0;
@@ -97,7 +97,7 @@ namespace Robust.Server.Maps
             }
 
             //TODO: Pass in options
-            var grid = mapMan.CreateUnboundGrid();
+            var grid = mapMan.CreateUnboundGrid(forcedGridId);
 
             foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
             {

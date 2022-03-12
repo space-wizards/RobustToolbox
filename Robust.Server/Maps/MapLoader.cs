@@ -229,6 +229,7 @@ namespace Robust.Server.Maps
             private readonly MapLoadOptions? _loadOptions;
             private readonly Dictionary<GridId, int> GridIDMap = new();
             public readonly List<MapGrid> Grids = new();
+            private readonly List<GridId> _readGridIndices = new();
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
             private readonly Dictionary<int, EntityUid> UidEntityMap = new();
@@ -314,9 +315,8 @@ namespace Robust.Server.Maps
                 // Create the new map.
                 AllocMap();
 
-                // Load grids.
-                ReadTileMapSection();
-                ReadGridSection();
+                // Maps grid section indices to GridIds, for deserializing GridIds on entities.
+                ReadGridSectionIndices();
 
                 // Entities are first allocated. This allows us to know the future UID of all entities on the map before
                 // even ExposeData is loaded. This allows us to resolve serialized EntityUid instances correctly.
@@ -325,8 +325,11 @@ namespace Robust.Server.Maps
                 // Actually instance components and run ExposeData on them.
                 FinishEntitiesLoad();
 
-                // Finish binding MapGrids to their respective MapGridComponents.
-                BindGridComponents();
+                // Load grids.
+                ReadTileMapSection();
+
+                // Reads the grid section, allocates MapGrids, and maps them to their respective MapGridComponents.
+                ReadGridSection();
 
                 // Clear the net tick numbers so that components from prototypes (not modified by map)
                 // aren't sent over the wire initially.
@@ -474,18 +477,20 @@ namespace Robust.Server.Maps
                 }
             }
 
-            private void BindGridComponents()
+            private void ReadGridSection()
             {
                 // There were no new grids, nothing to do here.
-                if(Grids.Count == 0)
+                if(_readGridIndices.Count == 0)
                     return;
 
                 // MapGrids already contain their assigned GridId from their ctor, and the MapComponents just got deserialized.
                 // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
                 // After doing this, it should be 100% safe to use the MapManager API like normal.
 
+                var yamlGrids = RootNode.GetNode<YamlSequenceNode>("grids");
+
                 // get ents that the grids will bind to
-                var gridComps = new Dictionary<GridId, MapGridComponent>(Grids.Count);
+                var gridComps = new Dictionary<GridId, MapGridComponent>(_readGridIndices.Count);
 
                 // linear search for new grid comps
                 foreach (var tuple in _entitiesToDeserialize)
@@ -502,12 +507,27 @@ namespace Robust.Server.Maps
                     gridComps[gridComp.GridIndex] = gridComp;
                 }
 
-                // Actually bind them
-                foreach (var mapGrid in Grids)
+                for (var index = 0; index < _readGridIndices.Count; index++)
                 {
+                    // Here is where the implicit index pairing magic happens from the yaml.
+                    var gridIndex = _readGridIndices[index];
+                    var yamlGrid = yamlGrids.Children[index];
+
                     // designed to throw if something is broken, every grid must map to an ent
-                    var gridComp = gridComps[mapGrid.Index];
-                    _mapManager.BindGrid(gridComp, mapGrid);
+                    var gridComp = gridComps[gridIndex];
+
+                    DebugTools.Assert(gridComp.GridIndex == gridIndex);
+
+                    var grid = YamlGridSerializer.DeserializeGrid(
+                        _mapManager,
+                        (YamlMappingNode)yamlGrid["settings"],
+                        (YamlSequenceNode)yamlGrid["chunks"],
+                        _tileMap!,
+                        _tileDefinitionManager, gridIndex);
+
+                    Grids.Add(grid); // Grids are kept in index order
+
+                    _mapManager.BindGrid(gridComp, grid);
                 }
             }
 
@@ -577,21 +597,15 @@ namespace Robust.Server.Maps
                 }
             }
 
-            private void ReadGridSection()
+            private void ReadGridSectionIndices()
             {
+                // sets up the mapping so the serializer can properly deserialize GridIds.
+
                 var yamlGrids = RootNode.GetNode<YamlSequenceNode>("grids");
 
-                foreach (var yamlGrid in yamlGrids)
+                for (var i = 0; i < yamlGrids.Children.Count; i++)
                 {
-                    var grid = YamlGridSerializer.DeserializeGrid(
-                        _mapManager,
-                        (YamlMappingNode) yamlGrid["settings"],
-                        (YamlSequenceNode) yamlGrid["chunks"],
-                        _tileMap!,
-                        _tileDefinitionManager
-                    );
-
-                    Grids.Add(grid);
+                    _readGridIndices.Add(_mapManager.GenerateGridId(null));
                 }
             }
 
@@ -923,6 +937,13 @@ namespace Robust.Server.Maps
                 return true;
             }
 
+            [Virtual]
+            public class MapLoadException : Exception
+            {
+                public MapLoadException(string? message)
+                    : base(message) { }
+            }
+
             public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
                 IDependencyCollection dependencies,
                 bool skipHook,
@@ -931,19 +952,18 @@ namespace Robust.Server.Maps
                 // This is the code that deserializes the Grids index into the GridId. This has to happen between Grid allocation
                 // and when grids are bound to their entities.
 
-                if (node.Value == "null") return new DeserializedValue<GridId>(GridId.Invalid);
+                if (node.Value == "null")
+                {
+                    throw new MapLoadException($"Error in map file: found local grid ID '{node.Value}' which does not exist.");
+                }
 
                 var val = int.Parse(node.Value);
-                if (val >= Grids.Count)
+                if (val >= _readGridIndices.Count)
                 {
-                    Logger.ErrorS("map", "Error in map file: found local grid ID '{0}' which does not exist.", val);
-                }
-                else
-                {
-                    return new DeserializedValue<GridId>(Grids[val].Index);
+                    throw new MapLoadException($"Error in map file: found local grid ID '{val}' which does not exist.");
                 }
 
-                return new DeserializedValue<GridId>(GridId.Invalid);
+                return new DeserializedValue<GridId>(_readGridIndices[val]);
             }
 
             ValidationNode ITypeValidator<EntityUid, ValueDataNode>.Validate(ISerializationManager serializationManager,

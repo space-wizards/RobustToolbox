@@ -121,10 +121,9 @@ internal partial class MapManager
         OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
     }
 
-    /// <inheritdoc />
-    public MapGrid CreateUnboundGrid()
+    public MapGrid CreateUnboundGrid(GridId? forcedGridId)
     {
-        var actualId = GenerateGridId(null);
+        var actualId = GenerateGridId(forcedGridId);
         var grid = new MapGrid(this, EntityManager, actualId, 16);
         Logger.InfoS("map", $"Creating unbound grid {grid.Index}");
         return grid;
@@ -350,7 +349,7 @@ internal partial class MapManager
         EntityManager.EventBus.RaiseLocalEvent(ev.Grid.GridEntityId, args);
     }
 
-    private GridId GenerateGridId(GridId? forcedGridId)
+    public GridId GenerateGridId(GridId? forcedGridId)
     {
         var actualId = forcedGridId ?? new GridId(_highestGridId.Value + 1);
 
@@ -362,6 +361,10 @@ internal partial class MapManager
 
         if (_highestGridId.Value < actualId.Value)
             _highestGridId = actualId;
+
+        if(forcedGridId is not null) // this function basically just passes forced gridIds through.
+            Logger.DebugS("map", $"Allocating new GridId {actualId}.");
+
         return actualId;
     }
 }

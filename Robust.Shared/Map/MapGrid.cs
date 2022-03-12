@@ -105,7 +105,7 @@ namespace Robust.Shared.Map
         ///     The length of the side of a square tile in world units.
         /// </summary>
         [ViewVariables]
-        public ushort TileSize { get; } = 1;
+        public ushort TileSize { get; set; } = 1;
 
         /// <inheritdoc />
         [ViewVariables]

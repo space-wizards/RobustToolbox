@@ -121,10 +121,10 @@ internal partial class MapManager
         OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
     }
 
-    public MapGrid CreateUnboundGrid(GridId? forcedGridId)
+    public MapGrid CreateUnboundGrid(GridId? forcedGridId, ushort chunkSize)
     {
         var actualId = GenerateGridId(forcedGridId);
-        var grid = new MapGrid(this, EntityManager, actualId, 16);
+        var grid = new MapGrid(this, EntityManager, actualId, chunkSize);
         Logger.InfoS("map", $"Creating unbound grid {grid.Index}");
         return grid;
     }

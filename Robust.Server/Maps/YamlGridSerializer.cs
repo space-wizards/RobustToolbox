@@ -80,9 +80,9 @@ namespace Robust.Server.Maps
             YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
             ITileDefinitionManager tileDefinitionManager, GridId forcedGridId)
         {
-            ushort csz = 0;
-            ushort tsz = 0;
-            float sgsz = 0.0f;
+            // sane defaults
+            ushort csz = 16; 
+            ushort tsz = 1;
 
             foreach (var kvInfo in info)
             {
@@ -93,11 +93,11 @@ namespace Robust.Server.Maps
                 else if (key == "tilesize")
                     tsz = ushort.Parse(val);
                 else if (key == "snapsize")
-                    sgsz = float.Parse(val, CultureInfo.InvariantCulture);
+                    continue; // obsolete
             }
 
-            //TODO: Pass in options
-            var grid = mapMan.CreateUnboundGrid(forcedGridId);
+            var grid = mapMan.CreateUnboundGrid(forcedGridId, csz);
+            grid.TileSize = tsz;
 
             foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
             {

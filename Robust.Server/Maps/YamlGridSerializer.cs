@@ -76,40 +76,7 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static MapGrid DeserializeMapGrid(IMapManagerInternal mapMan, YamlMappingNode info, GridId forcedGridId)
-        {
-            // sane defaults
-            ushort csz = 16;
-            ushort tsz = 1;
-
-            foreach (var kvInfo in info)
-            {
-                var key = kvInfo.Key.ToString();
-                var val = kvInfo.Value.ToString();
-                if (key == "chunksize")
-                    csz = ushort.Parse(val);
-                else if (key == "tilesize")
-                    tsz = ushort.Parse(val);
-                else if (key == "snapsize")
-                    continue; // obsolete
-            }
-
-            var grid = mapMan.CreateUnboundGrid(forcedGridId, csz);
-            grid.TileSize = tsz;
-            return grid;
-        }
-
-        public static void DeserializeChunks(IMapManagerInternal mapMan, IMapGridInternal grid, YamlSequenceNode chunks,
-            IReadOnlyDictionary<ushort, string> tileDefMapping,
-            ITileDefinitionManager tileDefinitionManager)
-        {
-            foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
-            {
-                DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
-            }
-        }
-
-        private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid,
+        public static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid,
             YamlMappingNode chunkData,
             IReadOnlyDictionary<ushort, string> tileDefMapping,
             ITileDefinitionManager tileDefinitionManager)

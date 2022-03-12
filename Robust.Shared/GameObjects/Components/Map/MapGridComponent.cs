@@ -5,6 +5,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.GameObjects
@@ -30,6 +31,7 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IEntityManager _entMan = default!;
 
         // This field is used for deserialization internally in the map loader.
+        // If you want to remove this, you would have to restructure the map save file.
         [ViewVariables(VVAccess.ReadOnly)]
         [DataField("index")]
         private GridId _gridIndex = GridId.Invalid;
@@ -131,6 +133,20 @@ namespace Robust.Shared.GameObjects
 
             _gridIndex = state.GridIndex;
             _chunkSize = state.ChunkSize;
+        }
+
+        public MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
+        {
+            DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
+
+            var grid = new MapGrid(_mapManager, _entMan, GridIndex, chunkSize);
+            grid.TileSize = tileSize;
+
+            Grid = grid;
+            grid.GridEntityId = Owner;
+
+            _mapManager.OnGridAllocated(this, grid);
+            return grid;
         }
     }
 

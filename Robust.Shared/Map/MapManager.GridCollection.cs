@@ -110,23 +110,11 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public void BindGrid(MapGridComponent gridComponent, MapGrid mapGrid)
+    public void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid)
     {
-        gridComponent.Grid = mapGrid;
-        gridComponent.GridIndex = mapGrid.Index;
-        mapGrid.GridEntityId = gridComponent.Owner;
-
         _grids.Add(mapGrid.Index, mapGrid.GridEntityId);
         Logger.InfoS("map", $"Binding grid {mapGrid.Index} to entity {gridComponent.Owner}");
         OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
-    }
-
-    public MapGrid CreateUnboundGrid(GridId? forcedGridId, ushort chunkSize)
-    {
-        var actualId = GenerateGridId(forcedGridId);
-        var grid = new MapGrid(this, EntityManager, actualId, chunkSize);
-        Logger.InfoS("map", $"Creating unbound grid {grid.Index}");
-        return grid;
     }
 
     public IEnumerable<IMapGrid> GetAllGrids()
@@ -258,11 +246,6 @@ internal partial class MapManager
         OnGridRemoved?.Invoke(mapId, gridId);
     }
 
-    public GridId NextGridId()
-    {
-        return _highestGridId = new GridId(_highestGridId.Value + 1);
-    }
-
     /// <inheritdoc />
     public event EventHandler<TileChangedEventArgs>? TileChanged;
 
@@ -315,18 +298,16 @@ internal partial class MapManager
     {
         var gridEnt = EntityManager.CreateEntityUninitialized(null, forcedGridEuid);
 
+        //TODO: Also known as Component.OnAdd ;)
         MapGrid grid;
         using (var preInit = EntityManager.AddComponentUninitialized<MapGridComponent>(gridEnt))
         {
             var actualId = GenerateGridId(forcedGridId);
-            grid = new MapGrid(this, EntityManager, actualId, chunkSize);
-
-            preInit.Comp.Grid = grid;
-            preInit.Comp.GridIndex = grid.Index;
-            grid.GridEntityId = gridEnt;
+            preInit.Comp.GridIndex = actualId; // Required because of MapGrid needing it in ctor
+            preInit.Comp.AllocMapGrid(chunkSize, 1);
+            grid = (MapGrid) preInit.Comp.Grid;
         }
 
-        _grids.Add(grid.Index, grid.GridEntityId);
         Logger.DebugS("map", $"Binding new grid {grid.Index} to entity {grid.GridEntityId}");
 
         //TODO: This is a hack to get TransformComponent.MapId working before entity states
@@ -338,7 +319,6 @@ internal partial class MapManager
 
         EntityManager.InitializeComponents(grid.GridEntityId);
         EntityManager.StartComponents(grid.GridEntityId);
-        OnGridCreated?.Invoke(currentMapId, grid.Index);
         return grid;
     }
 

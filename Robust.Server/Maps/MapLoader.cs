@@ -520,14 +520,39 @@ namespace Robust.Server.Maps
 
                     YamlMappingNode yamlGridInfo = (YamlMappingNode)yamlGrid["settings"];
                     YamlSequenceNode yamlGridChunks = (YamlSequenceNode)yamlGrid["chunks"];
-                    var grid = YamlGridSerializer.DeserializeMapGrid(_mapManager, yamlGridInfo, gridIndex);
 
-                    YamlGridSerializer.DeserializeChunks(_mapManager, grid, yamlGridChunks, _tileMap!, _tileDefinitionManager);
+                    var grid = AllocateMapGrid(gridComp, yamlGridInfo);
+
+                    foreach (var chunkNode in yamlGridChunks.Cast<YamlMappingNode>())
+                    {
+                        YamlGridSerializer.DeserializeChunk(_mapManager, grid, chunkNode, _tileMap!, _tileDefinitionManager);
+                    }
 
                     Grids.Add(grid); // Grids are kept in index order
-
-                    _mapManager.BindGrid(gridComp, grid);
                 }
+            }
+
+            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, YamlMappingNode yamlGridInfo)
+            {
+                // sane defaults
+                ushort csz = 16;
+                ushort tsz = 1;
+
+                foreach (var kvInfo in yamlGridInfo)
+                {
+                    var key = kvInfo.Key.ToString();
+                    var val = kvInfo.Value.ToString();
+                    if (key == "chunksize")
+                        csz = ushort.Parse(val);
+                    else if (key == "tilesize")
+                        tsz = ushort.Parse(val);
+                    else if (key == "snapsize")
+                        continue; // obsolete
+                }
+
+                var grid = gridComp.AllocMapGrid(csz, tsz);
+
+                return grid;
             }
 
             private void AttachMapEntities()

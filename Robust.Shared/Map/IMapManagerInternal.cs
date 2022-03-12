@@ -26,9 +26,8 @@ namespace Robust.Shared.Map
         bool TryGetGridComp(GridId id, [MaybeNullWhen(false)]out IMapGridComponent comp);
         bool TryGetGridEuid(GridId id, [MaybeNullWhen(false)]out EntityUid euid);
         void TrueGridDelete(MapGrid grid);
-        MapGrid CreateUnboundGrid(GridId? forcedGridId, ushort chunkSize);
-        void BindGrid(MapGridComponent gridComponent, MapGrid mapGrid);
         void TrueDeleteMap(MapId mapId);
         GridId GenerateGridId(GridId? forcedGridId);
+        void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid);
     }
 }

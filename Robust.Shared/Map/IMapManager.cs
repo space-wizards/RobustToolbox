@@ -181,7 +181,6 @@ namespace Robust.Shared.Map
         bool IsMap(EntityUid uid);
 
         MapId NextMapId();
-        GridId NextGridId();
         EntityUid GetGridEuid(GridId id);
         IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);

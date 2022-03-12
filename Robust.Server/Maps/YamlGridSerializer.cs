@@ -76,12 +76,10 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static MapGrid DeserializeGrid(IMapManagerInternal mapMan, YamlMappingNode info,
-            YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
-            ITileDefinitionManager tileDefinitionManager, GridId forcedGridId)
+        public static MapGrid DeserializeMapGrid(IMapManagerInternal mapMan, YamlMappingNode info, GridId forcedGridId)
         {
             // sane defaults
-            ushort csz = 16; 
+            ushort csz = 16;
             ushort tsz = 1;
 
             foreach (var kvInfo in info)
@@ -98,16 +96,23 @@ namespace Robust.Server.Maps
 
             var grid = mapMan.CreateUnboundGrid(forcedGridId, csz);
             grid.TileSize = tsz;
+            return grid;
+        }
 
+        public static void DeserializeChunks(IMapManagerInternal mapMan, IMapGridInternal grid, YamlSequenceNode chunks,
+            IReadOnlyDictionary<ushort, string> tileDefMapping,
+            ITileDefinitionManager tileDefinitionManager)
+        {
             foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
             {
                 DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
             }
-
-            return grid;
         }
 
-        private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
+        private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid,
+            YamlMappingNode chunkData,
+            IReadOnlyDictionary<ushort, string> tileDefMapping,
+            ITileDefinitionManager tileDefinitionManager)
         {
             var indNode = chunkData["ind"];
             var tileNode = chunkData["tiles"];

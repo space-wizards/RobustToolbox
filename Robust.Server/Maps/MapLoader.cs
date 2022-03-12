@@ -511,19 +511,18 @@ namespace Robust.Server.Maps
                 {
                     // Here is where the implicit index pairing magic happens from the yaml.
                     var gridIndex = _readGridIndices[index];
-                    var yamlGrid = yamlGrids.Children[index];
+                    var yamlGrid = (YamlMappingNode)yamlGrids.Children[index];
 
                     // designed to throw if something is broken, every grid must map to an ent
                     var gridComp = gridComps[gridIndex];
 
                     DebugTools.Assert(gridComp.GridIndex == gridIndex);
 
-                    var grid = YamlGridSerializer.DeserializeGrid(
-                        _mapManager,
-                        (YamlMappingNode)yamlGrid["settings"],
-                        (YamlSequenceNode)yamlGrid["chunks"],
-                        _tileMap!,
-                        _tileDefinitionManager, gridIndex);
+                    YamlMappingNode yamlGridInfo = (YamlMappingNode)yamlGrid["settings"];
+                    YamlSequenceNode yamlGridChunks = (YamlSequenceNode)yamlGrid["chunks"];
+                    var grid = YamlGridSerializer.DeserializeMapGrid(_mapManager, yamlGridInfo, gridIndex);
+
+                    YamlGridSerializer.DeserializeChunks(_mapManager, grid, yamlGridChunks, _tileMap!, _tileDefinitionManager);
 
                     Grids.Add(grid); // Grids are kept in index order
 

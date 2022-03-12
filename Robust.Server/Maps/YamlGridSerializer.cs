@@ -68,7 +68,8 @@ namespace Robust.Server.Maps
                     {
                         var tile = chunk.GetTile(x, y);
                         writer.Write(tile.TypeId);
-                        writer.Write(tile.Data);
+                        writer.Write((byte)tile.Flags);
+                        writer.Write(tile.Variant);
                     }
                 }
             }
@@ -101,12 +102,13 @@ namespace Robust.Server.Maps
                 for (ushort x = 0; x < grid.ChunkSize; x++)
                 {
                     var id = reader.ReadUInt16();
-                    var data = reader.ReadUInt16();
+                    var flags = (TileRenderFlag)reader.ReadByte();
+                    var variant = reader.ReadByte();
 
                     var defName = tileDefMapping[id];
                     id = tileDefinitionManager[defName].TileId;
 
-                    var tile = new Tile(id, data);
+                    var tile = new Tile(id, flags, variant);
                     chunk.SetTile(x, y, tile);
                 }
             }

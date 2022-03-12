@@ -32,13 +32,13 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapMan.CreateMap();
             var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
 
-            grid.SetTile(new Vector2i(-9, -1), new Tile(1, 2));
+            grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
 
             var result = grid.GetTileRef(new Vector2i(-9, -1));
 
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(result, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9,-1), new Tile(1, 2))));
+            Assert.That(result, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9,-1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         /// <summary>
@@ -144,14 +144,14 @@ namespace Robust.UnitTesting.Shared.Map
             var mapId = mapMan.CreateMap();
             var grid = (IMapGridInternal)mapMan.CreateGrid(mapId, null, 8);
 
-            grid.SetTile(new Vector2i(-9, -1), new Tile(1, 2));
+            grid.SetTile(new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1));
 
             var foundTile = grid.TryGetTileRef(new Vector2i(-9, -1), out var tileRef);
 
             Assert.That(foundTile, Is.True);
             Assert.That(grid.ChunkCount, Is.EqualTo(1));
             Assert.That(grid.GetMapChunks().Keys.ToList()[0], Is.EqualTo(new Vector2i(-2, -1)));
-            Assert.That(tileRef, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9, -1), new Tile(1, 2))));
+            Assert.That(tileRef, Is.EqualTo(new TileRef(mapId, grid.Index, new Vector2i(-9, -1), new Tile(1, (TileRenderFlag)1, 1))));
         }
 
         [Test]

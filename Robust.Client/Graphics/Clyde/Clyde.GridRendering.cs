@@ -1,7 +1,5 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -101,13 +99,18 @@ namespace Robust.Client.Graphics.Clyde
                     if (tile.IsEmpty)
                         continue;
 
-                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId);
-                    if (regionMaybe == null)
+                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
+
+                    Box2 region;
+                    if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
                     {
-                        continue;
+                        region = _tileDefinitionManager.ErrorTileRegion;
+                    }
+                    else
+                    {
+                        region = regionMaybe[tile.Variant];
                     }
 
-                    var region = regionMaybe.Value;
                     var gx = x + cScaled.X;
                     var gy = y + cScaled.Y;
 

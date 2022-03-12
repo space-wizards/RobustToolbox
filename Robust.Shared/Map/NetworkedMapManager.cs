@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
@@ -98,7 +99,6 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
                     }
                 }
-
                 chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
             }
 

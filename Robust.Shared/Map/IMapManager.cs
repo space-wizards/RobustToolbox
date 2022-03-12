@@ -180,13 +180,12 @@ namespace Robust.Shared.Map
         bool IsGrid(EntityUid uid);
         bool IsMap(EntityUid uid);
 
+        [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
         EntityUid GetGridEuid(GridId id);
         IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);
-        IMapGrid GetGrid(EntityUid euid);
         bool TryGetGrid(EntityUid euid, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(EntityUid euid);
-        IEnumerable<IMapComponent> GetAllMapComponents();
     }
 }

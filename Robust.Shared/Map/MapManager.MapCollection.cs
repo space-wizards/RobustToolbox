@@ -182,12 +182,6 @@ internal partial class MapManager
     }
 
     /// <inheritdoc />
-    public IEnumerable<IMapComponent> GetAllMapComponents()
-    {
-        return EntityManager.EntityQuery<IMapComponent>(true);
-    }
-
-    /// <inheritdoc />
     public bool IsMap(EntityUid uid)
     {
         return EntityManager.HasComponent<IMapComponent>(uid);

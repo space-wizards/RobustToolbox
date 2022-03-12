@@ -53,7 +53,7 @@ namespace Robust.Shared.GameObjects
         public IMapGrid Grid
         {
             get => _mapGrid ?? throw new InvalidOperationException();
-            set => _mapGrid = value;
+            private set => _mapGrid = value;
         }
 
         protected override void Initialize()

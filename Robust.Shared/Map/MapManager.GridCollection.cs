@@ -5,7 +5,6 @@ using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Log;
 using Robust.Shared.Maths;
-using Robust.Shared.Physics;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map;
@@ -125,11 +124,6 @@ internal partial class MapManager
     public IMapGrid CreateGrid(MapId currentMapId, GridId? forcedGridId = null, ushort chunkSize = 16)
     {
         return CreateGrid(currentMapId, forcedGridId, chunkSize, default);
-    }
-
-    public IMapGrid GetGrid(EntityUid euid)
-    {
-        return GetGridComp(euid).Grid;
     }
 
     public IMapGrid GetGrid(GridId gridId)

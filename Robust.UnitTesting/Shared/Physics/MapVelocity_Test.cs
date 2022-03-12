@@ -22,7 +22,7 @@ namespace Robust.UnitTesting.Shared.Physics
   - type: Fixtures
 ";
         [Test]
-        public async Task TestMapVelicities()
+        public async Task TestMapVelocities()
         {
             var server = StartServer(new ServerIntegrationOptions {ExtraPrototypes = Prototypes});
 

@@ -976,7 +976,7 @@ namespace Robust.Client.UserInterface
             scaleRatioY = (windowSize.Y > maxScaleRes.Y) ? osScale : ((float)windowSize.Y-minScaleRes.Y)/(maxScaleRes.Y-minScaleRes.Y)*osScale;
             scaleRatioY = (scaleRatioY > autoScaleMin) ? scaleRatioY : autoScaleMin;
             //Take the smallest UIScale value and use it for UI scaling
-            return (scaleRatioX < scaleRatioY) ? scaleRatioX : scaleRatioY;
+            return Math.Min(scaleRatioX, scaleRatioY);
         }
 
         private void UpdateUIScale(WindowRoot root)

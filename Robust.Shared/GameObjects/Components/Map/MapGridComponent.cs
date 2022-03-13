@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -147,6 +149,56 @@ namespace Robust.Shared.GameObjects
 
             _mapManager.OnGridAllocated(this, grid);
             return grid;
+        }
+
+        public static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
+        {
+            var grid = (MapGrid)gridComp.Grid;
+            networkedMapManager.SuppressOnTileChanged = true;
+            var modified = new List<(Vector2i position, Tile tile)>();
+            foreach (var chunkData in chunkUpdates)
+            {
+                if (chunkData.IsDeleted())
+                    continue;
+
+                var chunk = grid.GetChunk(chunkData.Index);
+                chunk.SuppressCollisionRegeneration = true;
+                DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
+
+                var counter = 0;
+                for (ushort x = 0; x < grid.ChunkSize; x++)
+                {
+                    for (ushort y = 0; y < grid.ChunkSize; y++)
+                    {
+                        var tile = chunkData.TileData[counter++];
+                        if (chunk.GetTile(x, y) == tile)
+                            continue;
+
+                        chunk.SetTile(x, y, tile);
+                        modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
+                    }
+                }
+            }
+
+            if (modified.Count != 0)
+            {
+                MapManager.InvokeGridChanged(networkedMapManager, grid, modified);
+            }
+
+            foreach (var chunkData in chunkUpdates)
+            {
+                if (chunkData.IsDeleted())
+                {
+                    grid.RemoveChunk(chunkData.Index);
+                    continue;
+                }
+
+                var chunk = grid.GetChunk(chunkData.Index);
+                chunk.SuppressCollisionRegeneration = false;
+                grid.RegenerateCollision(chunk);
+            }
+
+            networkedMapManager.SuppressOnTileChanged = false;
         }
     }
 

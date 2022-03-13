@@ -19,7 +19,7 @@ namespace Robust.Shared.Map
         ///     Last game tick that the map was modified.
         /// </summary>
         [ViewVariables]
-        public GameTick LastTileModifiedTick { get; private set; }
+        public GameTick LastTileModifiedTick { get; internal set; }
 
         /// <inheritdoc />
         [ViewVariables]

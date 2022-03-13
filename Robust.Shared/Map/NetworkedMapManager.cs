@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
@@ -197,61 +198,24 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         // Process all grid updates.
         if (data != null && data.GridData != null)
         {
-            SuppressOnTileChanged = true;
             // Ok good all the grids and maps exist now.
             foreach (var (gridId, gridDatum) in data.GridData)
             {
-                var grid = (MapGrid)GetGrid(gridId);
-                if (grid.ParentMapId != gridDatum.Coordinates.MapId)
-                    throw new NotImplementedException("Moving grids between maps is not yet implemented");
+                var xformComp = EntityManager.GetComponent<TransformComponent>(gridId);
+                ApplyTransformState(xformComp, gridDatum);
 
-                // I love mapmanager!!!
-                grid.WorldPosition = gridDatum.Coordinates.Position;
-                grid.WorldRotation = gridDatum.Angle;
-
-                var modified = new List<(Vector2i position, Tile tile)>();
-                foreach (var chunkData in gridDatum.ChunkData)
-                {
-                    if(chunkData.IsDeleted())
-                        continue;
-
-                    var chunk = grid.GetChunk(chunkData.Index);
-                    chunk.SuppressCollisionRegeneration = true;
-                    DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
-
-                    var counter = 0;
-                    for (ushort x = 0; x < grid.ChunkSize; x++)
-                    {
-                        for (ushort y = 0; y < grid.ChunkSize; y++)
-                        {
-                            var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTile(x, y) == tile)
-                                continue;
-
-                            chunk.SetTile(x, y, tile);
-                            modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
-                        }
-                    }
-                }
-
-                if (modified.Count != 0)
-                    InvokeGridChanged(this, new GridChangedEventArgs(grid, modified));
-
-                foreach (var chunkData in gridDatum.ChunkData)
-                {
-                    if(chunkData.IsDeleted())
-                    {
-                        grid.RemoveChunk(chunkData.Index);
-                        continue;
-                    }
-
-                    var chunk = grid.GetChunk(chunkData.Index);
-                    chunk.SuppressCollisionRegeneration = false;
-                    grid.RegenerateCollision(chunk);
-                }
+                var gridComp = EntityManager.GetComponent<IMapGridComponent>(gridId);
+                MapGridComponent.ApplyMapGridState(this, gridComp, gridDatum.ChunkData);
             }
-
-            SuppressOnTileChanged = false;
         }
+    }
+
+    private static void ApplyTransformState(TransformComponent xformComp, GameStateMapData.GridDatum gridDatum)
+    {
+        if (xformComp.MapID != gridDatum.Coordinates.MapId)
+            throw new NotImplementedException("Moving grids between maps is not yet implemented");
+
+        xformComp.WorldPosition = gridDatum.Coordinates.Position;
+        xformComp.WorldRotation = gridDatum.Angle;
     }
 }

@@ -316,11 +316,10 @@ internal partial class MapManager
         return grid;
     }
 
-    protected void InvokeGridChanged(object? sender, GridChangedEventArgs ev)
+    protected internal static void InvokeGridChanged(MapManager mapManager, IMapGrid mapGrid, IReadOnlyCollection<(Vector2i position, Tile tile)> changedTiles)
     {
-        GridChanged?.Invoke(sender, ev);
-        var args = new GridModifiedEvent(ev.Grid, ev.Modified);
-        EntityManager.EventBus.RaiseLocalEvent(ev.Grid.GridEntityId, args);
+        mapManager.GridChanged?.Invoke(mapManager, new GridChangedEventArgs(mapGrid, changedTiles));
+        mapManager.EntityManager.EventBus.RaiseLocalEvent(mapGrid.GridEntityId, new GridModifiedEvent(mapGrid, changedTiles));
     }
 
     public GridId GenerateGridId(GridId? forcedGridId)

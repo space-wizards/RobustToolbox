@@ -74,29 +74,6 @@ namespace Robust.Client.UserInterface
         public virtual float UIScale => Root?.UIScale ?? 1;
 
         /// <summary>
-        ///     Enable the UI autoscale system, this will scale down the UI for lower resolutions
-        /// </summary>
-        [ViewVariables]
-        public virtual bool AutoScale => false;
-
-        /// <summary>
-        ///     Minimum resolution to start clamping autoscale to 1
-        /// </summary>
-        [ViewVariables]
-        public virtual Vector2i AutoScaleUpperCutoff => new Vector2i(1080, 720);
-
-        /// <summary>
-        ///     Maximum resolution to start clamping autos scale to autoscale minimum
-        /// </summary>
-        [ViewVariables]
-        public virtual Vector2i AutoScaleLowerCutoff => new Vector2i(520, 520);
-
-        /// <summary>
-        ///     The minimum ui scale value that autoscale will scale to
-        /// </summary>
-        [ViewVariables] public virtual float AutoScaleMinimum => 0.5f;
-
-        /// <summary>
         ///     The size of this control, in virtual pixels.
         /// </summary>
         /// <seealso cref="PixelSize"/>

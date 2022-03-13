@@ -971,9 +971,8 @@ namespace Robust.Client.UserInterface
             float scaleRatioY;
             
             //Calculate the scale ratios and clamp it between the maximums and minimums
-            scaleRatioX = Math.Clamp(((float)windowSize.X-minScaleRes.X)/(maxScaleRes.X-minScaleRes.X)*osScale, autoScaleMin, osScale)
-
-            scaleRatioY = Math.Clamp(((float)windowSize.Y-minScaleRes.Y)/(maxScaleRes.Y-minScaleRes.Y)*osScale, autoScaleMin, osScale)
+            scaleRatioX = Math.Clamp(((float) windowSize.X - minScaleRes.X) / (maxScaleRes.X - minScaleRes.X) * osScale, autoScaleMin, osScale);
+            scaleRatioY = Math.Clamp(((float) windowSize.Y - minScaleRes.Y) / (maxScaleRes.Y - minScaleRes.Y) * osScale, autoScaleMin, osScale);
             scaleRatioY = (scaleRatioY > autoScaleMin) ? scaleRatioY : autoScaleMin;
             //Take the smallest UIScale value and use it for UI scaling
             return Math.Min(scaleRatioX, scaleRatioY);

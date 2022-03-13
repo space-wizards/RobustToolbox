@@ -9,14 +9,11 @@ namespace Robust.Shared.GameStates
     [Serializable, NetSerializable]
     public sealed class GameStateMapData
     {
-        // Dict of the new maps
-        public readonly GridId[]? CreatedGrids;
         public readonly KeyValuePair<GridId, GridDatum>[]? GridData;
 
-        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData, GridId[]? createdGrids)
+        public GameStateMapData(KeyValuePair<GridId, GridDatum>[]? gridData)
         {
             GridData = gridData;
-            CreatedGrids = createdGrids;
         }
 
         [Serializable, NetSerializable]
@@ -25,19 +22,17 @@ namespace Robust.Shared.GameStates
             public readonly MapCoordinates Coordinates;
             public readonly Angle Angle;
             public readonly ChunkDatum[] ChunkData;
-            public readonly DeletedChunkDatum[] DeletedChunkData;
 
-            public GridDatum(ChunkDatum[] chunkData, DeletedChunkDatum[] deletedChunkData, MapCoordinates coordinates, Angle angle)
+            public GridDatum(ChunkDatum[] chunkData, MapCoordinates coordinates, Angle angle)
             {
                 ChunkData = chunkData;
-                DeletedChunkData = deletedChunkData;
                 Coordinates = coordinates;
                 Angle = angle;
             }
         }
 
         [Serializable, NetSerializable]
-        public struct ChunkDatum
+        public readonly struct ChunkDatum
         {
             public readonly Vector2i Index;
 
@@ -46,21 +41,25 @@ namespace Robust.Shared.GameStates
             // Also it's stored row-major.
             public readonly Tile[] TileData;
 
-            public ChunkDatum(Vector2i index, Tile[] tileData)
+            public bool IsDeleted()
+            {
+                return TileData == default;
+            }
+
+            private ChunkDatum(Vector2i index, Tile[] tileData)
             {
                 Index = index;
                 TileData = tileData;
             }
-        }
 
-        [Serializable, NetSerializable]
-        public struct DeletedChunkDatum
-        {
-            public readonly Vector2i Index;
-
-            public DeletedChunkDatum(Vector2i index)
+            public static ChunkDatum CreateModified(Vector2i index, Tile[] tileData)
             {
-                Index = index;
+                return new ChunkDatum(index, tileData);
+            }
+
+            public static ChunkDatum CreateDeleted(Vector2i index)
+            {
+                return new ChunkDatum(index, default!);
             }
         }
     }

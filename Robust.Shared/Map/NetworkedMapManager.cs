@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
-using Robust.Shared.Log;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
@@ -67,7 +66,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             if (grid.LastTileModifiedTick < fromTick)
                 continue;
 
-            var deletedChunkData = new List<GameStateMapData.DeletedChunkDatum>();
+            var chunkData = new List<GameStateMapData.ChunkDatum>();
 
             if (_chunkDeletionHistory.TryGetValue(grid.Index, out var chunks))
             {
@@ -76,11 +75,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                     if (tick < fromTick)
                         continue;
 
-                    deletedChunkData.Add(new GameStateMapData.DeletedChunkDatum(indices));
+                    chunkData.Add(GameStateMapData.ChunkDatum.CreateDeleted(indices));
                 }
             }
-
-            var chunkData = new List<GameStateMapData.ChunkDatum>();
 
             foreach (var (index, chunk) in grid.GetMapChunks())
             {
@@ -99,40 +96,22 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
                     }
                 }
-                chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
+                chunkData.Add(GameStateMapData.ChunkDatum.CreateModified(index, tileBuffer));
             }
 
             var gridDatum = new GameStateMapData.GridDatum(
                     chunkData.ToArray(),
-                    deletedChunkData.ToArray(),
                     new MapCoordinates(grid.WorldPosition, grid.ParentMapId),
                     grid.WorldRotation);
 
             gridDatums.Add(grid.Index, gridDatum);
         }
 
-        // - Grid Creation data --
-        var gridCreations = new List<GridId>();
-
-        foreach (var gridComp in EntityManager.EntityQuery<IMapGridComponent>(true))
-        {
-            if (gridComp.CreationTick < fromTick || gridComp.Grid.ParentMapId == MapId.Nullspace)
-                continue;
-            gridCreations.Add(gridComp.Grid.Index);
-        }
-
         // no point sending empty collections
         if (gridDatums.Count == 0)
-            gridDatums = default;
-        if (gridCreations.Count == 0)
-            gridCreations = default;
-
-        // no point even creating an empty map state if no data
-        if (gridDatums == null && gridCreations == null)
             return default;
 
-        return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(),
-            gridCreations?.ToArray<GridId>());
+        return new GameStateMapData(gridDatums.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>());
     }
 
     public void CullDeletionHistory(GameTick upToTick)
@@ -233,6 +212,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                 var modified = new List<(Vector2i position, Tile tile)>();
                 foreach (var chunkData in gridDatum.ChunkData)
                 {
+                    if(chunkData.IsDeleted())
+                        continue;
+
                     var chunk = grid.GetChunk(chunkData.Index);
                     chunk.SuppressCollisionRegeneration = true;
                     DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
@@ -243,11 +225,11 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         for (ushort y = 0; y < grid.ChunkSize; y++)
                         {
                             var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTile(x, y) != tile)
-                            {
-                                chunk.SetTile(x, y, tile);
-                                modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
-                            }
+                            if (chunk.GetTile(x, y) == tile)
+                                continue;
+
+                            chunk.SetTile(x, y, tile);
+                            modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
                         }
                     }
                 }
@@ -257,14 +239,15 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 
                 foreach (var chunkData in gridDatum.ChunkData)
                 {
+                    if(chunkData.IsDeleted())
+                    {
+                        grid.RemoveChunk(chunkData.Index);
+                        continue;
+                    }
+
                     var chunk = grid.GetChunk(chunkData.Index);
                     chunk.SuppressCollisionRegeneration = false;
                     grid.RegenerateCollision(chunk);
-                }
-
-                foreach (var chunkData in gridDatum.DeletedChunkData)
-                {
-                    grid.RemoveChunk(chunkData.Index);
                 }
             }
 

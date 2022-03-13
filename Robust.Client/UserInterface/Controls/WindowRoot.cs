@@ -9,6 +9,8 @@ namespace Robust.Client.UserInterface.Controls
             Window = window;
         }
 
+        public override bool AutoScale => true;
+
         public override float UIScale => UIScaleSet;
         internal float UIScaleSet { get; set; }
         public override IClydeWindow Window { get; }

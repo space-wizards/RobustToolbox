@@ -48,6 +48,41 @@ namespace Robust.Client.GameObjects
             base.StartEntity(entity);
         }
 
+        void IClientEntityManagerInternal.ActuallyDeleteEntity(EntityUid uid)
+        {
+            DeleteEntityInternal(uid);
+        }
+
+        public override void DeleteEntity(EntityUid uid)
+        {
+            if (uid.IsClientSide())
+            {
+                DeleteEntityInternal(uid);
+                return;
+            }
+
+            // Client-side code is predicting that a server-side entity will get deleted.
+            // Until confirmation is received from the server, simply mark it as deleted and move it to null-space.
+            // If there was a mispredict, the metadata & transform component resets should fix it.
+
+            // This is somewhat of a hack for predicting entity deletions, and will not properly fire things like
+            // component shutdown & remove events. It doesn't even mark the entity as actually deleted, because the
+            // meta-data component doesn't netowork / reset that (though AFAIK there is no reason it couldn't?).
+
+            if (!TryGetComponent(uid, out MetaDataComponent? meta) || meta.EntityDeleted)
+                return;
+
+            if (meta.EntityLifeStage == EntityLifeStage.Terminating)
+#if !EXCEPTION_TOLERANCE
+                throw new InvalidOperationException("Called Delete on an entity already being deleted.");
+#else
+                return;
+#endif
+            // detach to null
+            if (TryGetComponent(uid, out TransformComponent? xform))
+                xform.DetachParentToNull();
+        }
+
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;

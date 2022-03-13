@@ -357,7 +357,8 @@ namespace Robust.Client.GameStates
                     continue;
                 }
 
-                // TODO: handle component deletions/creations.
+                // TODO: handle component creations. Deletions currently being handled by just detaching to null. If
+                // there was a mispredict, the transform comp reset should undo the pseudo deletion.
                 foreach (var (netId, comp) in _entityManager.GetNetComponents(entity))
                 {
                     DebugTools.AssertNotNull(netId);
@@ -487,7 +488,7 @@ namespace Robust.Client.GameStates
             foreach (var id in deletions)
             {
                 // Logger.Debug($"[{IGameTiming.TickStampStatic}] DELETE {id}");
-                _entities.DeleteEntity(id);
+                _entities.ActuallyDeleteEntity(id);
             }
 
 #if EXCEPTION_TOLERANCE

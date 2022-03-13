@@ -11,5 +11,10 @@ namespace Robust.Client.GameObjects
         void InitializeEntity(EntityUid entity);
 
         void StartEntity(EntityUid entity);
+
+        /// <summary>
+        ///     Actually delete server-side entities, rather than just moving them to null-space.
+        /// </summary>
+        void ActuallyDeleteEntity(EntityUid entityUid);
     }
 }

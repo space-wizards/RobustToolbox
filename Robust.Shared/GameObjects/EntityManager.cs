@@ -258,6 +258,12 @@ namespace Robust.Shared.GameObjects
         /// <param name="e">Entity to remove</param>
         public virtual void DeleteEntity(EntityUid e)
         {
+            // Client handles deletion prediciton / fake deletion here instead of calling:
+            DeleteEntityInternal(e);
+        }
+
+        protected void DeleteEntityInternal(EntityUid e)
+        {
             // Networking blindly spams entities at this function, they can already be
             // deleted from being a child of a previously deleted entity
             // TODO: Why does networking need to send deletes for child entities?
@@ -346,11 +352,11 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Disposes all entities and clears all lists.
         /// </summary>
-        public void FlushEntities()
+        public virtual void FlushEntities()
         {
             foreach (var e in GetEntities())
             {
-                DeleteEntity(e);
+                DeleteEntityInternal(e);
             }
         }
 
@@ -421,7 +427,7 @@ namespace Robust.Shared.GameObjects
             {
                 // Exception during entity loading.
                 // Need to delete the entity to avoid corrupt state causing crashes later.
-                DeleteEntity(entity);
+                DeleteEntityInternal(entity);
                 throw new EntityCreationException($"Exception inside CreateEntity with prototype {prototypeName}", e);
             }
         }
@@ -444,7 +450,7 @@ namespace Robust.Shared.GameObjects
             }
             catch (Exception e)
             {
-                DeleteEntity(entity);
+                DeleteEntityInternal(entity);
                 throw new EntityCreationException("Exception inside InitializeAndStartEntity", e);
             }
         }

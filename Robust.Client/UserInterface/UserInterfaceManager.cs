@@ -963,29 +963,21 @@ namespace Robust.Client.UserInterface
             osScale = osScale == 0f ? root.Window.ContentScale.X : osScale;
             var windowSize = root.Window.RenderTarget.Size;
             //Only run autoscale if it is enabled, otherwise default to just use OS UIScale
-            if (!root.AutoScale && (windowSize.X <= 0 || windowSize.Y <= 0))
-            {
-                Logger.DebugS("DEBG", windowSize.ToString());
-                return osScale;
-            }
+            if (!root.AutoScale && (windowSize.X <= 0 || windowSize.Y <= 0)) return osScale;
             var maxScaleRes = root.AutoScaleUpperCutoff;
             var minScaleRes = root.AutoScaleLowerCutoff;
             var autoScaleMin = root.AutoScaleMinimum;
             float scaleRatioX;
             float scaleRatioY;
-                //Calculate the scale ratios and clamp it between the maximums and minimums
+            
+            //Calculate the scale ratios and clamp it between the maximums and minimums
+            scaleRatioX = (windowSize.X > maxScaleRes.X) ? osScale : ((float)windowSize.X-minScaleRes.X)/(maxScaleRes.X-minScaleRes.X)*osScale;
+            scaleRatioX = (scaleRatioX > autoScaleMin) ? scaleRatioX : autoScaleMin;
 
-                scaleRatioX = (windowSize.X > maxScaleRes.X) ? osScale : ((float)windowSize.X-minScaleRes.X)/(maxScaleRes.X-minScaleRes.X)*osScale;
-                scaleRatioX = (scaleRatioX > autoScaleMin) ? scaleRatioX : autoScaleMin;
-
-                scaleRatioY = (windowSize.Y > maxScaleRes.Y) ? osScale : ((float)windowSize.Y-minScaleRes.Y)/(maxScaleRes.Y-minScaleRes.Y)*osScale;
-                scaleRatioY = (scaleRatioY > autoScaleMin) ? scaleRatioY : autoScaleMin;
-
-                Logger.DebugS("DEBG", windowSize.ToString());
-                Logger.DebugS("DEBG", scaleRatioX.ToString());
-                Logger.DebugS("DEBG", scaleRatioY.ToString());
-                //Take the smallest UIScale value and use it for UI scaling
-                return (scaleRatioX < scaleRatioY) ? scaleRatioX : scaleRatioY;
+            scaleRatioY = (windowSize.Y > maxScaleRes.Y) ? osScale : ((float)windowSize.Y-minScaleRes.Y)/(maxScaleRes.Y-minScaleRes.Y)*osScale;
+            scaleRatioY = (scaleRatioY > autoScaleMin) ? scaleRatioY : autoScaleMin;
+            //Take the smallest UIScale value and use it for UI scaling
+            return (scaleRatioX < scaleRatioY) ? scaleRatioX : scaleRatioY;
         }
 
         private void UpdateUIScale(WindowRoot root)

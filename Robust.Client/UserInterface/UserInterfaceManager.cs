@@ -25,6 +25,7 @@ namespace Robust.Client.UserInterface
     internal sealed class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -953,7 +954,11 @@ namespace Robust.Client.UserInterface
         private void WindowContentScaleChanged(WindowContentScaleEventArgs args)
         {
             if (_windowsToRoot.TryGetValue(args.Window.Id, out var root))
+            {
                 UpdateUIScale(root);
+                _fontManager.ClearFontCache();
+            }
+
         }
 
         private float CalculateAutoScale(WindowRoot root)

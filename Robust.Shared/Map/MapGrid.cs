@@ -16,20 +16,37 @@ namespace Robust.Shared.Map
     internal sealed class MapGrid : IMapGridInternal
     {
         /// <summary>
-        ///     Game tick that the map was created.
-        /// </summary>
-        [ViewVariables]
-        public GameTick CreatedTick { get; }
-
-        /// <summary>
         ///     Last game tick that the map was modified.
         /// </summary>
         [ViewVariables]
-        public GameTick LastTileModifiedTick { get; private set; }
+        public GameTick LastTileModifiedTick { get; internal set; }
 
         /// <inheritdoc />
         [ViewVariables]
-        public MapId ParentMapId { get; set; }
+        public MapId ParentMapId
+        {
+            get
+            {
+                //TODO: Make grids real parents of entities.
+                if(GridEntityId.IsValid())
+                {
+                    return IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).MapID;
+                }
+
+                throw new InvalidOperationException($"Tried to access the {nameof(ParentMapId)} of an unbound grid.");
+            }
+            set
+            {
+                var mapEnt = _mapManager.GetMapEntityId(value);
+                var worldPos = WorldPosition;
+
+                // this should teleport the grid to the map
+                IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(GridEntityId).Coordinates =
+                    new EntityCoordinates(mapEnt, worldPos);
+
+                LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            }
+        }
 
         [ViewVariables]
         public EntityUid GridEntityId { get; internal set; }
@@ -56,15 +73,13 @@ namespace Robust.Shared.Map
         /// <param name="entityManager"></param>
         /// <param name="gridIndex">Index identifier of this grid.</param>
         /// <param name="chunkSize">The dimension of this square chunk.</param>
-        /// <param name="parentMapId">Parent map identifier.</param>
-        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize, MapId parentMapId)
+        internal MapGrid(IMapManagerInternal mapManager, IEntityManager entityManager, GridId gridIndex, ushort chunkSize)
         {
             _mapManager = mapManager;
             _entityManager = entityManager;
             Index = gridIndex;
             ChunkSize = chunkSize;
-            ParentMapId = parentMapId;
-            LastTileModifiedTick = CreatedTick = _mapManager.GameTiming.CurTick;
+            LastTileModifiedTick = _mapManager.GameTiming.CurTick;
         }
 
         /// <inheritdoc />
@@ -90,7 +105,7 @@ namespace Robust.Shared.Map
         ///     The length of the side of a square tile in world units.
         /// </summary>
         [ViewVariables]
-        public ushort TileSize { get; } = 1;
+        public ushort TileSize { get; set; } = 1;
 
         /// <inheritdoc />
         [ViewVariables]
@@ -875,10 +890,17 @@ namespace Robust.Shared.Map
         {
             // As the collision regeneration can potentially delete the chunk we'll notify of the tile changed first.
             var gridTile = mapChunk.ChunkTileToGridTile(tileIndices);
-            var newTileRef = new TileRef(ParentMapId, Index, gridTile, newTile);
             mapChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
             LastTileModifiedTick = _mapManager.GameTiming.CurTick;
-            _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
+
+            // The map serializer currently sets tiles of unbound grids as part of the deserialization process
+            // It properly sets SuppressOnTileChanged so that the event isn't spammed for every tile on the grid.
+            // ParentMapId is not able to be accessed on unbound grids, so we can't even call this function for unbound grids.
+            if(!_mapManager.SuppressOnTileChanged)
+            {
+                var newTileRef = new TileRef(ParentMapId, Index, gridTile, newTile);
+                _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
+            }
 
             if (shapeChanged && !mapChunk.SuppressCollisionRegeneration)
             {

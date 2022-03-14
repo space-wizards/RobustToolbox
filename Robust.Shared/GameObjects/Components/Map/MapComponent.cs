@@ -60,6 +60,15 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
+        protected override void OnRemove()
+        {
+            base.OnRemove();
+
+            var mapMan = IoCManager.Resolve<IMapManagerInternal>();
+            mapMan.TrueDeleteMap(_mapIndex);
+        }
+
+        /// <inheritdoc />
         public override ComponentState GetComponentState()
         {
             return new MapComponentState(_mapIndex, LightingEnabled);

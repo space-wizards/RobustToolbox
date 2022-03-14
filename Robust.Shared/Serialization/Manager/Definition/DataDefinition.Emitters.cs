@@ -6,6 +6,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Network;
 using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Serialization.Manager.Definition
@@ -39,11 +40,32 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     var type = fieldDefinition.FieldType;
                     var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
-                    var result = fieldDefinition.Attribute.CustomTypeSerializer != null
-                        ? serializationManager.ReadWithTypeSerializer(type,
-                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext,
-                            skipHook)
-                        : serializationManager.Read(type, node, serializationContext, skipHook);
+                    DeserializationResult? result;
+                    if (fieldDefinition.Attribute.CustomTypeSerializer != null)
+                    {
+                        var foundInterface = false;
+                        foreach (var @interface in fieldDefinition.Attribute.CustomTypeSerializer.GetInterfaces())
+                        {
+                            if(@interface.GetGenericTypeDefinition() != typeof(ITypeSerializer<,>)) continue;
+                            if (@interface.GenericTypeArguments[0] == type && @interface.GenericTypeArguments[1] == node.GetType())
+                            {
+                                foundInterface = true;
+                            }
+                        }
+
+                        if (!foundInterface)
+                        {
+                            throw new InvalidOperationException(
+                                $"Could not find implementation of ITypeSerializer for type {type} and node {node.GetType()} on customtypeserializer {fieldDefinition.Attribute.CustomTypeSerializer}");
+                        }
+
+                        result = serializationManager.ReadWithTypeSerializer(type,
+                            fieldDefinition.Attribute.CustomTypeSerializer, node, serializationContext, skipHook);
+                    }
+                    else
+                    {
+                        result = serializationManager.Read(type, node, serializationContext, skipHook);
+                    }
 
                     var entry = new DeserializedFieldEntry(mapped, fieldDefinition.InheritanceBehavior, result);
                     mappedInfo[i] = entry;

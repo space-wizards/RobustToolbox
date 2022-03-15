@@ -25,6 +25,16 @@ namespace Robust.Shared.Configuration
         /// </summary>
         /// <typeparam name="T">CVar type.</typeparam>
         /// <param name="channel">channel of the connected client.</param>
+        /// <param name="definition">The CVar.</param>
+        /// <returns>Replicated CVar of the client.</returns>
+        public T GetClientCVar<T>(INetChannel channel, CVarDef<T> definition) where T : notnull =>
+            GetClientCVar<T>(channel, definition.Name);
+
+        /// <summary>
+        /// Get a replicated client CVar for a specific client.
+        /// </summary>
+        /// <typeparam name="T">CVar type.</typeparam>
+        /// <param name="channel">channel of the connected client.</param>
         /// <param name="name">Name of the CVar.</param>
         /// <returns>Replicated CVar of the client.</returns>
         T GetClientCVar<T>(INetChannel channel, string name);

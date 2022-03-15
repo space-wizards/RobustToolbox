@@ -50,7 +50,6 @@ namespace Robust.Server
             IoCManager.Register<IMapManagerInternal, NetworkedMapManager>();
             IoCManager.Register<INetworkedMapManager, NetworkedMapManager>();
             IoCManager.Register<IEntityManager, ServerEntityManager>();
-            IoCManager.Register<IEntityLookup, EntityLookup>();
             IoCManager.Register<IEntityNetworkManager, ServerEntityManager>();
             IoCManager.Register<IServerEntityNetworkManager, ServerEntityManager>();
             IoCManager.Register<IMapLoader, MapLoader>();

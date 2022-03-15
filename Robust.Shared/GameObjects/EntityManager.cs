@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
@@ -16,10 +17,10 @@ namespace Robust.Shared.GameObjects
     {
         #region Dependencies
 
-        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
-        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
 
         #endregion Dependencies
 
@@ -82,6 +83,7 @@ namespace Robust.Shared.GameObjects
             if (Started)
                 throw new InvalidOperationException("Startup() called multiple times");
 
+            // TODO: Probably better to call this on its own given it's so infrequent.
             EntitySystemManager.Initialize();
             Started = true;
         }
@@ -276,12 +278,13 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted) 
+            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted)
                 return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
-            EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
+            var ev = new EntityTerminatingEvent(uid);
+            EventBus.RaiseLocalEvent(uid, ref ev, false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var child in transform._children.ToArray())
@@ -393,7 +396,7 @@ namespace Robust.Shared.GameObjects
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata);
+            AddComponentInternal(uid, metadata, false, false);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);

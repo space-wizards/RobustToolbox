@@ -24,7 +24,6 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
         DebugTools.Assert(!_dbgGuardRunning);
         _dbgGuardInit = true;
 #endif
-        InitializeGridTrees();
         InitializeMapPausing();
     }
 
@@ -38,6 +37,7 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 
         Logger.DebugS("map", "Starting...");
 
+        StartupGridTrees();
         EnsureNullspaceExistsAndClear();
 
         DebugTools.Assert(_grids.Count == 0);
@@ -52,7 +52,11 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #endif
         Logger.DebugS("map", "Stopping...");
 
-        DeleteAllMaps();
+        foreach (var mapComp in EntityManager.EntityQuery<IMapComponent>())
+        {
+            EntityManager.DeleteEntity(mapComp.Owner);
+        }
+        ShutdownGridTrees();
 
 #if DEBUG
         DebugTools.Assert(_grids.Count == 0);
@@ -61,17 +65,18 @@ internal partial class MapManager : IMapManagerInternal, IEntityEventSubscriber
 #endif
     }
 
-        /// <summary>
-        ///     Old tile that was replaced.
-        /// </summary>
-        public Tile OldTile { get; }
     /// <inheritdoc />
     public void Restart()
     {
         Logger.DebugS("map", "Restarting...");
 
-        Shutdown();
-        Startup();
+        // Don't just call Shutdown / Startup because we don't want to touch the subscriptions on gridtrees
+        // Restart can be called any time during a game, whereas shutdown / startup are typically called upon connection.
+        foreach (var mapComp in EntityManager.EntityQuery<IMapComponent>())
+        {
+            EntityManager.DeleteEntity(mapComp.Owner);
+        }
+        EnsureNullspaceExistsAndClear();
     }
 
 #if DEBUG

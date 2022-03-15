@@ -51,7 +51,14 @@ namespace Robust.UnitTesting.Shared.GameObjects
         [OneTimeSetUp]
         public void Setup()
         {
-            IoCManager.Resolve<IEntitySystemManager>().Initialize();
+            var syssy = IoCManager.Resolve<IEntitySystemManager>();
+            syssy.Clear();
+            syssy.LoadExtraSystemType<ESystemA>();
+            syssy.LoadExtraSystemType<ESystemB>();
+            syssy.LoadExtraSystemType<ESystemC>();
+            syssy.LoadExtraSystemType<ESystemDepA>();
+            syssy.LoadExtraSystemType<ESystemDepB>();
+            syssy.Initialize(false);
         }
 
         [Test]

@@ -1,7 +1,5 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -18,8 +16,8 @@ namespace Robust.Client.Graphics.Clyde
         private readonly Dictionary<GridId, Dictionary<Vector2i, MapChunkData>> _mapChunkData =
             new();
 
-        private int _verticesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
-        private int _indicesPerChunk(IMapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
+        private int _verticesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * 4;
+        private int _indicesPerChunk(MapChunk chunk) => chunk.ChunkSize * chunk.ChunkSize * GetQuadBatchIndexCount();
 
         private void _drawGrids(Viewport viewport, Box2Rotated worldBounds, IEye eye)
         {
@@ -78,7 +76,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateChunkMesh(IMapGrid grid, IMapChunk chunk)
+        private void _updateChunkMesh(IMapGrid grid, MapChunk chunk)
         {
             var data = _mapChunkData[grid.Index];
 
@@ -91,25 +89,41 @@ namespace Robust.Client.Graphics.Clyde
             Span<Vertex2D> vertexBuffer = stackalloc Vertex2D[_verticesPerChunk(chunk)];
 
             var i = 0;
-            foreach (var tile in chunk)
+            var cSz = grid.ChunkSize;
+            var cScaled = chunk.Indices * cSz;
+            for (ushort x = 0; x < cSz; x++)
             {
-                var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.Tile);
-                if (regionMaybe == null)
+                for (ushort y = 0; y < cSz; y++)
                 {
-                    continue;
+                    var tile = chunk.GetTile(x, y);
+                    if (tile.IsEmpty)
+                        continue;
+
+                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
+
+                    Box2 region;
+                    if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
+                    {
+                        region = _tileDefinitionManager.ErrorTileRegion;
+                    }
+                    else
+                    {
+                        region = regionMaybe[tile.Variant];
+                    }
+
+                    var gx = x + cScaled.X;
+                    var gy = y + cScaled.Y;
+
+                    var vIdx = i * 4;
+                    vertexBuffer[vIdx + 0] = new Vertex2D(gx, gy, region.Left, region.Bottom);
+                    vertexBuffer[vIdx + 1] = new Vertex2D(gx + 1, gy, region.Right, region.Bottom);
+                    vertexBuffer[vIdx + 2] = new Vertex2D(gx + 1, gy + 1, region.Right, region.Top);
+                    vertexBuffer[vIdx + 3] = new Vertex2D(gx, gy + 1, region.Left, region.Top);
+                    var nIdx = i * GetQuadBatchIndexCount();
+                    var tIdx = (ushort)(i * 4);
+                    QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
+                    i += 1;
                 }
-
-                var region = regionMaybe.Value;
-
-                var vIdx = i * 4;
-                vertexBuffer[vIdx + 0] = new Vertex2D(tile.X, tile.Y, region.Left, region.Bottom);
-                vertexBuffer[vIdx + 1] = new Vertex2D(tile.X + 1, tile.Y, region.Right, region.Bottom);
-                vertexBuffer[vIdx + 2] = new Vertex2D(tile.X + 1, tile.Y + 1, region.Right, region.Top);
-                vertexBuffer[vIdx + 3] = new Vertex2D(tile.X, tile.Y + 1, region.Left, region.Top);
-                var nIdx = i * GetQuadBatchIndexCount();
-                var tIdx = (ushort) (i * 4);
-                QuadBatchIndexWrite(indexBuffer, ref nIdx, tIdx);
-                i += 1;
             }
 
             GL.BindVertexArray(datum.VAO);
@@ -122,7 +136,7 @@ namespace Robust.Client.Graphics.Clyde
             datum.TileCount = i;
         }
 
-        private MapChunkData _initChunkBuffers(IMapGrid grid, IMapChunk chunk)
+        private MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)
         {
             var vao = GenVertexArray();
             BindVertexArray(vao);
@@ -159,7 +173,7 @@ namespace Robust.Client.Graphics.Clyde
             return datum;
         }
 
-        private bool _isChunkDirty(IMapGrid grid, IMapChunk chunk)
+        private bool _isChunkDirty(IMapGrid grid, MapChunk chunk)
         {
             var data = _mapChunkData[grid.Index];
             return !data.TryGetValue(chunk.Indices, out var datum) || datum.Dirty;
@@ -175,7 +189,7 @@ namespace Robust.Client.Graphics.Clyde
             // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
         }
 
-        private void _updateOnGridModified(object? sender, GridChangedEventArgs args)
+        private void _updateOnGridModified(GridModifiedEvent args)
         {
             foreach (var (pos, _) in args.Modified)
             {
@@ -185,21 +199,23 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateTileMapOnUpdate(object? sender, TileChangedEventArgs args)
+        private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 
-        private void _updateOnGridCreated(MapId mapId, GridId gridId)
+        private void _updateOnGridCreated(GridStartupEvent ev)
         {
+            var gridId = ev.GridId;
             Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
-        private void _updateOnGridRemoved(MapId mapId, GridId gridId)
+        private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
+            var gridId = ev.GridId;
             Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
 
             var data = _mapChunkData[gridId];

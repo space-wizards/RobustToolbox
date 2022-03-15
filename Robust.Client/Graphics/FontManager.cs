@@ -9,6 +9,7 @@ using Robust.Shared.Utility;
 using SharpFont;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using TerraFX.Interop.Windows;
 
 namespace Robust.Client.Graphics
 {
@@ -56,6 +57,14 @@ namespace Robust.Client.Graphics
 
             _loadedInstances.Add((fontFaceHandle, size), instance);
             return instance;
+        }
+
+        public void ClearFontCache()
+        {
+            foreach (var fontInstance in _loadedInstances)
+            {
+                fontInstance.Value.ClearSizeData();
+            }
         }
 
         private ScaledFontData _generateScaledDatum(FontInstanceHandle instance, float scale)
@@ -244,6 +253,18 @@ namespace Robust.Client.Graphics
                 _fontManager = fontManager;
                 Size = size;
                 FaceHandle = faceHandle;
+            }
+
+            public void ClearSizeData()
+            {
+                foreach (var scaleData in _scaledData)
+                {
+                    foreach (var ownedTexture in scaleData.Value.AtlasTextures)
+                    {
+                        ownedTexture.Dispose();
+                    }
+                }
+                _scaledData.Clear();
             }
 
             public Texture? GetCharTexture(Rune codePoint, float scale)

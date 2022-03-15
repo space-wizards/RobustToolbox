@@ -478,7 +478,7 @@ stored in a single array since multiple arrays lead to multiple misses.
             }
         }
 
-        internal void UpdateBodies(List<(TransformComponent Transform, PhysicsComponent Body)> deferredUpdates)
+        internal void UpdateBodies(HashSet<TransformComponent> deferredUpdates)
         {
             foreach (var (joint, error) in _brokenJoints)
             {
@@ -530,7 +530,7 @@ stored in a single array since multiple arrays lead to multiple misses.
                     // changes then this is immediately invalidated.
                     if (transform.UpdatesDeferred)
                     {
-                        deferredUpdates.Add((transform, body));
+                        deferredUpdates.Add(transform);
                     }
                 }
 

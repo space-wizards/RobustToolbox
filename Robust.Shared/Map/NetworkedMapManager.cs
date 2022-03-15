@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
@@ -18,42 +19,32 @@ internal interface INetworkedMapManager : IMapManagerInternal
     // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
     // but old ones can be deleted after.
     void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates);
-    void ApplyGameStatePost(GameStateMapData? data);
 }
 
 internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
 {
     private readonly Dictionary<GridId, List<(GameTick tick, Vector2i indices)>> _chunkDeletionHistory = new();
-    private readonly List<(GameTick tick, GridId gridId)> _gridDeletionHistory = new();
-    private readonly List<(GameTick tick, MapId mapId)> _mapDeletionHistory = new();
-
-    public override void DeleteMap(MapId mapId)
-    {
-        base.DeleteMap(mapId);
-        _mapDeletionHistory.Add((GameTiming.CurTick, mapId));
-    }
 
     public override void DeleteGrid(GridId gridId)
     {
         base.DeleteGrid(gridId);
-        _gridDeletionHistory.Add((GameTiming.CurTick, gridId));
         // No point syncing chunk removals anymore!
         _chunkDeletionHistory.Remove(gridId);
     }
 
-    public override void ChunkRemoved(MapChunk chunk)
+    public override void ChunkRemoved(GridId gridId, MapChunk chunk)
     {
-        base.ChunkRemoved(chunk);
-        if (!_chunkDeletionHistory.TryGetValue(chunk.GridId, out var chunks))
+        base.ChunkRemoved(gridId, chunk);
+        if (!_chunkDeletionHistory.TryGetValue(gridId, out var chunks))
         {
             chunks = new List<(GameTick tick, Vector2i indices)>();
-            _chunkDeletionHistory[chunk.GridId] = chunks;
+            _chunkDeletionHistory[gridId] = chunks;
         }
 
         chunks.Add((GameTiming.CurTick, chunk.Indices));
 
         // Seemed easier than having this method on GridFixtureSystem
-        if (!TryGetGrid(chunk.GridId, out var grid) ||
+        if (!TryGetGrid(gridId, out var grid) ||
             !EntityManager.TryGetComponent(grid.GridEntityId, out PhysicsComponent? body) ||
             chunk.Fixtures.Count == 0)
             return;
@@ -76,7 +67,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             if (grid.LastTileModifiedTick < fromTick)
                 continue;
 
-            var deletedChunkData = new List<GameStateMapData.DeletedChunkDatum>();
+            var chunkData = new List<GameStateMapData.ChunkDatum>();
 
             if (_chunkDeletionHistory.TryGetValue(grid.Index, out var chunks))
             {
@@ -85,11 +76,9 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                     if (tick < fromTick)
                         continue;
 
-                    deletedChunkData.Add(new GameStateMapData.DeletedChunkDatum(indices));
+                    chunkData.Add(GameStateMapData.ChunkDatum.CreateDeleted(indices));
                 }
             }
-
-            var chunkData = new List<GameStateMapData.ChunkDatum>();
 
             foreach (var (index, chunk) in grid.GetMapChunks())
             {
@@ -108,78 +97,22 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
                         tileBuffer[x * grid.ChunkSize + y] = chunk.GetTile((ushort)x, (ushort)y);
                     }
                 }
-
-                chunkData.Add(new GameStateMapData.ChunkDatum(index, tileBuffer));
+                chunkData.Add(GameStateMapData.ChunkDatum.CreateModified(index, tileBuffer));
             }
 
             var gridDatum = new GameStateMapData.GridDatum(
                     chunkData.ToArray(),
-                    deletedChunkData.ToArray(),
                     new MapCoordinates(grid.WorldPosition, grid.ParentMapId),
                     grid.WorldRotation);
 
             gridDatums.Add(grid.Index, gridDatum);
         }
 
-        // -- Map Deletion Data --
-        var mapDeletionsData = new List<MapId>();
-
-        foreach (var (tick, mapId) in _mapDeletionHistory)
-        {
-            if (tick < fromTick)
-                continue;
-            mapDeletionsData.Add(mapId);
-        }
-
-        // -- Grid Deletion Data
-        var gridDeletionsData = new List<GridId>();
-
-        foreach (var (tick, gridId) in _gridDeletionHistory)
-        {
-            if (tick < fromTick)
-                continue;
-            gridDeletionsData.Add(gridId);
-        }
-
-        // -- Map Creations --
-        var mapCreations = new List<MapId>();
-
-        foreach (var (mapId, tick) in MapCreationTick)
-        {
-            if (tick < fromTick || mapId == MapId.Nullspace)
-                continue;
-            mapCreations.Add(mapId);
-        }
-
-        // - Grid Creation data --
-        var gridCreations = new Dictionary<GridId, GameStateMapData.GridCreationDatum>();
-
-        foreach (MapGrid grid in GetAllGrids())
-        {
-            if (grid.CreatedTick < fromTick || grid.ParentMapId == MapId.Nullspace)
-                continue;
-            gridCreations.Add(grid.Index, new GameStateMapData.GridCreationDatum(grid.ChunkSize));
-        }
-
         // no point sending empty collections
         if (gridDatums.Count == 0)
-            gridDatums = default;
-        if (gridDeletionsData.Count == 0)
-            gridDeletionsData = default;
-        if (mapDeletionsData.Count == 0)
-            mapDeletionsData = default;
-        if (mapCreations.Count == 0)
-            mapCreations = default;
-        if (gridCreations.Count == 0)
-            gridCreations = default;
-
-        // no point even creating an empty map state if no data
-        if (gridDatums == null && gridDeletionsData == null && mapDeletionsData == null && mapCreations == null && gridCreations == null)
             return default;
 
-        return new GameStateMapData(gridDatums?.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>(), gridDeletionsData?.ToArray(),
-            mapDeletionsData?.ToArray(), mapCreations?.ToArray(),
-            gridCreations?.ToArray<KeyValuePair<GridId, GameStateMapData.GridCreationDatum>>());
+        return new GameStateMapData(gridDatums.ToArray<KeyValuePair<GridId, GameStateMapData.GridDatum>>());
     }
 
     public void CullDeletionHistory(GameTick upToTick)
@@ -190,174 +123,99 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
             if (chunks.Count == 0)
                 _chunkDeletionHistory.Remove(gridId);
         }
-
-        _mapDeletionHistory.RemoveAll(t => t.tick < upToTick);
-        _gridDeletionHistory.RemoveAll(t => t.tick < upToTick);
     }
+
+    private readonly List<(MapId mapId, EntityUid euid)> _newMaps = new();
+    private List<(MapId mapId, EntityUid euid, GridId gridId, ushort chunkSize)> _newGrids = new();
 
     public void ApplyGameStatePre(GameStateMapData? data, ReadOnlySpan<EntityState> entityStates)
     {
-        // There was no map data this tick, so nothing to do.
-        if (data == null)
-            return;
-
-        // First we need to figure out all the NEW MAPS.
-        if (data.CreatedMaps != null)
+        // Setup new maps and grids
         {
-            DebugTools.Assert(!entityStates.IsEmpty, "Received new maps, but no entity state.");
-
-            foreach (var mapId in data.CreatedMaps)
+            // search for any newly created map components
+            foreach (var entityState in entityStates)
             {
-                // map already exists from a previous state.
-                if (MapExists(mapId))
-                    continue;
-
-                EntityUid mapEuid = default;
-
-                //get shared euid of map comp entity
-                foreach (var entityState in entityStates)
+                foreach (var compChange in entityState.ComponentChanges.Span)
                 {
-                    foreach (var compChange in entityState.ComponentChanges.Span)
-                    {
-                        if (compChange.State is not MapComponentState mapCompState || mapCompState.MapId != mapId)
-                            continue;
-
-                        mapEuid = entityState.Uid;
-                        goto BreakMapEntSearch;
-                    }
-                }
-
-                BreakMapEntSearch:
-
-                DebugTools.Assert(mapEuid != default, $"Could not find corresponding entity state for new map {mapId}.");
-
-                CreateMap(mapId, mapEuid);
-            }
-        }
-
-        // Then make all the grids.
-        if (data.CreatedGrids != null)
-        {
-            DebugTools.Assert(data.GridData is not null, "Received new grids, but GridData was null.");
-
-            foreach (var (gridId, creationDatum) in data.CreatedGrids)
-            {
-                if (GridExists(gridId))
-                    continue;
-
-                EntityUid gridEuid = default;
-
-                //get shared euid of map comp entity
-                foreach (var entityState in entityStates)
-                {
-                    foreach (var compState in entityState.ComponentChanges.Span)
-                    {
-                        if (compState.State is not MapGridComponentState gridCompState || gridCompState.GridIndex != gridId)
-                            continue;
-
-                        gridEuid = entityState.Uid;
-                        goto BreakGridEntSearch;
-                    }
-                }
-
-                BreakGridEntSearch:
-
-                DebugTools.Assert(gridEuid != default, $"Could not find corresponding entity state for new grid {gridId}.");
-
-                MapId gridMapId = default;
-                foreach (var kvData in data.GridData!)
-                {
-                    if (kvData.Key != gridId)
+                    if (!compChange.Created)
                         continue;
 
-                    gridMapId = kvData.Value.Coordinates.MapId;
-                    break;
+                    if (compChange.State is MapComponentState mapCompState)
+                    {
+                        var mapEuid = entityState.Uid;
+                        var mapId = mapCompState.MapId;
+
+                        // map already exists from a previous state.
+                        if (MapExists(mapId))
+                            continue;
+
+                        _newMaps.Add((mapId, mapEuid));
+                    }
+                    else if (data != null && data.GridData != null && compChange.State is MapGridComponentState gridCompState)
+                    {
+                        var gridEuid = entityState.Uid;
+                        var gridId = gridCompState.GridIndex;
+                        var chunkSize = gridCompState.ChunkSize;
+
+                        // grid already exists from a previous state
+                        if(GridExists(gridId))
+                            continue;
+
+                        DebugTools.Assert(chunkSize > 0, $"Invalid chunk size in entity state for new grid {gridId}.");
+
+                        MapId gridMapId = default;
+                        foreach (var kvData in data.GridData)
+                        {
+                            if (kvData.Key != gridId)
+                                continue;
+
+                            gridMapId = kvData.Value.Coordinates.MapId;
+                            break;
+                        }
+
+                        DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridId}.");
+
+                        _newGrids.Add((gridMapId, gridEuid, gridId, chunkSize));
+                    }
                 }
-
-                DebugTools.Assert(gridMapId != default, $"Could not find corresponding gridData for new grid {gridId}.");
-
-                CreateGrid(gridMapId, gridId, creationDatum.ChunkSize, gridEuid);
             }
+
+            // create all the new maps
+            foreach (var (mapId, euid) in _newMaps)
+            {
+                CreateMap(mapId, euid);
+            }
+            _newMaps.Clear();
+
+            // create all the new grids
+            foreach (var (mapId, euid, gridId, chunkSize) in _newGrids)
+            {
+                CreateGrid(mapId, gridId, chunkSize, euid);
+            }
+            _newGrids.Clear();
         }
 
         // Process all grid updates.
-        if (data.GridData != null)
+        if (data != null && data.GridData != null)
         {
-            SuppressOnTileChanged = true;
             // Ok good all the grids and maps exist now.
             foreach (var (gridId, gridDatum) in data.GridData)
             {
-                var grid = (MapGrid)GetGrid(gridId);
-                if (grid.ParentMapId != gridDatum.Coordinates.MapId)
-                    throw new NotImplementedException("Moving grids between maps is not yet implemented");
+                var xformComp = EntityManager.GetComponent<TransformComponent>(gridId);
+                ApplyTransformState(xformComp, gridDatum);
 
-                // I love mapmanager!!!
-                grid.WorldPosition = gridDatum.Coordinates.Position;
-                grid.WorldRotation = gridDatum.Angle;
-
-                var modified = new List<(Vector2i position, Tile tile)>();
-                foreach (var chunkData in gridDatum.ChunkData)
-                {
-                    var chunk = grid.GetChunk(chunkData.Index);
-                    chunk.SuppressCollisionRegeneration = true;
-                    DebugTools.Assert(chunkData.TileData.Length == grid.ChunkSize * grid.ChunkSize);
-
-                    var counter = 0;
-                    for (ushort x = 0; x < grid.ChunkSize; x++)
-                    {
-                        for (ushort y = 0; y < grid.ChunkSize; y++)
-                        {
-                            var tile = chunkData.TileData[counter++];
-                            if (chunk.GetTileRef(x, y).Tile != tile)
-                            {
-                                chunk.SetTile(x, y, tile);
-                                modified.Add((new Vector2i(chunk.X * grid.ChunkSize + x, chunk.Y * grid.ChunkSize + y), tile));
-                            }
-                        }
-                    }
-                }
-
-                if (modified.Count != 0)
-                    InvokeGridChanged(this, new GridChangedEventArgs(grid, modified));
-
-                foreach (var chunkData in gridDatum.ChunkData)
-                {
-                    var chunk = grid.GetChunk(chunkData.Index);
-                    chunk.SuppressCollisionRegeneration = false;
-                    chunk.RegenerateCollision();
-                }
-
-                foreach (var chunkData in gridDatum.DeletedChunkData)
-                {
-                    grid.RemoveChunk(chunkData.Index);
-                }
+                var gridComp = EntityManager.GetComponent<IMapGridComponent>(gridId);
+                MapGridComponent.ApplyMapGridState(this, gridComp, gridDatum.ChunkData);
             }
-
-            SuppressOnTileChanged = false;
         }
     }
 
-    public void ApplyGameStatePost(GameStateMapData? data)
+    private static void ApplyTransformState(TransformComponent xformComp, GameStateMapData.GridDatum gridDatum)
     {
-        if (data == null) // if there is no data, there is nothing to do!
-            return;
+        if (xformComp.MapID != gridDatum.Coordinates.MapId)
+            throw new NotImplementedException("Moving grids between maps is not yet implemented");
 
-        if (data.DeletedGrids != null)
-        {
-            foreach (var grid in data.DeletedGrids)
-            {
-                if (GridExists(grid))
-                    DeleteGrid(grid);
-            }
-        }
-
-        if (data.DeletedMaps != null)
-        {
-            foreach (var map in data.DeletedMaps)
-            {
-                if (MapExists(map))
-                    DeleteMap(map);
-            }
-        }
+        xformComp.WorldPosition = gridDatum.Coordinates.Position;
+        xformComp.WorldRotation = gridDatum.Angle;
     }
 }

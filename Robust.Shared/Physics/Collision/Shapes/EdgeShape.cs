@@ -59,6 +59,9 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public ShapeType ShapeType => ShapeType.Edge;
 
+        /// <inheritdoc />
+        public Box2 LocalBounds => CalcLocalBounds();
+
         public float Radius
         {
             get => _radius;
@@ -117,6 +120,15 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
             var lower = Vector2.ComponentMin(v1, v2);
             var upper = Vector2.ComponentMax(v1, v2);
+
+            var radius = new Vector2(PhysicsConstants.PolygonRadius, PhysicsConstants.PolygonRadius);
+            return new Box2(lower - radius, upper + radius);
+        }
+
+        private Box2 CalcLocalBounds()
+        {
+            var lower = Vector2.ComponentMin(Vertex1, Vertex2);
+            var upper = Vector2.ComponentMax(Vertex1, Vertex2);
 
             var radius = new Vector2(PhysicsConstants.PolygonRadius, PhysicsConstants.PolygonRadius);
             return new Box2(lower - radius, upper + radius);

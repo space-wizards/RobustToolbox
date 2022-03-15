@@ -200,7 +200,6 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
@@ -257,6 +256,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
+            entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
@@ -265,7 +265,6 @@ namespace Robust.UnitTesting.Server
 
             entityMan.Startup();
             mapManager.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 

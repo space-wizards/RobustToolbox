@@ -25,7 +25,7 @@ namespace Robust.Client.GameObjects
                 if (_enabled)
                 {
                     _lightOverlay = new DebugLightOverlay(
-                        IoCManager.Resolve<IEntityLookup>(),
+                        EntitySystem.Get<EntityLookupSystem>(),
                         IoCManager.Resolve<IEyeManager>(),
                         IoCManager.Resolve<IMapManager>(),
                         Get<RenderingTreeSystem>());
@@ -44,7 +44,7 @@ namespace Robust.Client.GameObjects
 
         private sealed class DebugLightOverlay : Overlay
         {
-            private IEntityLookup _lookup;
+            private EntityLookupSystem _lookup;
             private IEyeManager _eyeManager;
             private IMapManager _mapManager;
 
@@ -52,7 +52,7 @@ namespace Robust.Client.GameObjects
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public DebugLightOverlay(IEntityLookup lookup, IEyeManager eyeManager, IMapManager mapManager, RenderingTreeSystem tree)
+            public DebugLightOverlay(EntityLookupSystem lookup, IEyeManager eyeManager, IMapManager mapManager, RenderingTreeSystem tree)
             {
                 _lookup = lookup;
                 _eyeManager = eyeManager;
@@ -72,7 +72,7 @@ namespace Robust.Client.GameObjects
                 {
                     foreach (var light in tree.LightTree)
                     {
-                        var aabb = _lookup.GetWorldAabbFromEntity(light.Owner);
+                        var aabb = _lookup.GetWorldAABB(light.Owner);
                         if (!aabb.Intersects(worldBounds)) continue;
 
                         args.WorldHandle.DrawRect(aabb, Color.Green.WithAlpha(0.1f));

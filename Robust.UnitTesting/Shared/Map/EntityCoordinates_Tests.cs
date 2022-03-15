@@ -25,18 +25,6 @@ namespace Robust.UnitTesting.Shared.Map
   components:
   - type: Transform";
 
-        protected override void OverrideIoC()
-        {
-            base.OverrideIoC();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
-
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-        }
-
         [OneTimeSetUp]
         public void Setup()
         {

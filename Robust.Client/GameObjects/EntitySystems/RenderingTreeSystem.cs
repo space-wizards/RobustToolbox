@@ -70,8 +70,9 @@ namespace Robust.Client.GameObjects
             UpdatesAfter.Add(typeof(TransformSystem));
             UpdatesAfter.Add(typeof(PhysicsSystem));
 
-            _mapManager.MapCreated += MapManagerOnMapCreated;
-            _mapManager.OnGridCreated += MapManagerOnGridCreated;
+            SubscribeLocalEvent<MapChangedEvent>(MapManagerOnMapCreated);
+
+            SubscribeLocalEvent<GridInitializeEvent>(MapManagerOnGridCreated);
 
             // Due to how recursion works, this must be done.
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
@@ -220,13 +221,6 @@ namespace Robust.Client.GameObjects
         }
         #endregion
 
-        public override void Shutdown()
-        {
-            base.Shutdown();
-            _mapManager.MapCreated -= MapManagerOnMapCreated;
-            _mapManager.OnGridCreated -= MapManagerOnGridCreated;
-        }
-
         private void OnTreeRemove(EntityUid uid, RenderingTreeComponent component, ComponentRemove args)
         {
             foreach (var sprite in component.SpriteTree)
@@ -243,9 +237,9 @@ namespace Robust.Client.GameObjects
             component.LightTree.Clear();
         }
 
-        private void MapManagerOnMapCreated(object? sender, MapEventArgs e)
+        private void MapManagerOnMapCreated(MapChangedEvent e)
         {
-            if (e.Map == MapId.Nullspace)
+            if (e.Destroyed || e.Map == MapId.Nullspace)
             {
                 return;
             }
@@ -253,9 +247,9 @@ namespace Robust.Client.GameObjects
             EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetMapEntityId(e.Map));
         }
 
-        private void MapManagerOnGridCreated(MapId mapId, GridId gridId)
+        private void MapManagerOnGridCreated(GridInitializeEvent ev)
         {
-            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(gridId).GridEntityId);
+            EntityManager.EnsureComponent<RenderingTreeComponent>(_mapManager.GetGrid(ev.GridId).GridEntityId);
         }
 
         private RenderingTreeComponent? GetRenderTree(EntityUid entity, EntityQuery<TransformComponent> xforms)

@@ -28,7 +28,7 @@ namespace Robust.Benchmarks.Serialization.Copy
 
             var seedMapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            Seed = SerializationManager.ReadValueOrThrow<SeedDataDefinition>(seedMapping);
+            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping);
         }
 
         private const string String = "ABC";

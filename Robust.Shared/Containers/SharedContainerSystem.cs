@@ -288,12 +288,14 @@ namespace Robust.Shared.Containers
                 return false;
 
             var conQuery = EntityManager.GetEntityQuery<ContainerManagerComponent>();
+            var metaQuery = EntityManager.GetEntityQuery<MetaDataComponent>();
             var child = uid;
             var parent = xform.ParentUid;
 
             while (parent.IsValid())
             {
-                if (conQuery.TryGetComponent(parent, out var conManager) &&
+                if (((metaQuery.GetComponent(child).Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) && 
+                    conQuery.TryGetComponent(parent, out var conManager) &&
                     conManager.TryGetContainer(child, out var parentContainer))
                 {
                     container = parentContainer;

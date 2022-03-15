@@ -264,7 +264,7 @@ namespace Robust.Shared.Serialization.Manager
                 }
 
                 return Expression.Lambda<ReadDelegate>(
-                    call,
+                    Expression.Convert(call, typeof(object)),
                     typeParam,
                     nodeParam,
                     contextParam,

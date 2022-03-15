@@ -639,10 +639,10 @@ namespace Robust.Shared.Prototypes
                 }
 
                 _prototypeResults[prototypeType][id] = datanode;
-                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
+                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)) && datanode.TryGet("parent", out ValueDataNode? parentNode))
                 {
                     //todo paul datafield might not always be called "parent"
-                    _inheritanceTrees[prototypeType].AddId(id, datanode.Get<ValueDataNode>("parent").Value, true);
+                    _inheritanceTrees[prototypeType].AddId(id, parentNode.Value, true);
                 }
 
                 if (changed == null) continue;

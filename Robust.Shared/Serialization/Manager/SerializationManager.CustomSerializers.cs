@@ -47,6 +47,7 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var valueParam = Expression.Parameter(typeof(object), "value");
 
                 var call = Expression.Call(
                     instanceParam,
@@ -54,13 +55,15 @@ namespace Robust.Shared.Serialization.Manager
                     new[] {tuple.value, tuple.node, tuple.serializer},
                     Expression.Convert(nodeParam, tuple.node),
                     contextParam,
-                    skipHookParam);
+                    skipHookParam,
+                    Expression.Convert(valueParam, tuple.value));
 
                 return Expression.Lambda<ReadSerializerDelegate>(
-                    call,
+                    Expression.Convert(call, typeof(object)),
                     nodeParam,
                     contextParam,
-                    skipHookParam).Compile();
+                    skipHookParam,
+                    valueParam).Compile();
             }, this);
         }
 

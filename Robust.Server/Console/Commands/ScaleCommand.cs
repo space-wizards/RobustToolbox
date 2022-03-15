@@ -45,9 +45,9 @@ public sealed class ScaleCommand : IConsoleCommand
         var entManager = IoCManager.Resolve<IEntityManager>();
         entManager.EventBus.RaiseLocalEvent(uid, ref @event);
 
-        if (entManager.TryGetComponent(uid, out SpriteComponent? spriteComponent))
+        if (entManager.TryGetComponent(uid, out AppearanceComponent? appearanceComponent))
         {
-            spriteComponent.Scale *= scale;
+            appearanceComponent.SetData(ScaleVisuals.Scale, scale);
         }
 
         if (entManager.TryGetComponent(uid, out FixturesComponent? manager))

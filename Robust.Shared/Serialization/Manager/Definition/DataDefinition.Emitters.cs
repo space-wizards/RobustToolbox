@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Robust.Shared.IoC;
 using Robust.Shared.Network;
+using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 using Robust.Shared.Utility;
@@ -42,7 +43,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     var type = fieldDefinition.FieldType;
                     var node = mappingDataNode.Get(fieldDefinition.Attribute.Tag);
-                    DeserializationResult result;
+                    object? result;
                     if (fieldDefinition.Attribute.CustomTypeSerializer != null)
                     {
                         var foundInterface = false;

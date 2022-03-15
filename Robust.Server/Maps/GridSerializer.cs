@@ -96,7 +96,7 @@ namespace Robust.Server.Maps
             return root;
         }
 
-        private static string SerializeTiles(IMapChunk chunk)
+        private static string SerializeTiles(MapChunk chunk)
         {
             // number of bytes written per tile, because sizeof(Tile) is useless.
             const int structSize = 4;

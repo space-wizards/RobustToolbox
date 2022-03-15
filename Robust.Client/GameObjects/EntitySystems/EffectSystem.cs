@@ -377,6 +377,9 @@ namespace Robust.Client.GameObjects
                         (attachedXform?.Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
 
+                    // If we've never seen the entity before then can't resolve coordinates.
+                    if (!coordinates.IsValid(_entityManager)) continue;
+
                     // ???
                     var rotation = attachedXform?.WorldRotation ?? _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
 

@@ -421,7 +421,6 @@ namespace Robust.Client.GameStates
             var createdEntities = ApplyEntityStates(curState.EntityStates.Span, curState.EntityDeletions.Span,
                 nextState != null ? nextState.EntityStates.Span : default);
             _players.ApplyPlayerStates(curState.PlayerStates.Value ?? Array.Empty<PlayerState>());
-            _mapManager.ApplyGameStatePost(curState.MapData);
 
             GameStateApplied?.Invoke(new GameStateAppliedArgs(curState));
             return createdEntities;

@@ -192,6 +192,57 @@ namespace Robust.Shared.GameObjects
             return newComponent;
         }
 
+        public readonly struct CompInitializeHandle<T> : IDisposable
+            where T : Component
+        {
+            private readonly IEntityManager _entMan;
+            public readonly T Comp;
+
+            public CompInitializeHandle(IEntityManager entityManager, T comp)
+            {
+                _entMan = entityManager;
+                Comp = comp;
+            }
+
+            public void Dispose()
+            {
+                var metadata = _entMan.GetComponent<MetaDataComponent>(Comp.Owner);
+
+                if (!metadata.EntityInitialized && !metadata.EntityInitializing)
+                    return;
+
+                if (!Comp.Initialized)
+                    Comp.LifeInitialize(_entMan);
+
+                if (metadata.EntityInitialized && !Comp.Running)
+                    Comp.LifeStartup(_entMan);
+            }
+
+            public static implicit operator T(CompInitializeHandle<T> handle)
+            {
+                return handle.Comp;
+            }
+        }
+
+        /// <inheritdoc />
+        public CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new()
+        {
+            var newComponent = _componentFactory.GetComponent<T>();
+            newComponent.Owner = uid;
+
+            if (!uid.IsValid() || !EntityExists(uid))
+                throw new ArgumentException("Entity is not valid.", nameof(uid));
+
+            if (newComponent == null) throw new ArgumentNullException(nameof(newComponent));
+
+            if (newComponent.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
+
+            AddComponentInternal(uid, newComponent, false, true);
+
+            return new CompInitializeHandle<T>(this, newComponent);
+        }
+
+        /// <inheritdoc />
         public void AddComponent<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
         {
             if (!uid.IsValid() || !EntityExists(uid))
@@ -201,10 +252,10 @@ namespace Robust.Shared.GameObjects
 
             if (component.Owner != uid) throw new InvalidOperationException("Component is not owned by entity.");
 
-            AddComponentInternal(uid, component, overwrite);
+            AddComponentInternal(uid, component, overwrite, false);
         }
 
-        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite = false) where T : Component
+        private void AddComponentInternal<T>(EntityUid uid, T component, bool overwrite, bool skipInit) where T : Component
         {
             // get interface aliases for mapping
             var reg = _componentFactory.GetRegistration(component);
@@ -255,6 +306,9 @@ namespace Robust.Shared.GameObjects
             ComponentAdded?.Invoke(this, new AddedComponentEventArgs(component, uid));
 
             component.LifeAddToEntity(this);
+
+            if (skipInit)
+                return;
 
             var metadata = GetComponent<MetaDataComponent>(uid);
 

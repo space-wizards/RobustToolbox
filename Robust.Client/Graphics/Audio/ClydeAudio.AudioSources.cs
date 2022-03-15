@@ -15,6 +15,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Audio;
 using Robust.Shared.Log;
 using Vector2 = Robust.Shared.Maths.Vector2;
+using Robust.Shared.Utility;
 
 namespace Robust.Client.Graphics.Audio
 {
@@ -193,8 +194,10 @@ namespace Robust.Client.Graphics.Audio
                 {
                     _didPositionWarning = true;
                     Logger.WarningS("clyde.oal",
-                        "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'",
+                        "Attempting to set position on audio source with multiple audio channels! Stream: '{0}'.  Make sure the audio is MONO, not stereo.",
                         _sourceStream.Name);
+                    // warning isn't enough, people just ignore it :(
+                    DebugTools.Assert(false, $"Attempting to set position on audio source with multiple audio channels! Stream: '{_sourceStream.Name}'. Make sure the audio is MONO, not stereo.");
                 }
 #endif
 

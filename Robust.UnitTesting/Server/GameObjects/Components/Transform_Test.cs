@@ -73,7 +73,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.RegisterType(typeof(EntityPrototype));
             manager.LoadFromStream(new StringReader(PROTOTYPES));
-            manager.Resync();
+            manager.ResolveResults();
 
             // build the net dream
             MapA = MapManager.CreateMap();

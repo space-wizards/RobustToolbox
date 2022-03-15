@@ -188,6 +188,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return newMapping;
         }
 
+        public override bool IsEmpty => _children.Count == 0;
+
         public override MappingDataNode Copy()
         {
             var newMapping = new MappingDataNode()

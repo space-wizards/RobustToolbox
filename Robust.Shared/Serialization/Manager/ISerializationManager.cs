@@ -199,10 +199,21 @@ namespace Robust.Shared.Serialization.Manager
 
         #endregion
 
-        #region PushInheritance
+        #region Composition
 
-        DataNode PushInheritance(Type type, DataNode parent, DataNode child, ISerializationContext? context = null);
-        TNode PushInheritance<TType, TNode>(TNode parent, TNode child, ISerializationContext? context = null);
+        DataNode PushComposition(Type type, DataNode[] parents, DataNode child, ISerializationContext? context = null);
+
+        public TNode PushComposition<TType, TNode>(TNode[] parents, TNode child, ISerializationContext? context = null) where TNode : DataNode
+        {
+            // ReSharper disable once CoVariantArrayConversion
+            return (TNode)PushComposition(typeof(TType), parents, child, context);
+        }
+
+        public TNode PushCompositionWithGenericNode<TNode>(Type type, TNode[] parents, TNode child, ISerializationContext? context = null) where TNode : DataNode
+        {
+            // ReSharper disable once CoVariantArrayConversion
+            return (TNode) PushComposition(type, parents, child, context);
+        }
 
         #endregion
     }

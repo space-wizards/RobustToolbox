@@ -21,6 +21,8 @@ namespace Robust.Shared.Serialization.Markdown.Value
 
         public string Value { get; set; }
 
+        public override bool IsEmpty => Value == string.Empty;
+
         public override ValueDataNode Copy()
         {
             return new(Value)

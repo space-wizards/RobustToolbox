@@ -14,6 +14,8 @@ namespace Robust.Shared.Serialization.Markdown
             End = end;
         }
 
+        public abstract bool IsEmpty { get; }
+
         public abstract DataNode Copy();
 
         public abstract DataNode? Except(DataNode node);

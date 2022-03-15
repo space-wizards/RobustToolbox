@@ -47,7 +47,7 @@ entitiesImmutableList:
 
             protoMan.RegisterType(typeof(EntityPrototype));
             protoMan.LoadString(Prototypes);
-            protoMan.Resync();
+            protoMan.ResolveResults();
         }
 
         [Test]

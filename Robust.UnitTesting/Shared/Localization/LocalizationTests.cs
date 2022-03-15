@@ -33,7 +33,7 @@ namespace Robust.UnitTesting.Shared.Localization
 
             protoMan.RegisterType(typeof(EntityPrototype));
             protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
-            protoMan.Resync();
+            protoMan.ResolveResults();
 
             var loc = IoCManager.Resolve<ILocalizationManager>();
             var culture = new CultureInfo("en-US", false);

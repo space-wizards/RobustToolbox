@@ -23,6 +23,12 @@ public partial class SerializationManager
         return null;
     }
 
+    private bool TryGetTypeInheritanceHandler(Type value, Type node, [NotNullWhen(true)] out object? handler)
+    {
+        return (handler = GetTypeInheritanceHandler(value, node)) != null;
+    }
+
+
     private bool TryGetGenericInheritanceHandler(Type type, Type node, [NotNullWhen(true)] out object? handler)
     {
         if (type.IsGenericType)

@@ -8,5 +8,5 @@ namespace Robust.Shared.Serialization.TypeSerializers.Interfaces;
 public interface ITypeInheritanceHandler<[UsedImplicitly] TType, TNode> where TNode : DataNode
 {
     TNode PushInheritance(ISerializationManager serializationManager, TNode child, TNode parent,
-        IDependencyCollection dependencies);
+        IDependencyCollection dependencies, ISerializationContext context);
 }

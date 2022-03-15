@@ -44,7 +44,7 @@ namespace Robust.UnitTesting.Shared.Map
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
-            prototypeManager.Resync();
+            prototypeManager.ResolveResults();
 
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.GenerateNetIds();

@@ -52,7 +52,7 @@ namespace Robust.UnitTesting.Server.GameObjects
             var manager = IoCManager.Resolve<IPrototypeManager>();
             manager.RegisterType(typeof(EntityPrototype));
             manager.LoadFromStream(new StringReader(PROTOTYPES));
-            manager.Resync();
+            manager.ResolveResults();
 
             //NOTE: The grids have not moved, so we can assert worldpos == localpos for the test
         }

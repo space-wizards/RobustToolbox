@@ -272,7 +272,7 @@ namespace Robust.UnitTesting.Server
             var protoMan = container.Resolve<IPrototypeManager>();
             protoMan.RegisterType(typeof(EntityPrototype));
             _protoDelegate?.Invoke(protoMan);
-            protoMan.Resync();
+            protoMan.ResolveResults();
 
             return this;
         }

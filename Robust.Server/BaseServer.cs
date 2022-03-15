@@ -339,7 +339,7 @@ namespace Robust.Server
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.Initialize();
             prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            prototypeManager.Resync();
+            prototypeManager.ResolveResults();
 
             _consoleHost.Initialize();
             _entityManager.Startup();

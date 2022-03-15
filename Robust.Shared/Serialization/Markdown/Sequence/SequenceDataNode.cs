@@ -102,6 +102,8 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return (T) this[index];
         }
 
+        public override bool IsEmpty => _nodes.Count == 0;
+
         public override SequenceDataNode Copy()
         {
             var newSequence = new SequenceDataNode()

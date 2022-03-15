@@ -48,7 +48,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             _prototypes = (PrototypeManager) IoCManager.Resolve<IPrototypeManager>();
             _prototypes.RegisterType(typeof(EntityPrototype));
             _prototypes.LoadString(InitialPrototypes);
-            _prototypes.Resync();
+            _prototypes.ResolveResults();
 
             _maps = IoCManager.Resolve<IMapManager>();
             _entities = IoCManager.Resolve<IEntityManager>();

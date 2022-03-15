@@ -180,28 +180,53 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
         public SequenceDataNode PushInheritance(ISerializationManager serializationManager, SequenceDataNode child,
             SequenceDataNode parent,
-            IDependencyCollection dependencies)
+            IDependencyCollection dependencies, ISerializationContext context)
         {
             var componentFactory = dependencies.Resolve<IComponentFactory>();
             var newCompReg = child.Copy();
             var newCompRegDict = ToTypeIndexedDictionary(newCompReg, componentFactory);
             var parentDict = ToTypeIndexedDictionary(parent, componentFactory);
 
-            foreach (var (type, mapping) in parentDict)
+            foreach (var (reg, mapping) in parentDict)
             {
-                if (newCompRegDict.TryFirstOrNull(p => p.Key., out var childMapping))
-                {
+                if (newCompRegDict.ContainsKey(reg) || newCompRegDict.Any(p =>
+                    {
+                        foreach (var reference in reg.References)
+                        {
+                            if (p.Key.References.Contains(reference))
+                            {
+                                return true;
+                            }
+                        }
 
-                    var newMapping = serializationManager.PushInheritance(type, )
+                        return false;
+                    })) continue;
+
+                if (newCompRegDict.TryGetValue(reg, out var entry))
+                {
+                    newCompReg[entry] = serializationManager.PushCompositionWithGenericNode(reg.Type,
+                        new[] { parent[mapping] }, newCompReg[entry], context);
                 }
                 else
                 {
-
+                    newCompReg.Add(parent[mapping]);
+                    newCompRegDict[reg] = newCompReg.Count-1;
                 }
             }
+
+            return newCompReg;
         }
 
-        private Dictionary<IComponentRegistration, MappingDataNode> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory) =>
-            node.Cast<MappingDataNode>().ToDictionary(p => componentFactory.GetRegistration(p.Get<ValueDataNode>("type").Value), p => p);
+        private Dictionary<IComponentRegistration, int> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory)
+        {
+            var dict = new Dictionary<IComponentRegistration, int>();
+            for (var i = 0; i < node.Count; i++)
+            {
+                var mapping = (MappingDataNode)node[i];
+                dict.Add(componentFactory.GetRegistration(mapping.Get<ValueDataNode>("type").Value), i);
+            }
+
+            return dict;
+        }
     }
 }

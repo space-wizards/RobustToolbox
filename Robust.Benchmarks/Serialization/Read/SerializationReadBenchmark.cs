@@ -2,7 +2,6 @@
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
 using Robust.Shared.Analyzers;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;

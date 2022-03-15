@@ -65,6 +65,7 @@ namespace Robust.Shared.Serialization.Manager
 
                 var typeParam = Expression.Parameter(typeof(Type), "type");
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
+                //todo paul serializers in the context should also override default serializers for array etc
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
                 var valueParam = Expression.Parameter(typeof(object), "value");
@@ -475,19 +476,12 @@ namespace Robust.Shared.Serialization.Manager
                 throw new ArgumentException($"No mapping node provided for type {type} at line: {node.Start.Line}");
             }
 
-            // If we get an empty ValueDataNode we just use an empty mapping
-            // this is needed to fire the setters & getters for default values
-            // todo paul: rethink default values, especially reference types
-            var mapping = new MappingDataNode();
-
-            var result = (TValue)definition.Populate(instance, mapping, this, context, skipHook)!;
-
             if (!skipHook && hooks)
             {
-                ((ISerializationHooks) result).AfterDeserialization();
+                ((ISerializationHooks) instance).AfterDeserialization();
             }
 
-            return result;
+            return (TValue) instance;
         }
 
         private TValue ReadGenericMapping<TValue>(

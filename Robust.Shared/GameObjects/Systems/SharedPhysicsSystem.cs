@@ -106,7 +106,9 @@ namespace Robust.Shared.GameObjects
 
         private void HandleParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            if (LifeStage(uid) is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized
+            var meta = MetaData(uid);
+
+            if (meta.EntityLifeStage is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized
                 || !TryComp(uid, out TransformComponent? xform))
             {
                 return;
@@ -114,6 +116,9 @@ namespace Robust.Shared.GameObjects
                 
             if (body.CanCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
+
+            if (_container.IsEntityInContainer(uid, meta))
+                return;
 
             HandleParentChangeVelocity(uid, body, ref args, xform);
         }

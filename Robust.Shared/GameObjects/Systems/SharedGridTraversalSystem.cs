@@ -39,21 +39,26 @@ namespace Robust.Shared.GameObjects
             var maps = EntityManager.GetEntityQuery<MapComponent>();
             var grids = EntityManager.GetEntityQuery<MapGridComponent>();
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+            var metas = EntityManager.GetEntityQuery<MetaDataComponent>();
 
             while (_queuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender)) continue;
-                HandleMove(ref moveEvent, xforms, maps, grids);
+                HandleMove(ref moveEvent, xforms, maps, grids, metas);
             }
 
             _handledThisTick.Clear();
         }
 
-        private void HandleMove(ref MoveEvent moveEvent, EntityQuery<TransformComponent> xforms, EntityQuery<MapComponent> maps, EntityQuery<MapGridComponent> grids)
+        private void HandleMove(ref MoveEvent moveEvent,
+            EntityQuery<TransformComponent> xforms,
+            EntityQuery<MapComponent> maps,
+            EntityQuery<MapGridComponent> grids,
+            EntityQuery<MetaDataComponent> metas)
         {
             var entity = moveEvent.Sender;
 
-            if (!TryComp(entity, out MetaDataComponent? meta) ||
+            if (!metas.TryGetComponent(entity, out MetaDataComponent? meta) ||
                 meta.EntityDeleted ||
                 maps.HasComponent(entity) ||
                 grids.HasComponent(entity))

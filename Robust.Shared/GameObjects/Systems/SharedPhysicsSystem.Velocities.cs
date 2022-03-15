@@ -142,9 +142,6 @@ public abstract partial class SharedPhysicsSystem
         if (physics.LifeStage != ComponentLifeStage.Running)
             return;
 
-        if (_container.IsEntityInContainer(uid, xform))
-            return;
-
         // When transferring bodies, we will preserve map angular and linear velocities. For this purpose, we simply
         // modify the velocities so that the map value remains unchanged.
 

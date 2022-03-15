@@ -13,6 +13,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Prototypes;
@@ -494,7 +495,7 @@ namespace Robust.Server.Maps
                 // Now we need to actually bind the MapGrids to their components so that you can resolve GridId -> EntityUid
                 // After doing this, it should be 100% safe to use the MapManager API like normal.
 
-                var yamlGrids = RootNode.GetNode<YamlSequenceNode>("grids");
+                var yamlGrids = RootNode.Get<SequenceDataNode>("grids");
 
                 // get ents that the grids will bind to
                 var gridComps = new Dictionary<GridId, MapGridComponent>(_readGridIndices.Count);
@@ -518,28 +519,30 @@ namespace Robust.Server.Maps
                 {
                     // Here is where the implicit index pairing magic happens from the yaml.
                     var gridIndex = _readGridIndices[index];
-                    var yamlGrid = (YamlMappingNode)yamlGrids.Children[index];
+                    var yamlGrid = (MappingDataNode)yamlGrids[index];
 
                     // designed to throw if something is broken, every grid must map to an ent
                     var gridComp = gridComps[gridIndex];
 
                     DebugTools.Assert(gridComp.GridIndex == gridIndex);
 
-                    YamlMappingNode yamlGridInfo = (YamlMappingNode)yamlGrid["settings"];
-                    YamlSequenceNode yamlGridChunks = (YamlSequenceNode)yamlGrid["chunks"];
+                    MappingDataNode yamlGridInfo = (MappingDataNode)yamlGrid["settings"];
+                    SequenceDataNode yamlGridChunks = (SequenceDataNode)yamlGrid["chunks"];
 
                     var grid = AllocateMapGrid(gridComp, yamlGridInfo);
 
-                    foreach (var chunkNode in yamlGridChunks.Cast<YamlMappingNode>())
+                    foreach (var chunkNode in yamlGridChunks.Cast<MappingDataNode>())
                     {
-                        YamlGridSerializer.DeserializeChunk(_mapManager, grid, chunkNode, _tileMap!, _tileDefinitionManager);
+                        var (chunkOffsetX, chunkOffsetY) = _serializationManager.Read<Vector2i>(chunkNode["ind"]);
+                        var chunk = grid.GetChunk(chunkOffsetX, chunkOffsetY);
+                        _serializationManager.Read(chunkNode, this, value: chunk);
                     }
 
                     Grids.Add(grid); // Grids are kept in index order
                 }
             }
 
-            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, YamlMappingNode yamlGridInfo)
+            private static MapGrid AllocateMapGrid(MapGridComponent gridComp, MappingDataNode yamlGridInfo)
             {
                 // sane defaults
                 ushort csz = 16;
@@ -547,8 +550,8 @@ namespace Robust.Server.Maps
 
                 foreach (var kvInfo in yamlGridInfo)
                 {
-                    var key = kvInfo.Key.ToString();
-                    var val = kvInfo.Value.ToString();
+                    var key = ((ValueDataNode)kvInfo.Key).Value;
+                    var val = ((ValueDataNode)kvInfo.Value).Value;
                     if (key == "chunksize")
                         csz = ushort.Parse(val);
                     else if (key == "tilesize")
@@ -632,9 +635,9 @@ namespace Robust.Server.Maps
             {
                 // sets up the mapping so the serializer can properly deserialize GridIds.
 
-                var yamlGrids = RootNode.GetNode<YamlSequenceNode>("grids");
+                var yamlGrids = RootNode.Get<SequenceDataNode>("grids");
 
-                for (var i = 0; i < yamlGrids.Children.Count; i++)
+                for (var i = 0; i < yamlGrids.Count; i++)
                 {
                     _readGridIndices.Add(_mapManager.GenerateGridId(null));
                 }

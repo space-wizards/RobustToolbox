@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -16,6 +18,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Server.Maps
 {
+    [TypeSerializer]
     internal sealed class MapChunkSerializer : ITypeSerializer<MapChunk, MappingDataNode>
     {
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,
@@ -65,12 +68,13 @@ namespace Robust.Server.Maps
                 for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
                     var id = reader.ReadUInt16();
-                    var data = reader.ReadUInt16();
+                    var flags = (TileRenderFlag)reader.ReadByte();
+                    var variant = reader.ReadByte();
 
                     var defName = tileMap[id];
                     id = tileDefinitionManager[defName].TileId;
 
-                    var tile = new Tile(id, data);
+                    var tile = new Tile(id, flags, variant);
                     chunk.SetTile(x, y, tile);
                 }
             }
@@ -113,7 +117,8 @@ namespace Robust.Server.Maps
                     {
                         var tile = chunk.GetTile(x, y);
                         writer.Write(tile.TypeId);
-                        writer.Write(tile.Data);
+                        writer.Write((byte)tile.Flags);
+                        writer.Write(tile.Variant);
                     }
                 }
             }
@@ -128,6 +133,8 @@ namespace Robust.Server.Maps
         }
     }
 
+    //todo paul make this be used
+    [TypeSerializer]
     internal sealed class GridSerializer : ITypeSerializer<MapGrid, MappingDataNode>
     {
 
@@ -165,7 +172,8 @@ namespace Robust.Server.Maps
                     $"Someone tried serializing a mapgrid without passing {nameof(MapLoader.MapContext)} as context.");
             }
 
-            grid ??= dependencies.Resolve<MapManager>().CreateUnboundGrid(mapContext.TargetMap);
+            if (grid == null) throw new NotImplementedException();
+            //todo paul grid ??= dependencies.Resolve<MapManager>().CreateUnboundGrid(mapContext.TargetMap);
 
             foreach (var chunkNode in chunks.Cast<MappingDataNode>())
             {

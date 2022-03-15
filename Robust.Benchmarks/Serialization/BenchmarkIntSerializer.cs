@@ -18,10 +18,10 @@ namespace Robust.Benchmarks.Serialization
                 : new ErrorNode(node, $"Failed parsing int value: {node.Value}");
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
+        public int Read(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null, int _ = default)
         {
-            return new DeserializedValue<int>(int.Parse(node.Value, CultureInfo.InvariantCulture));
+            return int.Parse(node.Value, CultureInfo.InvariantCulture);
         }
 
         public DataNode Write(ISerializationManager serializationManager, int value, bool alwaysWrite = false,

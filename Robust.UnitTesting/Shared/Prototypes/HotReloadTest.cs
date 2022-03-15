@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Robust.Shared.GameObjects;
@@ -67,7 +68,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             var reloaded = false;
             _prototypes.PrototypesReloaded += _ => reloaded = true;
 
-            _prototypes.ReloadPrototypes(new List<IPrototype>());
+            _prototypes.ReloadPrototypes(new Dictionary<Type, HashSet<string>>());
 
             Assert.True(reloaded);
             reloaded = false;
@@ -75,7 +76,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
             Assert.That(entityComponent.Value, Is.EqualTo(5));
             Assert.False(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestTwoComponent>(entity));
 
-            var changedPrototypes = _prototypes.LoadString(ReloadedPrototypes, true);
+            var changedPrototypes = new Dictionary<Type, HashSet<string>>();
+            _prototypes.LoadString(ReloadedPrototypes, true, changedPrototypes);
             _prototypes.ReloadPrototypes(changedPrototypes);
 
             Assert.True(reloaded);
@@ -87,7 +89,8 @@ namespace Robust.UnitTesting.Shared.Prototypes
             // New components are added
             Assert.True(IoCManager.Resolve<IEntityManager>().HasComponent<HotReloadTestTwoComponent>(entity));
 
-            changedPrototypes = _prototypes.LoadString(InitialPrototypes, true);
+            changedPrototypes = new Dictionary<Type, HashSet<string>>();
+            _prototypes.LoadString(InitialPrototypes, true, changedPrototypes);
             _prototypes.ReloadPrototypes(changedPrototypes);
 
             Assert.True(reloaded);

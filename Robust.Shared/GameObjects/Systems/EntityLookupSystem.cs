@@ -14,9 +14,22 @@ namespace Robust.Shared.GameObjects
     public enum LookupFlags : byte
     {
         None = 0,
+        /// <summary>
+        /// Should we use the approximately intersecting entities or check tighter bounds.
+        /// </summary>
         Approximate = 1 << 0,
+
+        /// <summary>
+        /// Also return entities from an anchoring query.
+        /// </summary>
         IncludeAnchored = 1 << 1,
+
+        /// <summary>
+        /// Include entities that are currently in containers.
+        /// </summary>
+        Contained = 1 << 2,
         // IncludeGrids = 1 << 2,
+        // IncludePhysics (whenever it gets split off)
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem
@@ -24,6 +37,11 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
         [Dependency] private readonly SharedTransformSystem _transform = default!;
+
+        /// <summary>
+        /// Returns all non-grid entities. Consider using your own flags if you wish for a faster query.
+        /// </summary>
+        public const LookupFlags DefaultFlags = LookupFlags.Contained | LookupFlags.IncludeAnchored;
 
         private const int GrowthRate = 256;
 

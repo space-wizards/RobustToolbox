@@ -1,13 +1,137 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Physics;
 
 namespace Robust.Shared.GameObjects;
 
 public sealed partial class EntityLookupSystem
 {
+    #region Box2
+
+    public bool AnyEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        if (mapId == MapId.Nullspace) return false;
+
+        var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        var found = false;
+        EntityLookupComponent lookup;
+        Box2 localAABB;
+
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+        {
+            lookup = lookupQuery.GetComponent(grid.GridEntityId);
+            localAABB = xformQuery.GetComponent(grid.GridEntityId).InvWorldMatrix.TransformBox(worldAABB);
+
+            lookup.Tree._b2Tree.Query(ref found, static (ref bool state, DynamicTree.Proxy _) =>
+            {
+                state = true;
+                return false;
+            }, localAABB);
+
+            if (found)
+                return true;
+        }
+
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+        lookup = lookupQuery.GetComponent(mapUid);
+        localAABB = xformQuery.GetComponent(mapUid).InvWorldMatrix.TransformBox(worldAABB);
+
+        lookup.Tree._b2Tree.Query(ref found, static (ref bool state, DynamicTree.Proxy _) =>
+        {
+            state = true;
+            return false;
+        }, localAABB);
+
+        return found;
+    }
+
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Box2Rotated
+
+    public bool AnyEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
+    {
+        var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldBounds))
+        {
+            var lookup = lookupQuery.GetComponent(grid.GridEntityId);
+            var localAABB = xformQuery.GetComponent(grid.GridEntityId).InvWorldMatrix.TransformBox(worldBounds);
+            var found = false;
+
+            lookup.Tree._b2Tree.Query(ref found, static (ref bool b, DynamicTree.Proxy _) =>
+            {
+                b = true;
+                return false;
+            }, localAABB);
+
+            if (found)
+                return true;
+        }
+
+        return false;
+    }
+
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldBounds, LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region Entity
+
+    public bool AnyEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region EntityCoordinates
+
+    public bool AnyEntitiesIntersecting(EntityCoordinates coordinates, LookupFlags flags = DefaultFlags)
+    {
+        if (!coordinates.IsValid(EntityManager)) return false;
+
+        throw new NotImplementedException();
+    }
+
+    public bool AnyEntitiesIntersecting(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
+    #region MapCoordinates
+
+    public bool AnyEntitiesIntersecting(MapCoordinates coordinates, LookupFlags flags = DefaultFlags)
+    {
+        if (coordinates.MapId == MapId.Nullspace) return false;
+
+        throw new NotImplementedException();
+    }
+
+    public bool AnyEntitiesIntersecting(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    #endregion
+
     #region Grid Methods
 
     /// <summary>
@@ -119,6 +243,8 @@ public sealed partial class EntityLookupSystem
 
     #endregion
 
+    #region Bounds
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public Box2 GetLocalBounds(Vector2i gridIndices, ushort tileSize)
     {
@@ -148,4 +274,6 @@ public sealed partial class EntityLookupSystem
 
         return new Box2Rotated(translatedBox, -angle.Value, center);
     }
+
+    #endregion
 }

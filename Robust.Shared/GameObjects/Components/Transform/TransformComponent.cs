@@ -110,7 +110,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -135,7 +135,7 @@ namespace Robust.Shared.GameObjects
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 _localRotation = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -357,6 +357,10 @@ namespace Robust.Shared.GameObjects
                     _parent = value.EntityId;
                     ChangeMapId(newParent.MapID, xformQuery);
 
+                    // preserve world rotation
+                    if (LifeStage == ComponentLifeStage.Running)
+                        LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
+
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
 
@@ -420,7 +424,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -653,6 +657,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void AttachToGridOrMap()
         {
+            bool TerminatingOrDeleted(EntityUid uid)
+            {
+                return !_entMan.TryGetComponent(uid, out MetaDataComponent? meta)
+                       || meta.EntityLifeStage >= EntityLifeStage.Terminating;
+            }
+
             // nothing to do
             var oldParent = Parent;
             if (oldParent == null)
@@ -663,11 +673,13 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
             {
                 newMapEntity = mapGrid.GridEntityId;
             }
-            else if (_mapManager.HasMapEntity(mapPos.MapId))
+            else if (_mapManager.HasMapEntity(mapPos.MapId)
+                     && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
+                     && !TerminatingOrDeleted(mapEnt))
             {
                 newMapEntity = _mapManager.GetMapEntityIdOrThrow(mapPos.MapId);
             }
@@ -691,7 +703,7 @@ namespace Robust.Shared.GameObjects
             WorldPosition = mapPos.Position;
             DeferUpdates = false;
 
-            Dirty();
+            Dirty(_entMan);
         }
 
         public void DetachParentToNull()
@@ -730,7 +742,7 @@ namespace Robust.Shared.GameObjects
             // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
             MapIdChanged(oldMapId);
-            Dirty();
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -761,14 +773,13 @@ namespace Robust.Shared.GameObjects
 
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
-            var metaData = _entMan.GetComponent<MetaDataComponent>(Owner);
+            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
+            var metaData = metaEnts.GetComponent(Owner);
             metaData.EntityPaused = mapPaused;
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            var xforms = _entMan.GetEntityQuery<TransformComponent>();
-            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xforms, metaEnts);
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
         }
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
@@ -1028,7 +1039,7 @@ namespace Robust.Shared.GameObjects
                     RebuildMatrices();
                 }
 
-                Dirty();
+                Dirty(_entMan);
             }
 
             if (nextState is TransformComponentState nextTransform)

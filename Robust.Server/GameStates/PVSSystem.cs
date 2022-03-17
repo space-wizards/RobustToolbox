@@ -28,6 +28,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
     [Shared.IoC.Dependency] private readonly IServerGameStateManager _stateManager = default!;
     [Shared.IoC.Dependency] private readonly SharedTransformSystem _transform = default!;
+    [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
 
     public const float ChunkSize = 8;
 
@@ -40,16 +41,6 @@ internal sealed partial class PVSSystem : EntitySystem
     /// Is view culling enabled, or will we send the whole map?
     /// </summary>
     public bool CullingEnabled { get; private set; }
-
-    /// <summary>
-    /// How many new entities we can send per tick (dont wanna nuke the clients mailbox).
-    /// </summary>
-    private int _newEntityBudget;
-
-    /// <summary>
-    /// How many entered entities can be sent per tick.
-    /// </summary>
-    private int _entityBudget;
 
     /// <summary>
     /// Size of the side of the view bounds square.
@@ -97,10 +88,18 @@ internal sealed partial class PVSSystem : EntitySystem
         base.Initialize();
 
         _entityPvsCollection = RegisterPVSCollection<EntityUid>();
-        _mapManager.MapCreated += OnMapCreated;
-        _mapManager.MapDestroyed += OnMapDestroyed;
-        _mapManager.OnGridCreated += OnGridCreated;
-        _mapManager.OnGridRemoved += OnGridRemoved;
+
+        SubscribeLocalEvent<MapChangedEvent>(ev =>
+        {
+            if (ev.Created)
+                OnMapCreated(ev);
+            else
+                OnMapDestroyed(ev);
+        });
+
+        SubscribeLocalEvent<GridInitializeEvent>(OnGridCreated);
+        SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoved);
+
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
         SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
@@ -108,32 +107,21 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
         _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
-        _configManager.OnValueChanged(CVars.NetPVSNewEntityBudget, OnNewEntityBudgetChanged, true);
-        _configManager.OnValueChanged(CVars.NetPVSEntityBudget, OnEntityBudgetChanged, true);
 
         InitializeDirty();
     }
 
-    private void OnEntityBudgetChanged(int obj)
-    {
-        _entityBudget = obj;
-    }
 
     public override void Shutdown()
     {
         base.Shutdown();
 
         UnregisterPVSCollection(_entityPvsCollection);
-        _mapManager.MapCreated -= OnMapCreated;
-        _mapManager.MapDestroyed -= OnMapDestroyed;
-        _mapManager.OnGridCreated -= OnGridCreated;
-        _mapManager.OnGridRemoved -= OnGridRemoved;
         _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
         EntityManager.EntityDeleted -= OnEntityDeleted;
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
         _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
-        _configManager.UnsubValueChanged(CVars.NetPVSEntityBudget, OnEntityBudgetChanged);
 
         ShutdownDirty();
     }
@@ -148,10 +136,6 @@ internal sealed partial class PVSSystem : EntitySystem
         CullingEnabled = value;
     }
 
-    private void OnNewEntityBudgetChanged(int obj)
-    {
-        _newEntityBudget = obj;
-    }
 
     public void ProcessCollections()
     {
@@ -265,16 +249,17 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    private void OnGridRemoved(MapId mapId, GridId gridId)
+    private void OnGridRemoved(GridRemovalEvent ev)
     {
         foreach (var pvsCollection in _pvsCollections)
         {
-            pvsCollection.RemoveGrid(gridId);
+            pvsCollection.RemoveGrid(ev.GridId);
         }
     }
 
-    private void OnGridCreated(MapId mapId, GridId gridId)
+    private void OnGridCreated(GridInitializeEvent ev)
     {
+        var gridId = ev.GridId;
         foreach (var pvsCollection in _pvsCollections)
         {
             pvsCollection.AddGrid(gridId);
@@ -284,7 +269,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _entityPvsCollection.UpdateIndex(euid);
     }
 
-    private void OnMapDestroyed(object? sender, MapEventArgs e)
+    private void OnMapDestroyed(MapChangedEvent e)
     {
         foreach (var pvsCollection in _pvsCollections)
         {
@@ -292,7 +277,7 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    private void OnMapCreated(object? sender, MapEventArgs e)
+    private void OnMapCreated(MapChangedEvent e)
     {
         foreach (var pvsCollection in _pvsCollections)
         {
@@ -476,6 +461,8 @@ internal sealed partial class PVSSystem : EntitySystem
         EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
+        var newEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSNewEntityBudget);
+        var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
         var newEntitiesSent = 0;
         var entitiesSent = 0;
         var playerVisibleSet = _playerVisibleSets[session];
@@ -491,7 +478,7 @@ internal sealed partial class PVSSystem : EntitySystem
             foreach (var rootNode in rootNodes)
             {
                 RecursivelyAddTreeNode(in rootNode, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                        ref entitiesSent, cache.Value.metadata);
+                        ref entitiesSent, cache.Value.metadata, in enteredEntityBudget, in newEntityBudget);
             }
             cache.Value.tree.ReturnRootNodes(rootNodes);
         }
@@ -501,7 +488,7 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             var uid = globalEnumerator.Current;
             RecursivelyAddOverride(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery);
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
         globalEnumerator.Dispose();
 
@@ -510,14 +497,14 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             var uid = localEnumerator.Current;
             RecursivelyAddOverride(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery);
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
         localEnumerator.Dispose();
 
         foreach (var viewerEntity in viewerEntities)
         {
             RecursivelyAddOverride(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery);
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
 
         var entityStates = new List<EntityState>();
@@ -569,7 +556,9 @@ internal sealed partial class PVSSystem : EntitySystem
         GameTick fromTick,
         ref int newEntitiesSent,
         ref int totalEnteredEntities,
-        Dictionary<EntityUid, MetaDataComponent> metaDataCache)
+        Dictionary<EntityUid, MetaDataComponent> metaDataCache,
+        in int enteredEntityBudget,
+        in int newEntityBudget)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -581,7 +570,7 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             //are we new?
             var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
-                ref totalEnteredEntities);
+                ref totalEnteredEntities, in enteredEntityBudget, in newEntityBudget);
 
             if (budgetFail) return;
 
@@ -592,7 +581,7 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var child in node.Children)
         {
             RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
-                ref totalEnteredEntities, metaDataCache);
+                ref totalEnteredEntities, metaDataCache, in enteredEntityBudget, in newEntityBudget);
         }
     }
 
@@ -605,7 +594,9 @@ internal sealed partial class PVSSystem : EntitySystem
         ref int newEntitiesSent,
         ref int totalEnteredEntities,
         EntityQuery<MetaDataComponent> metaQuery,
-        EntityQuery<TransformComponent> transQuery)
+        EntityQuery<TransformComponent> transQuery,
+        in int enteredEntityBudget,
+        in int newEntityBudget)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -616,10 +607,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
         var parent = transQuery.GetComponent(uid).ParentUid;
         if (parent.IsValid() && !RecursivelyAddOverride(in parent, seenSet, previousVisibleEnts, toSend, fromTick,
-                ref newEntitiesSent, ref totalEnteredEntities, metaQuery, transQuery))
+                ref newEntitiesSent, ref totalEnteredEntities, metaQuery, transQuery, in enteredEntityBudget, in newEntityBudget))
             return false;
 
-        var (entered, _) = ProcessEntry(in uid, seenSet, previousVisibleEnts, ref newEntitiesSent, ref totalEnteredEntities);
+        var (entered, _) = ProcessEntry(in uid, seenSet, previousVisibleEnts, ref newEntitiesSent,
+            ref totalEnteredEntities, in enteredEntityBudget, in newEntityBudget);
 
         AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, entered);
         return true;
@@ -628,14 +620,14 @@ internal sealed partial class PVSSystem : EntitySystem
     private (bool entered, bool budgetFail) ProcessEntry(in EntityUid uid, HashSet<EntityUid> seenSet,
         Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
         ref int newEntitiesSent,
-        ref int totalEnteredEntities)
+        ref int totalEnteredEntities, in int enteredEntityBudget, in int newEntityBudget)
     {
         var @new = !seenSet.Contains(uid);
         var entered = @new | !previousVisibleEnts.Remove(uid);
 
         if (entered)
         {
-            if (totalEnteredEntities >= _entityBudget)
+            if (totalEnteredEntities >= enteredEntityBudget)
                 return (entered, true);
 
             totalEnteredEntities++;
@@ -644,7 +636,7 @@ internal sealed partial class PVSSystem : EntitySystem
         if (@new)
         {
             //we just entered pvs, do we still have enough budget to send us?
-            if(newEntitiesSent >= _newEntityBudget)
+            if(newEntitiesSent >= newEntityBudget)
                 return (entered, true);
 
             newEntitiesSent++;

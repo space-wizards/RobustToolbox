@@ -24,14 +24,29 @@ internal partial class MapManager
         _movedGrids[mapId].Clear();
     }
 
-    private void InitializeGridTrees()
+    private void StartupGridTrees()
     {
+        // Needs to be done on mapmanager startup because the eventbus will clear on shutdown
+        // (and mapmanager initialize doesn't run upon connecting to a server every time).
         EntityManager.EventBus.SubscribeEvent<GridInitializeEvent>(EventSource.Local, this, OnGridInit);
         EntityManager.EventBus.SubscribeEvent<GridRemovalEvent>(EventSource.Local, this, OnGridRemove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, MoveEvent>(OnGridMove);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, RotateEvent>(OnGridRotate);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>(OnGridMapChange);
         EntityManager.EventBus.SubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>(OnGridBoundsChange);
+    }
+
+    private void ShutdownGridTrees()
+    {
+        EntityManager.EventBus.UnsubscribeEvent<GridInitializeEvent>(EventSource.Local, this);
+        EntityManager.EventBus.UnsubscribeEvent<GridRemovalEvent>(EventSource.Local, this);
+        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, MoveEvent>();
+        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, RotateEvent>();
+        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, EntMapIdChangedMessage>();
+        EntityManager.EventBus.UnsubscribeLocalEvent<MapGridComponent, GridFixtureChangeEvent>();
+
+        DebugTools.Assert(_gridTrees.Count == 0);
+        DebugTools.Assert(_movedGrids.Count == 0);
     }
 
     private void OnMapCreatedGridTree(MapEventArgs e)

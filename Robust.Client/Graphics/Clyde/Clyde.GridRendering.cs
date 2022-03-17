@@ -1,7 +1,5 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
-using System.Diagnostics;
 using OpenToolkit.Graphics.OpenGL4;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -101,13 +99,18 @@ namespace Robust.Client.Graphics.Clyde
                     if (tile.IsEmpty)
                         continue;
 
-                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile.TypeId);
-                    if (regionMaybe == null)
+                    var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
+
+                    Box2 region;
+                    if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
                     {
-                        continue;
+                        region = _tileDefinitionManager.ErrorTileRegion;
+                    }
+                    else
+                    {
+                        region = regionMaybe[tile.Variant];
                     }
 
-                    var region = regionMaybe.Value;
                     var gx = x + cScaled.X;
                     var gy = y + cScaled.Y;
 
@@ -186,7 +189,7 @@ namespace Robust.Client.Graphics.Clyde
             // Don't need to set it if we don't have an entry since lack of an entry is treated as dirty.
         }
 
-        private void _updateOnGridModified(object? sender, GridChangedEventArgs args)
+        private void _updateOnGridModified(GridModifiedEvent args)
         {
             foreach (var (pos, _) in args.Modified)
             {
@@ -196,21 +199,23 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
-        private void _updateTileMapOnUpdate(object? sender, TileChangedEventArgs args)
+        private void _updateTileMapOnUpdate(TileChangedEvent args)
         {
             var grid = _mapManager.GetGrid(args.NewTile.GridIndex);
             var chunk = grid.GridTileToChunkIndices(new Vector2i(args.NewTile.X, args.NewTile.Y));
             _setChunkDirty(grid, chunk);
         }
 
-        private void _updateOnGridCreated(MapId mapId, GridId gridId)
+        private void _updateOnGridCreated(GridStartupEvent ev)
         {
+            var gridId = ev.GridId;
             Logger.DebugS("grid", $"Adding {gridId} to grid renderer");
             _mapChunkData.Add(gridId, new Dictionary<Vector2i, MapChunkData>());
         }
 
-        private void _updateOnGridRemoved(MapId mapId, GridId gridId)
+        private void _updateOnGridRemoved(GridRemovalEvent ev)
         {
+            var gridId = ev.GridId;
             Logger.DebugS("grid", $"Removing {gridId} from grid renderer");
 
             var data = _mapChunkData[gridId];

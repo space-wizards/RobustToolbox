@@ -12,11 +12,6 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager : IPauseManager
     {
-        /// <summary>
-        ///     The default <see cref="MapId" /> that is always available. Equivalent to SS13 Null space.
-        /// </summary>
-        MapId DefaultMap { get; }
-
         IEnumerable<IMapGrid> GetAllGrids();
 
         /// <summary>
@@ -153,25 +148,31 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     A tile is being modified.
         /// </summary>
+        [Obsolete("Subscribe to TileChangedEvent on the event bus.")]
         event EventHandler<TileChangedEventArgs> TileChanged;
 
+        [Obsolete("Subscribe to GridStartupEvent on the event bus.")]
         event GridEventHandler OnGridCreated;
 
+        [Obsolete("Subscribe to GridRemovalEvent on the event bus.")]
         event GridEventHandler OnGridRemoved;
 
         /// <summary>
         ///     A Grid was modified.
         /// </summary>
+        [Obsolete("Subscribe to GridModifiedEvent on the event bus.")]
         event EventHandler<GridChangedEventArgs> GridChanged;
 
         /// <summary>
         ///     A new map has been created.
         /// </summary>
+        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Created is true.")]
         event EventHandler<MapEventArgs> MapCreated;
 
         /// <summary>
         ///     An existing map has been destroyed.
         /// </summary>
+        [Obsolete("Subscribe to MapChangedEvent on the event bus, and check if Destroyed is true.")]
         event EventHandler<MapEventArgs> MapDestroyed;
 
         bool HasMapEntity(MapId mapId);
@@ -179,12 +180,11 @@ namespace Robust.Shared.Map
         bool IsGrid(EntityUid uid);
         bool IsMap(EntityUid uid);
 
+        [Obsolete("Whatever this is used for, it is a terrible idea. Create a new map and get it's MapId.")]
         MapId NextMapId();
-        GridId NextGridId();
         EntityUid GetGridEuid(GridId id);
         IMapGridComponent GetGridComp(GridId id);
         IMapGridComponent GetGridComp(EntityUid euid);
-        IMapGrid GetGrid(EntityUid euid);
         bool TryGetGrid(EntityUid euid, [NotNullWhen(true)] out IMapGrid? grid);
         bool GridExists(EntityUid euid);
     }

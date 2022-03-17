@@ -74,14 +74,13 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<EntityTerminatingEvent>(OnTerminate);
 
             EntityManager.EntityInitialized += OnEntityInit;
-            _mapManager.MapCreated += OnMapCreated;
+            SubscribeLocalEvent<MapChangedEvent>(OnMapCreated);
         }
 
         public override void Shutdown()
         {
             base.Shutdown();
             EntityManager.EntityInitialized -= OnEntityInit;
-            _mapManager.MapCreated -= OnMapCreated;
         }
 
         private void OnAnchored(ref AnchorStateChangedEvent args)
@@ -144,8 +143,11 @@ namespace Robust.Shared.GameObjects
             );
         }
 
-        private void OnMapCreated(object? sender, MapEventArgs eventArgs)
+        private void OnMapCreated(MapChangedEvent eventArgs)
         {
+            if(eventArgs.Destroyed)
+                return;
+
             if (eventArgs.Map == MapId.Nullspace) return;
 
             EntityManager.EnsureComponent<EntityLookupComponent>(_mapManager.GetMapEntityId(eventArgs.Map));

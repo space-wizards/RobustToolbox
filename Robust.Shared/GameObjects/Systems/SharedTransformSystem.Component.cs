@@ -29,6 +29,45 @@ public abstract partial class SharedTransformSystem
         return GetWorldMatrix(xformQuery.GetComponent(uid));
     }
 
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix3 GetWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return component.WorldMatrix;
+    }
+    #endregion
+
+    #region World Position
+
+    [Pure]
+    public Vector2 GetWorldPosition(EntityUid uid)
+    {
+        return Transform(uid).WorldPosition;
+    }
+
+    // Temporary until it's moved here
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetWorldPosition(TransformComponent component)
+    {
+        return component.WorldPosition;
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetWorldPosition(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
+    {
+        return GetWorldPosition(xformQuery.GetComponent(uid));
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Vector2 GetWorldPosition(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return component.WorldPosition;
+    }
+
     #endregion
 
     #region World Rotation
@@ -54,6 +93,13 @@ public abstract partial class SharedTransformSystem
         return GetWorldRotation(xformQuery.GetComponent(uid));
     }
 
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Angle GetWorldRotation(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return component.WorldRotation;
+    }
+
     #endregion
 
     #region Inverse World Matrix
@@ -77,6 +123,13 @@ public abstract partial class SharedTransformSystem
     public Matrix3 GetInvWorldMatrix(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
     {
         return GetInvWorldMatrix(xformQuery.GetComponent(uid));
+    }
+
+    [Pure]
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public Matrix3 GetInvWorldMatrix(TransformComponent component, EntityQuery<TransformComponent> xformQuery)
+    {
+        return component.InvWorldMatrix;
     }
 
     #endregion

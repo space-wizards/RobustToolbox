@@ -634,26 +634,25 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = _prototypeTypes[type];
-                var id = datanode.Get<ValueDataNode>("id").Value;
+                //todo paul this is a shit solution, do it properly
+                var tempPrototype = (IPrototype)_serializationManager.Read(prototypeType, datanode, skipHook: true)!;
 
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(id))
+                if (!overwrite && _prototypes[prototypeType].ContainsKey(tempPrototype.ID))
                 {
-                    throw new PrototypeLoadException($"Duplicate ID: '{id}'");
+                    throw new PrototypeLoadException($"Duplicate ID: '{tempPrototype.ID}'");
                 }
 
-                _prototypeResults[prototypeType][id] = datanode;
-                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
+                _prototypeResults[prototypeType][tempPrototype.ID] = datanode;
+                if (tempPrototype is IInheritingPrototype inheritingPrototype)
                 {
-                    //todo paul datafield might not always be called "parent"
-                    datanode.TryGet("parent", out ValueDataNode? parentNode);
-                    _inheritanceTrees[prototypeType].AddId(id, parentNode?.Value, true);
+                    _inheritanceTrees[prototypeType].AddId(tempPrototype.ID, inheritingPrototype.Parent, true);
                 }
 
                 if (changed == null) continue;
 
                 if (!changed.TryGetValue(prototypeType, out var set))
                     changed[prototypeType] = set = new HashSet<string>();
-                set.Add(id);
+                set.Add(tempPrototype.ID);
             }
         }
 

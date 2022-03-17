@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -47,8 +48,8 @@ public partial class SerializationManager
             var dependencyCollectionConst = Expression.Constant(instance.DependencyCollection);
 
             var typeParam = Expression.Parameter(typeof(Type), "type");
-            var parentParam = Expression.Parameter(nodeType, "parent");
-            var childParam = Expression.Parameter(nodeType, "child");
+            var parentParam = Expression.Parameter(typeof(DataNode), "parent");
+            var childParam = Expression.Parameter(typeof(DataNode), "child");
             //todo paul serializers in the context should also override default serializers for array etc
             var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
 
@@ -64,9 +65,22 @@ public partial class SerializationManager
                     "PushInheritance",
                     Type.EmptyTypes,
                     instanceConst,
-                    childParam,
-                    parentParam,
+                    Expression.Convert(childParam, nodeType),
+                    Expression.Convert(parentParam, nodeType),
                     dependencyCollectionConst,
+                    contextParam);
+            }
+            else if (nodeType == typeof(MappingDataNode) && instance.TryGetDefinition(value, out var dataDefinition))
+            {
+                var definitionConst = Expression.Constant(dataDefinition, typeof(DataDefinition));
+
+                expression = Expression.Call(
+                    instanceConst,
+                    nameof(PushInheritanceDefinition),
+                    Type.EmptyTypes,
+                    Expression.Convert(childParam, nodeType),
+                    Expression.Convert(parentParam, nodeType),
+                    definitionConst,
                     contextParam);
             }
             else
@@ -77,14 +91,14 @@ public partial class SerializationManager
                         instanceConst,
                         nameof(PushInheritanceSequence),
                         Type.EmptyTypes,
-                        childParam,
-                        parentParam),
+                        Expression.Convert(childParam, nodeType),
+                        Expression.Convert(parentParam, nodeType)),
                     MappingDataNode => Expression.Call(
                         instanceConst,
                         nameof(PushInheritanceMapping),
                         Type.EmptyTypes,
-                        childParam,
-                        parentParam),
+                        Expression.Convert(childParam, nodeType),
+                        Expression.Convert(parentParam, nodeType)),
                     _ => childParam
                 };
             }
@@ -98,14 +112,42 @@ public partial class SerializationManager
         }, (node, this));
     }
 
-    private SequenceDataNode PushInheritanceSequence(SequenceDataNode child, SequenceDataNode parent)
+    private SequenceDataNode PushInheritanceSequence(SequenceDataNode child, SequenceDataNode _)
     {
-        return child; //todo implement different inheritancebehaviours
+        return child; //todo implement different inheritancebehaviours for yamlfield
     }
 
-    private MappingDataNode PushInheritanceMapping(MappingDataNode child, MappingDataNode parent)
+    private MappingDataNode PushInheritanceMapping(MappingDataNode child, MappingDataNode _)
     {
-        return child; //todo implement different inheritancebehaviours
+        return child; //todo implement different inheritancebehaviours for yamlfield
+    }
+
+    private MappingDataNode PushInheritanceDefinition(MappingDataNode child, MappingDataNode parent,
+        DataDefinition definition, ISerializationContext? context = null)
+    {
+        var newMapping = child.Copy();
+        foreach (var field in definition.BaseFieldDefinitions)
+        {
+            if (field.InheritanceBehavior == InheritanceBehavior.Never) continue;
+
+            var key = new ValueDataNode(field.Attribute.Tag);
+            if (parent.TryGetValue(key, out var parentValue))
+            {
+                if (newMapping.TryGetValue(key, out var childValue))
+                {
+                    if (field.InheritanceBehavior == InheritanceBehavior.Always)
+                    {
+                        newMapping[key] = PushComposition(field.FieldType, new[] { parentValue }, childValue, context);
+                    }
+                }
+                else
+                {
+                    newMapping.Add(key, parentValue);
+                }
+            }
+        }
+
+        return newMapping;
     }
 
 }

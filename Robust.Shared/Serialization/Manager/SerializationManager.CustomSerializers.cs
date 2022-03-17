@@ -56,7 +56,7 @@ namespace Robust.Shared.Serialization.Manager
                     Expression.Convert(nodeParam, tuple.node),
                     contextParam,
                     skipHookParam,
-                    Expression.Convert(valueParam, tuple.value));
+                    valueParam);
 
                 return Expression.Lambda<ReadSerializerDelegate>(
                     Expression.Convert(call, typeof(object)),
@@ -144,12 +144,12 @@ namespace Robust.Shared.Serialization.Manager
             TNode node,
             ISerializationContext? context = null,
             bool skipHook = false,
-            T? value = default)
+            object? value = default)
             where TSerializer : ITypeReader<T, TNode>
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Read(this, node, DependencyCollection, skipHook, context, value);
+            return serializer.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (T)value);
         }
 
         private DataNode WriteWithSerializerRaw(

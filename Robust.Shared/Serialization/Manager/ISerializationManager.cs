@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -24,7 +25,7 @@ namespace Robust.Shared.Serialization.Manager
         /// <param name="type">The type to check for.</param>
         /// <returns>True if it does, false otherwise.</returns>
         bool HasDataDefinition(Type type);
-
+        
         #region Validation
 
         /// <summary>

@@ -330,12 +330,13 @@ namespace Robust.Shared.Prototypes
                 {
                     if (!pushed.ContainsKey(type))
                         pushed[type] = new HashSet<string>();
-                    if (!pushed[type].Contains(id))
+                    if (pushed[type].Contains(id))
                     {
                         continue;
                     }
 
                     var set = new HashSet<string>();
+                    set.Add(id);
                     PushInheritance(type, id, _inheritanceTrees[type].GetParent(id), set);
                     foreach (var changedId in set)
                     {
@@ -405,6 +406,8 @@ namespace Robust.Shared.Prototypes
             {
                 PushInheritanceWithoutRecursion(type, id, parent, changed);
             }
+
+            if(!_inheritanceTrees[type].HasId(id)) return;
 
             foreach (var child in _inheritanceTrees[type].Children(id))
             {
@@ -639,10 +642,11 @@ namespace Robust.Shared.Prototypes
                 }
 
                 _prototypeResults[prototypeType][id] = datanode;
-                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)) && datanode.TryGet("parent", out ValueDataNode? parentNode))
+                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
                     //todo paul datafield might not always be called "parent"
-                    _inheritanceTrees[prototypeType].AddId(id, parentNode.Value, true);
+                    datanode.TryGet("parent", out ValueDataNode? parentNode);
+                    _inheritanceTrees[prototypeType].AddId(id, parentNode?.Value, true);
                 }
 
                 if (changed == null) continue;

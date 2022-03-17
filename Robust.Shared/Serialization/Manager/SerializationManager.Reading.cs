@@ -187,7 +187,7 @@ namespace Robust.Shared.Serialization.Manager
                             skipHookParam),
                         ValueDataNode when nullable && !value.IsValueType => Expression.Call(
                             instanceConst,
-                            nameof(ReadWithTypeReaderNullable),
+                            nameof(ReadWithTypeReaderNullableClass),
                             new[] { value },
                             Expression.Convert(nodeParam, typeof(ValueDataNode)),
                             readerConst,
@@ -375,16 +375,17 @@ namespace Robust.Shared.Serialization.Manager
             return value;
         }
 
-        private TValue? ReadWithTypeReaderNullable<TValue>(
+        private TValue? ReadWithTypeReaderNullableClass<TValue>(
             ValueDataNode node,
             ITypeReader<TValue, ValueDataNode> reader,
             ISerializationContext? context = null,
             bool skipHook = false,
             object? value = null)
+        where TValue : class
         {
             if (node.Value == "null")
             {
-                return default; //todo paul this default should be null
+                return null;
             }
 
             return ReadWithTypeReader(node, reader, context, skipHook, value);
@@ -419,7 +420,7 @@ namespace Robust.Shared.Serialization.Manager
                 reader = (ITypeReader<TValue, TNode>) readerUnCast;
             }
 
-            return reader.Read(this, node, DependencyCollection, skipHook, context, (TValue?) value);
+            return reader.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (TValue) value);
         }
 
         private TValue? ReadGenericNullable<TValue>(
@@ -456,7 +457,7 @@ namespace Robust.Shared.Serialization.Manager
                 context.TypeReaders.TryGetValue((typeof(TValue), typeof(ValueDataNode)), out var readerUnCast))
             {
                 var reader = (ITypeReader<TValue, ValueDataNode>) readerUnCast;
-                return reader.Read(this, node, DependencyCollection, skipHook, context, (TValue?) instance);
+                return reader.Read(this, node, DependencyCollection, skipHook, context, instance == null ? default : (TValue)instance);
             }
 
             if (definition == null)

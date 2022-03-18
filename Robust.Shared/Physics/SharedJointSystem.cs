@@ -9,6 +9,7 @@ using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Dynamics.Joints;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
@@ -48,11 +49,15 @@ namespace Robust.Shared.Physics
         // To avoid issues with component states we'll queue up all dirty joints and check it every tick to see if
         // we can delete the component.
         private HashSet<JointComponent> _dirtyJoints = new();
+        private HashSet<Joint> _addedJoints = new();
+
+        private ISawmill _sawmill = default!;
 
         public override void Initialize()
         {
             base.Initialize();
 
+            _sawmill = Logger.GetSawmill("physics");
             UpdatesOutsidePrediction = true;
 
             UpdatesBefore.Add(typeof(SharedPhysicsSystem));
@@ -102,6 +107,13 @@ namespace Robust.Shared.Physics
         {
             base.Update(frameTime);
 
+            foreach (var joint in _addedJoints)
+            {
+                InitJoint(joint);
+            }
+
+            _addedJoints.Clear();
+
             foreach (var joint in _dirtyJoints)
             {
                 if (joint.Deleted || joint.JointCount != 0) continue;
@@ -109,6 +121,61 @@ namespace Robust.Shared.Physics
             }
 
             _dirtyJoints.Clear();
+        }
+
+        private void InitJoint(Joint joint)
+        {
+            var bodyA = joint.BodyA;
+            var bodyB = joint.BodyB;
+
+            var jointComponentA = EntityManager.EnsureComponent<JointComponent>(bodyA.Owner);
+            var jointComponentB = EntityManager.EnsureComponent<JointComponent>(bodyB.Owner);
+            var jointsA = jointComponentA.Joints;
+            var jointsB = jointComponentB.Joints;
+
+            if (jointsA.ContainsKey(joint.ID))
+            {
+                // If they both already have it we should be gucci
+                // This can occur because of client states coming in blah blah
+                // The reason for this is we defer everything until Update
+                // (and the reason we defer is to avoid modifying components during iteration when we do the EnsureComponent)
+                if (jointsB.ContainsKey(joint.ID)) return;
+
+                _sawmill.Error($"Existing joint {joint.ID} on {bodyA.Owner}");
+                return;
+            }
+
+            if (jointsB.ContainsKey(joint.ID))
+            {
+                _sawmill.Error($"Existing joint {joint.ID} on {bodyB.Owner}");
+                return;
+            }
+
+            _sawmill.Debug($"Added joint {joint.ID}");
+
+            jointsA.Add(joint.ID, joint);
+            jointsB.Add(joint.ID, joint);
+
+            // If the joint prevents collisions, then flag any contacts for filtering.
+            if (!joint.CollideConnected)
+            {
+                FilterContactsForJoint(joint);
+            }
+
+            bodyA.WakeBody();
+            bodyB.WakeBody();
+            Dirty(bodyA);
+            Dirty(bodyB);
+            Dirty(jointComponentA);
+            Dirty(jointComponentB);
+            // Note: creating a joint doesn't wake the bodies.
+
+            // Raise broadcast last so we can do both sides of directed first.
+            var vera = new JointAddedEvent(joint, bodyA, bodyB);
+            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
+            var smug = new JointAddedEvent(joint, bodyB, bodyA);
+            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
+            EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
         }
 
         private static string GetJointId(Joint joint)
@@ -262,72 +329,26 @@ namespace Robust.Shared.Physics
             if (mapidA == MapId.Nullspace ||
                 mapidA != EntityManager.GetComponent<TransformComponent>(bodyB.Owner).MapID)
             {
-                Logger.ErrorS("physics", $"Tried to add joint to ineligible bodies");
+                _sawmill.Error($"Tried to add joint to ineligible bodies");
                 return;
             }
 
             if (string.IsNullOrEmpty(joint.ID))
             {
-                Logger.ErrorS("physics", $"Can't add a joint with no ID");
+                _sawmill.Error($"Can't add a joint with no ID");
                 DebugTools.Assert($"Can't add a joint with no ID");
                 return;
             }
 
-            var jointComponentA = EntityManager.EnsureComponent<JointComponent>(bodyA.Owner);
-            var jointComponentB = EntityManager.EnsureComponent<JointComponent>(bodyB.Owner);
-            var jointsA = jointComponentA.Joints;
-            var jointsB = jointComponentB.Joints;
-
-            if (jointsA.ContainsKey(joint.ID))
-            {
-                // If they both already have it we should be gucci
-                // This can occur because of client states coming in blah blah
-                // The reason for this is we defer everything until Update
-                // (and the reason we defer is to avoid modifying components during iteration when we do the EnsureComponent)
-                if (jointsB.ContainsKey(joint.ID)) return;
-
-                Logger.ErrorS("physics", $"Existing joint {joint.ID} on {bodyA.Owner}");
-                return;
-            }
-
-            if (jointsB.ContainsKey(joint.ID))
-            {
-                Logger.ErrorS("physics", $"Existing joint {joint.ID} on {bodyB.Owner}");
-                return;
-            }
-            Logger.DebugS("physics", $"Added joint {joint.ID}");
-
-
-            jointsA.Add(joint.ID, joint);
-            jointsB.Add(joint.ID, joint);
-
-            // If the joint prevents collisions, then flag any contacts for filtering.
-            if (!joint.CollideConnected)
-            {
-                FilterContactsForJoint(joint);
-            }
-
-            bodyA.WakeBody();
-            bodyB.WakeBody();
-            bodyA.Dirty();
-            bodyB.Dirty();
-            jointComponentA.Dirty();
-            jointComponentB.Dirty();
-            // Note: creating a joint doesn't wake the bodies.
-
-            // Raise broadcast last so we can do both sides of directed first.
-            var vera = new JointAddedEvent(joint, bodyA, bodyB);
-            EntityManager.EventBus.RaiseLocalEvent(bodyA.Owner, vera, false);
-            var smug = new JointAddedEvent(joint, bodyB, bodyA);
-            EntityManager.EventBus.RaiseLocalEvent(bodyB.Owner, smug, false);
-            EntityManager.EventBus.RaiseEvent(EventSource.Local, vera);
+            // Need to defer this for prediction reasons, yay!
+            _addedJoints.Add(joint);
         }
 
         public void ClearJoints(PhysicsComponent body)
         {
-            if (!EntityManager.HasComponent<JointComponent>(body.Owner)) return;
+            if (!TryComp<JointComponent>(body.Owner, out var joint)) return;
 
-            EntityManager.RemoveComponent<JointComponent>(body.Owner);
+            _dirtyJoints.Add(joint);
         }
 
         public void RemoveJoint(Joint joint)
@@ -357,7 +378,7 @@ namespace Robust.Shared.Physics
                 return;
             }
 
-            Logger.DebugS("physics", $"Removed joint {joint.ID}");
+            _sawmill.Debug($"Removed joint {joint.ID}");
 
             // Wake up connected bodies.
             if (EntityManager.TryGetComponent<PhysicsComponent>(bodyAUid, out var bodyA) &&
@@ -374,12 +395,12 @@ namespace Robust.Shared.Physics
 
             if (!jointComponentA.Deleted)
             {
-                jointComponentA.Dirty(EntityManager);
+                Dirty(jointComponentA);
             }
 
             if (!jointComponentB.Deleted)
             {
-                jointComponentB.Dirty(EntityManager);
+                Dirty(jointComponentB);
             }
 
             if (jointComponentA.Deleted && jointComponentB.Deleted)

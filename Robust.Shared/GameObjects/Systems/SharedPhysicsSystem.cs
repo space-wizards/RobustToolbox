@@ -3,6 +3,7 @@ using Prometheus;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -50,9 +51,15 @@ namespace Robust.Shared.GameObjects
         public bool MetricsEnabled { get; protected set; }
         private readonly Stopwatch _stopwatch = new();
 
+        private ISawmill _sawmill = default!;
+
         public override void Initialize()
         {
             base.Initialize();
+
+            _sawmill = Logger.GetSawmill("physics");
+            _sawmill.Level = LogLevel.Info;
+
             SubscribeLocalEvent<MapChangedEvent>(ev =>
             {
                 if (ev.Created)
@@ -111,7 +118,7 @@ namespace Robust.Shared.GameObjects
             {
                 return;
             }
-                
+
             if (body.CanCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
 
@@ -259,7 +266,7 @@ namespace Robust.Shared.GameObjects
             {
                 comp.ProcessQueue();
             }
-            
+
             _physicsManager.ClearTransforms();
         }
 

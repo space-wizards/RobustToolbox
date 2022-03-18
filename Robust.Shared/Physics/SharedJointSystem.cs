@@ -168,6 +168,10 @@ namespace Robust.Shared.Physics
             Dirty(bodyB);
             Dirty(jointComponentA);
             Dirty(jointComponentB);
+
+            // Also flag these for checking juusssttt in case.
+            _dirtyJoints.Add(jointComponentA);
+            _dirtyJoints.Add(jointComponentB);
             // Note: creating a joint doesn't wake the bodies.
 
             // Raise broadcast last so we can do both sides of directed first.

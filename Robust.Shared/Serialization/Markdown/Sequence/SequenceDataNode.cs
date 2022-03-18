@@ -114,7 +114,7 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
         {
             var set = new HashSet<DataNode>(node._nodes);
             var newList = new List<DataNode>();
-            foreach (var nodeNode in node._nodes)
+            foreach (var nodeNode in _nodes)
             {
                 if (!set.Contains(nodeNode)) newList.Add(nodeNode);
             }

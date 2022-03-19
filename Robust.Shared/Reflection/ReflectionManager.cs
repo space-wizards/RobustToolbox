@@ -127,7 +127,7 @@ namespace Robust.Shared.Reflection
                 return ret;
             }
 
-            throw new ArgumentException($"Unable to find type: {type}.");
+            throw new ArgumentException($"Unable to find type: {name}.");
         }
 
         public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)

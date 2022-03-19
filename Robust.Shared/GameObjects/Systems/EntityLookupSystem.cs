@@ -71,6 +71,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         /// Updates the entity's AABB. Uses <see cref="ILookupWorldBox2Component"/>
         /// </summary>
+        [UsedImplicitly]
         public void UpdateBounds(EntityUid uid, TransformComponent? xform = null)
         {
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();

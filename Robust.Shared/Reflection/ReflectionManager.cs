@@ -127,7 +127,7 @@ namespace Robust.Shared.Reflection
                 return ret;
             }
 
-            throw new ArgumentException("Unable to find type.");
+            throw new ArgumentException($"Unable to find type: {type}.");
         }
 
         public bool TryLooseGetType(string name, [NotNullWhen(true)] out Type? type)
@@ -205,7 +205,7 @@ namespace Robust.Shared.Reflection
                 }
             }
 
-            throw new ArgumentException("Could not resolve enum reference.");
+            throw new ArgumentException($"Could not resolve enum reference: {reference}.");
         }
 
         public Type? YamlTypeTagLookup(Type baseType, string typeName)

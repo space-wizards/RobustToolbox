@@ -68,7 +68,8 @@ namespace Robust.Server.Maps
                     {
                         var tile = chunk.GetTile(x, y);
                         writer.Write(tile.TypeId);
-                        writer.Write(tile.Data);
+                        writer.Write((byte)tile.Flags);
+                        writer.Write(tile.Variant);
                     }
                 }
             }
@@ -76,38 +77,10 @@ namespace Robust.Server.Maps
             return Convert.ToBase64String(barr);
         }
 
-        public static MapGrid DeserializeGrid(IMapManagerInternal mapMan, MapId mapId, YamlMappingNode info,
-            YamlSequenceNode chunks, IReadOnlyDictionary<ushort, string> tileDefMapping,
+        public static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid,
+            YamlMappingNode chunkData,
+            IReadOnlyDictionary<ushort, string> tileDefMapping,
             ITileDefinitionManager tileDefinitionManager)
-        {
-            ushort csz = 0;
-            ushort tsz = 0;
-            float sgsz = 0.0f;
-
-            foreach (var kvInfo in info)
-            {
-                var key = kvInfo.Key.ToString();
-                var val = kvInfo.Value.ToString();
-                if (key == "chunksize")
-                    csz = ushort.Parse(val);
-                else if (key == "tilesize")
-                    tsz = ushort.Parse(val);
-                else if (key == "snapsize")
-                    sgsz = float.Parse(val, CultureInfo.InvariantCulture);
-            }
-
-            //TODO: Pass in options
-            var grid = mapMan.CreateUnboundGrid(mapId);
-
-            foreach (var chunkNode in chunks.Cast<YamlMappingNode>())
-            {
-                DeserializeChunk(mapMan, grid, chunkNode, tileDefMapping, tileDefinitionManager);
-            }
-
-            return grid;
-        }
-
-        private static void DeserializeChunk(IMapManager mapMan, IMapGridInternal grid, YamlMappingNode chunkData, IReadOnlyDictionary<ushort, string> tileDefMapping, ITileDefinitionManager tileDefinitionManager)
         {
             var indNode = chunkData["ind"];
             var tileNode = chunkData["tiles"];
@@ -129,12 +102,13 @@ namespace Robust.Server.Maps
                 for (ushort x = 0; x < grid.ChunkSize; x++)
                 {
                     var id = reader.ReadUInt16();
-                    var data = reader.ReadUInt16();
+                    var flags = (TileRenderFlag)reader.ReadByte();
+                    var variant = reader.ReadByte();
 
                     var defName = tileDefMapping[id];
                     id = tileDefinitionManager[defName].TileId;
 
-                    var tile = new Tile(id, data);
+                    var tile = new Tile(id, flags, variant);
                     chunk.SetTile(x, y, tile);
                 }
             }

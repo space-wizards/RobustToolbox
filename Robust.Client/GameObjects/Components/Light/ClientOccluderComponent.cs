@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(OccluderComponent))]
-    internal sealed class ClientOccluderComponent : OccluderComponent
+    public sealed class ClientOccluderComponent : OccluderComponent
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
@@ -71,13 +71,29 @@ namespace Robust.Client.GameObjects
         {
             Occluding = OccluderDir.None;
 
-            if (Deleted || !_entityManager.GetComponent<TransformComponent>(Owner).Anchored)
+            if (Deleted)
+                return;
+
+            // Content may want to override the default behavior for occlusion.
+            var xform = _entityManager.GetComponent<TransformComponent>(Owner);
+            var ev = new OccluderDirectionsEvent
             {
+                Component = xform,
+            };
+
+            _entityManager.EventBus.RaiseLocalEvent(Owner, ref ev);
+
+            if (ev.Handled)
+            {
+                Occluding = ev.Directions;
                 return;
             }
 
-            var grid = _mapManager.GetGrid(_entityManager.GetComponent<TransformComponent>(Owner).GridID);
-            var position = _entityManager.GetComponent<TransformComponent>(Owner).Coordinates;
+            if (!xform.Anchored)
+                return;
+
+            var grid = _mapManager.GetGrid(xform.GridID);
+            var position = xform.Coordinates;
             void CheckDir(Direction dir, OccluderDir oclDir)
             {
                 foreach (var neighbor in grid.GetInDir(position, dir))
@@ -90,7 +106,7 @@ namespace Robust.Client.GameObjects
                 }
             }
 
-            var angle = _entityManager.GetComponent<TransformComponent>(Owner).LocalRotation;
+            var angle = xform.LocalRotation;
             var dirRolling = angle.GetCardinalDir();
             // dirRolling starts at effective south
 
@@ -105,15 +121,28 @@ namespace Robust.Client.GameObjects
 
             CheckDir(dirRolling, OccluderDir.East);
         }
+    }
 
-        [Flags]
-        internal enum OccluderDir : byte
-        {
-            None = 0,
-            North = 1,
-            East = 1 << 1,
-            South = 1 << 2,
-            West = 1 << 3,
-        }
+    [Flags]
+    public enum OccluderDir : byte
+    {
+        None = 0,
+        North = 1,
+        East = 1 << 1,
+        South = 1 << 2,
+        West = 1 << 3,
+    }
+
+    /// <summary>
+    /// Raised by occluders when trying to get occlusion directions.
+    /// </summary>
+    [ByRefEvent]
+    public struct OccluderDirectionsEvent
+    {
+        public bool Handled = false;
+        public OccluderDir Directions = OccluderDir.None;
+        public TransformComponent Component = default!;
+
+        public OccluderDirectionsEvent() {}
     }
 }

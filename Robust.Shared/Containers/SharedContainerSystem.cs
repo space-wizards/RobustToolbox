@@ -209,6 +209,43 @@ namespace Robust.Shared.Containers
             return false;
         }
 
+        /// <summary>
+        /// Gets the top-most container in the hierarchy for this entity, if it exists.
+        /// </summary>
+        public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform, [NotNullWhen(true)] out IContainer? container)
+        {
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+            return TryGetOuterContainer(uid, xform, out container, xformQuery);
+        }
+
+        public bool TryGetOuterContainer(EntityUid uid, TransformComponent xform,
+            [NotNullWhen(true)] out IContainer? container, EntityQuery<TransformComponent> xformQuery)
+        {
+            container = null;
+
+            if (!uid.IsValid())
+                return false;
+
+            var conQuery = EntityManager.GetEntityQuery<ContainerManagerComponent>();
+            var child = uid;
+            var parent = xform.ParentUid;
+
+            while (parent.IsValid())
+            {
+                if (conQuery.TryGetComponent(parent, out var conManager) &&
+                    conManager.TryGetContainer(child, out var parentContainer))
+                {
+                    container = parentContainer;
+                }
+
+                var parentXform = xformQuery.GetComponent(parent);
+                child = parent;
+                parent = parentXform.ParentUid;
+            }
+
+            return container != null;
+        }
+
         #endregion
 
         // Eject entities from their parent container if the parent change is done by the transform only.

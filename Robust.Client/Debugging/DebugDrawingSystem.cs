@@ -6,17 +6,21 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Debugging
 {
-    /// <inheritdoc />
-    public sealed class DebugDrawing : IDebugDrawing
+    /// <summary>
+    /// A collection of visual debug overlays for the client game.
+    /// </summary>
+    public sealed class DebugDrawingSystem : EntitySystem
     {
         [Dependency] private readonly IOverlayManager _overlayManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IEntityManager _entityManager = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
         private bool _debugPositions;
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Toggles the visual overlay of the local origin for each entity on screen.
+        /// </summary>
         public bool DebugPositions
         {
             get => _debugPositions;
@@ -42,13 +46,13 @@ namespace Robust.Client.Debugging
 
         private sealed class EntityPositionOverlay : Overlay
         {
-            private readonly IEntityLookup _lookup;
+            private readonly EntityLookupSystem _lookup;
             private readonly IEyeManager _eyeManager;
             private readonly IEntityManager _entityManager;
 
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            public EntityPositionOverlay(IEntityLookup lookup, IEyeManager eyeManager, IEntityManager entityManager)
+            public EntityPositionOverlay(EntityLookupSystem lookup, IEyeManager eyeManager, IEntityManager entityManager)
             {
                 _lookup = lookup;
                 _eyeManager = eyeManager;
@@ -61,13 +65,11 @@ namespace Robust.Client.Debugging
 
                 var worldHandle = (DrawingHandleWorld) args.DrawingHandle;
                 var viewport = _eyeManager.GetWorldViewport();
+                var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
 
                 foreach (var entity in _lookup.GetEntitiesIntersecting(_eyeManager.CurrentMap, viewport))
                 {
-                    var transform = _entityManager.GetComponent<TransformComponent>(entity);
-
-                    var center = transform.WorldPosition;
-                    var worldRotation = transform.WorldRotation;
+                    var (center, worldRotation) = xformQuery.GetComponent(entity).GetWorldPositionRotation();
 
                     var xLine = worldRotation.RotateVec(Vector2.UnitX);
                     var yLine = worldRotation.RotateVec(Vector2.UnitY);

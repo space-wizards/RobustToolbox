@@ -26,7 +26,6 @@ namespace Robust.Client
         [Dependency] private readonly IPlayerManager _playMan = default!;
         [Dependency] private readonly INetConfigurationManager _configManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _entityLookup = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IDiscordRichPresence _discord = default!;
         [Dependency] private readonly IGameTiming _timing = default!;
@@ -213,7 +212,6 @@ namespace Robust.Client
         {
             _entityManager.Startup();
             _mapManager.Startup();
-            _entityLookup.Startup();
 
             _timing.ResetSimTime();
             _timing.Paused = false;
@@ -224,7 +222,6 @@ namespace Robust.Client
             IoCManager.Resolve<INetConfigurationManager>().FlushMessages();
             _gameStates.Reset();
             _playMan.Shutdown();
-            _entityLookup.Shutdown();
             _entityManager.Shutdown();
             _mapManager.Shutdown();
             _discord.ClearPresence();

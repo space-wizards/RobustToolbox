@@ -105,14 +105,29 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void Initialize()
+        public void Initialize(bool discover = true)
         {
+            // Tempted to make this an assert
+            // However, EntityManager calls this directly so we'd need to remove that and manually call it.
+            if (_initialized) return;
+
             var excludedTypes = new HashSet<Type>();
 
             _systemDependencyCollection = new(IoCManager.Instance!);
             var subTypes = new Dictionary<Type, Type>();
             _systemTypes.Clear();
-            foreach (var type in _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes))
+            IEnumerable<Type> systems;
+
+            if (discover)
+            {
+                systems = _reflectionManager.GetAllChildren<IEntitySystem>().Concat(_extraLoadedTypes);
+            }
+            else
+            {
+                systems = _extraLoadedTypes;
+            }
+
+            foreach (var type in systems)
             {
                 Logger.DebugS("go.sys", "Initializing entity system {0}", type);
 
@@ -251,6 +266,7 @@ namespace Robust.Shared.GameObjects
 
         public void Clear()
         {
+            _extraLoadedTypes.Clear();
             _systemTypes.Clear();
             _updateOrder = Array.Empty<UpdateReg>();
             _frameUpdateOrder = Array.Empty<IEntitySystem>();

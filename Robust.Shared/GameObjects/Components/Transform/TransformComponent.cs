@@ -110,7 +110,7 @@ namespace Robust.Shared.GameObjects
                     LocalRotation = Angle.Zero;
 
                 _noLocalRotation = value;
-                Dirty();
+                Dirty(_entMan);
             }
         }
 
@@ -135,12 +135,12 @@ namespace Robust.Shared.GameObjects
                 // Set _nextRotation to null to break any active lerps if this is a client side prediction.
                 _nextRotation = null;
                 _localRotation = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
                     RebuildMatrices();
-                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation);
+                    var rotateEvent = new RotateEvent(Owner, oldRotation, _localRotation, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
                 }
                 else
@@ -210,7 +210,11 @@ namespace Robust.Shared.GameObjects
         public EntityUid ParentUid
         {
             get => _parent;
-            set => Parent = _entMan.GetComponent<TransformComponent>(value);
+            set
+            {
+                if (value == _parent) return;
+                Parent = _entMan.GetComponent<TransformComponent>(value);
+            }
         }
 
         /// <summary>
@@ -353,6 +357,10 @@ namespace Robust.Shared.GameObjects
                     _parent = value.EntityId;
                     ChangeMapId(newParent.MapID, xformQuery);
 
+                    // preserve world rotation
+                    if (LifeStage == ComponentLifeStage.Running)
+                        LocalRotation += (oldParent?.WorldRotation ?? Angle.Zero) - newParent.WorldRotation;
+
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
 
@@ -416,7 +424,7 @@ namespace Robust.Shared.GameObjects
 
                 var oldGridPos = Coordinates;
                 _localPosition = value;
-                Dirty();
+                Dirty(_entMan);
 
                 if (!DeferUpdates)
                 {
@@ -618,7 +626,7 @@ namespace Robust.Shared.GameObjects
         /// <summary>
         ///     Run MoveEvent, RotateEvent, and UpdateEntityTree updates.
         /// </summary>
-        public void RunDeferred(Box2 worldAABB)
+        public void RunDeferred()
         {
             // if we resolved to (close enough) to the OG position then no update.
             if ((_oldCoords == null || _oldCoords.Equals(Coordinates)) &&
@@ -631,14 +639,14 @@ namespace Robust.Shared.GameObjects
 
             if (_oldCoords != null)
             {
-                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this, worldAABB);
+                var moveEvent = new MoveEvent(Owner, _oldCoords.Value, Coordinates, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
                 _oldCoords = null;
             }
 
             if (_oldLocalRotation != null)
             {
-                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, worldAABB);
+                var rotateEvent = new RotateEvent(Owner, _oldLocalRotation.Value, _localRotation, this);
                 _entMan.EventBus.RaiseLocalEvent(Owner, ref rotateEvent);
                 _oldLocalRotation = null;
             }
@@ -649,6 +657,12 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public void AttachToGridOrMap()
         {
+            bool TerminatingOrDeleted(EntityUid uid)
+            {
+                return !_entMan.TryGetComponent(uid, out MetaDataComponent? meta)
+                       || meta.EntityLifeStage >= EntityLifeStage.Terminating;
+            }
+
             // nothing to do
             var oldParent = Parent;
             if (oldParent == null)
@@ -659,11 +673,13 @@ namespace Robust.Shared.GameObjects
             var mapPos = MapPosition;
 
             EntityUid newMapEntity;
-            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid))
+            if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))
             {
                 newMapEntity = mapGrid.GridEntityId;
             }
-            else if (_mapManager.HasMapEntity(mapPos.MapId))
+            else if (_mapManager.HasMapEntity(mapPos.MapId)
+                     && _mapManager.GetMapEntityIdOrThrow(mapPos.MapId) is var mapEnt
+                     && !TerminatingOrDeleted(mapEnt))
             {
                 newMapEntity = _mapManager.GetMapEntityIdOrThrow(mapPos.MapId);
             }
@@ -687,7 +703,7 @@ namespace Robust.Shared.GameObjects
             WorldPosition = mapPos.Position;
             DeferUpdates = false;
 
-            Dirty();
+            Dirty(_entMan);
         }
 
         public void DetachParentToNull()
@@ -726,7 +742,7 @@ namespace Robust.Shared.GameObjects
             // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
             MapIdChanged(oldMapId);
-            Dirty();
+            Dirty(_entMan);
         }
 
         /// <summary>
@@ -757,14 +773,13 @@ namespace Robust.Shared.GameObjects
 
             //Set Paused state
             var mapPaused = _mapManager.IsMapPaused(newMapId);
-            var metaData = _entMan.GetComponent<MetaDataComponent>(Owner);
+            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
+            var metaData = metaEnts.GetComponent(Owner);
             metaData.EntityPaused = mapPaused;
 
             MapID = newMapId;
             MapIdChanged(oldMapId);
-            var xforms = _entMan.GetEntityQuery<TransformComponent>();
-            var metaEnts = _entMan.GetEntityQuery<MetaDataComponent>();
-            UpdateChildMapIdsRecursive(MapID, mapPaused, xforms, metaEnts);
+            UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
         }
 
         private void UpdateChildMapIdsRecursive(MapId newMapId, bool mapPaused, EntityQuery<TransformComponent> xformQuery, EntityQuery<MetaDataComponent> metaQuery)
@@ -1024,7 +1039,7 @@ namespace Robust.Shared.GameObjects
                     RebuildMatrices();
                 }
 
-                Dirty();
+                Dirty(_entMan);
             }
 
             if (nextState is TransformComponentState nextTransform)
@@ -1137,24 +1152,18 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct MoveEvent
     {
-        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component, Box2? worldAABB = null)
+        public MoveEvent(EntityUid sender, EntityCoordinates oldPos, EntityCoordinates newPos, TransformComponent component)
         {
             Sender = sender;
             OldPosition = oldPos;
             NewPosition = newPos;
             Component = component;
-            WorldAABB = worldAABB;
         }
 
         public readonly EntityUid Sender;
         public readonly EntityCoordinates OldPosition;
         public readonly EntityCoordinates NewPosition;
         public readonly TransformComponent Component;
-
-        /// <summary>
-        ///     New AABB of the entity.
-        /// </summary>
-        public readonly Box2? WorldAABB;
     }
 
     /// <summary>
@@ -1163,22 +1172,18 @@ namespace Robust.Shared.GameObjects
     [ByRefEvent]
     public readonly struct RotateEvent
     {
-        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, Box2? worldAABB = null)
+        public RotateEvent(EntityUid sender, Angle oldRotation, Angle newRotation, TransformComponent xform)
         {
             Sender = sender;
             OldRotation = oldRotation;
             NewRotation = newRotation;
-            WorldAABB = worldAABB;
+            Component = xform;
         }
 
         public readonly EntityUid Sender;
         public readonly Angle OldRotation;
         public readonly Angle NewRotation;
-
-        /// <summary>
-        ///     New AABB of the entity.
-        /// </summary>
-        public readonly Box2? WorldAABB;
+        public readonly TransformComponent Component;
     }
 
     public struct TransformChildrenEnumerator : IDisposable

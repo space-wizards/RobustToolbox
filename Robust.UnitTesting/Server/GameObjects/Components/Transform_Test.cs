@@ -2,6 +2,7 @@ using System.IO;
 using System.Reflection;
 using Moq;
 using NUnit.Framework;
+using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Server.Physics;
 using Robust.Shared.GameObjects;
@@ -39,6 +40,8 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
   - type: Transform
   - type: Map
     index: 123
+  # Due to the map getting initialised last this seemed easiest to fix the test while removing the mocks.
+  - type: EntityLookup
 ";
 
         private MapId MapA;
@@ -47,18 +50,6 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
         private IMapGrid GridB = default!;
 
         private static readonly EntityCoordinates InitialPos = new(new EntityUid(1), (0, 0));
-
-        protected override void OverrideIoC()
-        {
-            base.OverrideIoC();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
-
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-        }
 
         [OneTimeSetUp]
         public void Setup()
@@ -483,28 +474,10 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(node3Trans.WorldPosition, new ApproxEqualityConstraint(new Vector2(15, 15)));
         }
 
-        [Test]
-        public void TestMapIdInitOrder()
-        {
-            // Tests that if a child initializes before its parent, MapID still gets initialized correctly.
-
-            // Set private _parent field via reflection here.
-            // This basically simulates the field getting set in ExposeData(), with way less test boilerplate.
-            var field = typeof(TransformComponent).GetField("_parent", BindingFlags.NonPublic | BindingFlags.Instance)!;
-            var parent = EntityManager.CreateEntityUninitialized("mapDummy");
-            var child1 = EntityManager.CreateEntityUninitialized("dummy");
-            var child2 = EntityManager.CreateEntityUninitialized("dummy");
-
-            field.SetValue(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child1), parent);
-            field.SetValue(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child2), child1);
-
-            EntityManager.FinishEntityInitialization(child2);
-            EntityManager.FinishEntityInitialization(child1);
-            EntityManager.FinishEntityInitialization(parent);
-
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child2).MapID, Is.EqualTo(new MapId(123)));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(child1).MapID, Is.EqualTo(new MapId(123)));
-            Assert.That(IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(parent).MapID, Is.EqualTo(new MapId(123)));
-        }
+        /*
+         * There used to be a TestMapInitOrder test here. The problem is that the actual game will probably explode if
+         * you start initialising children before parents and the test only worked because of specific setup being done
+         * to prevent this in its use case.
+         */
     }
 }

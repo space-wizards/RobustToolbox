@@ -47,7 +47,6 @@ namespace Robust.Client
             IoCManager.Register<IMapManagerInternal, NetworkedMapManager>();
             IoCManager.Register<INetworkedMapManager, NetworkedMapManager>();
             IoCManager.Register<IEntityManager, ClientEntityManager>();
-            IoCManager.Register<IEntityLookup, EntityLookup>();
             IoCManager.Register<IReflectionManager, ClientReflectionManager>();
             IoCManager.Register<IConsoleHost, ClientConsoleHost>();
             IoCManager.Register<IClientConsoleHost, ClientConsoleHost>();
@@ -72,7 +71,6 @@ namespace Robust.Client
             IoCManager.Register<IStateManager, StateManager>();
             IoCManager.Register<IUserInterfaceManager, UserInterfaceManager>();
             IoCManager.Register<IUserInterfaceManagerInternal, UserInterfaceManager>();
-            IoCManager.Register<IDebugDrawing, DebugDrawing>();
             IoCManager.Register<ILightManager, LightManager>();
             IoCManager.Register<IDiscordRichPresence, DiscordRichPresence>();
             IoCManager.Register<IMidiManager, MidiManager>();

@@ -15,7 +15,6 @@ namespace Robust.Shared.GameObjects
 {
     public abstract class SharedGridFixtureSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly FixtureSystem _fixtures = default!;
 
         private bool _enabled;

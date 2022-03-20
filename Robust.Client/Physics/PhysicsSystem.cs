@@ -37,7 +37,7 @@ namespace Robust.Client.Physics
             SimulateWorld((float) diff.TotalSeconds, true);
         }
 
-        protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        protected override void HandleMapCreated(MapChangedEvent eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
             var mapUid = MapManager.GetMapEntityId(eventArgs.Map);

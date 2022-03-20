@@ -209,8 +209,6 @@ namespace Robust.Server.GameStates
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
-                DebugTools.Assert(state.MapData?.CreatedMaps is null || (state.MapData?.CreatedMaps is not null && state.EntityStates.HasContents), "Sending new maps, but no entity state.");
-
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
                 stateUpdateMessage.State = state;

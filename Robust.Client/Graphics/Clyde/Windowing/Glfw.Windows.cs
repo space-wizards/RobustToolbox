@@ -170,6 +170,13 @@ namespace Robust.Client.Graphics.Clyde
                     mode->RefreshRate);
             }
 
+            // because macOS is a little dumpy when it comes to
+            // running stuff on the window thread, we'll have to
+            // do it here
+            public void RunActionOnWindowThread(Action action) => SendCmd(new CmdWinRunAction(action));
+
+            private void WinThreadRunAction(CmdWinRunAction cmd) => cmd.action();
+
             // glfwGetWindowMonitor only works for fullscreen windows.
             // Picks the monitor with the top-left corner of the window.
             private Monitor* MonitorForWindow(Window* window)

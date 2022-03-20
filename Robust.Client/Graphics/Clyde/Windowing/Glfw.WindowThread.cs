@@ -118,6 +118,10 @@ namespace Robust.Client.Graphics.Clyde
                     case CmdWinCursorSet cmd:
                         WinThreadWinCursorSet(cmd);
                         break;
+
+                    case CmdWinRunAction cmd:
+                        WinThreadRunAction(cmd);
+                        break;
                 }
             }
 
@@ -176,6 +180,10 @@ namespace Robust.Client.Graphics.Clyde
             private sealed record CmdWinSetTitle(
                 nint Window,
                 string Title
+            ) : CmdBase;
+
+            private sealed record CmdWinRunAction(
+                Action action
             ) : CmdBase;
 
             private sealed record CmdWinSetMonitor(

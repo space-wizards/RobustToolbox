@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
@@ -43,6 +44,9 @@ namespace Robust.Client.Graphics.Clyde
             uint? WindowGetX11Id(WindowReg window);
             nint? WindowGetX11Display(WindowReg window);
             nint? WindowGetWin32Window(WindowReg window);
+
+            // Run things on the window thread
+            void RunActionOnWindowThread(Action action);
 
             // Keyboard
             string KeyGetName(Keyboard.Key key);

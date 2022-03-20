@@ -166,10 +166,10 @@ namespace Robust.Client.UserInterface
             {
                 // macOS seems pretty annoying about having the file dialog opened from the main thread.
                 // So we are forced to execute this synchronously on the main thread.
-                // Also I'm calling RunOnMainThread here to provide safety in case this is ran from a different thread.
-                // nativefiledialog doesn't provide any form of async API, so this WILL lock up the client.
+                // This previously ran on the game's main thread, but now it should run on the actual
+                // main thread that the renderer runs on.
                 var tcs = new TaskCompletionSource<string?>();
-                _taskManager.RunOnMainThread(() => tcs.SetResult(action()));
+                _clyde.RunActionOnWindowThread(() => tcs.SetResult(action()));
 
                 return tcs.Task;
             }

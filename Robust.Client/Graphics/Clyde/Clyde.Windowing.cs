@@ -93,6 +93,8 @@ namespace Robust.Client.Graphics.Clyde
             return _windowing?.WindowGetX11Id(_mainWindow!) ?? null;
         }
 
+        public void RunActionOnWindowThread(Action action) => _windowing!.RunActionOnWindowThread(action);
+
         private bool InitWindowing()
         {
             var iconPath = _cfg.GetCVar(CVars.DisplayWindowIconSet);

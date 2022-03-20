@@ -96,6 +96,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void RunActionOnWindowThread(Action action)
+        {
+            action(); // just run it now, headless implies that this is the main thread
+        }
+
         public event Action<WindowResizedEventArgs> OnWindowResized
         {
             add { }

@@ -92,7 +92,6 @@ namespace Robust.Client
 
                 if (_gameThread.IsAlive)
                 {
-                    Logger.Debug("Window loop exited; waiting for game thread to exit");
                     _gameThread.Join();
                 }
             }

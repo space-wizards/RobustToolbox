@@ -861,7 +861,6 @@ namespace Robust.Client.Graphics.Clyde
             // 3D geometry used during depth projection.
             // 2D mask geometry used to apply wall bleed.
 
-            // TODO: This code probably does not work correctly with rotated camera.
             // TODO: Yes this function throws and index exception if you reach maxOccluders.
 
             const int maxOccluders = 2048;

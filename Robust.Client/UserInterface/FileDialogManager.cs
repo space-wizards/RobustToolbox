@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Robust.Client.Graphics;
 using Robust.Shared;
+using Robust.Shared.Console;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -164,12 +165,11 @@ namespace Robust.Client.UserInterface
         {
             if (OperatingSystem.IsMacOS())
             {
-                // macOS seems pretty annoying about having the file dialog opened from the main thread.
-                // So we are forced to execute this synchronously on the main thread.
-                // Also I'm calling RunOnMainThread here to provide safety in case this is ran from a different thread.
-                // nativefiledialog doesn't provide any form of async API, so this WILL lock up the client.
+                // macOS seems pretty annoying about having the file dialog opened from the main windowing thread.
+                // So we are forced to execute this synchronously on the main windowing thread.
+                // nativefiledialog doesn't provide any form of async API, so this WILL lock up half the client.
                 var tcs = new TaskCompletionSource<string?>();
-                _taskManager.RunOnMainThread(() => tcs.SetResult(action()));
+                _clyde.RunOnWindowThread(() => tcs.SetResult(action()));
 
                 return tcs.Task;
             }
@@ -386,6 +386,19 @@ namespace Robust.Client.UserInterface
             SW_NFD_ERROR,
             SW_NFD_OKAY,
             SW_NFD_CANCEL,
+        }
+    }
+
+    public sealed class OpenFileCommand : IConsoleCommand
+    {
+        public string Command => "testopenfile";
+        public string Description => "";
+        public string Help => "";
+
+        public async void Execute(IConsoleShell shell, string argStr, string[] args)
+        {
+            var stream = await IoCManager.Resolve<IFileDialogManager>().OpenFile();
+            stream?.Dispose();
         }
     }
 }

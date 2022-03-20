@@ -437,6 +437,13 @@ namespace Robust.Client.Graphics.Clyde
             _windowing!.WindowSetVisible(reg, visible);
         }
 
+        public void RunOnWindowThread(Action a)
+        {
+            DebugTools.AssertNotNull(_windowing);
+
+            _windowing!.RunOnWindowThread(a);
+        }
+
         private abstract class WindowReg
         {
             public bool IsDisposed;

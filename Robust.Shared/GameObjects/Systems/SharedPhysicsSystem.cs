@@ -120,16 +120,20 @@ namespace Robust.Shared.GameObjects
             var mapId = _transform.GetMapId(args.Entity);
 
             if (oldMapId != mapId)
-                HandleMapChange(body, oldMapId, mapId);
+            {
+                HandleMapChange(body, xform, oldMapId, mapId);
+            }
 
             HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 
-        private void HandleMapChange(PhysicsComponent body, MapId oldMapId, MapId mapId)
+        private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId mapId)
         {
             _joints.ClearJoints(body);
 
             // So if the map is being deleted it detaches all of its bodies to null soooo we have this fun check.
+            SharedPhysicsMapComponent? oldMap = null;
+            SharedPhysicsMapComponent? map = null;
 
             if (oldMapId != MapId.Nullspace)
             {
@@ -137,13 +141,46 @@ namespace Robust.Shared.GameObjects
 
                 if (MetaData(oldMapEnt).EntityLifeStage < EntityLifeStage.Terminating)
                 {
-                    Comp<SharedPhysicsMapComponent>(oldMapEnt).RemoveBody(body);
+                    oldMap = Comp<SharedPhysicsMapComponent>(oldMapEnt);
+                    oldMap.RemoveBody(body);
                 }
             }
 
             if (mapId != MapId.Nullspace)
             {
-                Comp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId)).AddBody(body);
+                map = Comp<SharedPhysicsMapComponent>(MapManager.GetMapEntityId(mapId));
+                map.AddBody(body);
+            }
+
+            if (_mapManager.IsGrid(body.Owner) ||
+                _mapManager.IsMap(body.Owner) ||
+                xform.ChildCount == 0 ||
+                (oldMap == null && map == null)) return;
+
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var bodyQuery = GetEntityQuery<PhysicsComponent>();
+
+            RecursiveMapUpdate(xform, oldMap, map, xformQuery, bodyQuery);
+        }
+
+        private void RecursiveMapUpdate(
+            TransformComponent xform,
+            SharedPhysicsMapComponent? oldMap,
+            SharedPhysicsMapComponent? map,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PhysicsComponent> bodyQuery)
+        {
+            var childEnumerator = xform.ChildEnumerator;
+
+            while (childEnumerator.MoveNext(out var child))
+            {
+                if (!bodyQuery.TryGetComponent(child.Value, out var childBody) ||
+                    !xformQuery.TryGetComponent(child.Value, out var childXform)) continue;
+
+                _joints.ClearJoints(childBody);
+                oldMap?.RemoveBody(childBody);
+                map?.AddBody(childBody);
+                RecursiveMapUpdate(childXform, oldMap, map, xformQuery, bodyQuery);
             }
         }
 

@@ -464,13 +464,11 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             var cache = chunkCache[i];
             if(!cache.HasValue) continue;
-            var rootNodes = cache.Value.tree.GetRootNodes();
-            foreach (var rootNode in rootNodes)
+            foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
                         ref entitiesSent, cache.Value.metadata);
             }
-            cache.Value.tree.ReturnRootNodes(rootNodes);
         }
 
         var globalEnumerator = _entityPvsCollection.GlobalOverridesEnumerator;
@@ -540,7 +538,8 @@ internal sealed partial class PVSSystem : EntitySystem
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void RecursivelyAddTreeNode(
-        in RobustTree<EntityUid>.TreeNode node,
+        in EntityUid nodeIndex,
+        RobustTree<EntityUid> tree,
         HashSet<EntityUid> seenSet,
         Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
         Dictionary<EntityUid, PVSEntityVisiblity> toSend,
@@ -555,23 +554,24 @@ internal sealed partial class PVSSystem : EntitySystem
         // As every map is parented to uid 0 in the tree we still need to get their children, plus because we go top-down
         // we may find duplicate parents with children we haven't encountered before
         // on different chunks (this is especially common with direct grid children)
-        if (node.Value.IsValid() && !toSend.ContainsKey(node.Value))
+        if (nodeIndex.IsValid() && !toSend.ContainsKey(nodeIndex))
         {
             //are we new?
-            var (entered, budgetFail) = ProcessEntry(in node.Value, seenSet, previousVisibleEnts, ref newEntitiesSent,
+            var (entered, budgetFail) = ProcessEntry(in nodeIndex, seenSet, previousVisibleEnts, ref newEntitiesSent,
                 ref totalEnteredEntities);
 
             if (budgetFail) return;
 
-            AddToSendSet(in node.Value, metaDataCache[node.Value], toSend, fromTick, entered);
+            AddToSendSet(in nodeIndex, metaDataCache[nodeIndex], toSend, fromTick, entered);
         }
 
+        var node = tree[nodeIndex];
         //our children are important regardless! iterate them!
         if(node.Children != null)
         {
             foreach (var child in node.Children)
             {
-                RecursivelyAddTreeNode(in child, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
+                RecursivelyAddTreeNode(in child, tree, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
                     ref totalEnteredEntities, metaDataCache);
             }
         }
@@ -853,9 +853,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull
     {
-        private readonly ObjectPool<HashSet<RobustTree<T>.TreeNode>> _treeNodeSetPool =
-            new DefaultObjectPool<HashSet<RobustTree<T>.TreeNode>>(new SetPolicy<RobustTree<T>.TreeNode>());
-
         public override RobustTree<T> Create()
         {
             return new RobustTree<T>(_treeNodeSetPool.Get, _treeNodeSetPool.Return);

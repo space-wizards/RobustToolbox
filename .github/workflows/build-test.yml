@@ -29,7 +29,23 @@ jobs:
       run: dotnet build --no-restore /p:WarningsAsErrors=nullable
     - name: Test Engine
       run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -v n
-    
+ 
+  docfx:
+   runs-on: ubuntu-latest
+   steps: 
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore /p:WarningsAsErrors=nullable
+
     - name: Build Docfx
       uses: nikeee/docfx-action@v1.0.0      
       with:

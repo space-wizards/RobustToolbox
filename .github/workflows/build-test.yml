@@ -29,3 +29,14 @@ jobs:
       run: dotnet build --no-restore /p:WarningsAsErrors=nullable
     - name: Test Engine
       run: dotnet test --no-build Robust.UnitTesting/Robust.UnitTesting.csproj -v n
+    
+    - name: Build Docfx
+      uses: nikeee/docfx-action@v1.0.0      
+      with:
+        args: docfx.json
+    
+    - name: Publish Documentation on GitHub Pages
+      uses: maxheld83/ghpages@master
+      env:
+        BUILD_DIR: _robust-site 
+        GH_PAT: ${{ secrets.GH_PAT }} 

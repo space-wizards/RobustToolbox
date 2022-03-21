@@ -25,6 +25,8 @@ namespace Robust.Client.GameObjects
         [Animatable]
         Vector2 Scale { get; set; }
 
+        Box2 Bounds { get; }
+
         /// <summary>
         ///     A rotation applied to all layers.
         /// </summary>

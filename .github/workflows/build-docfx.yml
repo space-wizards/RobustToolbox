@@ -24,7 +24,9 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Setup Docfx
-      run:  choco install docfx -y
+      uses: crazy-max/ghaction-chocolatey@v1
+      with:
+        args: "install docfx -y"
             
     - name: Install dependencies
       run: dotnet restore

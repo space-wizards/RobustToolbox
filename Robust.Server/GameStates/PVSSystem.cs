@@ -905,7 +905,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull
     {
-        private ObjectPool<HashSet<T>> _setPool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>());
+        private ObjectPool<HashSet<T>> _setPool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize);
         public override RobustTree<T> Create()
         {
             return new RobustTree<T>(_setPool);

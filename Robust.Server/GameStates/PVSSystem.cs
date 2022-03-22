@@ -81,7 +81,7 @@ internal sealed partial class PVSSystem : EntitySystem
         new DefaultObjectPool<HashSet<int>>(new SetPolicy<int>(), MaxVisPoolSize);
 
     private readonly ObjectPool<RobustTree<EntityUid>> _treePool =
-        new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>());
+        new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>(), MaxVisPoolSize);
 
     public override void Initialize()
     {

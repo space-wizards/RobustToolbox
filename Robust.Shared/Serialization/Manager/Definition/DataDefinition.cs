@@ -112,6 +112,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
         {
             var validatedMapping = new Dictionary<ValidationNode, ValidationNode>();
 
+            var requiredFields = BaseFieldDefinitions.Where(x => x.Attribute.Required).Select(x => x.Attribute.Tag).ToHashSet();
             foreach (var (key, val) in mapping.Children)
             {
                 if (key is not ValueDataNode valueDataNode)
@@ -119,6 +120,8 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     validatedMapping.Add(new ErrorNode(key, "Key not ValueDataNode."), new InconclusiveNode(val));
                     continue;
                 }
+
+                requiredFields.Remove(valueDataNode.Value);
 
                 var field = BaseFieldDefinitions.FirstOrDefault(f => f.Attribute.Tag == valueDataNode.Value);
                 if (field == null)
@@ -139,6 +142,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
                     : serialization.ValidateNode(field.FieldType, val, context);
 
                 validatedMapping.Add(keyValidated, valValidated);
+            }
+
+            foreach (var requiredField in requiredFields)
+            {
+                validatedMapping.Add(new ErrorNode(new ValueDataNode(""), $"Required field \"{requiredField}\" missing."),
+                    new InconclusiveNode(new ValueDataNode("")));
             }
 
             return new ValidatedMappingNode(validatedMapping);

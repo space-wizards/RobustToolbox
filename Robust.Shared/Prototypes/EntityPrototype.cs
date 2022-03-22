@@ -98,7 +98,7 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [NeverPushInheritance]
-        [DataField("abstract")]
+        [AbstractDataFieldAttribute]
         public bool Abstract { get; private set; }
 
         [DataField("placement")] private EntityPlacementProperties PlacementProperties = new();

@@ -380,21 +380,21 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         public void ResolveResults()
         {
-            var trees = _inheritanceTrees.Keys.ToList();
-            trees.Sort(SortPrototypesByPriority);
-            foreach (var type in trees)
+            var types = _prototypeResults.Keys.ToList();
+            types.Sort(SortPrototypesByPriority);
+            foreach (var type in types)
             {
-                var tree = _inheritanceTrees[type];
-                foreach (var baseNode in tree.BaseNodes)
-                {
-                    PushInheritance(type, baseNode);
+                if(_inheritanceTrees.TryGetValue(type, out var tree)){
+                    foreach (var baseNode in tree.BaseNodes)
+                    {
+                        PushInheritance(type, baseNode);
+                    }
                 }
-            }
 
-            foreach (var (type, results) in _prototypeResults)
-            {
-                foreach (var (id, mapping) in results)
+                foreach (var (id, mapping) in _prototypeResults[type])
                 {
+                    if(mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) && abstractNode.AsBool())
+                        continue;
                     _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, mapping)!;
                 }
             }
@@ -635,7 +635,7 @@ namespace Robust.Shared.Prototypes
 
                 var prototypeType = _prototypeTypes[type];
 
-                if (!datanode.TryGet<ValueDataNode>("id", out var idNode))
+                if (!datanode.TryGet<ValueDataNode>(IdDataFieldAttribute.Name, out var idNode))
                     throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
 
                 if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
@@ -646,7 +646,7 @@ namespace Robust.Shared.Prototypes
                 _prototypeResults[prototypeType][idNode.Value] = datanode;
                 if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
-                    datanode.TryGet<ValueDataNode>("parent", out var parentNode);
+                    datanode.TryGet<ValueDataNode>(ParentDataFieldAttribute.Name, out var parentNode);
                     _inheritanceTrees[prototypeType].AddId(idNode.Value, parentNode?.Value, true);
                 }
 
@@ -767,6 +767,7 @@ namespace Robust.Shared.Prototypes
 
             var foundIdAttribute = false;
             var foundParentAttribute = false;
+            var foundAbstractAttribute = false;
             foreach (var info in type.GetAllPropertiesAndFields())
             {
                 var hasId = info.HasAttribute<IdDataFieldAttribute>();
@@ -795,6 +796,16 @@ namespace Robust.Shared.Prototypes
                     throw new InvalidImplementationException(type,
                         typeof(IPrototype),
                         $"Prototype {type} has the Id- & ParentDatafield on single member {info.Name}");
+
+                if (info.HasAttribute<AbstractDataFieldAttribute>())
+                {
+                    if (foundAbstractAttribute)
+                        throw new InvalidImplementationException(type,
+                            typeof(IInheritingPrototype),
+                            $"Found two {nameof(AbstractDataFieldAttribute)}");
+
+                    foundAbstractAttribute = true;
+                }
             }
 
             if (!foundIdAttribute)
@@ -802,10 +813,10 @@ namespace Robust.Shared.Prototypes
                     typeof(IPrototype),
                     $"Did not find any member annotated with the {nameof(IdDataFieldAttribute)}");
 
-            if (type.IsAssignableTo(typeof(IInheritingPrototype)) && !foundParentAttribute)
+            if (type.IsAssignableTo(typeof(IInheritingPrototype)) && (!foundParentAttribute || !foundAbstractAttribute))
                 throw new InvalidImplementationException(type,
                     typeof(IInheritingPrototype),
-                    $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)}");
+                    $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)} and/or {nameof(AbstractDataFieldAttribute)}");
 
             _prototypeTypes[attribute.Type] = type;
             _prototypePriorities[type] = attribute.LoadPriority;

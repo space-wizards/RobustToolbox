@@ -634,25 +634,27 @@ namespace Robust.Shared.Prototypes
                 }
 
                 var prototypeType = _prototypeTypes[type];
-                //todo paul this is a shit solution, do it properly
-                var tempPrototype = (IPrototype)_serializationManager.Read(prototypeType, datanode, skipHook: true)!;
 
-                if (!overwrite && _prototypes[prototypeType].ContainsKey(tempPrototype.ID))
+                if (!datanode.TryGet<ValueDataNode>("id", out var idNode))
+                    throw new PrototypeLoadException($"Prototype type {type} is missing an 'id' datafield.");
+
+                if (!overwrite && _prototypes[prototypeType].ContainsKey(idNode.Value))
                 {
-                    throw new PrototypeLoadException($"Duplicate ID: '{tempPrototype.ID}'");
+                    throw new PrototypeLoadException($"Duplicate ID: '{idNode.Value}'");
                 }
 
-                _prototypeResults[prototypeType][tempPrototype.ID] = datanode;
-                if (tempPrototype is IInheritingPrototype inheritingPrototype)
+                _prototypeResults[prototypeType][idNode.Value] = datanode;
+                if (prototypeType.IsAssignableTo(typeof(IInheritingPrototype)))
                 {
-                    _inheritanceTrees[prototypeType].AddId(tempPrototype.ID, inheritingPrototype.Parent, true);
+                    datanode.TryGet<ValueDataNode>("parent", out var parentNode);
+                    _inheritanceTrees[prototypeType].AddId(idNode.Value, parentNode?.Value, true);
                 }
 
                 if (changed == null) continue;
 
                 if (!changed.TryGetValue(prototypeType, out var set))
                     changed[prototypeType] = set = new HashSet<string>();
-                set.Add(tempPrototype.ID);
+                set.Add(idNode.Value);
             }
         }
 
@@ -762,6 +764,48 @@ namespace Robust.Shared.Prototypes
                     typeof(IPrototype),
                     $"Duplicate prototype type ID: {attribute.Type}. Current: {_prototypeTypes[attribute.Type]}");
             }
+
+            var foundIdAttribute = false;
+            var foundParentAttribute = false;
+            foreach (var info in type.GetAllPropertiesAndFields())
+            {
+                var hasId = info.HasAttribute<IdDataFieldAttribute>();
+                var hasParent = info.HasAttribute<ParentDataFieldAttribute>();
+                if (hasId)
+                {
+                    if (foundIdAttribute)
+                        throw new InvalidImplementationException(type,
+                            typeof(IPrototype),
+                            $"Found two {nameof(IdDataFieldAttribute)}");
+
+                    foundIdAttribute = true;
+                }
+
+                if (hasParent)
+                {
+                    if (foundParentAttribute)
+                        throw new InvalidImplementationException(type,
+                            typeof(IInheritingPrototype),
+                            $"Found two {nameof(ParentDataFieldAttribute)}");
+
+                    foundParentAttribute = true;
+                }
+
+                if (hasId && hasParent)
+                    throw new InvalidImplementationException(type,
+                        typeof(IPrototype),
+                        $"Prototype {type} has the Id- & ParentDatafield on single member {info.Name}");
+            }
+
+            if (!foundIdAttribute)
+                throw new InvalidImplementationException(type,
+                    typeof(IPrototype),
+                    $"Did not find any member annotated with the {nameof(IdDataFieldAttribute)}");
+
+            if (type.IsAssignableTo(typeof(IInheritingPrototype)) && !foundParentAttribute)
+                throw new InvalidImplementationException(type,
+                    typeof(IInheritingPrototype),
+                    $"Did not find any member annotated with the {nameof(ParentDataFieldAttribute)}");
 
             _prototypeTypes[attribute.Type] = type;
             _prototypePriorities[type] = attribute.LoadPriority;

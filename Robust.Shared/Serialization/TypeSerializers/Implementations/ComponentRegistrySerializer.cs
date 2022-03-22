@@ -189,23 +189,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 
             foreach (var (reg, mapping) in parentDict)
             {
-                if (newCompRegDict.ContainsKey(reg) || newCompRegDict.Any(p =>
-                    {
-                        foreach (var reference in reg.References)
-                        {
-                            if (p.Key.References.Contains(reference))
-                            {
-                                return true;
-                            }
-                        }
-
-                        return false;
-                    })) continue;
-
-                if (newCompRegDict.TryGetValue(reg, out var entry))
+                if (newCompRegDict.TryFirstOrNull(childReg => reg.References.Any(x => childReg.Key.References.Contains(x)), out var entry))
                 {
-                    newCompReg[entry] = serializationManager.PushCompositionWithGenericNode(reg.Type,
-                        new[] { parent[mapping] }, newCompReg[entry], context);
+                    newCompReg[entry.Value.Value] = serializationManager.PushCompositionWithGenericNode(reg.Type,
+                        new[] { parent[mapping] }, newCompReg[entry.Value.Value], context);
                 }
                 else
                 {
@@ -223,7 +210,10 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             for (var i = 0; i < node.Count; i++)
             {
                 var mapping = (MappingDataNode)node[i];
-                dict.Add(componentFactory.GetRegistration(mapping.Get<ValueDataNode>("type").Value), i);
+                var type = mapping.Get<ValueDataNode>("type").Value;
+                var availability = componentFactory.GetComponentAvailability(type);
+                if(availability == ComponentAvailability.Ignore) continue;
+                dict.Add(componentFactory.GetRegistration(type), i);
             }
 
             return dict;

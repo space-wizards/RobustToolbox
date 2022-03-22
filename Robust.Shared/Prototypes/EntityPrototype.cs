@@ -39,7 +39,7 @@ namespace Robust.Shared.Prototypes
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         [ViewVariables]
-        [DataField("id")]
+        [IdDataFieldAttribute]
         public string ID { get; private set; } = default!;
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [DataField("parent", customTypeSerializer:typeof(PrototypeIdSerializer<EntityPrototype>))]
+        [ParentDataFieldAttribute(typeof(PrototypeIdSerializer<EntityPrototype>))]
         public string? Parent { get; private set; }
 
         /// <summary>

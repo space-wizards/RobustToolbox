@@ -1,4 +1,9 @@
-﻿using Robust.Shared.ViewVariables;
+﻿using System;
+using JetBrains.Annotations;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
+using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.ViewVariables;
 using YamlDotNet.RepresentationModel;
 
 namespace Robust.Shared.Prototypes
@@ -24,5 +29,21 @@ namespace Robust.Shared.Prototypes
         string? Parent { get; }
 
         bool Abstract { get; }
+    }
+
+    public sealed class IdDataFieldAttribute : DataFieldAttribute
+    {
+        public IdDataFieldAttribute(int priority = 1, Type? customTypeSerializer = null) :
+            base("id", false, priority, true, false, customTypeSerializer)
+        {
+        }
+    }
+
+    public sealed class ParentDataFieldAttribute : DataFieldAttribute
+    {
+        public ParentDataFieldAttribute(Type prototypeIdSerializer, int priority = 1) :
+            base("parent", false, priority, false, false, prototypeIdSerializer)
+        {
+        }
     }
 }

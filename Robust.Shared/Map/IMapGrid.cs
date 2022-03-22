@@ -133,6 +133,9 @@ namespace Robust.Shared.Map
         IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds);
 
+        // Struct enumerators
+        AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(Vector2i pos);
+
         Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));
         Vector2i TileIndicesFor(Vector2 worldPos) => WorldToTile(worldPos);

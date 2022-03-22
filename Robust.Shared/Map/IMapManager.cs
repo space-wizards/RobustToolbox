@@ -12,6 +12,11 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager : IPauseManager
     {
+        /// <summary>
+        /// A faster version of <see cref="GetAllGrids"/>
+        /// </summary>
+        GridEnumerator GetAllGridsEnumerator();
+
         IEnumerable<IMapGrid> GetAllGrids();
 
         /// <summary>

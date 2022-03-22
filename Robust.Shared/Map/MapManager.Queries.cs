@@ -19,20 +19,15 @@ internal partial class MapManager
         return FindGridsIntersecting(mapId, aabb, approx);
     }
 
-    /// <summary>
-    /// Returns the grids intersecting this AABB.
-    /// </summary>
-    /// <param name="mapId">The relevant MapID</param>
-    /// <param name="aabb">The AABB to intersect</param>
-    /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
-    public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 aabb, bool approx = false)
+    public IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false)
     {
         if (!_gridTrees.ContainsKey(mapId)) return Enumerable.Empty<IMapGrid>();
 
         var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+        var grids = new List<MapGrid>();
 
-        return FindGridsIntersecting(mapId, aabb, xformQuery, physicsQuery, approx);
+        return FindGridsIntersecting(mapId, worldAabb, grids, xformQuery, physicsQuery, approx);
     }
 
     /// <summary>
@@ -41,13 +36,14 @@ internal partial class MapManager
     public IEnumerable<IMapGrid> FindGridsIntersecting(
         MapId mapId,
         Box2 aabb,
+        List<MapGrid> grids,
         EntityQuery<TransformComponent> xformQuery,
         EntityQuery<PhysicsComponent> physicsQuery,
         bool approx = false)
     {
         if (!_gridTrees.TryGetValue(mapId, out var gridTree)) return Enumerable.Empty<IMapGrid>();
 
-        var grids = new List<MapGrid>();
+        DebugTools.Assert(grids.Count == 0);
         var state = (gridTree, grids);
 
         gridTree.Query(ref state,

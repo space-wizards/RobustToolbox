@@ -106,8 +106,7 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            if (LifeStage(uid) is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized
-                || !TryComp(uid, out TransformComponent? xform))
+            if (LifeStage(uid) < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
             {
                 return;
             }
@@ -159,8 +158,9 @@ namespace Robust.Shared.GameObjects
 
             var xformQuery = GetEntityQuery<TransformComponent>();
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
+            var metaQuery = GetEntityQuery<MetaDataComponent>();
 
-            RecursiveMapUpdate(xform, oldMap, map, xformQuery, bodyQuery);
+            RecursiveMapUpdate(xform, oldMap, map, xformQuery, bodyQuery, metaQuery);
         }
 
         private void RecursiveMapUpdate(
@@ -168,19 +168,21 @@ namespace Robust.Shared.GameObjects
             SharedPhysicsMapComponent? oldMap,
             SharedPhysicsMapComponent? map,
             EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PhysicsComponent> bodyQuery)
+            EntityQuery<PhysicsComponent> bodyQuery,
+            EntityQuery<MetaDataComponent> metaQuery)
         {
             var childEnumerator = xform.ChildEnumerator;
 
             while (childEnumerator.MoveNext(out var child))
             {
                 if (!bodyQuery.TryGetComponent(child.Value, out var childBody) ||
-                    !xformQuery.TryGetComponent(child.Value, out var childXform)) continue;
+                    !xformQuery.TryGetComponent(child.Value, out var childXform) ||
+                    metaQuery.GetComponent(child.Value).EntityLifeStage == EntityLifeStage.Deleted) continue;
 
                 _joints.ClearJoints(childBody);
                 oldMap?.RemoveBody(childBody);
                 map?.AddBody(childBody);
-                RecursiveMapUpdate(childXform, oldMap, map, xformQuery, bodyQuery);
+                RecursiveMapUpdate(childXform, oldMap, map, xformQuery, bodyQuery, metaQuery);
             }
         }
 

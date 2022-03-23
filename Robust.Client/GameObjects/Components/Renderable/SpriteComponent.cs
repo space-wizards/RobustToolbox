@@ -815,6 +815,8 @@ namespace Robust.Client.GameObjects
                 default:
                     throw new NotImplementedException();
             }
+
+            RebuildBounds();
         }
 
         public void LayerSetSprite(object layerKey, SpriteSpecifier specifier)
@@ -840,6 +842,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.SetTexture(texture);
+            RebuildBounds();
         }
 
         public void LayerSetTexture(object layerKey, Texture texture)
@@ -905,6 +908,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.SetState(stateId);
+            RebuildBounds();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId)
@@ -952,6 +956,8 @@ namespace Robust.Client.GameObjects
                     theLayer.Texture = null;
                 }
             }
+
+            RebuildBounds();
         }
 
         public void LayerSetState(object layerKey, RSI.StateId stateId, RSI rsi)
@@ -1009,6 +1015,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.SetRsi(rsi);
+            RebuildBounds();
         }
 
         public void LayerSetRSI(object layerKey, RSI rsi)
@@ -1066,6 +1073,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Scale = scale;
+            RebuildBounds();
         }
 
         public void LayerSetScale(object layerKey, Vector2 scale)
@@ -1092,6 +1100,7 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Rotation = rotation;
+            RebuildBounds();
         }
 
         public void LayerSetRotation(object layerKey, Angle rotation)
@@ -1116,6 +1125,7 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer].SetVisible(visible);
+            RebuildBounds();
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -1141,6 +1151,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.Color = color;
+
+            RebuildBounds();
         }
 
         public void LayerSetColor(object layerKey, Color color)
@@ -1166,6 +1178,8 @@ namespace Robust.Client.GameObjects
 
             var theLayer = Layers[layer];
             theLayer.DirOffset = offset;
+
+            RebuildBounds();
         }
 
         public void LayerSetDirOffset(object layerKey, DirectionOffset offset)
@@ -1217,6 +1231,8 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer].SetAutoAnimated(autoAnimated);
+
+            RebuildBounds();
         }
 
         public void LayerSetAutoAnimated(object layerKey, bool autoAnimated)
@@ -1242,6 +1258,8 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer].Offset = layerOffset;
+
+            RebuildBounds();
         }
 
         public void LayerSetOffset(object layerKey, Vector2 layerOffset)

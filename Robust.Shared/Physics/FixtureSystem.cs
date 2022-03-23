@@ -94,7 +94,7 @@ namespace Robust.Shared.Physics
         #region Public
 
         /// <summary>
-        ///     Attempts to add a new fixture. Will do nothing ia a fixture with the requested ID already exists.
+        ///     Attempts to add a new fixture. Will do nothing if a fixture with the requested ID already exists.
         /// </summary>
         public bool TryCreateFixture(PhysicsComponent body, Fixture fixture, bool updates = true, FixturesComponent? manager = null, TransformComponent? xform = null)
         {

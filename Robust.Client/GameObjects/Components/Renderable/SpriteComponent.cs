@@ -1959,6 +1959,13 @@ namespace Robust.Client.GameObjects
 
                     var box = Box2.CenteredAround(Offset, textureSize);
 
+                    var rsiState = GetActualState();
+
+                    if (rsiState is {Directions: RSI.State.DirectionType.Dir8})
+                    {
+                        box = box.Union(Box2.CenteredAround(Offset, (textureSize.Y, textureSize.X)).Union(Box2.CenteredAround(Offset, Vector2.One * (textureSize.X + textureSize.Y) / MathF.Sqrt(2))));
+                    }
+
                     return _scale == Vector2.One ? box : box.Scale(_scale);
                 }
 

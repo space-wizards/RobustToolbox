@@ -875,20 +875,6 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    public sealed class ListPolicy<T> : PooledObjectPolicy<List<T>>
-    {
-        public override List<T> Create()
-        {
-            return new();
-        }
-
-        public override bool Return(List<T> obj)
-        {
-            obj.Clear();
-            return true;
-        }
-    }
-
     public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
     {
         public override Dictionary<T1, T2> Create()
@@ -905,10 +891,10 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public sealed class TreePolicy<T> : PooledObjectPolicy<RobustTree<T>> where T : notnull
     {
-        private ObjectPool<HashSet<T>> _setPool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize);
         public override RobustTree<T> Create()
         {
-            return new RobustTree<T>(_setPool);
+            var pool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize);
+            return new RobustTree<T>(pool);
         }
 
         public override bool Return(RobustTree<T> obj)

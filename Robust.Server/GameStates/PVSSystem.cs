@@ -875,20 +875,6 @@ internal sealed partial class PVSSystem : EntitySystem
         }
     }
 
-    public sealed class ListPolicy<T> : PooledObjectPolicy<List<T>>
-    {
-        public override List<T> Create()
-        {
-            return new();
-        }
-
-        public override bool Return(List<T> obj)
-        {
-            obj.Clear();
-            return true;
-        }
-    }
-
     public sealed class DictPolicy<T1, T2> : PooledObjectPolicy<Dictionary<T1, T2>> where T1 : notnull
     {
         public override Dictionary<T1, T2> Create()

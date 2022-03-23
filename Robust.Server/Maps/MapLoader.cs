@@ -623,10 +623,10 @@ namespace Robust.Server.Maps
                 _tileMap = new Dictionary<ushort, string>();
 
                 var tileMap = RootNode.Get<MappingDataNode>("tilemap");
-                foreach (var (key, value) in tileMap.Children.Cast<KeyValuePair<ValueDataNode, ValueDataNode>>())
+                foreach (var (key, value) in tileMap.Children)
                 {
-                    var tileId = (ushort) key.AsInt();
-                    var tileDefName = value.Value;
+                    var tileId = (ushort) ((ValueDataNode)key).AsInt();
+                    var tileDefName = ((ValueDataNode)value).Value;
                     _tileMap.Add(tileId, tileDefName);
                 }
             }

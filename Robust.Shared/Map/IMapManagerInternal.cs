@@ -17,6 +17,17 @@ namespace Robust.Shared.Map
         void ChunkRemoved(GridId gridId, MapChunk chunk);
 
         /// <summary>
+        /// Specific version of TryFindGridAt that allows re-usable data structures to be passed in for optimisation reasons.
+        /// </summary>
+        bool TryFindGridAt(
+            MapId mapId,
+            Vector2 worldPos,
+            List<MapGrid> grids,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<PhysicsComponent> bodyQuery,
+            [NotNullWhen(true)] out IMapGrid? grid);
+
+        /// <summary>
         /// Specific version of FindGridsIntersecting that allows re-usable data structures to be passed in for optimisation reasons.
         /// </summary>
         IEnumerable<IMapGrid> FindGridsIntersecting(

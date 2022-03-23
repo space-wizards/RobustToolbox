@@ -893,7 +893,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         public override RobustTree<T> Create()
         {
-            var pool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize * 8);
+            var pool = new DefaultObjectPool<HashSet<T>>(new SetPolicy<T>(), MaxVisPoolSize);
             return new RobustTree<T>(pool);
         }
 

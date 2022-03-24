@@ -102,12 +102,14 @@ Mouse Pos:
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
                 var playerCoordinates = entityTransform.Coordinates;
+                var playerRotation = entityTransform.WorldRotation;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
-    EntId: {3}
-    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner,
+    Rotation: {3:F2}°
+    EntId: {4}
+    GridID: {5}", playerScreen, playerWorldOffset, playerCoordinates, playerRotation.Degrees, entityTransform.Owner,
                     entityTransform.GridID);
             }
 

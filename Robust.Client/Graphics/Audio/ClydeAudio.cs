@@ -23,6 +23,10 @@ namespace Robust.Client.Graphics.Audio
         private ALDevice _openALDevice;
         private ALContext _openALContext;
 
+        // Set to 512 because it's double the default limit of 256, we can
+        // change this in the future if needs be.
+        private const int MonoSourceMaximum = 512;
+
         private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
 
         private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources =
@@ -65,7 +69,13 @@ namespace Robust.Client.Graphics.Audio
         {
             unsafe
             {
-                _openALContext = ALC.CreateContext(_openALDevice, (int*) 0);
+                // Context attributes to pass to OpenAL - this tells OpenAL
+                // that we will be allocating up to `MonoSourceMaximum` sources.
+                int[] args =  { (int) AlcContextAttributes.MonoSources, MonoSourceMaximum };
+                fixed (int* a = args)
+                {
+                    _openALContext = ALC.CreateContext(_openALDevice, a);
+                }
             }
 
             ALC.MakeContextCurrent(_openALContext);

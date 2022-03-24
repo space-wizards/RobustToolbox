@@ -93,6 +93,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// </summary>
     private readonly Dictionary<TIndex, GameTick> _removalBuffer = new();
 
+    /// <summary>
+    /// To avoid re-allocating the hashset every tick we'll just store it.
+    /// </summary>
+    private HashSet<TIndex> _changedIndices = new();
+
     public PVSCollection()
     {
         IoCManager.InjectDependencies(this);
@@ -100,13 +105,18 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public void Process()
     {
-        var changedIndices = new HashSet<TIndex>(_locationChangeBuffer.Keys);
+        _changedIndices.EnsureCapacity(_locationChangeBuffer.Count);
+
+        foreach (var (key, _) in _locationChangeBuffer)
+        {
+            _changedIndices.Add(key);
+        }
 
         var changedChunkLocations = new HashSet<IIndexLocation>();
         foreach (var (index, tick) in _removalBuffer)
         {
             //changes dont need to be computed if we are removing the index anyways
-            if (changedIndices.Remove(index) && !_indexLocations.ContainsKey(index))
+            if (_changedIndices.Remove(index) && !_indexLocations.ContainsKey(index))
             {
                 //this index wasnt added yet, so we can safely just skip the deletion
                 continue;
@@ -134,13 +144,14 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             }
         }
 
-        foreach (var index in changedIndices)
+        foreach (var index in _changedIndices)
         {
             RemoveIndexInternal(index);
 
             AddIndexInternal(index, _locationChangeBuffer[index]);
         }
 
+        _changedIndices.Clear();
         _locationChangeBuffer.Clear();
         _removalBuffer.Clear();
     }
@@ -320,6 +331,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if(!removeFromOverride && IsOverride(index))
             return;
 
+        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
+            oldLocation is GlobalOverride) return;
+
         RegisterUpdate(index, new GlobalOverride());
     }
 
@@ -333,6 +347,10 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         if(!removeFromOverride && IsOverride(index))
             return;
+
+        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
+            oldLocation is LocalOverride local &&
+            local.Session == session) return;
 
         RegisterUpdate(index, new LocalOverride(session));
     }
@@ -373,6 +391,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if(!removeFromOverride && IsOverride(index))
             return;
 
+        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
+            oldLocation is GridChunkLocation oldGrid &&
+            oldGrid.ChunkIndices == chunkIndices &&
+            oldGrid.GridId == gridId) return;
+
         RegisterUpdate(index, new GridChunkLocation(gridId, chunkIndices));
     }
 
@@ -388,13 +411,16 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         if(!removeFromOverride && IsOverride(index))
             return;
 
+        if (_indexLocations.TryGetValue(index, out var oldLocation) &&
+            oldLocation is MapChunkLocation oldMap &&
+            oldMap.ChunkIndices == chunkIndices &&
+            oldMap.MapId == mapId) return;
+
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }
 
     private void RegisterUpdate(TIndex index, IIndexLocation location)
     {
-        if(_indexLocations.TryGetValue(index, out var oldLocation) && oldLocation == location) return;
-
         _locationChangeBuffer[index] = location;
     }
 

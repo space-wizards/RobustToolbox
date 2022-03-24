@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Robust.Client.Input;
 using Robust.Shared.Maths;
 using SixLabors.ImageSharp;
@@ -58,6 +59,9 @@ namespace Robust.Client.Graphics.Clyde
             void GLMakeContextCurrent(WindowReg? reg);
             void GLSwapInterval(int interval);
             unsafe void* GLGetProcAddress(string procName);
+
+            // Misc
+            void RunOnWindowThread(Action a);
         }
     }
 }

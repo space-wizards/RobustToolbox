@@ -1966,40 +1966,31 @@ namespace Robust.Client.GameObjects
             /// <inheritdoc/>
             public Box2 CalculateBoundingBox()
             {
-                // Other than some special cases for simple layers, this will basically just apply the matrix obtained
-                // via GetLayerDrawMatrix() to this layer's bounding box.
+                var textureSize = PixelSize / EyeManager.PixelsPerMeter;
 
-                var dir = RSIDirection.South;
+                var rsiState = GetActualState();
 
-                // special case for simple layers. The vast majority of layers are like this.
-                if (_rotation == Angle.Zero)
+                var longestSide = MathF.Max(textureSize.X, textureSize.Y);
+                var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
+
+                // Build the bounding box based on how many directions the sprite has
+                var box = (_rotation != 0, rsiState) switch
                 {
-                    var textureSize = PixelSize / EyeManager.PixelsPerMeter;
+                    // If this layer has any form of arbitrary rotation, return a bounding box big enough to cover
+                    // any possible rotation.
+                    (true, _) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
 
-                    var rsiState = GetActualState();
-
-                    var longestSide = MathF.Max(textureSize.X, textureSize.Y);
-                    var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
-
-                    // Build the bounding box based on how many directions the sprite has
-                    var box = rsiState switch
-                    {
-                        // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
-                        {Directions: RSI.State.DirectionType.Dir1} or null => Box2.CenteredAround(Offset, textureSize),
-                        // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
-                        // This accounts for all possible rotations.
-                        {Directions: RSI.State.DirectionType.Dir4} => Box2.CenteredAround(Offset, new Vector2(longestSide, longestSide)),
-                        // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
-                        // our bounding box.
-                        {Directions: RSI.State.DirectionType.Dir8} => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
-                    };
-
-                    return _scale == Vector2.One ? box : box.Scale(_scale);
-                }
-
-                // Welp we have some non-zero _rotation, so lets just apply the generalized layer transform and get the bounding box from there
-                GetLayerDrawMatrix(dir, out var layerDrawMatrix);
-                return layerDrawMatrix.TransformBox(Box2.CentredAroundZero(PixelSize / EyeManager.PixelsPerMeter));
+                    // Otherwise...
+                    // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
+                    (_, {Directions: RSI.State.DirectionType.Dir1} or null) => Box2.CenteredAround(Offset, textureSize),
+                    // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
+                    // This accounts for all possible rotations.
+                    (_, {Directions: RSI.State.DirectionType.Dir4}) => Box2.CenteredAround(Offset, new Vector2(longestSide, longestSide)),
+                    // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
+                    // our bounding box.
+                    (_, {Directions: RSI.State.DirectionType.Dir8}) => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+                };
+                return _scale == Vector2.One ? box : box.Scale(_scale);
             }
 
             internal RSI.State? GetActualState()

@@ -19,6 +19,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using TerraFX.Interop.Windows;
 using DrawDepthTag = Robust.Shared.GameObjects.DrawDepth;
 using RSIDirection = Robust.Client.Graphics.RSI.State.Direction;
 
@@ -1975,19 +1976,28 @@ namespace Robust.Client.GameObjects
                 {
                     var textureSize = PixelSize / EyeManager.PixelsPerMeter;
 
-                    var box = Box2.CenteredAround(Offset, textureSize);
-
                     var rsiState = GetActualState();
 
-                    if (rsiState is {Directions: RSI.State.DirectionType.Dir8})
+                    var longestSide = MathF.Max(textureSize.X, textureSize.Y);
+                    var longestRotatedSide = Math.Max(longestSide, (textureSize.X + textureSize.Y) / MathF.Sqrt(2));
+
+                    // Build the bounding box based on how many directions the sprite has
+                    var box = rsiState switch
                     {
-                        box = box.Union(Box2.CenteredAround(Offset, (textureSize.Y, textureSize.X)).Union(Box2.CenteredAround(Offset, Vector2.One * (textureSize.X + textureSize.Y) / MathF.Sqrt(2))));
-                    }
+                        // If we have only one direction or an invalid RSI state, create a simple bounding box with the size of the texture.
+                        {Directions: RSI.State.DirectionType.Dir1} or null => Box2.CenteredAround(Offset, textureSize),
+                        // If we have four cardinal directions, take the longest side of our texture and square it, then turn that into our bounding box.
+                        // This accounts for all possible rotations.
+                        {Directions: RSI.State.DirectionType.Dir4} => Box2.CenteredAround(Offset, new Vector2(longestSide, longestSide)),
+                        // If we have eight directions, find the maximum length of the texture (accounting for rotation), then square it to make
+                        // our bounding box.
+                        {Directions: RSI.State.DirectionType.Dir8} => Box2.CenteredAround(Offset, new Vector2(longestRotatedSide, longestRotatedSide)),
+                    };
 
                     return _scale == Vector2.One ? box : box.Scale(_scale);
                 }
 
-                // Welp we have some non-zero _rotation, so lets just apply the generalized layer transform and get the bounding box from where;
+                // Welp we have some non-zero _rotation, so lets just apply the generalized layer transform and get the bounding box from there
                 GetLayerDrawMatrix(dir, out var layerDrawMatrix);
                 return layerDrawMatrix.TransformBox(Box2.CentredAroundZero(PixelSize / EyeManager.PixelsPerMeter));
             }

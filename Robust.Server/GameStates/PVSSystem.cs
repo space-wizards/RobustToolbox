@@ -1,7 +1,7 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
-using System.Composition;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.ObjectPool;
 using NetSerializer;
@@ -9,7 +9,6 @@ using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
 using Robust.Shared.Configuration;
-using Robust.Shared.Containers;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Map;
@@ -22,7 +21,7 @@ namespace Robust.Server.GameStates;
 
 internal sealed partial class PVSSystem : EntitySystem
 {
-    [Shared.IoC.Dependency] private readonly IMapManager _mapManager = default!;
+    [Shared.IoC.Dependency] private readonly IMapManagerInternal _mapManager = default!;
     [Shared.IoC.Dependency] private readonly IPlayerManager _playerManager = default!;
     [Shared.IoC.Dependency] private readonly IConfigurationManager _configManager = default!;
     [Shared.IoC.Dependency] private readonly IServerEntityManager _serverEntManager = default!;
@@ -82,6 +81,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<RobustTree<EntityUid>> _treePool =
         new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>(), MaxVisPoolSize);
+
+    private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
+    private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
+    private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
+    private readonly List<MapGrid> _gridsPool = new(8);
 
     public override void Initialize()
     {
@@ -293,15 +297,17 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public (List<(uint, IChunkIndexLocation)> , HashSet<int>[], EntityUid[][] viewers) GetChunks(IPlayerSession[] sessions)
     {
-        var chunkList = new List<(uint, IChunkIndexLocation)>();
         var playerChunks = new HashSet<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
         var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
 
+        _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
-        var mapIndices = new Dictionary<uint, Dictionary<MapChunkLocation, int>>(4);
-        var gridIndices = new Dictionary<uint, Dictionary<GridChunkLocation, int>>(4);
+        _mapIndices.Clear();
+        _gridIndices.Clear();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var physicsQuery = GetEntityQuery<PhysicsComponent>();
 
         for (int i = 0; i < sessions.Length; i++)
         {
@@ -309,8 +315,7 @@ internal sealed partial class PVSSystem : EntitySystem
             playerChunks[i] = _playerChunkPool.Get();
 
             var viewers = GetSessionViewers(session);
-            viewerEntities[i] = new EntityUid[viewers.Count];
-            viewers.CopyTo(viewerEntities[i]);
+            viewerEntities[i] = viewers;
 
             foreach (var eyeEuid in viewers)
             {
@@ -321,10 +326,10 @@ internal sealed partial class PVSSystem : EntitySystem
                     visMask = eyeComp.VisibilityMask;
 
                 // Get the nyoom dictionary for index lookups.
-                if (!mapIndices.TryGetValue(visMask, out var mapDict))
+                if (!_mapIndices.TryGetValue(visMask, out var mapDict))
                 {
                     mapDict = new Dictionary<MapChunkLocation, int>(32);
-                    mapIndices[visMask] = mapDict;
+                    _mapIndices[visMask] = mapDict;
                 }
 
                 var mapChunkEnumerator = new ChunkIndicesEnumerator(viewPos, range, ChunkSize);
@@ -340,21 +345,28 @@ internal sealed partial class PVSSystem : EntitySystem
                     }
                     else
                     {
-                        playerChunks[i].Add(chunkList.Count);
-                        mapDict.Add(chunkLocation, chunkList.Count);
-                        chunkList.Add(entry);
+                        playerChunks[i].Add(_chunkList.Count);
+                        mapDict.Add(chunkLocation, _chunkList.Count);
+                        _chunkList.Add(entry);
                     }
                 }
 
                 // Get the nyoom dictionary for index lookups.
-                if (!gridIndices.TryGetValue(visMask, out var gridDict))
+                if (!_gridIndices.TryGetValue(visMask, out var gridDict))
                 {
                     gridDict = new Dictionary<GridChunkLocation, int>(32);
-                    gridIndices[visMask] = gridDict;
+                    _gridIndices[visMask] = gridDict;
                 }
 
-                _mapManager.FindGridsIntersectingEnumerator(mapId, new Box2(viewPos - range, viewPos + range), out var gridEnumerator, true);
-                while (gridEnumerator.MoveNext(out var mapGrid))
+                _gridsPool.Clear();
+
+                foreach (var mapGrid in _mapManager.FindGridsIntersecting(
+                             mapId,
+                             new Box2(viewPos - range, viewPos + range),
+                             _gridsPool,
+                             xformQuery,
+                             physicsQuery,
+                             true))
                 {
                     var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
 
@@ -372,18 +384,16 @@ internal sealed partial class PVSSystem : EntitySystem
                         }
                         else
                         {
-                            playerChunks[i].Add(chunkList.Count);
-                            gridDict.Add(chunkLocation, chunkList.Count);
-                            chunkList.Add(entry);
+                            playerChunks[i].Add(_chunkList.Count);
+                            gridDict.Add(chunkLocation, _chunkList.Count);
+                            _chunkList.Add(entry);
                         }
                     }
                 }
             }
-
-            _uidSetPool.Return(viewers);
         }
 
-        return (chunkList, playerChunks, viewerEntities);
+        return (_chunkList, playerChunks, viewerEntities);
     }
 
     public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
@@ -833,14 +843,24 @@ internal sealed partial class PVSSystem : EntitySystem
         return new EntityState(entityUid, changed.ToArray());
     }
 
-    private HashSet<EntityUid> GetSessionViewers(ICommonSession session)
+    private EntityUid[] GetSessionViewers(ICommonSession session)
     {
-        var viewers = _uidSetPool.Get();
         if (session.Status != SessionStatus.InGame)
-            return viewers;
+            return Array.Empty<EntityUid>();
+
+        var viewers = _uidSetPool.Get();
 
         if (session.AttachedEntity != null)
+        {
+            // Fast path
+            if (session is IPlayerSession { ViewSubscriptionCount: 0 })
+            {
+                _uidSetPool.Return(viewers);
+                return new[] { session.AttachedEntity.Value };
+            }
+
             viewers.Add(session.AttachedEntity.Value);
+        }
 
         // This is awful, but we're not gonna add the list of view subscriptions to common session.
         if (session is IPlayerSession playerSession)
@@ -851,7 +871,10 @@ internal sealed partial class PVSSystem : EntitySystem
             }
         }
 
-        return viewers;
+        var viewerArray = viewers.ToArray();
+
+        _uidSetPool.Return(viewers);
+        return viewerArray;
     }
 
     // Read Safe

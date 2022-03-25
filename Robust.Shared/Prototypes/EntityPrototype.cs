@@ -98,8 +98,8 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [NeverPushInheritance]
-        [AbstractDataFieldAttribute]
-        public bool Abstract { get; private set; }
+        [DataField("noSpawn")]
+        public bool NoSpawn { get; private set; }
 
         [DataField("placement")] private EntityPlacementProperties PlacementProperties = new();
 
@@ -140,6 +140,11 @@ namespace Robust.Shared.Prototypes
         [ViewVariables]
         [ParentDataFieldAttribute(typeof(PrototypeIdSerializer<EntityPrototype>))]
         public string? Parent { get; private set; }
+
+        [ViewVariables]
+        [NeverPushInheritance]
+        [AbstractDataField]
+        public bool Abstract { get; }
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.

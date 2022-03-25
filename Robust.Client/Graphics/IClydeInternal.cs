@@ -63,5 +63,7 @@ namespace Robust.Client.Graphics
         uint? GetX11WindowId();
 
         void RegisterGridEcsEvents();
+
+        void RunOnWindowThread(Action action);
     }
 }

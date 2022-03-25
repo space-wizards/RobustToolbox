@@ -66,10 +66,11 @@ namespace Robust.Shared.Map
         /// <summary>
         ///     Returns the tile at the given chunk indices.
         /// </summary>
+        /// <param name="mapId"></param>
         /// <param name="mapChunk"></param>
         /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
         /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
         /// <returns>A reference to a tile.</returns>
-        TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex);
+        TileRef GetTileRef(MapId mapId, MapChunk mapChunk, ushort xIndex, ushort yIndex);
     }
 }

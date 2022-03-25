@@ -1,0 +1,214 @@
+{
+  "metadata": [
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.UnitTesting"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.UnitTesting"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.Shared"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.Shared"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.Shared.Maths"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.Shared.Maths"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.Shared.Scripting"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.Shared.Scripting"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.Client"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.Client"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.Client.WebView"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.Client.WebView"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.Server"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.Server"
+    },
+    {
+      "src":
+      [
+        {
+          "files": [
+            "**.csproj"
+          ],
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "_site/**",
+            "**.xaml"
+          ],
+          "src": "../Robust.LoaderApi"
+        }
+      ],
+      "disableGitFeatures": false,
+      "disableDefaultFilter": false,
+      "dest": "api/Robust.LoaderApi/Robust.LoaderApi"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "files": [
+          "api/**/**.yml"
+        ]
+      },
+      {
+        "files": [
+          "articles/**.md",
+          "articles/**/toc.yml",
+          "toc.yml",
+          "*.md"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "files": [
+          "images/**",
+          "favicon.ico",
+          "icon.svg"          
+        ]
+      }
+    ],
+    "overwrite": [
+      {
+        "files": [
+          "apidoc/**.md"
+        ],
+        "exclude": [
+          "obj/**",
+          "_site/**"
+        ]
+      }
+    ],
+    "dest": "_robust-site",
+    "globalMetadataFiles": [],
+    "fileMetadataFiles": [],
+    "template": [
+      "default",
+      "templates/darkfx"
+    ],
+    "postProcessors": [],
+    "markdownEngineName": "markdig",
+    "noLangKeyword": false,
+    "keepFileLink": false,
+    "cleanupCacheHistory": false,
+    "disableGitFeatures": false
+  }
+}

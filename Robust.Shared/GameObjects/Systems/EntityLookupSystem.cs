@@ -8,6 +8,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
@@ -50,7 +51,6 @@ namespace Robust.Shared.GameObjects
             SubscribeLocalEvent<RotateEvent>(OnRotate);
             SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
             SubscribeLocalEvent<AnchorStateChangedEvent>(OnAnchored);
-            SubscribeLocalEvent<UpdateLookupBoundsEvent>(OnBoundsUpdate);
 
             SubscribeLocalEvent<EntityLookupComponent, ComponentAdd>(OnLookupAdd);
             SubscribeLocalEvent<EntityLookupComponent, ComponentShutdown>(OnLookupShutdown);
@@ -66,6 +66,39 @@ namespace Robust.Shared.GameObjects
         {
             base.Shutdown();
             EntityManager.EntityInitialized -= OnEntityInit;
+        }
+
+        /// <summary>
+        /// Updates the entity's AABB. Uses <see cref="ILookupWorldBox2Component"/>
+        /// </summary>
+        [UsedImplicitly]
+        public void UpdateBounds(EntityUid uid, TransformComponent? xform = null)
+        {
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
+            if (xform == null)
+                xformQuery.TryGetComponent(uid, out xform);
+
+            if (xform == null)
+            {
+                Logger.Error($"Unable to resolve transform on {EntityManager.ToPrettyString(uid)}");
+                DebugTools.Assert(false);
+                return;
+            }
+
+            if (xform.Anchored || _container.IsEntityInContainer(uid, xform)) return;
+
+            var lookup = GetLookup(uid, xform, xformQuery);
+
+            if (lookup == null) return;
+
+            var lookupXform = xformQuery.GetComponent(lookup.Owner);
+            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+            // If we're contained then LocalRotation should be 0 anyway.
+            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform) - _transform.GetWorldRotation(lookupXform), xform, xformQuery);
+
+            // TODO: Only container children need updating so could manually do this slightly better.
+            AddToEntityTree(lookup, xform, aabb, xformQuery);
         }
 
         private void OnAnchored(ref AnchorStateChangedEvent args)
@@ -244,26 +277,6 @@ namespace Robust.Shared.GameObjects
                 AddToEntityTree(newLookup, xform, xformQuery);
         }
 
-        private void OnBoundsUpdate(ref UpdateLookupBoundsEvent ev)
-        {
-            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(ev.Uid);
-
-            if (xform.Anchored || _container.IsEntityInContainer(ev.Uid, xform)) return;
-
-            var lookup = GetLookup(ev.Uid, xform, xformQuery);
-
-            if (lookup == null) return;
-
-            var lookupXform = xformQuery.GetComponent(lookup.Owner);
-            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
-            // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform) - _transform.GetWorldRotation(lookupXform), xform, xformQuery);
-
-            // TODO: Only container children need updating so could manually do this slightly better.
-            AddToEntityTree(lookup, xform, aabb, xformQuery);
-        }
-
         private void AddToEntityTree(
             EntityLookupComponent lookup,
             TransformComponent xform,
@@ -425,7 +438,7 @@ namespace Robust.Shared.GameObjects
             Box2 localAABB;
             var transform = new Transform(position, angle);
 
-            if (EntityManager.TryGetComponent<ILookupWorldBox2Component>(uid, out var worldLookup))
+            if (TryComp<ILookupWorldBox2Component>(uid, out var worldLookup))
             {
                 localAABB = worldLookup.GetAABB(transform);
             }
@@ -447,19 +460,5 @@ namespace Robust.Shared.GameObjects
         }
 
         #endregion
-    }
-}
-
-/// <summary>
-/// Flags this entity for an update to their lookup bounds.
-/// </summary>
-[ByRefEvent]
-public readonly struct UpdateLookupBoundsEvent
-{
-    public readonly EntityUid Uid;
-
-    public UpdateLookupBoundsEvent(EntityUid uid)
-    {
-        Uid = uid;
     }
 }

@@ -251,6 +251,11 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
+        public void RunOnWindowThread(Action action)
+        {
+            action();
+        }
+
         private sealed class DummyCursor : ICursor
         {
             public void Dispose()

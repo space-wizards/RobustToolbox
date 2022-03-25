@@ -730,6 +730,8 @@ namespace Robust.Client.GameObjects
 
             // If neither state: nor texture: were provided we assume that they want a blank invisible layer.
             layer.Visible = anyTextureAttempted && layerDatum.Visible;
+
+            RebuildBounds();
         }
 
         public void LayerSetData(object layerKey, PrototypeLayerData data)
@@ -1967,6 +1969,13 @@ namespace Robust.Client.GameObjects
             public Box2 CalculateBoundingBox()
             {
                 var textureSize = PixelSize / EyeManager.PixelsPerMeter;
+
+                // If the parent has locked rotation and we don't have any rotation,
+                // we can take the quick path of just making a box the size of the texture.
+                if (_parent.NoRotation && _rotation != 0)
+                {
+                    return Box2.CenteredAround(Offset, textureSize);
+                }
 
                 var rsiState = GetActualState();
 

@@ -58,8 +58,8 @@ namespace Robust.Shared.Localization
 
             while (true)
             {
-                var prototype = _prototype.Index<EntityPrototype>(prototypeId);
-                var locId = prototype.CustomLocalizationID ?? $"ent-{prototypeId}";
+                _prototype.TryIndex<EntityPrototype>(prototypeId, out var prototype);
+                var locId = prototype?.CustomLocalizationID ?? $"ent-{prototypeId}";
 
                 if (TryGetMessage(locId, out var bundle, out var msg))
                 {
@@ -109,11 +109,11 @@ namespace Robust.Shared.Localization
                     }
                 }
 
-                name ??= prototype.SetName;
-                desc ??= prototype.SetDesc;
-                suffix ??= prototype.SetSuffix;
+                name ??= prototype?.SetName;
+                desc ??= prototype?.SetDesc;
+                suffix ??= prototype?.SetSuffix;
 
-                if (prototype.LocProperties.Count != 0)
+                if (prototype?.LocProperties != null && prototype.LocProperties.Count != 0)
                 {
                     foreach (var (attrib, value) in prototype.LocProperties)
                     {
@@ -125,7 +125,7 @@ namespace Robust.Shared.Localization
                     }
                 }
 
-                if (prototype.Parent == null)
+                if (prototype?.Parent == null)
                     break;
 
                 prototypeId = prototype.Parent;

@@ -96,6 +96,12 @@ namespace Robust.Shared.Player
             return this;
         }
 
+        public static IEnumerable<ICommonSession> GetAllPlayers(ISharedPlayerManager? playerManager = null)
+        {
+            IoCManager.Resolve(ref playerManager);
+            return playerManager.NetworkedSessions;
+        }
+
         /// <summary>
         ///     Adds all players to the filter.
         /// </summary>

@@ -16,7 +16,7 @@ namespace Robust.Shared.Physics
 {
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private const int MinimumBroadphaseCapacity = 256;
@@ -40,6 +40,8 @@ namespace Robust.Shared.Physics
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
+
+        private List<MapGrid> _gridsPool = new(8);
 
         /// <summary>
         /// How much to expand bounds by to check cross-broadphase collisions.
@@ -188,9 +190,11 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
+                _gridsPool.Clear();
+
                 // Get every broadphase we may be intersecting.
                 // Also TODO: Don't put grids on movebuffer so you get peak shuttle driving performance.
-                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), xformQuery, physicsQuery))
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), _gridsPool, xformQuery, physicsQuery))
                 {
                     FindPairs(proxy, worldAABB, grid.GridEntityId, xformQuery, broadphaseQuery);
                 }

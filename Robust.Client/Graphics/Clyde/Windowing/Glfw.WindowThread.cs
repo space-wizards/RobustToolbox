@@ -118,6 +118,10 @@ namespace Robust.Client.Graphics.Clyde
                     case CmdWinCursorSet cmd:
                         WinThreadWinCursorSet(cmd);
                         break;
+
+                    case CmdRunAction cmd:
+                        cmd.Action();
+                        break;
                 }
             }
 
@@ -167,6 +171,11 @@ namespace Robust.Client.Graphics.Clyde
                 {
                     task.AsTask().Wait();
                 }
+            }
+
+            public void RunOnWindowThread(Action action)
+            {
+                SendCmd(new CmdRunAction(action));
             }
 
             private abstract record CmdBase;
@@ -244,6 +253,10 @@ namespace Robust.Client.Graphics.Clyde
 
             private sealed record CmdCursorDestroy(
                 ClydeHandle Cursor
+            ) : CmdBase;
+
+            private sealed record CmdRunAction(
+                Action Action
             ) : CmdBase;
         }
     }

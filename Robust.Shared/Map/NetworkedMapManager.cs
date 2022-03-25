@@ -62,8 +62,12 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
     public GameStateMapData? GetStateData(GameTick fromTick)
     {
         var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
-        foreach (MapGrid grid in GetAllGrids())
+        var enumerator = GetAllGridsEnumerator();
+
+        while (enumerator.MoveNext(out var iGrid))
         {
+            var grid = (MapGrid)iGrid;
+
             if (grid.LastTileModifiedTick < fromTick)
                 continue;
 

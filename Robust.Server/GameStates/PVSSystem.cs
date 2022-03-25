@@ -82,6 +82,14 @@ internal sealed partial class PVSSystem : EntitySystem
     private readonly ObjectPool<RobustTree<EntityUid>> _treePool =
         new DefaultObjectPool<RobustTree<EntityUid>>(new TreePolicy<EntityUid>(), MaxVisPoolSize);
 
+    private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
+        new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
+            new ChunkPoolPolicy<MapChunkLocation>(), 256);
+
+    private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
+        new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
+            new ChunkPoolPolicy<GridChunkLocation>(), 256);
+
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
     private readonly List<(uint, IChunkIndexLocation)> _chunkList = new(64);
@@ -304,6 +312,13 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
+        // Pool it because this will allocate a lot across ticks as we scale in players.
+        foreach (var (_, chunks) in _mapIndices)
+            _mapChunkPool.Return(chunks);
+
+        foreach (var (_, chunks) in _gridIndices)
+            _gridChunkPool.Return(chunks);
+
         _mapIndices.Clear();
         _gridIndices.Clear();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -328,7 +343,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 // Get the nyoom dictionary for index lookups.
                 if (!_mapIndices.TryGetValue(visMask, out var mapDict))
                 {
-                    mapDict = new Dictionary<MapChunkLocation, int>(32);
+                    mapDict = _mapChunkPool.Get();
                     _mapIndices[visMask] = mapDict;
                 }
 
@@ -354,7 +369,7 @@ internal sealed partial class PVSSystem : EntitySystem
                 // Get the nyoom dictionary for index lookups.
                 if (!_gridIndices.TryGetValue(visMask, out var gridDict))
                 {
-                    gridDict = new Dictionary<GridChunkLocation, int>(32);
+                    gridDict = _gridChunkPool.Get();
                     _gridIndices[visMask] = gridDict;
                 }
 
@@ -921,6 +936,20 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         public override bool Return(RobustTree<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    private sealed class ChunkPoolPolicy<T> : PooledObjectPolicy<Dictionary<T, int>> where T : notnull
+    {
+        public override Dictionary<T, int> Create()
+        {
+            return new Dictionary<T, int>(32);
+        }
+
+        public override bool Return(Dictionary<T, int> obj)
         {
             obj.Clear();
             return true;

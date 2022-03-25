@@ -1,13 +1,13 @@
 using System;
 using Robust.Client.Audio.Midi;
 using Robust.Client.Console;
-using Robust.Client.Debugging;
 using Robust.Client.GameObjects;
 using Robust.Client.GameStates;
 using Robust.Client.Graphics;
 using Robust.Client.Graphics.Audio;
 using Robust.Client.Graphics.Clyde;
 using Robust.Client.Input;
+using Robust.Client.Localization;
 using Robust.Client.Map;
 using Robust.Client.Placement;
 using Robust.Client.Player;
@@ -112,6 +112,7 @@ namespace Robust.Client
             IoCManager.Register<IViewVariablesManagerInternal, ViewVariablesManager>();
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
+            IoCManager.Register<LocalizationWatcher, LocalizationWatcher>();
         }
     }
 }

@@ -8,6 +8,11 @@ namespace Robust.Shared.ContentPack
     internal interface IResourceManagerInternal : IResourceManager
     {
         /// <summary>
+        ///     Fires with the newly added root in <see cref="IResourceManager.AddRoot"/>.
+        /// </summary>
+        event Action<IContentRoot>? RootAdded;
+
+        /// <summary>
         ///     Sets the manager up so that the base game can run.
         /// </summary>
         /// <param name="userData">

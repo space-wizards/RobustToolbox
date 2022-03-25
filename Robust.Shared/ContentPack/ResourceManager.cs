@@ -36,6 +36,8 @@ namespace Robust.Shared.ContentPack
         /// <inheritdoc />
         public IWritableDirProvider UserData { get; private set; } = default!;
 
+        public event Action<IContentRoot>? RootAdded;
+
         /// <inheritdoc />
         public void Initialize(string? userData)
         {
@@ -109,6 +111,8 @@ namespace Robust.Shared.ContentPack
             {
                 _contentRootsLock.ExitWriteLock();
             }
+
+            RootAdded?.Invoke(loader);
         }
 
         private static ResourcePath SanitizePrefix(ResourcePath? prefix)

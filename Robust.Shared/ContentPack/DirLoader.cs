@@ -15,7 +15,7 @@ namespace Robust.Shared.ContentPack
         /// <summary>
         ///     Holds info about a directory that is mounted in the VFS.
         /// </summary>
-        sealed class DirLoader : IContentRoot
+        sealed class DirLoader : IDirRoot
         {
             private readonly DirectoryInfo _directory;
             private readonly ISawmill _sawmill;
@@ -33,6 +33,8 @@ namespace Robust.Shared.ContentPack
                 _sawmill = sawmill;
                 _checkCasing = checkCasing;
             }
+
+            public string FullPath => _directory.ToString();
 
             /// <inheritdoc />
             public void Mount()

@@ -601,7 +601,7 @@ namespace Robust.Client.GameObjects
         private void RebuildBounds()
         {
             _bounds = new Box2();
-            foreach (var layer in Layers)
+            foreach (var layer in Layers.Where(layer => layer.Visible))
             {
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
@@ -1128,7 +1128,6 @@ namespace Robust.Client.GameObjects
             }
 
             Layers[layer].SetVisible(visible);
-            RebuildBounds();
         }
 
         public void LayerSetVisible(object layerKey, bool visible)
@@ -1872,6 +1871,7 @@ namespace Robust.Client.GameObjects
                 Visible = value;
 
                 _parent.QueueUpdateIsInert();
+                _parent.RebuildBounds();
             }
 
             public void SetRsi(RSI? rsi)

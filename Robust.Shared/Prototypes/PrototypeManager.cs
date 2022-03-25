@@ -340,10 +340,7 @@ namespace Robust.Shared.Prototypes
                     PushInheritance(type, id, _inheritanceTrees[type].GetParent(id), set);
                     foreach (var changedId in set)
                     {
-                        if(_prototypeResults[type][changedId].TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) && abstractNode.AsBool())
-                            continue;
-                        _prototypes[type][changedId] =
-                            (IPrototype)_serializationManager.Read(type, _prototypeResults[type][changedId])!;
+                        TryReadPrototype(type, changedId, _prototypeResults[type][changedId]);
                     }
                     pushed[type].UnionWith(set);
                 }
@@ -395,10 +392,22 @@ namespace Robust.Shared.Prototypes
 
                 foreach (var (id, mapping) in _prototypeResults[type])
                 {
-                    if(mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) && abstractNode.AsBool())
-                        continue;
-                    _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, mapping)!;
+                    TryReadPrototype(type, id, mapping);
                 }
+            }
+        }
+
+        private void TryReadPrototype(Type type, string id, MappingDataNode mapping)
+        {
+            if(mapping.TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) && abstractNode.AsBool())
+                return;
+            try
+            {
+                _prototypes[type][id] = (IPrototype) _serializationManager.Read(type, mapping)!;
+            }
+            catch (Exception e)
+            {
+                Logger.ErrorS("PROTO", $"Reading {type}({id}) threw the following exception: {e}");
             }
         }
 

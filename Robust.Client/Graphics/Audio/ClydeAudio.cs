@@ -23,10 +23,6 @@ namespace Robust.Client.Graphics.Audio
         private ALDevice _openALDevice;
         private ALContext _openALContext;
 
-        // Set to 512 because it's double the default limit of 256, we can
-        // change this in the future if needs be.
-        private const int MonoSourceMaximum = 512;
-
         private readonly List<LoadedAudioSample> _audioSampleBuffers = new();
 
         private readonly Dictionary<int, WeakReference<AudioSource>> _audioSources =
@@ -65,17 +61,43 @@ namespace Robust.Client.Graphics.Audio
             return true;
         }
 
+        private int? GetAlMonoSourceLimit()
+        {
+            // Get default mono source limit, if it exists
+            int? sourceLimit = null;
+            var attributeArray = ALC.GetAttributeArray(_openALDevice);
+            for (var i = 0; i < attributeArray.Length; i += 2)
+            {
+                if (attributeArray[i] == (int) AlcContextAttributes.MonoSources)
+                {
+                    sourceLimit = attributeArray[i + 1];
+                }
+            }
+
+            return sourceLimit;
+        }
+
         private void _audioCreateContext()
         {
+            // Subtract one from the source maximum since OpenAL source limits are zero-indexed.
+            var sourceMaximum = _cfg.GetCVar(CVars.SourceMaximum) - 1;
+
             unsafe
             {
                 // Context attributes to pass to OpenAL - this tells OpenAL
-                // that we will be allocating up to `MonoSourceMaximum` sources.
-                int[] args =  { (int) AlcContextAttributes.MonoSources, MonoSourceMaximum };
+                // that we will be allocating up to `sourceMaximum` sources.
+                int[] args =  { (int) AlcContextAttributes.MonoSources, sourceMaximum };
                 fixed (int* a = args)
                 {
                     _openALContext = ALC.CreateContext(_openALDevice, a);
                 }
+            }
+
+            var postInitSourceMaximum = GetAlMonoSourceLimit();
+
+            if (sourceMaximum != postInitSourceMaximum)
+            {
+                _openALSawmill.Warning("Unable to set audio source limit to {0} - currently set at {1} instead", sourceMaximum, postInitSourceMaximum);
             }
 
             ALC.MakeContextCurrent(_openALContext);

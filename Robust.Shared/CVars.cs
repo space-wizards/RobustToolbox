@@ -830,6 +830,12 @@ namespace Robust.Shared
         public static readonly CVarDef<string> AudioDevice =
             CVarDef.Create("audio.device", string.Empty, CVar.CLIENTONLY);
 
+
+        /// <summary>
+        /// Source maximum for OpenAL. This is set to 512 by default (double the usual limit of 256).
+        /// </summary>
+        public static readonly CVarDef<int> SourceMaximum = CVarDef.Create("audio.sourcemaximum", 512, CVar.CLIENTONLY);
+
         /// <summary>
         /// Master volume for audio output.
         /// </summary>

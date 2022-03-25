@@ -84,11 +84,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
         new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
-            new DefaultPooledObjectPolicy<Dictionary<MapChunkLocation, int>>(), 256);
+            new ChunkPoolPolicy<MapChunkLocation>(), 256);
 
     private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
-            new DefaultPooledObjectPolicy<Dictionary<GridChunkLocation, int>>(), 256);
+            new ChunkPoolPolicy<GridChunkLocation>(), 256);
 
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
@@ -312,17 +312,12 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _chunkList.Clear();
         // Keep track of the index of each chunk we use for a faster index lookup.
+        // Pool it because this will allocate a lot across ticks as we scale in players.
         foreach (var (_, chunks) in _mapIndices)
-        {
-            chunks.Clear();
             _mapChunkPool.Return(chunks);
-        }
 
         foreach (var (_, chunks) in _gridIndices)
-        {
-            chunks.Clear();
             _gridChunkPool.Return(chunks);
-        }
 
         _mapIndices.Clear();
         _gridIndices.Clear();
@@ -941,6 +936,20 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         public override bool Return(RobustTree<T> obj)
+        {
+            obj.Clear();
+            return true;
+        }
+    }
+
+    private sealed class ChunkPoolPolicy<T> : PooledObjectPolicy<Dictionary<T, int>> where T : notnull
+    {
+        public override Dictionary<T, int> Create()
+        {
+            return new Dictionary<T, int>(32);
+        }
+
+        public override bool Return(Dictionary<T, int> obj)
         {
             obj.Clear();
             return true;

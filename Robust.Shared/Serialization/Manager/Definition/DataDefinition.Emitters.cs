@@ -36,8 +36,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
                     if (!mapped)
                     {
-                        if (fieldDefinition.Attribute.Required)
-                            throw new InvalidOperationException("Required field wasn't mapped.");
+                        //if (fieldDefinition.Attribute.Required)
+                            //System.Console.WriteLine($"{target.GetType()} | {fieldDefinition.Attribute.Tag}");
+                            //throw new InvalidOperationException("Required field wasn't mapped.");
                         continue;
                     }
 

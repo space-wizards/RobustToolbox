@@ -104,13 +104,16 @@ Mouse Pos:
                 var playerCoordinates = entityTransform.Coordinates;
                 var playerRotation = entityTransform.WorldRotation;
 
+                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridID, out var grid) ? grid.WorldRotation : Angle.Zero;
+
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
     Rotation: {3:F2}°
     EntId: {4}
-    GridID: {5}", playerScreen, playerWorldOffset, playerCoordinates, playerRotation.Degrees, entityTransform.Owner,
-                    entityTransform.GridID);
+    GridID: {5}
+    Grid Rotation: {6:F2}°", playerScreen, playerWorldOffset, playerCoordinates, playerRotation.Degrees, entityTransform.Owner,
+                    entityTransform.GridID, gridRotation.Degrees);
             }
 
             if (controlHovered != null)

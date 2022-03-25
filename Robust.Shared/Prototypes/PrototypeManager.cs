@@ -340,6 +340,8 @@ namespace Robust.Shared.Prototypes
                     PushInheritance(type, id, _inheritanceTrees[type].GetParent(id), set);
                     foreach (var changedId in set)
                     {
+                        if(_prototypeResults[type][changedId].TryGet<ValueDataNode>(AbstractDataFieldAttribute.Name, out var abstractNode) && abstractNode.AsBool())
+                            continue;
                         _prototypes[type][changedId] =
                             (IPrototype)_serializationManager.Read(type, _prototypeResults[type][changedId])!;
                     }

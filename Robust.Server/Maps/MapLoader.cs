@@ -786,40 +786,29 @@ namespace Robust.Server.Maps
 
             private void PopulateEntityList()
             {
-                var withUid = new List<MapSaveIdComponent>();
                 var withoutUid = new List<EntityUid>();
-                var takenIds = new HashSet<int>();
+                var takenIds = new HashSet<int>(_serverEntityManager.EntityCount);
 
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
-                    if (IsMapSavable(entity))
+                    if (!IsMapSavable(entity)) continue;
+
+                    Entities.Add(entity);
+                    if (_serverEntityManager.TryGetComponent(entity, out MapSaveIdComponent? mapSaveId))
                     {
-                        Entities.Add(entity);
-                        if (_serverEntityManager.TryGetComponent(entity, out MapSaveIdComponent? mapSaveId))
+                        if (takenIds.Add(mapSaveId.Uid))
                         {
-                            withUid.Add(mapSaveId);
+                            EntityUidMap.Add(mapSaveId.Owner, mapSaveId.Uid);
                         }
                         else
                         {
-                            withoutUid.Add(entity);
+                            // If the id was already saved, we need to find a new id for this entity
+                            withoutUid.Add(mapSaveId.Owner);
                         }
-                    }
-                }
-
-                // Go over entities with a MapSaveIdComponent and assign those.
-
-                foreach (var mapIdComp in withUid)
-                {
-                    var uid = mapIdComp.Uid;
-                    if (takenIds.Contains(uid))
-                    {
-                        // Duplicate ID. Just pretend it doesn't have an ID and use the without path.
-                        withoutUid.Add(mapIdComp.Owner);
                     }
                     else
                     {
-                        EntityUidMap.Add(mapIdComp.Owner, uid);
-                        takenIds.Add(uid);
+                        withoutUid.Add(entity);
                     }
                 }
 
@@ -833,7 +822,7 @@ namespace Robust.Server.Maps
                     }
 
                     EntityUidMap.Add(entity, uidCounter);
-                    takenIds.Add(uidCounter);
+                    uidCounter += 1;
                 }
             }
 
@@ -940,17 +929,17 @@ namespace Robust.Server.Maps
 
             private bool IsMapSavable(EntityUid entity)
             {
-                if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(_serverEntityManager.GetComponent<TransformComponent>(entity).GridID))
+                var current = _serverEntityManager.GetComponent<TransformComponent>(entity);
+                if (!GridIDMap.ContainsKey(current.GridID))
                 {
                     return false;
                 }
 
                 // Don't serialize things parented to un savable things.
                 // For example clothes inside a person.
-                var current = _serverEntityManager.GetComponent<TransformComponent>(entity);
-                while (current.Parent != null)
+                while (current != null)
                 {
-                    if (_serverEntityManager.GetComponent<MetaDataComponent>(current.Parent.Owner).EntityPrototype?.MapSavable == false)
+                    if (_serverEntityManager.GetComponent<MetaDataComponent>(current.Owner).EntityPrototype?.MapSavable == false)
                     {
                         return false;
                     }

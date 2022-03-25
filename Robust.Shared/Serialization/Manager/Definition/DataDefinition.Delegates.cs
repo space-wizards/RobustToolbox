@@ -35,6 +35,6 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
         private delegate TValue AccessField<TTarget, TValue>(ref TTarget target);
 
-        private delegate void AssignField<TTarget, TValue>(ref TTarget target, TValue? value);
+        internal delegate void AssignField<TTarget, TValue>(ref TTarget target, TValue? value);
     }
 }

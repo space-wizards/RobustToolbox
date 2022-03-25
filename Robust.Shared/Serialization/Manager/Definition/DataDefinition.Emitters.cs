@@ -238,7 +238,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return CopyDelegate;
         }
 
-        private void EmitSetField(RobustILGenerator rGenerator, AbstractFieldInfo info)
+        private static void EmitSetField(RobustILGenerator rGenerator, AbstractFieldInfo info)
         {
             switch (info)
             {
@@ -308,7 +308,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return method.CreateDelegate<AccessField<object, object?>>();
         }
 
-        private AssignField<object, object?> EmitFieldAssigner(FieldDefinition fieldDefinition)
+        internal static AssignField<object, object?> EmitFieldAssigner(Type type,AbstractFieldInfo fieldInfo)
         {
             var method = new DynamicMethod(
                 "AssignField",
@@ -321,22 +321,22 @@ namespace Robust.Shared.Serialization.Manager.Definition
 
             var generator = method.GetRobustGen();
 
-            if (Type.IsValueType)
+            if (type.IsValueType)
             {
-                generator.DeclareLocal(Type);
+                generator.DeclareLocal(type);
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Unbox_Any, Type);
+                generator.Emit(OpCodes.Unbox_Any, type);
                 generator.Emit(OpCodes.Stloc_0);
                 generator.Emit(OpCodes.Ldloca, 0);
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+                generator.Emit(OpCodes.Unbox_Any, fieldInfo.FieldType);
 
-                EmitSetField(generator, fieldDefinition.BackingField);
+                EmitSetField(generator, fieldInfo);
 
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldloc_0);
-                generator.Emit(OpCodes.Box, Type);
+                generator.Emit(OpCodes.Box, type);
                 generator.Emit(OpCodes.Stind_Ref);
 
                 generator.Emit(OpCodes.Ret);
@@ -345,11 +345,11 @@ namespace Robust.Shared.Serialization.Manager.Definition
             {
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldind_Ref);
-                generator.Emit(OpCodes.Castclass, Type);
+                generator.Emit(OpCodes.Castclass, type);
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldDefinition.FieldType);
+                generator.Emit(OpCodes.Unbox_Any, fieldInfo.FieldType);
 
-                EmitSetField(generator, fieldDefinition.BackingField);
+                EmitSetField(generator, fieldInfo);
 
                 generator.Emit(OpCodes.Ret);
             }

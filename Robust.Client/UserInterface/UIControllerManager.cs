@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Robust.Client.GameStates;
+using Robust.Client.State;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -23,7 +24,7 @@ public interface IUILink //Don't use this for things other than systems or I'll 
 [Virtual]
 public abstract class UIController
 {
-    public virtual void OnGamestateChanged(GameStateAppliedArgs args) {}
+    public virtual void OnStateChanged(StateChangedEventArgs args) {}
 
 }
 
@@ -46,7 +47,7 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
     [Robust.Shared.IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Robust.Shared.IoC.Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
     [Robust.Shared.IoC.Dependency] private readonly IEntitySystemManager _systemManager = default!;
-    [Robust.Shared.IoC.Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
+    [Robust.Shared.IoC.Dependency] private readonly IStateManager _stateManager = default!;
     private UIController[] _uiControllerRegistry = default!;
     private readonly Dictionary<Type, int> _uiControllerIndices = new();
 
@@ -110,8 +111,10 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField)));
             }
-            if (uiControllerType.GetMethod(nameof(UIController.OnGamestateChanged))?.DeclaringType != typeof(UIController))
-                _gameStateManager.GameStateApplied += ((UIController)newController).OnGamestateChanged;
+
+            if (uiControllerType.GetMethod(nameof(UIController.OnStateChanged))?.DeclaringType != typeof(UIController))
+                _stateManager.OnStateChanged += ((UIController)newController).OnStateChanged;
+
         }
 
         _uiControllerRegistry = tempList.ToArray();

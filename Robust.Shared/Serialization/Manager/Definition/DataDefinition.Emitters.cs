@@ -308,7 +308,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return method.CreateDelegate<AccessField<object, object?>>();
         }
 
-        internal static AssignField<object, object?> EmitFieldAssigner(Type type,AbstractFieldInfo fieldInfo)
+        internal static AssignField<object, object?> EmitFieldAssigner(Type type, Type fieldType, AbstractFieldInfo backingField)
         {
             var method = new DynamicMethod(
                 "AssignField",
@@ -330,9 +330,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Stloc_0);
                 generator.Emit(OpCodes.Ldloca, 0);
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldInfo.FieldType);
+                generator.Emit(OpCodes.Unbox_Any, fieldType);
 
-                EmitSetField(generator, fieldInfo);
+                EmitSetField(generator, backingField);
 
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldloc_0);
@@ -347,9 +347,9 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Ldind_Ref);
                 generator.Emit(OpCodes.Castclass, type);
                 generator.Emit(OpCodes.Ldarg_1);
-                generator.Emit(OpCodes.Unbox_Any, fieldInfo.FieldType);
+                generator.Emit(OpCodes.Unbox_Any, fieldType);
 
-                EmitSetField(generator, fieldInfo);
+                EmitSetField(generator, backingField);
 
                 generator.Emit(OpCodes.Ret);
             }

@@ -54,7 +54,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 var fieldDefinition = BaseFieldDefinitions[i];
 
                 fieldAccessors[i] = EmitFieldAccessor(fieldDefinition);
-                fieldAssigners[i] = EmitFieldAssigner(Type,fieldDefinition.FieldInfo);
+                fieldAssigners[i] = EmitFieldAssigner(Type, fieldDefinition.FieldType, fieldDefinition.BackingField);
             }
 
             FieldAccessors = fieldAccessors.ToImmutableArray();

@@ -6,10 +6,8 @@ using Robust.Client.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
-using Robust.Shared.Sandboxing;
 using Robust.Shared.Serialization.Manager.Definition;
 using Robust.Shared.Utility;
-
 
 namespace Robust.Client.UserInterface;
 
@@ -60,8 +58,18 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
             _registeredControllers.Add(uiControllerType, (UIController)newController);
             foreach (var fieldInfo in uiControllerType.GetAllPropertiesAndFields())
             {
+                var backingField = fieldInfo;
+                if (fieldInfo is SpecificPropertyInfo property)
+                {
+                    if (!property.TryGetBackingField(out var field))
+                    {
+                        continue;
+                    }
+
+                    backingField = field;
+                }
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
-                typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner(fieldInfo.FieldType, fieldInfo)));
+                typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner(uiControllerType, fieldInfo.FieldType, backingField)));
             }
             if (uiControllerType.GetMethod(nameof(UIController.OnGamestateChanged))?.DeclaringType != typeof(UIController))
                 _gameStateManager.GameStateApplied += ((UIController)newController).OnGamestateChanged;

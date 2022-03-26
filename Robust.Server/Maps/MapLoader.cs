@@ -915,8 +915,8 @@ namespace Robust.Server.Maps
             }
 
             // Create custom object serializers that will correctly allow data to be overriden by the map file.
-            IComponent IEntityLoadContext.GetComponentData(string componentName,
-                IComponent? protoData)
+            MappingDataNode IEntityLoadContext.GetComponentData(string componentName,
+                MappingDataNode? protoData)
             {
                 if (CurrentReadingEntityComponents == null)
                 {
@@ -926,18 +926,15 @@ namespace Robust.Server.Maps
                 var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var factory = IoCManager.Resolve<IComponentFactory>();
 
-                IComponent data = protoData != null
-                    ? serializationManager.CreateCopy(protoData, this)!
-                    : (IComponent) Activator.CreateInstance(factory.GetRegistration(componentName).Type)!;
-
                 if (CurrentReadingEntityComponents.TryGetValue(componentName, out var mapping))
                 {
-                    data = (IComponent) serializationManager.Read(
-                        factory.GetRegistration(componentName).Type,
-                        mapping, this, value: data)!;
+                    if (protoData == null) return mapping.Copy();
+
+                    return serializationManager.PushCompositionWithGenericNode(
+                        factory.GetRegistration(componentName).Type, new[] { protoData }, mapping, this);
                 }
 
-                return data;
+                return protoData ?? new MappingDataNode();
             }
 
             public IEnumerable<string> GetExtraComponentTypes()

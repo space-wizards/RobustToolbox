@@ -80,6 +80,8 @@ namespace Robust.Shared.Prototypes
         bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
         bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
+        bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
+
         /// <summary>
         ///     Returns whether a prototype variant <param name="variant"/> exists.
         /// </summary>
@@ -694,6 +696,13 @@ namespace Robust.Shared.Prototypes
             }
 
             return index.TryGetValue(id, out prototype);
+        }
+
+        public bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings)
+        {
+            var ret = _prototypeResults[type].TryGetValue(id, out var originalMappings);
+            mappings = originalMappings?.Copy();
+            return ret;
         }
 
         /// <inheritdoc />

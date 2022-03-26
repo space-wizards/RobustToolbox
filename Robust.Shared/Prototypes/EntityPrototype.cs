@@ -10,6 +10,9 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.ViewVariables;
 
@@ -235,7 +238,7 @@ namespace Robust.Shared.Prototypes
         }
 
         internal static void LoadEntity(EntityPrototype? prototype, EntityUid entity, IComponentFactory factory,
-            IEntityLoadContext? context) //yeah officer this method right here
+            IEntityLoadContext? context, IPrototypeManager prototypeManager) //yeah officer this method right here
         {
             /*YamlObjectSerializer.Context? defaultContext = null;
             if (context == null)
@@ -245,12 +248,22 @@ namespace Robust.Shared.Prototypes
 
             if (prototype != null)
             {
-                foreach (var (name, data) in prototype.Components)
+                prototypeManager.TryGetMapping(typeof(EntityPrototype), prototype.ID, out var prototypeData);
+
+                foreach (var (name, _) in prototype.Components)
                 {
-                    var fullData = data;
+                    MappingDataNode? fullData = null;
+                    if (prototypeData != null && prototypeData.TryGet<SequenceDataNode>("components", out var compList))
+                    {
+                        fullData = compList.Cast<MappingDataNode>().FirstOrDefault(x =>
+                            x.TryGet<ValueDataNode>("type", out var typeNode) && typeNode.Value == name);
+                    }
+
+                    fullData ??= new MappingDataNode();
+
                     if (context != null)
                     {
-                        fullData = context.GetComponentData(name, data);
+                        fullData = context.GetComponentData(name, fullData);
                     }
 
                     EnsureCompExistsAndDeserialize(entity, factory, name, fullData, context as ISerializationContext);
@@ -277,7 +290,7 @@ namespace Robust.Shared.Prototypes
         }
 
         private static void EnsureCompExistsAndDeserialize(EntityUid entity, IComponentFactory factory, string compName,
-            IComponent data, ISerializationContext? context)
+            MappingDataNode data, ISerializationContext? context)
         {
             var entityManager = IoCManager.Resolve<IEntityManager>();
             var compType = factory.GetRegistration(compName).Type;
@@ -291,7 +304,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            _ = IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
+            IoCManager.Resolve<ISerializationManager>().Read(compType, data, context, value: component);
         }
 
         public override string ToString()

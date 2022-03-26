@@ -13,7 +13,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
         public ValidationNode Validate(ISerializationManager serializationManager, ValueDataNode node,
             IDependencyCollection dependencies, ISerializationContext? context = null)
         {
-            return dependencies.Resolve<IPrototypeManager>().HasIndex<TPrototype>(node.Value)
+            return dependencies.Resolve<IPrototypeManager>().HasMapping<TPrototype>(node.Value)
                 ? new ValidatedValueNode(node)
                 : new ErrorNode(node, $"PrototypeID {node.Value} for type {typeof(TPrototype)} not found");
         }

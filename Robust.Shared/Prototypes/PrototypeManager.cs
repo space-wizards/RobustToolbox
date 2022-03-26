@@ -80,6 +80,7 @@ namespace Robust.Shared.Prototypes
         bool TryIndex<T>(string id, [NotNullWhen(true)] out T? prototype) where T : class, IPrototype;
         bool TryIndex(Type type, string id, [NotNullWhen(true)] out IPrototype? prototype);
 
+        bool HasMapping<T>(string id);
         bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings);
 
         /// <summary>
@@ -696,6 +697,16 @@ namespace Robust.Shared.Prototypes
             }
 
             return index.TryGetValue(id, out prototype);
+        }
+
+        public bool HasMapping<T>(string id)
+        {
+            if (!_prototypeResults.TryGetValue(typeof(T), out var index))
+            {
+                throw new UnknownPrototypeException(id);
+            }
+
+            return index.ContainsKey(id);
         }
 
         public bool TryGetMapping(Type type, string id, [NotNullWhen(true)] out MappingDataNode? mappings)

@@ -12,6 +12,11 @@ namespace Robust.Shared.Map
     /// </summary>
     public interface IMapManager : IPauseManager
     {
+        /// <summary>
+        /// A faster version of <see cref="GetAllGrids"/>
+        /// </summary>
+        GridEnumerator GetAllGridsEnumerator();
+
         IEnumerable<IMapGrid> GetAllGrids();
 
         /// <summary>
@@ -124,16 +129,6 @@ namespace Robust.Shared.Map
         /// <param name="approx">Set to false if you wish to accurately get the grid bounds per-tile.</param>
         /// <returns></returns>
         IEnumerable<IMapGrid> FindGridsIntersecting(MapId mapId, Box2 worldAabb, bool approx = false);
-
-        /// <summary>
-        /// <see cref="FindGridsIntersecting(Robust.Shared.Map.MapId,Robust.Shared.Maths.Box2,bool)"/>
-        /// </summary>
-        IEnumerable<IMapGrid> FindGridsIntersecting(
-            MapId mapId,
-            Box2 worldAABB,
-            EntityQuery<TransformComponent> xformQuery,
-            EntityQuery<PhysicsComponent> physicsQuery,
-            bool approx = false);
 
         /// <summary>
         /// Returns the grids intersecting this AABB.

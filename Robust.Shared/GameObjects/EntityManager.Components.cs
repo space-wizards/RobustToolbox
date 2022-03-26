@@ -12,6 +12,8 @@ using Robust.Shared.Utility;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Robust.Shared.Maths;
+using Robust.Shared.Log;
+using System.Diagnostics;
 #if EXCEPTION_TOLERANCE
 using Robust.Shared.Exceptions;
 #endif
@@ -1099,6 +1101,27 @@ namespace Robust.Shared.GameObjects
         public bool HasComponent(EntityUid uid)
         {
             return _traitDict.TryGetValue(uid, out var comp) && !comp.Deleted;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Resolve(EntityUid uid, [NotNullWhen(true)] ref TComp1? component, bool logMissing = true)
+        {
+            if (component != null)
+            {
+                DebugTools.Assert(uid == component.Owner, "Specified Entity is not the component's Owner!");
+                return true;
+            }
+
+            if (_traitDict.TryGetValue(uid, out var comp) && !comp.Deleted)
+            {
+                component = (TComp1)comp;
+                return true;
+            }
+
+            if (logMissing)
+                Logger.ErrorS("resolve", $"Can't resolve \"{typeof(TComp1)}\" on entity {uid}!\n{new StackTrace(1, true)}");
+
+            return false;
         }
     }
 }

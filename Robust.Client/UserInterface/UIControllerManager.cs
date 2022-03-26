@@ -39,7 +39,6 @@ public sealed class UIControllerManager: IUIControllerManager
     {
         return (T)_registeredControllers[typeof(T)];
     }
-    //DataDefinition.EmitFieldAssigner(fieldInfo.FieldType, fieldInfo);
     public void Initialize()
     {
         foreach (var uiControllerType in _reflectionManager.GetAllChildren<UIController>())
@@ -62,7 +61,7 @@ public sealed class UIControllerManager: IUIControllerManager
     {
         if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
-        {
+        {//This may cause everything to catch fire and explode
             accessor(ref Unsafe.As<UIController,object>(ref CollectionsMarshal.GetValueRefOrNullRef(_registeredControllers, controllerType)), args.System);
         }
     }

@@ -10,6 +10,61 @@ namespace Robust.Shared.GameObjects;
 
 public sealed partial class EntityLookupSystem
 {
+    /*
+     * There is no GetEntitiesInMap method as this should be avoided; anyone that really needs it can implement it themselves
+     */
+
+    private void AddEntitiesIntersecting(
+        EntityUid lookupUid,
+        HashSet<EntityUid> intersecting,
+        Box2 worldAABB,
+        LookupFlags flags,
+        EntityQuery<EntityLookupComponent> lookupQuery,
+        EntityQuery<TransformComponent> xformQuery)
+    {
+        var lookup = lookupQuery.GetComponent(lookupUid);
+        var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
+
+        foreach (var ent in lookup.Tree.QueryAabb(localAABB, (flags & LookupFlags.Approximate) != 0x0))
+        {
+            intersecting.Add(ent);
+        }
+    }
+
+    #region Arc
+
+    public IEnumerable<EntityUid> GetEntitiesInArc(
+        EntityCoordinates coordinates,
+        float range,
+        Angle direction,
+        float arcWidth,
+        LookupFlags flags = DefaultFlags)
+    {
+        var position = coordinates.ToMap(EntityManager);
+
+        return GetEntitiesInArc(position, range, direction, arcWidth, flags);
+    }
+
+    public IEnumerable<EntityUid> GetEntitiesInArc(
+        MapCoordinates coordinates,
+        float range,
+        Angle direction,
+        float arcWidth,
+        LookupFlags flags = DefaultFlags)
+    {
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        foreach (var entity in GetEntitiesIntersecting(coordinates, range * 2, flags))
+        {
+            var angle = new Angle(xformQuery.GetComponent(entity).WorldPosition - coordinates.Position);
+            if (angle.Degrees < direction.Degrees + arcWidth / 2 &&
+                angle.Degrees > direction.Degrees - arcWidth / 2)
+                yield return entity;
+        }
+    }
+
+    #endregion
+
     #region Box2
 
     public bool AnyEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
@@ -53,7 +108,24 @@ public sealed partial class EntityLookupSystem
 
     public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        throw new NotImplementedException();
+        if (mapId == MapId.Nullspace) return Enumerable.Empty<EntityUid>();
+
+        var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        var intersecting = new HashSet<EntityUid>();
+
+        // Get grid entities
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB))
+        {
+            AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
+        }
+
+        // Get map entities
+        var mapUid = _mapManager.GetMapEntityId(mapId);
+        AddEntitiesIntersecting(mapUid, intersecting, worldAABB, flags, lookupQuery, xformQuery);
+
+        return intersecting;
     }
 
     #endregion
@@ -84,11 +156,6 @@ public sealed partial class EntityLookupSystem
         return false;
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldBounds, LookupFlags flags = DefaultFlags)
-    {
-        throw new NotImplementedException();
-    }
-
     #endregion
 
     #region Entity
@@ -114,6 +181,18 @@ public sealed partial class EntityLookupSystem
         throw new NotImplementedException();
     }
 
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates,
+        LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, float range,
+        LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
     #endregion
 
     #region MapCoordinates
@@ -126,6 +205,18 @@ public sealed partial class EntityLookupSystem
     }
 
     public bool AnyEntitiesIntersecting(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates,
+        LookupFlags flags = DefaultFlags)
+    {
+        throw new NotImplementedException();
+    }
+
+    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates, float range,
+        LookupFlags flags = DefaultFlags)
     {
         throw new NotImplementedException();
     }

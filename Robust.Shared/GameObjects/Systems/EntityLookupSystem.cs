@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using Robust.Shared.Configuration;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
@@ -31,6 +32,7 @@ namespace Robust.Shared.GameObjects
         Contained = 1 << 2,
         // IncludeGrids = 1 << 2,
         // IncludePhysics (whenever it gets split off)
+        // Include maps
     }
 
     public sealed partial class EntityLookupSystem : EntitySystem

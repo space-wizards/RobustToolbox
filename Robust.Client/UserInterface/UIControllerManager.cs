@@ -35,9 +35,11 @@ public sealed class UIControllerManager: IUIControllerManager
     {
         IoCManager.InjectDependencies(this);
     }
-
+    public T GetController<T>() where T : UIController, new()
+    {
+        return (T)_registeredControllers[typeof(T)];
+    }
     //DataDefinition.EmitFieldAssigner(fieldInfo.FieldType, fieldInfo);
-
     public void Initialize()
     {
         foreach (var uiControllerType in _reflectionManager.GetAllChildren<UIController>())

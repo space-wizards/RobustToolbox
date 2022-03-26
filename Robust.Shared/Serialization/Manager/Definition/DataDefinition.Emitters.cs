@@ -308,12 +308,12 @@ namespace Robust.Shared.Serialization.Manager.Definition
             return method.CreateDelegate<AccessField<object, object?>>();
         }
 
-        internal static AssignField<object, object?> EmitFieldAssigner(Type type, Type fieldType, AbstractFieldInfo backingField)
+        internal static AssignField<T, object?> EmitFieldAssigner<T>(Type type, Type fieldType, AbstractFieldInfo backingField)
         {
             var method = new DynamicMethod(
                 "AssignField",
                 typeof(void),
-                new[] {typeof(object).MakeByRefType(), typeof(object)},
+                new[] {typeof(T).MakeByRefType(), typeof(object)},
                 true);
 
             method.DefineParameter(1, ParameterAttributes.Out, "target");
@@ -354,7 +354,7 @@ namespace Robust.Shared.Serialization.Manager.Definition
                 generator.Emit(OpCodes.Ret);
             }
 
-            return method.CreateDelegate<AssignField<object, object?>>();
+            return method.CreateDelegate<AssignField<T, object?>>();
         }
     }
 }

@@ -113,6 +113,7 @@ namespace Robust.Client
             IoCManager.Register<IClientConGroupController, ClientConGroupController>();
             IoCManager.Register<IScriptClient, ScriptClient>();
             IoCManager.Register<IUIControllerManager, UIControllerManager>();
+            IoCManager.Register<IUIControllerManagerInternal, UIControllerManager>();
         }
     }
 }

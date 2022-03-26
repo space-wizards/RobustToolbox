@@ -11,19 +11,30 @@ using Robust.Shared.Utility;
 
 
 namespace Robust.Client.UserInterface;
-[Virtual]
-public abstract class UIController {}
 
-//notices your IUI, UwU What's this?
+[Virtual]
+public abstract class UIController
+{
+    public virtual void OnStateLoad() {}
+    public virtual void OnStateUnload() {}
+
+}
+
+//notices your IUI, *UwU What's this?*
 public interface IUIControllerManager
 {
-    public void Initialize();
+    public T GetController<T>() where T : UIController, new();
+}
+
+internal interface IUIControllerManagerInternal : IUIControllerManager
+{
+    void Initialize();
 }
 
 
 public sealed class UISystemDependency : Attribute {}
 
-public sealed class UIControllerManager: IUIControllerManager
+internal sealed class UIControllerManager: IUIControllerManagerInternal
 {
     [Robust.Shared.IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Robust.Shared.IoC.Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
@@ -56,6 +67,12 @@ public sealed class UIControllerManager: IUIControllerManager
         _systemManager.SystemLoaded += OnSystemLoaded;
         _systemManager.SystemUnloaded += OnSystemUnloaded;
     }
+
+    private void InitializeUiController()
+    {
+
+    }
+
 
     private void OnSystemLoaded(object? sender,SystemChangedArgs args)
     {

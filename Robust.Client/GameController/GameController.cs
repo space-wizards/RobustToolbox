@@ -66,7 +66,7 @@ namespace Robust.Client
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
-        [Dependency] private readonly UIControllerManager _uiControllerManager = default!;
+        [Dependency] private readonly IUIControllerManagerInternal _uiControllerManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 

@@ -55,7 +55,7 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
     private void AddUiControllerToRegistry(List<UIController> list,Type type, UIController instance)
     {
         list.Add(instance);
-        _uiControllerIndices.Add(type, _uiControllerRegistry.Length - 1);
+        _uiControllerIndices.Add(type, list.Count - 1);
     }
 
     private ref UIController GetUiControllerByTypeRef(Type type)

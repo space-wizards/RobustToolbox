@@ -85,16 +85,28 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
             AddUiControllerToRegistry(tempList, uiControllerType, (UIController)newController);
             foreach (var fieldInfo in uiControllerType.GetAllPropertiesAndFields())
             {
+                if (!fieldInfo.HasAttribute<UISystemDependency>())
+                {
+                    continue;
+                }
+
                 var backingField = fieldInfo;
                 if (fieldInfo is SpecificPropertyInfo property)
                 {
-                    if (!property.TryGetBackingField(out var field))
+                    if (property.TryGetBackingField(out var field))
                     {
-                        continue;
+                        backingField = field;
                     }
-
-                    backingField = field;
+                    else
+                    {
+                        var setter = property.PropertyInfo.GetSetMethod(true);
+                        if (setter == null)
+                        {
+                            throw new InvalidOperationException($"Property with {nameof(UISystemDependency)} attribute did not have a backing field nor setter");
+                        }
+                    }
                 }
+
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField)));
             }
@@ -107,7 +119,6 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
         _systemManager.SystemLoaded += OnSystemLoaded;
         _systemManager.SystemUnloaded += OnSystemUnloaded;
     }
-
 
     private void OnSystemLoaded(object? sender,SystemChangedArgs args)
     {

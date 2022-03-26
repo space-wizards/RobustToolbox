@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Robust.Client.GameStates;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
@@ -15,8 +16,7 @@ namespace Robust.Client.UserInterface;
 [Virtual]
 public abstract class UIController
 {
-    public virtual void OnStateLoad() {}
-    public virtual void OnStateUnload() {}
+    public virtual void OnGamestateChanged(GameStateAppliedArgs args) {}
 
 }
 
@@ -39,6 +39,7 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
     [Robust.Shared.IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
     [Robust.Shared.IoC.Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
     [Robust.Shared.IoC.Dependency] private readonly IEntitySystemManager _systemManager = default!;
+    [Robust.Shared.IoC.Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
     private readonly Dictionary<Type, UIController> _registeredControllers = new();
     //field type, systemsDict
     private readonly Dictionary<Type, List<(Type,DataDefinition.AssignField<object,object?>)>> _assignerRegistry = new ();
@@ -62,15 +63,12 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner(fieldInfo.FieldType, fieldInfo)));
             }
+            if (uiControllerType.GetMethod(nameof(UIController.OnGamestateChanged))?.DeclaringType != typeof(UIController))
+                _gameStateManager.GameStateApplied += ((UIController)newController).OnGamestateChanged;
         }
 
         _systemManager.SystemLoaded += OnSystemLoaded;
         _systemManager.SystemUnloaded += OnSystemUnloaded;
-    }
-
-    private void InitializeUiController()
-    {
-
     }
 
 

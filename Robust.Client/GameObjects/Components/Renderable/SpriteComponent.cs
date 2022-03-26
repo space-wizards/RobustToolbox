@@ -1974,7 +1974,7 @@ namespace Robust.Client.GameObjects
                 // we can take the quick path of just making a box the size of the texture.
                 if (_parent.NoRotation && _rotation != 0)
                 {
-                    return Box2.CenteredAround(Offset, textureSize);
+                    return Box2.CenteredAround(Offset, textureSize).Scale(_scale);
                 }
 
                 var rsiState = GetActualState();

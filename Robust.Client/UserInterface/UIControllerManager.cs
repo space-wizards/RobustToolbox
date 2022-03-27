@@ -50,6 +50,8 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
     [Robust.Shared.IoC.Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
     [Robust.Shared.IoC.Dependency] private readonly IEntitySystemManager _systemManager = default!;
     [Robust.Shared.IoC.Dependency] private readonly IStateManager _stateManager = default!;
+    private Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
+    private Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
     private UIController[] _uiControllerRegistry = default!;
     private readonly Dictionary<Type, int> _uiControllerIndices = new();
 
@@ -115,10 +117,20 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
 
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField)));
+
+                if (uiControllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType != typeof(UIController))
+                {
+                    _systemLoadedListeners.GetOrNew(fieldInfo.FieldType).Add((UIController)newController);
+                }
+                if (uiControllerType.GetMethod(nameof(UIController.OnSystemUnloaded))?.DeclaringType != typeof(UIController))
+                {
+                    _systemUnloadedListeners.GetOrNew(fieldInfo.FieldType).Add((UIController)newController);
+                }
             }
 
             if (uiControllerType.GetMethod(nameof(UIController.OnStateChanged))?.DeclaringType != typeof(UIController))
                 _stateManager.OnStateChanged += ((UIController)newController).OnStateChanged;
+
 
         }
 
@@ -140,9 +152,10 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                 linkedSystem.OnLink(controller);
             }
 
-            if (controllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType != typeof(UIController))
+            if (!_systemLoadedListeners.TryGetValue(controllerType, out var controllers)) continue;
+            foreach (var uiCon in controllers)
             {
-                controller.OnSystemLoaded(args.System);
+                uiCon.OnSystemLoaded(args.System);
             }
         }
 
@@ -159,9 +172,10 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
             {
                 linkedSystem.OnUnlink(controller);
             }
-            if (controllerType.GetMethod(nameof(UIController.OnSystemUnloaded))?.DeclaringType != typeof(UIController))
+            if (!_systemUnloadedListeners.TryGetValue(controllerType, out var controllers)) continue;
+            foreach (var uiCon in controllers)
             {
-                controller.OnSystemUnloaded(args.System);
+                uiCon.OnSystemUnloaded(args.System);
             }
         }
     }

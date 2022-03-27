@@ -158,7 +158,7 @@ namespace Robust.Shared.Network
                 RandomNumberGenerator.Fill(sharedSecret);
 
                 if (encrypt)
-                    encryption = new NetAESEncryption(peer.Peer, sharedSecret, 0, sharedSecret.Length);
+                    encryption = new NetEncryption(sharedSecret, isServer: false);
 
                 byte[] keyBytes;
                 if (hasPubKey)

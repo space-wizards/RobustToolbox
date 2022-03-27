@@ -830,10 +830,7 @@ namespace Robust.Shared.Network
 
             var encryption = IsServer ? channel.Encryption : _clientEncryption;
 
-            if (encryption != null)
-            {
-                msg.Decrypt(encryption);
-            }
+            encryption?.Decrypt(msg);
 
             var id = msg.ReadByte();
 
@@ -1062,10 +1059,8 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
-            if (channel.Encryption != null)
-            {
-                packet.Encrypt(channel.Encryption);
-            }
+
+            channel.Encryption?.Encrypt(packet);
 
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
@@ -1105,10 +1100,8 @@ namespace Robust.Shared.Network
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer.Peer);
             var method = message.DeliveryMethod;
-            if (_clientEncryption != null)
-            {
-                packet.Encrypt(_clientEncryption);
-            }
+
+            _clientEncryption?.Encrypt(packet);
 
             peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
             LogSend(message, method, packet);

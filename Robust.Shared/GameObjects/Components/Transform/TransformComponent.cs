@@ -733,7 +733,6 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            var oldMapId = MapID;
             MapID = MapId.Nullspace;
             var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
@@ -741,7 +740,6 @@ namespace Robust.Shared.GameObjects
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
-            MapIdChanged(oldMapId);
             Dirty(_entMan);
         }
 
@@ -778,7 +776,6 @@ namespace Robust.Shared.GameObjects
             metaData.EntityPaused = mapPaused;
 
             MapID = newMapId;
-            MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
         }
 
@@ -796,18 +793,12 @@ namespace Robust.Shared.GameObjects
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
-                concrete.MapIdChanged(old);
 
                 if (concrete.ChildCount != 0)
                 {
                     concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery);
                 }
             }
-        }
-
-        private void MapIdChanged(MapId oldId)
-        {
-            _entMan.EventBus.RaiseLocalEvent(Owner, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(EntityUid parent)

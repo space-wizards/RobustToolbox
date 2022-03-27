@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
 using Robust.Shared.IoC;
 
@@ -32,10 +33,21 @@ namespace Robust.Shared.Asynchronous
             _mainThreadContext.Post(_runCallback, callback);
         }
 
-        private static readonly SendOrPostCallback _runCallback = o =>
+        public void BlockWaitOnTask(Task task)
         {
-            ((Action?)o)?.Invoke();
-        };
+            // NOTE: This code should be re-entry safe.
+            while (true)
+            {
+                var waitTask = _mainThreadContext.WaitOnPendingTasks().AsTask();
+                var idx = Task.WaitAny(task, waitTask);
+                if (idx == 0)
+                    return;
+
+                _mainThreadContext.ProcessPendingTasks();
+            }
+        }
+
+        private static readonly SendOrPostCallback _runCallback = o => { ((Action?)o)?.Invoke(); };
     }
 
     public interface ITaskManager
@@ -52,5 +64,14 @@ namespace Robust.Shared.Asynchronous
         /// </remarks>
         /// <param name="callback">The callback that will be invoked on the main thread.</param>
         void RunOnMainThread(Action callback);
+
+        /// <summary>
+        /// Synchronously wait for a main-thread task to complete.
+        /// This is effectively what you need to safely .Result a task on the main thread.
+        /// </summary>
+        /// <remarks>
+        /// Use of this method is only ever recommended in rare scenarios like shutdown. For most other scenarios you should really avoid blocking the main thread and use proper async instead.
+        /// </remarks>
+        void BlockWaitOnTask(Task task);
     }
 }

@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 using Robust.Shared.Exceptions;
 
 namespace Robust.Shared.Asynchronous
@@ -14,10 +15,19 @@ namespace Robust.Shared.Asynchronous
         public RobustSynchronizationContext(IRuntimeLog runtimeLog)
         {
             _runtimeLog = runtimeLog;
+
+            var channel = Channel.CreateUnbounded<Mail>(new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false
+            });
+
+            _channelReader = channel.Reader;
+            _channelWriter = channel.Writer;
         }
 
-        private readonly ConcurrentQueue<(SendOrPostCallback d, object? state)> _pending
-            = new();
+        private readonly ChannelReader<Mail> _channelReader;
+        private readonly ChannelWriter<Mail> _channelWriter;
 
         public override void Send(SendOrPostCallback d, object? state)
         {
@@ -34,18 +44,18 @@ namespace Robust.Shared.Asynchronous
 
         public override void Post(SendOrPostCallback d, object? state)
         {
-            _pending.Enqueue((d, state));
+            _channelWriter.TryWrite(new Mail(d, state));
         }
 
         public void ProcessPendingTasks()
         {
-            while (_pending.TryDequeue(out var task))
+            while (_channelReader.TryRead(out var task))
             {
 #if EXCEPTION_TOLERANCE
                 try
 #endif
                 {
-                    task.d(task.state);
+                    task.Callback(task.State);
                 }
 #if EXCEPTION_TOLERANCE
                 catch (Exception e)
@@ -55,5 +65,12 @@ namespace Robust.Shared.Asynchronous
 #endif
             }
         }
+
+        public ValueTask<bool> WaitOnPendingTasks()
+        {
+            return _channelReader.WaitToReadAsync();
+        }
+
+        private record struct Mail(SendOrPostCallback Callback, object? State);
     }
 }

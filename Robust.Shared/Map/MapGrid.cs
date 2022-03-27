@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
@@ -516,6 +515,20 @@ namespace Robust.Shared.Map
 
             var chunkTile = chunk.GridTileToChunkTile(pos);
             return chunk.GetSnapGridCell((ushort)chunkTile.X, (ushort)chunkTile.Y);
+        }
+
+        public AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(Vector2i pos)
+        {
+            var gridChunkPos = GridTileToChunkIndices(pos);
+
+            if (!_chunks.TryGetValue(gridChunkPos, out var chunk)) return AnchoredEntitiesEnumerator.Empty;
+
+            var chunkTile = chunk.GridTileToChunkTile(pos);
+            var snapgrid = chunk.GetSnapGrid((ushort)chunkTile.X, (ushort)chunkTile.Y);
+
+            return snapgrid == null ?
+                AnchoredEntitiesEnumerator.Empty :
+                new AnchoredEntitiesEnumerator(snapgrid.GetEnumerator());
         }
 
         /// <inheritdoc />

@@ -117,6 +117,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// </summary>
         public float MaxMotorTorque;
 
+        public RevoluteJoint() {}
+
         public RevoluteJoint(PhysicsComponent bodyA, PhysicsComponent bodyB, Vector2 anchor) : base(bodyA.Owner, bodyB.Owner)
         {
             LocalAnchorA = bodyA.GetLocalPoint(anchor);

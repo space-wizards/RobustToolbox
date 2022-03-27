@@ -105,6 +105,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         [ViewVariables(VVAccess.ReadWrite)]
         public float MaxTorque { get; set; }
 
+        public FrictionJoint() {}
+
         /// <summary>
         /// Constructor for FrictionJoint.
         /// </summary>

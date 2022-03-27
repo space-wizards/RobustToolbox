@@ -115,6 +115,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         public override JointType JointType => JointType.Distance;
 
+        public DistanceJoint() {}
+
         /// <summary>
         /// This requires defining an
         /// anchor point on both bodies and the non-zero length of the

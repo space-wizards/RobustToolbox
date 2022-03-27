@@ -194,6 +194,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _translation;
         private float _axialMass;
 
+        public PrismaticJoint() {}
+
         public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid)
         {
             LocalAxisA = new Vector2(1f, 0f);

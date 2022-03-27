@@ -1,9 +1,5 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using Robust.Client.GameStates;
 using Robust.Client.State;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -160,7 +156,17 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
 
     private void OnSystemUnloaded(object? system,SystemChangedArgs args)
     {
-        if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
+        var systemType = args.System.GetType();
+
+        if (_systemUnloadedListeners.TryGetValue(systemType, out var controllers))
+        {
+            foreach (var uiCon in controllers)
+            {
+                uiCon.OnSystemUnloaded(args.System);
+            }
+        }
+
+        if (!_assignerRegistry.TryGetValue(systemType, out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
         {
             var controller = GetUiControllerByType(controllerType);
@@ -170,12 +176,5 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                 linkedSystem.OnUnlink(controller);
             }
         }
-        if (!_systemUnloadedListeners.TryGetValue(args.System.GetType(), out var controllers)) return;
-        foreach (var uiCon in controllers)
-        {
-            uiCon.OnSystemUnloaded(args.System);
-        }
     }
-
-
 }

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Buffers;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Lidgren.Network;
-using static SpaceWizards.Sodium.Interop.Libsodium;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network;
 
@@ -20,7 +19,7 @@ internal sealed class NetEncryption
 
     public NetEncryption(byte[] key, bool isServer)
     {
-        if (key.Length != crypto_aead_xchacha20poly1305_ietf_KEYBYTES)
+        if (key.Length != CryptoAeadXChaCha20Poly1305Ietf.KeyBytes)
             throw new ArgumentException("Key is of wrong size!");
 
         _nonce = isServer ? 0ul : 1ul;
@@ -32,7 +31,7 @@ internal sealed class NetEncryption
         var nonce = Interlocked.Add(ref _nonce, 2);
 
         var lengthBytes = message.LengthBytes;
-        var encryptedSize = checked((int)(crypto_aead_xchacha20poly1305_ietf_ABYTES + lengthBytes + sizeof(ulong)));
+        var encryptedSize = CryptoAeadXChaCha20Poly1305Ietf.AddBytes + lengthBytes + sizeof(ulong);
 
         var data = message.Data.AsSpan(0, lengthBytes);
 
@@ -62,30 +61,23 @@ internal sealed class NetEncryption
         }
 
         // TODO: this is probably broken for big-endian machines.
-        Span<byte> nonceData = stackalloc byte[(int)crypto_aead_xchacha20poly1305_ietf_NPUBBYTES];
+        Span<byte> nonceData = stackalloc byte[CryptoAeadXChaCha20Poly1305Ietf.NoncePublicBytes];
         nonceData.Fill(0);
         MemoryMarshal.Write(nonceData, ref nonce);
         MemoryMarshal.Write(ciphertext, ref nonce);
 
-        fixed (byte* cPtr = ciphertext[sizeof(ulong)..])
-        fixed (byte* pPtr = plaintext)
-        fixed (byte* kPtr = _key)
-        fixed (byte* nPtr = nonceData)
-        {
-            crypto_aead_xchacha20poly1305_ietf_encrypt(
-                // ciphertext
-                cPtr, null,
-                // plaintext
-                pPtr, (ulong)plaintext.Length,
-                // additional data (unused)
-                null, 0,
-                // always null
-                null,
-                // nonce
-                nPtr,
-                // key
-                kPtr);
-        }
+        CryptoAeadXChaCha20Poly1305Ietf.Encrypt(
+            // ciphertext
+            ciphertext[sizeof(ulong)..],
+            out _,
+            // plaintext
+            plaintext,
+            // additional data (unused)
+            ReadOnlySpan<byte>.Empty,
+            // nonce
+            nonceData,
+            // key
+            _key);
 
         message.LengthBytes = encryptedSize;
 
@@ -96,48 +88,35 @@ internal sealed class NetEncryption
     public unsafe void Decrypt(NetIncomingMessage message)
     {
         var nonce = message.ReadUInt64();
-        var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes-sizeof(ulong));
+        var cipherText = message.Data.AsSpan(sizeof(ulong), message.LengthBytes - sizeof(ulong));
 
         var buffer = ArrayPool<byte>.Shared.Rent(cipherText.Length);
         cipherText.CopyTo(buffer);
 
-        try
-        {
-            // TODO: this is probably broken for big-endian machines.
-            Span<byte> nonceData = stackalloc byte[(int)crypto_aead_xchacha20poly1305_ietf_NPUBBYTES];
-            nonceData.Fill(0);
-            MemoryMarshal.Write(nonceData, ref nonce);
+        // TODO: this is probably broken for big-endian machines.
+        Span<byte> nonceData = stackalloc byte[CryptoAeadXChaCha20Poly1305Ietf.NoncePublicBytes];
+        nonceData.Fill(0);
+        MemoryMarshal.Write(nonceData, ref nonce);
 
-            fixed (byte* mPtr = message.Data)
-            fixed (byte* cPtr = buffer)
-            fixed (byte* kPtr = _key)
-            fixed (byte* nPtr = nonceData)
-            {
-                ulong mlen;
-                var result = crypto_aead_xchacha20poly1305_ietf_decrypt(
-                    // plaintext
-                    mPtr, &mlen,
-                    // always null
-                    null,
-                    // ciphertext
-                    cPtr, (ulong)cipherText.Length,
-                    // additional data (unused)
-                    null, 0,
-                    // nonce
-                    nPtr,
-                    // key
-                    kPtr);
+        var result = CryptoAeadXChaCha20Poly1305Ietf.Decrypt(
+            // plaintext
+            message.Data,
+            out var messageLength,
+            // ciphertext
+            buffer.AsSpan(0, cipherText.Length),
+            // additional data (unused)
+            ReadOnlySpan<byte>.Empty,
+            // nonce
+            nonceData,
+            // key
+            _key);
 
-                if (result == -1)
-                    throw new InvalidDataException("Decryption verification failed");
+        message.Position = 0;
+        message.LengthBytes = messageLength;
 
-                message.Position = 0;
-                message.LengthBytes = (int) mlen;
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(buffer);
-        }
+        ArrayPool<byte>.Shared.Return(buffer);
+
+        if (!result)
+            throw new SodiumException("Decryption operation failed!");
     }
 }

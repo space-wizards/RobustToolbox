@@ -10,31 +10,25 @@ using Robust.Shared.AuthLib;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
     partial class NetManager
     {
-        private const int RsaKeySize = 2048;
+        private readonly byte[] _cryptoPrivateKey = new byte[CryptoBox.SecretKeyBytes];
 
-        private RSA? _authRsaPrivateKey;
-
-        public byte[]? RsaPublicKey { get; private set; }
+        public byte[] CryptoPublicKey { get; } = new byte[CryptoBox.PublicKeyBytes];
         public AuthMode Auth { get; private set; }
 
         public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
         public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }
 
-        private void SAGenerateRsaKeys()
+        private void SAGenerateKeys()
         {
-            _authRsaPrivateKey = RSA.Create(RsaKeySize);
-            RsaPublicKey = _authRsaPrivateKey.ExportRSAPublicKey();
+            CryptoBox.KeyPair(CryptoPublicKey, _cryptoPrivateKey);
 
-            /*
-            Logger.DebugS("auth", "Private RSA key is {0}",
-                Convert.ToBase64String(_authRsaPrivateKey.ExportRSAPrivateKey()));
-            */
-            Logger.DebugS("auth", "Public RSA key is {0}", Convert.ToBase64String(RsaPublicKey));
+            Logger.DebugS("auth", "Public key is {0}", Convert.ToBase64String(CryptoPublicKey));
         }
 
         private async void HandleHandshake(NetPeerData peer, NetConnection connection)
@@ -72,7 +66,7 @@ namespace Robust.Shared.Network
                     RandomNumberGenerator.Fill(verifyToken);
                     var msgEncReq = new MsgEncryptionRequest
                     {
-                        PublicKey = needPk ? RsaPublicKey : Array.Empty<byte>(),
+                        PublicKey = needPk ? CryptoPublicKey : Array.Empty<byte>(),
                         VerifyToken = verifyToken
                     };
 
@@ -87,18 +81,14 @@ namespace Robust.Shared.Network
                     var msgEncResponse = new MsgEncryptionResponse();
                     msgEncResponse.ReadFromBuffer(incPacket);
 
-                    byte[] verifyTokenCheck;
-                    byte[] sharedSecret;
-                    try
-                    {
-                        verifyTokenCheck = _authRsaPrivateKey!.Decrypt(
-                            msgEncResponse.VerifyToken,
-                            RSAEncryptionPadding.OaepSHA256);
-                        sharedSecret = _authRsaPrivateKey!.Decrypt(
-                            msgEncResponse.SharedSecret,
-                            RSAEncryptionPadding.OaepSHA256);
-                    }
-                    catch (CryptographicException)
+                    var encResp = new byte[verifyToken.Length + SharedKeyLength];
+                    var ret = CryptoBox.SealOpen(
+                        encResp,
+                        msgEncResponse.SealedData,
+                        CryptoPublicKey,
+                        _cryptoPrivateKey);
+
+                    if (!ret)
                     {
                         // Launcher gives the client the public RSA key of the server BUT
                         // that doesn't persist if the server restarts.
@@ -108,7 +98,11 @@ namespace Robust.Shared.Network
                         return;
                     }
 
-                    if (!verifyToken.SequenceEqual(verifyTokenCheck))
+                    // Data is [shared]+[verify]
+                    var verifyTokenCheck = encResp[SharedKeyLength..];
+                    var sharedSecret = encResp[..SharedKeyLength];
+
+                    if (!verifyToken.AsSpan().SequenceEqual(verifyTokenCheck))
                     {
                         connection.Disconnect("Verify token is invalid");
                         return;
@@ -117,7 +111,7 @@ namespace Robust.Shared.Network
                     if (msgLogin.Encrypt)
                         encryption = new NetEncryption(sharedSecret, isServer: true);
 
-                    var authHashBytes = MakeAuthHash(sharedSecret, RsaPublicKey!);
+                    var authHashBytes = MakeAuthHash(sharedSecret, CryptoPublicKey!);
                     var authHash = Base64Helpers.ConvertToBase64Url(authHashBytes);
 
                     var client = new HttpClient();

@@ -18,6 +18,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
@@ -38,7 +39,7 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed partial class NetManager : IClientNetManager, IServerNetManager
     {
-        internal const int AesKeyLength = 32;
+        internal const int SharedKeyLength = CryptoAeadXChaCha20Poly1305Ietf.KeyBytes; // 32 bytes
 
         [Dependency] private readonly IRobustSerializer _serializer = default!;
 
@@ -266,7 +267,7 @@ namespace Robust.Shared.Network
 
             if (IsServer)
             {
-                SAGenerateRsaKeys();
+                SAGenerateKeys();
             }
         }
 

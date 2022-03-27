@@ -10,7 +10,7 @@ namespace Robust.Shared.Network
     {
         public delegate Task<NetApproval> NetApprovalDelegate(NetApprovalEventArgs eventArgs);
 
-        byte[]? RsaPublicKey { get; }
+        byte[]? CryptoPublicKey { get; }
         AuthMode Auth { get;  }
         Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
         NetApprovalDelegate? HandleApprovalCallback { get; set; }

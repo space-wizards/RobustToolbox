@@ -14,6 +14,7 @@ using Lidgren.Network;
 using Robust.Shared.Log;
 using Robust.Shared.Network.Messages.Handshake;
 using Robust.Shared.Utility;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
@@ -154,7 +155,7 @@ namespace Robust.Shared.Network
                 var encRequest = new MsgEncryptionRequest();
                 encRequest.ReadFromBuffer(response);
 
-                var sharedSecret = new byte[AesKeyLength];
+                var sharedSecret = new byte[SharedKeyLength];
                 RandomNumberGenerator.Fill(sharedSecret);
 
                 if (encrypt)
@@ -172,11 +173,18 @@ namespace Robust.Shared.Network
                     keyBytes = encRequest.PublicKey;
                 }
 
-                var rsaKey = RSA.Create();
-                rsaKey.ImportRSAPublicKey(keyBytes, out _);
+                if (keyBytes.Length != CryptoBox.PublicKeyBytes)
+                {
+                    connection.Disconnect("Invalid public key length");
+                    return;
+                }
 
-                var encryptedSecret = rsaKey.Encrypt(sharedSecret, RSAEncryptionPadding.OaepSHA256);
-                var encryptedVerifyToken = rsaKey.Encrypt(encRequest.VerifyToken, RSAEncryptionPadding.OaepSHA256);
+                // Data is [shared]+[verify]
+                var data = new byte[sharedSecret.Length + encRequest.VerifyToken.Length];
+                sharedSecret.CopyTo(data.AsSpan());
+                encRequest.VerifyToken.CopyTo(data.AsSpan(sharedSecret.Length));
+
+                var sealedData = CryptoBox.Seal(data, keyBytes);
 
                 var authHashBytes = MakeAuthHash(sharedSecret, keyBytes);
                 var authHash = Convert.ToBase64String(authHashBytes);
@@ -190,8 +198,7 @@ namespace Robust.Shared.Network
 
                 var encryptionResponse = new MsgEncryptionResponse
                 {
-                    SharedSecret = encryptedSecret,
-                    VerifyToken = encryptedVerifyToken,
+                    SealedData = sealedData,
                     UserId = userId!.Value.UserId
                 };
 

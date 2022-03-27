@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -111,10 +111,8 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                         }
                     }
                 }
-
                 //Do not do anything if the field isn't an entity system
-                if (!backingField.FieldType.IsAssignableFrom(typeof(IEntitySystem))) continue;
-
+                if (!typeof(IEntitySystem).IsAssignableFrom(backingField.FieldType)) continue;
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField)));
 
@@ -151,12 +149,11 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
             {
                 linkedSystem.OnLink(controller);
             }
-
-            if (!_systemLoadedListeners.TryGetValue(controllerType, out var controllers)) continue;
-            foreach (var uiCon in controllers)
-            {
-                uiCon.OnSystemLoaded(args.System);
-            }
+        }
+        if (!_systemLoadedListeners.TryGetValue(args.System.GetType(), out var controllers)) return;
+        foreach (var uiCon in controllers)
+        {
+            uiCon.OnSystemLoaded(args.System);
         }
 
     }
@@ -172,11 +169,11 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
             {
                 linkedSystem.OnUnlink(controller);
             }
-            if (!_systemUnloadedListeners.TryGetValue(controllerType, out var controllers)) continue;
-            foreach (var uiCon in controllers)
-            {
-                uiCon.OnSystemUnloaded(args.System);
-            }
+        }
+        if (!_systemUnloadedListeners.TryGetValue(args.System.GetType(), out var controllers)) return;
+        foreach (var uiCon in controllers)
+        {
+            uiCon.OnSystemUnloaded(args.System);
         }
     }
 

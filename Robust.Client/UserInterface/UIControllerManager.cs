@@ -26,6 +26,8 @@ public abstract class UIController
 {
     public virtual void OnStateChanged(StateChangedEventArgs args) {}
 
+    public virtual void OnSystemLoaded(IEntitySystem system) {}
+    public virtual void OnSystemUnloaded(IEntitySystem system) {}
 }
 
 //notices your IUI, *UwU What's this?*
@@ -108,6 +110,9 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                     }
                 }
 
+                //Do not do anything if the field isn't an entity system
+                if (!backingField.FieldType.IsAssignableFrom(typeof(IEntitySystem))) continue;
+
                 var typeDict = _assignerRegistry.GetOrNew(fieldInfo.FieldType);
                 typeDict.Add((uiControllerType,DataDefinition.EmitFieldAssigner<UIController>(uiControllerType, fieldInfo.FieldType, backingField)));
             }
@@ -128,10 +133,16 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
         if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
         {
+            var controller = GetUiControllerByType(controllerType);
             accessor( ref GetUiControllerByTypeRef(controllerType),args.System);
             if (args.System is IUILink linkedSystem)
             {
-                linkedSystem.OnLink(GetUiControllerByType(controllerType));
+                linkedSystem.OnLink(controller);
+            }
+
+            if (controllerType.GetMethod(nameof(UIController.OnSystemLoaded))?.DeclaringType != typeof(UIController))
+            {
+                controller.OnSystemLoaded(args.System);
             }
         }
 
@@ -142,10 +153,15 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
         if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
         {
+            var controller = GetUiControllerByType(controllerType);
             accessor(ref GetUiControllerByTypeRef(controllerType), null);
             if (args.System is IUILink linkedSystem)
             {
-                linkedSystem.OnUnlink(GetUiControllerByType(controllerType));
+                linkedSystem.OnUnlink(controller);
+            }
+            if (controllerType.GetMethod(nameof(UIController.OnSystemUnloaded))?.DeclaringType != typeof(UIController))
+            {
+                controller.OnSystemUnloaded(args.System);
             }
         }
     }

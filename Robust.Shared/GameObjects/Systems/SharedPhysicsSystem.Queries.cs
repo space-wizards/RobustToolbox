@@ -168,6 +168,24 @@ namespace Robust.Shared.GameObjects
         }
 
         #region RayCast
+
+        /// <summary>
+        ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="ray">Ray to cast in the world.</param>
+        /// <param name="maxLength">Maximum length of the ray in meters.</param>
+        /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
+        /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
+        /// <returns>A result object describing the hit, if any.</returns>
+        [Obsolete("Use any other overload for IntersectRayWithPredicate.")]
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
+            float maxLength = 50F,
+            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
+        {
+            return IntersectRayWithPredicate(mapId, ray, predicate, maxLength, returnOnFirstHit);
+        }
+
         /// <summary>
         ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
         /// </summary>
@@ -178,8 +196,30 @@ namespace Robust.Shared.GameObjects
         /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
         /// <returns>A result object describing the hit, if any.</returns>
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            float maxLength = 50F,
-            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
+            Func<EntityUid, bool>? predicate = null, float maxLength = 50F, bool returnOnFirstHit = true)
+        {
+            // No, rider. This is better than a local function!
+            // ReSharper disable once ConvertToLocalFunction
+            var wrapper =
+                (EntityUid uid, Func<EntityUid, bool>? wrapped)
+                    => wrapped == null || wrapped(uid);
+
+            return IntersectRayWithPredicate(mapId, ray, predicate, wrapper, maxLength, returnOnFirstHit);
+        }
+
+        /// <summary>
+        ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="ray">Ray to cast in the world.</param>
+        /// <param name="maxLength">Maximum length of the ray in meters.</param>
+        /// <param name="state">A custom state to pass to the predicate.</param>
+        /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
+        /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
+        /// <remarks>You can avoid variable capture in many cases by using this method and passing a custom state to the predicate.</remarks>
+        /// <returns>A result object describing the hit, if any.</returns>
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, CollisionRay ray, TState state,
+            Func<EntityUid, TState, bool> predicate, float maxLength = 50F, bool returnOnFirstHit = true)
         {
             List<RayCastResults> results = new();
             var endPoint = ray.Position + ray.Direction.Normalized * maxLength;
@@ -207,7 +247,7 @@ namespace Robust.Shared.GameObjects
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (predicate?.Invoke(proxy.Fixture.Body.Owner) == true)
+                    if (predicate?.Invoke(proxy.Fixture.Body.Owner, state) == true)
                         return true;
 
                     // TODO: Shape raycast here

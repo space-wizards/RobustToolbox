@@ -202,7 +202,7 @@ namespace Robust.Shared.GameObjects
             // ReSharper disable once ConvertToLocalFunction
             var wrapper =
                 (EntityUid uid, Func<EntityUid, bool>? wrapped)
-                    => wrapped == null || wrapped(uid);
+                    => wrapped != null && wrapped(uid);
 
             return IntersectRayWithPredicate(mapId, ray, predicate, wrapper, maxLength, returnOnFirstHit);
         }
@@ -247,7 +247,7 @@ namespace Robust.Shared.GameObjects
                     if ((proxy.Fixture.CollisionLayer & ray.CollisionMask) == 0x0)
                         return true;
 
-                    if (predicate?.Invoke(proxy.Fixture.Body.Owner, state) == true)
+                    if (predicate.Invoke(proxy.Fixture.Body.Owner, state) == true)
                         return true;
 
                     // TODO: Shape raycast here
@@ -287,7 +287,13 @@ namespace Robust.Shared.GameObjects
         /// <param name="returnOnFirstHit">If false, will return a list of everything it hits, otherwise will just return a list of the first entity hit</param>
         /// <returns>An enumerable of either the first entity hit or everything hit</returns>
         public IEnumerable<RayCastResults> IntersectRay(MapId mapId, CollisionRay ray, float maxLength = 50, EntityUid? ignoredEnt = null, bool returnOnFirstHit = true)
-            => IntersectRayWithPredicate(mapId, ray, maxLength, entity => entity == ignoredEnt, returnOnFirstHit);
+        {
+            // ReSharper disable once ConvertToLocalFunction
+            var wrapper = (EntityUid uid, EntityUid? ignored)
+                => uid == ignored;
+
+            return IntersectRayWithPredicate(mapId, ray, ignoredEnt, wrapper, maxLength, returnOnFirstHit);
+        }
 
         /// <summary>
         ///     Casts a ray in the world and returns the distance the ray traveled while colliding with entities

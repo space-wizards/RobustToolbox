@@ -411,8 +411,47 @@ internal sealed partial class PVSSystem : EntitySystem
         return (_chunkList, playerChunks, viewerEntities);
     }
 
+    private Dictionary<(uint visMask, IChunkIndexLocation location), (Dictionary<EntityUid, MetaDataComponent> metadata,
+        RobustTree<EntityUid> tree)?> _previousTrees = new();
+
+    private HashSet<(uint visMask, IChunkIndexLocation location)> _reusedTrees = new();
+
+    public void ProcessPreviousChunkTrees(
+        List<(uint, IChunkIndexLocation)> chunks,
+        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees)
+    {
+        var previousIndices = _previousTrees.Keys.ToArray();
+        foreach (var index in previousIndices)
+        {
+            if(_reusedTrees.Contains(index)) continue;
+            var chunk = _previousTrees[index];
+            if (chunk.HasValue)
+            {
+                _chunkCachePool.Return(chunk.Value.metadata);
+                _treePool.Return(chunk.Value.tree);
+            }
+
+            if (!chunks.Contains(index))
+            {
+                _previousTrees.Remove(index);
+            }
+        }
+        _previousTrees.EnsureCapacity(chunks.Count);
+        for (int i = 0; i < chunks.Count; i++)
+        {
+            //this is a redundant assign if the tree has been reused. the assumption is that this is cheaper than a .Contains call
+            _previousTrees[chunks[i]] = trees[i];
+        }
+    }
+
     public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
     {
+        if (_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
+        {
+            _reusedTrees.Add((visMask, chunkLocation));
+            return previousTree;
+        }
+
         var chunk = chunkLocation switch
         {
             GridChunkLocation gridChunkLocation => _entityPvsCollection.TryGetChunk(gridChunkLocation.GridId,
@@ -435,15 +474,8 @@ internal sealed partial class PVSSystem : EntitySystem
         return (chunkSet, tree);
     }
 
-    public void ReturnToPool((Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache, HashSet<int>[] playerChunks)
+    public void ReturnToPool(HashSet<int>[] playerChunks)
     {
-        foreach (var chunk in chunkCache)
-        {
-            if(!chunk.HasValue) continue;
-            _chunkCachePool.Return(chunk.Value.metadata);
-            _treePool.Return(chunk.Value.tree);
-        }
-
         foreach (var playerChunk in playerChunks)
         {
             _playerChunkPool.Return(playerChunk);

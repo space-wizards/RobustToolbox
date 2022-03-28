@@ -157,6 +157,7 @@ namespace Robust.Server.GameStates
                         chunkCache[j] = _pvs.CalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery);
                     }
                 });
+                _pvs.ProcessPreviousChunkTrees(chunks, chunkCache);
             }
 
             const int BatchSize = 2;
@@ -230,7 +231,7 @@ namespace Robust.Server.GameStates
             }
 
             if(_pvs.CullingEnabled)
-                _pvs.ReturnToPool(chunkCache, playerChunks);
+                _pvs.ReturnToPool(playerChunks);
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 

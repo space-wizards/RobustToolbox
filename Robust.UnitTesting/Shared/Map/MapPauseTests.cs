@@ -15,7 +15,6 @@ internal sealed class MapPauseTests
     {
         var sim = RobustServerSimulation
             .NewSimulation()
-            .RegisterComponents(factory => factory.RegisterClass<IgnorePauseComponent>())
             .InitializeInstance();
 
         return sim;
@@ -38,7 +37,7 @@ internal sealed class MapPauseTests
         entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
 
         var query = entMan.EntityQuery<TransformComponent>(false).ToList();
-        
+
         // 0 ents, map and the spawned one are not returned
         Assert.That(query.Count, Is.EqualTo(0));
     }
@@ -82,7 +81,7 @@ internal sealed class MapPauseTests
         entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
 
         var query = entMan.EntityQuery<TransformComponent>(true).ToList();
-        
+
         // 2 ents, map and the spawned one are returned because includePaused
         Assert.That(query.Count, Is.EqualTo(2));
     }
@@ -246,27 +245,6 @@ internal sealed class MapPauseTests
 
         var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
         Assert.That(metaData.EntityPaused, Is.True);
-    }
-
-    /// <summary>
-    ///     An entity that has set IgnorePause will not be paused when the map is paused.
-    /// </summary>
-    [Test]
-    public void IgnorePause_PauseMap_NotPaused()
-    {
-        var sim = SimulationFactory();
-        var entMan = sim.Resolve<IEntityManager>();
-        var mapMan = sim.Resolve<IMapManager>();
-
-        var mapId = mapMan.CreateMap();
-        mapMan.SetMapPaused(mapId, false);
-        var newEnt = entMan.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-
-        entMan.AddComponent<IgnorePauseComponent>(newEnt);
-        mapMan.SetMapPaused(mapId, true);
-
-        var metaData = entMan.GetComponent<MetaDataComponent>(newEnt);
-        Assert.That(metaData.EntityPaused, Is.False);
     }
 
     /// <summary>

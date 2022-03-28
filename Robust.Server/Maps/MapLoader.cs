@@ -792,18 +792,20 @@ namespace Robust.Server.Maps
                 var metaCompQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
-                    var currentTranform = transformCompQuery.GetComponent(entity);
-                    if (!GridIDMap.ContainsKey(currentTranform.GridID)) continue;
+                    var currentTransform = transformCompQuery.GetComponent(entity);
+                    if (!GridIDMap.ContainsKey(currentTransform.GridID)) continue;
+
+                    var currentEntity = entity;
 
                     // Don't serialize things parented to un savable things.
                     // For example clothes inside a person.
-                    while (currentTranform != null)
+                    while (currentEntity.IsValid())
                     {
-                        if (metaCompQuery.GetComponent(currentTranform.Owner).EntityPrototype?.MapSavable == false) break;
-                        currentTranform = currentTranform.Parent;
+                        if (metaCompQuery.GetComponent(currentEntity).EntityPrototype?.MapSavable == false) break;
+                        currentEntity = transformCompQuery.GetComponent(currentEntity).ParentUid;
                     }
 
-                    if (currentTranform != null) continue;
+                    if (currentEntity.IsValid()) continue;
 
                     Entities.Add(entity);
 

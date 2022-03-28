@@ -30,6 +30,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
@@ -144,6 +145,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// Manipulating the length can lead to non-physical behavior when the frequency is zero.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("length")]
         public float Length
         {
             get => _length;
@@ -163,6 +165,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     The upper limit allowed between the 2 bodies.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("maxLength")]
         public float MaxLength
         {
             get => _maxLength;
@@ -182,6 +185,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     The lower limit allowed between the 2 bodies.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("minLength")]
         public float MinLength
         {
             get => _minLength;
@@ -201,6 +205,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// The linear stiffness in N/m.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("stiffness")]
         public float Stiffness
         {
             get => _stiffness;
@@ -219,6 +224,7 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         /// The linear damping in N*s/m.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("damping")]
         public float Damping
         {
             get => _damping;

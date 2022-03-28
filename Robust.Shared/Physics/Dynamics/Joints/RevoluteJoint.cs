@@ -25,6 +25,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -84,37 +85,44 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         private float _upperImpulse;
 
         // Settable
+        [DataField("enableLimit")]
         public bool EnableLimit;
 
         /// <summary>
         /// A flag to enable the joint motor.
         /// </summary>
+        [DataField("enableMotor")]
         public bool EnableMotor;
 
         /// <summary>
         /// The bodyB angle minus bodyA angle in the reference state (radians).
         /// </summary>
+        [DataField("referenceAngle")]
         public float ReferenceAngle;
 
         /// <summary>
         /// The lower angle for the joint limit (radians).
         /// </summary>
+        [DataField("lowerAngle")]
         public float LowerAngle;
 
         /// <summary>
         /// The upper angle for the joint limit (radians).
         /// </summary>
+        [DataField("upperAngle")]
         public float UpperAngle;
 
         /// <summary>
         /// The desired motor speed. Usually in radians per second.
         /// </summary>
+        [DataField("motorSpeed")]
         public float MotorSpeed;
 
         /// <summary>
         /// The maximum motor torque used to achieve the desired motor speed.
         /// Usually in N-m.
         /// </summary>
+        [DataField("maxMotorTorque")]
         public float MaxMotorTorque;
 
         public RevoluteJoint() {}

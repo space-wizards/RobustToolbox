@@ -842,6 +842,7 @@ namespace Robust.Server.Maps
             {
                 var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var compFactory = IoCManager.Resolve<IComponentFactory>();
+                var metaQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
@@ -854,7 +855,7 @@ namespace Robust.Server.Maps
                         {"uid", saveId.ToString(CultureInfo.InvariantCulture)}
                     };
 
-                    var md = _serverEntityManager.GetComponent<MetaDataComponent>(entityUid);
+                    var md = metaQuery.GetComponent(entityUid);
 
                     if (md.EntityPrototype is {} prototype)
                     {

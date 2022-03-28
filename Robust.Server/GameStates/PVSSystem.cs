@@ -442,6 +442,7 @@ internal sealed partial class PVSSystem : EntitySystem
             //this is a redundant assign if the tree has been reused. the assumption is that this is cheaper than a .Contains call
             _previousTrees[chunks[i]] = trees[i];
         }
+        _reusedTrees.Clear();
     }
 
     public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)

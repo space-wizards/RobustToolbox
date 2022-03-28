@@ -157,7 +157,7 @@ namespace Robust.Server.GameStates
                         chunkCache[j] = _pvs.CalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery);
                     }
                 });
-                _pvs.ProcessPreviousChunkTrees(chunks, chunkCache);
+                _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache);
             }
 
             const int BatchSize = 2;

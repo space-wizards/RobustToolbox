@@ -416,7 +416,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private HashSet<(uint visMask, IChunkIndexLocation location)> _reusedTrees = new();
 
-    public void ProcessPreviousChunkTrees(
+    public void RegisterNewPreviousChunkTrees(
         List<(uint, IChunkIndexLocation)> chunks,
         (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees)
     {

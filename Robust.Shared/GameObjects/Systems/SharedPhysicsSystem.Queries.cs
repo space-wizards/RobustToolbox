@@ -178,25 +178,9 @@ namespace Robust.Shared.GameObjects
         /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
         /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
         /// <returns>A result object describing the hit, if any.</returns>
-        [Obsolete("Use any other overload for IntersectRayWithPredicate.")]
+        // TODO: Make the parameter order here consistent with the other overload.
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            float maxLength = 50F,
-            Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
-        {
-            return IntersectRayWithPredicate(mapId, ray, predicate, maxLength, returnOnFirstHit);
-        }
-
-        /// <summary>
-        ///     Casts a ray in the world, returning the first entity it hits (or all entities it hits, if so specified)
-        /// </summary>
-        /// <param name="mapId"></param>
-        /// <param name="ray">Ray to cast in the world.</param>
-        /// <param name="maxLength">Maximum length of the ray in meters.</param>
-        /// <param name="predicate">A predicate to check whether to ignore an entity or not. If it returns true, it will be ignored.</param>
-        /// <param name="returnOnFirstHit">If true, will only include the first hit entity in results. Otherwise, returns all of them.</param>
-        /// <returns>A result object describing the hit, if any.</returns>
-        public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, CollisionRay ray,
-            Func<EntityUid, bool>? predicate = null, float maxLength = 50F, bool returnOnFirstHit = true)
+            float maxLength = 50F, Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
             // No, rider. This is better than a local function!
             // ReSharper disable once ConvertToLocalFunction

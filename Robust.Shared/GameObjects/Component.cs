@@ -220,22 +220,6 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Sends a message to all other components in this entity.
-        ///     This is an alias of 'Owner.SendMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendMessage(ComponentMessage message)
-        {
-            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner);
-            foreach (var component in components)
-            {
-                if (this != component)
-                    component.HandleMessage(message, this);
-            }
-        }
-
-        /// <summary>
         ///     Sends a message over the network to all other components on the networked entity. This works both ways.
         ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
         /// </summary>
@@ -246,10 +230,6 @@ namespace Robust.Shared.GameObjects
         {
             IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, Owner, this, message);
         }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
 
         /// <inheritdoc />
         [Obsolete("Component Messages are deprecated, use Entity Events instead.")]

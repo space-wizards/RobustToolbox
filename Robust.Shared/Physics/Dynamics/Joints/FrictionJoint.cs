@@ -97,13 +97,17 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         ///     The maximum friction force in N.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("maxForce")]
         public float MaxForce { get; set; }
 
         /// <summary>
         ///     The maximum friction torque in N-m.
         /// </summary>
         [ViewVariables(VVAccess.ReadWrite)]
+        [DataField("maxTorque")]
         public float MaxTorque { get; set; }
+
+        public FrictionJoint() {}
 
         /// <summary>
         /// Constructor for FrictionJoint.

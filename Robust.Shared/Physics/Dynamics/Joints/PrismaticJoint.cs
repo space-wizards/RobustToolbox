@@ -26,6 +26,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
+using Robust.Shared.Serialization.Manager.Attributes;
 
 namespace Robust.Shared.Physics.Dynamics.Joints
 {
@@ -135,7 +136,10 @@ namespace Robust.Shared.Physics.Dynamics.Joints
     /// </summary>
     public sealed class PrismaticJoint : Joint, IEquatable<PrismaticJoint>
     {
+        /// <summary>
         /// The local translation unit axis in bodyA.
+        /// </summary>
+        [DataField("localAxisA")]
         public Vector2 LocalAxisA
         {
             get => _localAxisA;
@@ -149,25 +153,46 @@ namespace Robust.Shared.Physics.Dynamics.Joints
 
         private Vector2 _localAxisA;
 
+        /// <summary>
         /// The constrained angle between the bodies: bodyB_angle - bodyA_angle.
+        /// </summary>
+        [DataField("referenceANgle")]
         public float ReferenceAngle;
 
+        /// <summary>
         /// Enable/disable the joint limit.
+        /// </summary>
+        [DataField("enableLimit")]
         public bool EnableLimit;
 
+        /// <summary>
         /// The lower translation limit, usually in meters.
+        /// </summary>
+        [DataField("lowerTranslation")]
         public float LowerTranslation;
 
+        /// <summary>
         /// The upper translation limit, usually in meters.
+        /// </summary>
+        [DataField("upperTranslation")]
         public float UpperTranslation;
 
+        /// <summary>
         /// Enable/disable the joint motor.
+        /// </summary>
+        [DataField("enableMotor")]
         public bool EnableMotor;
 
+        /// <summary>
         /// The maximum motor torque, usually in N-m.
+        /// </summary>
+        [DataField("maxMotorForce")]
         public float MaxMotorForce;
 
+        /// <summary>
         /// The desired motor speed in radians per second.
+        /// </summary>
+        [DataField("motorSpeed")]
         public float MotorSpeed;
 
         internal Vector2 _localXAxisA;
@@ -193,6 +218,8 @@ namespace Robust.Shared.Physics.Dynamics.Joints
         Matrix22 _K;
         private float _translation;
         private float _axialMass;
+
+        public PrismaticJoint() {}
 
         public PrismaticJoint(EntityUid bodyAUid, EntityUid bodyBUid) : base(bodyAUid, bodyBUid)
         {

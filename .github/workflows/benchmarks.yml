@@ -1,0 +1,27 @@
+﻿name: Benchmarks
+on:
+  shedule:
+    - cron: '0 0 * * *'
+
+permissions:
+  contents: write
+  deployments: write
+
+env:
+  ROBUST_BENCHMARKS_SQL_ADDRESS: ${{ secrets.BENCHMARKS_WRITE_ADDRESS }}
+  ROBUST_BENCHMARKS_SQL_PORT: ${{ secrets.BENCHMARKS_WRITE_PORT }}
+  ROBUST_BENCHMARKS_SQL_USER: ${{ secrets.BENCHMARKS_WRITE_USER }}
+  ROBUST_BENCHMARKS_SQL_PASSWORD: ${{ secrets.BENCHMARKS_WRITE_PASSWORD }}
+  ROBUST_BENCHMARKS_SQL_DATABASE: benchmarks
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '6.0.101'
+      - name: Run benchmark
+        run: cd examples/benchmarkdotnet && dotnet run --filter '*'

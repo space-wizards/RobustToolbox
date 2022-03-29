@@ -70,14 +70,6 @@ namespace Robust.Shared.GameObjects
         GameTick LastModifiedTick { get; }
 
         /// <summary>
-        ///     Handles a local incoming component message.
-        /// </summary>
-        /// <param name="message">Incoming event message.</param>
-        /// <param name="component">The local component that sent the message.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        void HandleMessage(ComponentMessage message, IComponent? component);
-
-        /// <summary>
         ///     Handles an incoming component message from the server.
         /// </summary>
         /// <param name="message">Incoming event message.</param>

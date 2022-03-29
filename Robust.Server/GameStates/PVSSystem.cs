@@ -447,9 +447,12 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
     {
-        if (_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
+        if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
         {
-            _reusedTrees.Add((visMask, chunkLocation));
+            lock (_reusedTrees)
+            {
+                _reusedTrees.Add((visMask, chunkLocation));
+            }
             return previousTree;
         }
 

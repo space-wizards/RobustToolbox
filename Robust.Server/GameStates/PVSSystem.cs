@@ -423,6 +423,7 @@ internal sealed partial class PVSSystem : EntitySystem
         var previousIndices = _previousTrees.Keys.ToArray();
         foreach (var index in previousIndices)
         {
+            // ReSharper disable once InconsistentlySynchronizedField
             if(_reusedTrees.Contains(index)) continue;
             var chunk = _previousTrees[index];
             if (chunk.HasValue)
@@ -442,6 +443,7 @@ internal sealed partial class PVSSystem : EntitySystem
             //this is a redundant assign if the tree has been reused. the assumption is that this is cheaper than a .Contains call
             _previousTrees[chunks[i]] = trees[i];
         }
+        // ReSharper disable once InconsistentlySynchronizedField
         _reusedTrees.Clear();
     }
 

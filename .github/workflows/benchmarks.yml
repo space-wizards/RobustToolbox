@@ -1,10 +1,11 @@
 ﻿name: Benchmarks
 on:
-  schedule:
-    - cron: '0 5 * * *'
-  push:
-    tags:
-      - 'v*'
+  push
+  #schedule:
+  #  - cron: '0 5 * * *'
+  #push:
+  #  tags:
+  #    - 'v*'
 
 env:
   ROBUST_BENCHMARKS_SQL_ADDRESS: ${{ secrets.BENCHMARKS_WRITE_ADDRESS }}
@@ -28,4 +29,4 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Run benchmark
-        run: cd Robust.Benchmarks && dotnet run --filter '*'
+        run: cd Robust.Benchmarks && dotnet run --filter '*' --configuration Release

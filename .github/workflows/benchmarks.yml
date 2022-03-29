@@ -1,7 +1,7 @@
 ﻿name: Benchmarks
 on:
-  shedule:
-    - cron: '0 0 * * *'
+  schedule:
+    - cron: '0 5 * * *'
   push:
     tags:
       - 'v*'

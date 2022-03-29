@@ -42,7 +42,12 @@ namespace Robust.Shared.GameObjects
         private void OnHandleState(EntityUid uid, CollisionWakeComponent component, ref ComponentHandleState args)
         {
             if (args.Current is CollisionWakeComponent.CollisionWakeState state)
-                SetEnabled(uid, state.Enabled, component);
+                component.Enabled = state.Enabled;
+
+            // Note, this explicitly does not update PhysicsComponent.CanCollide. The physics component should perform
+            // its own state-handling logic. Additionally, if we wanted to set it you would have to ensure that things
+            // like the join-component and physics component have already handled their states, otherwise CanCollide may
+            // be set incorrectly and leave the client with a bad state.
         }
 
         private void OnGetState(EntityUid uid, CollisionWakeComponent component, ref ComponentGetState args)

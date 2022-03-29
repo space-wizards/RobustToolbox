@@ -69,13 +69,13 @@ public sealed class SQLExporter : IExporter
         try
         {
             ctx.Database.Migrate();
+            ctx.BenchmarkRuns.Add(BenchmarkRun.FromSummary(summary, gitHash));
+            ctx.SaveChanges();
         }
         finally
         {
-            ctx.DisposeAsync();
+            ctx.Dispose();
         }
-
-        ctx.BenchmarkRuns.Add(BenchmarkRun.FromSummary(summary, gitHash));
     }
 
     public string Name => "sql";
@@ -104,7 +104,7 @@ public class BenchmarkRun
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public ulong Id { get; set; }
     public string GitHash { get; set; } = string.Empty;
-    [Column(TypeName = "Date")]
+    [Column(TypeName = "timestamptz")]
     public DateTime RunDate { get; set; }
     public string Name { get; set; } = string.Empty;
     [Column(TypeName = "jsonb")]
@@ -124,7 +124,7 @@ public class BenchmarkRun
                 Statistics = r.ResultStatistics
             }).ToArray(),
             Name = summary.BenchmarksCases.First().FolderInfo,
-            RunDate = DateTime.Now,
+            RunDate = DateTime.UtcNow,
             GitHash = gitHash
         };
     }

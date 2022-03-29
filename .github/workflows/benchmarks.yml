@@ -6,10 +6,6 @@ on:
     tags:
       - 'v*'
 
-permissions:
-  contents: write
-  deployments: write
-
 env:
   ROBUST_BENCHMARKS_SQL_ADDRESS: ${{ secrets.BENCHMARKS_WRITE_ADDRESS }}
   ROBUST_BENCHMARKS_SQL_PORT: ${{ secrets.BENCHMARKS_WRITE_PORT }}
@@ -23,8 +19,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '6.0.101'
+          submodules: true
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+      - name: Install dependencies
+        run: dotnet restore
       - name: Run benchmark
-        run: cd examples/benchmarkdotnet && dotnet run --filter '*'
+        run: cd Robust.Benchmarks && dotnet run --filter '*'

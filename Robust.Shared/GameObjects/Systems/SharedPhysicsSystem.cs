@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects
@@ -272,14 +273,17 @@ namespace Robust.Shared.GameObjects
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
         {
-            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
+            // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent) ||
+                MetaData(message.Entity).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Container.Owner).MapID;
+            var mapId = Transform(message.Container.Owner).MapID;
 
             if (mapId != MapId.Nullspace)
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
+                DebugTools.Assert(!physicsComponent.Deleted);
+                var tempQualifier = MapManager.GetMapEntityId(mapId);
+                Comp<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }
 

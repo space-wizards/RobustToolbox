@@ -33,7 +33,7 @@ public sealed class SQLExporter : IExporter
 
     private bool TryGetEnvironmentVariable(string name, ILogger logger, [NotNullWhen(true)] out string? value)
     {
-        value = Environment.GetEnvironmentVariable("name");
+        value = Environment.GetEnvironmentVariable(name);
         if (value == null)
             logger.WriteError($"ROBUST_BENCHMARKS_ENABLE_SQL is set, but {name} is missing.");
         return value != null;
@@ -41,11 +41,11 @@ public sealed class SQLExporter : IExporter
 
     private void Export(Summary summary, ILogger logger)
     {
-        if (!TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_ADDRESS", logger, out var address) ||
-            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_PORT", logger, out var rawPort) ||
-            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_USER", logger, out var user) ||
-            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_PASSWORD", logger, out var password) ||
-            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_DATABASE", logger, out var db) ||
+        if (!TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_ADDRESS", logger, out var address) |
+            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_PORT", logger, out var rawPort) |
+            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_USER", logger, out var user) |
+            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_PASSWORD", logger, out var password) |
+            !TryGetEnvironmentVariable("ROBUST_BENCHMARKS_SQL_DATABASE", logger, out var db) |
             !TryGetEnvironmentVariable("GITHUB_SHA", logger, out var gitHash))
             return;
 

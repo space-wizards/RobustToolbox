@@ -418,8 +418,18 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public void RegisterNewPreviousChunkTrees(
         List<(uint, IChunkIndexLocation)> chunks,
-        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees)
+        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees,
+        bool[] reuse)
     {
+        // For any chunks able to re-used we'll chuck them in a dictionary for faster lookup.
+        for (var i = 0; i < chunks.Count; i++)
+        {
+            var canReuse = reuse[i];
+            if (!canReuse) continue;
+
+            _reusedTrees.Add(chunks[i]);
+        }
+
         var previousIndices = _previousTrees.Keys.ToArray();
         foreach (var index in previousIndices)
         {
@@ -447,15 +457,17 @@ internal sealed partial class PVSSystem : EntitySystem
         _reusedTrees.Clear();
     }
 
-    public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
+    public bool TryCalculateChunk(
+        IChunkIndexLocation chunkLocation,
+        uint visMask,
+        EntityQuery<TransformComponent> transform,
+        EntityQuery<MetaDataComponent> metadata,
+        out (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? result)
     {
         if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
         {
-            lock (_reusedTrees)
-            {
-                _reusedTrees.Add((visMask, chunkLocation));
-            }
-            return previousTree;
+            result = previousTree;
+            return true;
         }
 
         var chunk = chunkLocation switch
@@ -469,7 +481,11 @@ internal sealed partial class PVSSystem : EntitySystem
                 ? mapChunk
                 : null
         };
-        if (chunk == null) return null;
+        if (chunk == null)
+        {
+            result = null;
+            return false;
+        }
         var chunkSet = _chunkCachePool.Get();
         var tree = _treePool.Get();
         foreach (var uid in chunk)
@@ -477,7 +493,8 @@ internal sealed partial class PVSSystem : EntitySystem
             AddToChunkSetRecursively(in uid, visMask, tree, chunkSet, transform, metadata);
         }
 
-        return (chunkSet, tree);
+        result = (chunkSet, tree);
+        return false;
     }
 
     public void ReturnToPool(HashSet<int>[] playerChunks)

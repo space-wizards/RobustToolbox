@@ -447,15 +447,22 @@ internal sealed partial class PVSSystem : EntitySystem
         _reusedTrees.Clear();
     }
 
-    public (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? CalculateChunk(IChunkIndexLocation chunkLocation, uint visMask, EntityQuery<TransformComponent> transform, EntityQuery<MetaDataComponent> metadata)
+    public void ReuseChunk((uint, IChunkIndexLocation) chunk)
+    {
+        _reusedTrees.Add(chunk);
+    }
+
+    public bool TryCalculateChunk(
+        IChunkIndexLocation chunkLocation,
+        uint visMask,
+        EntityQuery<TransformComponent> transform,
+        EntityQuery<MetaDataComponent> metadata,
+        out (Dictionary<EntityUid, MetaDataComponent> mData, RobustTree<EntityUid> tree)? result)
     {
         if (!_entityPvsCollection.IsDirty(chunkLocation) && _previousTrees.TryGetValue((visMask, chunkLocation), out var previousTree))
         {
-            lock (_reusedTrees)
-            {
-                _reusedTrees.Add((visMask, chunkLocation));
-            }
-            return previousTree;
+            result = previousTree;
+            return true;
         }
 
         var chunk = chunkLocation switch
@@ -469,7 +476,11 @@ internal sealed partial class PVSSystem : EntitySystem
                 ? mapChunk
                 : null
         };
-        if (chunk == null) return null;
+        if (chunk == null)
+        {
+            result = null;
+            return false;
+        }
         var chunkSet = _chunkCachePool.Get();
         var tree = _treePool.Get();
         foreach (var uid in chunk)
@@ -477,7 +488,8 @@ internal sealed partial class PVSSystem : EntitySystem
             AddToChunkSetRecursively(in uid, visMask, tree, chunkSet, transform, metadata);
         }
 
-        return (chunkSet, tree);
+        result = (chunkSet, tree);
+        return false;
     }
 
     public void ReturnToPool(HashSet<int>[] playerChunks)

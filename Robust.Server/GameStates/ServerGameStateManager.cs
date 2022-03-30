@@ -164,16 +164,8 @@ namespace Robust.Server.GameStates
                     }
                 });
 
-                for (var i = 0; i < chunksCount; i++)
-                {
-                    var reused = reuse[i];
-                    if (!reused) continue;
-                    _pvs.ReuseChunk(chunks[i]);
-                }
-
+                _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache, reuse);
                 ArrayPool<bool>.Shared.Return(reuse);
-
-                _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache);
             }
 
             const int BatchSize = 2;

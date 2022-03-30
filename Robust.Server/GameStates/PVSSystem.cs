@@ -418,8 +418,18 @@ internal sealed partial class PVSSystem : EntitySystem
 
     public void RegisterNewPreviousChunkTrees(
         List<(uint, IChunkIndexLocation)> chunks,
-        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees)
+        (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] trees,
+        bool[] reuse)
     {
+        // For any chunks able to re-used we'll chuck them in a dictionary for faster lookup.
+        for (var i = 0; i < chunks.Count; i++)
+        {
+            var canReuse = reuse[i];
+            if (!canReuse) continue;
+
+            _reusedTrees.Add(chunks[i]);
+        }
+
         var previousIndices = _previousTrees.Keys.ToArray();
         foreach (var index in previousIndices)
         {
@@ -445,11 +455,6 @@ internal sealed partial class PVSSystem : EntitySystem
         }
         // ReSharper disable once InconsistentlySynchronizedField
         _reusedTrees.Clear();
-    }
-
-    public void ReuseChunk((uint, IChunkIndexLocation) chunk)
-    {
-        _reusedTrees.Add(chunk);
     }
 
     public bool TryCalculateChunk(

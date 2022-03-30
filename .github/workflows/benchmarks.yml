@@ -30,4 +30,4 @@ jobs:
       - name: Install dependencies
         run: dotnet restore
       - name: Run benchmark
-        run: cd Robust.Benchmarks && sudo dotnet run --filter '*' --configuration Release
+        run: cd Robust.Benchmarks && sudo dotnet run --filter 'Robust.Benchmarks.NumericsHelpers.AddBenchmark*' --configuration Release

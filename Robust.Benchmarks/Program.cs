@@ -18,8 +18,10 @@ namespace Robust.Benchmarks
             Console.WriteLine("THE DEBUG BUILD IS ONLY GOOD FOR FIXING A CRASHING BENCHMARK\n");
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, new DebugInProcessConfig());
 #else
-            var config = Environment.GetEnvironmentVariable("ROBUST_BENCHMARKS_ENABLE_SQL") != null ? DefaultSQLConfig.Instance : null;
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
+            var sqlBenchmarks = Environment.GetEnvironmentVariable("ROBUST_BENCHMARKS_ENABLE_SQL") != null;
+            if(sqlBenchmarks)
+                Console.WriteLine("Found ROBUST_BENCHMARKS_ENABLE_SQL, using SQLExporter.");
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, sqlBenchmarks ? DefaultSQLConfig.Instance : null);
 #endif
         }
     }

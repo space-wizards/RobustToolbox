@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -31,6 +32,14 @@ namespace Robust.Shared.Map
         /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
         MapChunk GetChunk(Vector2i chunkIndices);
+
+        /// <summary>
+        ///     Returns the chunk at the given indices.
+        /// </summary>
+        /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
+        /// <param name="chunk">The existing chunk.</param>
+        /// <returns></returns>
+        bool TryGetChunk(Vector2i chunkIndices, [MaybeNullWhen(false)] out MapChunk chunk);
 
         /// <summary>
         /// Returns whether a chunk exists with the specified indices.

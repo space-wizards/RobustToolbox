@@ -137,6 +137,11 @@ internal partial class MapManager
         return CreateGrid(currentMapId, forcedGridId, chunkSize, default);
     }
 
+    public void GenerateChunk(MapGrid grid, MapChunk newChunk)
+    {
+        EntityManager.EventBus.RaiseLocalEvent(grid.GridEntityId, new ChunkGenerateEvent(grid, newChunk.Indices));
+    }
+
     public IMapGrid GetGrid(GridId gridId)
     {
         DebugTools.Assert(gridId != GridId.Invalid);

@@ -51,5 +51,6 @@ namespace Robust.Shared.Map
         void TrueDeleteMap(MapId mapId);
         GridId GenerateGridId(GridId? forcedGridId);
         void OnGridAllocated(MapGridComponent gridComponent, MapGrid mapGrid);
+        void GenerateChunk(MapGrid grid, MapChunk newChunk);
     }
 }

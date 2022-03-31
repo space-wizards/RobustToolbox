@@ -53,5 +53,17 @@ namespace Robust.Shared.Map
         {
             return Value.ToString();
         }
+
+        public static bool TryParse(string str, out MapId mapId)
+        {
+            if (int.TryParse(str, out var val))
+            {
+                mapId = new MapId(val);
+                return true;
+            }
+
+            mapId = default;
+            return false;
+        }
     }
 }

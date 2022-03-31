@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 using Robust.Shared.GameObjects;
 using Robust.Shared.Maths;
@@ -60,6 +61,13 @@ namespace Robust.Shared.Map
         Matrix3 WorldMatrix { get; }
 
         Matrix3 InvWorldMatrix { get; }
+
+        /// <summary>
+        /// Generates a new chunk any time an unallocated chunk is accessed. Set this to true if you want to generate chunks
+        /// as they come into a client's view (procedural terrain gen). Keep this as false if you only want to generate a new chunk when it is
+        /// explicitly written to (manually constructing tiles on a ship).
+        /// </summary>
+        bool GenerateChunkOnView { get; set; }
 
         #region TileAccess
 

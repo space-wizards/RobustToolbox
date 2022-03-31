@@ -948,7 +948,10 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     // Read Safe
-    private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
+    /// <summary>
+    /// Calculates the PVS world view bounds of an entity.
+    /// </summary>
+    internal (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
     {
         var xform = transformQuery.GetComponent(euid);
         return (xform.WorldPosition, _viewSize / 2f, xform.MapID);

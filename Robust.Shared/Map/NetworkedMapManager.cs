@@ -13,7 +13,7 @@ namespace Robust.Shared.Map;
 
 internal interface INetworkedMapManager : IMapManagerInternal
 {
-    GameStateMapData? GetStateData(GameTick fromTick);
+    GameStateMapData? GetStateData(GameTick fromTick, (Box2 view, MapId mapId) worldViewBounds);
     void CullDeletionHistory(GameTick upToTick);
 
     // Two methods here, so that new grids etc can be made BEFORE entities get states applied,
@@ -59,7 +59,7 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         }
     }
 
-    public GameStateMapData? GetStateData(GameTick fromTick)
+    public GameStateMapData? GetStateData(GameTick fromTick, (Box2 view, MapId mapId) worldViewBounds)
     {
         var gridDatums = new Dictionary<GridId, GameStateMapData.GridDatum>();
         var enumerator = GetAllGridsEnumerator();
@@ -67,6 +67,30 @@ internal sealed class NetworkedMapManager : MapManager, INetworkedMapManager
         while (enumerator.MoveNext(out var iGrid))
         {
             var grid = (MapGrid)iGrid;
+
+            // In order to procgen the terrain we have to actually touch the visible chunks to generate them
+            // any newly procgenned chunks will set grid.LastTileModifiedTick which is checked below
+            {
+                if(grid.GenerateChunkOnView && grid.ParentMapId == worldViewBounds.mapId)
+                {
+                    if(grid.WorldBounds.Intersects(worldViewBounds.view))
+                    {
+                        var localViewBounds = worldViewBounds.view.Translated(grid.WorldPosition);
+
+                        var chunkSize = grid.ChunkSize;
+                        var _chunkLB = new Vector2i((int)Math.Floor(localViewBounds.Left / chunkSize), (int)Math.Floor(localViewBounds.Bottom / chunkSize));
+                        var _chunkRT = new Vector2i((int)Math.Floor(localViewBounds.Right / chunkSize), (int)Math.Floor(localViewBounds.Top / chunkSize));
+
+                        for (var x = _chunkLB.X; x <= _chunkRT.X; x++)
+                        {
+                            for (var y = _chunkLB.Y; y <= _chunkRT.Y; y++)
+                            {
+                                grid.TouchChunk(x, y);
+                            }
+                        }
+                    }
+                }
+            }
 
             if (grid.LastTileModifiedTick < fromTick)
                 continue;

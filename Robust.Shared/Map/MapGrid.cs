@@ -47,6 +47,10 @@ namespace Robust.Shared.Map
             }
         }
 
+        /// <inheritdoc />
+        [ViewVariables]
+        public bool GenerateChunkOnView { get; set; } = false;
+
         [ViewVariables]
         public EntityUid GridEntityId { get; internal set; }
 
@@ -396,16 +400,30 @@ namespace Robust.Shared.Map
             }
         }
 
+        private MapChunk GenerateNewChunk(Vector2i chunkIndices)
+        {
+            var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
+            newChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
+            newChunk.TileModified += OnTileModified;
+            _chunks[chunkIndices] = newChunk;
+            _mapManager.GenerateChunk(this, newChunk);
+            return newChunk;
+        }
+
         /// <inheritdoc />
         public MapChunk GetChunk(Vector2i chunkIndices)
         {
             if (_chunks.TryGetValue(chunkIndices, out var output))
                 return output;
 
-            var newChunk = new MapChunk(chunkIndices.X, chunkIndices.Y, ChunkSize);
-            newChunk.LastTileModifiedTick = _mapManager.GameTiming.CurTick;
-            newChunk.TileModified += OnTileModified;
-            return _chunks[chunkIndices] = newChunk;
+            //TODO: LEGACY: This function will ALWAYS generate a new chunk, and things break if it does not.
+            return GenerateNewChunk(chunkIndices);
+        }
+
+        /// <inheritdoc />
+        public bool TryGetChunk(Vector2i chunkIndices, [MaybeNullWhen(false)] out MapChunk chunk)
+        {
+            return _chunks.TryGetValue(chunkIndices, out chunk);
         }
 
         /// <inheritdoc />
@@ -422,17 +440,18 @@ namespace Robust.Shared.Map
 
         internal struct ChunkEnumerator
         {
-            private Dictionary<Vector2i, MapChunk> _chunks;
+            private MapGrid _grid;
             private Vector2i _chunkLB;
             private Vector2i _chunkRT;
 
             private int _xIndex;
             private int _yIndex;
 
-            internal ChunkEnumerator(Dictionary<Vector2i, MapChunk> chunks, Box2 localAABB, int chunkSize)
+            internal ChunkEnumerator(MapGrid grid, Box2 localAABB)
             {
-                _chunks = chunks;
+                _grid = grid;
 
+                var chunkSize = grid.ChunkSize;
                 _chunkLB = new Vector2i((int)Math.Floor(localAABB.Left / chunkSize), (int)Math.Floor(localAABB.Bottom / chunkSize));
                 _chunkRT = new Vector2i((int)Math.Floor(localAABB.Right / chunkSize), (int)Math.Floor(localAABB.Top / chunkSize));
 
@@ -453,7 +472,7 @@ namespace Robust.Shared.Map
                     for (var y = _yIndex; y <= _chunkRT.Y; y++)
                     {
                         var gridChunk = new Vector2i(x, y);
-                        if (!_chunks.TryGetValue(gridChunk, out chunk)) continue;
+                        if (!_grid.TryGetChunk(gridChunk, out chunk)) continue;
                         _xIndex = x;
                         _yIndex = y + 1;
                         return true;
@@ -471,7 +490,7 @@ namespace Robust.Shared.Map
         public void GetMapChunks(Box2 worldAABB, out ChunkEnumerator enumerator)
         {
             var localArea = InvWorldMatrix.TransformBox(worldAABB);
-            enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
+            enumerator = new ChunkEnumerator(this, localArea);
         }
 
         /// <inheritdoc />
@@ -480,12 +499,12 @@ namespace Robust.Shared.Map
             var matrix = InvWorldMatrix;
             var localArea = matrix.TransformBox(worldArea);
 
-            enumerator = new ChunkEnumerator(_chunks, localArea, ChunkSize);
+            enumerator = new ChunkEnumerator(this, localArea);
         }
 
         public void GetLocalMapChunks(Box2 localAABB, out ChunkEnumerator enumerator)
         {
-            enumerator = new ChunkEnumerator(_chunks, localAABB, ChunkSize);
+            enumerator = new ChunkEnumerator(this, localAABB);
         }
 
         #endregion ChunkAccess
@@ -924,6 +943,18 @@ namespace Robust.Shared.Map
                 RegenerateCollision(mapChunk);
             }
         }
+
+        public void TouchChunk(int xIndex, int yIndex)
+        {
+            if(!GenerateChunkOnView)
+                return;
+
+            var key = new Vector2i(xIndex, yIndex);
+            if(_chunks.ContainsKey(key))
+                return;
+
+            GenerateNewChunk(key);
+        }
     }
 
     /// <summary>
@@ -932,5 +963,17 @@ namespace Robust.Shared.Map
     public sealed class EmptyGridEvent : EntityEventArgs
     {
         public GridId GridId { get; init;  }
+    }
+
+    public sealed class ChunkGenerateEvent : HandledEntityEventArgs
+    {
+        public IMapGrid Grid { get; }
+        public Vector2i ChunkIndices { get; }
+
+        public ChunkGenerateEvent(IMapGrid grid, Vector2i chunkIndices)
+        {
+            Grid = grid;
+            ChunkIndices = chunkIndices;
+        }
     }
 }

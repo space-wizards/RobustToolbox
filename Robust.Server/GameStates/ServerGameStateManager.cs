@@ -16,6 +16,7 @@ using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -209,7 +210,9 @@ namespace Robust.Server.GameStates
                         playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
                     : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
-                var mapData = _mapManager.GetStateData(lastAck);
+
+                var viewBounds = session.AttachedEntity is not null ? _pvs.CalcViewBounds(session.AttachedEntity.Value, transformQuery) : default;
+                var mapData = _mapManager.GetStateData(lastAck, (Box2.UnitCentered.Scale(viewBounds.range).Translated(viewBounds.worldPos), viewBounds.mapId));
 
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);

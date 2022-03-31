@@ -27,7 +27,7 @@ namespace Robust.Shared.GameObjects
     /// <inheritdoc cref="IMapGridComponent"/>
     [ComponentReference(typeof(IMapGridComponent))]
     [NetworkedComponent]
-    internal sealed class MapGridComponent : Component, IMapGridComponent
+    public sealed class MapGridComponent : Component, IMapGridComponent
     {
         [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IEntityManager _entMan = default!;
@@ -137,7 +137,7 @@ namespace Robust.Shared.GameObjects
             _chunkSize = state.ChunkSize;
         }
 
-        public MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
+        internal MapGrid AllocMapGrid(ushort chunkSize, ushort tileSize)
         {
             DebugTools.Assert(LifeStage == ComponentLifeStage.Added);
 
@@ -151,7 +151,7 @@ namespace Robust.Shared.GameObjects
             return grid;
         }
 
-        public static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
+        internal static void ApplyMapGridState(NetworkedMapManager networkedMapManager, IMapGridComponent gridComp, GameStateMapData.ChunkDatum[] chunkUpdates)
         {
             var grid = (MapGrid)gridComp.Grid;
             networkedMapManager.SuppressOnTileChanged = true;

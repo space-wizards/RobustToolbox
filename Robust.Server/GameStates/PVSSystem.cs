@@ -138,9 +138,6 @@ internal sealed partial class PVSSystem : EntitySystem
         // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
         // Should still be at its old location as moveevent is called after.
         MarkDirty(ev.Entity);
-        if(ev.OldParent.HasValue){
-            MarkDirty(ev.OldParent.Value);
-        }
     }
 
     public override void Shutdown()

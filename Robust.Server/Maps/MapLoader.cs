@@ -786,54 +786,55 @@ namespace Robust.Server.Maps
 
             private void PopulateEntityList()
             {
-                var withUid = new List<MapSaveIdComponent>();
-                var withoutUid = new List<EntityUid>();
-                var takenIds = new HashSet<int>();
-
+                var withoutUid = new HashSet<EntityUid>();
+                var saveCompQuery = _serverEntityManager.GetEntityQuery<MapSaveIdComponent>();
+                var transformCompQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+                var metaCompQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
                 foreach (var entity in _serverEntityManager.GetEntities())
                 {
-                    if (IsMapSavable(entity))
-                    {
-                        Entities.Add(entity);
-                        if (_serverEntityManager.TryGetComponent(entity, out MapSaveIdComponent? mapSaveId))
-                        {
-                            withUid.Add(mapSaveId);
-                        }
-                        else
-                        {
-                            withoutUid.Add(entity);
-                        }
-                    }
-                }
+                    var currentTransform = transformCompQuery.GetComponent(entity);
+                    if (!GridIDMap.ContainsKey(currentTransform.GridID)) continue;
 
-                // Go over entities with a MapSaveIdComponent and assign those.
+                    var currentEntity = entity;
 
-                foreach (var mapIdComp in withUid)
-                {
-                    var uid = mapIdComp.Uid;
-                    if (takenIds.Contains(uid))
+                    // Don't serialize things parented to un savable things.
+                    // For example clothes inside a person.
+                    while (currentEntity.IsValid())
                     {
-                        // Duplicate ID. Just pretend it doesn't have an ID and use the without path.
-                        withoutUid.Add(mapIdComp.Owner);
+                        if (metaCompQuery.GetComponent(currentEntity).EntityPrototype?.MapSavable == false) break;
+                        currentEntity = transformCompQuery.GetComponent(currentEntity).ParentUid;
                     }
-                    else
+
+                    if (currentEntity.IsValid()) continue;
+
+                    Entities.Add(entity);
+
+                    if (!saveCompQuery.TryGetComponent(entity, out var mapSaveComp) ||
+                        !UidEntityMap.TryAdd(mapSaveComp.Uid, entity))
                     {
-                        EntityUidMap.Add(mapIdComp.Owner, uid);
-                        takenIds.Add(uid);
+                        // If the id was already saved before, or has no save component we need to find a new id for this entity
+                        withoutUid.Add(entity);
                     }
                 }
 
                 var uidCounter = 0;
                 foreach (var entity in withoutUid)
                 {
-                    while (takenIds.Contains(uidCounter))
+                    while (UidEntityMap.ContainsKey(uidCounter))
                     {
                         // Find next available UID.
                         uidCounter += 1;
                     }
 
-                    EntityUidMap.Add(entity, uidCounter);
-                    takenIds.Add(uidCounter);
+                    UidEntityMap.Add(uidCounter, entity);
+                    uidCounter += 1;
+                }
+
+                // Build a reverse lookup
+                EntityUidMap.EnsureCapacity(UidEntityMap.Count);
+                foreach(var (saveId, mapId) in UidEntityMap)
+                {
+                    EntityUidMap.Add(mapId, saveId);
                 }
             }
 
@@ -841,19 +842,20 @@ namespace Robust.Server.Maps
             {
                 var serializationManager = IoCManager.Resolve<ISerializationManager>();
                 var compFactory = IoCManager.Resolve<IComponentFactory>();
+                var metaQuery = _serverEntityManager.GetEntityQuery<MetaDataComponent>();
                 var entities = new YamlSequenceNode();
                 RootNode.Add("entities", entities);
 
                 var prototypeCompCache = new Dictionary<string, Dictionary<string, MappingDataNode>>();
-                foreach (var entity in Entities.OrderBy(e => EntityUidMap[e]))
+                foreach (var (saveId, entityUid) in UidEntityMap.OrderBy(e=>e.Key))
                 {
-                    CurrentWritingEntity = entity;
+                    CurrentWritingEntity = entityUid;
                     var mapping = new YamlMappingNode
                     {
-                        {"uid", EntityUidMap[entity].ToString(CultureInfo.InvariantCulture)}
+                        {"uid", saveId.ToString(CultureInfo.InvariantCulture)}
                     };
 
-                    var md = _serverEntityManager.GetComponent<MetaDataComponent>(entity);
+                    var md = metaQuery.GetComponent(entityUid);
 
                     if (md.EntityPrototype is {} prototype)
                     {
@@ -871,7 +873,7 @@ namespace Robust.Server.Maps
                     var components = new YamlSequenceNode();
 
                     // See engine#636 for why the Distinct() call.
-                    foreach (var component in _serverEntityManager.GetComponents(entity))
+                    foreach (var component in _serverEntityManager.GetComponents(entityUid))
                     {
                         if (component is MapSaveIdComponent)
                             continue;
@@ -936,29 +938,6 @@ namespace Robust.Server.Maps
             public IEnumerable<string> GetExtraComponentTypes()
             {
                 return CurrentReadingEntityComponents!.Keys;
-            }
-
-            private bool IsMapSavable(EntityUid entity)
-            {
-                if (_serverEntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype?.MapSavable == false || !GridIDMap.ContainsKey(_serverEntityManager.GetComponent<TransformComponent>(entity).GridID))
-                {
-                    return false;
-                }
-
-                // Don't serialize things parented to un savable things.
-                // For example clothes inside a person.
-                var current = _serverEntityManager.GetComponent<TransformComponent>(entity);
-                while (current.Parent != null)
-                {
-                    if (_serverEntityManager.GetComponent<MetaDataComponent>(current.Parent.Owner).EntityPrototype?.MapSavable == false)
-                    {
-                        return false;
-                    }
-
-                    current = current.Parent;
-                }
-
-                return true;
             }
 
             [Virtual]

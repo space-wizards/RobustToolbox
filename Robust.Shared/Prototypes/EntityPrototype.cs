@@ -229,7 +229,12 @@ namespace Robust.Shared.Prototypes
             metaData.EntityPrototype = this;
         }
 
-        internal static void LoadEntity(EntityPrototype? prototype, EntityUid entity, IComponentFactory factory,
+        internal static void LoadEntity(
+            EntityPrototype? prototype,
+            EntityUid entity,
+            IComponentFactory factory,
+            IEntityManager entityManager,
+            ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             /*YamlObjectSerializer.Context? defaultContext = null;
@@ -248,7 +253,7 @@ namespace Robust.Shared.Prototypes
                         fullData = context.GetComponentData(name, data);
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData, context as ISerializationContext);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
             }
 
@@ -266,15 +271,18 @@ namespace Robust.Shared.Prototypes
 
                     var ser = context.GetComponentData(name, null);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, ser, context as ISerializationContext);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, ser, context as ISerializationContext);
                 }
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(EntityUid entity, IComponentFactory factory, string compName,
+        private static void EnsureCompExistsAndDeserialize(EntityUid entity,
+            IComponentFactory factory,
+            IEntityManager entityManager,
+            ISerializationManager serManager,
+            string compName,
             IComponent data, ISerializationContext? context)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
             var compType = factory.GetRegistration(compName).Type;
 
             if (!entityManager.TryGetComponent(entity, compType, out var component))
@@ -286,7 +294,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            _ = IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
+            _ = serManager.Copy(data, component, context);
         }
 
         public override string ToString()

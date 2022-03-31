@@ -21,7 +21,7 @@ namespace Robust.Shared.GameObjects
             base.Initialize();
 
             UpdatesOutsidePrediction = true;
-            
+
             SubscribeLocalEvent<MapChangedEvent>(ev =>
             {
                 if (ev.Created)
@@ -174,6 +174,16 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
             Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
+            // ReSharper disable once ConvertToLocalFunction
+            var wrapper = (EntityUid uid, Func<EntityUid, bool>? wrapped)
+                => wrapped != null && wrapped(uid);
+
+            return IntersectRayWithPredicate(mapId, in ray, maxLength, predicate, wrapper, returnOnFirstHit);
+        }
+
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, in Ray ray, float maxLength,
+            TState state, Func<EntityUid, TState, bool> predicate, bool returnOnFirstHit = true)
+        {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
             var list = new List<RayCastResults>();
 
@@ -191,7 +201,7 @@ namespace Robust.Shared.GameObjects
                 var treeRay = new Ray(matrix.Transform(ray.Position), relativeAngle);
 
                 comp.Tree.QueryRay(ref list,
-                    (ref List<RayCastResults> state, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
+                    (ref List<RayCastResults> listState, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
                     {
                         if (distFromOrigin > maxLength)
                             return true;
@@ -199,11 +209,11 @@ namespace Robust.Shared.GameObjects
                         if (!value.Enabled)
                             return true;
 
-                        if (predicate != null && predicate.Invoke(value.Owner))
+                        if (predicate.Invoke(value.Owner, state))
                             return true;
 
                         var result = new RayCastResults(distFromOrigin, point, value.Owner);
-                        state.Add(result);
+                        listState.Add(result);
                         return !returnOnFirstHit;
                     }, treeRay);
             }

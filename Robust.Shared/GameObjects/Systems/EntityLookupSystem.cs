@@ -68,6 +68,33 @@ namespace Robust.Shared.GameObjects
             EntityManager.EntityInitialized -= OnEntityInit;
         }
 
+        /// <summary>
+        /// Updates the entity's AABB. Uses <see cref="ILookupWorldBox2Component"/>
+        /// </summary>
+        [UsedImplicitly]
+        public void UpdateBounds(EntityUid uid, TransformComponent? xform = null, MetaDataComponent? meta = null)
+        {
+            if (_container.IsEntityInContainer(uid, meta))
+                return;
+
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+
+            if (!xformQuery.Resolve(uid, ref xform) || xform.Anchored)
+                return;
+
+            var lookup = GetLookup(uid, xform, xformQuery);
+
+            if (lookup == null) return;
+
+            var lookupXform = xformQuery.GetComponent(lookup.Owner);
+            var coordinates = _transform.GetMoverCoordinates(xform.Coordinates, xformQuery);
+            // If we're contained then LocalRotation should be 0 anyway.
+            var aabb = GetAABB(xform.Owner, coordinates.Position, _transform.GetWorldRotation(xform) - _transform.GetWorldRotation(lookupXform), xform, xformQuery);
+
+            // TODO: Only container children need updating so could manually do this slightly better.
+            AddToEntityTree(lookup, xform, aabb, xformQuery);
+        }
+
         private void OnAnchored(ref AnchorStateChangedEvent args)
         {
             // This event needs to be handled immediately as anchoring is handled immediately

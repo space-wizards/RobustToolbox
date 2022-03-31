@@ -35,7 +35,7 @@ public abstract partial class SharedPhysicsSystem
                 EntityManager.EventBus.RaiseEvent(EventSource.Local, new PhysicsWakeMessage(component));
             }
 
-            if (!_containerSystem.IsEntityInContainer(uid, xform))
+            if (!_containerSystem.IsEntityInContainer(uid))
             {
                 // TODO: Probably a bad idea but ehh future sloth's problem; namely that we have to duplicate code between here and CanCollide.
                 EntityManager.EventBus.RaiseLocalEvent(uid, new CollisionChangeMessage(component, uid, component._canCollide));

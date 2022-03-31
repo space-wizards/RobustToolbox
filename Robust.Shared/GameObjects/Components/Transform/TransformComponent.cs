@@ -931,7 +931,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Returns whether the entity of this transform contains the entity argument
+        ///     Returns whether the given entity is a child of this transform or one of its descendants.
         /// </summary>
         public bool ContainsEntity(TransformComponent entityTransform)
         {
@@ -940,7 +940,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (this == entityTransform.Parent) //Is this the direct container of the entity
+            if (this == entityTransform.Parent) //Is this the direct parent of the entity
             {
                 return true;
             }
@@ -948,7 +948,7 @@ namespace Robust.Shared.GameObjects
             {
                 return
                     ContainsEntity(entityTransform
-                        .Parent); //Recursively search up the entities containers for this object
+                        .Parent); //Recursively search up the parents for this object
             }
         }
 

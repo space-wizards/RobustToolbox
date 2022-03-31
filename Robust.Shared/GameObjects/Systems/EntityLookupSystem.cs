@@ -89,21 +89,15 @@ namespace Robust.Shared.GameObjects
         /// Updates the entity's AABB. Uses <see cref="ILookupWorldBox2Component"/>
         /// </summary>
         [UsedImplicitly]
-        public void UpdateBounds(EntityUid uid, TransformComponent? xform = null)
+        public void UpdateBounds(EntityUid uid, TransformComponent? xform = null, MetaDataComponent? meta = null)
         {
+            if (_container.IsEntityInContainer(uid, meta))
+                return;
+
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
-            if (xform == null)
-                xformQuery.TryGetComponent(uid, out xform);
-
-            if (xform == null)
-            {
-                Logger.Error($"Unable to resolve transform on {EntityManager.ToPrettyString(uid)}");
-                DebugTools.Assert(false);
+            if (!xformQuery.Resolve(uid, ref xform) || xform.Anchored)
                 return;
-            }
-
-            if (xform.Anchored || _container.IsEntityInContainer(uid, xform)) return;
 
             var lookup = GetLookup(uid, xform, xformQuery);
 
@@ -249,7 +243,7 @@ namespace Robust.Shared.GameObjects
         private void UpdatePosition(EntityUid uid, TransformComponent xform)
         {
             // Even if the entity is contained it may have children that aren't so we still need to update.
-            if (!CanMoveUpdate(uid, xform)) return;
+            if (!CanMoveUpdate(uid)) return;
 
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
             var lookup = GetLookup(uid, xform, xformQuery);
@@ -262,11 +256,11 @@ namespace Robust.Shared.GameObjects
             AddToEntityTree(lookup, xform, aabb, xformQuery);
         }
 
-        private bool CanMoveUpdate(EntityUid uid, TransformComponent xform)
+        private bool CanMoveUpdate(EntityUid uid)
         {
             return !_mapManager.IsMap(uid) &&
                      !_mapManager.IsGrid(uid) &&
-                     !_container.IsEntityInContainer(uid, xform);
+                     !_container.IsEntityInContainer(uid);
         }
 
         private void OnParentChange(ref EntParentChangedMessage args)

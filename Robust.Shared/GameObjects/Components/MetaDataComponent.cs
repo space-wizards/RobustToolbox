@@ -182,5 +182,9 @@ namespace Robust.Shared.GameObjects
         /// Whether the entity has states specific to a particular player.
         /// </summary>
         EntitySpecific = 1 << 0,
+        /// <summary>
+        /// Whether the entity is currently inside of a container.
+        /// </summary>
+        InContainer = 1 << 1,
     }
 }

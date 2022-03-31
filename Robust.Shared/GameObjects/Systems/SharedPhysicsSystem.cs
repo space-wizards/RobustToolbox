@@ -114,7 +114,9 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            if (LifeStage(uid) < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
+            var meta = MetaData(uid);
+
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
             {
                 return;
             }
@@ -131,7 +133,8 @@ namespace Robust.Shared.GameObjects
                 HandleMapChange(body, xform, oldMapId, mapId);
             }
 
-            HandleParentChangeVelocity(uid, body, ref args, xform);
+            if (!_container.IsEntityInContainer(uid, meta))
+                HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 
         private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId mapId)

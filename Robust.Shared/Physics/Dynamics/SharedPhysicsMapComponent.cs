@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
@@ -98,11 +99,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// </summary>
         private HashSet<PhysicsComponent> _islandSet = new();
 
-        private HashSet<PhysicsComponent> _queuedWake = new();
-        private HashSet<PhysicsComponent> _queuedSleep = new();
-
-        private Queue<CollisionChangeMessage> _queuedCollisionMessages = new();
-
         private List<PhysicsComponent> _islandBodies = new(64);
         private List<Contact> _islandContacts = new(32);
         private List<Joint> _islandJoints = new(8);
@@ -130,7 +126,6 @@ namespace Robust.Shared.Physics.Dynamics
             // Look at my note under ProcessWakeQueue
             if (body.Awake && body.BodyType != BodyType.Static)
             {
-                _queuedWake.Remove(body);
                 AwakeBodies.Add(body);
             }
 
@@ -140,7 +135,20 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void AddAwakeBody(PhysicsComponent body)
         {
-            _queuedWake.Add(body);
+            if (body.BodyType == BodyType.Static)
+            {
+                Logger.ErrorS("physics", $"Tried to add static body {_entityManager.ToPrettyString(body.Owner)} as an awake body to map!");
+                return;
+            }
+
+            DebugTools.Assert(Bodies.Contains(body));
+            if (!Bodies.Contains(body))
+            {
+                Logger.ErrorS("physics", $"Tried to add {_entityManager.ToPrettyString(body.Owner)} as an awake body to map when it's not contained on the map!");
+                return;
+            }
+
+            AwakeBodies.Add(body);
         }
 
         public void RemoveBody(PhysicsComponent body)
@@ -153,61 +161,9 @@ namespace Robust.Shared.Physics.Dynamics
 
         public void RemoveSleepBody(PhysicsComponent body)
         {
-            _queuedSleep.Add(body);
+            AwakeBodies.Remove(body);
         }
 
-        #endregion
-
-        #region Queue
-        private void ProcessChanges()
-        {
-            ProcessBodyChanges();
-            ProcessWakeQueue();
-            ProcessSleepQueue();
-        }
-
-        private void ProcessBodyChanges()
-        {
-            while (_queuedCollisionMessages.Count > 0)
-            {
-                var message = _queuedCollisionMessages.Dequeue();
-
-                if (!message.Body.Deleted && message.Body.CanCollide)
-                {
-                    AddBody(message.Body);
-                }
-                else
-                {
-                    RemoveBody(message.Body);
-                }
-            }
-        }
-
-        private void ProcessWakeQueue()
-        {
-            foreach (var body in _queuedWake)
-            {
-                // Sloth note: So FPE doesn't seem to handle static bodies being woken gracefully as they never sleep
-                // (No static body's an island so can't increase their min sleep time).
-                // AFAIK not adding it to woken bodies shouldn't matter for anything tm...
-                if (!body.Awake || body.BodyType == BodyType.Static || !Bodies.Contains(body)) continue;
-                AwakeBodies.Add(body);
-            }
-
-            _queuedWake.Clear();
-        }
-
-        private void ProcessSleepQueue()
-        {
-            foreach (var body in _queuedSleep)
-            {
-                if (body.Awake) continue;
-
-                AwakeBodies.Remove(body);
-            }
-
-            _queuedSleep.Clear();
-        }
         #endregion
 
         /// <summary>
@@ -217,10 +173,6 @@ namespace Robust.Shared.Physics.Dynamics
         /// <param name="prediction"></param>
         public void Step(float frameTime, bool prediction)
         {
-            // The original doesn't call ProcessChanges quite so much but stuff like collision behaviors
-            // can edit things during the solver so we'll just handle it as it comes up.
-            ProcessChanges();
-
             // Box2D does this at the end of a step and also here when there's a fixture update.
             // Given external stuff can move bodies we'll just do this here.
             // Unfortunately this NEEDS to be predicted to make pushing remotely fucking good.
@@ -236,9 +188,6 @@ namespace Robust.Shared.Physics.Dynamics
             // Don't run collision behaviors during FrameUpdate?
             if (!prediction)
                 ContactManager.PreSolve(frameTime);
-
-            // Remove all deleted entities etc.
-            ProcessChanges();
 
             // Integrate velocities, solve velocity constraints, and do integration.
             Solve(frameTime, dtRatio, invDt, prediction);

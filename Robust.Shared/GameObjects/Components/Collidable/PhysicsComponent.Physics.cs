@@ -113,7 +113,8 @@ namespace Robust.Shared.GameObjects
                     _angularVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
-                else
+                // Even if it's dynamic if it can't collide then don't force it awake.
+                else if (_canCollide)
                 {
                     SetAwake(true);
                 }

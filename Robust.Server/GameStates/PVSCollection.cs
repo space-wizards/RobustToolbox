@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
@@ -182,10 +183,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 break;
             case GridChunkLocation gridChunkLocation:
                 // might be gone due to grid-deletions
-                if(!_gridChunkContents.ContainsKey(gridChunkLocation.GridId)) return;
-                if(!_gridChunkContents[gridChunkLocation.GridId].ContainsKey(gridChunkLocation.ChunkIndices))
-                    _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices] = new();
-                _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Add(index);
+                if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridId, out var gridChunk)) return;
+                var gridLoc = gridChunk.GetOrNew(gridChunkLocation.ChunkIndices);
+                gridLoc.Add(index);
                 dirtyChunks.Add(gridChunkLocation);
                 break;
             case LocalOverride localOverride:
@@ -195,10 +195,9 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 break;
             case MapChunkLocation mapChunkLocation:
                 // might be gone due to map-deletions
-                if(!_mapChunkContents.ContainsKey(mapChunkLocation.MapId)) return;
-                if(!_mapChunkContents[mapChunkLocation.MapId].ContainsKey(mapChunkLocation.ChunkIndices))
-                    _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices] = new();
-                _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Add(index);
+                if(!_mapChunkContents.TryGetValue(mapChunkLocation.MapId, out var mapChunk)) return;
+                var mapLoc = mapChunk.GetOrNew(mapChunkLocation.ChunkIndices);
+                mapLoc.Add(index);
                 dirtyChunks.Add(mapChunkLocation);
                 break;
         }
@@ -390,6 +389,20 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 
+    public IIndexLocation GetIndex(EntityCoordinates coordinates)
+    {
+        var gridId = coordinates.GetGridId(_entityManager);
+        if (gridId != GridId.Invalid)
+        {
+            var gridIndices = GetChunkIndices(coordinates.Position);
+            return new GridChunkLocation(gridId, gridIndices);
+        }
+
+        var mapCoordinates = coordinates.ToMap(_entityManager);
+        var mapIndices = GetChunkIndices(coordinates.Position);
+        return new MapChunkLocation(mapCoordinates.MapId, mapIndices);
+    }
+
     /// <summary>
     /// Updates an <see cref="TIndex"/> using the provided <see cref="gridId"/> and <see cref="chunkIndices"/>.
     /// </summary>
@@ -430,7 +443,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }
 
-    private void RegisterUpdate(TIndex index, IIndexLocation location)
+    public void RegisterUpdate(TIndex index, IIndexLocation location)
     {
         _locationChangeBuffer[index] = location;
     }

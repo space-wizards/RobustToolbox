@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -14,6 +13,8 @@ public sealed partial class EntityLookupSystem
     /*
      * There is no GetEntitiesInMap method as this should be avoided; anyone that really needs it can implement it themselves
      */
+
+    // Internal API messy for now but mainly want external to be fairly stable for a while and optimise it later.
 
     #region Private
 
@@ -55,38 +56,36 @@ public sealed partial class EntityLookupSystem
         Box2 worldAABB,
         LookupFlags flags,
         EntityQuery<EntityLookupComponent> lookupQuery,
-        EntityQuery<TransformComponent> xformQuery)
+        EntityQuery<TransformComponent> xformQuery,
+        EntityUid? ignored = null)
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldAABB);
-        var found = false;
 
-        lookup.Tree._b2Tree.Query(ref found, static (ref bool state, DynamicTree.Proxy _) =>
+        foreach (var uid in lookup.Tree.QueryAabb(localAABB))
         {
-            state = true;
-            return false;
-        }, localAABB);
-
-        if (found)
+            if (uid == ignored) continue;
             return true;
-
-        if (_mapManager.TryGetGrid(lookupUid, out var grid))
-        {
-            // TODO: Need a method that takes in local AABB.
-            foreach (var _ in grid.GetAnchoredEntities(worldAABB))
-            {
-                return true;
-            }
         }
 
-        return found;
+        if (!_mapManager.TryGetGrid(lookupUid, out var grid)) return false;
+
+        // TODO: Need a method that takes in local AABB.
+        foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+        {
+            if (uid == ignored) continue;
+            return true;
+        }
+
+        return false;
     }
 
     private bool AnyEntitiesIntersecting(EntityUid lookupUid,
         Box2Rotated worldBounds,
         LookupFlags flags,
         EntityQuery<EntityLookupComponent> lookupQuery,
-        EntityQuery<TransformComponent> xformQuery)
+        EntityQuery<TransformComponent> xformQuery,
+        EntityUid? ignored = null)
     {
         var lookup = lookupQuery.GetComponent(lookupUid);
         var localAABB = xformQuery.GetComponent(lookupUid).InvWorldMatrix.TransformBox(worldBounds);
@@ -113,14 +112,14 @@ public sealed partial class EntityLookupSystem
         return found;
     }
 
-    private void RecursiveAdd(EntityUid uid, HashSet<EntityUid> intersecting, EntityQuery<TransformComponent> xformQuery)
+    private void RecursiveAdd(EntityUid uid, List<EntityUid> toAdd, EntityQuery<TransformComponent> xformQuery)
     {
         var childEnumerator = xformQuery.GetComponent(uid).ChildEnumerator;
 
         while (childEnumerator.MoveNext(out var child))
         {
-            intersecting.Add(child.Value);
-            RecursiveAdd(child.Value, intersecting, xformQuery);
+            toAdd.Add(child.Value);
+            RecursiveAdd(child.Value, toAdd, xformQuery);
         }
     }
 
@@ -129,6 +128,7 @@ public sealed partial class EntityLookupSystem
         if ((flags & LookupFlags.Contained) == 0x0) return;
 
         var conQuery = GetEntityQuery<ContainerManagerComponent>();
+        var toAdd = new List<EntityUid>();
 
         foreach (var uid in intersecting)
         {
@@ -138,10 +138,15 @@ public sealed partial class EntityLookupSystem
             {
                 foreach (var contained in con.ContainedEntities)
                 {
-                    intersecting.Add(contained);
-                    RecursiveAdd(contained, intersecting, xformQuery);
+                    toAdd.Add(contained);
+                    RecursiveAdd(contained, toAdd, xformQuery);
                 }
             }
+        }
+
+        foreach (var uid in toAdd)
+        {
+            intersecting.Add(uid);
         }
     }
 
@@ -201,9 +206,9 @@ public sealed partial class EntityLookupSystem
         return AnyEntitiesIntersecting(mapUid, worldAABB, flags, lookupQuery, xformQuery);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        if (mapId == MapId.Nullspace) return Enumerable.Empty<EntityUid>();
+        if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<EntityLookupComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -250,9 +255,9 @@ public sealed partial class EntityLookupSystem
         return AnyEntitiesIntersecting(mapUid, worldBounds, flags, lookupQuery, xformQuery);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(MapId mapId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
-        if (mapId == MapId.Nullspace) return Enumerable.Empty<EntityUid>();
+        if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<EntityLookupComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -284,33 +289,68 @@ public sealed partial class EntityLookupSystem
 
     #region Entity
 
+    // TODO: Bit of duplication between here and the other methods. Was a bit lazy passing around predicates for speed too.
+
     public bool AnyEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
     {
         var worldAABB = GetWorldAABB(uid);
         var mapID = Transform(uid).MapID;
-        var predicate = (EntityUid ent, EntityUid otherUid) => ent == otherUid;
-        return AnyEntitiesIntersecting<EntityUid>(mapID, worldAABB, flags, uid);
+
+        if (mapID == MapId.Nullspace) return false;
+
+        var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapID, worldAABB))
+        {
+            if (AnyEntitiesIntersecting(grid.GridEntityId, worldAABB, flags, lookupQuery, xformQuery, uid))
+                return true;
+        }
+
+        var mapUid = _mapManager.GetMapEntityId(mapID);
+        return AnyEntitiesIntersecting(mapUid, worldAABB, flags, lookupQuery, xformQuery, uid);
     }
 
     public bool AnyEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)
     {
         var mapPos = Transform(uid).MapPosition;
-        var predicate = (EntityUid ent, EntityUid otherUid) => ent == otherUid;
-        return AnyEntitiesInRange<EntityUid>(mapPos, range, flags, predicate, uid);
+
+        if (mapPos.MapId == MapId.Nullspace) return false;
+
+        var worldAABB = new Box2(mapPos.Position - range, mapPos.Position + range);
+        var lookupQuery = GetEntityQuery<EntityLookupComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        foreach (var grid in _mapManager.FindGridsIntersecting(mapPos.MapId, worldAABB))
+        {
+            if (AnyEntitiesIntersecting(grid.GridEntityId, worldAABB, flags, lookupQuery, xformQuery, uid))
+                return true;
+        }
+
+        var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
+        return AnyEntitiesIntersecting(mapUid, worldAABB, flags, lookupQuery, xformQuery, uid);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesInRange(EntityUid uid, float range, LookupFlags flags = DefaultFlags)
     {
         var mapPos = Transform(uid).MapPosition;
-        var predicate = (EntityUid ent, EntityUid otherUid) => ent == otherUid;
-        return GetEntitiesInRange<EntityUid>(mapPos, range, flags, predicate, uid);
+
+        if (mapPos.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
+
+        var intersecting = GetEntitiesInRange(mapPos, range, flags).ToHashSet();
+        intersecting.Remove(uid);
+        return intersecting;
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityUid uid, LookupFlags flags = DefaultFlags)
     {
-        var worldAABB = GetWorldAABB(uid);
-        var xform = Transform(uid);
-        return GetEntitiesIntersecting(xform.MapID, worldAABB, flags);
+        var mapPos = Transform(uid).MapPosition;
+
+        if (mapPos.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
+
+        var intersecting = GetEntitiesIntersecting(mapPos, flags).ToHashSet();
+        intersecting.Remove(uid);
+        return intersecting;
     }
 
     #endregion
@@ -333,13 +373,13 @@ public sealed partial class EntityLookupSystem
         return AnyEntitiesInRange(mapPos, range, flags);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityCoordinates coordinates, LookupFlags flags = DefaultFlags)
     {
         var mapPos = coordinates.ToMap(EntityManager);
         return GetEntitiesIntersecting(mapPos, flags);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesInRange(EntityCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
     {
         var mapPos = coordinates.ToMap(EntityManager);
         return GetEntitiesInRange(mapPos, range, flags);
@@ -366,15 +406,15 @@ public sealed partial class EntityLookupSystem
         return AnyEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(MapCoordinates coordinates, LookupFlags flags = DefaultFlags)
     {
-        if (coordinates.MapId == MapId.Nullspace) return Enumerable.Empty<EntityUid>();
+        if (coordinates.MapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         var worldAABB = new Box2(coordinates.Position - float.Epsilon, coordinates.Position + float.Epsilon);
         return GetEntitiesIntersecting(coordinates.MapId, worldAABB, flags);
     }
 
-    public IEnumerable<EntityUid> GetEntitiesInRange(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesInRange(MapCoordinates coordinates, float range, LookupFlags flags = DefaultFlags)
     {
         return GetEntitiesInRange(coordinates.MapId, coordinates.Position, range, flags);
     }
@@ -383,10 +423,10 @@ public sealed partial class EntityLookupSystem
 
     #region MapId
 
-    public IEnumerable<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
+    public HashSet<EntityUid> GetEntitiesInRange(MapId mapId, Vector2 worldPos, float range,
         LookupFlags flags = DefaultFlags)
     {
-        if (mapId == MapId.Nullspace) return Enumerable.Empty<EntityUid>();
+        if (mapId == MapId.Nullspace) return new HashSet<EntityUid>();
 
         // TODO: Actual circles
         var worldAABB = new Box2(worldPos - range, worldPos + range);
@@ -403,10 +443,10 @@ public sealed partial class EntityLookupSystem
     /// <param name="gridId"></param>
     /// <param name="gridIndices"></param>
     /// <returns></returns>
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, IEnumerable<Vector2i> gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookup = Comp<EntityLookupComponent>(grid.GridEntityId);
         var intersecting = new HashSet<EntityUid>();
@@ -436,10 +476,10 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Vector2i gridIndices, LookupFlags flags = DefaultFlags)
     {
         // Technically this doesn't consider anything overlapping from outside the grid but is this an issue?
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookup = Comp<EntityLookupComponent>(grid.GridEntityId);
         var tileSize = grid.TileSize;
@@ -465,9 +505,9 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2 worldAABB, LookupFlags flags = DefaultFlags)
     {
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<EntityLookupComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -485,9 +525,9 @@ public sealed partial class EntityLookupSystem
         return intersecting;
     }
 
-    public IEnumerable<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
+    public HashSet<EntityUid> GetEntitiesIntersecting(GridId gridId, Box2Rotated worldBounds, LookupFlags flags = DefaultFlags)
     {
-        if (!_mapManager.TryGetGrid(gridId, out var grid)) return Enumerable.Empty<EntityUid>();
+        if (!_mapManager.TryGetGrid(gridId, out var grid)) return new HashSet<EntityUid>();
 
         var lookupQuery = GetEntityQuery<EntityLookupComponent>();
         var xformQuery = GetEntityQuery<TransformComponent>();

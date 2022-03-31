@@ -5,6 +5,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Physics;
 using Robust.Shared.Players;
 
 namespace Robust.Shared.Player
@@ -95,6 +96,12 @@ namespace Robust.Shared.Player
             return this;
         }
 
+        public static IEnumerable<ICommonSession> GetAllPlayers(ISharedPlayerManager? playerManager = null)
+        {
+            IoCManager.Resolve(ref playerManager);
+            return playerManager.NetworkedSessions;
+        }
+
         /// <summary>
         ///     Adds all players to the filter.
         /// </summary>
@@ -139,7 +146,8 @@ namespace Robust.Shared.Player
         public Filter AddInGrid(GridId gridId, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
-            return AddWhereAttachedEntity(entity => entMan.GetComponent<TransformComponent>(entity).GridID == gridId);
+            var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+            return AddWhereAttachedEntity(entity => xformQuery.GetComponent(entity).GridID == gridId);
         }
 
         /// <summary>
@@ -148,7 +156,8 @@ namespace Robust.Shared.Player
         public Filter AddInMap(MapId mapId, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
-            return AddWhereAttachedEntity(entity => entMan.GetComponent<TransformComponent>(entity).MapID == mapId);
+            var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+            return AddWhereAttachedEntity(entity => xformQuery.GetComponent(entity).MapID == mapId);
         }
 
         /// <summary>
@@ -157,10 +166,13 @@ namespace Robust.Shared.Player
         public Filter AddInRange(MapCoordinates position, float range, ISharedPlayerManager? playerMan = null, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
+            var xformQuery = entMan.GetEntityQuery<TransformComponent>();
 
             return AddWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(entMan.GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range), playerMan);
+                xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
+                xform.MapID == position.MapId &&
+                (xform.WorldPosition - position.Position).Length < range, playerMan);
         }
 
         /// <summary>
@@ -210,10 +222,13 @@ namespace Robust.Shared.Player
         public Filter RemoveInRange(MapCoordinates position, float range, IEntityManager? entMan = null)
         {
             IoCManager.Resolve(ref entMan);
+            var xformQuery = entMan.GetEntityQuery<TransformComponent>();
 
             return RemoveWhere(session =>
                 session.AttachedEntity != null &&
-                position.InRange(entMan.GetComponent<TransformComponent>(session.AttachedEntity.Value).MapPosition, range));
+                xformQuery.TryGetComponent(session.AttachedEntity.Value, out var xform) &&
+                xform.MapID == position.MapId &&
+                (xform.WorldPosition - position.Position).Length < range);
         }
 
         /// <summary>

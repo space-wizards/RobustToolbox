@@ -116,9 +116,20 @@ internal partial class MapManager
         OnGridCreated?.Invoke(mapGrid.ParentMapId, mapGrid.Index);
     }
 
+    public GridEnumerator GetAllGridsEnumerator()
+    {
+        var query = EntityManager.GetEntityQuery<MapGridComponent>();
+        return new GridEnumerator(_grids.GetEnumerator(), query);
+    }
+
     public IEnumerable<IMapGrid> GetAllGrids()
     {
-        return EntityManager.EntityQuery<IMapGridComponent>(true).Select(c => c.Grid);
+        var compQuery = EntityManager.GetEntityQuery<MapGridComponent>();
+
+        foreach (var (_, uid) in _grids)
+        {
+            yield return compQuery.GetComponent(uid).Grid;
+        }
     }
 
     public IMapGrid CreateGrid(MapId currentMapId, GridId? forcedGridId = null, ushort chunkSize = 16)

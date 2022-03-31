@@ -236,7 +236,12 @@ namespace Robust.Shared.Prototypes
                 throw new InvalidOperationException("No prototypes have been loaded yet.");
             }
 
-            return _prototypes[typeof(T)].Values.Select(p => (T) p);
+            var protos = _prototypes[typeof(T)];
+
+            foreach (var (_, proto) in protos)
+            {
+                yield return (T) proto;
+            }
         }
 
         public IEnumerable<IPrototype> EnumeratePrototypes(Type type)

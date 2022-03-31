@@ -39,6 +39,7 @@ namespace Robust.Server.Player
         }
 
         [ViewVariables] public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
+        public int ViewSubscriptionCount => _viewSubscriptions.Count;
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 

@@ -880,7 +880,7 @@ namespace Robust.Shared.Maths
                 return color.Value;
             if (fallback.HasValue)
                 return fallback.Value;
-            throw new ArgumentException("Invalid color code and no fallback provided.", nameof(hexColor));
+            throw new ArgumentException($"Invalid color code \"{new string(hexColor)}\" and no fallback provided.", nameof(hexColor));
         }
 
         public static Color FromXaml(string name)

@@ -347,9 +347,7 @@ namespace Robust.Client.GameStates
 
                 // Check log level first to avoid the string alloc.
                 if (_sawmill.Level <= LogLevel.Debug)
-                {
                     _sawmill.Debug($"Entity {entity} was made dirty.");
-                }
 
                 if (!_processor.TryGetLastServerStates(entity, out var last))
                 {
@@ -367,7 +365,9 @@ namespace Robust.Client.GameStates
                         continue;
                     }
 
-                    _sawmill.Debug($"  And also its component {comp.GetType()}");
+                    if (_sawmill.Level <= LogLevel.Debug)
+                        _sawmill.Debug($"  And also its component {comp.GetType()}");
+
                     // TODO: Handle interpolation.
                     var handleState = new ComponentHandleState(compState, null);
                     _entities.EventBus.RaiseComponentEvent(comp, ref handleState);

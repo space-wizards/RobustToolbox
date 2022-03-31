@@ -219,42 +219,6 @@ namespace Robust.Shared.GameObjects
             entManager.Dirty(this);
         }
 
-        /// <summary>
-        ///     Sends a message to all other components in this entity.
-        ///     This is an alias of 'Owner.SendMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendMessage(ComponentMessage message)
-        {
-            var components = IoCManager.Resolve<IEntityManager>().GetComponents(Owner);
-            foreach (var component in components)
-            {
-                if (this != component)
-                    component.HandleMessage(message, this);
-            }
-        }
-
-        /// <summary>
-        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
-        ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
-        {
-            IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, Owner, this, message);
-        }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleMessage(ComponentMessage message, IComponent? component) { }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
-
         private static readonly ComponentState DefaultComponentState = new();
 
         /// <inheritdoc />

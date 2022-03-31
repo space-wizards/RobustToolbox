@@ -128,16 +128,19 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         if (_mapManager.IsGrid(ev.Entity) || _mapManager.IsMap(ev.Entity)) return;
 
-        // If parent changes then the RobustTree for that chunk will probably no longer be valid and need to force it as dirty.
+        void MarkDirty(EntityUid entityUid)
+        {
+            var xform = Transform(entityUid);
+            var index = _entityPvsCollection.GetChunkIndex(xform.Coordinates);
+            _entityPvsCollection.MarkDirty(index);
+        }
+
+        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
         // Should still be at its old location as moveevent is called after.
-        var xform = Transform(ev.Entity);
-
-        // As it's still at the old location this means it may be somewhere invalid such as nullspace.
-        if (xform.MapID == MapId.Nullspace) return;
-
-        // TODO: Could check the chunk of old vs new parent and see if we need to dirty at all.
-        var index = _entityPvsCollection.GetIndex(xform.Coordinates);
-        _entityPvsCollection.RegisterUpdate(ev.Entity, index);
+        MarkDirty(ev.Entity);
+        if(ev.OldParent.HasValue){
+            MarkDirty(ev.OldParent.Value);
+        }
     }
 
     public override void Shutdown()

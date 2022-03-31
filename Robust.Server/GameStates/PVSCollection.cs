@@ -166,6 +166,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public bool IsDirty(IChunkIndexLocation location) => _dirtyChunks.Contains(location);
 
+    public bool MarkDirty(IChunkIndexLocation location) => _dirtyChunks.Add(location);
+
     public bool TryGetChunk(MapId mapId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _mapChunkContents[mapId].TryGetValue(chunkIndices, out indices);
 
@@ -389,7 +391,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
     }
 
-    public IIndexLocation GetIndex(EntityCoordinates coordinates)
+    public IChunkIndexLocation GetChunkIndex(EntityCoordinates coordinates)
     {
         var gridId = coordinates.GetGridId(_entityManager);
         if (gridId != GridId.Invalid)
@@ -443,7 +445,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         RegisterUpdate(index, new MapChunkLocation(mapId, chunkIndices));
     }
 
-    public void RegisterUpdate(TIndex index, IIndexLocation location)
+    private void RegisterUpdate(TIndex index, IIndexLocation location)
     {
         _locationChangeBuffer[index] = location;
     }

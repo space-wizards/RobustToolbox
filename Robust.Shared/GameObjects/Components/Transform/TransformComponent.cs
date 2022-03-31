@@ -381,7 +381,7 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if (!oldPosition.Equals(Coordinates))
+                        if (!oldPosition.Position.Equals(Coordinates.Position))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);

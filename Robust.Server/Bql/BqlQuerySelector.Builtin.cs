@@ -317,7 +317,7 @@ namespace Robust.Server.Bql
 
             foreach (var uid in input)
             {
-                foreach (var near in entityLookup.GetEntitiesIntersecting(xformQuery.GetComponent(uid).Coordinates,
+                foreach (var near in entityLookup.GetEntitiesInRange(xformQuery.GetComponent(uid).Coordinates,
                              radius))
                 {
                     if (!distinct.Add(near)) continue;

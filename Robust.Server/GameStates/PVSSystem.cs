@@ -185,6 +185,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         CleanupDirty(playerSessions);
+
+        foreach (var collection in _pvsCollections)
+        {
+            collection.ClearDirty();
+        }
     }
 
     public void CullDeletionHistory(GameTick oldestAck)

@@ -33,6 +33,13 @@ public interface IPVSCollection
     /// </summary>
     /// <param name="tick">The <see cref="GameTick"/> before which all deletions should be removed.</param>
     public void CullDeletionHistoryUntil(GameTick tick);
+
+    public bool IsDirty(IChunkIndexLocation location);
+
+    public bool MarkDirty(IChunkIndexLocation location);
+
+    public void ClearDirty();
+
 }
 
 public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
@@ -111,7 +118,6 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public void Process()
     {
-        _dirtyChunks.Clear();
         _changedIndices.EnsureCapacity(_locationChangeBuffer.Count);
 
         foreach (var (key, loc) in _locationChangeBuffer)
@@ -140,12 +146,16 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
             switch (chunkLocation)
             {
                 case GridChunkLocation gridChunkLocation:
-                    if (_gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Count == 0)
-                        _gridChunkContents[gridChunkLocation.GridId].Remove(gridChunkLocation.ChunkIndices);
+                    if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridId, out var gridChunks)) continue;
+                    if(!gridChunks.TryGetValue(gridChunkLocation.ChunkIndices, out var chunk)) continue;
+                    if(chunk.Count == 0)
+                        gridChunks.Remove(gridChunkLocation.ChunkIndices);
                     break;
                 case MapChunkLocation mapChunkLocation:
-                    if (_mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Count == 0)
-                        _mapChunkContents[mapChunkLocation.MapId].Remove(mapChunkLocation.ChunkIndices);
+                    if(!_mapChunkContents.TryGetValue(mapChunkLocation.MapId, out var mapChunks)) continue;
+                    if(!mapChunks.TryGetValue(mapChunkLocation.ChunkIndices, out chunk)) continue;
+                    if(chunk.Count == 0)
+                        mapChunks.Remove(mapChunkLocation.ChunkIndices);
                     break;
             }
         }
@@ -167,6 +177,8 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     public bool IsDirty(IChunkIndexLocation location) => _dirtyChunks.Contains(location);
 
     public bool MarkDirty(IChunkIndexLocation location) => _dirtyChunks.Add(location);
+
+    public void ClearDirty() => _dirtyChunks.Clear();
 
     public bool TryGetChunk(MapId mapId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _mapChunkContents[mapId].TryGetValue(chunkIndices, out indices);

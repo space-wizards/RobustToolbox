@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -131,7 +130,8 @@ internal sealed partial class PVSSystem : EntitySystem
         // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
         // Should still be at its old location as moveevent is called after.
         var xform = Transform(ev.Entity);
-        var index = _entityPvsCollection.GetChunkIndex(xform.Coordinates);
+        var coordinates = _transform.GetMoverCoordinates(xform);
+        var index = _entityPvsCollection.GetChunkIndex(coordinates);
         _entityPvsCollection.MarkDirty(index);
     }
 

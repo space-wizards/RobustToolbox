@@ -19,11 +19,12 @@ namespace Robust.Shared.GameObjects
         public EntityUid? OldParent { get; }
 
         /// <summary>
-        ///     Old map Id.
+        ///     The map Id that the entity was on before its parent changed.
         /// </summary>
         /// <remarks>
-        ///     If the old parent has been detached to null, this will differ from the old-parent's map ID. Also avoids
-        ///     having to fetch the old parent's transform component.
+        ///     If the old parent was detached to null without manually updating the map ID of its children, then this
+        ///     is required as we cannot simply use the old parent's map ID. Also avoids having to fetch the old
+        ///     parent's transform component.
         /// </remarks>
         public MapId OldMapId { get; }
 

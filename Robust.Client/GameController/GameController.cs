@@ -67,6 +67,7 @@ namespace Robust.Client
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IUIControllerManagerInternal _uiControllerManager = default!;
+        [Dependency] private readonly IUIWindowManager _uiWindowManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -141,6 +142,7 @@ namespace Robust.Client
             _viewVariablesManager.Initialize();
             _scriptClient.Initialize();
             _client.Initialize();
+            _uiWindowManager.Initialize();
             _uiControllerManager.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);

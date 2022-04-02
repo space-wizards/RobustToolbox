@@ -87,8 +87,8 @@ namespace Robust.Server.ServerStatus
             var authInfo = new JsonObject
             {
                 ["mode"] = _netManager.Auth.ToString(),
-                ["public_key"] = _netManager.RsaPublicKey != null
-                    ? Convert.ToBase64String(_netManager.RsaPublicKey)
+                ["public_key"] = _netManager.CryptoPublicKey != null
+                    ? Convert.ToBase64String(_netManager.CryptoPublicKey)
                     : null
             };
 

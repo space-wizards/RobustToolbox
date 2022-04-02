@@ -77,12 +77,10 @@ namespace Robust.Client.GameObjects
             // Due to how recursion works, this must be done.
             SubscribeLocalEvent<MoveEvent>(AnythingMoved);
 
-            SubscribeLocalEvent<SpriteComponent, EntMapIdChangedMessage>(SpriteMapChanged);
             SubscribeLocalEvent<SpriteComponent, EntParentChangedMessage>(SpriteParentChanged);
             SubscribeLocalEvent<SpriteComponent, ComponentRemove>(RemoveSprite);
             SubscribeLocalEvent<SpriteComponent, SpriteUpdateEvent>(HandleSpriteUpdate);
 
-            SubscribeLocalEvent<PointLightComponent, EntMapIdChangedMessage>(LightMapChanged);
             SubscribeLocalEvent<PointLightComponent, EntParentChangedMessage>(LightParentChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightRadiusChangedEvent>(PointLightRadiusChanged);
             SubscribeLocalEvent<PointLightComponent, PointLightUpdateEvent>(HandleLightUpdate);
@@ -156,10 +154,6 @@ namespace Robust.Client.GameObjects
         // Otherwise these will still have their past MapId and that's all we need..
 
         #region SpriteHandlers
-        private void SpriteMapChanged(EntityUid uid, SpriteComponent component, EntMapIdChangedMessage args)
-        {
-            QueueSpriteUpdate(component);
-        }
 
         private void SpriteParentChanged(EntityUid uid, SpriteComponent component, ref EntParentChangedMessage args)
         {
@@ -189,10 +183,6 @@ namespace Robust.Client.GameObjects
         #endregion
 
         #region LightHandlers
-        private void LightMapChanged(EntityUid uid, PointLightComponent component, EntMapIdChangedMessage args)
-        {
-            QueueLightUpdate(component);
-        }
 
         private void LightParentChanged(EntityUid uid, PointLightComponent component, ref EntParentChangedMessage args)
         {

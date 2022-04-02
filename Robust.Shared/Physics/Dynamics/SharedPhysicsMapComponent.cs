@@ -121,6 +121,23 @@ namespace Robust.Shared.Physics.Dynamics
         public MapId MapId => _entityManager.GetComponent<TransformComponent>(Owner).MapID;
 
         #region AddRemove
+
+        public void AddBody(PhysicsComponent body)
+        {
+            if (Bodies.Contains(body)) return;
+
+            // TODO: Kinda dodgy with this and wake shit.
+            // Look at my note under ProcessWakeQueue
+            if (body.Awake && body.BodyType != BodyType.Static)
+            {
+                _queuedWake.Remove(body);
+                AwakeBodies.Add(body);
+            }
+
+            Bodies.Add(body);
+            body.PhysicsMap = this;
+        }
+
         public void AddAwakeBody(PhysicsComponent body)
         {
             _queuedWake.Add(body);
@@ -138,6 +155,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             _queuedSleep.Add(body);
         }
+
         #endregion
 
         #region Queue
@@ -163,22 +181,6 @@ namespace Robust.Shared.Physics.Dynamics
                     RemoveBody(message.Body);
                 }
             }
-        }
-
-        public void AddBody(PhysicsComponent body)
-        {
-            if (Bodies.Contains(body)) return;
-
-            // TODO: Kinda dodgy with this and wake shit.
-            // Look at my note under ProcessWakeQueue
-            if (body.Awake && body.BodyType != BodyType.Static)
-            {
-                _queuedWake.Remove(body);
-                AwakeBodies.Add(body);
-            }
-
-            Bodies.Add(body);
-            body.PhysicsMap = this;
         }
 
         private void ProcessWakeQueue()
@@ -299,6 +301,14 @@ namespace Robust.Shared.Physics.Dynamics
             foreach (var seed in _awakeBodyList)
             {
                 // TODO: When this gets ECSd add a helper and remove
+
+                if (seed.Deleted)
+                {
+                    // This should never happen. Yet it does.
+                    Logger.Error($"Deleted physics component in awake bodies set. Owner Uid: {seed.Owner}. Physics map: {_entityManager.ToPrettyString(Owner)}");
+                    RemoveBody(seed);
+                    continue;
+                }
 
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.

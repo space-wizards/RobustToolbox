@@ -355,6 +355,7 @@ namespace Robust.Shared.GameObjects
 
                     // offset position from world to parent
                     _parent = value.EntityId;
+                    var oldMapId = MapID;
                     ChangeMapId(newParent.MapID, xformQuery);
 
                     // preserve world rotation
@@ -364,7 +365,7 @@ namespace Robust.Shared.GameObjects
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
 
-                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
                 }
 
@@ -381,7 +382,7 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if(!oldPosition.Position.Equals(Coordinates.Position))
+                        if (!oldPosition.Position.Equals(Coordinates.Position))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
@@ -733,15 +734,13 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            var oldMapId = MapID;
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, MapID);
             MapID = MapId.Nullspace;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?
             // > FWIW, also called pre-entity-delete and when moved outside of PVS range.
             RebuildMatrices();
-            MapIdChanged(oldMapId);
             Dirty(_entMan);
         }
 
@@ -778,7 +777,6 @@ namespace Robust.Shared.GameObjects
             metaData.EntityPaused = mapPaused;
 
             MapID = newMapId;
-            MapIdChanged(oldMapId);
             UpdateChildMapIdsRecursive(MapID, mapPaused, xformQuery, metaEnts);
         }
 
@@ -796,18 +794,12 @@ namespace Robust.Shared.GameObjects
                 var old = concrete.MapID;
 
                 concrete.MapID = newMapId;
-                concrete.MapIdChanged(old);
 
                 if (concrete.ChildCount != 0)
                 {
                     concrete.UpdateChildMapIdsRecursive(newMapId, mapPaused, xformQuery, metaQuery);
                 }
             }
-        }
-
-        private void MapIdChanged(MapId oldId)
-        {
-            _entMan.EventBus.RaiseLocalEvent(Owner, new EntMapIdChangedMessage(Owner, oldId));
         }
 
         public void AttachParent(EntityUid parent)
@@ -940,7 +932,7 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
-        ///     Returns whether the entity of this transform contains the entity argument
+        ///     Returns whether the given entity is a child of this transform or one of its descendants.
         /// </summary>
         public bool ContainsEntity(TransformComponent entityTransform)
         {
@@ -949,7 +941,7 @@ namespace Robust.Shared.GameObjects
                 return false;
             }
 
-            if (this == entityTransform.Parent) //Is this the direct container of the entity
+            if (this == entityTransform.Parent) //Is this the direct parent of the entity
             {
                 return true;
             }
@@ -957,7 +949,7 @@ namespace Robust.Shared.GameObjects
             {
                 return
                     ContainsEntity(entityTransform
-                        .Parent); //Recursively search up the entities containers for this object
+                        .Parent); //Recursively search up the parents for this object
             }
         }
 

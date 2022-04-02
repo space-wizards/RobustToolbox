@@ -5,6 +5,7 @@ using Prometheus;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -18,9 +19,10 @@ namespace Robust.Shared.GameObjects
         #region Dependencies
 
         [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly ISerializationManager _serManager = default!;
 
         #endregion Dependencies
 
@@ -30,7 +32,7 @@ namespace Robust.Shared.GameObjects
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
-        public IEntitySystemManager EntitySysManager => EntitySystemManager;
+        public IEntitySystemManager EntitySysManager => _entitySystemManager;
 
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
@@ -84,7 +86,7 @@ namespace Robust.Shared.GameObjects
                 throw new InvalidOperationException("Startup() called multiple times");
 
             // TODO: Probably better to call this on its own given it's so infrequent.
-            EntitySystemManager.Initialize();
+            _entitySystemManager.Initialize();
             Started = true;
         }
 
@@ -92,7 +94,7 @@ namespace Robust.Shared.GameObjects
         {
             FlushEntities();
             _eventBus.ClearEventTables();
-            EntitySystemManager.Shutdown();
+            _entitySystemManager.Shutdown();
             ClearComponents();
             Initialized = false;
             Started = false;
@@ -102,7 +104,7 @@ namespace Robust.Shared.GameObjects
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
-            EntitySystemManager.Clear();
+            _entitySystemManager.Clear();
             Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
@@ -116,7 +118,7 @@ namespace Robust.Shared.GameObjects
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                EntitySystemManager.TickUpdate(frameTime, noPredictions);
+                _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
@@ -142,7 +144,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void FrameUpdate(float frameTime)
         {
-            EntitySystemManager.FrameUpdate(frameTime);
+            _entitySystemManager.FrameUpdate(frameTime);
         }
 
         #region Entity Management
@@ -415,7 +417,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, uid);
             try
             {
-                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, null, PrototypeManager);
+                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
                 return entity;
             }
             catch (Exception e)
@@ -429,7 +431,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, context, PrototypeManager);
+            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, context);
         }
 
         private void InitializeAndStartEntity(EntityUid entity, MapId mapId)
@@ -476,31 +478,7 @@ namespace Robust.Shared.GameObjects
 
 #endregion Entity Management
 
-        protected void DispatchComponentMessage(NetworkComponentMessage netMsg)
-        {
-            var compMsg = netMsg.Message;
-            var compChannel = netMsg.Channel;
-            var session = netMsg.Session;
-            compMsg.Remote = true;
-
-#pragma warning disable 618
-            var uid = netMsg.EntityUid;
-            if (compMsg.Directed)
-            {
-                if (TryGetComponent(uid, (ushort) netMsg.NetId, out var component))
-                    component.HandleNetworkMessage(compMsg, compChannel, session);
-            }
-            else
-            {
-                foreach (var component in GetComponents(uid))
-                {
-                    component.HandleNetworkMessage(compMsg, compChannel, session);
-                }
-            }
-#pragma warning restore 618
-        }
-
-        /// <summary>
+/// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
         /// <inheritdoc />
@@ -513,7 +491,6 @@ namespace Robust.Shared.GameObjects
     public enum EntityMessageType : byte
     {
         Error = 0,
-        ComponentMessage,
         SystemMessage
     }
 }

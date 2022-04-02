@@ -619,6 +619,7 @@ namespace Robust.Client.Audio.Midi
             var seqEv = (SequencerEvent) midiEvent;
             seqEv.Dest = _debugEvents ? _debugRegister : _synthRegister;
             _sequencer.SendAt(seqEv, time, absolute);
+            seqEv.Dispose();
         }
 
         public void Dispose()

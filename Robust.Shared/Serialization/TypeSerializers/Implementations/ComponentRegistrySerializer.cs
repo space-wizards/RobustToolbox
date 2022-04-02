@@ -7,29 +7,28 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
+using Robust.Shared.Utility;
 using static Robust.Shared.Prototypes.EntityPrototype;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>
+    public sealed class ComponentRegistrySerializer : ITypeSerializer<ComponentRegistry, SequenceDataNode>, ITypeInheritanceHandler<ComponentRegistry, SequenceDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager,
+        public ComponentRegistry Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, ComponentRegistry? components = null)
         {
             var factory = dependencies.Resolve<IComponentFactory>();
-            var components = new ComponentRegistry();
-            var mappings = new Dictionary<DeserializationResult, DeserializationResult>();
+            components ??= new ComponentRegistry();
 
             foreach (var componentMapping in node.Sequence.Cast<MappingDataNode>())
             {
@@ -59,10 +58,9 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 copy.Remove("type");
 
                 var type = factory.GetRegistration(compType).Type;
-                var read = serializationManager.ReadWithValueOrThrow<IComponent>(type, copy, skipHook: skipHook);
+                var read = (IComponent)serializationManager.Read(type, copy, skipHook: skipHook)!;
 
-                components[compType] = read.value;
-                mappings.Add(new DeserializedValue<string>(compType), read.result);
+                components[compType] = read;
             }
 
             var referenceTypes = new List<Type>();
@@ -82,7 +80,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 }
             }
 
-            return new DeserializedComponentRegistry(components, mappings);
+            return components;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager,
@@ -178,6 +176,47 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             }
 
             return target;
+        }
+
+        public SequenceDataNode PushInheritance(ISerializationManager serializationManager, SequenceDataNode child,
+            SequenceDataNode parent,
+            IDependencyCollection dependencies, ISerializationContext context)
+        {
+            var componentFactory = dependencies.Resolve<IComponentFactory>();
+            var newCompReg = child.Copy();
+            var newCompRegDict = ToTypeIndexedDictionary(newCompReg, componentFactory);
+            var parentDict = ToTypeIndexedDictionary(parent, componentFactory);
+
+            foreach (var (reg, mapping) in parentDict)
+            {
+                if (newCompRegDict.TryFirstOrNull(childReg => reg.References.Any(x => childReg.Key.References.Contains(x)), out var entry))
+                {
+                    newCompReg[entry.Value.Value] = serializationManager.PushCompositionWithGenericNode(reg.Type,
+                        new[] { parent[mapping] }, newCompReg[entry.Value.Value], context);
+                }
+                else
+                {
+                    newCompReg.Add(parent[mapping]);
+                    newCompRegDict[reg] = newCompReg.Count-1;
+                }
+            }
+
+            return newCompReg;
+        }
+
+        private Dictionary<IComponentRegistration, int> ToTypeIndexedDictionary(SequenceDataNode node, IComponentFactory componentFactory)
+        {
+            var dict = new Dictionary<IComponentRegistration, int>();
+            for (var i = 0; i < node.Count; i++)
+            {
+                var mapping = (MappingDataNode)node[i];
+                var type = mapping.Get<ValueDataNode>("type").Value;
+                var availability = componentFactory.GetComponentAvailability(type);
+                if(availability == ComponentAvailability.Ignore) continue;
+                dict.Add(componentFactory.GetRegistration(type), i);
+            }
+
+            return dict;
         }
     }
 }

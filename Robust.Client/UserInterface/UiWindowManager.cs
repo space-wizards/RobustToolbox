@@ -17,13 +17,14 @@ public interface IUIWindowManager
     public WindowRoot GetPopupWindow(string windowName);
     public WindowRoot? CreatePopupWindow(string windowName, string? displayName = null, int width = 1000,
         int height = 1000, Action<WindowRequestClosedEventArgs>? onClosed = null);
-    public bool RegisterNamedWindow(string name, DefaultWindow window);
-    public T? CreateNamedWindow<T>(string name) where T : DefaultWindow, new();
-    public bool RemoveWindowOfType<T>() where T : DefaultWindow, new();
+    public bool RegisterNamedWindow(string name, BaseWindow window);
+    public T? CreateNamedWindow<T>(string name) where T : BaseWindow, new();
+    public bool RemoveWindowOfType<T>() where T : BaseWindow, new();
+    public T? CreateWindowOfType<T>() where T : BaseWindow, new();
     public bool RemoveNamedWindow(string name);
-    public T GetFirstWindowOfType<T>() where T : DefaultWindow, new();
-    public bool TryGetWindowByType<T>(out T? window) where T : DefaultWindow, new();
-    public bool TryGetWindowByType(Type type, out DefaultWindow? window);
+    public T GetFirstWindowOfType<T>() where T : BaseWindow, new();
+    public bool TryGetWindowByType<T>(out T? window) where T : BaseWindow, new();
+    public bool TryGetWindowByType(Type type, out BaseWindow? window);
     internal void Initialize();
 }
 
@@ -34,11 +35,9 @@ public class UIWindowManager : IUIWindowManager
     [Dependency] private readonly IUserInterfaceManager _uiManager = default!;
     [Dependency] private readonly IClyde _clyde = default!;
     [Dependency] private readonly IStateManager _stateManager = default!;
-    private readonly Dictionary<string, DefaultWindow> _windowData = new();
-    private readonly Dictionary<Type, Queue<DefaultWindow>> _windowsByType = new();
+    private readonly Dictionary<string, BaseWindow> _windowData = new();
+    private readonly Dictionary<Type, Queue<BaseWindow>> _windowsByType = new();
     private readonly Dictionary<string, (IClydeWindow, WindowRoot)> _popoutWindows = new ();
-
-
 
     public bool TryGetPopupWindow(string windowName, out WindowRoot? window)
     {
@@ -88,7 +87,7 @@ public class UIWindowManager : IUIWindowManager
         return root;
     }
 
-    public bool RegisterNamedWindow(string name, DefaultWindow window)
+    public bool RegisterNamedWindow(string name, BaseWindow window)
     {
         if (_windowData.ContainsKey(name)) return false;
         if (!_windowsByType.ContainsKey(window.GetType()))
@@ -100,7 +99,7 @@ public class UIWindowManager : IUIWindowManager
         return true;
     }
 
-    public T? CreateNamedWindow<T>(string name) where T : DefaultWindow, new()
+    public T? CreateNamedWindow<T>(string name) where T : BaseWindow, new()
     {
         if (_windowData.ContainsKey(name)) return null;
         var newWindow = !_windowsByType.ContainsKey(typeof(T)) ? CreateWindowOfType<T>() : _typeFactory.CreateInstance<T>();
@@ -108,7 +107,7 @@ public class UIWindowManager : IUIWindowManager
         return newWindow;
     }
 
-    public bool RemoveWindowOfType<T>() where T : DefaultWindow, new()
+    public bool RemoveWindowOfType<T>() where T : BaseWindow, new()
     {
         if (!_windowsByType.TryGetValue(typeof(T),out var windowQueue)) return false;
         var oldWindow = windowQueue.Dequeue();
@@ -139,14 +138,14 @@ public class UIWindowManager : IUIWindowManager
         return true;
     }
 
-    public T GetFirstWindowOfType<T>() where T : DefaultWindow, new()
+    public T GetFirstWindowOfType<T>() where T : BaseWindow, new()
     {
         if (!_windowsByType.TryGetValue(typeof(T), out var windowQueue) || windowQueue.Count == 0)
             throw new Exception("Window of type" + typeof(T) + " not found!");
         return (T)windowQueue.Peek();
     }
 
-    public T? CreateWindowOfType<T>() where T : DefaultWindow, new()
+    public T? CreateWindowOfType<T>() where T : BaseWindow, new()
     {
         if (_windowsByType.ContainsKey(typeof(T))) return null;
         var newWindow = _typeFactory.CreateInstance<T>();
@@ -154,13 +153,13 @@ public class UIWindowManager : IUIWindowManager
         return newWindow;
     }
 
-    private void RegisterWindowOfType(DefaultWindow window)
+    private void RegisterWindowOfType(BaseWindow window)
     {
         if (_windowsByType.ContainsKey(window.GetType())) return;
         _windowsByType.GetOrNew(window.GetType()).Enqueue(window);
     }
 
-    public bool TryGetWindowByType<T>(out T? window) where T : DefaultWindow, new()
+    public bool TryGetWindowByType<T>(out T? window) where T : BaseWindow, new()
     {
         window = null;
         var success =  _windowsByType.TryGetValue(typeof(T), out var win);
@@ -171,10 +170,10 @@ public class UIWindowManager : IUIWindowManager
         return success;
     }
 
-    public bool TryGetWindowByType(Type type, out DefaultWindow? window)
+    public bool TryGetWindowByType(Type type, out BaseWindow? window)
     {
         window = null;
-        if (!typeof(DefaultWindow).IsAssignableFrom(type)) return false;
+        if (!typeof(BaseWindow).IsAssignableFrom(type)) return false;
         if (!_windowsByType.TryGetValue(type, out var winQueue) || winQueue.Count == 0) return false;
         window = winQueue.Peek();
         return true;

@@ -21,7 +21,7 @@ public class MemberRequiresBaseTypeAnalyzer : DiagnosticAnalyzer
         "Usage",
         DiagnosticSeverity.Error,
         true,
-        "Make sure to specify the accessing class in the friends attribute.");
+        "Make sure to inherit the correct basetype.");
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create(Rule);
 

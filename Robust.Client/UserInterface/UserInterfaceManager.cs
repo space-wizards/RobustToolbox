@@ -33,7 +33,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
-        [ViewVariables] public UITheme ThemeDefaults { get; private set; } = default!;
+        [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
 
         [ViewVariables]
         public Stylesheet? Stylesheet
@@ -107,8 +107,8 @@ namespace Robust.Client.UserInterface
         public void Initialize()
         {
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
-
-            ThemeDefaults = new UIThemeDummy();
+            UITheme.ValidateDefaults();
+            ThemeDefaults = new InterfaceThemeDummy();
 
             _initializeCommon();
 
@@ -186,7 +186,7 @@ namespace Robust.Client.UserInterface
 
         public void InitializeTesting()
         {
-            ThemeDefaults = new UIThemeDummy();
+            ThemeDefaults = new InterfaceThemeDummy();
 
             _initializeCommon();
         }

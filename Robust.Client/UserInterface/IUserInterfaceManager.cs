@@ -10,7 +10,7 @@ namespace Robust.Client.UserInterface
 {
     public interface IUserInterfaceManager
     {
-        UITheme ThemeDefaults { get; }
+        InterfaceTheme ThemeDefaults { get; }
 
         /// <summary>
         ///     Default style sheet that applies to all controls

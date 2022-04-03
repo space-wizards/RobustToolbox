@@ -341,16 +341,17 @@ namespace Robust.Shared.Prototypes
                     processQueue.Enqueue(id);
                 }
 
-                var pushQueue = new Queue<string>();
-                while (processQueue.TryDequeue(out var id))
+                while(processQueue.TryDequeue(out var id))
                 {
+                    var pushedSet = pushed.GetOrNew(type);
+
                     if (tree.TryGetParents(id, out var parents))
                     {
                         var nonPushedParent = false;
                         foreach (var parent in parents)
                         {
-                            //our parent has been reloaded and has not been added to the pushQueue yet
-                            if (prototypes[type].Contains(parent) && !pushQueue.Contains(parent))
+                            //our parent has been reloaded and has not been added to the pushedSet yet
+                            if (prototypes[type].Contains(parent) && !pushedSet.Contains(parent))
                             {
                                 //we re-queue ourselves at the end of the queue
                                 processQueue.Enqueue(id);
@@ -359,16 +360,7 @@ namespace Robust.Shared.Prototypes
                             }
                         }
                         if(nonPushedParent) continue;
-                    }
 
-                    pushQueue.Enqueue(id);
-                }
-
-
-                while(pushQueue.TryDequeue(out var id))
-                {
-                    if (tree.TryGetParents(id, out var parents))
-                    {
                         foreach (var parent in parents)
                         {
                             PushInheritance(type, id, parent);
@@ -377,7 +369,7 @@ namespace Robust.Shared.Prototypes
 
                     TryReadPrototype(type, id, _prototypeResults[type][id]);
 
-                    pushed.GetOrNew(type).Add(id);
+                    pushedSet.Add(id);
                 }
             }
 

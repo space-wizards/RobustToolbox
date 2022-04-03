@@ -27,9 +27,14 @@ public sealed class UITheme
     internal static void ValidateDefaults(IResourceCache resourceCache)
     {
         if (_pathIsValid) return; //prevent double validation
-        var foundFolders = resourceCache.ContentFindFiles(new ResourcePath(UIPath).ToRootedPath());
-        if (!foundFolders.Any()) throw new Exception("Default path for UI theme does not exist!");
+        ValidateFilePath(resourceCache, _uiPath, "Default path for UI theme does not exist!");
         _pathIsValid = true;
+    }
+
+    private static void ValidateFilePath(IResourceCache resourceCache, string path, string failMessage)
+    {
+        var foundFolders = resourceCache.ContentFindFiles(new ResourcePath(UIPath).ToRootedPath());
+        if (!foundFolders.Any()) throw new Exception(failMessage);
     }
     private string HudAssetPath { get; }
     public string Name => _name;
@@ -41,8 +46,9 @@ public sealed class UITheme
     {
         _name = name;
         HudAssetPath = UIPath;
-    }
 
+        ValidateFilePath(IoCManager.Resolve<IResourceCache>(),HudAssetPath + "/" + Name, "Path for UI theme: "+ _name +" does not exist!");
+    }
 
     //helper to autoresolve dependencies
     public Texture ResolveTexture(string texturePath)

@@ -67,7 +67,6 @@ public class MemberRequiresBaseTypeAnalyzer : DiagnosticAnalyzer
                         matchedType |= Utils.InheritsFromOrEquals(obj.Symbol.ContainingType, t);
                     }
 
-                    Debugger.Launch();
                     if (!matchedType)
                     {
                         obj.ReportDiagnostic(Diagnostic.Create(Rule, obj.Symbol.Locations.First(), string.Join(",", allowedTypes)));

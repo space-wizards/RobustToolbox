@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Robust.Analyzers;
@@ -18,7 +17,7 @@ public class MemberRequiresBaseTypeAnalyzer : DiagnosticAnalyzer
     private static readonly DiagnosticDescriptor Rule = new (
         Diagnostics.MemberRequiresBaseType,
         "Required basetype missing",
-        "You can only use this attribute for members of types which are subtypes of \"{0}\"",
+        "You can only use this attribute for members of types which are subtypes of one of the following types: {0}",
         "Usage",
         DiagnosticSeverity.Error,
         true,
@@ -42,25 +41,40 @@ public class MemberRequiresBaseTypeAnalyzer : DiagnosticAnalyzer
 
         var analyzerAttribute = obj.Compilation.GetTypeByMetadataName(AnalyzerAttribute);
 
-        INamedTypeSymbol requiredBaseType = null;
+        //get all attributes on the member
         foreach (var attribute in obj.Symbol.GetAttributes())
         {
             if(attribute.AttributeClass == null) continue;
 
+            //get all attributes of the attribute
             foreach (var attributeAttribute in attribute.AttributeClass.GetAttributes())
             {
+                //is it our analyzerattribute?
                 if (SymbolEqualityComparer.Default.Equals(analyzerAttribute, attributeAttribute.AttributeClass))
                 {
-                    requiredBaseType = (INamedTypeSymbol) attributeAttribute.ConstructorArguments[0].Value;
+                    //it is, lets check if we are inheriting one of the required basetypes
+                    bool matchedType = false;
+
+                    var allowedTypes = new List<INamedTypeSymbol>();
+                    foreach (var constant in attributeAttribute.ConstructorArguments[0].Values)
+                    {
+                        // Check if the value is a type...
+                        if (constant.Value is not INamedTypeSymbol t)
+                            continue;
+
+                        allowedTypes.Add(t);
+                        // If we find that the containing class is specified in the attribute, return! All is good.
+                        matchedType |= Utils.InheritsFromOrEquals(obj.Symbol.ContainingType, t);
+                    }
+
+                    Debugger.Launch();
+                    if (!matchedType)
+                    {
+                        obj.ReportDiagnostic(Diagnostic.Create(Rule, obj.Symbol.Locations.First(), string.Join(",", allowedTypes)));
+                    }
                 }
+
             }
-        }
-
-        if(requiredBaseType == null) return;
-
-        if (!Utils.InheritsFromOrEquals(obj.Symbol.ContainingType, requiredBaseType))
-        {
-            obj.ReportDiagnostic(Diagnostic.Create(Rule, obj.Symbol.Locations.First(), requiredBaseType.Name));
         }
     }
 }

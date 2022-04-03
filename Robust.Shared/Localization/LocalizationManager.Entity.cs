@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using Linguini.Bundle.Errors;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameObjects.Components.Localization;
@@ -125,10 +126,10 @@ namespace Robust.Shared.Localization
                     }
                 }
 
-                if (prototype?.Parent == null)
+                if (prototype?.Parents == null)
                     break;
 
-                prototypeId = prototype.Parent;
+                prototypeId = prototype.Parents.First();
             }
 
             return new EntityLocData(

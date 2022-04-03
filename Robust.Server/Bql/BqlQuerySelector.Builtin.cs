@@ -268,7 +268,7 @@ namespace Robust.Server.Bql
                 if ((metaData.EntityPrototype?.ID == name) ^ isInverted)
                     return true;
 
-                return (metaData.EntityPrototype?.Parent == name) ^ isInverted; // Damn, can't actually do recursive check here.
+                return metaData.EntityPrototype?.Parents?.Any(x => x == name) == true ^ isInverted; // Damn, can't actually do recursive check here.
             });
         }
     }

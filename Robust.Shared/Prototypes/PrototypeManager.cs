@@ -471,19 +471,6 @@ namespace Robust.Shared.Prototypes
             }
         }
 
-        /*private void PushInheritance(Type type, string id, string? parent = null, HashSet<string>? changed = null)
-        {
-            if (parent != null)
-            {
-                PushInheritanceWithoutRecursion(type, id, parent, changed);
-            }
-
-            foreach (var child in _inheritanceTrees[type].Children(id))
-            {
-                PushInheritance(type, child, id, changed);
-            }
-        }*/
-
         private void PushInheritance(Type type, string id, string parent)
         {
             _prototypeResults[type][id] = _serializationManager.PushCompositionWithGenericNode(type,

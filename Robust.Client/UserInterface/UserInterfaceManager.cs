@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
 using Robust.Client.Input;
 using Robust.Client.Player;
+using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface.Controls;
 using Robust.Client.UserInterface.CustomControls;
@@ -31,6 +32,7 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IStateManager _stateManager = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
@@ -107,7 +109,7 @@ namespace Robust.Client.UserInterface
         public void Initialize()
         {
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
-            UITheme.ValidateDefaults();
+            UITheme.ValidateDefaults(_resourceCache);
             ThemeDefaults = new InterfaceThemeDummy();
 
             _initializeCommon();

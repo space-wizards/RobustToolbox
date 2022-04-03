@@ -8,15 +8,28 @@ using Robust.Shared.Utility;
 namespace Robust.Client.UserInterface;
 public sealed class UITheme
 {
-    //Set this during compile time or you will get angry exceptions :D
+    //Set these during your game's bootstrap! BEFORE your UI gets loaded.
     public static UITheme Default = new("Default");
-    public static string UIPath = "/Textures/Interface";
-
-    internal static void ValidateDefaults()
+    private static string _uiPath = "/Textures/Interface";
+    private static bool _pathIsValid;
+    public static string UIPath
     {
-        var foundFolders = IoCManager.Resolve<IResourceCache>()
-            .ContentFindFiles(new ResourcePath(UIPath).ToRootedPath());
+        get => _uiPath;
+        set
+        {
+            _pathIsValid = _uiPath == value;
+            _uiPath = value;
+            ValidateDefaults(IoCManager.Resolve<IResourceCache>());
+            _pathIsValid = true;
+        }
+    }
+
+    internal static void ValidateDefaults(IResourceCache resourceCache)
+    {
+        if (_pathIsValid) return; //prevent double validation
+        var foundFolders = resourceCache.ContentFindFiles(new ResourcePath(UIPath).ToRootedPath());
         if (!foundFolders.Any()) throw new Exception("Default path for UI theme does not exist!");
+        _pathIsValid = true;
     }
     private string HudAssetPath { get; }
     public string Name => _name;

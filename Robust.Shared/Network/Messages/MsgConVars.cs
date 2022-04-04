@@ -144,7 +144,7 @@ namespace Robust.Shared.Network.Messages
             String,
             Float,
             Double,
-            Vector2
+            Vector2,
         }
     }
 }

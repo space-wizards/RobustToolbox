@@ -55,7 +55,7 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles)
+        internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<List<Vector2i>> polygons)
         {
             if (!_enabled) return;
 
@@ -85,25 +85,26 @@ namespace Robust.Shared.GameObjects
             // on the grid (e.g. mass) which we want to preserve.
             var newFixtures = new List<Fixture>();
 
-            Span<Vector2> vertices = stackalloc Vector2[4];
+            Span<Vector2> vertices = stackalloc Vector2[8];
 
-            foreach (var rectangle in rectangles)
+            foreach (var vecPoly in polygons)
             {
-                var bounds = ((Box2) rectangle.Translated(origin)).Enlarged(_fixtureEnlargement);
+                for (var i = 0; i < vecPoly.Count; i++)
+                {
+                    vertices[i] = vecPoly[i] + origin;
+                }
+
+                // TODO: Need to re-implement fixture enlargement.
+                // var bounds = ((Box2) vecPoly.Translated(origin)).Enlarged(_fixtureEnlargement);
                 var poly = new PolygonShape();
 
-                vertices[0] = bounds.BottomLeft;
-                vertices[1] = bounds.BottomRight;
-                vertices[2] = bounds.TopRight;
-                vertices[3] = bounds.TopLeft;
-
-                poly.SetVertices(vertices);
+                poly.SetVertices(vertices, vecPoly.Count);
 
                 var newFixture = new Fixture(
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true) {ID = $"grid_chunk-{bounds.Left}-{bounds.Bottom}",
+                    true) {ID = $"grid_chunk-{vertices[0].X}-{vertices[0].Y}",
                     Body = physicsComponent};
 
                 newFixtures.Add(newFixture);

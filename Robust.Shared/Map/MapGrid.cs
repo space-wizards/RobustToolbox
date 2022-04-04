@@ -855,7 +855,7 @@ namespace Robust.Shared.Map
             }
 
             // generate collision rectangles for this chunk based on filled tiles.
-            GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
+            GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var polys);
             mapChunk.CachedBounds = localBounds;
 
             LocalBounds = new Box2();
@@ -880,7 +880,7 @@ namespace Robust.Shared.Map
 
             // TryGet because unit tests YAY
             if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
-                system.RegenerateCollision(GridEntityId, mapChunk, rectangles);
+                system.RegenerateCollision(GridEntityId, mapChunk, polys);
         }
 
         /// <summary>

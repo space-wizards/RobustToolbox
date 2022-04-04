@@ -12,11 +12,11 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Iterates through a chunk row and tries to find the first valid polygon tile.
         /// </summary>
-        private static void GetRowPolygons(List<Box2i> fakePolys, ushort row, MapChunk chunk)
+        private static void GetRowPolygons(List<List<Vector2i>> polys, ushort row, MapChunk chunk)
         {
             var running = false;
             ushort origin = default;
-            var polys = new List<List<Vector2i>>();
+            //var polys = new List<List<Vector2i>>();
             //var fakePolys = new List<Box2i>();
 
             for (ushort x = 0; x < chunk.ChunkSize; x++)
@@ -53,7 +53,6 @@ namespace Robust.Shared.Map
                 polygon.Add(new Vector2i(origin, row + 1));
 
                 polys.Add(polygon);
-                fakePolys.Add(new Box2i(new Vector2i(origin, row), new Vector2i(endIndex + 1, row + 1)));
             }
         }
 
@@ -78,16 +77,17 @@ namespace Robust.Shared.Map
             return false;
         }
 
-        public static void PartitionChunk(MapChunk chunk, out Box2i bounds, out List<Box2i> rectangles)
+        public static void PartitionChunk(MapChunk chunk, out Box2i bounds, out List<List<Vector2i>> polygons)
         {
-            rectangles = new List<Box2i>();
+            polygons = new List<List<Vector2i>>();
 
             for (ushort y = 0; y < chunk.ChunkSize; y++)
             {
-                GetRowPolygons(rectangles, y, chunk);
+                GetRowPolygons(polygons, y, chunk);
             }
 
-            // Patch them together as available
+            // Patch them together as available (TODO NOW
+            /*
             for (var i = rectangles.Count - 1; i >= 0; i--)
             {
                 var box = rectangles[i];
@@ -108,13 +108,22 @@ namespace Robust.Shared.Map
                     }
                 }
             }
+            */
 
             bounds = new Box2i();
+            var minimum = Vector2i.Zero;
+            var maximum = Vector2i.Zero;
 
-            foreach (var rectangle in rectangles)
+            foreach (var poly in polygons)
             {
-                bounds = bounds.IsEmpty() ? rectangle : bounds.Union(rectangle);
+                foreach (var vert in poly)
+                {
+                    minimum = Vector2i.ComponentMin(minimum, vert);
+                    maximum = Vector2i.ComponentMax(maximum, vert);
+                }
             }
+
+            bounds = new Box2i(minimum, maximum);
         }
     }
 }

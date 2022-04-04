@@ -40,9 +40,9 @@ namespace Robust.Shared.Physics
         /// Sets the convex hull from the given vertices.
         /// </summary>
         /// <param name="vertices">The vertices.</param>
-        public static Vector2[] SetConvexHull(Span<Vector2> vertices)
+        public static Vector2[] SetConvexHull(Span<Vector2> vertices, int count)
         {
-            if (vertices.Length <= 3)
+            if (count <= 3)
             {
                 return vertices.ToArray();
             }
@@ -50,7 +50,7 @@ namespace Robust.Shared.Physics
             // Find the right most point on the hull
             int i0 = 0;
             float x0 = vertices[0].X;
-            for (int i = 1; i < vertices.Length; ++i)
+            for (int i = 1; i < count; ++i)
             {
                 float x = vertices[i].X;
                 if (x > x0 || (MathHelper.CloseToPercent(x, x0) && vertices[i].Y < vertices[i0].Y))
@@ -60,7 +60,7 @@ namespace Robust.Shared.Physics
                 }
             }
 
-            Span<int> hull = stackalloc int[vertices.Length];
+            Span<int> hull = stackalloc int[count];
             int m = 0;
             int ih = i0;
 
@@ -69,7 +69,7 @@ namespace Robust.Shared.Physics
                 hull[m] = ih;
 
                 int ie = 0;
-                for (int j = 1; j < vertices.Length; ++j)
+                for (int j = 1; j < count; ++j)
                 {
                     if (ie == ih)
                     {

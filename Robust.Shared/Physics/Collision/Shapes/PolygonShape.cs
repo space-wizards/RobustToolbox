@@ -85,41 +85,41 @@ namespace Robust.Shared.Physics.Collision.Shapes
             SetVertices(verts);
         }
 
-        public void SetVertices(Span<Vector2> vertices)
+        public void SetVertices(Span<Vector2> vertices, int count)
         {
             var configManager = IoCManager.Resolve<IConfigurationManager>();
-            DebugTools.Assert(vertices.Length >= 3 && vertices.Length <= configManager.GetCVar(CVars.MaxPolygonVertices));
-
-            var vertexCount = vertices.Length;
+            DebugTools.Assert(count >= 3 && count <= configManager.GetCVar(CVars.MaxPolygonVertices));
 
             if (configManager.GetCVar(CVars.ConvexHullPolygons))
             {
                 //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
                 //So instead of giftwrapping a triangle, we just force it to be clock wise.
-                if (vertexCount <= 3)
+                if (count <= 3)
                     Vertices = Physics.Vertices.ForceCounterClockwise(vertices);
                 else
-                    Vertices = GiftWrap.SetConvexHull(vertices);
+                {
+                    // Convex hull may prune some vertices hence the count may change by this point.
+                    Vertices = GiftWrap.SetConvexHull(vertices, count);
+                    count = Vertices.Length;
+                }
             }
             else
             {
-                Array.Resize(ref Vertices, vertexCount);
+                Array.Resize(ref Vertices, count);
 
-                for (var i = 0; i < vertices.Length; i++)
+                for (var i = 0; i < count; i++)
                 {
                     Vertices[i] = vertices[i];
                 }
             }
 
-            // Convex hull may prune some vertices hence the count may change by this point.
-            vertexCount = Vertices.Length;
-
-            Array.Resize(ref Normals, vertexCount);
+            DebugTools.Assert(count == Vertices.Length);
+            Array.Resize(ref Normals, count);
 
             // Compute normals. Ensure the edges have non-zero length.
-            for (var i = 0; i < vertexCount; i++)
+            for (var i = 0; i < count; i++)
             {
-                var next = i + 1 < vertexCount ? i + 1 : 0;
+                var next = i + 1 < count ? i + 1 : 0;
                 var edge = Vertices[next] - Vertices[i];
                 DebugTools.Assert(edge.LengthSquared > float.Epsilon * float.Epsilon);
 
@@ -129,6 +129,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
             }
 
             // TODO: Updates (network etc)
+        }
+
+        public void SetVertices(Span<Vector2> vertices)
+        {
+            SetVertices(vertices, vertices.Length);
         }
 
         public ShapeType ShapeType => ShapeType.Polygon;

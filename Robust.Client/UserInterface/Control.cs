@@ -5,6 +5,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using Robust.Client.Graphics;
 using Robust.Client.UserInterface.Controls;
+using Robust.Client.UserInterface.Themes;
 using Robust.Client.UserInterface.XAML;
 using Robust.Shared.Animations;
 using Robust.Shared.IoC;
@@ -67,6 +68,22 @@ namespace Robust.Client.UserInterface
         //{
         //    _nameScope = nameScope;
         //}
+
+        public UITheme Theme { get; set; }
+
+        protected virtual void OnThemeUpdated(){}
+        internal void ThemeUpdateRecursive()
+        {
+            var curTheme = IoCManager.Resolve<IUIThemeManager>().CurrentTheme;
+            if (Theme == curTheme) return; //don't update themes if the themes are up to date
+            Theme = curTheme;
+            OnThemeUpdated();
+            foreach (var child in Children)
+            {
+                // Don't descent into children that have a style sheet since those aren't affected.
+                child.ThemeUpdateRecursive();
+            }
+        }
 
         public NameScope? FindNameScope()
         {
@@ -452,6 +469,7 @@ namespace Robust.Client.UserInterface
             UserInterfaceManagerInternal = IoCManager.Resolve<IUserInterfaceManagerInternal>();
             StyleClasses = new StyleClassCollection(this);
             Children = new OrderedChildCollection(this);
+            Theme = IoCManager.Resolve<IUIThemeManager>().CurrentTheme;
             XamlChildren = Children;
         }
 

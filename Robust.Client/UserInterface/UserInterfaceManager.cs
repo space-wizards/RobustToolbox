@@ -36,7 +36,6 @@ namespace Robust.Client.UserInterface
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
         [ViewVariables] public InterfaceTheme ThemeDefaults { get; private set; } = default!;
-
         [ViewVariables]
         public Stylesheet? Stylesheet
         {
@@ -81,6 +80,10 @@ namespace Robust.Client.UserInterface
         [ViewVariables] public LayoutContainer PopupRoot { get; private set; } = default!;
         [ViewVariables] public DropDownDebugConsole DebugConsole { get; private set; } = default!;
         [ViewVariables] public IDebugMonitors DebugMonitors => _debugMonitors;
+        [ViewVariables] private Vector2i _resolutionAutoScaleUpper;
+        [ViewVariables] private Vector2i _resolutionAutoScaleLower;
+        [ViewVariables] private bool _autoScaleEnabled;
+        [ViewVariables] private float _resolutionAutoScaleMinValue;
         private DebugMonitors _debugMonitors = default!;
 
         private readonly List<Control> _modalStack = new();
@@ -109,7 +112,6 @@ namespace Robust.Client.UserInterface
         public void Initialize()
         {
             _configurationManager.OnValueChanged(CVars.DisplayUIScale, _uiScaleChanged, true);
-            UITheme.ValidateDefaults(_resourceCache);
             ThemeDefaults = new InterfaceThemeDummy();
 
             _initializeCommon();
@@ -134,7 +136,7 @@ namespace Robust.Client.UserInterface
                     disabled: session => _rendering = true));
 
             _inputManager.UIKeyBindStateChanged += OnUIKeyBindStateChanged;
-
+            RegisterAutoscaleCVarListeners();
             _uiScaleChanged(_configurationManager.GetCVar(CVars.DisplayUIScale));
         }
 
@@ -966,6 +968,16 @@ namespace Robust.Client.UserInterface
 
         }
 
+        private void RegisterAutoscaleCVarListeners()
+        {
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleEnabled, i => _autoScaleEnabled= i, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleLowX, i => _resolutionAutoScaleLower.X = i, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleLowY, i => _resolutionAutoScaleLower.Y = i, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleUpperX, i => _resolutionAutoScaleUpper.X = i, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleUpperY, i => _resolutionAutoScaleUpper.Y = i, true);
+            _configurationManager.OnValueChanged(CVars.ResAutoScaleMin, i => _resolutionAutoScaleMinValue= i, true);
+        }
+
         private float CalculateAutoScale(WindowRoot root)
         {
             //Grab the OS UIScale or the value set through CVAR debug
@@ -973,10 +985,10 @@ namespace Robust.Client.UserInterface
             osScale = osScale == 0f ? root.Window.ContentScale.X : osScale;
             var windowSize = root.Window.RenderTarget.Size;
             //Only run autoscale if it is enabled, otherwise default to just use OS UIScale
-            if (!root.AutoScale && (windowSize.X <= 0 || windowSize.Y <= 0)) return osScale;
-            var maxScaleRes = root.AutoScaleUpperCutoff;
-            var minScaleRes = root.AutoScaleLowerCutoff;
-            var autoScaleMin = root.AutoScaleMinimum;
+            if (!_autoScaleEnabled && (windowSize.X <= 0 || windowSize.Y <= 0)) return osScale;
+            var maxScaleRes = _resolutionAutoScaleUpper;
+            var minScaleRes = _resolutionAutoScaleLower;
+            var autoScaleMin = _resolutionAutoScaleMinValue;
             float scaleRatioX;
             float scaleRatioY;
 

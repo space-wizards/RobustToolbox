@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using Lidgren.Network;
+using Robust.Shared.Configuration;
 using Robust.Shared.Log;
 using Robust.Shared.Timing;
 
@@ -66,6 +68,11 @@ namespace Robust.Shared.Network.Messages
                     case CvarType.Double:
                         value = buffer.ReadDouble();
                         break;
+                    case CvarType.Vector2:
+                        var valX = buffer.ReadFloat();
+                        var valY = buffer.ReadFloat();
+                        value = new Vector2(valX, valY);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -116,6 +123,11 @@ namespace Robust.Shared.Network.Messages
                         buffer.Write((byte)CvarType.Double);
                         buffer.Write(val);
                         break;
+                    case Vector2 val:
+                        buffer.Write((byte)CvarType.Vector2);
+                        buffer.Write(val.X);
+                        buffer.Write(val.Y);
+                        break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -126,13 +138,13 @@ namespace Robust.Shared.Network.Messages
         {
             // ReSharper disable once UnusedMember.Local
             None,
-
             Int,
             Long,
             Bool,
             String,
             Float,
-            Double
+            Double,
+            Vector2,
         }
     }
 }

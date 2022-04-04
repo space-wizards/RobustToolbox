@@ -104,7 +104,7 @@ namespace Robust.Shared.GameObjects
                     poly,
                     MapGridHelpers.CollisionGroup,
                     MapGridHelpers.CollisionGroup,
-                    true) {ID = $"grid_chunk-{vertices[0].X}-{vertices[0].Y}",
+                    true) {ID = $"grid_chunk-{vertices[0].X}-{vertices[0].Y}-{vertices[1].X}-{vertices[1].Y}",
                     Body = physicsComponent};
 
                 newFixtures.Add(newFixture);

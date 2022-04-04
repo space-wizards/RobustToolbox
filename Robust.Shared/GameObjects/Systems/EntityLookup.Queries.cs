@@ -279,7 +279,6 @@ public sealed partial class EntityLookupSystem
         // Get map entities
         var mapUid = _mapManager.GetMapEntityId(mapId);
         AddEntitiesIntersecting(mapUid, intersecting, worldBounds, flags, lookupQuery, xformQuery);
-
         AddContained(intersecting, flags, xformQuery);
 
         return intersecting;
@@ -459,13 +458,11 @@ public sealed partial class EntityLookupSystem
 
             lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
             {
-                if (Deleted(data)) return;
                 intersecting.Add(data);
             });
 
             foreach (var ent in grid.GetAnchoredEntities(index))
             {
-                if (Deleted(ent)) continue;
                 intersecting.Add(ent);
             }
         }
@@ -489,13 +486,11 @@ public sealed partial class EntityLookupSystem
 
         lookup.Tree._b2Tree.FastQuery(ref aabb, (ref EntityUid data) =>
         {
-            if (Deleted(data)) return;
             intersecting.Add(data);
         });
 
         foreach (var ent in grid.GetAnchoredEntities(gridIndices))
         {
-            if (Deleted(ent)) continue;
             intersecting.Add(ent);
         }
 
@@ -517,7 +512,6 @@ public sealed partial class EntityLookupSystem
 
         foreach (var uid in grid.GetAnchoredEntities(worldAABB))
         {
-            if (Deleted(uid)) continue;
             intersecting.Add(uid);
         }
 
@@ -549,6 +543,56 @@ public sealed partial class EntityLookupSystem
     public IEnumerable<EntityUid> GetEntitiesIntersecting(TileRef tileRef, LookupFlags flags = DefaultFlags)
     {
         return GetEntitiesIntersecting(tileRef.GridIndex, tileRef.GridIndices, flags);
+    }
+
+    #endregion
+
+    #region Lookup Query
+
+    public HashSet<EntityUid> GetEntitiesIntersecting(EntityLookupComponent component, ref Box2 worldAABB, LookupFlags flags = DefaultFlags)
+    {
+        var intersecting = new HashSet<EntityUid>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
+        var localAABB = xformQuery.GetComponent(component.Owner).InvWorldMatrix.TransformBox(worldAABB);
+
+        foreach (var uid in component.Tree.QueryAabb(localAABB))
+        {
+            intersecting.Add(uid);
+        }
+
+        if ((flags & LookupFlags.IncludeAnchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        {
+            foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
+            {
+                intersecting.Add(uid);
+            }
+        }
+
+        AddContained(intersecting, flags, xformQuery);
+
+        return intersecting;
+    }
+
+    public HashSet<EntityUid> GetLocalEntitiesIntersecting(EntityLookupComponent component, ref Box2 localAABB, LookupFlags flags = DefaultFlags)
+    {
+        var intersecting = new HashSet<EntityUid>();
+
+        foreach (var uid in component.Tree.QueryAabb(localAABB))
+        {
+            intersecting.Add(uid);
+        }
+
+        if ((flags & LookupFlags.IncludeAnchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        {
+            foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
+            {
+                intersecting.Add(uid);
+            }
+        }
+
+        AddContained(intersecting, flags, GetEntityQuery<TransformComponent>());
+
+        return intersecting;
     }
 
     #endregion

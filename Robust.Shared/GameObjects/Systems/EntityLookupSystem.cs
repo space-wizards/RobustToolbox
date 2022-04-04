@@ -206,13 +206,14 @@ namespace Robust.Shared.GameObjects
 
         private void OnEntityInit(object? sender, EntityUid uid)
         {
+            if (_mapManager.IsMap(uid) ||
+                _mapManager.IsGrid(uid) ||
+                _container.IsEntityInContainer(uid)) return;
+
             var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
             if (!xformQuery.TryGetComponent(uid, out var xform) ||
-                xform.Anchored ||
-                _mapManager.IsMap(uid) ||
-                _mapManager.IsGrid(uid) ||
-                _container.IsEntityInContainer(uid, xform)) return;
+                xform.Anchored) return;
 
             var lookup = GetLookup(uid, xform, xformQuery);
 
@@ -224,7 +225,7 @@ namespace Robust.Shared.GameObjects
             DebugTools.Assert(coordinates.EntityId == lookup.Owner);
 
             // If we're contained then LocalRotation should be 0 anyway.
-            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform) - _transform.GetWorldRotation(lookupXform), xform, xformQuery);
+            var aabb = GetAABB(uid, coordinates.Position, _transform.GetWorldRotation(xform, xformQuery) - _transform.GetWorldRotation(lookupXform, xformQuery), xform, xformQuery);
 
             // Any child entities should be handled by their own OnEntityInit
             AddToEntityTree(lookup, xform, aabb, xformQuery, false);
@@ -266,15 +267,16 @@ namespace Robust.Shared.GameObjects
         private void OnParentChange(ref EntParentChangedMessage args)
         {
             if (_mapManager.IsMap(args.Entity) ||
-                _mapManager.IsGrid(args.Entity) ||
-                EntityManager.GetComponent<MetaDataComponent>(args.Entity).EntityLifeStage < EntityLifeStage.Initialized) return;
+                _mapManager.IsGrid(args.Entity)) return;
 
-            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
-            var xform = xformQuery.GetComponent(args.Entity);
+            var meta = MetaData(args.Entity);
 
             // Parent change gets raised after container insert so we'll just drop it and let OnContainerInsert handle.
-            if (_container.IsEntityInContainer(args.Entity, xform)) return;
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized ||
+                _container.IsEntityInContainer(args.Entity, meta)) return;
 
+            var xformQuery = GetEntityQuery<TransformComponent>();
+            var xform = xformQuery.GetComponent(args.Entity);
             EntityLookupComponent? oldLookup = null;
 
             if (args.OldParent != null)

@@ -123,7 +123,6 @@ namespace Robust.Shared.Physics.Dynamics
             if (Bodies.Contains(body)) return;
 
             // TODO: Kinda dodgy with this and wake shit.
-            // Look at my note under ProcessWakeQueue
             if (body.Awake && body.BodyType != BodyType.Static)
             {
                 AwakeBodies.Add(body);

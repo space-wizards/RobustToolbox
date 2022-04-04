@@ -2023,14 +2023,26 @@ namespace Robust.Client.GameObjects
             /// </summary>
             public void GetLayerDrawMatrix(RSIDirection dir, out Matrix3 layerDrawMatrix)
             {
-                if (_parent.NoRotation)
+                if (_parent.NoRotation || dir == RSIDirection.South)
                     layerDrawMatrix = LocalMatrix;
                 else
                 {
-                    var rsiDirectionMatrix = Matrix3.CreateTransform(Vector2.Zero, -dir.Convert().ToAngle());
-                    Matrix3.Multiply(ref rsiDirectionMatrix, ref LocalMatrix, out layerDrawMatrix);
+                    Matrix3.Multiply(ref _rsiDirectionMatrices[(int)dir], ref LocalMatrix, out layerDrawMatrix);
                 }
             }
+
+            private static Matrix3[] _rsiDirectionMatrices = new Matrix3[]
+            {
+                // array order chosen such that this array can be indexed by casing an RSI direction to an int
+                Matrix3.Identity, // should probably just avoid matrix multiplication altogether if the direction is south.
+                Matrix3.CreateRotation(-Direction.North.ToAngle()),
+                Matrix3.CreateRotation(-Direction.East.ToAngle()),
+                Matrix3.CreateRotation(-Direction.West.ToAngle()),
+                Matrix3.CreateRotation(-Direction.SouthEast.ToAngle()),
+                Matrix3.CreateRotation(-Direction.SouthWest.ToAngle()),
+                Matrix3.CreateRotation(-Direction.NorthEast.ToAngle()),
+                Matrix3.CreateRotation(-Direction.NorthWest.ToAngle())
+            };
 
             internal void Render(DrawingHandleWorld drawingHandle, ref Matrix3 spriteMatrix, Angle angle, Direction? overrideDirection)
             {

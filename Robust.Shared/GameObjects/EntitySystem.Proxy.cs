@@ -198,7 +198,7 @@ public partial class EntitySystem
         if(!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        return metaData.EntityName;
+        return metaData.EntityDescription;
     }
 
     /// <summary>

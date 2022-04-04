@@ -18,6 +18,7 @@ using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
+using SpaceWizards.Sodium;
 
 namespace Robust.Shared.Network
 {
@@ -38,7 +39,7 @@ namespace Robust.Shared.Network
     /// </summary>
     public sealed partial class NetManager : IClientNetManager, IServerNetManager
     {
-        internal const int AesKeyLength = 32;
+        internal const int SharedKeyLength = CryptoAeadXChaCha20Poly1305Ietf.KeyBytes; // 32 bytes
 
         [Dependency] private readonly IRobustSerializer _serializer = default!;
 
@@ -266,7 +267,7 @@ namespace Robust.Shared.Network
 
             if (IsServer)
             {
-                SAGenerateRsaKeys();
+                SAGenerateKeys();
             }
         }
 
@@ -830,10 +831,7 @@ namespace Robust.Shared.Network
 
             var encryption = IsServer ? channel.Encryption : _clientEncryption;
 
-            if (encryption != null)
-            {
-                msg.Decrypt(encryption);
-            }
+            encryption?.Decrypt(msg);
 
             var id = msg.ReadByte();
 
@@ -1062,10 +1060,8 @@ namespace Robust.Shared.Network
 
             var peer = channel.Connection.Peer;
             var packet = BuildMessage(message, peer);
-            if (channel.Encryption != null)
-            {
-                packet.Encrypt(channel.Encryption);
-            }
+
+            channel.Encryption?.Encrypt(packet);
 
             var method = message.DeliveryMethod;
             peer.SendMessage(packet, channel.Connection, method);
@@ -1105,10 +1101,8 @@ namespace Robust.Shared.Network
             var peer = _netPeers[0];
             var packet = BuildMessage(message, peer.Peer);
             var method = message.DeliveryMethod;
-            if (_clientEncryption != null)
-            {
-                packet.Encrypt(_clientEncryption);
-            }
+
+            _clientEncryption?.Encrypt(packet);
 
             peer.Peer.SendMessage(packet, peer.ConnectionsWithChannels[0], method);
             LogSend(message, method, packet);

@@ -47,7 +47,7 @@ entitiesImmutableList:
 
             protoMan.RegisterType(typeof(EntityPrototype));
             protoMan.LoadString(Prototypes);
-            protoMan.Resync();
+            protoMan.ResolveResults();
         }
 
         [Test]
@@ -88,7 +88,7 @@ entitiesImmutableList:
             stream.Load(new StringReader(DataString));
 
             var node = stream.Documents[0].RootNode.ToDataNode();
-            var definition = Serialization.ReadValue<PrototypeIdListSerializerTestDataDefinition>(node);
+            var definition = Serialization.Read<PrototypeIdListSerializerTestDataDefinition>(node);
 
             Assert.NotNull(definition);
 

@@ -15,9 +15,13 @@ namespace Robust.Shared.Serialization.Markdown
             End = end;
         }
 
+        public abstract bool IsEmpty { get; }
+
         public abstract DataNode Copy();
 
         public abstract DataNode? Except(DataNode node);
+
+        public abstract DataNode PushInheritance(DataNode parent);
 
         public override bool Equals(object? obj)
         {
@@ -45,9 +49,16 @@ namespace Robust.Shared.Serialization.Markdown
 
         public abstract T? Except(T node);
 
+        public abstract T PushInheritance(T node);
+
         public override DataNode? Except(DataNode node)
         {
             return node is not T tNode ? throw new InvalidNodeTypeException() : Except(tNode);
+        }
+
+        public override DataNode PushInheritance(DataNode parent)
+        {
+            return parent is not T tNode ? throw new InvalidNodeTypeException() : PushInheritance(tNode);
         }
     }
 }

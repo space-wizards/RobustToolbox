@@ -22,6 +22,9 @@ def verify_version():
     for v in parts:
         # this verifies parsability, exceptions here are expected for bad input
         int(v)
+    if int(parts[0]) != 0:
+        print("Major version must be 0")
+        sys.exit(1)
 
 def write_version():
     # Writing operation

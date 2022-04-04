@@ -13,6 +13,7 @@ using Robust.Client.Placement;
 using Robust.Client.ResourceManagement;
 using Robust.Client.State;
 using Robust.Client.UserInterface;
+using Robust.Client.UserInterface.Themes;
 using Robust.Client.Utility;
 using Robust.Client.ViewVariables;
 using Robust.Client.WebViewHook;
@@ -68,6 +69,7 @@ namespace Robust.Client
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IUIControllerManagerInternal _uiControllerManager = default!;
         [Dependency] private readonly IUIWindowManager _uiWindowManager = default!;
+        [Dependency] private readonly IUIThemeManager _uiThemeManager = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -123,7 +125,6 @@ namespace Robust.Client
             // Call Init in game assemblies.
             _modLoader.BroadcastRunLevel(ModRunLevel.PreInit);
             _modLoader.BroadcastRunLevel(ModRunLevel.Init);
-
             _resourceCache.PreloadTextures();
             _userInterfaceManager.Initialize();
             _eyeManager.Initialize();
@@ -135,6 +136,9 @@ namespace Robust.Client
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
             _prototypeManager.Resync();
+            _uiThemeManager.Initialize();
+            _uiWindowManager.Initialize();
+            _uiControllerManager.Initialize();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();
@@ -142,8 +146,6 @@ namespace Robust.Client
             _viewVariablesManager.Initialize();
             _scriptClient.Initialize();
             _client.Initialize();
-            _uiWindowManager.Initialize();
-            _uiControllerManager.Initialize();
             _discord.Initialize();
             _modLoader.BroadcastRunLevel(ModRunLevel.PostInit);
 

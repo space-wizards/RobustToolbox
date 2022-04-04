@@ -1,4 +1,6 @@
 ﻿using JetBrains.Annotations;
+using Robust.Client.UserInterface.Themes;
+using Robust.Shared.IoC;
 
 namespace Robust.Client.UserInterface.XAML;
 
@@ -10,9 +12,9 @@ public sealed class UiTexExtension
     public UiTexExtension(string path)
     {
         Path = path;
-        Theme = UITheme.Default;
+        Theme = IoCManager.Resolve<IUIThemeManager>().CurrentTheme;
     }
-
+    //Support for forcing a theme
     public UiTexExtension(UITheme theme, string path)
     {
         Path = path;

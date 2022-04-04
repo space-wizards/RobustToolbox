@@ -151,12 +151,8 @@ namespace Robust.Shared.GameObjects
                 if (_entityPaused == value)
                     return;
 
-                var entMan = IoCManager.Resolve<IEntityManager>();
-                if (value && entMan.HasComponent<IgnorePauseComponent>(Owner))
-                    return;
-
                 _entityPaused = value;
-                entMan.EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
+                IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner, new EntityPausedEvent(Owner, value));
             }
         }
 
@@ -182,5 +178,9 @@ namespace Robust.Shared.GameObjects
         /// Whether the entity has states specific to a particular player.
         /// </summary>
         EntitySpecific = 1 << 0,
+        /// <summary>
+        /// Whether the entity is currently inside of a container.
+        /// </summary>
+        InContainer = 1 << 1,
     }
 }

@@ -228,7 +228,7 @@ namespace Robust.Client.UserInterface.CustomControls
 
             foreach (var prototype in prototypeManager.EnumeratePrototypes<EntityPrototype>())
             {
-                if (prototype.Abstract)
+                if (prototype.NoSpawn || prototype.Abstract)
                 {
                     continue;
                 }

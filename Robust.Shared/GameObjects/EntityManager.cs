@@ -417,7 +417,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, uid);
             try
             {
-                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, null);
+                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
                 return entity;
             }
             catch (Exception e)
@@ -431,7 +431,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, this, _serManager, context);
+            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, context);
         }
 
         private void InitializeAndStartEntity(EntityUid entity, MapId mapId)
@@ -478,31 +478,7 @@ namespace Robust.Shared.GameObjects
 
 #endregion Entity Management
 
-        protected void DispatchComponentMessage(NetworkComponentMessage netMsg)
-        {
-            var compMsg = netMsg.Message;
-            var compChannel = netMsg.Channel;
-            var session = netMsg.Session;
-            compMsg.Remote = true;
-
-#pragma warning disable 618
-            var uid = netMsg.EntityUid;
-            if (compMsg.Directed)
-            {
-                if (TryGetComponent(uid, (ushort) netMsg.NetId, out var component))
-                    component.HandleNetworkMessage(compMsg, compChannel, session);
-            }
-            else
-            {
-                foreach (var component in GetComponents(uid))
-                {
-                    component.HandleNetworkMessage(compMsg, compChannel, session);
-                }
-            }
-#pragma warning restore 618
-        }
-
-        /// <summary>
+/// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
         /// <inheritdoc />
@@ -515,7 +491,6 @@ namespace Robust.Shared.GameObjects
     public enum EntityMessageType : byte
     {
         Error = 0,
-        ComponentMessage,
         SystemMessage
     }
 }

@@ -39,6 +39,7 @@ namespace Robust.Server.ServerStatus
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
+        private ISawmill _aczSawmill = default!;
 
         private string? _serverNameCache;
 
@@ -95,6 +96,7 @@ namespace Robust.Server.ServerStatus
         public void Start()
         {
             _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
+            _aczSawmill = Logger.GetSawmill($"{Sawmill}.acz");
             RegisterCVars();
 
             // Cache this in a field to avoid thread safety shenanigans.
@@ -216,11 +218,21 @@ namespace Robust.Server.ServerStatus
         private sealed class ContextImpl : IStatusHandlerContext
         {
             private readonly HttpListenerContext _context;
+            private readonly Dictionary<string, string> _responseHeaders;
             public HttpMethod RequestMethod { get; }
             public IPEndPoint RemoteEndPoint => _context.Request.RemoteEndPoint!;
+            public Stream RequestBody => _context.Request.InputStream;
             public Uri Url => _context.Request.Url!;
             public bool IsGetLike => RequestMethod == HttpMethod.Head || RequestMethod == HttpMethod.Get;
             public IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+
+            public bool KeepAlive
+            {
+                get => _context.Response.KeepAlive;
+                set => _context.Response.KeepAlive = value;
+            }
+
+            public IDictionary<string, string> ResponseHeaders => _responseHeaders;
 
             public ContextImpl(HttpListenerContext context)
             {
@@ -237,16 +249,17 @@ namespace Robust.Server.ServerStatus
                 }
 
                 RequestHeaders = headers;
+                _responseHeaders = new Dictionary<string, string>();
             }
 
             public T? RequestBodyJson<T>()
             {
-                return JsonSerializer.Deserialize<T>(_context.Request.InputStream);
+                return JsonSerializer.Deserialize<T>(RequestBody);
             }
 
             public async Task<T?> RequestBodyJsonAsync<T>()
             {
-                return await JsonSerializer.DeserializeAsync<T>(_context.Request.InputStream);
+                return await JsonSerializer.DeserializeAsync<T>(RequestBody);
             }
 
             public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
@@ -290,6 +303,16 @@ namespace Robust.Server.ServerStatus
                 _context.Response.Close();
             }
 
+            public Task RespondNoContentAsync()
+            {
+                RespondShared();
+
+                _context.Response.StatusCode = (int) HttpStatusCode.NoContent;
+                _context.Response.Close();
+
+                return Task.CompletedTask;
+            }
+
             public Task RespondAsync(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain")
             {
                 return RespondAsync(text, (int) code, contentType);
@@ -297,6 +320,8 @@ namespace Robust.Server.ServerStatus
 
             public async Task RespondAsync(string text, int code = 200, string contentType = "text/plain")
             {
+                RespondShared();
+
                 _context.Response.StatusCode = code;
                 _context.Response.ContentType = contentType;
 
@@ -315,6 +340,8 @@ namespace Robust.Server.ServerStatus
 
             public async Task RespondAsync(byte[] data, int code = 200, string contentType = "text/plain")
             {
+                RespondShared();
+
                 _context.Response.StatusCode = code;
                 _context.Response.ContentType = contentType;
                 _context.Response.ContentLength64 = data.Length;
@@ -341,6 +368,8 @@ namespace Robust.Server.ServerStatus
 
             public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
+                RespondShared();
+
                 _context.Response.ContentType = "application/json";
 
                 JsonSerializer.Serialize(_context.Response.OutputStream, jsonData);
@@ -350,11 +379,30 @@ namespace Robust.Server.ServerStatus
 
             public async Task RespondJsonAsync(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
+                RespondShared();
+
                 _context.Response.ContentType = "application/json";
 
                 await JsonSerializer.SerializeAsync(_context.Response.OutputStream, jsonData);
 
                 _context.Response.Close();
+            }
+
+            public Task<Stream> RespondStreamAsync(HttpStatusCode code = HttpStatusCode.OK)
+            {
+                RespondShared();
+
+                _context.Response.StatusCode = (int) code;
+
+                return Task.FromResult(_context.Response.OutputStream);
+            }
+
+            private void RespondShared()
+            {
+                foreach (var (header, value) in _responseHeaders)
+                {
+                    _context.Response.AddHeader(header, value);
+                }
             }
         }
     }

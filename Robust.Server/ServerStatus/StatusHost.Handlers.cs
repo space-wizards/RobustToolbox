@@ -15,7 +15,7 @@ namespace Robust.Server.ServerStatus
             AddHandler(HandleTeapot);
             AddHandler(HandleStatus);
             AddHandler(HandleInfo);
-            AddHandler(HandleAutomaticClientZip);
+            AddAczHandlers();
         }
 
         private static async Task<bool> HandleTeapot(IStatusHandlerContext context)
@@ -81,6 +81,7 @@ namespace Robust.Server.ServerStatus
                     ["version"] = _configurationManager.GetCVar(CVars.BuildVersion),
                     ["download_url"] = downloadUrl,
                     ["hash"] = hash,
+                    ["acz"] = false,
                 };
             }
 
@@ -125,10 +126,15 @@ namespace Robust.Server.ServerStatus
             {
                 ["engine_version"] = engineVersion,
                 ["fork_id"] = fork,
-                ["version"] = acz.Value.Hash,
+                ["version"] = acz.ManifestHash,
                 // Don't supply a download URL - like supplying an empty self-address
                 ["download_url"] = "",
-                ["hash"] = acz.Value.Hash,
+                ["manifest_download_url"] = "",
+                ["manifest_url"] = "",
+                // Pass acz so the launcher knows where to find the downloads.
+                ["acz"] = true,
+                ["hash"] = acz.ZipHash,
+                ["manifest_hash"] = acz.ManifestHash
             };
         }
     }

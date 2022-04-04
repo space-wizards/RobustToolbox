@@ -427,10 +427,28 @@ namespace Robust.Shared
             CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
 
         /// <summary>
+        /// URL of the content manifest the launcher should download to connect to this server.
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestUrl =
+            CVarDef.Create("build.manifest_url", string.Empty, CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL at which the launcher can download the manifest game files.
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestDownloadUrl =
+            CVarDef.Create("build.manifest_download_url", string.Empty, CVar.SERVERONLY);
+
+        /// <summary>
         /// SHA-256 hash of the content pack hosted at <c>build.download_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildHash =
             CVarDef.Create("build.hash", "", CVar.SERVERONLY);
+
+        /// <summary>
+        /// SHA-256 hash of the manifest hosted at <c>build.manifest_url</c>
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestHash =
+            CVarDef.Create("build.manifest_hash", "", CVar.SERVERONLY);
 
         /*
          * WATCHDOG

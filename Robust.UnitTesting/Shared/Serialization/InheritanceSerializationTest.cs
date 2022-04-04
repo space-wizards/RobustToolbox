@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Shared.Serialization
 
             prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadString(Prototypes);
-            prototypeManager.Resync();
+            prototypeManager.ResolveResults();
 
             var entityManager = IoCManager.Resolve<IEntityManager>();
 

@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -114,6 +113,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -123,6 +123,17 @@ internal sealed partial class PVSSystem : EntitySystem
         InitializeDirty();
     }
 
+    private void OnParentChange(ref EntParentChangedMessage ev)
+    {
+        if (_mapManager.IsGrid(ev.Entity) || _mapManager.IsMap(ev.Entity)) return;
+
+        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
+        // Should still be at its old location as moveevent is called after.
+        var xform = Transform(ev.Entity);
+        var coordinates = _transform.GetMoverCoordinates(xform);
+        var index = _entityPvsCollection.GetChunkIndex(coordinates);
+        _entityPvsCollection.MarkDirty(index);
+    }
 
     public override void Shutdown()
     {
@@ -174,6 +185,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         CleanupDirty(playerSessions);
+
+        foreach (var collection in _pvsCollections)
+        {
+            collection.ClearDirty();
+        }
     }
 
     public void CullDeletionHistory(GameTick oldestAck)

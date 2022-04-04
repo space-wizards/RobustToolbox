@@ -355,6 +355,7 @@ namespace Robust.Shared.GameObjects
 
                     // offset position from world to parent
                     _parent = value.EntityId;
+                    var oldMapId = MapID;
                     ChangeMapId(newParent.MapID, xformQuery);
 
                     // preserve world rotation
@@ -364,7 +365,7 @@ namespace Robust.Shared.GameObjects
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
 
-                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner);
+                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
                 }
 
@@ -381,7 +382,7 @@ namespace Robust.Shared.GameObjects
                     //TODO: This is a hack, look into WHY we can't call GridPosition before the comp is Running
                     if (Running)
                     {
-                        if(!oldPosition.Position.Equals(Coordinates.Position))
+                        if (!oldPosition.Position.Equals(Coordinates.Position))
                         {
                             var moveEvent = new MoveEvent(Owner, oldPosition, Coordinates, this);
                             _entMan.EventBus.RaiseLocalEvent(Owner, ref moveEvent);
@@ -733,8 +734,8 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, MapID);
             MapID = MapId.Nullspace;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?

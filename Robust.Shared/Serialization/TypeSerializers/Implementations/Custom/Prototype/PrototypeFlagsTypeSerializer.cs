@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -38,9 +38,13 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return new ValidatedSequenceNode(list);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, SequenceDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public PrototypeFlags<T> Read(ISerializationManager serializationManager, SequenceDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            PrototypeFlags<T>? rawValue = null)
         {
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+
             var flags = new List<string>(node.Sequence.Count);
 
             foreach (var dataNode in node.Sequence)
@@ -51,7 +55,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                 flags.Add(value.Value);
             }
 
-            return new DeserializedValue<PrototypeFlags<T>>(new PrototypeFlags<T>(flags));
+            return new PrototypeFlags<T>(flags);
         }
 
         public DataNode Write(ISerializationManager serializationManager, PrototypeFlags<T> value, bool alwaysWrite = false,
@@ -72,10 +76,14 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return serializationManager.ValidateNodeWith<string, PrototypeIdSerializer<T>, ValueDataNode>(node, context);
         }
 
-        public DeserializationResult Read(ISerializationManager serializationManager, ValueDataNode node,
-            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null)
+        public PrototypeFlags<T> Read(ISerializationManager serializationManager, ValueDataNode node,
+            IDependencyCollection dependencies, bool skipHook, ISerializationContext? context = null,
+            PrototypeFlags<T>? rawValue = null)
         {
-            return new DeserializedValue<PrototypeFlags<T>>(new PrototypeFlags<T>(node.Value));
+            if(rawValue != null)
+                Logger.Warning($"Provided value to a Read-call for a {nameof(PrototypeFlags<T>)}. Ignoring...");
+
+            return new PrototypeFlags<T>(node.Value);
         }
     }
 }

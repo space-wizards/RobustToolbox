@@ -22,7 +22,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void PopulateStruct()
         {
-            var value = Serialization.ReadValue<TestStruct>(new ValueDataNode(string.Empty));
+            var value = Serialization.Read<TestStruct>(new ValueDataNode(string.Empty));
 
             Assert.True(value.Populated);
         }
@@ -30,7 +30,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         [Test]
         public void PopulateNullableStruct()
         {
-            var value = Serialization.ReadValue<TestStruct?>(new ValueDataNode(string.Empty));
+            var value = Serialization.Read<TestStruct?>(new ValueDataNode(string.Empty));
 
             Assert.NotNull(value);
             Assert.True(value.HasValue);

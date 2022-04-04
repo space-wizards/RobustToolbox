@@ -302,7 +302,7 @@ namespace Robust.UnitTesting
                 }
             }
 
-            public byte[]? RsaPublicKey => null;
+            public byte[]? CryptoPublicKey => null;
             public AuthMode Auth => AuthMode.Disabled;
             public Func<string, Task<NetUserId?>>? AssignUserIdCallback { get; set; }
             public IServerNetManager.NetApprovalDelegate? HandleApprovalCallback { get; set; }

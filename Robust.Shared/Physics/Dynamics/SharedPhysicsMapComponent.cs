@@ -251,6 +251,14 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 // TODO: When this gets ECSd add a helper and remove
 
+                if (seed.Deleted)
+                {
+                    // This should never happen. Yet it does.
+                    Logger.Error($"Deleted physics component in awake bodies set. Owner Uid: {seed.Owner}. Physics map: {_entityManager.ToPrettyString(Owner)}");
+                    RemoveBody(seed);
+                    continue;
+                }
+
                 // I tried not running prediction for non-contacted entities but unfortunately it looked like shit
                 // when contact broke so if you want to try that then GOOD LUCK.
                 if (seed.Island ||

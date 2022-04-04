@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
             Assert.That(sequence.Sequence.Count, Is.EqualTo(1));
             Assert.That(sequence.Cast<ValueDataNode>(0).Value, Is.EqualTo("One"));
 
-            var value = Serialization.ReadValueOrThrow<TestDefinition>(node);
+            var value = Serialization.Read<TestDefinition>(node);
             Assert.That(value.Flag, Is.EqualTo(1));
         }
 
@@ -45,7 +45,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
             Assert.That(sequence.Sequence, Does.Contain(new ValueDataNode("One")));
             Assert.That(sequence.Sequence, Does.Contain(new ValueDataNode("Two")));
 
-            var value = Serialization.ReadValueOrThrow<TestDefinition>(node);
+            var value = Serialization.Read<TestDefinition>(node);
             Assert.That(value.Flag, Is.EqualTo(3));
         }
 
@@ -61,7 +61,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom
             Assert.That(sequence.Sequence.Count, Is.EqualTo(1));
             Assert.That(sequence.Cast<ValueDataNode>(0).Value, Is.EqualTo("NegativeFlag"));
 
-            var value = Serialization.ReadValueOrThrow<TestDefinition>(node);
+            var value = Serialization.Read<TestDefinition>(node);
             Assert.That(value.Flag, Is.EqualTo(TestFlags.Negative));
         }
 

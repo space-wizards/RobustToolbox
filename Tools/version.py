@@ -8,7 +8,7 @@ import argparse
 import time
 
 parser = argparse.ArgumentParser(description = "Tool for versioning RobustToolbox: commits the version config update and sets your local tag.")
-parser.add_argument("version", help = "Version that will be written to tag")
+parser.add_argument("version", help = "Version that will be written to tag. Format: 0.x.x.x")
 parser.add_argument("--file-only", action = "store_true", help = "Does not perform the Git part of the update (for writes only, not undos!)")
 parser.add_argument("--undo", action = "store_true", help = "Macro to rebase over last commit and remove version tag. Version still required.")
 
@@ -16,8 +16,8 @@ result = parser.parse_args()
 
 def verify_version():
     parts = result.version.split(".")
-    if len(parts) != 3:
-        print("Version must be split into three parts with '.'")
+    if len(parts) != 4:
+        print("Version must be split into four parts with '.'")
         sys.exit(1)
     for v in parts:
         # this verifies parsability, exceptions here are expected for bad input

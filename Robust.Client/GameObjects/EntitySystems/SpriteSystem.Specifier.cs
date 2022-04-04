@@ -16,14 +16,12 @@ public sealed partial class SpriteSystem
 {
     [Dependency] private readonly IPrototypeManager _proto = default!;
     [Dependency] private readonly IResourceCache _resourceCache = default!;
-
-    [Pure]
+    
     public Texture Frame0(SpriteSpecifier specifier)
     {
         return RsiStateLike(specifier).Default;
     }
 
-    [Pure]
     public IRsiStateLike RsiStateLike(SpriteSpecifier specifier)
     {
         switch (specifier)
@@ -48,7 +46,6 @@ public sealed partial class SpriteSystem
         }
     }
 
-    [Pure]
     public IRsiStateLike GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
     {
         var icon = IconComponent.GetPrototypeIcon(prototype, _resourceCache);

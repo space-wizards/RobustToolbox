@@ -1,6 +1,6 @@
-using System;
 using System.Collections.Generic;
 using Robust.Shared.Maths;
+using Robust.Shared.Utility;
 
 namespace Robust.Shared.Map
 {
@@ -10,42 +10,81 @@ namespace Robust.Shared.Map
     internal static class GridChunkPartition
     {
         /// <summary>
-        ///
+        /// Iterates through a chunk row and tries to find the first valid polygon tile.
         /// </summary>
-        /// <param name="chunk"></param>
-        /// <param name="bounds">The overall bounds that covers every rectangle.</param>
-        /// <param name="rectangles">Each individual rectangle comprising the chunk's bounds</param>
+        private static void GetRowPolygons(List<Box2i> fakePolys, ushort row, MapChunk chunk)
+        {
+            var running = false;
+            ushort origin = default;
+            var polys = new List<List<Vector2i>>();
+            //var fakePolys = new List<Box2i>();
+
+            for (ushort x = 0; x < chunk.ChunkSize; x++)
+            {
+                var tile = chunk.GetTile(x, row);
+
+                if (!running)
+                {
+                    if (!CanStart(tile)) continue;
+
+                    running = true;
+                    origin = x;
+                    continue;
+                }
+
+                if (!TryEnd(tile, out var index) && x != chunk.ChunkSize - 1) continue;
+
+                running = false;
+                var polygon = new List<Vector2i>();
+                var endIndex = (ushort) (index + x);
+
+                var originTile = chunk.GetTile(origin, row);
+                var endTile = chunk.GetTile(endIndex, row);
+
+                // Grab:
+                // Origin bot left
+                // End bot right
+                // End top right
+                // Origin top left
+                // TODO: Diagonals you numpty
+                polygon.Add(new Vector2i(origin, row));
+                polygon.Add(new Vector2i(endIndex + 1, row));
+                polygon.Add(new Vector2i(endIndex + 1, row + 1));
+                polygon.Add(new Vector2i(origin, row + 1));
+
+                polys.Add(polygon);
+                fakePolys.Add(new Box2i(new Vector2i(origin, row), new Vector2i(endIndex + 1, row + 1)));
+            }
+        }
+
+        private static bool CanStart(Tile tile)
+        {
+            if (tile.IsEmpty) return false;
+
+            return true;
+        }
+
+        private static bool TryEnd(Tile tile, out int index)
+        {
+            // Tries to terminate the tile.
+            // If the tile is empty will return the preceding tile as the terminator
+            if (tile.IsEmpty)
+            {
+                index = -1;
+                return true;
+            }
+
+            index = 0;
+            return false;
+        }
+
         public static void PartitionChunk(MapChunk chunk, out Box2i bounds, out List<Box2i> rectangles)
         {
             rectangles = new List<Box2i>();
 
-            // TODO: Use the existing PartitionChunk version because that one is likely faster and you can Span that shit.
-            // Convert each line into boxes as long as they can be.
             for (ushort y = 0; y < chunk.ChunkSize; y++)
             {
-                var origin = 0;
-                var running = false;
-
-                for (ushort x = 0; x < chunk.ChunkSize; x++)
-                {
-                    if (!chunk.GetTile(x, y).IsEmpty)
-                    {
-                        running = true;
-                        continue;
-                    }
-
-                    // Still empty
-                    if (running)
-                    {
-                        rectangles.Add(new Box2i(origin, y, x, y + 1));
-                    }
-
-                    origin = x + 1;
-                    running = false;
-                }
-
-                if (running)
-                    rectangles.Add(new Box2i(origin, y, chunk.ChunkSize, y + 1));
+                GetRowPolygons(rectangles, y, chunk);
             }
 
             // Patch them together as available

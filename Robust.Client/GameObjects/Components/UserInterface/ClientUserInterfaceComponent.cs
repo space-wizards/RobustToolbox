@@ -75,6 +75,10 @@ namespace Robust.Client.GameObjects
                 (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[] {this, wrapped.UiKey});
             boundInterface.Open();
             _openInterfaces[wrapped.UiKey] = boundInterface;
+
+            var playerSession = _playerManager.LocalPlayer?.Session;
+            if(playerSession != null)
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIOpenedEvent(wrapped.UiKey, Owner, playerSession));
         }
 
         internal void Close(object uiKey, bool remoteCall)

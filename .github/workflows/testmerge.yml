@@ -54,3 +54,8 @@ jobs:
           key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
           script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}
 
+      - name: Provide submodule hash
+        shell: pwsh
+        run: |
+          $ver = git log -1 --format="%H"
+          echo ("Use the following commit hash for the submodule: {0}" -f $ver)

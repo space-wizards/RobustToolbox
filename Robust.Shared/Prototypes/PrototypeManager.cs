@@ -361,7 +361,7 @@ namespace Robust.Shared.Prototypes
                         .ToDictionary(
                             g => g.Key,
                             g => new PrototypesReloadedEventArgs.PrototypeChangeSet(
-                                g.Value.ToDictionary(a => a, a => _prototypes[g.Key][a])))));
+                                g.Value.Where(x => _prototypes[g.Key].ContainsKey(x)).ToDictionary(a => a, a => _prototypes[g.Key][a])))));
 
             // TODO filter by entity prototypes changed
             if (!pushed.ContainsKey(typeof(EntityPrototype))) return;

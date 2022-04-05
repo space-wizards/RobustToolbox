@@ -81,7 +81,6 @@ namespace Robust.Shared.Network.Messages
             }
         }
 
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <inheritdoc />
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {

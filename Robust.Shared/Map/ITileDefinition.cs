@@ -43,9 +43,27 @@
         byte Variants { get; }
 
         /// <summary>
+        ///     Determines the collision to be used for tiles, e.g. full tile or partial.
+        /// </summary>
+        TileCollision Collision { get; }
+
+        /// <summary>
         ///     Assign a new value to <see cref="TileId"/>, used when registering the tile definition.
         /// </summary>
         /// <param name="id">The new tile ID for this tile definition.</param>
         void AssignTileId(ushort id);
+    }
+
+    public enum TileCollision : byte
+    {
+        /// <summary>
+        /// Not supported (yet?)
+        /// </summary>
+        None = 0,
+        Full = 1 << 0,
+        BottomLeft = 1 << 1,
+        BottomRight = 1 << 2,
+        TopRight = 1 << 3,
+        TopLeft = 1 << 4,
     }
 }

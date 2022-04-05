@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Utility;
@@ -21,6 +22,7 @@ namespace Robust.Shared.Map
             ushort origin = default;
             //var polys = new List<List<Vector2i>>();
             //var fakePolys = new List<Box2i>();
+            var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
 
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
@@ -38,25 +40,66 @@ namespace Robust.Shared.Map
                 if (!TryEnd(tile, out var index) && x != chunk.ChunkSize - 1) continue;
 
                 running = false;
-                var polygon = new List<Vector2i>();
+                var polygon = new List<Vector2i>(4);
                 var endIndex = (ushort) (index + x);
 
                 var originTile = chunk.GetTile(origin, row);
                 var endTile = chunk.GetTile(endIndex, row);
+
+                var originCollision = tileDefManager[originTile.TypeId].Collision;
+                var endCollision = tileDefManager[endTile.TypeId].Collision;
 
                 // Grab:
                 // Origin bot left
                 // End bot right
                 // End top right
                 // Origin top left
-                // TODO: Diagonals you numpty
-                polygon.Add(new Vector2i(origin, row));
-                polygon.Add(new Vector2i(endIndex + 1, row));
-                polygon.Add(new Vector2i(endIndex + 1, row + 1));
-                polygon.Add(new Vector2i(origin, row + 1));
-
+                polygon.Add(GetVertex(originCollision, 0, origin, row));
+                polygon.Add(GetVertex(endCollision, 1, endIndex, row));
+                polygon.Add(GetVertex(endCollision, 2, endIndex, row));
+                polygon.Add(GetVertex(originCollision, 3, origin, row));
                 polys.Add(polygon);
             }
+        }
+
+        /// <summary>
+        /// Tries to get a vertex with the specified index.
+        /// </summary>
+        /// <param name="collision"></param>
+        /// <param name="index"></param>
+        /// <param name="x">Left index of the tile</param>
+        /// <param name="y">Bottom index of the tile</param>
+        /// <returns></returns>
+        private static Vector2i GetVertex(TileCollision collision, int index, int x, int y)
+        {
+            return index switch
+            {
+                0 => collision switch
+                {
+                    TileCollision.Full => new Vector2i(x, y),
+                    TileCollision.BottomLeft => new Vector2i(x, y),
+                    _ => throw new NotImplementedException()
+                },
+                1 => collision switch
+                {
+                    TileCollision.Full => new Vector2i(x + 1, y),
+                    TileCollision.BottomLeft => new Vector2i(x + 1, y),
+                    _ => throw new NotImplementedException()
+                },
+                2 => collision switch
+                {
+                    TileCollision.Full => new Vector2i(x + 1, y + 1),
+                    TileCollision.BottomLeft => new Vector2i(x, y + 1),
+                    _ => throw new NotImplementedException()
+                },
+                3 => collision switch
+                {
+                    TileCollision.Full => new Vector2i(x, y + 1),
+                    TileCollision.BottomLeft => new Vector2i(x, y + 1),
+                    _ => throw new NotImplementedException()
+                },
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         private static bool CanStart(Tile tile)
@@ -113,11 +156,6 @@ namespace Robust.Shared.Map
         /// </summary>
         private static void PatchPolygons(List<List<Vector2i>> polygons)
         {
-            // TODO: If any angle > 180 degrees I think?
-
-            // TODO: Iterate every polygon and check all forward ones to see if any 2 points match
-            // Recursively do this until they're all combined.
-
             var combined = true;
 
             while (combined)

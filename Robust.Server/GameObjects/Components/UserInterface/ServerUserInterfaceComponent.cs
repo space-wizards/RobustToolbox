@@ -183,8 +183,8 @@ namespace Robust.Server.GameObjects
                 return false;
             }
 
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Owner, new BoundUIOpenedEvent(UiKey, Owner.Owner, session));
             _subscribedSessions.Add(session);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Owner, new BoundUIOpenedEvent(UiKey, Owner.Owner, session));
             SendMessage(new OpenBoundInterfaceMessage(), session);
             if (_lastState != null)
             {

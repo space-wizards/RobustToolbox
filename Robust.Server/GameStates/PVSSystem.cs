@@ -606,6 +606,14 @@ internal sealed partial class PVSSystem : EntitySystem
                 ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
 
+        var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
+        RaiseLocalEvent(ref expandEvent);
+        foreach (var entityUid in expandEvent.Entities)
+        {
+            RecursivelyAddOverride(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+        }
+
         var entityStates = new List<EntityState>();
 
         foreach (var (entityUid, visiblity) in visibleEnts)

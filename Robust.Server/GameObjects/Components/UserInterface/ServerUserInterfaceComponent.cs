@@ -184,6 +184,7 @@ namespace Robust.Server.GameObjects
             }
 
             _subscribedSessions.Add(session);
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(Owner.Owner, new BoundUIOpenedEvent(UiKey, Owner.Owner, session));
             SendMessage(new OpenBoundInterfaceMessage(), session);
             if (_lastState != null)
             {
@@ -236,11 +237,11 @@ namespace Robust.Server.GameObjects
         public void CloseShared(IPlayerSession session)
         {
             var owner = Owner.Owner;
-            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner, new BoundUIClosedEvent(UiKey, owner, session));
             OnClosed?.Invoke(session);
             _subscribedSessions.Remove(session);
             _playerStateOverrides.Remove(session);
             session.PlayerStatusChanged -= OnSessionOnPlayerStatusChanged;
+            IoCManager.Resolve<IEntityManager>().EventBus.RaiseLocalEvent(owner, new BoundUIClosedEvent(UiKey, owner, session));
 
             if (_subscribedSessions.Count == 0)
             {

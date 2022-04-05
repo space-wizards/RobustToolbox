@@ -1520,6 +1520,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
+        [Obsolete("Use SpriteSystem instead.")]
         internal static RSI.State GetFallbackState(IResourceCache cache)
         {
             var rsi = cache.GetResource<RSIResource>("/Textures/error.rsi").RSI;

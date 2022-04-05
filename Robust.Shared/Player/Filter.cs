@@ -5,6 +5,7 @@ using Robust.Shared.Configuration;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
+using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Players;
 
@@ -78,7 +79,7 @@ namespace Robust.Shared.Player
             if (!cfgMan.GetCVar(CVars.NetPVS))
                 return AddAllPlayers();
 
-            var pvsRange = cfgMan.GetCVar(CVars.NetMaxUpdateRange) * rangeMultiplier;
+            var pvsRange = cfgMan.GetCVar(CVars.NetDefaultUpdateRange) * rangeMultiplier;
 
             return AddInRange(origin, pvsRange, playerMan);
         }
@@ -174,6 +175,13 @@ namespace Robust.Shared.Player
                 xform.MapID == position.MapId &&
                 (xform.WorldPosition - position.Position).Length < range, playerMan);
         }
+
+        /// <summary>
+        ///     Adds all players in range of a position.
+        /// </summary>
+        public Filter AddInRange(MapCoordinates position, Vector2 range, ISharedPlayerManager? playerMan = null,
+            IEntityManager? entMan = null)
+            => AddInRange(position, range.Length, playerMan, entMan);
 
         /// <summary>
         ///     Removes all players without the specified visibility flag.

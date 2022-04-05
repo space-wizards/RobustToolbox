@@ -135,6 +135,16 @@ namespace Robust.Shared.GameObjects
         }
     }
 
+    public sealed class BoundUIOpenedEvent : BoundUserInterfaceMessage
+    {
+        public BoundUIOpenedEvent(object uiKey, EntityUid uid, ICommonSession session)
+        {
+            UiKey = uiKey;
+            Entity = uid;
+            Session = session;
+        }
+    }
+
     public sealed class BoundUIClosedEvent : BoundUserInterfaceMessage
     {
         public BoundUIClosedEvent(object uiKey, EntityUid uid, ICommonSession session)

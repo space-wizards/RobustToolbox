@@ -129,12 +129,11 @@ namespace Robust.Shared.Map
                     var polyA = polygons[i];
                     var end = polygons.Count;
 
-                    for (var j = i; j < end; j++)
+                    for (var j = i + 1; j < end; j++)
                     {
                         var polyB = polygons[j];
 
                         var dupe = 0;
-                        // TODO: Check if any 2 points align, then check if that poly is convex.
                         foreach (var vertA in polyA)
                         {
                             foreach (var vertB in polyB)

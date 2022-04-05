@@ -560,7 +560,7 @@ public sealed partial class EntityLookupSystem
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.IncludeAnchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.IsGrid(component.Owner))
         {
             foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
             {
@@ -582,7 +582,7 @@ public sealed partial class EntityLookupSystem
             intersecting.Add(uid);
         }
 
-        if ((flags & LookupFlags.IncludeAnchored) != 0x0 && _mapManager.IsGrid(component.Owner))
+        if ((flags & LookupFlags.Anchored) != 0x0 && _mapManager.IsGrid(component.Owner))
         {
             foreach (var uid in _mapManager.GetGrid(component.Owner).GetLocalAnchoredEntities(localAABB))
             {

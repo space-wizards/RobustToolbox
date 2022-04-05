@@ -1,0 +1,56 @@
+﻿name: Testmerge PR
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'PR Number'
+        required: true
+        type: number
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name:
+        id: parse_version
+        shell: pwsh
+        run: |
+          $rawver = git tag --sort=committerdate --list "v*" | Select-Object -Last 1
+          $ver = [regex]::Match($rawver, "v?(.+)").Groups[1].Value
+          echo ("::set-output name=version::{0}-testmerge${{ github.event.inputs.pr }}" -f $ver)
+      - name: Checkout PR and create new branch
+        run: |
+          git checkout -b testmerge-${{ github.event.inputs.pr }}
+          git merge master
+          git push origin testmerge-${{ github.event.inputs.pr }}
+
+      - name: Package client
+        run: Tools/package_client_build.py -p windows mac linux
+
+      - name: Shuffle files around
+        run: |
+          mkdir "release/${{ steps.parse_version.outputs.version }}"
+          mv release/*.zip "release/${{ steps.parse_version.outputs.version }}"
+
+      - name: Upload files to centcomm
+        uses: appleboy/scp-action@master
+        with:
+          host: centcomm.spacestation14.io
+          username: robust-build-push
+          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+          source: "release/${{ steps.parse_version.outputs.version }}"
+          target: "/var/lib/robust-builds/builds/"
+          strip_components: 1
+
+      - name: Update manifest JSON
+        uses: appleboy/ssh-action@master
+        with:
+          host: centcomm.spacestation14.io
+          username: robust-build-push
+          key: ${{ secrets.CENTCOMM_ROBUST_BUILDS_PUSH_KEY }}
+          script: /home/robust-build-push/push.ps1 ${{ steps.parse_version.outputs.version }}
+

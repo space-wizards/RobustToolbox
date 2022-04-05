@@ -1,0 +1,22 @@
+﻿name: Remove Testmerge
+on:
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: 'PR Number'
+        required: true
+        type: number
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Delete branch
+        id: parse_version
+        shell: pwsh
+        run: git branch -d testmerge-${{ github.event.inputs.pr }}
+      - name: Remove the client build off of centcomm (todo)

@@ -27,6 +27,12 @@ namespace Robust.Client.GameObjects
             SubscribeLocalEvent<SpriteUpdateInertEvent>(QueueUpdateInert);
         }
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            _proto.PrototypesReloaded -= OnPrototypesReloaded;
+        }
+
         private void QueueUpdateInert(SpriteUpdateInertEvent ev)
         {
             _inertUpdateQueue.Enqueue(ev.Sprite);

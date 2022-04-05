@@ -46,9 +46,9 @@ namespace Robust.Shared.Map
                 var endIndex = (ushort) (index + x);
 
                 var originTile = chunk.GetTile(origin, row);
-                var endTile = chunk.GetTile(endIndex, row);
-
                 var originCollision = tileDefManager[originTile.TypeId].Collision;
+
+                var endTile = chunk.GetTile(endIndex, row);
                 var endCollision = tileDefManager[endTile.TypeId].Collision;
 
                 // Grab:
@@ -60,6 +60,19 @@ namespace Robust.Shared.Map
                 polygon.Add(GetVertex(endCollision, 1, endIndex, row));
                 polygon.Add(GetVertex(endCollision, 2, endIndex, row));
                 polygon.Add(GetVertex(originCollision, 3, origin, row));
+
+                // De-dupe verts: Should only ever be 1 duplicated for triangles.
+                for (var i = 0; i < polygon.Count; i++)
+                {
+                    var vert = polygon[i];
+                    var nextVert = polygon[(i + 1) % polygon.Count];
+                    if (vert.Equals(nextVert))
+                    {
+                        polygon.RemoveAt(i);
+                        break;
+                    }
+                }
+
                 polys.Add(polygon);
             }
         }
@@ -127,14 +140,17 @@ namespace Robust.Shared.Map
                     index = 0;
                     return true;
                 case TileCollision.BottomRight:
+                    index = 0;
+                    return false;
                 case TileCollision.TopRight:
+                    index = 0;
+                    return false;
                 case TileCollision.TopLeft:
+                    index = 0;
+                    return true;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            index = 0;
-            return false;
         }
 
         public static void PartitionChunk(MapChunk chunk, out Box2i bounds, out List<List<Vector2i>> polygons)

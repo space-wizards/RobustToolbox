@@ -34,10 +34,12 @@ namespace Robust.Shared.Map
 
                     running = true;
                     origin = x;
+                    // Iterate the tile again and try to end on it.
+                    x--;
                     continue;
                 }
 
-                if (!TryEnd(tile, out var index) && x != chunk.ChunkSize - 1) continue;
+                if (!TryEnd(tile.IsEmpty ? TileCollision.None : tileDefManager[tile.TypeId].Collision, out var index) && x != chunk.ChunkSize - 1) continue;
 
                 running = false;
                 var polygon = new List<Vector2i>(4);
@@ -109,14 +111,26 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        private static bool TryEnd(Tile tile, out int index)
+        private static bool TryEnd(TileCollision collision, out int index)
         {
             // Tries to terminate the tile.
             // If the tile is empty will return the preceding tile as the terminator
-            if (tile.IsEmpty)
+            switch (collision)
             {
-                index = -1;
-                return true;
+                case TileCollision.None:
+                    index = -1;
+                    return true;
+                case TileCollision.Full:
+                    index = 0;
+                    return false;
+                case TileCollision.BottomLeft:
+                    index = 0;
+                    return true;
+                case TileCollision.BottomRight:
+                case TileCollision.TopRight:
+                case TileCollision.TopLeft:
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             index = 0;

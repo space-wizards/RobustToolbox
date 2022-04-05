@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
 using Lidgren.Network;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
@@ -74,13 +74,14 @@ namespace Robust.Shared.Network.Messages
                         value = new Vector2(valX, valY);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(value), valType, $"CVar {name} is not of a valid CVar type!");
                 }
 
                 NetworkedVars.Add((name, value));
             }
         }
 
+        /// <exception cref="ArgumentOutOfRangeException"></exception>
         /// <inheritdoc />
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
@@ -129,7 +130,7 @@ namespace Robust.Shared.Network.Messages
                         buffer.Write(val.Y);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(value), value.GetType(), $"CVar {name} is not of a valid CVar type!");
                 }
             }
         }

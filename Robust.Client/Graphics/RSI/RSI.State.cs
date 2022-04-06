@@ -152,9 +152,12 @@ namespace Robust.Client.Graphics
             /// <summary>
             ///     Specifies a direction in an RSI state.
             /// </summary>
+            /// <remarks>
+            ///     Value of the enum here matches the index used to store it in the icons array. If this ever changes, then
+            ///     <see cref="GameObjects.SpriteComponent.Layer._rsiDirectionMatrices"/> also needs to be updated.
+            /// </remarks>
             public enum Direction : byte
             {
-                // Value of the enum here matches the index used to store it in the icons array.
                 South = 0,
                 North = 1,
                 East = 2,

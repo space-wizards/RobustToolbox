@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -44,7 +43,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Size of the side of the view bounds square.
     /// </summary>
-    private float _viewSize;
+    private Vector2 _viewSize;
 
     /// <summary>
     /// If PVS disabled then we'll track if we've dumped all entities on the player.
@@ -114,15 +113,27 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
-        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetDefaultUpdateRange, OnViewsizeChanged, true);
 
         InitializeDirty();
     }
 
+    private void OnParentChange(ref EntParentChangedMessage ev)
+    {
+        if (_mapManager.IsGrid(ev.Entity) || _mapManager.IsMap(ev.Entity)) return;
+
+        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
+        // Should still be at its old location as moveevent is called after.
+        var xform = Transform(ev.Entity);
+        var coordinates = _transform.GetMoverCoordinates(xform);
+        var index = _entityPvsCollection.GetChunkIndex(coordinates);
+        _entityPvsCollection.MarkDirty(index);
+    }
 
     public override void Shutdown()
     {
@@ -133,14 +144,14 @@ internal sealed partial class PVSSystem : EntitySystem
         EntityManager.EntityDeleted -= OnEntityDeleted;
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
-        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetDefaultUpdateRange, OnViewsizeChanged);
 
         ShutdownDirty();
     }
 
-    private void OnViewsizeChanged(float obj)
+    private void OnViewsizeChanged(Vector2 obj)
     {
-        _viewSize = obj * 2;
+        _viewSize = obj;
     }
 
     private void SetPvs(bool value)
@@ -174,6 +185,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         CleanupDirty(playerSessions);
+
+        foreach (var collection in _pvsCollections)
+        {
+            collection.ClearDirty();
+        }
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -307,7 +323,6 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var playerChunks = new HashSet<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
-        var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
 
         _chunkList.Clear();
@@ -334,11 +349,17 @@ internal sealed partial class PVSSystem : EntitySystem
 
             foreach (var eyeEuid in viewers)
             {
-                var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+                var xform = xformQuery.GetComponent(eyeEuid);
+                var viewPos = xform.WorldPosition;
+                var range = _viewSize;
+                var mapId = xform.MapID;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
+                {
                     visMask = eyeComp.VisibilityMask;
+                    range *= eyeComp.Zoom;
+                }
 
                 // Get the nyoom dictionary for index lookups.
                 if (!_mapIndices.TryGetValue(visMask, out var mapDict))
@@ -383,7 +404,7 @@ internal sealed partial class PVSSystem : EntitySystem
                              physicsQuery,
                              true))
                 {
-                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
+                    var localPos = xformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
 
                     var gridChunkEnumerator =
                         new ChunkIndicesEnumerator(localPos, range, ChunkSize);
@@ -582,6 +603,14 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var viewerEntity in viewerEntities)
         {
             RecursivelyAddOverride(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+        }
+
+        var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
+        RaiseLocalEvent(ref expandEvent);
+        foreach (var entityUid in expandEvent.Entities)
+        {
+            RecursivelyAddOverride(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
                 ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
 
@@ -945,13 +974,6 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _uidSetPool.Return(viewers);
         return viewerArray;
-    }
-
-    // Read Safe
-    private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
-    {
-        var xform = transformQuery.GetComponent(euid);
-        return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
     }
 
     public sealed class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>

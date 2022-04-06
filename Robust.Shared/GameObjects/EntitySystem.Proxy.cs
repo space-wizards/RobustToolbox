@@ -198,7 +198,7 @@ public partial class EntitySystem
         if(!Resolve(uid, ref metaData, false))
             throw CompNotFound<MetaDataComponent>(uid);
 
-        return metaData.EntityName;
+        return metaData.EntityDescription;
     }
 
     /// <summary>
@@ -410,7 +410,7 @@ public partial class EntitySystem
 
     /// <inheritdoc cref="IEntityManager.TryGetComponent&lt;T&gt;(EntityUid?, out T)"/>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    protected bool TryComp<T>(EntityUid? uid, [NotNullWhen(true)] out T? comp)
+    protected bool TryComp<T>([NotNullWhen(true)] EntityUid? uid, [NotNullWhen(true)] out T? comp)
     {
         if (!uid.HasValue)
         {

@@ -342,7 +342,6 @@ namespace Robust.Client.GameObjects
                 var map = _owner.eyeManager.CurrentMap;
 
                 var worldHandle = args.WorldHandle;
-                ShaderInstance? currentShader = null;
 
                 if (_playerManager.LocalPlayer?.ControlledEntity is not {} playerEnt)
                     return;
@@ -362,13 +361,8 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    var newShader = effect.Shaded ? null : _unshadedShader;
-
-                    if (newShader != currentShader)
-                    {
-                        worldHandle.UseShader(newShader);
-                        currentShader = newShader;
-                    }
+                    if (!effect.Shaded)
+                        worldHandle.UseShader(_unshadedShader);
 
                     // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
@@ -389,6 +383,9 @@ namespace Robust.Client.GameObjects
                     var rotatedBox = new Box2Rotated(effectArea, effect.Rotation + rotation, effectOrigin);
 
                     worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
+
+                    if (!effect.Shaded)
+                        worldHandle.UseShader(null);
                 }
             }
         }

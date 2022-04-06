@@ -109,6 +109,7 @@ internal sealed partial class MidiManager : IMidiManager
         }, true);
 
         _midiSawmill = _logger.GetSawmill("midi");
+        _midiSawmill.Level = LogLevel.Info;
         _sawmill = _logger.GetSawmill("midi.fluidsynth");
         _loggerDelegate = LoggerDelegate;
 

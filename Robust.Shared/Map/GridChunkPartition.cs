@@ -192,12 +192,11 @@ namespace Robust.Shared.Map
             {
                 combined = false;
 
-                for (var i = 0; i < polygons.Count; i++)
+                for (var i = polygons.Count - 1; i >= 0; i--)
                 {
                     var polyA = polygons[i];
-                    var end = polygons.Count;
 
-                    for (var j = i + 1; j < end; j++)
+                    for (var j = i - 1; j >= 0; j--)
                     {
                         var polyB = polygons[j];
 
@@ -219,9 +218,7 @@ namespace Robust.Shared.Map
 
                         // Replace polyA and remove polyB.
                         polygons[i] = combinedPoly;
-                        polygons.RemoveSwap(j);
-                        j--;
-                        end--;
+                        polygons.RemoveAt(j);
                         combined = true;
                     }
                 }

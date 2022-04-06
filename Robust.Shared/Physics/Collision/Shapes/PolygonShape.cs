@@ -87,6 +87,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
         public void SetVertices(Span<Vector2> vertices, int count)
         {
+            var verts = vertices[..count];
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             DebugTools.Assert(count >= 3 && count <= configManager.GetCVar(CVars.MaxPolygonVertices));
 
@@ -95,11 +96,11 @@ namespace Robust.Shared.Physics.Collision.Shapes
                 //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
                 //So instead of giftwrapping a triangle, we just force it to be clock wise.
                 if (count <= 3)
-                    Vertices = Physics.Vertices.ForceCounterClockwise(vertices);
+                    Vertices = Physics.Vertices.ForceCounterClockwise(verts);
                 else
                 {
                     // Convex hull may prune some vertices hence the count may change by this point.
-                    Vertices = GiftWrap.SetConvexHull(vertices, count);
+                    Vertices = GiftWrap.SetConvexHull(verts, count);
                     count = Vertices.Length;
                 }
             }
@@ -109,7 +110,7 @@ namespace Robust.Shared.Physics.Collision.Shapes
 
                 for (var i = 0; i < count; i++)
                 {
-                    Vertices[i] = vertices[i];
+                    Vertices[i] = verts[i];
                 }
             }
 

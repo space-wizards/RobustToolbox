@@ -531,6 +531,17 @@ namespace Robust.Shared.Map
                 new AnchoredEntitiesEnumerator(snapgrid.GetEnumerator());
         }
 
+        public IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB)
+        {
+            foreach (var tile in GetLocalTilesIntersecting(localAABB, true, null))
+            {
+                foreach (var ent in GetAnchoredEntities(tile.GridIndices))
+                {
+                    yield return ent;
+                }
+            }
+        }
+
         /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB)
         {

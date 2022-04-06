@@ -312,15 +312,20 @@ namespace Robust.Server.Bql
         {
             var radius = (float)(double)arguments[0];
             var entityLookup = EntitySystem.Get<EntityLookupSystem>();
+            var xformQuery = IoCManager.Resolve<IEntityManager>().GetEntityQuery<TransformComponent>();
+            var distinct = new HashSet<EntityUid>();
 
-            // TODO: Make this a foreach and reduce LINQ chain because it'll allocate a LOT
+            foreach (var uid in input)
+            {
+                foreach (var near in entityLookup.GetEntitiesInRange(xformQuery.GetComponent(uid).Coordinates,
+                             radius))
+                {
+                    if (!distinct.Add(near)) continue;
+                    yield return near;
+                }
+            }
+
             //BUG: GetEntitiesInRange effectively uses manhattan distance. This is not intended, near is supposed to be circular.
-            return input.Where(entityManager.HasComponent<TransformComponent>)
-                .SelectMany(e =>
-                    entityLookup.GetEntitiesInRange(entityManager.GetComponent<TransformComponent>(e).Coordinates,
-                        radius))
-                .Select(x => x) // Sloth's fault.
-                .Distinct();
         }
     }
 

@@ -140,7 +140,7 @@ namespace Robust.Client.Audio.Midi
         /// <summary>
         ///     Invoked whenever a new midi event is registered.
         /// </summary>
-        event Action<Shared.Audio.Midi.RobustMidiEvent> OnMidiEvent;
+        event Action<RobustMidiEvent> OnMidiEvent;
 
         /// <summary>
         ///     Invoked when the midi player finishes playing a song.
@@ -164,7 +164,7 @@ namespace Robust.Client.Audio.Midi
         ///     Send a midi event for the renderer to play.
         /// </summary>
         /// <param name="midiEvent">The midi event to be played</param>
-        void SendMidiEvent(Shared.Audio.Midi.RobustMidiEvent midiEvent);
+        void SendMidiEvent(RobustMidiEvent midiEvent);
 
         /// <summary>
         ///     Schedule a MIDI event to be played at a later time.
@@ -173,7 +173,7 @@ namespace Robust.Client.Audio.Midi
         /// <param name="midiEvent">the midi event in question</param>
         /// <param name="time"></param>
         /// <param name="absolute"></param>
-        void ScheduleMidiEvent(Shared.Audio.Midi.RobustMidiEvent midiEvent, uint time, bool absolute);
+        void ScheduleMidiEvent(RobustMidiEvent midiEvent, uint time, bool absolute);
 
         /// <summary>
         ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
@@ -186,6 +186,7 @@ namespace Robust.Client.Audio.Midi
         private readonly IMidiManager _midiManager;
         private readonly ITaskManager _taskManager;
 
+        // TODO: Make this a replicated CVar in MidiManager
         private const int MidiSizeLimit = 2000000;
         private const double BytesToMegabytes = 0.000001d;
 
@@ -207,8 +208,9 @@ namespace Robust.Client.Audio.Midi
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
         private readonly object _playerStateLock = new();
-        private bool _debugEvents = false;
+        [ViewVariables(VVAccess.ReadWrite)] private bool _debugEvents = false;
         private SequencerClientId _synthRegister;
+        private SequencerClientId _robustRegister;
         private SequencerClientId _debugRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         IClydeBufferedAudioSource IMidiRenderer.Source => Source;
@@ -325,6 +327,9 @@ namespace Robust.Client.Audio.Midi
             _synth = new Synth(_settings);
             _sequencer = new Sequencer(false);
             _debugRegister = _sequencer.RegisterClient("honk", DumpSequencerEvent);
+            _robustRegister = _sequencer.RegisterClient("henk", SendAsRobustMidiEvent);
+
+            // We need to register at least one synthesizer or the sequencer will refuse to work properly.
             _synthRegister = _sequencer.RegisterFluidsynth(_synth);
 
             _synth.AddSoundFontLoader(soundFontLoader);
@@ -332,6 +337,24 @@ namespace Robust.Client.Audio.Midi
             Mono = mono;
             Source.EmptyBuffers();
             Source.StartPlaying();
+        }
+
+        private void SendAsRobustMidiEvent(uint time, SequencerEvent midiEvent)
+        {
+            var robustEvent = _midiManager.FromSequencerEvent(midiEvent, time);
+
+            // Check if the command is correct.
+            if (robustEvent.Command != 0)
+            {
+                SendMidiEvent(robustEvent);
+                midiEvent.Dispose();
+            }
+            else
+            {
+                // Unsupported command, send it to the synth directly.
+                midiEvent.Dest = _synthRegister;
+                _sequencer.SendNow(midiEvent);
+            }
         }
 
         private void DumpSequencerEvent(uint time, SequencerEvent @event)
@@ -351,7 +374,7 @@ namespace Robust.Client.Audio.Midi
                 @event.Value,
                 @event.Velocity));
 
-            @event.Dest = _synthRegister;
+            @event.Dest = _robustRegister;
             _sequencer.SendNow(@event);
         }
 
@@ -383,7 +406,7 @@ namespace Robust.Client.Audio.Midi
 
             if (buffer.Length > MidiSizeLimit)
             {
-                _midiSawmill.Error("Midi file selected is too big! It was {0} MB but it should be less than {1} MB.",
+                _midiSawmill.Error("MIDI file selected is too big! It was {0} MB but it should be less than {1} MB.",
                     buffer.Length * BytesToMegabytes, MidiSizeLimit * BytesToMegabytes);
                 CloseMidi();
                 return false;
@@ -449,7 +472,7 @@ namespace Robust.Client.Audio.Midi
             }
         }
 
-        public event Action<Shared.Audio.Midi.RobustMidiEvent>? OnMidiEvent;
+        public event Action<RobustMidiEvent>? OnMidiEvent;
         public event Action? OnMidiPlayerFinished;
 
         void IMidiRenderer.Render()
@@ -462,8 +485,12 @@ namespace Robust.Client.Audio.Midi
             if (Disposed) return;
 
             var buffersProcessed = Source.GetNumberOfBuffersProcessed();
-            if(buffersProcessed == Buffers) _midiSawmill.Warning("MIDI buffer overflow!");
-            if (buffersProcessed == 0) return;
+
+            if(buffersProcessed == Buffers)
+                _midiSawmill.Warning("MIDI buffer overflow!");
+
+            if (buffersProcessed == 0)
+                return;
 
             var bufferLength = length * 2;
 
@@ -533,9 +560,7 @@ namespace Robust.Client.Audio.Midi
 
         public void SendMidiEvent(RobustMidiEvent midiEvent)
         {
-            if (Disposed) return;
-
-            if (DisablePercussionChannel && midiEvent.Channel == 9)
+            if (Disposed)
                 return;
 
             try
@@ -550,6 +575,10 @@ namespace Robust.Client.Audio.Midi
                             break;
 
                         case RobustMidiCommand.NoteOn:
+                            // Channel 9 is the percussion channel. We only block NoteOn events to it.
+                            if (DisablePercussionChannel && midiEvent.Channel == 9)
+                                return;
+
                             _synth.NoteOn(midiEvent.Channel, midiEvent.Key, VolumeBoost ? 127 : midiEvent.Velocity);
                             break;
 
@@ -581,13 +610,18 @@ namespace Robust.Client.Audio.Midi
                         case (RobustMidiCommand) 0x01:
                         case (RobustMidiCommand) 0x05:
                         // MetaEvent -- SetTempo
-                        case (RobustMidiCommand) 0x50:
-                            // Already handled by the player.
+                        case (RobustMidiCommand) 0x50: // Already handled by the player.
                             return;
 
                         case RobustMidiCommand.SystemMessage:
                             switch (midiEvent.Control)
                             {
+                                case 0x0:
+                                    if (midiEvent.Status == 0xFF)
+                                        _synth.SystemReset();
+
+                                    break;
+
                                 case 0x0B:
                                     _synth.AllNotesOff(midiEvent.Channel);
                                     break;
@@ -615,8 +649,13 @@ namespace Robust.Client.Audio.Midi
             if (Disposed) return;
 
             var seqEv = _midiManager.ToSequencerEvent(midiEvent);
-            seqEv.Dest = _debugEvents ? _debugRegister : _synthRegister;
-            _sequencer.SendAt(seqEv, time, absolute);
+            seqEv.Dest = _debugEvents ? _debugRegister : _robustRegister;
+
+            // If this is an old event, send it right now.
+            if(absolute && time <= SequencerTick || !absolute && time <= 0)
+                _sequencer.SendNow(seqEv);
+            else
+                _sequencer.SendAt(seqEv, time, absolute);
             seqEv.Dispose();
         }
 
@@ -643,6 +682,7 @@ namespace Robust.Client.Audio.Midi
 
             // Do NOT dispose of the sequencer after the synth or it'll cause a segfault for some fucking reason.
             _sequencer?.UnregisterClient(_debugRegister);
+            _sequencer?.UnregisterClient(_robustRegister);
             _sequencer?.UnregisterClient(_synthRegister);
             _sequencer?.Dispose();
 

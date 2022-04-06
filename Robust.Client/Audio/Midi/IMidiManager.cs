@@ -41,6 +41,11 @@ public interface IMidiManager
     SequencerEvent ToSequencerEvent(RobustMidiEvent midiEvent);
 
     /// <summary>
+    ///     Creates a <see cref="RobustMidiEvent"/> given a <see cref="SequencerEvent"/> and a sequencer tick.
+    /// </summary>
+    RobustMidiEvent FromSequencerEvent(SequencerEvent midiEvent, uint tick);
+
+    /// <summary>
     ///     Method called every frame.
     ///     Should be used to update positional audio.
     /// </summary>

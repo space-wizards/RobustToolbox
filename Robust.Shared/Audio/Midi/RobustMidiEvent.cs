@@ -38,7 +38,7 @@ namespace Robust.Shared.Audio.Midi
         public byte Velocity => Data2;
         public byte Control => Data1;
         public byte Value => Data2;
-        public int Pitch => ((Data2 << 8) + Data1);
+        public int Pitch => ((Data2 << 8) | Data1);
         public byte Pressure => Data1;
         public byte Program => Data1;
 
@@ -54,7 +54,7 @@ namespace Robust.Shared.Audio.Midi
 
         public override string ToString()
         {
-            return $"{base.ToString()} >> CHANNEL: 0x{Channel:X} || COMMAND: 0x{Command:X} || DATA1: 0x{Data1:X} || DATA2: 0x{Data2:X} || TICK: {Tick} <<";
+            return $"{base.ToString()} >> CHANNEL: 0x{Channel:X} || COMMAND: 0x{Command:X} {MidiCommand} || DATA1: 0x{Data1:X} || DATA2: 0x{Data2:X} || TICK: {Tick} <<";
         }
 
         #region Static Methods

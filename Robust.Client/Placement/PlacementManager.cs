@@ -358,6 +358,29 @@ namespace Robust.Client.Placement
             if (Hijack != null && !Hijack.CanRotate)
                 return;
 
+            // Tile mode
+            // I HATE PLACEMENT MANAGER ARGH
+            if (CurrentPermission is { IsTile: true })
+            {
+                var defManager = IoCManager.Resolve<ITileDefinitionManager>();
+                var tileDef = defManager[CurrentPermission.TileType];
+
+                if ((tileDef.Flags & TileDefFlag.Diagonals) != 0x0)
+                {
+                    // Too tired to think of something cleverer
+                    CurrentPermission.TileFlags = CurrentPermission.TileFlags switch
+                    {
+                        TileFlag.None => TileFlag.BottomLeft,
+                        TileFlag.BottomLeft => TileFlag.BottomRight,
+                        TileFlag.BottomRight => TileFlag.TopRight,
+                        TileFlag.TopRight => TileFlag.TopLeft,
+                        TileFlag.TopLeft => TileFlag.None,
+                        _ => throw new ArgumentOutOfRangeException()
+                    };
+                }
+                return;
+            }
+
             switch (Direction)
             {
                 case Direction.North:
@@ -755,7 +778,10 @@ namespace Robust.Client.Placement
             message.IsTile = CurrentPermission.IsTile;
 
             if (CurrentPermission.IsTile)
+            {
                 message.TileType = CurrentPermission.TileType;
+                message.TileFlags = CurrentPermission.TileFlags;
+            }
             else
                 message.EntityTemplateName = CurrentPermission.EntityType;
 

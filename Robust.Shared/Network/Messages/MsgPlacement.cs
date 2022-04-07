@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Network.Messages
 {
+    // TODO: Entity placement and tile placement should not be the same messAGE.
     public sealed class MsgPlacement : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
@@ -17,6 +18,7 @@ namespace Robust.Shared.Network.Messages
         public string Align { get; set; }
         public bool IsTile { get; set; }
         public ushort TileType { get; set; }
+        public TileFlag TileFlags { get; set; }
         public string EntityTemplateName { get; set; }
         public EntityCoordinates EntityCoordinates { get; set; }
         public Direction DirRcv { get; set; }
@@ -36,8 +38,15 @@ namespace Robust.Shared.Network.Messages
                     Align = buffer.ReadString();
                     IsTile = buffer.ReadBoolean();
 
-                    if (IsTile) TileType = buffer.ReadUInt16();
-                    else EntityTemplateName = buffer.ReadString();
+                    if (IsTile)
+                    {
+                        TileType = buffer.ReadUInt16();
+                        TileFlags = (TileFlag) buffer.ReadByte();
+                    }
+                    else
+                    {
+                        EntityTemplateName = buffer.ReadString();
+                    }
 
                     EntityCoordinates = buffer.ReadEntityCoordinates();
                     DirRcv = (Direction)buffer.ReadByte();
@@ -70,8 +79,15 @@ namespace Robust.Shared.Network.Messages
                     buffer.Write(Align);
                     buffer.Write(IsTile);
 
-                    if(IsTile) buffer.Write(TileType);
-                    else buffer.Write(EntityTemplateName);
+                    if (IsTile)
+                    {
+                        buffer.Write(TileType);
+                        buffer.Write((byte) TileFlags);
+                    }
+                    else
+                    {
+                        buffer.Write(EntityTemplateName);
+                    }
 
                     buffer.Write(EntityCoordinates);
                     buffer.Write((byte)DirRcv);

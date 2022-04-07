@@ -71,9 +71,14 @@ namespace Robust.Server.Placement
             var isTile = msg.IsTile;
 
             ushort tileType = 0;
+            TileFlag flags = TileFlag.None;
             var entityTemplateName = "";
 
-            if (isTile) tileType = msg.TileType;
+            if (isTile)
+            {
+                tileType = msg.TileType;
+                flags = msg.TileFlags;
+            }
             else entityTemplateName = msg.EntityTemplateName;
 
             var dirRcv = msg.DirRcv;
@@ -126,11 +131,11 @@ namespace Robust.Server.Placement
             else
             {
                 var mapCoords = coordinates.ToMap(_entityManager);
-                PlaceNewTile(tileType, mapCoords.MapId, mapCoords.Position);
+                PlaceNewTile(tileType, flags, mapCoords.MapId, mapCoords.Position);
             }
         }
 
-        private void PlaceNewTile(ushort tileType, MapId mapId, Vector2 position)
+        private void PlaceNewTile(ushort tileType, TileFlag flags, MapId mapId, Vector2 position)
         {
             // tile can snap up to 0.75m away from grid
             var gridSearchBox = new Box2(-0.5f, -0.5f, 0.5f, 0.5f)
@@ -187,14 +192,14 @@ namespace Robust.Server.Placement
                 }
 
                 var pos = closest.WorldToTile(position);
-                closest.SetTile(pos, new Tile(tileType));
+                closest.SetTile(pos, new Tile(tileType, flags));
             }
             else if (tileType != 0) // create a new grid
             {
                 var newGrid = _mapManager.CreateGrid(mapId);
                 newGrid.WorldPosition = position + (newGrid.TileSize / 2f); // assume bottom left tile origin
                 var tilePos = newGrid.WorldToTile(position);
-                newGrid.SetTile(tilePos, new Tile(tileType));
+                newGrid.SetTile(tilePos, new Tile(tileType, flags));
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using Robust.Shared.GameObjects;
+using Robust.Shared.Map;
 
 namespace Robust.Shared.Enums
 {
@@ -10,6 +11,7 @@ namespace Robust.Shared.Enums
         public string? PlacementOption { get; set; }
         public int Range { get; set; }
         public ushort TileType { get; set; }
+        public TileFlag TileFlags { get; set; }
         public int Uses { get; set; } = 1;
     }
 }

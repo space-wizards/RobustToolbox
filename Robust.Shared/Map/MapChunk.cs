@@ -144,7 +144,7 @@ namespace Robust.Shared.Map
                 }
             }
 
-            var shapeChanged = oldFilledTiles != FilledTiles;
+            var shapeChanged = oldFilledTiles != FilledTiles || oldTile.Flags != tile.Flags;
             DebugTools.Assert(FilledTiles >= 0);
 
             _tiles[xIndex, yIndex] = tile;

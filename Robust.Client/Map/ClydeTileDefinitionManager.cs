@@ -133,6 +133,7 @@ namespace Robust.Client.Map
                         for (var i = 1; i < 5; i++)
                         {
                             regionList[j * 5 + i] = Update(sheet, image, j, column, row, tileSize, i);
+                            column++;
                             if (column >= dimensionX)
                             {
                                 column = 0;
@@ -148,15 +149,10 @@ namespace Robust.Client.Map
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
         }
 
-        private int GetTileCount(ITileDefinition def)
-        {
-            return (def.Flags & TileDefFlag.Diagonals) != 0x0 ? def.Variants * 4 : def.Variants;
-        }
-
         private Box2 Update(Image<Rgba32> sheet, Image<Rgba32> image, int index, int column, int row, int tileSize, int yIndex)
         {
             var point = new Vector2i(column * tileSize, row * tileSize);
-            var box = new UIBox2i(0, 0, tileSize, tileSize).Translated(new Vector2i(index * tileSize, yIndex));
+            var box = new UIBox2i(0, 0, tileSize, tileSize).Translated(new Vector2i(index * tileSize, yIndex * tileSize));
             image.Blit(box, sheet, point);
 
             var w = (float) sheet.Width;
@@ -164,6 +160,11 @@ namespace Robust.Client.Map
             return Box2.FromDimensions(
                 point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
                 tileSize / w, tileSize / h);
+        }
+
+        private int GetTileCount(ITileDefinition def)
+        {
+            return (def.Flags & TileDefFlag.Diagonals) != 0x0 ? def.Variants * 4 : def.Variants;
         }
     }
 }

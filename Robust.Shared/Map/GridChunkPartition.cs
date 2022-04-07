@@ -36,6 +36,7 @@ namespace Robust.Shared.Map
                     continue;
                 }
 
+                // TODO: TryEnd should look at current index and next index to determine if current index should end instead.
                 if (!TryEnd(tile.IsEmpty, tile.Flags, out var index) && x != chunk.ChunkSize - 1) continue;
 
                 running = false;
@@ -71,6 +72,45 @@ namespace Robust.Shared.Map
                 }
 
                 polys.Add(polygon);
+            }
+        }
+
+        private static bool CanStart(Tile tile)
+        {
+            if (tile.IsEmpty) return false;
+
+            return true;
+        }
+
+        private static bool TryEnd(bool isEmpty, TileFlag flag, out int index)
+        {
+            if (isEmpty)
+            {
+                index = -1;
+                return true;
+            }
+
+            // Tries to terminate the tile.
+            // If the tile is empty will return the preceding tile as the terminator
+            switch (flag)
+            {
+                case TileFlag.None:
+                    index = 0;
+                    return false;
+                case TileFlag.BottomLeft:
+                    index = 0;
+                    return true;
+                case TileFlag.BottomRight:
+                    index = -1;
+                    return true;
+                case TileFlag.TopRight:
+                    index = -1;
+                    return true;
+                case TileFlag.TopLeft:
+                    index = 0;
+                    return true;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
@@ -124,45 +164,6 @@ namespace Robust.Shared.Map
                 },
                 _ => throw new ArgumentOutOfRangeException()
             };
-        }
-
-        private static bool CanStart(Tile tile)
-        {
-            if (tile.IsEmpty) return false;
-
-            return true;
-        }
-
-        private static bool TryEnd(bool isEmpty, TileFlag flag, out int index)
-        {
-            if (isEmpty)
-            {
-                index = -1;
-                return true;
-            }
-
-            // Tries to terminate the tile.
-            // If the tile is empty will return the preceding tile as the terminator
-            switch (flag)
-            {
-                case TileFlag.None:
-                    index = 0;
-                    return false;
-                case TileFlag.BottomLeft:
-                    index = 0;
-                    return true;
-                case TileFlag.BottomRight:
-                    index = 0;
-                    return false;
-                case TileFlag.TopRight:
-                    index = 0;
-                    return false;
-                case TileFlag.TopLeft:
-                    index = 0;
-                    return true;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
         }
 
         public static void PartitionChunk(MapChunk chunk, out Box2i bounds, out List<List<Vector2i>> polygons)

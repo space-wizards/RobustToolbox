@@ -14,10 +14,7 @@ public readonly struct Tile : IEquatable<Tile>
     /// </summary>
     public readonly ushort TypeId;
 
-    /// <summary>
-    ///     Rendering flags.
-    /// </summary>
-    public readonly TileRenderFlag Flags;
+    public readonly TileFlag Flags;
 
     /// <summary>
     /// Variant of this tile to render.
@@ -40,7 +37,7 @@ public readonly struct Tile : IEquatable<Tile>
     /// <param name="typeId">Internal type ID.</param>
     /// <param name="flags">Flags used by toolbox's rendering.</param>
     /// <param name="variant">The visual variant this tile is using.</param>
-    public Tile(ushort typeId, TileRenderFlag flags = 0, byte variant = 0)
+    public Tile(ushort typeId, TileFlag flags = TileFlag.None, byte variant = 0)
     {
         TypeId = typeId;
         Flags = flags;
@@ -66,7 +63,7 @@ public readonly struct Tile : IEquatable<Tile>
     {
         return new(
             (ushort)(tile >> 16),
-            (TileRenderFlag)(tile >> 8),
+            (TileFlag)(tile >> 8),
             (byte)tile
         );
     }
@@ -120,7 +117,12 @@ public readonly struct Tile : IEquatable<Tile>
     }
 }
 
-public enum TileRenderFlag : byte
+public enum TileFlag : byte
 {
-
+    None = 0,
+    Full = 1 << 0,
+    BottomLeft = 1 << 1,
+    BottomRight = 1 << 2,
+    TopRight = 1 << 3,
+    TopLeft = 1 << 4,
 }

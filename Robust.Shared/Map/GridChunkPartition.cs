@@ -39,17 +39,17 @@ namespace Robust.Shared.Map
                     continue;
                 }
 
-                if (!TryEnd(tile.IsEmpty ? TileCollision.None : tileDefManager[tile.TypeId].Collision, out var index) && x != chunk.ChunkSize - 1) continue;
+                if (!TryEnd(tile.IsEmpty ? TileFlag.None : tile.Flags, out var index) && x != chunk.ChunkSize - 1) continue;
 
                 running = false;
                 var polygon = new List<Vector2i>(4);
                 var endIndex = (ushort) (index + x);
 
                 var originTile = chunk.GetTile(origin, row);
-                var originCollision = tileDefManager[originTile.TypeId].Collision;
+                var originCollision = originTile.Flags;
 
                 var endTile = chunk.GetTile(endIndex, row);
-                var endCollision = tileDefManager[endTile.TypeId].Collision;
+                var endCollision = endTile.Flags;
 
                 // Grab:
                 // Origin bot left
@@ -80,37 +80,49 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Tries to get a vertex with the specified index.
         /// </summary>
-        /// <param name="collision"></param>
+        /// <param name="flag"></param>
         /// <param name="index"></param>
         /// <param name="x">Left index of the tile</param>
         /// <param name="y">Bottom index of the tile</param>
         /// <returns></returns>
-        private static Vector2i GetVertex(TileCollision collision, int index, int x, int y)
+        private static Vector2i GetVertex(TileFlag flag, int index, int x, int y)
         {
             return index switch
             {
-                0 => collision switch
+                0 => flag switch
                 {
-                    TileCollision.Full => new Vector2i(x, y),
-                    TileCollision.BottomLeft => new Vector2i(x, y),
+                    TileFlag.Full => new Vector2i(x, y),
+                    TileFlag.BottomLeft => new Vector2i(x, y),
+                    TileFlag.BottomRight => new Vector2i(x, y),
+                    TileFlag.TopRight => new Vector2i(x + 1, y),
+                    TileFlag.TopLeft => new Vector2i(x, y),
                     _ => throw new NotImplementedException()
                 },
-                1 => collision switch
+                1 => flag switch
                 {
-                    TileCollision.Full => new Vector2i(x + 1, y),
-                    TileCollision.BottomLeft => new Vector2i(x + 1, y),
+                    TileFlag.Full => new Vector2i(x + 1, y),
+                    TileFlag.BottomLeft => new Vector2i(x + 1, y),
+                    TileFlag.BottomRight => new Vector2i(x + 1, y),
+                    TileFlag.TopRight => new Vector2i(x + 1, y),
+                    TileFlag.TopLeft => new Vector2i(x + 1, y + 1),
                     _ => throw new NotImplementedException()
                 },
-                2 => collision switch
+                2 => flag switch
                 {
-                    TileCollision.Full => new Vector2i(x + 1, y + 1),
-                    TileCollision.BottomLeft => new Vector2i(x, y + 1),
+                    TileFlag.Full => new Vector2i(x + 1, y + 1),
+                    TileFlag.BottomLeft => new Vector2i(x, y + 1),
+                    TileFlag.BottomRight => new Vector2i(x + 1, y + 1),
+                    TileFlag.TopRight => new Vector2i(x + 1, y + 1),
+                    TileFlag.TopLeft => new Vector2i(x + 1, y + 1),
                     _ => throw new NotImplementedException()
                 },
-                3 => collision switch
+                3 => flag switch
                 {
-                    TileCollision.Full => new Vector2i(x, y + 1),
-                    TileCollision.BottomLeft => new Vector2i(x, y + 1),
+                    TileFlag.Full => new Vector2i(x, y + 1),
+                    TileFlag.BottomLeft => new Vector2i(x, y + 1),
+                    TileFlag.BottomRight => new Vector2i(x, y),
+                    TileFlag.TopRight => new Vector2i(x, y + 1),
+                    TileFlag.TopLeft => new Vector2i(x, y + 1),
                     _ => throw new NotImplementedException()
                 },
                 _ => throw new ArgumentOutOfRangeException()
@@ -124,28 +136,28 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        private static bool TryEnd(TileCollision collision, out int index)
+        private static bool TryEnd(TileFlag flag, out int index)
         {
             // Tries to terminate the tile.
             // If the tile is empty will return the preceding tile as the terminator
-            switch (collision)
+            switch (flag)
             {
-                case TileCollision.None:
+                case TileFlag.None:
                     index = -1;
                     return true;
-                case TileCollision.Full:
+                case TileFlag.Full:
                     index = 0;
                     return false;
-                case TileCollision.BottomLeft:
+                case TileFlag.BottomLeft:
                     index = 0;
                     return true;
-                case TileCollision.BottomRight:
+                case TileFlag.BottomRight:
                     index = 0;
                     return false;
-                case TileCollision.TopRight:
+                case TileFlag.TopRight:
                     index = 0;
                     return false;
-                case TileCollision.TopLeft:
+                case TileFlag.TopLeft:
                     index = 0;
                     return true;
                 default:

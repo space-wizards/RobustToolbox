@@ -68,7 +68,7 @@ namespace Robust.Server.Maps
                 for (ushort x = 0; x < chunk.ChunkSize; x++)
                 {
                     var id = reader.ReadUInt16();
-                    var flags = (TileRenderFlag)reader.ReadByte();
+                    var flags = (TileFlag)reader.ReadByte();
                     var variant = reader.ReadByte();
 
                     var defName = tileMap[id];

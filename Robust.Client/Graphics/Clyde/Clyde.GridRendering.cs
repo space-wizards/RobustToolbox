@@ -100,15 +100,17 @@ namespace Robust.Client.Graphics.Clyde
                         continue;
 
                     var regionMaybe = _tileDefinitionManager.TileAtlasRegion(tile);
+                    var tileDefFlags = _tileDefinitionManager[tile.TypeId].Flags;
+                    var offset = GetOffset(tile, tileDefFlags);
 
                     Box2 region;
-                    if (regionMaybe == null || regionMaybe.Length <= tile.Variant)
+                    if (regionMaybe == null || regionMaybe.Length <= offset)
                     {
                         region = _tileDefinitionManager.ErrorTileRegion;
                     }
                     else
                     {
-                        region = regionMaybe[tile.Variant];
+                        region = regionMaybe[offset];
                     }
 
                     var gx = x + cScaled.X;
@@ -134,6 +136,30 @@ namespace Robust.Client.Graphics.Clyde
             datum.VBO.Reallocate(vertexBuffer[..(i * 4)]);
             datum.Dirty = false;
             datum.TileCount = i;
+        }
+
+        private static int GetOffset(Tile tile, TileDefFlag defFlag)
+        {
+            if ((defFlag & TileDefFlag.Diagonals) == 0x0)
+            {
+                return tile.Variant;
+            }
+
+            var offset = tile.Variant * 4;
+            return offset + GetDirectionalOffset(tile.Flags);
+        }
+
+        private static int GetDirectionalOffset(TileFlag flag)
+        {
+            return flag switch
+            {
+                TileFlag.Full => 0,
+                TileFlag.BottomLeft => 1,
+                TileFlag.BottomRight => 2,
+                TileFlag.TopRight => 3,
+                TileFlag.TopLeft => 4,
+                _ => throw new ArgumentOutOfRangeException()
+            };
         }
 
         private MapChunkData _initChunkBuffers(IMapGrid grid, MapChunk chunk)

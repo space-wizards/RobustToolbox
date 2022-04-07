@@ -112,23 +112,26 @@ namespace Robust.Client.Map
 
                 for (var j = 0; j < def.Variants; j++)
                 {
-                    var point = new Vector2i(column * tileSize, row * tileSize);
-
-                    var box = new UIBox2i(0, 0, tileSize, tileSize).Translated(new Vector2i(j * tileSize, 0));
-                    image.Blit(box, sheet, point);
-
-                    var w = (float) sheet.Width;
-                    var h = (float) sheet.Height;
-
-                    regionList[j] = Box2.FromDimensions(
-                        point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
-                        tileSize / w, tileSize / h);
+                    // Lord this is uggo
+                    regionList[j] = Update(sheet, image, j, column, row, tileSize, 0);
                     column++;
-
                     if (column >= dimensionX)
                     {
                         column = 0;
                         row++;
+                    }
+
+                    if ((def.Flags & TileDefFlag.Diagonals) != 0x0)
+                    {
+                        for (var i = 1; i < 5; i++)
+                        {
+                            regionList[j] = Update(sheet, image, j, column, row, tileSize, i);
+                            if (column >= dimensionX)
+                            {
+                                column = 0;
+                                row++;
+                            }
+                        }
                     }
                 }
 
@@ -136,6 +139,19 @@ namespace Robust.Client.Map
             }
 
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+        }
+
+        private Box2 Update(Image<Rgba32> sheet, Image<Rgba32> image, int index, int column, int row, int tileSize, int yIndex)
+        {
+            var point = new Vector2i(column * tileSize, row * tileSize);
+            var box = new UIBox2i(0, 0, tileSize, tileSize).Translated(new Vector2i(index * tileSize, yIndex));
+            image.Blit(box, sheet, point);
+
+            var w = (float) sheet.Width;
+            var h = (float) sheet.Height;
+            return Box2.FromDimensions(
+                point.X / w, (h - point.Y - EyeManager.PixelsPerMeter) / h,
+                tileSize / w, tileSize / h);
         }
     }
 }

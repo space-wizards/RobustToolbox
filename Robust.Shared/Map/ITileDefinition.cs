@@ -1,4 +1,6 @@
-﻿namespace Robust.Shared.Map
+﻿using System;
+
+namespace Robust.Shared.Map
 {
     /// <summary>
     ///     The definition (template) for a grid tile.
@@ -43,9 +45,9 @@
         byte Variants { get; }
 
         /// <summary>
-        ///     Determines the collision to be used for tiles, e.g. full tile or partial.
+        ///     Any flags that apply to this tile definition; see <see cref="TileDefFlag"/>
         /// </summary>
-        TileCollision Collision { get; }
+        TileDefFlag Flags { get; }
 
         /// <summary>
         ///     Assign a new value to <see cref="TileId"/>, used when registering the tile definition.
@@ -54,16 +56,10 @@
         void AssignTileId(ushort id);
     }
 
-    public enum TileCollision : byte
+    [Flags]
+    public enum TileDefFlag : byte
     {
-        /// <summary>
-        /// Not supported (yet?)
-        /// </summary>
         None = 0,
-        Full = 1 << 0,
-        BottomLeft = 1 << 1,
-        BottomRight = 1 << 2,
-        TopRight = 1 << 3,
-        TopLeft = 1 << 4,
+        Diagonals = 1 << 1,
     }
 }

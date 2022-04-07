@@ -403,7 +403,6 @@ namespace Robust.Server.ServerStatus
                 var decompressBuffer = ArrayPool<byte>.Shared.Rent(1024 * 1024);
                 Span<byte> entryHash = stackalloc byte[256 / 8];
 
-                // TODO: hash incrementally without buffering in-memory
                 var manifestStream = new MemoryStream();
                 var manifestWriter = new StreamWriter(manifestStream, EncodingHelpers.UTF8);
                 manifestWriter.Write("Robust Content Manifest 1\n");

@@ -159,6 +159,8 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
+            InitAcz();
+
             // Set status host binding to match network manager by default
             SetCVarIfUnmodified(CVars.StatusBind, $"*:{_netManager.Port}");
 

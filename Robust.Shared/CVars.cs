@@ -1090,5 +1090,43 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> HubAdvertiseInterval =
             CVarDef.Create("hub.advertise_interval", 120, CVar.SERVERONLY);
+
+        /*
+         * ACZ
+         */
+
+        /// <summary>
+        /// Whether to use stream compression instead of per-file compression when transmitting ACZ data.
+        /// Enabling stream compression significantly reduces bandwidth usage of downloads,
+        /// but increases server and launcher CPU load. It also makes final files stored on the client compressed less.
+        /// </summary>
+        public static readonly CVarDef<bool> AczStreamCompress =
+            CVarDef.Create("acz.stream_compress", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// ZSTD Compression level to use when doing ACZ stream compressed.
+        /// </summary>
+        public static readonly CVarDef<int> AczStreamCompressLevel =
+            CVarDef.Create("acz.stream_compress_level", 3, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Whether to do compression on individual files for ACZ downloads.
+        /// Automatically forced off if stream compression is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> AczBlobCompress =
+            CVarDef.Create("acz.blob_compress", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// ZSTD Compression level to use for individual file compression.
+        /// </summary>
+        public static readonly CVarDef<int> AczBlobCompressLevel =
+            CVarDef.Create("acz.blob_compress_level", 14, CVar.SERVERONLY);
+
+        // Could consider using a ratio for this?
+        /// <summary>
+        /// Amount of bytes that need to be saved by compression for the compression to be "worth it".
+        /// </summary>
+        public static readonly CVarDef<int> AczBlobCompressSaveThreshold =
+            CVarDef.Create("acz.blob_compress_save_threshold", 14, CVar.SERVERONLY);
     }
 }

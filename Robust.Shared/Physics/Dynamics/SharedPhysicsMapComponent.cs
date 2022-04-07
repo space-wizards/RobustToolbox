@@ -250,7 +250,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 // TODO: When this gets ECSd add a helper and remove
 
-                if (seed.Deleted)
+                if (seed.Deleted || _entityManager.Deleted(seed.Owner))
                 {
                     // This should never happen. Yet it does.
                     Logger.Error($"Deleted physics component in awake bodies set. Owner Uid: {seed.Owner}. Physics map: {_entityManager.ToPrettyString(Owner)}");

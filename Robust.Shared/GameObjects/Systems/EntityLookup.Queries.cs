@@ -71,10 +71,14 @@ public sealed partial class EntityLookupSystem
         if (!_mapManager.TryGetGrid(lookupUid, out var grid)) return false;
 
         // TODO: Need a method that takes in local AABB.
-        foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+
+        if ((flags & LookupFlags.Anchored) != 0x0)
         {
-            if (uid == ignored) continue;
-            return true;
+            foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+            {
+                if (uid == ignored) continue;
+                return true;
+            }
         }
 
         return false;
@@ -103,9 +107,12 @@ public sealed partial class EntityLookupSystem
         if (_mapManager.TryGetGrid(lookupUid, out var grid))
         {
             // TODO: Need a method that takes in local AABB.
-            foreach (var _ in grid.GetAnchoredEntities(worldBounds))
+            if ((flags & LookupFlags.Anchored) != 0x0)
             {
-                return true;
+                foreach (var _ in grid.GetAnchoredEntities(worldBounds))
+                {
+                    return true;
+                }
             }
         }
 
@@ -220,10 +227,13 @@ public sealed partial class EntityLookupSystem
         {
             AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
-            foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+            if ((flags & LookupFlags.Anchored) != 0x0)
             {
-                if (Deleted(uid)) continue;
-                intersecting.Add(uid);
+                foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+                {
+                    if (Deleted(uid)) continue;
+                    intersecting.Add(uid);
+                }
             }
         }
 
@@ -269,10 +279,13 @@ public sealed partial class EntityLookupSystem
         {
             AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
 
-            foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+            if ((flags & LookupFlags.Anchored) != 0x0)
             {
-                if (Deleted(uid)) continue;
-                intersecting.Add(uid);
+                foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+                {
+                    if (Deleted(uid)) continue;
+                    intersecting.Add(uid);
+                }
             }
         }
 
@@ -461,9 +474,12 @@ public sealed partial class EntityLookupSystem
                 intersecting.Add(data);
             });
 
-            foreach (var ent in grid.GetAnchoredEntities(index))
+            if ((flags & LookupFlags.Anchored) != 0x0)
             {
-                intersecting.Add(ent);
+                foreach (var ent in grid.GetAnchoredEntities(index))
+                {
+                    intersecting.Add(ent);
+                }
             }
         }
 
@@ -489,9 +505,12 @@ public sealed partial class EntityLookupSystem
             intersecting.Add(data);
         });
 
-        foreach (var ent in grid.GetAnchoredEntities(gridIndices))
+        if ((flags & LookupFlags.Anchored) != 0x0)
         {
-            intersecting.Add(ent);
+            foreach (var ent in grid.GetAnchoredEntities(gridIndices))
+            {
+                intersecting.Add(ent);
+            }
         }
 
         var xformQuery = GetEntityQuery<TransformComponent>();
@@ -510,9 +529,12 @@ public sealed partial class EntityLookupSystem
 
         AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldAABB, flags, lookupQuery, xformQuery);
 
-        foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+        if ((flags & LookupFlags.Anchored) != 0x0)
         {
-            intersecting.Add(uid);
+            foreach (var uid in grid.GetAnchoredEntities(worldAABB))
+            {
+                intersecting.Add(uid);
+            }
         }
 
         AddContained(intersecting, flags, xformQuery);
@@ -529,10 +551,13 @@ public sealed partial class EntityLookupSystem
 
         AddEntitiesIntersecting(grid.GridEntityId, intersecting, worldBounds, flags, lookupQuery, xformQuery);
 
-        foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+        if ((flags & LookupFlags.Anchored) != 0x0)
         {
-            if (Deleted(uid)) continue;
-            intersecting.Add(uid);
+            foreach (var uid in grid.GetAnchoredEntities(worldBounds))
+            {
+                if (Deleted(uid)) continue;
+                intersecting.Add(uid);
+            }
         }
 
         AddContained(intersecting, flags, xformQuery);

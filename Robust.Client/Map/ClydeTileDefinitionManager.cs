@@ -115,12 +115,12 @@ namespace Robust.Client.Map
                         $"Unable to load {new ResourcePath(def.Path) / $"{def.SpriteName}.png"}, due to being unable to use tile texture with a dimension other than {tileSize} * Variants x {tileSize} x (full + diagonals).");
                 }
 
-                var regionList = new Box2[def.Variants];
+                var regionList = new Box2[(def.Flags & TileDefFlag.Diagonals) != 0x0 ? 5 * def.Variants : def.Variants];
 
                 for (var j = 0; j < def.Variants; j++)
                 {
                     // Lord this is uggo
-                    regionList[j] = Update(sheet, image, j, column, row, tileSize, 0);
+                    regionList[j * ((def.Flags & TileDefFlag.Diagonals) != 0x0 ? 5 : 1)] = Update(sheet, image, j, column, row, tileSize, 0);
                     column++;
                     if (column >= dimensionX)
                     {
@@ -132,7 +132,7 @@ namespace Robust.Client.Map
                     {
                         for (var i = 1; i < 5; i++)
                         {
-                            regionList[j] = Update(sheet, image, j, column, row, tileSize, i);
+                            regionList[j * 5 + i] = Update(sheet, image, j, column, row, tileSize, i);
                             if (column >= dimensionX)
                             {
                                 column = 0;

@@ -20,9 +20,6 @@ namespace Robust.Shared.Map
         {
             var running = false;
             ushort origin = default;
-            //var polys = new List<List<Vector2i>>();
-            //var fakePolys = new List<Box2i>();
-            var tileDefManager = IoCManager.Resolve<ITileDefinitionManager>();
 
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
@@ -39,7 +36,7 @@ namespace Robust.Shared.Map
                     continue;
                 }
 
-                if (!TryEnd(tile.IsEmpty ? TileFlag.None : tile.Flags, out var index) && x != chunk.ChunkSize - 1) continue;
+                if (!TryEnd(tile.IsEmpty, tile.Flags, out var index) && x != chunk.ChunkSize - 1) continue;
 
                 running = false;
                 var polygon = new List<Vector2i>(4);
@@ -91,7 +88,7 @@ namespace Robust.Shared.Map
             {
                 0 => flag switch
                 {
-                    TileFlag.Full => new Vector2i(x, y),
+                    TileFlag.None => new Vector2i(x, y),
                     TileFlag.BottomLeft => new Vector2i(x, y),
                     TileFlag.BottomRight => new Vector2i(x, y),
                     TileFlag.TopRight => new Vector2i(x + 1, y),
@@ -100,7 +97,7 @@ namespace Robust.Shared.Map
                 },
                 1 => flag switch
                 {
-                    TileFlag.Full => new Vector2i(x + 1, y),
+                    TileFlag.None => new Vector2i(x + 1, y),
                     TileFlag.BottomLeft => new Vector2i(x + 1, y),
                     TileFlag.BottomRight => new Vector2i(x + 1, y),
                     TileFlag.TopRight => new Vector2i(x + 1, y),
@@ -109,7 +106,7 @@ namespace Robust.Shared.Map
                 },
                 2 => flag switch
                 {
-                    TileFlag.Full => new Vector2i(x + 1, y + 1),
+                    TileFlag.None => new Vector2i(x + 1, y + 1),
                     TileFlag.BottomLeft => new Vector2i(x, y + 1),
                     TileFlag.BottomRight => new Vector2i(x + 1, y + 1),
                     TileFlag.TopRight => new Vector2i(x + 1, y + 1),
@@ -118,7 +115,7 @@ namespace Robust.Shared.Map
                 },
                 3 => flag switch
                 {
-                    TileFlag.Full => new Vector2i(x, y + 1),
+                    TileFlag.None => new Vector2i(x, y + 1),
                     TileFlag.BottomLeft => new Vector2i(x, y + 1),
                     TileFlag.BottomRight => new Vector2i(x, y),
                     TileFlag.TopRight => new Vector2i(x, y + 1),
@@ -136,16 +133,19 @@ namespace Robust.Shared.Map
             return true;
         }
 
-        private static bool TryEnd(TileFlag flag, out int index)
+        private static bool TryEnd(bool isEmpty, TileFlag flag, out int index)
         {
+            if (isEmpty)
+            {
+                index = -1;
+                return true;
+            }
+
             // Tries to terminate the tile.
             // If the tile is empty will return the preceding tile as the terminator
             switch (flag)
             {
                 case TileFlag.None:
-                    index = -1;
-                    return true;
-                case TileFlag.Full:
                     index = 0;
                     return false;
                 case TileFlag.BottomLeft:

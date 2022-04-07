@@ -52,15 +52,22 @@ namespace Robust.Client.Map
 
         private void _genTextureAtlas()
         {
-            var defList = TileDefs.Where(t => !string.IsNullOrEmpty(t.SpriteName)).ToList();
+            var tileCount = 1;
+            // - 1 for space.
+            var defList = new List<ITileDefinition>(TileDefs.Count - 1);
+
+            foreach (var def in TileDefs)
+            {
+                if (string.IsNullOrEmpty(def.SpriteName)) continue;
+                defList.Add(def);
+                tileCount += GetTileCount(def);
+            }
 
             // If there are no tile definitions, we do nothing.
             if (defList.Count <= 0)
                 return;
 
             const int tileSize = EyeManager.PixelsPerMeter;
-
-            var tileCount = defList.Select(x => (int)x.Variants).Sum() + 1;
 
             var dimensionX = (int) Math.Ceiling(Math.Sqrt(tileCount));
             var dimensionY = (int) Math.Ceiling((float) tileCount / dimensionX);
@@ -102,10 +109,10 @@ namespace Robust.Client.Map
                     image = Image.Load<Rgba32>(stream);
                 }
 
-                if (image.Width != (tileSize * def.Variants) || image.Height != tileSize)
+                if (image.Width != (tileSize * def.Variants) || image.Height != tileSize * ((def.Flags & TileDefFlag.Diagonals) != 0x0 ? 5 : 1))
                 {
                     throw new NotSupportedException(
-                        $"Unable to load {new ResourcePath(def.Path) / $"{def.SpriteName}.png"}, due to being unable to use tile texture with a dimension other than {tileSize}x({tileSize} * Variants).");
+                        $"Unable to load {new ResourcePath(def.Path) / $"{def.SpriteName}.png"}, due to being unable to use tile texture with a dimension other than {tileSize} * Variants x {tileSize} x (full + diagonals).");
                 }
 
                 var regionList = new Box2[def.Variants];
@@ -139,6 +146,11 @@ namespace Robust.Client.Map
             }
 
             _tileTextureAtlas = Texture.LoadFromImage(sheet, "Tile Atlas");
+        }
+
+        private int GetTileCount(ITileDefinition def)
+        {
+            return (def.Flags & TileDefFlag.Diagonals) != 0x0 ? def.Variants * 4 : def.Variants;
         }
 
         private Box2 Update(Image<Rgba32> sheet, Image<Rgba32> image, int index, int column, int row, int tileSize, int yIndex)

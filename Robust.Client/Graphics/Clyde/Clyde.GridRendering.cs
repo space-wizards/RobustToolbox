@@ -153,7 +153,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             return flag switch
             {
-                TileFlag.Full => 0,
+                TileFlag.None => 0,
                 TileFlag.BottomLeft => 1,
                 TileFlag.BottomRight => 2,
                 TileFlag.TopRight => 3,

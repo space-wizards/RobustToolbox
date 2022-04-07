@@ -43,6 +43,64 @@ internal sealed class ZStdException : Exception
     }
 }
 
+public sealed unsafe class ZStdCompressionContext : IDisposable
+{
+    public ZSTD_CCtx* Context { get; private set; }
+
+    private bool Disposed => Context == null;
+
+    public ZStdCompressionContext()
+    {
+        Context = ZSTD_createCCtx();
+    }
+
+    public void SetParameter(ZSTD_cParameter parameter, int value)
+    {
+        CheckDisposed();
+
+        ZSTD_CCtx_setParameter(Context, parameter, value);
+    }
+
+    public int Compress(Span<byte> destination, Span<byte> source, int compressionLevel = ZSTD_CLEVEL_DEFAULT)
+    {
+        CheckDisposed();
+
+        fixed (byte* dst = destination)
+        fixed (byte* src = source)
+        {
+            var ret = ZSTD_compressCCtx(
+                Context,
+                dst, (nuint)destination.Length,
+                src, (nuint)source.Length,
+                compressionLevel);
+
+            ZStdException.ThrowIfError(ret);
+            return (int)ret;
+        }
+    }
+
+    ~ZStdCompressionContext()
+    {
+        Dispose();
+    }
+
+    public void Dispose()
+    {
+        if (Disposed)
+            return;
+
+        ZSTD_freeCCtx(Context);
+        Context = null;
+        GC.SuppressFinalize(this);
+    }
+
+    private void CheckDisposed()
+    {
+        if (Disposed)
+            throw new ObjectDisposedException(nameof(ZStdCompressionContext));
+    }
+}
+
 internal sealed class ZStdDecompressStream : Stream
 {
     private readonly Stream _baseStream;
@@ -204,14 +262,15 @@ internal sealed class ZStdCompressStream : Stream
 {
     private readonly Stream _baseStream;
     private readonly bool _ownStream;
-    private readonly unsafe ZSTD_CCtx* _ctx;
+    public ZStdCompressionContext Context { get; }
     private readonly byte[] _buffer;
     private int _bufferPos;
     private bool _disposed;
+    private bool _hasSession;
 
-    public unsafe ZStdCompressStream(Stream baseStream, bool ownStream = true)
+    public ZStdCompressStream(Stream baseStream, bool ownStream = true)
     {
-        _ctx = ZSTD_createCCtx();
+        Context = new ZStdCompressionContext();
         _baseStream = baseStream;
         _ownStream = ownStream;
         _buffer = ArrayPool<byte>.Shared.Rent((int)ZSTD_CStreamOutSize());
@@ -224,6 +283,7 @@ internal sealed class ZStdCompressStream : Stream
 
     public void FlushEnd()
     {
+        _hasSession = false;
         FlushInternal(ZSTD_EndDirective.ZSTD_e_end);
     }
 
@@ -240,7 +300,7 @@ internal sealed class ZStdCompressStream : Stream
 
             while (true)
             {
-                var err = ZSTD_compressStream2(_ctx, &outBuf, &inBuf, directive);
+                var err = ZSTD_compressStream2(Context.Context, &outBuf, &inBuf, directive);
                 ZStdException.ThrowIfError(err);
                 _bufferPos = (int)outBuf.pos;
 
@@ -280,6 +340,8 @@ internal sealed class ZStdCompressStream : Stream
     {
         ThrowIfDisposed();
 
+        _hasSession = true;
+
         fixed (byte* outPtr = _buffer)
         fixed (byte* inPtr = buffer)
         {
@@ -295,7 +357,7 @@ internal sealed class ZStdCompressStream : Stream
 
             while (true)
             {
-                var err = ZSTD_compressStream2(_ctx, &outBuf, &inBuf, ZSTD_EndDirective.ZSTD_e_continue);
+                var err = ZSTD_compressStream2(Context.Context, &outBuf, &inBuf, ZSTD_EndDirective.ZSTD_e_continue);
                 ZStdException.ThrowIfError(err);
                 _bufferPos = (int)outBuf.pos;
 
@@ -320,7 +382,7 @@ internal sealed class ZStdCompressStream : Stream
         set => throw new NotSupportedException();
     }
 
-    protected override unsafe void Dispose(bool disposing)
+    protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
 
@@ -329,16 +391,17 @@ internal sealed class ZStdCompressStream : Stream
 
         if (disposing)
         {
-            FlushEnd();
+            if (_hasSession)
+                FlushEnd();
 
             if (_ownStream)
                 _baseStream.Dispose();
 
             ArrayPool<byte>.Shared.Return(_buffer);
+            Context.Dispose();
         }
 
         _disposed = true;
-        ZSTD_freeCCtx(_ctx);
     }
 
     private void ThrowIfDisposed()

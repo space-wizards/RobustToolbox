@@ -24,6 +24,7 @@ namespace Robust.Shared.Map
             for (ushort x = 0; x < chunk.ChunkSize; x++)
             {
                 var tile = chunk.GetTile(x, row);
+                var nextTile = x == chunk.ChunkSize - 1 ? Tile.Empty : chunk.GetTile((ushort) (x + 1), row);
 
                 if (!running)
                 {
@@ -31,22 +32,20 @@ namespace Robust.Shared.Map
 
                     running = true;
                     origin = x;
-                    // Iterate the tile again and try to end on it.
-                    x--;
-                    continue;
                 }
 
-                // TODO: TryEnd should look at current index and next index to determine if current index should end instead.
-                if (!TryEnd(tile.IsEmpty, tile.Flags, out var index) && x != chunk.ChunkSize - 1) continue;
+                if (!TryEnd(tile, nextTile)) continue;
+
+                // TODO: Test ideas
+                // Spawn same diagonal repeatedly, should create new fixtures.
 
                 running = false;
                 var polygon = new List<Vector2i>(4);
-                var endIndex = (ushort) (index + x);
 
                 var originTile = chunk.GetTile(origin, row);
                 var originCollision = originTile.Flags;
 
-                var endTile = chunk.GetTile(endIndex, row);
+                var endTile = chunk.GetTile(x, row);
                 var endCollision = endTile.Flags;
 
                 // Grab:
@@ -55,8 +54,8 @@ namespace Robust.Shared.Map
                 // End top right
                 // Origin top left
                 polygon.Add(GetVertex(originCollision, 0, origin, row));
-                polygon.Add(GetVertex(endCollision, 1, endIndex, row));
-                polygon.Add(GetVertex(endCollision, 2, endIndex, row));
+                polygon.Add(GetVertex(endCollision, 1, x, row));
+                polygon.Add(GetVertex(endCollision, 2, x, row));
                 polygon.Add(GetVertex(originCollision, 3, origin, row));
 
                 // De-dupe verts: Should only ever be 1 duplicated for triangles.
@@ -77,38 +76,38 @@ namespace Robust.Shared.Map
 
         private static bool CanStart(Tile tile)
         {
-            if (tile.IsEmpty) return false;
-
-            return true;
+            return !tile.IsEmpty;
         }
 
-        private static bool TryEnd(bool isEmpty, TileFlag flag, out int index)
+        private static bool TryEnd(Tile tile, Tile nextTile)
         {
-            if (isEmpty)
-            {
-                index = -1;
+            if (nextTile.IsEmpty)
                 return true;
-            }
 
             // Tries to terminate the tile.
-            // If the tile is empty will return the preceding tile as the terminator
-            switch (flag)
+            switch (nextTile.Flags)
             {
                 case TileFlag.None:
-                    index = 0;
-                    return false;
                 case TileFlag.BottomLeft:
-                    index = 0;
-                    return true;
-                case TileFlag.BottomRight:
-                    index = -1;
-                    return true;
-                case TileFlag.TopRight:
-                    index = -1;
-                    return true;
                 case TileFlag.TopLeft:
-                    index = 0;
+                    break;
+                case TileFlag.BottomRight:
+                case TileFlag.TopRight:
                     return true;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            // Okay so next tile isn't a terminator, check if this one is.
+            switch (tile.Flags)
+            {
+                case TileFlag.BottomLeft:
+                case TileFlag.TopLeft:
+                    return true;
+                case TileFlag.None:
+                case TileFlag.BottomRight:
+                case TileFlag.TopRight:
+                    return false;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -141,7 +140,7 @@ namespace Robust.Shared.Map
                     TileFlag.BottomLeft => new Vector2i(x + 1, y),
                     TileFlag.BottomRight => new Vector2i(x + 1, y),
                     TileFlag.TopRight => new Vector2i(x + 1, y),
-                    TileFlag.TopLeft => new Vector2i(x + 1, y + 1),
+                    TileFlag.TopLeft => new Vector2i(x, y),
                     _ => throw new NotImplementedException()
                 },
                 2 => flag switch
@@ -157,7 +156,7 @@ namespace Robust.Shared.Map
                 {
                     TileFlag.None => new Vector2i(x, y + 1),
                     TileFlag.BottomLeft => new Vector2i(x, y + 1),
-                    TileFlag.BottomRight => new Vector2i(x, y),
+                    TileFlag.BottomRight => new Vector2i(x + 1, y + 1),
                     TileFlag.TopRight => new Vector2i(x, y + 1),
                     TileFlag.TopLeft => new Vector2i(x, y + 1),
                     _ => throw new NotImplementedException()
@@ -241,7 +240,10 @@ namespace Robust.Shared.Map
         private static List<Vector2i> CombinePolygons(List<Vector2i> polyA, List<Vector2i> polyB)
         {
             // TODO: Need a test for this real bad.
+            // Essentially have a line for every test case (i.e. start and end position with stuff in the middle)
             // TODO: Lord this is disgusting.
+            // TODO: Still edge cases with this.
+            // Need to work out where to slow in the verts; start at one in common then slot polyB in or something
             var set = new HashSet<Vector2i>(polyA);
             set.EnsureCapacity(polyA.Count + polyB.Count - 2);
             set.UnionWith(polyB);

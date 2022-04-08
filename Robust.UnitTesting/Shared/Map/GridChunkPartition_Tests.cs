@@ -27,7 +27,6 @@ namespace Robust.UnitTesting.Shared.Map
             var fixtures = entManager.GetComponent<FixturesComponent>(grid.GridEntityId);
 
             // None
-            // Top Left
             grid.SetTile(new Vector2i(0, 0), new Tile(1, TileFlag.None));
             Assert.That(fixtures.FixtureCount, Is.EqualTo(1));
 

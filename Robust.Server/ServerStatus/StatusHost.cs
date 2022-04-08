@@ -183,7 +183,7 @@ namespace Robust.Server.ServerStatus
             var asmVer = typeof(StatusHost).Assembly.GetName().Version;
             if (asmVer != null)
             {
-                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(3));
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(4));
             }
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)

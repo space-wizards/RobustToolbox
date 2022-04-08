@@ -9,9 +9,6 @@ namespace Robust.Shared.Audio.Midi
     [Serializable, NetSerializable]
     public readonly struct RobustMidiEvent
     {
-        private const byte LowNibbleMask = 0x0F;
-        private const byte HighNibbleMask = 0xF0;
-
         #region Data
 
         /// <summary>
@@ -31,14 +28,14 @@ namespace Robust.Shared.Audio.Midi
 
         #region Properties
 
-        public int Channel => Status & LowNibbleMask;
-        public int Command => Status & HighNibbleMask;
+        public int Channel => Status & 0x0F; // Low nibble.
+        public int Command => Status & 0xF0; // High nibble.
         public RobustMidiCommand MidiCommand => (RobustMidiCommand) Command;
         public byte Key => Data1;
         public byte Velocity => Data2;
         public byte Control => Data1;
         public byte Value => Data2;
-        public int Pitch => ((Data2 << 8) | Data1);
+        public int Pitch => (Data2 << 8) | Data1;
         public byte Pressure => Data1;
         public byte Program => Data1;
 
@@ -81,6 +78,14 @@ namespace Robust.Shared.Audio.Midi
         public static RobustMidiEvent ResetAllControllers(uint tick)
         {
             return new RobustMidiEvent((byte)RobustMidiCommand.ControlChange, 0x79, 0x0, tick);
+        }
+
+        /// <summary>
+        ///     Creates and returns a system reset event.
+        /// </summary>
+        public static RobustMidiEvent SystemReset(uint tick)
+        {
+            return new RobustMidiEvent((byte) RobustMidiCommand.SystemMessage | 0x0F, 0x0, 0x0, tick);
         }
 
         #endregion

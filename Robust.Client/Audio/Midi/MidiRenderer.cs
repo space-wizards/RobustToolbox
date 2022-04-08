@@ -4,183 +4,13 @@ using Robust.Client.Graphics;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Audio.Midi;
 using Robust.Shared.GameObjects;
-using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
-using MidiEvent = NFluidsynth.MidiEvent;
 
 namespace Robust.Client.Audio.Midi
 {
-    public enum MidiRendererStatus : byte
-    {
-        None,
-        Input,
-        File,
-    }
-
-    public interface IMidiRenderer : IDisposable
-    {
-
-        /// <summary>
-        ///     The buffered audio source of this renderer.
-        /// </summary>
-        internal IClydeBufferedAudioSource Source { get; }
-
-        /// <summary>
-        ///     Whether this renderer has been disposed or not.
-        /// </summary>
-        bool Disposed { get; }
-
-        /// <summary>
-        ///     This controls whether the midi file being played will loop or not.
-        /// </summary>
-        bool LoopMidi { get; set; }
-
-        /// <summary>
-        ///     This increases all note on velocities to 127.
-        /// </summary>
-        bool VolumeBoost { get; set; }
-
-        /// <summary>
-        ///     The midi program (instrument) the renderer is using.
-        /// </summary>
-        byte MidiProgram { get; set; }
-
-        /// <summary>
-        ///     The instrument bank the renderer is using.
-        /// </summary>
-        byte MidiBank { get; set; }
-
-        /// <summary>
-        ///     The soundfont currently selected by the renderer.
-        /// </summary>
-        uint MidiSoundfont { get; set; }
-
-        /// <summary>
-        ///     The current status of the renderer.
-        ///     "None" if the renderer isn't playing from input or a midi file.
-        ///     "Input" if the renderer is playing from midi input.
-        ///     "File" if the renderer is playing from a midi file.
-        /// </summary>
-        MidiRendererStatus Status { get; }
-
-        /// <summary>
-        ///     Whether the sound will play in stereo or mono.
-        /// </summary>
-        bool Mono { get; set; }
-
-        /// <summary>
-        ///     Whether to drop messages on the percussion channel.
-        /// </summary>
-        bool DisablePercussionChannel { get; set; }
-
-        /// <summary>
-        /// Whether to drop messages for program change events.
-        /// </summary>
-        bool DisableProgramChangeEvent { get; set; }
-
-        /// <summary>
-        ///     Gets the total number of ticks possible for the MIDI player.
-        /// </summary>
-        int PlayerTotalTick { get; }
-
-        /// <summary>
-        ///     Gets or sets (seeks) the current tick of the MIDI player.
-        /// </summary>
-        int PlayerTick { get; set; }
-
-        /// <summary>
-        ///     Gets the current tick of the sequencer.
-        /// </summary>
-        uint SequencerTick { get; }
-
-        /// <summary>
-        ///     Gets the Time Scale of the sequencer in ticks per second. Default is 1000 for 1 tick per millisecond.
-        /// </summary>
-        double SequencerTimeScale { get; }
-
-        /// <summary>
-        ///     Start listening for midi input.
-        /// </summary>
-        bool OpenInput();
-
-        /// <summary>
-        ///     Start playing a midi file.
-        /// </summary>
-        /// <param name="buffer">Bytes of the midi file</param>
-        bool OpenMidi(ReadOnlySpan<byte> buffer);
-
-        /// <summary>
-        ///     Stops listening for midi input.
-        /// </summary>
-        bool CloseInput();
-
-        /// <summary>
-        ///     Stops playing midi files.
-        /// </summary>
-        bool CloseMidi();
-
-        /// <summary>
-        ///     Stops all notes being played currently.
-        /// </summary>
-        void StopAllNotes();
-
-        /// <summary>
-        ///     Render and play MIDI to the audio source.
-        /// </summary>
-        internal void Render();
-
-        /// <summary>
-        ///     Loads a new soundfont into the renderer.
-        /// </summary>
-        void LoadSoundfont(string filename, bool resetPresets = false);
-
-        /// <summary>
-        ///     Invoked whenever a new midi event is registered.
-        /// </summary>
-        event Action<RobustMidiEvent> OnMidiEvent;
-
-        /// <summary>
-        ///     Invoked when the midi player finishes playing a song.
-        /// </summary>
-        event Action OnMidiPlayerFinished;
-
-        /// <summary>
-        ///     The entity whose position will be used for positional audio.
-        ///     This is only used if <see cref="Mono"/> is set to True.
-        /// </summary>
-        EntityUid? TrackingEntity { get; set; }
-
-        /// <summary>
-        ///     The position that will be used for positional audio.
-        ///     This is only used if <see cref="Mono"/> is set to True
-        ///     and <see cref="TrackingEntity"/> is null.
-        /// </summary>
-        EntityCoordinates? TrackingCoordinates { get; set; }
-
-        /// <summary>
-        ///     Send a midi event for the renderer to play.
-        /// </summary>
-        /// <param name="midiEvent">The midi event to be played</param>
-        void SendMidiEvent(RobustMidiEvent midiEvent);
-
-        /// <summary>
-        ///     Schedule a MIDI event to be played at a later time.
-        /// </summary>
-        /// <remarks>Does NOT raise a <see cref="OnMidiEvent"/> as the event is sent directly to the <see cref="Synth"/> using a <see cref="Sequencer"/>.</remarks>
-        /// <param name="midiEvent">the midi event in question</param>
-        /// <param name="time"></param>
-        /// <param name="absolute"></param>
-        void ScheduleMidiEvent(RobustMidiEvent midiEvent, uint time, bool absolute);
-
-        /// <summary>
-        ///     Actually disposes of this renderer. Do NOT use outside the MIDI thread.
-        /// </summary>
-        internal void InternalDispose();
-    }
-
     internal sealed class MidiRenderer : IMidiRenderer
     {
         private readonly IMidiManager _midiManager;
@@ -192,13 +22,16 @@ namespace Robust.Client.Audio.Midi
 
         private readonly ISawmill _midiSawmill;
 
-        private Settings _settings;
+        private readonly Settings _settings;
+
+        [ViewVariables(VVAccess.ReadWrite)]
+        private bool _debugEvents = false;
 
         // Kept around to avoid the loader callbacks getting GC'd
         // ReSharper disable once NotAccessedField.Local
         private readonly SoundFontLoader _soundFontLoader;
-        private Synth _synth;
-        private Sequencer _sequencer;
+        private readonly Synth _synth;
+        private readonly Sequencer _sequencer;
         private NFluidsynth.Player? _player;
         private MidiDriver? _driver;
         private byte _midiProgram = 1;
@@ -208,10 +41,9 @@ namespace Robust.Client.Audio.Midi
         private const int SampleRate = 44100;
         private const int Buffers = SampleRate / 2205;
         private readonly object _playerStateLock = new();
-        [ViewVariables(VVAccess.ReadWrite)] private bool _debugEvents = false;
-        private SequencerClientId _synthRegister;
-        private SequencerClientId _robustRegister;
-        private SequencerClientId _debugRegister;
+        private readonly SequencerClientId _synthRegister;
+        private readonly SequencerClientId _robustRegister;
+        private readonly SequencerClientId _debugRegister;
         public IClydeBufferedAudioSource Source { get; set; }
         IClydeBufferedAudioSource IMidiRenderer.Source => Source;
 
@@ -225,8 +57,16 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
+                {
                     for (var i = 0; i < _synth.MidiChannelCount; i++)
+                    {
+                        // Channel 9 is the percussion channel. Let's not change its instrument...
+                        if (i == 9)
+                            continue;
+
                         _synth.ProgramChange(i, value);
+                    }
+                }
 
                 _midiProgram = value;
             }
@@ -239,8 +79,16 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
+                {
                     for (var i = 0; i < _synth.MidiChannelCount; i++)
+                    {
+                        // Channel 9 is the percussion channel. Let's not change its bank...
+                        if (i == 9)
+                            continue;
+
                         _synth.BankSelect(i, value);
+                    }
+                }
 
                 _midiBank = value;
             }
@@ -253,8 +101,12 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
+                {
                     for (var i = 0; i < _synth.MidiChannelCount; i++)
+                    {
                         _synth.SoundFontSelect(i, value);
+                    }
+                }
 
                 _midiSoundfont = value;
             }
@@ -276,7 +128,9 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
-                    _player?.Seek(Math.Max(Math.Min(value, PlayerTotalTick), 0));
+                {
+                    _player?.Seek(Math.Max(Math.Min(value, PlayerTotalTick-1), 0));
+                }
             }
         }
 
@@ -299,7 +153,10 @@ namespace Robust.Client.Audio.Midi
             set
             {
                 lock (_playerStateLock)
+                {
                     _player?.SetLoop(value ? -1 : 0);
+                }
+
                 _loopMidi = value;
             }
         }
@@ -339,6 +196,15 @@ namespace Robust.Client.Audio.Midi
             Source.StartPlaying();
         }
 
+        private void DumpSequencerEvent(uint time, SequencerEvent midiEvent)
+        {
+            // ReSharper disable once UseStringInterpolation
+            _midiSawmill.Debug($"{time:D8}: {MidiManager.SequencerEventToString(midiEvent)}");
+
+            midiEvent.Dest = _robustRegister;
+            _sequencer.SendNow(midiEvent);
+        }
+
         private void SendAsRobustMidiEvent(uint time, SequencerEvent midiEvent)
         {
             var robustEvent = _midiManager.FromSequencerEvent(midiEvent, time);
@@ -355,27 +221,6 @@ namespace Robust.Client.Audio.Midi
                 midiEvent.Dest = _synthRegister;
                 _sequencer.SendNow(midiEvent);
             }
-        }
-
-        private void DumpSequencerEvent(uint time, SequencerEvent @event)
-        {
-            // ReSharper disable once UseStringInterpolation
-            _midiSawmill.Debug(string.Format(
-                "{0:D8}: {1} chan:{2:D2} key:{3:D5} bank:{4:D2} ctrl:{5:D5} dur:{6:D5} pitch:{7:D5} prog:{8:D3} val:{9:D5} vel:{10:D5}",
-                time,
-                @event.Type.ToString().PadLeft(22),
-                @event.Channel,
-                @event.Key,
-                @event.Bank,
-                @event.Control,
-                @event.Duration,
-                @event.Pitch,
-                @event.Program,
-                @event.Value,
-                @event.Velocity));
-
-            @event.Dest = _robustRegister;
-            _sequencer.SendNow(@event);
         }
 
         public bool OpenInput()
@@ -416,8 +261,9 @@ namespace Robust.Client.Audio.Midi
             {
                 _player?.Dispose();
                 _player = new NFluidsynth.Player(_synth);
-                _player.AddMem(buffer);
                 _player.SetPlaybackCallback(MidiPlayerEventHandler);
+                _player.AddMem(buffer);
+                _player.Seek(0);
                 _player.Play();
                 _player.SetLoop(LoopMidi ? -1 : 1);
             }
@@ -457,10 +303,34 @@ namespace Robust.Client.Audio.Midi
             return true;
         }
 
+        private int MidiPlayerEventHandler(MidiEvent midiEvent)
+        {
+            if (Disposed || Status != MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Playing)
+                return 0;
+
+            var midiEv = _midiManager.FromFluidEvent(midiEvent, SequencerTick);
+            midiEvent.Dispose();
+            SendMidiEvent(midiEv);
+            return 0;
+        }
+
+        private int MidiDriverEventHandler(MidiEvent midiEvent)
+        {
+            if (Disposed || Status != MidiRendererStatus.Input)
+                return 0;
+
+            var midiEv = _midiManager.FromFluidEvent(midiEvent, SequencerTick);
+            midiEvent.Dispose();
+            SendMidiEvent(midiEv);
+            return 0;
+        }
+
         public void StopAllNotes()
         {
             lock(_playerStateLock)
+            {
                 _synth.AllNotesOff(-1);
+            }
         }
 
         public void LoadSoundfont(string filename, bool resetPresets = false)
@@ -536,28 +406,6 @@ namespace Robust.Client.Audio.Midi
             if (!Source.IsPlaying) Source.StartPlaying();
         }
 
-        private int MidiPlayerEventHandler(MidiEvent midiEvent)
-        {
-            if (Disposed || Status != MidiRendererStatus.File && _player?.Status == FluidPlayerStatus.Playing)
-                return 0;
-
-            var midiEv = _midiManager.FromFluidEvent(midiEvent, SequencerTick);
-            midiEvent.Dispose();
-            SendMidiEvent(midiEv);
-            return 0;
-        }
-
-        private int MidiDriverEventHandler(MidiEvent midiEvent)
-        {
-            if (Disposed || Status != MidiRendererStatus.Input)
-                return 0;
-
-            var midiEv = _midiManager.FromFluidEvent(midiEvent, SequencerTick);
-            midiEvent.Dispose();
-            SendMidiEvent(midiEv);
-            return 0;
-        }
-
         public void SendMidiEvent(RobustMidiEvent midiEvent)
         {
             if (Disposed)
@@ -616,9 +464,15 @@ namespace Robust.Client.Audio.Midi
                         case RobustMidiCommand.SystemMessage:
                             switch (midiEvent.Control)
                             {
-                                case 0x0:
-                                    if (midiEvent.Status == 0xFF)
-                                        _synth.SystemReset();
+                                case 0x0 when midiEvent.Status == 0xFF:
+                                    _synth.SystemReset();
+
+                                    // Reset the instrument to the one we were using.
+                                    if (DisableProgramChangeEvent)
+                                    {
+                                        MidiProgram = _midiProgram;
+                                        MidiBank = _midiBank;
+                                    }
 
                                     break;
 
@@ -630,7 +484,7 @@ namespace Robust.Client.Audio.Midi
                             break;
 
                         default:
-                            _midiSawmill.Warning("Unhandled midi event of type 0x{0:X}! Event: {1}", midiEvent.Command, midiEvent);
+                            _midiSawmill.Warning($"Unhandled midi event of type 0x{midiEvent.Command:X}! Event: {midiEvent}");
                             return;
                     }
                 }

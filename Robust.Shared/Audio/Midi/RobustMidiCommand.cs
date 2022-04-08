@@ -24,6 +24,7 @@ public enum RobustMidiCommand : byte
     ///     data1 - Key,                <br/>
     ///     data2 - Value
     /// </summary>
+    /// <remarks>Also known as "KeyPressure".</remarks>
     AfterTouch       = 0xA0,
 
     /// <summary>

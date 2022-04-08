@@ -1,4 +1,3 @@
-using System;
 using NFluidsynth;
 using Robust.Shared.Audio.Midi;
 
@@ -10,52 +9,17 @@ internal sealed partial class MidiManager
     {
         var status = RobustMidiEvent.MakeStatus((byte) midiEvent.Channel, (byte) midiEvent.Type);
 
-        byte data1 = 0;
-        byte data2 = 0;
+        // Control is always the first data byte. Value is always the second data byte. Fluidsynth's API ain't great.
+        var data1 = (byte) midiEvent.Control;
+        var data2 = (byte) midiEvent.Value;
 
-        switch ((RobustMidiCommand) midiEvent.Type)
+        // PitchBend is handled specially.
+        if (midiEvent.Type == (int) RobustMidiCommand.PitchBend)
         {
-            case RobustMidiCommand.NoteOff:
-                data1 = (byte) midiEvent.Key;
-                break;
-
-            case RobustMidiCommand.NoteOn:
-                data1 = (byte) midiEvent.Key;
-                data2 = (byte) midiEvent.Velocity;
-                break;
-
-            case RobustMidiCommand.AfterTouch:
-                data1 = (byte) midiEvent.Key;
-                data2 = (byte) midiEvent.Value;
-                break;
-
-            case RobustMidiCommand.ControlChange:
-                data1 = (byte) midiEvent.Control;
-                data2 = (byte) midiEvent.Value;
-                break;
-
-            case RobustMidiCommand.ProgramChange:
-                data1 = (byte) midiEvent.Program;
-                break;
-
-            case RobustMidiCommand.ChannelPressure:
-                data1 = (byte)midiEvent.Value;
-                break;
-
-            case RobustMidiCommand.PitchBend:
-                // We pack pitch into both data values.
-                var pitch = (ushort) midiEvent.Pitch;
-                var data = BitConverter.GetBytes(pitch);
-                data1 = data[0];
-                data2 = data[1];
-                break;
-
-            case RobustMidiCommand.SystemMessage:
-                data1 = (byte) midiEvent.Control;
-                break;
-
-            default:
-                break;
+            // We pack pitch into both data values.
+            var pitch = (ushort) midiEvent.Pitch;
+            data1 = (byte) pitch;
+            data2 = (byte) (pitch >> 8);
         }
 
         return new RobustMidiEvent(status, data1, data2, tick);
@@ -98,13 +62,23 @@ internal sealed partial class MidiManager
             case RobustMidiCommand.SystemMessage:
                 switch (midiEvent.Control)
                 {
+                    case 0x0 when midiEvent.Status == 0xFF:
+                        sequencerEvent.SystemReset();
+                        break;
+
                     case 0x0B:
                         sequencerEvent.AllNotesOff(midiEvent.Channel);
                         break;
+
+                    default:
+                        _midiSawmill.Warning($"Tried to convert unsupported event to sequencer event:\n{midiEvent}");
+                        break;
                 }
+
                 break;
 
             default:
+                _midiSawmill.Warning($"Tried to convert unsupported event to sequencer event:\n{midiEvent}");
                 break;
         }
 
@@ -135,9 +109,8 @@ internal sealed partial class MidiManager
                 command = RobustMidiCommand.PitchBend;
                 // We pack pitch into both data values
                 var pitch = (ushort) midiEvent.Pitch;
-                var data = BitConverter.GetBytes(pitch);
-                data1 = data[0];
-                data2 = data[1];
+                data1 = (byte) pitch;
+                data2 = (byte) (pitch >> 8);
                 break;
 
             case FluidSequencerEventType.ProgramChange:
@@ -157,7 +130,6 @@ internal sealed partial class MidiManager
                 data2 = (byte) midiEvent.Value;
                 break;
 
-
             case FluidSequencerEventType.ChannelPressure:
                 command = RobustMidiCommand.ChannelPressure;
                 data1 = (byte) midiEvent.Value;
@@ -173,23 +145,8 @@ internal sealed partial class MidiManager
                 channel = 0x0F;
                 break;
 
-            // Any other events will be sent to the synth directly by the sequencer.
             default:
-                /*
-                 _midiSawmill.Error(string.Format(
-                    "Unsupported Sequencer Event: {0:D8}: {1} chan:{2:D2} key:{3:D5} bank:{4:D2} ctrl:{5:D5} dur:{6:D5} pitch:{7:D5} prog:{8:D3} val:{9:D5} vel:{10:D5}",
-                    tick,
-                    midiEvent.Type.ToString().PadLeft(22),
-                    midiEvent.Channel,
-                    midiEvent.Key,
-                    midiEvent.Bank,
-                    midiEvent.Control,
-                    midiEvent.Duration,
-                    midiEvent.Pitch,
-                    midiEvent.Program,
-                    midiEvent.Value,
-                    midiEvent.Velocity));
-                */
+                _midiSawmill.Error($"Unsupported Sequencer Event: {tick:D8}: {SequencerEventToString(midiEvent)}");
                 break;
         }
 

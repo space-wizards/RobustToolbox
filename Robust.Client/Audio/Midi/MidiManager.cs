@@ -125,13 +125,15 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["synth.gain"].DoubleValue = 1.0d;
             _settings["synth.polyphony"].IntValue = 1024;
             _settings["synth.cpu-cores"].IntValue = 2;
+            _settings["synth.midi-channels"].IntValue = 16;
             _settings["synth.overflow.age"].DoubleValue = 3000;
             _settings["audio.driver"].StringValue = "file";
             _settings["audio.periods"].IntValue = 8;
             _settings["audio.period-size"].IntValue = 4096;
             _settings["midi.autoconnect"].IntValue = 1;
-            _settings["player.reset-synth"].IntValue = 0;
+            _settings["player.reset-synth"].IntValue = 1;
             _settings["synth.midi-bank-select"].StringValue = "gm";
+            //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
         }
         catch (Exception e)
         {
@@ -354,6 +356,26 @@ internal sealed partial class MidiManager : IMidiManager
         {
             NFluidsynth.Logger.SetLoggerMethod(null);
         }
+    }
+
+    /// <summary>
+    ///     Internal method to get a human-readable representation of a <see cref="SequencerEvent"/>.
+    /// </summary>
+    internal static string SequencerEventToString(SequencerEvent midiEvent)
+    {
+        // ReSharper disable once UseStringInterpolation
+        return string.Format(
+            "{0} chan:{1:D2} key:{2:D5} bank:{3:D2} ctrl:{4:D5} dur:{5:D5} pitch:{6:D5} prog:{7:D3} val:{8:D5} vel:{9:D5}",
+            midiEvent.Type.ToString().PadLeft(22),
+            midiEvent.Channel,
+            midiEvent.Key,
+            midiEvent.Bank,
+            midiEvent.Control,
+            midiEvent.Duration,
+            midiEvent.Pitch,
+            midiEvent.Program,
+            midiEvent.Value,
+            midiEvent.Velocity);
     }
 
     /// <summary>

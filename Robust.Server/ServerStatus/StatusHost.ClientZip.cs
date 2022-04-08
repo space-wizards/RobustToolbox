@@ -55,6 +55,9 @@ namespace Robust.Server.ServerStatus
             _configurationManager.OnValueChanged(CVars.AczStreamCompressLevel, _ => InvalidateAcz());
             _configurationManager.OnValueChanged(CVars.AczBlobCompress, _ => InvalidateAcz());
             _configurationManager.OnValueChanged(CVars.AczBlobCompressLevel, _ => InvalidateAcz());
+            _configurationManager.OnValueChanged(CVars.AczBlobCompressSaveThreshold, _ => InvalidateAcz());
+            _configurationManager.OnValueChanged(CVars.AczManifestCompress, _ => InvalidateAcz());
+            _configurationManager.OnValueChanged(CVars.AczManifestCompressLevel, _ => InvalidateAcz());
         }
 
         private void InvalidateAcz()
@@ -114,7 +117,32 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+            if (RequestWantsZStd(context) && result.ManifestCompressed)
+            {
+                context.ResponseHeaders.Add("Content-Encoding", "zstd");
+
+                await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+            }
+            else
+            {
+                if (result.ManifestCompressed)
+                {
+                    // Manifest is compressed in-memory but client didn't want it compressed.
+                    // Have to decompress ourselves.
+
+                    var ms = new MemoryStream(result.ManifestData);
+
+                    await using var stream = await context.RespondStreamAsync();
+                    await using var decompressStream = new ZStdDecompressStream(ms);
+
+                    await decompressStream.CopyToAsync(stream);
+                }
+                else
+                {
+                    await context.RespondAsync(result.ManifestData, HttpStatusCode.OK);
+                }
+            }
+
             return true;
         }
 
@@ -231,9 +259,7 @@ namespace Robust.Server.ServerStatus
             var cVarStreamCompressionLevel = _configurationManager.GetCVar(CVars.AczStreamCompressLevel);
 
             // Only do zstd stream compression if the client asks for it and we have it enabled.
-            // Yeah this isn't a good parser for Accept-Encoding but who cares.
-            var doStreamCompression = context.RequestHeaders.TryGetValue("Accept-Encoding", out var ac)
-                                      && ac[0].Contains("zstd")
+            var doStreamCompression = RequestWantsZStd(context)
                                       && cVarStreamCompression;
 
             if (doStreamCompression)
@@ -299,6 +325,12 @@ namespace Robust.Server.ServerStatus
             return true;
         }
 
+        private static bool RequestWantsZStd(IStatusHandlerContext context)
+        {
+            // Yeah this isn't a good parser for Accept-Encoding but who cares.
+            return context.RequestHeaders.TryGetValue("Accept-Encoding", out var ac) && ac[0].Contains("zstd");
+        }
+
         // Only call this if the download URL is not available!
         private async Task<AutomaticClientZipInfo?> PrepareACZ()
         {
@@ -352,6 +384,8 @@ namespace Robust.Server.ServerStatus
             var blobCompress = _configurationManager.GetCVar(CVars.AczBlobCompress);
             var blobCompressLevel = _configurationManager.GetCVar(CVars.AczBlobCompressLevel);
             var blobCompressSaveThresh = _configurationManager.GetCVar(CVars.AczBlobCompressSaveThreshold);
+            var manifestCompress = _configurationManager.GetCVar(CVars.AczManifestCompress);
+            var manifestCompressLevel = _configurationManager.GetCVar(CVars.AczManifestCompressLevel);
 
             // Stream compression disables individual compression.
             blobCompress &= !streamCompression;
@@ -360,31 +394,37 @@ namespace Robust.Server.ServerStatus
             var dataHash = Convert.ToHexString(SHA256.HashData(zipData));
 
             using var zip = OpenZip(zipData);
-            var (manifestData, manifestEntries, manifestBlobData) = CalcManifestData(
+            var (manifestData, manifestHash, manifestEntries, manifestBlobData) = CalcManifestData(
                 zip,
                 blobCompress,
                 blobCompressLevel,
-                blobCompressSaveThresh);
+                blobCompressSaveThresh,
+                manifestCompress,
+                manifestCompressLevel);
 
-            var manifestHash = Convert.ToHexString(SHA256.HashData(manifestData));
+            var manifestHashString = Convert.ToHexString(manifestHash);
 
-            _aczSawmill.Debug("ACZ Manifest hash: {ManifestHash}", manifestHash);
+            _aczSawmill.Debug("ACZ Manifest hash: {ManifestHash}", manifestHashString);
 
             return new AutomaticClientZipInfo(
                 zipData,
                 dataHash,
                 manifestData,
-                manifestHash,
+                manifestCompress,
+                manifestHashString,
                 manifestBlobData,
                 manifestEntries,
                 blobCompress);
         }
 
-        private (byte[] manifestContent, AczManifestEntry[] manifestEntries, byte[] blobData) CalcManifestData(
-            ZipArchive zip,
-            bool blobCompress,
-            int blobCompressLevel,
-            int blobCompressSaveThresh)
+        private static (byte[] manifestContent, byte[] manifestHash, AczManifestEntry[] manifestEntries, byte[] blobData)
+            CalcManifestData(
+                ZipArchive zip,
+                bool blobCompress,
+                int blobCompressLevel,
+                int blobCompressSaveThresh,
+                bool manifestCompress,
+                int manifestCompressLevel)
         {
             var blobData = new MemoryStream();
             ZStdCompressStream? compressStream = null;
@@ -404,7 +444,21 @@ namespace Robust.Server.ServerStatus
                 Span<byte> entryHash = stackalloc byte[256 / 8];
 
                 var manifestStream = new MemoryStream();
-                var manifestWriter = new StreamWriter(manifestStream, EncodingHelpers.UTF8);
+                Stream writeStream = manifestStream;
+                ZStdCompressStream? manifestCompressStream = null;
+                if (manifestCompress)
+                {
+                    manifestCompressStream = new ZStdCompressStream(writeStream);
+                    manifestCompressStream.Context.SetParameter(
+                        ZSTD_cParameter.ZSTD_c_compressionLevel,
+                        manifestCompressLevel);
+
+                    writeStream = manifestCompressStream;
+                }
+
+                var manifestHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                var hasherStream = new HasherStream(writeStream, manifestHash);
+                using var manifestWriter = new StreamWriter(hasherStream, EncodingHelpers.UTF8);
                 manifestWriter.Write("Robust Content Manifest 1\n");
 
                 var manifestEntries = new ValueList<AczManifestEntry>();
@@ -467,10 +521,11 @@ namespace Robust.Server.ServerStatus
                 }
 
                 manifestWriter.Flush();
+                manifestCompressStream?.FlushEnd();
 
                 ArrayPool<byte>.Shared.Return(decompressBuffer);
 
-                return (manifestStream.ToArray(), manifestEntries.ToArray(), blobData.ToArray());
+                return (manifestStream.ToArray(), manifestHash.GetCurrentHash(), manifestEntries.ToArray(), blobData.ToArray());
             }
             finally
             {
@@ -576,6 +631,7 @@ namespace Robust.Server.ServerStatus
             byte[] ZipData,
             string ZipHash,
             byte[] ManifestData,
+            bool ManifestCompressed,
             string ManifestHash,
             byte[] ManifestBlobData,
             AczManifestEntry[] ManifestEntries,

@@ -1129,5 +1129,19 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> AczBlobCompressSaveThreshold =
             CVarDef.Create("acz.blob_compress_save_threshold", 14, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Whether to ZSTD compress the ACZ manifest.
+        /// If this is enabled (the default) then non-compressed manifest requests will be decompressed live.
+        /// </summary>
+        public static readonly CVarDef<bool> AczManifestCompress =
+            CVarDef.Create("acz.manifest_compress", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Compression level for ACZ manifest compression.
+        /// </summary>
+        public static readonly CVarDef<int> AczManifestCompressLevel =
+            CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
+
     }
 }

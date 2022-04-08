@@ -13,6 +13,41 @@ namespace Robust.UnitTesting.Shared
     public sealed class EntityLookupTest
     {
         /// <summary>
+        /// If we don't pass an anchor flag do we still return an anchored entity
+        /// </summary>
+        [Test]
+        public void TestNoAnchorReturn()
+        {
+            var sim = RobustServerSimulation.NewSimulation();
+            var server = sim.InitializeInstance();
+
+            var lookup = server.Resolve<IEntitySystemManager>().GetEntitySystem<EntityLookupSystem>();
+            var entManager = server.Resolve<IEntityManager>();
+            var mapManager = server.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var grid = mapManager.CreateGrid(mapId);
+
+            var theMapSpotBeingUsed = new Box2(Vector2.Zero, Vector2.One);
+            grid.SetTile(new Vector2i(), new Tile(1));
+
+            // Setup and check it actually worked
+            var dummy = entManager.SpawnEntity(null, new MapCoordinates(Vector2.Zero, mapId));
+            var xform = entManager.GetComponent<TransformComponent>(dummy);
+
+            // When anchoring it should still get returned.
+            xform.Anchored = true;
+            Assert.That(xform.Anchored);
+            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed).ToList(), Has.Count.EqualTo(1));
+
+            Assert.That(lookup.GetEntitiesIntersecting(mapId, theMapSpotBeingUsed, LookupFlags.None).ToList(), Is.Empty);
+
+            entManager.DeleteEntity(dummy);
+            mapManager.DeleteGrid(grid.Index);
+            mapManager.DeleteMap(mapId);
+        }
+
+        /// <summary>
         /// Is the entity correctly removed / added to EntityLookup when anchored
         /// </summary>
         [Test]

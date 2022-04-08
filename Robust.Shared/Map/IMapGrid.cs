@@ -127,6 +127,7 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
+        IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB);
         IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);

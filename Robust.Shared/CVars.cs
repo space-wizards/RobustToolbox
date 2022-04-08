@@ -4,6 +4,7 @@ using System.Threading;
 using Robust.Shared.Audio;
 using Robust.Shared.Configuration;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Network;
 using Robust.Shared.Physics;
 
@@ -121,8 +122,8 @@ namespace Robust.Shared
         /// View size to take for PVS calculations,
         /// as the size of the sides of a square centered on the view points of clients.
         /// </summary>
-        public static readonly CVarDef<float> NetMaxUpdateRange =
-            CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+        public static readonly CVarDef<Vector2> NetDefaultUpdateRange =
+            CVarDef.Create("net.defaultupdaterange", new Vector2(12.5f, 12.5f), CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
         /// The amount of new entities that can be sent to a client in a single game state, under PVS.

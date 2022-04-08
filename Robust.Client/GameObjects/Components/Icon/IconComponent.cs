@@ -1,3 +1,4 @@
+using System;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.Utility;
@@ -32,11 +33,13 @@ namespace Robust.Client.GameObjects
         public const string LogCategory = "go.comp.icon";
         const string SerializationCache = "icon";
 
+        [Obsolete("Use SpriteSystem instead.")]
         private static IRsiStateLike TextureForConfig(IconComponent compData, IResourceCache resourceCache)
         {
             return compData.Icon?.Default ?? resourceCache.GetFallback<TextureResource>().Texture;
         }
 
+        [Obsolete("Use SpriteSystem instead.")]
         public static IRsiStateLike? GetPrototypeIcon(EntityPrototype prototype, IResourceCache resourceCache)
         {
             if (!prototype.Components.TryGetValue("Icon", out var compData))

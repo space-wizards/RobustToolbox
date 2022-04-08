@@ -9,14 +9,6 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.UserInterface;
 
-
-public interface IUILink //Don't use this for things other than systems or I'll eat you -Jezi
-{
-    public void OnLink(UIController controller);
-    public void OnUnlink(UIController controller);
-}
-
-
 [Virtual]
 public abstract class UIController
 {
@@ -37,22 +29,23 @@ internal interface IUIControllerManagerInternal : IUIControllerManager
     void Initialize();
 }
 
-
 public sealed class UISystemDependency : Attribute {}
 
 internal sealed class UIControllerManager: IUIControllerManagerInternal
 {
-    [Robust.Shared.IoC.Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Robust.Shared.IoC.Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
-    [Robust.Shared.IoC.Dependency] private readonly IEntitySystemManager _systemManager = default!;
-    [Robust.Shared.IoC.Dependency] private readonly IStateManager _stateManager = default!;
-    private Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
-    private Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
+    [Dependency] private readonly IReflectionManager _reflectionManager = default!;
+    [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+    [Dependency] private readonly IEntitySystemManager _systemManager = default!;
+    [Dependency] private readonly IStateManager _stateManager = default!;
+
+    private readonly Dictionary<Type, List<UIController>> _systemUnloadedListeners = new();
+    private readonly Dictionary<Type, List<UIController>> _systemLoadedListeners = new();
     private UIController[] _uiControllerRegistry = default!;
     private readonly Dictionary<Type, int> _uiControllerIndices = new();
 
     //field type, systemsDict
-    private readonly Dictionary<Type, List<(Type,DataDefinition.AssignField<UIController,object?>)>> _assignerRegistry = new ();
+    private readonly Dictionary<Type, List<(Type, DataDefinition.AssignField<UIController,object?>)>> _assignerRegistry = new ();
+
     private void AddUiControllerToRegistry(List<UIController> list,Type type, UIController instance)
     {
         list.Add(instance);
@@ -63,10 +56,12 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
     {
         return ref _uiControllerRegistry[_uiControllerIndices[type]];
     }
+
     private UIController GetUiControllerByType(Type type)
     {
         return _uiControllerRegistry[_uiControllerIndices[type]];
     }
+
     private T GetUiControllerByType<T>() where T: UIController, new()
     {
         return (T)_uiControllerRegistry[_uiControllerIndices[typeof(T)]];
@@ -76,6 +71,7 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
     {
         return GetUiControllerByType<T>();
     }
+
     public void Initialize()
     {
         List<UIController> tempList = new();
@@ -116,6 +112,7 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
                 {
                     _systemLoadedListeners.GetOrNew(fieldInfo.FieldType).Add((UIController)newController);
                 }
+
                 if (uiControllerType.GetMethod(nameof(UIController.OnSystemUnloaded))?.DeclaringType != typeof(UIController))
                 {
                     _systemUnloadedListeners.GetOrNew(fieldInfo.FieldType).Add((UIController)newController);
@@ -139,13 +136,9 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
         if (!_assignerRegistry.TryGetValue(args.System.GetType(), out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
         {
-            var controller = GetUiControllerByType(controllerType);
             accessor( ref GetUiControllerByTypeRef(controllerType),args.System);
-            if (args.System is IUILink linkedSystem)
-            {
-                linkedSystem.OnLink(controller);
-            }
         }
+
         if (!_systemLoadedListeners.TryGetValue(args.System.GetType(), out var controllers)) return;
         foreach (var uiCon in controllers)
         {
@@ -169,12 +162,7 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
         if (!_assignerRegistry.TryGetValue(systemType, out var fieldData)) return;
         foreach (var (controllerType, accessor) in fieldData)
         {
-            var controller = GetUiControllerByType(controllerType);
             accessor(ref GetUiControllerByTypeRef(controllerType), null);
-            if (args.System is IUILink linkedSystem)
-            {
-                linkedSystem.OnUnlink(controller);
-            }
         }
     }
 }

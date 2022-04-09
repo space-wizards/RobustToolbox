@@ -9,7 +9,7 @@ using Robust.UnitTesting.Server;
 
 namespace Robust.UnitTesting.Shared.Map
 {
-    [TestFixture, TestOf(typeof(GridChunkPartition))]
+    [TestFixture, TestOf(typeof(SharedGridFixtureSystem))]
     internal sealed class GridChunkPartition_Test
     {
         /// <summary>
@@ -329,6 +329,16 @@ namespace Robust.UnitTesting.Shared.Map
                 new(0f, 1f),
                 new(1f, 0f),
             }));
+
+            // Somehow "convex" shape I found when devving
+            grid.SetTile(new Vector2i(0, 0),new Tile(1, TileFlag.BottomRight));
+            grid.SetTile(new Vector2i(1, 0), new Tile(1, TileFlag.None));
+            grid.SetTile(new Vector2i(1, 1), new Tile(1, TileFlag.BottomLeft));
+            grid.SetTile(new Vector2i(0, 1), new Tile(1, TileFlag.BottomLeft));
+
+            // Assert.That(fixtures.FixtureCount, Is.EqualTo(2));
+
+            // Add whatever else I find here
 
             mapManager.DeleteGrid(grid.Index);
             mapManager.DeleteMap(mapId);

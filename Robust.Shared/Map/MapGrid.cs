@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Shared.GameObjects;
+using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Timing;
@@ -854,8 +855,13 @@ namespace Robust.Shared.Map
                 RemoveChunk(mapChunk.Indices);
             }
 
+            _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system);
+
             // generate collision rectangles for this chunk based on filled tiles.
-            GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var polys);
+            var localBounds = new Box2i();
+            var polys = new List<List<Vector2i>>();
+
+            system?.PartitionChunk(mapChunk, out localBounds, out polys);
             mapChunk.CachedBounds = localBounds;
 
             LocalBounds = new Box2();
@@ -879,8 +885,8 @@ namespace Robust.Shared.Map
             }
 
             // TryGet because unit tests YAY
-            if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
-                system.RegenerateCollision(GridEntityId, mapChunk, polys);
+            if (mapChunk.FilledTiles > 0)
+                system?.RegenerateCollision(GridEntityId, mapChunk, polys);
         }
 
         /// <summary>

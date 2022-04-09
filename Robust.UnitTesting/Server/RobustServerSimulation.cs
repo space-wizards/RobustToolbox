@@ -208,6 +208,7 @@ namespace Robust.UnitTesting.Server
             container.Register<IMapManagerInternal, MapManager>();
             container.Register<IPauseManager, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
+            container.Register<IVerticesSimplifier, CollinearSimplifier>();
 
             _diFactory?.Invoke(container);
             container.BuildGraph();

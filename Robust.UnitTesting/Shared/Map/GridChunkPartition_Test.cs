@@ -12,6 +12,62 @@ namespace Robust.UnitTesting.Shared.Map
     [TestFixture, TestOf(typeof(SharedGridFixtureSystem))]
     internal sealed class GridChunkPartition_Test
     {
+        [Test]
+        public void TestTryFindGrid()
+        {
+            var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+            var mapManager = sim.Resolve<IMapManager>();
+
+            var mapId = mapManager.CreateMap();
+            var grid = mapManager.CreateGrid(mapId);
+            var localPositions = new Vector2[]
+            {
+                new(0.25f, 0.25f),
+                new(0.75f, 0.25f),
+                new(0.75f, 0.75f),
+                new(0.25f, 0.75f),
+            };
+
+            grid.SetTile(Vector2i.Zero, new Tile(1, TileFlag.BottomLeft));
+            Assert.Multiple(() =>
+            {
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[0], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[1], out _));
+                Assert.That(!mapManager.TryFindGridAt(mapId, localPositions[2], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[3], out _));
+            });
+
+            grid.SetTile(Vector2i.Zero, new Tile(1, TileFlag.BottomRight));
+            Assert.Multiple(() =>
+            {
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[0], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[1], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[2], out _));
+                Assert.That(!mapManager.TryFindGridAt(mapId, localPositions[3], out _));
+            });
+
+            grid.SetTile(Vector2i.Zero, new Tile(1, TileFlag.TopRight));
+            Assert.Multiple(() =>
+            {
+                Assert.That(!mapManager.TryFindGridAt(mapId, localPositions[0], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[1], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[2], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[3], out _));
+            });
+
+            grid.SetTile(Vector2i.Zero, new Tile(1, TileFlag.TopLeft));
+            Assert.Multiple(() =>
+            {
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[0], out _));
+                Assert.That(!mapManager.TryFindGridAt(mapId, localPositions[1], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[2], out _));
+                Assert.That(mapManager.TryFindGridAt(mapId, localPositions[3], out _));
+            });
+
+            mapManager.DeleteGrid(grid.Index);
+            mapManager.DeleteMap(mapId);
+        }
+
         /// <summary>
         /// Check the vertices for a single tile being placed.
         /// </summary>

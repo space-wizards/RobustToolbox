@@ -43,7 +43,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// Size of the side of the view bounds square.
     /// </summary>
-    private Vector2 _viewSize;
+    private float _viewSize;
 
     /// <summary>
     /// If PVS disabled then we'll track if we've dumped all entities on the player.
@@ -83,11 +83,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
         new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
-            new ChunkPoolPolicy<MapChunkLocation>(), 256);
+            new ChunkPoolPolicy<MapChunkLocation>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
-            new ChunkPoolPolicy<GridChunkLocation>(), 256);
+            new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
 
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
@@ -118,7 +118,7 @@ internal sealed partial class PVSSystem : EntitySystem
         EntityManager.EntityDeleted += OnEntityDeleted;
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
-        _configManager.OnValueChanged(CVars.NetDefaultUpdateRange, OnViewsizeChanged, true);
+        _configManager.OnValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged, true);
 
         InitializeDirty();
     }
@@ -144,14 +144,14 @@ internal sealed partial class PVSSystem : EntitySystem
         EntityManager.EntityDeleted -= OnEntityDeleted;
 
         _configManager.UnsubValueChanged(CVars.NetPVS, SetPvs);
-        _configManager.UnsubValueChanged(CVars.NetDefaultUpdateRange, OnViewsizeChanged);
+        _configManager.UnsubValueChanged(CVars.NetMaxUpdateRange, OnViewsizeChanged);
 
         ShutdownDirty();
     }
 
-    private void OnViewsizeChanged(Vector2 obj)
+    private void OnViewsizeChanged(float obj)
     {
-        _viewSize = obj;
+        _viewSize = obj * 2;
     }
 
     private void SetPvs(bool value)
@@ -323,6 +323,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         var playerChunks = new HashSet<int>[sessions.Length];
         var eyeQuery = EntityManager.GetEntityQuery<EyeComponent>();
+        var transformQuery = EntityManager.GetEntityQuery<TransformComponent>();
         var viewerEntities = new EntityUid[sessions.Length][];
 
         _chunkList.Clear();
@@ -349,17 +350,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
             foreach (var eyeEuid in viewers)
             {
-                var xform = xformQuery.GetComponent(eyeEuid);
-                var viewPos = xform.WorldPosition;
-                var range = _viewSize;
-                var mapId = xform.MapID;
+                var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
-                {
                     visMask = eyeComp.VisibilityMask;
-                    range *= eyeComp.Zoom;
-                }
 
                 // Get the nyoom dictionary for index lookups.
                 if (!_mapIndices.TryGetValue(visMask, out var mapDict))
@@ -404,7 +399,7 @@ internal sealed partial class PVSSystem : EntitySystem
                              physicsQuery,
                              true))
                 {
-                    var localPos = xformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
+                    var localPos = transformQuery.GetComponent(mapGrid.GridEntityId).InvWorldMatrix.Transform(viewPos);
 
                     var gridChunkEnumerator =
                         new ChunkIndicesEnumerator(localPos, range, ChunkSize);
@@ -974,6 +969,13 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _uidSetPool.Return(viewers);
         return viewerArray;
+    }
+
+    // Read Safe
+    private (Vector2 worldPos, float range, MapId mapId) CalcViewBounds(in EntityUid euid, EntityQuery<TransformComponent> transformQuery)
+    {
+        var xform = transformQuery.GetComponent(euid);
+        return (xform.WorldPosition, _viewSize / 2f, xform.MapID);
     }
 
     public sealed class SetPolicy<T> : PooledObjectPolicy<HashSet<T>>

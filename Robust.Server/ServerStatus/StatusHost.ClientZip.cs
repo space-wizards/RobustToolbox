@@ -16,6 +16,7 @@ using Robust.Shared.ContentPack;
 using Robust.Shared.Utility;
 using Robust.Shared.Utility.Collections;
 using SharpZstd.Interop;
+using SpaceWizards.Sodium;
 
 namespace Robust.Server.ServerStatus
 {
@@ -394,17 +395,35 @@ namespace Robust.Server.ServerStatus
             var dataHash = Convert.ToHexString(SHA256.HashData(zipData));
 
             using var zip = OpenZip(zipData);
-            var (manifestData, manifestHash, manifestEntries, manifestBlobData) = CalcManifestData(
+            var (manifestData, manifestEntries, manifestBlobData) = CalcManifestData(
                 zip,
                 blobCompress,
                 blobCompressLevel,
-                blobCompressSaveThresh,
-                manifestCompress,
-                manifestCompressLevel);
+                blobCompressSaveThresh);
 
+            var manifestHash = CryptoGenericHashBlake2B.Hash(32, manifestData, ReadOnlySpan<byte>.Empty);
             var manifestHashString = Convert.ToHexString(manifestHash);
 
             _aczSawmill.Debug("ACZ Manifest hash: {ManifestHash}", manifestHashString);
+
+            if (manifestCompress)
+            {
+                _aczSawmill.Debug("Compressing ACZ manifest at level {ManifestCompressLevel}", manifestCompressLevel);
+
+                var beforeSize = manifestData.Length;
+                var compressBuffer = (int) Zstd.ZSTD_COMPRESSBOUND((nuint) manifestData.Length);
+                var compressed = ArrayPool<byte>.Shared.Rent(compressBuffer);
+
+                var size = ZStd.Compress(compressed, manifestData, manifestCompressLevel);
+
+                manifestData = compressed[..size];
+
+                ArrayPool<byte>.Shared.Return(compressed);
+
+                _aczSawmill.Debug(
+                    "ACZ manifest compression: {ManifestSize} -> {ManifestSizeCompressed} ({ManifestSizeRatio} ratio)",
+                    beforeSize, manifestData.Length, manifestData.Length / (float) beforeSize);
+            }
 
             return new AutomaticClientZipInfo(
                 zipData,
@@ -417,14 +436,12 @@ namespace Robust.Server.ServerStatus
                 blobCompress);
         }
 
-        private static (byte[] manifestContent, byte[] manifestHash, AczManifestEntry[] manifestEntries, byte[] blobData)
+        private static (byte[] manifestContent, AczManifestEntry[] manifestEntries, byte[] blobData)
             CalcManifestData(
                 ZipArchive zip,
                 bool blobCompress,
                 int blobCompressLevel,
-                int blobCompressSaveThresh,
-                bool manifestCompress,
-                int manifestCompressLevel)
+                int blobCompressSaveThresh)
         {
             var blobData = new MemoryStream();
             ZStdCompressStream? compressStream = null;
@@ -444,21 +461,7 @@ namespace Robust.Server.ServerStatus
                 Span<byte> entryHash = stackalloc byte[256 / 8];
 
                 var manifestStream = new MemoryStream();
-                Stream writeStream = manifestStream;
-                ZStdCompressStream? manifestCompressStream = null;
-                if (manifestCompress)
-                {
-                    manifestCompressStream = new ZStdCompressStream(writeStream);
-                    manifestCompressStream.Context.SetParameter(
-                        ZSTD_cParameter.ZSTD_c_compressionLevel,
-                        manifestCompressLevel);
-
-                    writeStream = manifestCompressStream;
-                }
-
-                var manifestHash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-                var hasherStream = new HasherStream(writeStream, manifestHash);
-                using var manifestWriter = new StreamWriter(hasherStream, EncodingHelpers.UTF8);
+                using var manifestWriter = new StreamWriter(manifestStream, EncodingHelpers.UTF8);
                 manifestWriter.Write("Robust Content Manifest 1\n");
 
                 var manifestEntries = new ValueList<AczManifestEntry>();
@@ -481,7 +484,7 @@ namespace Robust.Server.ServerStatus
                     }
 
                     // Calculate hash.
-                    SHA256.HashData(data, entryHash);
+                    CryptoGenericHashBlake2B.Hash(entryHash, data, ReadOnlySpan<byte>.Empty);
 
                     // Set to 0 to indicate not compressed.
                     int dataLength;
@@ -521,11 +524,10 @@ namespace Robust.Server.ServerStatus
                 }
 
                 manifestWriter.Flush();
-                manifestCompressStream?.FlushEnd();
 
                 ArrayPool<byte>.Shared.Return(decompressBuffer);
 
-                return (manifestStream.ToArray(), manifestHash.GetCurrentHash(), manifestEntries.ToArray(), blobData.ToArray());
+                return (manifestStream.ToArray(), manifestEntries.ToArray(), blobData.ToArray());
             }
             finally
             {
@@ -625,7 +627,7 @@ namespace Robust.Server.ServerStatus
         /// <param name="ZipData">Byte array containing the raw zip file data.</param>
         /// <param name="ZipHash">Hex SHA256 hash of <see cref="ZipData"/>.</param>
         /// <param name="ManifestData">Data for the content manifest</param>
-        /// <param name="ManifestHash">Hex SHA256 hash of <see cref="ManifestData"/>.</param>
+        /// <param name="ManifestHash">Hex BLAKE2B 256-bit hash of <see cref="ManifestData"/>.</param>
         /// <param name="ManifestEntries">Manifest -> zip entry map.</param>
         internal sealed record AutomaticClientZipInfo(
             byte[] ZipData,

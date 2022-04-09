@@ -10,6 +10,28 @@ using static SharpZstd.Interop.Zstd;
 
 namespace Robust.Shared.Utility;
 
+public static class ZStd
+{
+    public static int CompressBound(int length)
+    {
+        return (int)ZSTD_COMPRESSBOUND((nuint)length);
+    }
+
+    public static unsafe int Compress(
+        Span<byte> into,
+        ReadOnlySpan<byte> data,
+        int compressionLevel = ZSTD_CLEVEL_DEFAULT)
+    {
+        fixed (byte* dst = into)
+        fixed (byte* src = data)
+        {
+            var result = ZSTD_compress(dst, (nuint) into.Length, src, (nuint) data.Length, compressionLevel);
+            ZStdException.ThrowIfError(result);
+            return (int) result;
+        }
+    }
+}
+
 [Serializable]
 internal sealed class ZStdException : Exception
 {
@@ -171,7 +193,7 @@ internal sealed class ZStdDecompressStream : Stream
             fixed (byte* outputPtr = buffer)
             {
                 var outputBuf = new ZSTD_outBuffer { dst = outputPtr, pos = 0, size = (nuint)buffer.Length };
-                var inputBuf = new ZSTD_inBuffer { src =  inputPtr, pos = (nuint)_bufferPos, size = (nuint)_bufferSize};
+                var inputBuf = new ZSTD_inBuffer { src = inputPtr, pos = (nuint)_bufferPos, size = (nuint)_bufferSize };
                 var ret = ZSTD_decompressStream(_ctx, &outputBuf, &inputBuf);
 
                 _bufferPos = (int)inputBuf.pos;
@@ -376,6 +398,7 @@ internal sealed class ZStdCompressStream : Stream
     public override bool CanSeek => false;
     public override bool CanWrite => true;
     public override long Length => throw new NotSupportedException();
+
     public override long Position
     {
         get => throw new NotSupportedException();

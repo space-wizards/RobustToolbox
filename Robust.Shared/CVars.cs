@@ -129,13 +129,13 @@ namespace Robust.Shared
         /// The amount of new entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSNewEntityBudget =
-            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED);
+            CVarDef.Create("net.pvs_new_budget", 40, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
-            CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
+            CVarDef.Create("net.pvs_budget", 100, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// Log late input messages from clients.

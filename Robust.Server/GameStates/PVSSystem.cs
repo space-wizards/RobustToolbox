@@ -83,11 +83,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
         new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
-            new ChunkPoolPolicy<MapChunkLocation>(), 256);
+            new ChunkPoolPolicy<MapChunkLocation>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
-            new ChunkPoolPolicy<GridChunkLocation>(), 256);
+            new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
 
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);

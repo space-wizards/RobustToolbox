@@ -334,9 +334,8 @@ namespace Robust.UnitTesting.Shared.Map
             grid.SetTile(new Vector2i(0, 0),new Tile(1, TileFlag.BottomRight));
             grid.SetTile(new Vector2i(1, 0), new Tile(1, TileFlag.None));
             grid.SetTile(new Vector2i(1, 1), new Tile(1, TileFlag.BottomLeft));
-            grid.SetTile(new Vector2i(0, 1), new Tile(1, TileFlag.BottomLeft));
 
-            // Assert.That(fixtures.FixtureCount, Is.EqualTo(2));
+            Assert.That(fixtures.FixtureCount, Is.EqualTo(2));
 
             // Add whatever else I find here
 

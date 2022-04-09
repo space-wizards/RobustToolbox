@@ -135,6 +135,30 @@ internal partial class MapManager
             var chunkTile = chunk.GetTile((ushort)indices.X, (ushort)indices.Y);
 
             if (chunkTile.IsEmpty) continue;
+
+            if (chunkTile.Flags != TileFlag.None)
+            {
+                var (tileX, tileY) = localPos - tile;
+
+                switch (chunkTile.Flags)
+                {
+                    case TileFlag.BottomLeft:
+                        if (tileY > 1 - tileX) continue;
+                        break;
+                    case TileFlag.BottomRight:
+                        if (tileY > tileX) continue;
+                        break;
+                    case TileFlag.TopLeft:
+                        if (tileY < tileX) continue;
+                        break;
+                    case TileFlag.TopRight:
+                        if (tileY < 1 - tileX) continue;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
             grid = mapGrid;
             return true;
         }

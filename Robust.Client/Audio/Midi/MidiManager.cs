@@ -131,7 +131,7 @@ internal sealed partial class MidiManager : IMidiManager
             _settings["audio.periods"].IntValue = 8;
             _settings["audio.period-size"].IntValue = 4096;
             _settings["midi.autoconnect"].IntValue = 1;
-            _settings["player.reset-synth"].IntValue = 1;
+            _settings["player.reset-synth"].IntValue = 0;
             _settings["synth.midi-bank-select"].StringValue = "gm";
             //_settings["synth.verbose"].IntValue = 1; // Useful for debugging.
         }

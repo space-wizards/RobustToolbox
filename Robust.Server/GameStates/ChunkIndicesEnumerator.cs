@@ -11,7 +11,7 @@ public struct ChunkIndicesEnumerator
     private int _x;
     private int _y;
 
-    public ChunkIndicesEnumerator(Vector2 viewPos, Vector2 range, float chunkSize)
+    public ChunkIndicesEnumerator(Vector2 viewPos, float range, float chunkSize)
     {
         _bottomLeft = ((viewPos - range) / chunkSize).Floored();
         // Also floor this as we get the whole chunk anyway.

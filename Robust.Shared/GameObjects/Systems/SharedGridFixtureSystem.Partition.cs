@@ -176,9 +176,14 @@ public abstract partial class SharedGridFixtureSystem
         // Patch them together as available (TODO NOW
         PatchPolygons(polygons);
 
-        bounds = new Box2i();
-        var minimum = Vector2i.Zero;
-        var maximum = Vector2i.Zero;
+        if (polygons.Count == 0)
+        {
+            bounds = new Box2i();
+            return;
+        }
+
+        var minimum = polygons[0][0];
+        var maximum = polygons[0][0];
 
         foreach (var poly in polygons)
         {

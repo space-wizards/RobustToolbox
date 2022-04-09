@@ -120,8 +120,8 @@ public readonly struct Tile : IEquatable<Tile>
 public enum TileFlag : byte
 {
     None = 0,
-    BottomLeft = 1 << 1,
-    BottomRight = 1 << 2,
-    TopRight = 1 << 3,
-    TopLeft = 1 << 4,
+    BottomLeft = 1 << 0,
+    BottomRight = 1 << 1,
+    TopRight = 1 << 2,
+    TopLeft = 1 << 3,
 }

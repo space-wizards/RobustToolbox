@@ -365,7 +365,7 @@ namespace Robust.Shared.GameObjects
                     // Cache new GridID before raising the event.
                     GridID = GetGridIndex(xformQuery);
 
-                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId);
+                    var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent?.Owner, oldMapId, this);
                     _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
                 }
 
@@ -734,8 +734,9 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, MapID);
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, MapID, this);
             MapID = MapId.Nullspace;
+            GridID = GridId.Invalid;
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?

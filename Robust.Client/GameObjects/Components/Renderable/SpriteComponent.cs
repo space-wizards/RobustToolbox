@@ -601,8 +601,10 @@ namespace Robust.Client.GameObjects
         private void RebuildBounds()
         {
             _bounds = new Box2();
-            foreach (var layer in Layers.Where(layer => layer.Visible))
+            foreach (var layer in Layers)
             {
+                if (!layer.Visible) continue;
+
                 _bounds = _bounds.Union(layer.CalculateBoundingBox());
             }
         }

@@ -4,7 +4,7 @@ using System.Buffers.Binary;
 using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -551,19 +551,13 @@ namespace Robust.Server.ServerStatus
 
         private byte[]? PrepareACZViaMagic()
         {
-            var paths = new Dictionary<string, byte[]>();
-
-            bool AttemptPullFromDisk(string pathTo, string pathFrom)
-            {
-                // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
-                var res = PathHelpers.ExecutableRelativeFile(pathFrom);
-                if (!File.Exists(res)) return false;
-                paths[pathTo] = File.ReadAllBytes(res);
-                return true;
-            }
+            var sw = Stopwatch.StartNew();
 
             var (binFolderPath, assemblyNames) =
                 _aczInfo ?? ("Content.Client", new[] { "Content.Client", "Content.Shared" });
+
+            var outStream = new MemoryStream();
+            var archive = new ZipArchive(outStream, ZipArchiveMode.Create);
 
             foreach (var assemblyName in assemblyNames)
             {
@@ -580,20 +574,24 @@ namespace Robust.Server.ServerStatus
                 AttemptPullFromDisk(relPath, path);
             }
 
-            var outStream = new MemoryStream();
-            var archive = new ZipArchive(outStream, ZipArchiveMode.Create);
-            foreach (var kvp in paths)
-            {
-                var entry = archive.CreateEntry(kvp.Key);
-                using (var entryStream = entry.Open())
-                {
-                    entryStream.Write(kvp.Value);
-                }
-            }
-
             archive.Dispose();
-            _aczSawmill.Info($"StatusHost synthesized client zip!");
+            _aczSawmill.Info("StatusHost synthesized client zip in {Elapsed} ms!", sw.ElapsedMilliseconds);
             return outStream.ToArray();
+
+            void AttemptPullFromDisk(string pathTo, string pathFrom)
+            {
+                // _aczSawmill.Debug($"StatusHost PrepareACZMagic: {pathFrom} -> {pathTo}");
+                var res = PathHelpers.ExecutableRelativeFile(pathFrom);
+                if (!File.Exists(res))
+                    return;
+
+                var entry = archive.CreateEntry(pathTo);
+
+                using var file = File.OpenRead(res);
+                using var entryStream = entry.Open();
+
+                file.CopyTo(entryStream);
+            }
         }
 
         public void SetAczInfo(string clientBinFolder, string[] clientAssemblyNames)

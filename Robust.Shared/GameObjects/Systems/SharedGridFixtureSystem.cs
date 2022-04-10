@@ -74,6 +74,7 @@ namespace Robust.Shared.GameObjects
             }
 
             var origin = chunk.Indices * chunk.ChunkSize;
+            var org = (Vector2) origin;
 
             // So we store a reference to the fixture on the chunk because it's easier to cross-reference it.
             // This is because when we get multiple fixtures per chunk there's no easy way to tell which the old one
@@ -89,15 +90,25 @@ namespace Robust.Shared.GameObjects
 
             foreach (var vecPoly in polygons)
             {
+                // Enlarge / shrink the fixture accordingly, to the centre of it.
+                /*
+                var polyCenter = Vector2.Zero;
+
                 for (var i = 0; i < vecPoly.Count; i++)
                 {
-                    vertices[i] = vecPoly[i] + origin;
+                    polyCenter += vecPoly[i] + org;
                 }
 
-                // TODO: Need to re-implement fixture enlargement.
-                // var bounds = ((Box2) vecPoly.Translated(origin)).Enlarged(_fixtureEnlargement);
-                var poly = new PolygonShape();
+                polyCenter /= vecPoly.Count;
+                */
 
+                for (var i = 0; i < vecPoly.Count; i++)
+                {
+                    var vert = vecPoly[i] + org;
+                    vertices[i] = vert; // + (vert - polyCenter) * _fixtureEnlargement);
+                }
+
+                var poly = new PolygonShape();
                 poly.SetVertices(vertices, vecPoly.Count);
 
                 var newFixture = new Fixture(

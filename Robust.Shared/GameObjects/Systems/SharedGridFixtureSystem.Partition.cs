@@ -268,6 +268,7 @@ public abstract partial class SharedGridFixtureSystem
             }
         }
 
+        // WARNING: Poly will be giftwrapped by gridfixturesystem so this may not necessarily be a perfect poly.
         combined = _simp.Simplify(combined, 0f);
 
         Span<Vector2> spin = stackalloc Vector2[combined.Count];

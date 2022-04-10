@@ -56,11 +56,15 @@ public sealed class UiThemeManager : IUIThemeManager
         if (_defaultOverriden)
         {
             //this exists to stop people from misusing default theme
-            Logger.Warning("Tried to set default theme twice!");
+            Logger.Error("Tried to set default theme twice!");
             return;
         }
 
-        if (!_protoManager.TryIndex(themeId, out UITheme? theme)) return;
+        if (!_protoManager.TryIndex(themeId, out UITheme? theme))
+        {
+            Logger.Error("Could not find UI theme prototype for ID:"+ themeId);
+            return;
+        }
         DefaultTheme = theme;
         _defaultOverriden = true;
     }

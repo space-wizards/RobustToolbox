@@ -361,7 +361,7 @@ namespace Robust.Shared.Physics
 
             if (computeProperties)
             {
-                physics.ResetMassData();
+                physics.ResetMassData(component);
             }
         }
 

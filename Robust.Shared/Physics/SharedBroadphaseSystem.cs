@@ -266,8 +266,8 @@ namespace Robust.Shared.Physics
 
                 var aabb = new Box2Rotated(grid.LocalBounds, worldRot).CalcBoundingBox().Translated(worldPos);
 
-                // TODO: Need to handle grids colliding with non-grid entities.
-                // var broadphase = EntityManager.GetComponent<BroadphaseComponent>(_mapManager.GetMapEntityId(mapId));
+                // TODO: Need to handle grids colliding with non-grid entities with the same layer
+                // (nothing in SS14 does this yet).
 
                 var transform = bodyQuery.GetComponent(grid.GridEntityId).GetTransform(xform);
                 _gridsPool.Clear();
@@ -278,7 +278,7 @@ namespace Robust.Shared.Physics
 
                     var collidingMapGrid = (MapGrid)colliding;
                     var otherGridAABB = colliding.WorldBounds;
-                    var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform();
+                    var otherTransform = bodyQuery.GetComponent(colliding.GridEntityId).GetTransform(xformQuery.GetComponent(colliding.GridEntityId));
 
                     var overlap = aabb.Union(otherGridAABB);
 
@@ -439,7 +439,7 @@ namespace Robust.Shared.Physics
             // Can probably just bypass this by doing stuff in Update / FrameUpdate again but future problem
             // Also grids are special-cased due to their high fixture count.
             if (body.Broadphase != null ||
-                HasComp<MapGridComponent>(body.Owner)) return;
+                _mapManager.IsGrid(body.Owner)) return;
 
             if (!Resolve(body.Owner, ref manager))
             {
@@ -528,7 +528,7 @@ namespace Robust.Shared.Physics
         {
             if (!component.CanCollide ||
                 !TryComp<FixturesComponent>(uid, out var manager) ||
-                HasComp<MapGridComponent>(uid)) return;
+                _mapManager.IsGrid(uid)) return;
 
             var worldRot = Transform(uid).WorldRotation;
 
@@ -538,7 +538,7 @@ namespace Robust.Shared.Physics
         private void OnRotate(EntityUid uid, PhysicsComponent component, ref RotateEvent args)
         {
             if (!component.CanCollide ||
-                HasComp<MapGridComponent>(uid)) return;
+                _mapManager.IsGrid(uid)) return;
 
             var xform = Transform(uid);
             var (worldPos, worldRot) = xform.GetWorldPositionRotation();

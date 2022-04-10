@@ -10,6 +10,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics.Broadphase;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Physics.Dynamics.Contacts;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.Physics
@@ -302,7 +303,7 @@ namespace Robust.Shared.Physics
                                             var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                             if (!fixAABB.Intersects(otherAABB)) continue;
-                                            contactManager.AddPair(fixture, i, otherFixture, j);
+                                            contactManager.AddPair(fixture, i, otherFixture, j, Contact.ContactFlags.Grid);
                                             break;
                                         }
                                     }

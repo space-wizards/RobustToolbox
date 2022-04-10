@@ -69,6 +69,17 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         internal ContactType Type;
 
+        [Flags]
+        internal enum ContactFlags
+        {
+            None = 0,
+            Island = 1 << 0,
+            Filter = 1 << 1,
+            Grid = 1 << 2,
+        }
+
+        internal ContactFlags Flags = ContactFlags.None;
+
         /// <summary>
         ///     Has this contact already been added to an island?
         /// </summary>

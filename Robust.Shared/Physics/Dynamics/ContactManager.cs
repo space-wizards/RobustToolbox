@@ -165,6 +165,7 @@ namespace Robust.Shared.Physics.Dynamics
                 contact.Restitution = MathF.Max(fixtureA.Restitution, fixtureB.Restitution);
             }
 
+            contact.Flags = Contact.ContactFlags.None;
             contact.TangentSpeed = 0;
         }
 
@@ -239,11 +240,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Try to create a contact between these 2 fixtures.
         /// </summary>
-        /// <param name="fixtureA"></param>
-        /// <param name="indexA"></param>
-        /// <param name="fixtureB"></param>
-        /// <param name="indexB"></param>
-        internal void AddPair(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB)
+        internal void AddPair(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB, Contact.ContactFlags flags = Contact.ContactFlags.None)
         {
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
@@ -263,6 +260,7 @@ namespace Robust.Shared.Physics.Dynamics
 
             // Call the factory.
             var contact = CreateContact(fixtureA, indexA, fixtureB, indexB);
+            contact.Flags = flags;
 
             // Contact creation may swap fixtures.
             fixtureA = contact.FixtureA!;
@@ -353,6 +351,7 @@ namespace Robust.Shared.Physics.Dynamics
             // TODO: check for null instead?
             // Work out which contacts are still valid before we decide to update manifolds.
             var node = _activeContacts.First;
+            var xformQuery = _entityManager.GetEntityQuery<TransformComponent>();
 
             while (node != null)
             {
@@ -417,12 +416,29 @@ namespace Robust.Shared.Physics.Dynamics
                     continue;
                 }
 
+                // Special-case grid contacts.
+                if ((contact.Flags & Contact.ContactFlags.Grid) != 0x0)
+                {
+                    var gridABounds = fixtureA.Shape.ComputeAABB(fixtureA.Body.GetTransform(), 0);
+                    var gridBBounds = fixtureB.Shape.ComputeAABB(fixtureB.Body.GetTransform(), 0);
+
+                    if (!gridABounds.Intersects(gridBBounds))
+                    {
+                        Destroy(contact);
+                    }
+                    else
+                    {
+                        contacts[index++] = contact;
+                    }
+
+                    node = node.Next;
+                    continue;
+                }
+
                 var proxyA = fixtureA.Proxies[indexA];
                 var proxyB = fixtureB.Proxies[indexB];
                 var broadphaseA = bodyA.Broadphase;
                 var broadphaseB = bodyB.Broadphase;
-
-                // TODO: IT MIGHT BE THE FATAABB STUFF FOR MOVEPROXY SO TRY THAT
                 var overlap = false;
 
                 // We can have cross-broadphase proxies hence need to change them to worldspace
@@ -435,10 +451,10 @@ namespace Robust.Shared.Physics.Dynamics
                     else
                     {
                         // These should really be destroyed before map changes.
-                        DebugTools.Assert(_entityManager.GetComponent<TransformComponent>(broadphaseA.Owner).MapID == _entityManager.GetComponent<TransformComponent>(broadphaseB.Owner).MapID);
+                        DebugTools.Assert(xformQuery.GetComponent(broadphaseA.Owner).MapID == xformQuery.GetComponent(broadphaseB.Owner).MapID);
 
-                        var proxyAWorldAABB = _entityManager.GetComponent<TransformComponent>(broadphaseA.Owner).WorldMatrix.TransformBox(proxyA.AABB);
-                        var proxyBWorldAABB = _entityManager.GetComponent<TransformComponent>(broadphaseB.Owner).WorldMatrix.TransformBox(proxyB.AABB);
+                        var proxyAWorldAABB = xformQuery.GetComponent(broadphaseA.Owner).WorldMatrix.TransformBox(proxyA.AABB);
+                        var proxyBWorldAABB = xformQuery.GetComponent(broadphaseB.Owner).WorldMatrix.TransformBox(proxyB.AABB);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }

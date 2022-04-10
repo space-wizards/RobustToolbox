@@ -303,7 +303,7 @@ namespace Robust.Shared.Physics
                                             var otherAABB = otherFixture.Shape.ComputeAABB(otherTransform, j);
 
                                             if (!fixAABB.Intersects(otherAABB)) continue;
-                                            contactManager.AddPair(fixture, i, otherFixture, j, Contact.ContactFlags.Grid);
+                                            contactManager.AddPair(fixture, i, otherFixture, j, ContactFlags.Grid);
                                             break;
                                         }
                                     }
@@ -503,7 +503,7 @@ namespace Robust.Shared.Physics
 
             foreach (var (_, contact) in fixture.Contacts)
             {
-                contact.FilterFlag = true;
+                contact.Flags |= ContactFlags.Filter;
             }
 
             var broadphase = body.Broadphase;

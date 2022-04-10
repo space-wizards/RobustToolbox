@@ -229,7 +229,7 @@ namespace Robust.Shared.Physics.Dynamics
             {
                 var contact = contactNode.Value;
                 contactNode = contactNode.Next;
-                contact.IslandFlag = false;
+                contact.Flags &= ~ContactFlags.Island;
             }
 
             // Build and simulated islands from awake bodies.
@@ -303,7 +303,7 @@ namespace Robust.Shared.Physics.Dynamics
                         node = node.Next;
 
                         // Has this contact already been added to an island?
-                        if (contact.IslandFlag) continue;
+                        if ((contact.Flags & ContactFlags.Island) != 0x0) continue;
 
                         // Is this contact solid and touching?
                         if (!contact.Enabled || !contact.IsTouching) continue;
@@ -312,7 +312,7 @@ namespace Robust.Shared.Physics.Dynamics
                         if (contact.FixtureA?.Hard != true || contact.FixtureB?.Hard != true) continue;
 
                         _islandContacts.Add(contact);
-                        contact.IslandFlag = true;
+                        contact.Flags |= ContactFlags.Island;
                         var bodyA = contact.FixtureA!.Body;
                         var bodyB = contact.FixtureB!.Body;
 

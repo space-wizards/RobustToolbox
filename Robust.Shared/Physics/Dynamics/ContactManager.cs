@@ -48,6 +48,7 @@ namespace Robust.Shared.Physics.Dynamics
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
+        private SharedTransformSystem _transform = default!;
 
         internal MapId MapId { get; set; }
 
@@ -146,8 +147,7 @@ namespace Robust.Shared.Physics.Dynamics
         {
             contact.Enabled = true;
             contact.IsTouching = false;
-            contact.IslandFlag = false;
-            contact.FilterFlag = false;
+            contact.Flags = ContactFlags.None;
             // TOIFlag = false;
 
             contact.FixtureA = fixtureA;
@@ -165,13 +165,13 @@ namespace Robust.Shared.Physics.Dynamics
                 contact.Restitution = MathF.Max(fixtureA.Restitution, fixtureB.Restitution);
             }
 
-            contact.Flags = Contact.ContactFlags.None;
             contact.TangentSpeed = 0;
         }
 
         public void Initialize()
         {
             IoCManager.InjectDependencies(this);
+            _transform = IoCManager.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.ContactMultithreadThreshold, OnContactMultithreadThreshold, true);
             configManager.OnValueChanged(CVars.ContactMinimumThreads, OnContactMinimumThreads, true);
@@ -240,7 +240,7 @@ namespace Robust.Shared.Physics.Dynamics
         /// <summary>
         /// Try to create a contact between these 2 fixtures.
         /// </summary>
-        internal void AddPair(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB, Contact.ContactFlags flags = Contact.ContactFlags.None)
+        internal void AddPair(Fixture fixtureA, int indexA, Fixture fixtureB, int indexB, ContactFlags flags = ContactFlags.None)
         {
             PhysicsComponent bodyA = fixtureA.Body;
             PhysicsComponent bodyB = fixtureB.Body;
@@ -373,7 +373,7 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 // Is this contact flagged for filtering?
-                if (contact.FilterFlag)
+                if ((contact.Flags & ContactFlags.Filter) != 0x0)
                 {
                     // Should these bodies collide?
                     if (bodyB.ShouldCollide(bodyA) == false)
@@ -403,7 +403,7 @@ namespace Robust.Shared.Physics.Dynamics
                     */
 
                     // Clear the filtering flag.
-                    contact.FilterFlag = false;
+                    contact.Flags &= ~ContactFlags.Filter;
                 }
 
                 bool activeA = bodyA.Awake && bodyA.BodyType != BodyType.Static;
@@ -417,10 +417,13 @@ namespace Robust.Shared.Physics.Dynamics
                 }
 
                 // Special-case grid contacts.
-                if ((contact.Flags & Contact.ContactFlags.Grid) != 0x0)
+                if ((contact.Flags & ContactFlags.Grid) != 0x0)
                 {
-                    var gridABounds = fixtureA.Shape.ComputeAABB(fixtureA.Body.GetTransform(), 0);
-                    var gridBBounds = fixtureB.Shape.ComputeAABB(fixtureB.Body.GetTransform(), 0);
+                    var xformA = xformQuery.GetComponent(bodyA.Owner);
+                    var xformB = xformQuery.GetComponent(bodyB.Owner);
+
+                    var gridABounds = fixtureA.Shape.ComputeAABB(bodyA.GetTransform(xformA), 0);
+                    var gridBBounds = fixtureB.Shape.ComputeAABB(bodyB.GetTransform(xformB), 0);
 
                     if (!gridABounds.Intersects(gridBBounds))
                     {
@@ -453,8 +456,8 @@ namespace Robust.Shared.Physics.Dynamics
                         // These should really be destroyed before map changes.
                         DebugTools.Assert(xformQuery.GetComponent(broadphaseA.Owner).MapID == xformQuery.GetComponent(broadphaseB.Owner).MapID);
 
-                        var proxyAWorldAABB = xformQuery.GetComponent(broadphaseA.Owner).WorldMatrix.TransformBox(proxyA.AABB);
-                        var proxyBWorldAABB = xformQuery.GetComponent(broadphaseB.Owner).WorldMatrix.TransformBox(proxyB.AABB);
+                        var proxyAWorldAABB = _transform.GetWorldMatrix(broadphaseA.Owner, xformQuery).TransformBox(proxyA.AABB);
+                        var proxyBWorldAABB = _transform.GetWorldMatrix(broadphaseB.Owner, xformQuery).TransformBox(proxyB.AABB);
                         overlap = proxyAWorldAABB.Intersects(proxyBWorldAABB);
                     }
                 }

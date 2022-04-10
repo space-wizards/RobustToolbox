@@ -69,23 +69,7 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
 
         internal ContactType Type;
 
-        [Flags]
-        internal enum ContactFlags
-        {
-            None = 0,
-            Island = 1 << 0,
-            Filter = 1 << 1,
-            Grid = 1 << 2,
-        }
-
         internal ContactFlags Flags = ContactFlags.None;
-
-        /// <summary>
-        ///     Has this contact already been added to an island?
-        /// </summary>
-        public bool IslandFlag { get; set; }
-
-        public bool FilterFlag { get; set; }
 
         /// <summary>
         ///     Determines whether the contact is touching.
@@ -343,5 +327,25 @@ namespace Robust.Shared.Physics.Dynamics.Contacts
             // TODO: Need to suss this out
             return HashCode.Combine((FixtureA != null ? FixtureA.Body.Owner : EntityUid.Invalid), (FixtureB != null ? FixtureB.Body.Owner : EntityUid.Invalid));
         }
+    }
+
+    [Flags]
+    internal enum ContactFlags : byte
+    {
+        None = 0,
+        /// <summary>
+        ///     Has this contact already been added to an island?
+        /// </summary>
+        Island = 1 << 0,
+
+        /// <summary>
+        ///     Does this contact need re-filtering?
+        /// </summary>
+        Filter = 1 << 1,
+
+        /// <summary>
+        /// Is this a special contact for grid-grid collisions
+        /// </summary>
+        Grid = 1 << 2,
     }
 }

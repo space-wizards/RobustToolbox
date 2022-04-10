@@ -164,7 +164,7 @@ namespace Robust.Client.Map
 
         private int GetTileCount(ITileDefinition def)
         {
-            return (def.Flags & TileDefFlag.Diagonals) != 0x0 ? def.Variants * 4 : def.Variants;
+            return (def.Flags & TileDefFlag.Diagonals) != 0x0 ? def.Variants * 5 : def.Variants;
         }
     }
 }

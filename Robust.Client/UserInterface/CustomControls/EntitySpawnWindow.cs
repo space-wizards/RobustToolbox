@@ -22,7 +22,6 @@ namespace Robust.Client.UserInterface.CustomControls
         private readonly IPrototypeManager prototypeManager;
         private readonly IResourceCache resourceCache;
 
-        private BoxContainer MainVBox;
         private PrototypeListContainer PrototypeList;
         private LineEdit SearchBar;
         private OptionButton OverrideMenu;
@@ -72,7 +71,7 @@ namespace Robust.Client.UserInterface.CustomControls
             SetSize = (250, 300);
             MinSize = (250, 200);
 
-            Contents.AddChild(MainVBox = new BoxContainer
+            Contents.AddChild(new BoxContainer
             {
                 Orientation = LayoutOrientation.Vertical,
                 Name = "AAAAAA",
@@ -151,7 +150,6 @@ namespace Robust.Client.UserInterface.CustomControls
             BuildEntityList();
 
             this.placementManager.PlacementChanged += OnPlacementCanceled;
-            this.placementManager.DirectionChanged += OnDirectionChanged;
             UpdateDirectionLabel();
 
             OnClose += OnWindowClosed;
@@ -169,7 +167,11 @@ namespace Robust.Client.UserInterface.CustomControls
                 placementManager.Clear();
 
             placementManager.PlacementChanged -= OnPlacementCanceled;
-            placementManager.DirectionChanged -= OnDirectionChanged;
+        }
+
+        public void SetRotationLabel(Direction direction)
+        {
+            RotationLabel.Text = direction.ToString();
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
@@ -535,11 +537,6 @@ namespace Robust.Client.UserInterface.CustomControls
 
             EraseButton.Pressed = false;
             OverrideMenu.Disabled = false;
-        }
-
-        private void OnDirectionChanged(object? sender, EventArgs e)
-        {
-            UpdateDirectionLabel();
         }
 
         private void UpdateDirectionLabel()

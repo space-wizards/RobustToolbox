@@ -48,7 +48,6 @@ namespace Robust.Client.Placement
         /// Dictionary of all placement mode types
         /// </summary>
         private readonly Dictionary<string, Type> _modeDictionary = new();
-        private readonly List<Tuple<EntityCoordinates, TimeSpan>> _pendingTileChanges = new();
 
         /// <summary>
         /// Tells this system to try to handle placement of an entity during the next frame
@@ -184,8 +183,6 @@ namespace Robust.Client.Placement
             {
                 _modeDictionary.Add(type.Name, type);
             }
-
-            EntityManager.EventBus.SubscribeEvent<TileChangedEvent>(EventSource.Local, this, HandleTileChanged);
 
             _drawOverlay = new PlacementOverlay(this);
             _overlayManager.AddOverlay(_drawOverlay);
@@ -328,12 +325,6 @@ namespace Robust.Client.Placement
             }
         }
 
-        private void HandleTileChanged(TileChangedEvent args)
-        {
-            var coords = MapManager.GetGrid(args.NewTile.GridIndex).GridTileToLocal(args.NewTile.GridIndices);
-            _pendingTileChanges.RemoveAll(c => c.Item1 == coords);
-        }
-
         /// <inheritdoc />
         public event EventHandler? PlacementChanged;
 
@@ -355,7 +346,7 @@ namespace Robust.Client.Placement
 
         public void Rotate()
         {
-            if (Hijack != null && !Hijack.CanRotate)
+            if (Hijack is { CanRotate: false })
                 return;
 
             // Tile mode
@@ -377,6 +368,8 @@ namespace Robust.Client.Placement
                         TileFlag.TopLeft => TileFlag.None,
                         _ => throw new ArgumentOutOfRangeException()
                     };
+
+                    DirectionChanged?.Invoke(this, EventArgs.Empty);
                 }
                 return;
             }
@@ -589,9 +582,6 @@ namespace Robust.Client.Placement
 
             CurrentMode!.AlignPlacementMode(mouseScreen);
 
-            // purge old unapproved tile changes
-            _pendingTileChanges.RemoveAll(c => c.Item2 < _time.RealTime);
-
             // continues tile placement but placement of entities only occurs on mouseUp
             if (_placenextframe && CurrentPermission!.IsTile)
                 HandlePlacement();
@@ -739,6 +729,8 @@ namespace Robust.Client.Placement
             sc.AddLayer(new ResourcePath("/Textures/UserInterface/tilebuildoverlay.png"));
 
             IsActive = true;
+            // Yes this is garbage; I have made placement manager 10% worse and 10% better.
+            DirectionChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void RequestPlacement(EntityCoordinates coordinates)
@@ -762,16 +754,6 @@ namespace Robust.Client.Placement
                         tile.Flags == CurrentPermission.TileFlags)
                         return;
                 }
-
-                foreach (var tileChange in _pendingTileChanges)
-                {
-                    // if change already pending, ignore it
-                    if (tileChange.Item1 == coordinates)
-                        return;
-                }
-
-                var tuple = new Tuple<EntityCoordinates, TimeSpan>(coordinates, _time.RealTime + _pendingTileTimeout);
-                _pendingTileChanges.Add(tuple);
             }
 
             var message = NetworkManager.CreateNetMessage<MsgPlacement>();

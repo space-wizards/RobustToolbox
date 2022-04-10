@@ -16,13 +16,14 @@ namespace Robust.Client.UserInterface.CustomControls
 {
     public sealed class TileSpawnWindow : DefaultWindow
     {
-        private readonly ITileDefinitionManager __tileDefinitionManager;
+        private readonly ITileDefinitionManager _tileDefinitionManager;
         private readonly IPlacementManager _placementManager;
         private readonly IResourceCache _resourceCache;
 
-        private ItemList TileList;
-        private LineEdit SearchBar;
-        private Button ClearButton;
+        private readonly ItemList _tileList;
+        private readonly LineEdit _searchBar;
+        private readonly Button _clearButton;
+        private readonly Label _flag;
 
         private readonly List<ITileDefinition> _shownItems = new();
 
@@ -31,7 +32,7 @@ namespace Robust.Client.UserInterface.CustomControls
         public TileSpawnWindow(ITileDefinitionManager tileDefinitionManager, IPlacementManager placementManager,
             IResourceCache resourceCache)
         {
-            __tileDefinitionManager = tileDefinitionManager;
+            _tileDefinitionManager = tileDefinitionManager;
             _placementManager = placementManager;
             _resourceCache = resourceCache;
 
@@ -45,27 +46,34 @@ namespace Robust.Client.UserInterface.CustomControls
                 Orientation = LayoutOrientation.Horizontal
             };
             vBox.AddChild(hBox);
-            SearchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
-            SearchBar.OnTextChanged += OnSearchBarTextChanged;
-            hBox.AddChild(SearchBar);
+            _searchBar = new LineEdit {PlaceHolder = "Search", HorizontalExpand = true};
+            _searchBar.OnTextChanged += OnSearchBarTextChanged;
+            hBox.AddChild(_searchBar);
 
-            ClearButton = new Button {Text = "Clear"};
-            ClearButton.OnPressed += OnClearButtonPressed;
-            hBox.AddChild(ClearButton);
+            _clearButton = new Button {Text = "Clear"};
+            _clearButton.OnPressed += OnClearButtonPressed;
+            hBox.AddChild(_clearButton);
 
-            TileList = new ItemList {VerticalExpand = true};
-            TileList.OnItemSelected += TileListOnOnItemSelected;
-            TileList.OnItemDeselected += TileListOnOnItemDeselected;
-            vBox.AddChild(TileList);
+            _tileList = new ItemList {VerticalExpand = true};
+            _tileList.OnItemSelected += TileListOnOnItemSelected;
+            _tileList.OnItemDeselected += TileListOnOnItemDeselected;
+            vBox.AddChild(_tileList);
 
             BuildTileList();
+
+            _flag = new Label()
+            {
+                Text = "None",
+            };
+
+            vBox.AddChild(_flag);
 
             _placementManager.PlacementChanged += OnPlacementCanceled;
 
             OnClose += OnWindowClosed;
 
             Title = "Place Tiles";
-            SearchBar.GrabKeyboardFocus();
+            _searchBar.GrabKeyboardFocus();
 
             SetSize = (300, 300);
         }
@@ -80,28 +88,33 @@ namespace Robust.Client.UserInterface.CustomControls
             }
         }
 
+        public void SetFlagLabel(TileFlag flag)
+        {
+            _flag.Text = flag.ToString();
+        }
+
         private void OnClearButtonPressed(BaseButton.ButtonEventArgs args)
         {
-            TileList.ClearSelected();
+            _tileList.ClearSelected();
             _placementManager.Clear();
-            SearchBar.Clear();
+            _searchBar.Clear();
             BuildTileList("");
-            ClearButton.Disabled = true;
+            _clearButton.Disabled = true;
         }
 
         private void OnSearchBarTextChanged(LineEdit.LineEditEventArgs args)
         {
-            TileList.ClearSelected();
+            _tileList.ClearSelected();
             _placementManager.Clear();
             BuildTileList(args.Text);
-            ClearButton.Disabled = string.IsNullOrEmpty(args.Text);
+            _clearButton.Disabled = string.IsNullOrEmpty(args.Text);
         }
 
         private void BuildTileList(string? searchStr = null)
         {
-            TileList.Clear();
+            _tileList.Clear();
 
-            IEnumerable<ITileDefinition> tileDefs = __tileDefinitionManager;
+            IEnumerable<ITileDefinition> tileDefs = _tileDefinitionManager;
 
             if (!string.IsNullOrEmpty(searchStr))
             {
@@ -122,20 +135,20 @@ namespace Robust.Client.UserInterface.CustomControls
                 {
                     texture = _resourceCache.GetResource<TextureResource>(new ResourcePath(entry.Path) / $"{entry.SpriteName}.png");
                 }
-                TileList.AddItem(entry.Name, texture);
+                _tileList.AddItem(entry.Name, texture);
             }
         }
 
         private void OnWindowClosed()
         {
-            TileList.ClearSelected();
+            _tileList.ClearSelected();
             _placementManager.Clear();
         }
 
         private void OnPlacementCanceled(object? sender, EventArgs e)
         {
             _clearingSelections = true;
-            TileList.ClearSelected();
+            _tileList.ClearSelected();
             _clearingSelections = false;
         }
         private void TileListOnOnItemSelected(ItemList.ItemListSelectedEventArgs args)
@@ -147,7 +160,8 @@ namespace Robust.Client.UserInterface.CustomControls
                 PlacementOption = "AlignTileAny",
                 TileType = definition.TileId,
                 Range = 400,
-                IsTile = true
+                IsTile = true,
+                TileFlags = TileFlag.None,
             };
 
             _placementManager.BeginPlacing(newObjInfo);

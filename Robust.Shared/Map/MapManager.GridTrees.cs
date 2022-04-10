@@ -181,5 +181,6 @@ internal partial class MapManager
         var xform = EntityManager.GetComponent<TransformComponent>(uid);
         var aabb = GetWorldAABB(grid);
         _gridTrees[xform.MapID].MoveProxy(grid.MapProxy, in aabb, Vector2.Zero);
+        _movedGrids[xform.MapID].Add(grid);
     }
 }

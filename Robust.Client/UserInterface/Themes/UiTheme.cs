@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
 using Robust.Client.UserInterface.Themes;
 using Robust.Shared.IoC;
+using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
@@ -53,6 +53,6 @@ public sealed class UITheme : IPrototype
     public Color ResolveColorOrSpecified(string colorName, Color defaultColor = default)
     {
         var color = ResolveColor(colorName) ?? defaultColor;
-        return defaultColor;
+        return color;
     }
 }

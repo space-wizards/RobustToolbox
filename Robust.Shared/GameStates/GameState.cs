@@ -1,4 +1,4 @@
-﻿using Robust.Shared.GameObjects;
+using Robust.Shared.GameObjects;
 using Robust.Shared.Serialization;
 using System;
 using System.Diagnostics;
@@ -27,10 +27,11 @@ namespace Robust.Shared.GameStates
         /// <summary>
         /// Constructor!
         /// </summary>
-        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, NetListAsArray<EntityState> entities, NetListAsArray<PlayerState> players, NetListAsArray<EntityUid> deletions, GameStateMapData? mapData)
+        public GameState(GameTick fromSequence, GameTick toSequence, uint lastInput, NetListAsArray<EntityState> entities, NetListAsArray<PlayerState> players, NetListAsArray<EntityUid> deletions, GameStateMapData? mapData, TimeSpan? toTime = null)
         {
             FromSequence = fromSequence;
             ToSequence = toSequence;
+            ToTime = toTime;
             LastProcessedInput = lastInput;
             EntityStates = entities;
             PlayerStates = players;
@@ -40,6 +41,15 @@ namespace Robust.Shared.GameStates
 
         public readonly GameTick FromSequence;
         public readonly GameTick ToSequence;
+
+        /// <summary>
+        ///     The current time corresponding to tick <see cref="ToSequence"/>.
+        /// </summary>
+        /// <remarks>
+        ///     If tick-rate is constant, this could just be inferred from the current tick. But with dynamic tick
+        ///     timing, and in the event of tick time cvar updates being dropped, this just ensures they stay in sync.
+        /// </remarks>
+        public readonly TimeSpan? ToTime;
 
         public readonly uint LastProcessedInput;
 

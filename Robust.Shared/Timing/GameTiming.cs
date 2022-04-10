@@ -48,7 +48,7 @@ namespace Robust.Shared.Timing
         //
         // Notice that it starts from GameTick 1  - the "first tick" has no impact
         // on timing
-        private (TimeSpan, GameTick) _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);
+        public (TimeSpan, GameTick) CachedCurTimeInfo { get; set; } = (TimeSpan.Zero, GameTick.First);
 
         /// <summary>
         ///     The current synchronized uptime of the simulation. Use this for in-game timing. This can be rewound for
@@ -59,7 +59,7 @@ namespace Robust.Shared.Timing
             get
             {
                 // last tickrate change epoch
-                var (time, lastTimeTick) = _cachedCurTimeInfo;
+                var (time, lastTimeTick) = CachedCurTimeInfo;
 
                 // add our current time to it.
                 // the server never rewinds time, and the client never rewinds time outside of prediction.
@@ -207,7 +207,7 @@ namespace Robust.Shared.Timing
         // Call this whenever you change the TickRate.
         private void CacheCurTime()
         {
-            var (cachedTime, lastTimeTick) = _cachedCurTimeInfo;
+            var (cachedTime, lastTimeTick) = CachedCurTimeInfo;
 
             TimeSpan newTime;
 
@@ -217,7 +217,7 @@ namespace Robust.Shared.Timing
               newTime = cachedTime - (TickPeriod * (lastTimeTick.Value - CurTick.Value));
 
             DebugTools.Assert(TimeSpan.Zero <= newTime);
-            _cachedCurTimeInfo = (newTime, CurTick);
+            CachedCurTimeInfo = (newTime, CurTick);
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace Robust.Shared.Timing
         /// </summary>
         public void ResetSimTime()
         {
-            _cachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);;
+            CachedCurTimeInfo = (TimeSpan.Zero, GameTick.First);
             CurTick = GameTick.First;
             TickRemainder = TimeSpan.Zero;
             Paused = true;

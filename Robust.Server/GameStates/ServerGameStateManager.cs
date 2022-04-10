@@ -171,6 +171,7 @@ namespace Robust.Server.GameStates
             const int BatchSize = 2;
             var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
 
+            var curTime = _gameTiming.CurTime;
             Parallel.For(0, batches, i =>
             {
                 var start = i * BatchSize;
@@ -180,7 +181,7 @@ namespace Robust.Server.GameStates
                 {
                     try
                     {
-                        SendStateUpdate(j);
+                        SendStateUpdate(j, curTime);
                     }
                     catch (Exception e) // Catch EVERY exception
                     {
@@ -189,7 +190,7 @@ namespace Robust.Server.GameStates
                 }
             });
 
-            void SendStateUpdate(int sessionIndex)
+            void SendStateUpdate(int sessionIndex, TimeSpan curTime)
             {
                 var session = players[sessionIndex];
 
@@ -214,7 +215,7 @@ namespace Robust.Server.GameStates
                 // lastAck varies with each client based on lag and such, we can't just make 1 global state and send it to everyone
                 var lastInputCommand = inputSystem.GetLastInputCommand(session);
                 var lastSystemMessage = _entityNetworkManager.GetLastMessageSequence(session);
-                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates, playerStates, deletions, mapData);
+                var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates, playerStates, deletions, mapData, curTime);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 

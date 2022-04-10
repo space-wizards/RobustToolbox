@@ -123,7 +123,13 @@ namespace Robust.Client.GameStates
             }
 
             if (applyNextState && !curState!.Extrapolated)
+            {
                 LastProcessedRealState = curState.ToSequence;
+
+                // Keep the client and the server current-time calculation in sync 
+                if (curState.ToTime != null)
+                    _timing.CachedCurTimeInfo = (curState.ToTime.Value, curState.ToSequence);
+            }
 
             if (!_waitingForFull)
             {
@@ -204,6 +210,9 @@ namespace Robust.Client.GameStates
                     Logger.DebugS("net", $"Resync CurTick to: {_lastFullState.ToSequence}");
 
                 var curTick = _timing.CurTick = _lastFullState.ToSequence;
+
+                if (_lastFullState.ToTime != null)
+                    _timing.CachedCurTimeInfo = (_lastFullState.ToTime.Value, _lastFullState.ToSequence);
 
                 if (Interpolation)
                 {

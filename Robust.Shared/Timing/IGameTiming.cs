@@ -25,6 +25,8 @@ namespace Robust.Shared.Timing
         /// </summary>
         TimeSpan CurTime { get; }
 
+        (TimeSpan, GameTick) CachedCurTimeInfo { get; set; }
+
         /// <summary>
         ///     The current real uptime of the simulation. Use this for UI and out of game timing.
         /// </summary>

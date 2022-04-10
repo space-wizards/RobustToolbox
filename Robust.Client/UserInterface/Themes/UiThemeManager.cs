@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using NFluidsynth;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
+using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.UserInterface.Themes;
 
@@ -14,6 +16,8 @@ public interface IUIThemeManager
     public UITheme GetTheme(string name);
     public UITheme GetThemeOrDefault(string name);
     public void SetActiveTheme(string themeName);
+    public UITheme DefaultTheme { get; }
+    public void SetDefaultTheme(string themeId);
 }
 
 
@@ -27,10 +31,12 @@ public sealed class UiThemeManager : IUIThemeManager
 
     public UITheme CurrentTheme { get; private set; } = default!;
 
-    public UITheme DefaultTheme => _protoManager.Index<UITheme>(UITheme.DefaultName);
+    private bool _defaultOverriden = false;
+    public UITheme DefaultTheme { get; private set; } = default!;
 
     void IUIThemeManager.Initialize()
     {
+        DefaultTheme = _protoManager.Index<UITheme>(UITheme.DefaultName);
         CurrentTheme = DefaultTheme;
         foreach (var proto in _protoManager.EnumeratePrototypes<UITheme>())
         {
@@ -43,6 +49,20 @@ public sealed class UiThemeManager : IUIThemeManager
     {
         if (!_themes.TryGetValue(themeName, out var theme) || (theme == CurrentTheme)) return;
         CurrentTheme = theme;
+    }
+
+    public void SetDefaultTheme(string themeId)
+    {
+        if (_defaultOverriden)
+        {
+            //this exists to stop people from misusing default theme
+            Logger.Warning("Tried to set default theme twice!");
+            return;
+        }
+
+        if (!_protoManager.TryIndex(themeId, out UITheme? theme)) return;
+        DefaultTheme = theme;
+        _defaultOverriden = true;
     }
 
     private void UpdateTheme(UITheme newTheme)

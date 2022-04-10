@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
+using Robust.Client.UserInterface.Themes;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
@@ -20,6 +23,9 @@ public sealed class UITheme : IPrototype
 
     [DataField("path")]
     private ResourcePath? _path;
+
+    [DataField("colors", readOnly: true)]
+    public Dictionary<string, Color>? Colors { get; }
     public ResourcePath Path => _path == null ? new ResourcePath(DefaultPath+"/"+ID) : _path;
 
     private void ValidateFilePath(IResourceCache resourceCache)
@@ -36,5 +42,17 @@ public sealed class UITheme : IPrototype
     {
         return cache.TryGetResource<TextureResource>( new ResourcePath(Path + texturePath+".png"), out var texture) ? texture :
             cache.GetResource<TextureResource>(DefaultPath+"/"+DefaultName+"/" + texturePath+".png");
+    }
+
+    public Color? ResolveColor(string colorName)
+    {
+        if (Colors == null) return null;
+        return Colors.TryGetValue(colorName, out var color) ? color : IoCManager.Resolve<IUIThemeManager>().DefaultTheme.ResolveColor(colorName);
+    }
+
+    public Color ResolveColorOrSpecified(string colorName, Color defaultColor = default)
+    {
+        var color = ResolveColor(colorName) ?? defaultColor;
+        return defaultColor;
     }
 }

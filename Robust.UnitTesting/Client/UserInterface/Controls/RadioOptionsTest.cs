@@ -5,7 +5,7 @@ namespace Robust.UnitTesting.Client.UserInterface.Controls
 {
     [TestFixture]
     [TestOf(typeof(RadioOptions<int>))]
-    public class RadioOptionsTest : RobustUnitTest
+    public sealed class RadioOptionsTest : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 

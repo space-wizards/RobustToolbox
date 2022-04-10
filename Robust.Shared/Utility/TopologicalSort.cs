@@ -108,7 +108,7 @@ namespace Robust.Shared.Utility
         }
 
         [DebuggerDisplay("GraphNode: {" + nameof(Value) + "}")]
-        public class GraphNode<T>
+        public sealed class GraphNode<T>
         {
             public readonly T Value;
             public readonly List<GraphNode<T>> Dependant = new();

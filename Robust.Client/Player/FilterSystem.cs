@@ -4,7 +4,7 @@ using Robust.Shared.Player;
 
 namespace Robust.Client.Player
 {
-    internal class FilterSystem : SharedFilterSystem
+    internal sealed class FilterSystem : SharedFilterSystem
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 

@@ -8,7 +8,7 @@ using Robust.Shared.Prototypes;
 
 namespace Robust.Client.Placement.Modes
 {
-    public class AlignSimilar : PlacementMode
+    public sealed class AlignSimilar : PlacementMode
     {
         private const uint SnapToRange = 50;
 
@@ -31,7 +31,7 @@ namespace Robust.Client.Placement.Modes
 
             var mapId = MouseCoords.GetMapId(pManager.EntityManager);
 
-            var snapToEntities = IoCManager.Resolve<IEntityLookup>().GetEntitiesInRange(MouseCoords, SnapToRange)
+            var snapToEntities = EntitySystem.Get<EntityLookupSystem>().GetEntitiesInRange(MouseCoords, SnapToRange)
                 .Where(entity => pManager.EntityManager.GetComponent<MetaDataComponent>(entity).EntityPrototype == pManager.CurrentPrototype && pManager.EntityManager.GetComponent<TransformComponent>(entity).MapID == mapId)
                 .OrderBy(entity => (pManager.EntityManager.GetComponent<TransformComponent>(entity).WorldPosition - MouseCoords.ToMapPos(pManager.EntityManager)).LengthSquared)
                 .ToList();

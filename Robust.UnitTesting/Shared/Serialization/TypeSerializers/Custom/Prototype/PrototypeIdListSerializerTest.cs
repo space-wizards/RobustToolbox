@@ -20,7 +20,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers.Custom.Prototy
 {
     [TestFixture]
     [TestOf(typeof(PrototypeIdListSerializer<>))]
-    public class PrototypeIdListSerializerTest : SerializationTest
+    public sealed class PrototypeIdListSerializerTest : SerializationTest
     {
         private static readonly string TestEntityId = $"{nameof(PrototypeIdListSerializerTest)}Dummy";
 
@@ -47,7 +47,7 @@ entitiesImmutableList:
 
             protoMan.RegisterType(typeof(EntityPrototype));
             protoMan.LoadString(Prototypes);
-            protoMan.Resync();
+            protoMan.ResolveResults();
         }
 
         [Test]
@@ -88,7 +88,7 @@ entitiesImmutableList:
             stream.Load(new StringReader(DataString));
 
             var node = stream.Documents[0].RootNode.ToDataNode();
-            var definition = Serialization.ReadValue<PrototypeIdListSerializerTestDataDefinition>(node);
+            var definition = Serialization.Read<PrototypeIdListSerializerTestDataDefinition>(node);
 
             Assert.NotNull(definition);
 
@@ -167,7 +167,7 @@ entitiesImmutableList:
     }
 
     [DataDefinition]
-    public class PrototypeIdListSerializerTestDataDefinition
+    public sealed class PrototypeIdListSerializerTestDataDefinition
     {
         [DataField("entitiesList", customTypeSerializer: typeof(PrototypeIdListSerializer<EntityPrototype>))]
         public List<string> EntitiesList = new();

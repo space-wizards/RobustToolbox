@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 namespace Robust.Shared.ContentPack
 {
     [Serializable]
+    [Virtual]
     public class TypeCheckFailedException : Exception
     {
         public TypeCheckFailedException()

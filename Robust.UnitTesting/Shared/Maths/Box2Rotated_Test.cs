@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Maths
 {
     [TestFixture]
     [TestOf(typeof(Box2Rotated))]
-    public class Box2Rotated_Test
+    public sealed class Box2Rotated_Test
     {
         private static IEnumerable<Box2[]> BoxRotations = new[]
         {

@@ -6,6 +6,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A type of toggleable button that also has a checkbox.
     /// </summary>
+    [Virtual]
     public class CheckBox : ContainerButton
     {
         public const string StyleClassCheckBox = "checkBox";

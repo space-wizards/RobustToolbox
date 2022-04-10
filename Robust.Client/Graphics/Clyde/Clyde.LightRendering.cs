@@ -514,13 +514,14 @@ namespace Robust.Client.Graphics.Clyde
             var enlargedBounds = worldAABB.Enlarged(renderingTreeSystem.MaxLightRadius);
 
             // Use worldbounds for this one as we only care if the light intersects our actual bounds
-            var state = (this, worldAABB, count: 0);
+            var state = (this, worldAABB, count: 0, shadowCastingCount: 0);
+            var xforms = _entityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var comp in renderingTreeSystem.GetRenderTrees(map, enlargedBounds))
             {
-                var bounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
+                var bounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(worldBounds);
 
-                comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count) state, in PointLightComponent light) =>
+                comp.LightTree.QueryAabb(ref state, (ref (Clyde clyde, Box2 worldAABB, int count, int shadowCastingCount) state, in PointLightComponent light) =>
                 {
                     if (state.count >= LightsToRenderListSize)
                     {
@@ -528,7 +529,7 @@ namespace Robust.Client.Graphics.Clyde
                         return false;
                     }
 
-                    var transform = _entityManager.GetComponent<TransformComponent>(light.Owner);
+                    var transform = xforms.GetComponent(light.Owner);
 
                     if (float.IsNaN(transform.LocalPosition.X) || float.IsNaN(transform.LocalPosition.Y)) return true;
 
@@ -542,6 +543,9 @@ namespace Robust.Client.Graphics.Clyde
                         return true;
                     }
 
+                    // If the light is a shadow casting light, keep a separate track of that
+                    if (light.CastShadows) state.shadowCastingCount++;
+
                     float distanceSquared = (state.worldAABB.Center - lightPos).LengthSquared;
                     state.clyde._lightsToRenderList[state.count++] = (light, lightPos, distanceSquared);
 
@@ -549,17 +553,29 @@ namespace Robust.Client.Graphics.Clyde
                 }, bounds);
             }
 
-            if (state.count > _maxLightsPerScene)
+            if (state.shadowCastingCount > _maxLightsPerScene)
             {
-                // There are too many lights to fit in the scene.
+                // There are too many lights casting shadows to fit in the scene.
                 // This check must occur before occluder expansion, or else bad things happen.
-                // Sort lights by distance.
+
+                // First, partition the array based on whether the lights are shadow casting or not
+                // (non shadow casting lights should be the first partition, shadow casting lights the second)
                 Array.Sort(_lightsToRenderList, 0, state.count, Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
+                {
+                    if (x.light.CastShadows && !y.light.CastShadows) return 1;
+                    else if (!x.light.CastShadows && y.light.CastShadows) return -1;
+                    else return 0;
+                }));
+
+                // Next, sort just the shadow casting lights by distance.
+                Array.Sort(_lightsToRenderList, state.count - state.shadowCastingCount, state.shadowCastingCount, Comparer<(PointLightComponent light, Vector2 pos, float distanceSquared)>.Create((x, y) =>
                 {
                     return x.distanceSquared.CompareTo(y.distanceSquared);
                 }));
-                // Then effectively delete the furthest lights.
-                state.count = _maxLightsPerScene;
+
+                // Then effectively delete the furthest lights, by setting the end of the array to exclude N
+                // number of shadow casting lights (where N is the number above the max number per scene.)
+                state.count -= state.shadowCastingCount - _maxLightsPerScene;
             }
 
             // When culling occluders later, we can't just remove any occluders outside the worldBounds.
@@ -845,7 +861,6 @@ namespace Robust.Client.Graphics.Clyde
             // 3D geometry used during depth projection.
             // 2D mask geometry used to apply wall bleed.
 
-            // TODO: This code probably does not work correctly with rotated camera.
             // TODO: Yes this function throws and index exception if you reach maxOccluders.
 
             const int maxOccluders = 2048;
@@ -871,21 +886,24 @@ namespace Robust.Client.Graphics.Clyde
                 var ii = 0;
                 var imi = 0;
 
+                var xforms = _entityManager.GetEntityQuery<TransformComponent>();
+
                 foreach (var comp in occluderSystem.GetOccluderTrees(map, expandedBounds))
                 {
-                    var treeBounds = _entityManager.GetComponent<TransformComponent>(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
+                    var treeBounds = xforms.GetComponent(comp.Owner).InvWorldMatrix.TransformBox(expandedBounds);
 
                     comp.Tree.QueryAabb((in OccluderComponent sOccluder) =>
                     {
-                        var occluder = (ClientOccluderComponent)sOccluder;
-                        var transform = _entityManager.GetComponent<TransformComponent>(occluder.Owner);
-                        if (!occluder.Enabled)
+                        var transform = xforms.GetComponent(sOccluder.Owner);
+                        if (!sOccluder.Enabled)
                         {
                             return true;
                         }
 
+                        var occluder = (ClientOccluderComponent)sOccluder;
+
                         var worldTransform = transform.WorldMatrix;
-                        var box = occluder.BoundingBox;
+                        var box = sOccluder.BoundingBox;
 
                         var tl = worldTransform.Transform(box.TopLeft);
                         var tr = worldTransform.Transform(box.TopRight);

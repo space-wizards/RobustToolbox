@@ -507,8 +507,8 @@ namespace Robust.UnitTesting.Shared.GameObjects
         }
     }
 
-    internal class TestEventSubscriber : IEntityEventSubscriber { }
+    internal sealed class TestEventSubscriber : IEntityEventSubscriber { }
 
-    internal class TestEventArgs : EntityEventArgs { }
-    internal class TestEventTwoArgs : EntityEventArgs { }
+    internal sealed class TestEventArgs : EntityEventArgs { }
+    internal sealed class TestEventTwoArgs : EntityEventArgs { }
 }

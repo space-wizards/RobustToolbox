@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestFixture]
     [TestOf(typeof(TypeHelpers))]
     [SuppressMessage("ReSharper", "UnusedMember.Local")]
-    public class TypeHelpers_Test
+    public sealed class TypeHelpers_Test
     {
         [Test]
         public void TestIsBasePropertyDefinition()
@@ -19,21 +19,25 @@ namespace Robust.UnitTesting.Shared.Utility
             Assert.That(typeof(Hidden).GetProperty("X")!.IsBasePropertyDefinition(), Is.True);
         }
 
+        [Virtual]
         private class Parent
         {
             public virtual int X => 0;
         }
 
+        [Virtual]
         private class Child : Parent
         {
             public override int X => 5;
         }
 
+        [Virtual]
         private class SealedChild : Parent
         {
             public sealed override int X => 6;
         }
 
+        [Virtual]
         private class Hidden : Parent
         {
             public new int X { get; } = 5;

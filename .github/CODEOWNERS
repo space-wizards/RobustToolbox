@@ -11,7 +11,7 @@
 /Robust.Analyzers @PaulRitter
 /Robust.*/GameStates @PaulRitter
 /Robust.Shared/Analyzers @PaulRitter
-/Robust.*/Serialization @PaulRitter
+/Robust.*/Serialization @PaulRitter @DrSmugleaf
 /Robust.*/Prototypes @PaulRitter
 /Robust.Shared/GameObjects/ComponentDependencies @PaulRitter
 /Robust.*/Containers @PaulRitter

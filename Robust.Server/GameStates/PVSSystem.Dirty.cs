@@ -12,7 +12,7 @@ namespace Robust.Server.GameStates
     /// <summary>
     /// Caching for dirty bodies
     /// </summary>
-    internal partial class PVSSystem
+    internal sealed partial class PVSSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
 
@@ -33,12 +33,13 @@ namespace Robust.Server.GameStates
                 _dirtyEntities[i] = new HashSet<EntityUid>(32);
             }
             EntityManager.EntityAdded += OnEntityAdd;
-            SubscribeLocalEvent<EntityDirtyEvent>(OnDirty);
+            EntityManager.EntityDirtied += OnEntityDirty;
         }
 
         private void ShutdownDirty()
         {
             EntityManager.EntityAdded -= OnEntityAdd;
+            EntityManager.EntityDirtied -= OnEntityDirty;
         }
 
         private void OnEntityAdd(object? sender, EntityUid e)
@@ -47,12 +48,10 @@ namespace Robust.Server.GameStates
             _addEntities[_currentIndex].Add(e);
         }
 
-        private void OnDirty(ref EntityDirtyEvent ev)
+        private void OnEntityDirty(object? sender, EntityUid uid)
         {
-            if (_addEntities[_currentIndex].Contains(ev.Uid) ||
-                EntityManager.GetComponent<MetaDataComponent>(ev.Uid).EntityLifeStage < EntityLifeStage.Initialized) return;
-
-            _dirtyEntities[_currentIndex].Add(ev.Uid);
+            if (!_addEntities[_currentIndex].Contains(uid))
+                _dirtyEntities[_currentIndex].Add(uid);
         }
 
         private void CleanupDirty(IEnumerable<IPlayerSession> sessions)

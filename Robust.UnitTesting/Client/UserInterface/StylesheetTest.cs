@@ -6,7 +6,7 @@ using Robust.Shared.IoC;
 namespace Robust.UnitTesting.Client.UserInterface
 {
     [TestFixture]
-    public class StylesheetTest : RobustUnitTest
+    public sealed class StylesheetTest : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 

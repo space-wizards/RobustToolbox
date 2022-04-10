@@ -4,7 +4,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Shared.Maths
 {
     [TestFixture, Parallelizable, TestOf(typeof(Box2i))]
-    class Box2i_Test
+    sealed class Box2i_Test
     {
         [Test]
         public void Box2iUnion()

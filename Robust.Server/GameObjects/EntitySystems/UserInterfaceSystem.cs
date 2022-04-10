@@ -13,7 +13,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class UserInterfaceSystem : SharedUserInterfaceSystem
+    public sealed class UserInterfaceSystem : SharedUserInterfaceSystem
     {
         private const float MaxWindowRange = 2;
         private const float MaxWindowRangeSquared = MaxWindowRange * MaxWindowRange;
@@ -176,7 +176,7 @@ namespace Robust.Server.GameObjects
 
         public BoundUserInterface? GetUiOrNull(EntityUid uid, object uiKey, ServerUserInterfaceComponent? ui = null)
         {
-            return TryGetUi(uid, uiKey, out var bui)
+            return TryGetUi(uid, uiKey, out var bui, ui)
                 ? bui
                 : null;
         }
@@ -185,12 +185,12 @@ namespace Robust.Server.GameObjects
         {
             bui = null;
 
-            return Resolve(uid, ref ui) && ui.TryGetBoundUserInterface(uiKey, out bui);
+            return Resolve(uid, ref ui, false) && ui.TryGetBoundUserInterface(uiKey, out bui);
         }
 
         public bool IsUiOpen(EntityUid uid, object uiKey, ServerUserInterfaceComponent? ui = null)
         {
-            if (!Resolve(uid, ref ui))
+            if (!Resolve(uid, ref ui, false))
                 return false;
 
             if (!TryGetUi(uid, uiKey, out var bui, ui))
@@ -201,7 +201,7 @@ namespace Robust.Server.GameObjects
 
         public bool TrySetUiState(EntityUid uid, object uiKey, BoundUserInterfaceState state, IPlayerSession? session = null, ServerUserInterfaceComponent? ui = null)
         {
-            if (!Resolve(uid, ref ui))
+            if (!Resolve(uid, ref ui, false))
                 return false;
 
             if (!TryGetUi(uid, uiKey, out var bui, ui))

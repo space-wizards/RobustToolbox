@@ -13,7 +13,7 @@ namespace Robust.Shared.Network.Messages
     /// </summary>
     /// <seealso cref="RobustMappedStringSerializer.NetworkInitialize"/>
     [UsedImplicitly]
-    internal class MsgMapStrServerHandshake : NetMessage
+    internal sealed class MsgMapStrServerHandshake : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Core;
 

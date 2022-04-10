@@ -6,7 +6,7 @@ using Robust.UnitTesting.Server;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Parallelizable]
-    class EntityManagerTests
+    sealed class EntityManagerTests
     {
         private static readonly MapId TestMapId = new(1);
 

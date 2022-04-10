@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 namespace Robust.Client.GameObjects
 {
     [Serializable]
+    [Virtual]
     public class ComponentStateApplyException : Exception
     {
         public ComponentStateApplyException()

@@ -6,6 +6,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     Container that tries to put controls at their specified origin,
     ///     moving them around if necessary to avoid them going outside of the bounds of the container.
     /// </summary>
+    [Virtual]
     public sealed class PopupContainer : Control
     {
         /// <summary>

@@ -18,7 +18,7 @@ using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Client.Graphics.Audio
 {
-    internal partial class ClydeAudio : IClydeAudio, IClydeAudioInternal
+    internal sealed partial class ClydeAudio : IClydeAudio, IClydeAudioInternal
     {
         private ALDevice _openALDevice;
         private ALContext _openALContext;
@@ -224,7 +224,7 @@ namespace Robust.Client.Graphics.Audio
                 _openALSawmill.Error("Failed to generate source. Too many simultaneous audio streams?");
                 return null;
             }
-            
+
             // ReSharper disable once PossibleInvalidOperationException
             // TODO: This really shouldn't be indexing based on the ClydeHandle...
             AL.Source(source, ALSourcei.Buffer, _audioSampleBuffers[(int) stream.ClydeHandle!.Value.Value].BufferHandle);

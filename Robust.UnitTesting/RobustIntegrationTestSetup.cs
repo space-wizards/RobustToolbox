@@ -4,7 +4,7 @@ using static Robust.UnitTesting.RobustIntegrationTest;
 
 [SetUpFixture]
 // ReSharper disable once CheckNamespace
-public class RobustIntegrationTestSetup
+public sealed class RobustIntegrationTestSetup
 {
     public void Shutdown()
     {

@@ -62,7 +62,7 @@ namespace Robust.Client.Graphics.Clyde
                 PixelInternalFormat.Srgb8Alpha8 => 4,
                 PixelInternalFormat.R11fG11fB10f => 4,
                 PixelInternalFormat.R32f => 4,
-                PixelInternalFormat.Rg32f => 4,
+                PixelInternalFormat.Rg32f => 8,
                 PixelInternalFormat.R8 => 1,
                 _ => 0
             };

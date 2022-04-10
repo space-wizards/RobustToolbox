@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
     [TestOf(typeof(IPhysShape))]
-    public class Shape_Test : RobustUnitTest
+    public sealed class Shape_Test : RobustUnitTest
     {
         [Test]
         public void TestPolyNormals()

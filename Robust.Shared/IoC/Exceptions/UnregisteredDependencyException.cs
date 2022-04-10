@@ -8,6 +8,7 @@ namespace Robust.Shared.IoC.Exceptions
     /// except that this is thrown when using field injection via <see cref="DependencyAttribute"/> and includes extra metadata.
     /// </summary>
     [Serializable]
+    [Virtual]
     public class UnregisteredDependencyException : Exception
     {
         /// <summary>

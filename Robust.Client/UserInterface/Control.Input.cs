@@ -58,7 +58,7 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public class GUIMouseHoverEventArgs : EventArgs
+    public sealed class GUIMouseHoverEventArgs : EventArgs
     {
         /// <summary>
         ///     The control this event originated from.
@@ -71,7 +71,7 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public class GUIBoundKeyEventArgs : BoundKeyEventArgs
+    public sealed class GUIBoundKeyEventArgs : BoundKeyEventArgs
     {
         /// <summary>
         ///     Position of the mouse, relative to the current control.
@@ -89,7 +89,7 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public class GUIKeyEventArgs : KeyEventArgs
+    public sealed class GUIKeyEventArgs : KeyEventArgs
     {
         /// <summary>
         ///     The control spawning this event.
@@ -110,7 +110,7 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public class GUITextEventArgs : TextEventArgs
+    public sealed class GUITextEventArgs : TextEventArgs
     {
         /// <summary>
         ///     The control spawning this event.
@@ -160,7 +160,7 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public class GUIMouseMoveEventArgs : GUIMouseEventArgs
+    public sealed class GUIMouseMoveEventArgs : GUIMouseEventArgs
     {
         /// <summary>
         ///     The new position relative to the previous position.
@@ -180,7 +180,7 @@ namespace Robust.Client.UserInterface
         }
     }
 
-    public class GUIMouseWheelEventArgs : GUIMouseEventArgs
+    public sealed class GUIMouseWheelEventArgs : GUIMouseEventArgs
     {
         public Vector2 Delta { get; }
 

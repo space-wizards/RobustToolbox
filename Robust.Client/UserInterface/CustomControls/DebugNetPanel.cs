@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public class DebugNetPanel : PanelContainer
+    public sealed class DebugNetPanel : PanelContainer
     {
         // Float so I don't have to cast it to prevent integer division down below.
         const float ONE_KIBIBYTE = 1024;

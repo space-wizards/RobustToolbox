@@ -144,7 +144,7 @@ namespace Robust.Client.Graphics.Clyde
                 if (Eye == null)
                     return default;
 
-                var eye = (IEye) Eye;
+                var eye = Eye;
                 var newPoint = point;
 
                 eye.GetViewMatrix(out var viewMatrix, RenderScale);

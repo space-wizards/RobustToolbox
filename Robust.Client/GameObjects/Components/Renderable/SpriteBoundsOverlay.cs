@@ -57,7 +57,7 @@ namespace Robust.Client.GameObjects
         private bool _enabled;
     }
 
-    public class SpriteBoundsOverlay : Overlay
+    public sealed class SpriteBoundsOverlay : Overlay
     {
         public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
@@ -84,10 +84,16 @@ namespace Robust.Client.GameObjects
 
                 foreach (var sprite in comp.SpriteTree.QueryAabb(localAABB))
                 {
-                    var worldPos = _entityManager.GetComponent<TransformComponent>(sprite.Owner).WorldPosition;
-                    var bounds = sprite.CalculateBoundingBox(worldPos);
+                    var (worldPos, worldRot) = _entityManager.GetComponent<TransformComponent>(sprite.Owner).GetWorldPositionRotation();
+                    var bounds = sprite.CalculateRotatedBoundingBox(worldPos, worldRot);
+
+                    // Get scaled down bounds used to indicate the "south" of a sprite.
+                    var localBound = bounds.Box;
+                    var smallLocal = localBound.Scale(0.2f).Translated(-new Vector2(0f, localBound.Extents.Y));
+                    var southIndicator = new Box2Rotated(smallLocal, bounds.Rotation, bounds.Origin);
+
                     handle.DrawRect(bounds, Color.Red.WithAlpha(0.2f));
-                    handle.DrawRect(bounds.Scale(0.2f).Translated(-new Vector2(0f, bounds.Extents.Y)), Color.Blue.WithAlpha(0.5f));
+                    handle.DrawRect(southIndicator, Color.Blue.WithAlpha(0.5f));
                 }
             }
         }

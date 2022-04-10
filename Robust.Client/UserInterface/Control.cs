@@ -20,6 +20,7 @@ namespace Robust.Client.UserInterface
     ///     See https://docs.spacestation14.io/en/engine/user-interface for some basic concepts.
     /// </summary>
     [PublicAPI]
+    [Virtual]
     public partial class Control : IDisposable
     {
         private readonly List<Control> _orderedChildren = new();
@@ -896,7 +897,7 @@ namespace Robust.Client.UserInterface
             Ignore = 2,
         }
 
-        public class OrderedChildCollection : ICollection<Control>, IReadOnlyCollection<Control>
+        public sealed class OrderedChildCollection : ICollection<Control>, IReadOnlyCollection<Control>
         {
             private readonly Control Owner;
 

@@ -3,7 +3,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgReloadPrototypes : NetMessage
+    public sealed class MsgReloadPrototypes : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

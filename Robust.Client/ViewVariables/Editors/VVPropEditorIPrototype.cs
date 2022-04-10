@@ -9,7 +9,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorIPrototype<T> : VVPropEditor
+    public sealed class VVPropEditorIPrototype<T> : VVPropEditor
     {
         private object? _localValue;
         private ViewVariablesObjectSelector? _selector;

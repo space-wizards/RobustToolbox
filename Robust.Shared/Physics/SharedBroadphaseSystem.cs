@@ -16,7 +16,7 @@ namespace Robust.Shared.Physics
 {
     public abstract class SharedBroadphaseSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly IPhysicsManager _physicsManager = default!;
 
         private const int MinimumBroadphaseCapacity = 256;
@@ -40,7 +40,8 @@ namespace Robust.Shared.Physics
         private Dictionary<FixtureProxy, HashSet<FixtureProxy>> _pairBuffer = new(64);
         private Dictionary<FixtureProxy, Box2> _gridMoveBuffer = new(64);
         private List<FixtureProxy> _queryBuffer = new(32);
-        private Dictionary<EntityUid, Matrix3> _broadInvMatrices = new(8);
+
+        private List<MapGrid> _gridsPool = new(8);
 
         /// <summary>
         /// How much to expand bounds by to check cross-broadphase collisions.
@@ -64,16 +65,19 @@ namespace Robust.Shared.Physics
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemove);
             SubscribeLocalEvent<CollisionChangeMessage>(OnPhysicsUpdate);
 
-            // Shouldn't need to listen to mapchanges as parent changes should handle it...
-            SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
-
             SubscribeLocalEvent<PhysicsComponent, MoveEvent>(OnMove);
             SubscribeLocalEvent<PhysicsComponent, RotateEvent>(OnRotate);
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.OnValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand, true);
-            _mapManager.MapCreated += OnMapCreated;
-            _mapManager.MapDestroyed += OnMapDestroyed;
+
+            SubscribeLocalEvent<MapChangedEvent>(ev =>
+            {
+                if (ev.Created)
+                    OnMapCreated(ev);
+                else
+                    OnMapDestroyed(ev);
+            });
         }
 
         private void SetBroadphaseExpand(float value) => _broadphaseExpand = value;
@@ -95,18 +99,8 @@ namespace Robust.Shared.Physics
         /// </summary>
         public void ProcessUpdates()
         {
-            _broadInvMatrices.Clear();
-
             // Unfortunately we can't re-use our broadphase transforms as controllers may update them.
             _physicsManager.ClearTransforms();
-        }
-
-        private Matrix3 GetBroadphaseInvMatrix(EntityUid uid)
-        {
-            if (_broadInvMatrices.TryGetValue(uid, out var matrix)) return matrix;
-            matrix = EntityManager.GetComponent<TransformComponent>(uid).InvWorldMatrix;
-            _broadInvMatrices[uid] = matrix;
-            return matrix;
         }
 
         #region Find Contacts
@@ -177,6 +171,9 @@ namespace Robust.Shared.Physics
             // FindNewContacts is inherently going to be a lot slower than Box2D's normal version so we need
             // to cache a bunch of stuff to make up for it.
             var contactManager = EntityManager.GetComponent<SharedPhysicsMapComponent>(_mapManager.GetMapEntityIdOrThrow(mapId)).ContactManager;
+            var broadphaseQuery = EntityManager.GetEntityQuery<BroadphaseComponent>();
+            var physicsQuery = EntityManager.GetEntityQuery<PhysicsComponent>();
+            var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
 
             // Handle grids first as they're not stored on map broadphase at all.
             HandleGridCollisions(mapId, contactManager, movedGrids);
@@ -198,63 +195,16 @@ namespace Robust.Shared.Physics
                     continue;
                 }
 
+                _gridsPool.Clear();
+
                 // Get every broadphase we may be intersecting.
-                // TODO: Fuck LINQ
                 // Also TODO: Don't put grids on movebuffer so you get peak shuttle driving performance.
-                var broadphases = _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand)).Select(o => o.GridEntityId).ToList();
-                broadphases.Add(_mapManager.GetMapEntityIdOrThrow(mapId));
-
-                foreach (var broadphase in broadphases)
+                foreach (var grid in _mapManager.FindGridsIntersecting(mapId, worldAABB.Enlarged(_broadphaseExpand), _gridsPool, xformQuery, physicsQuery))
                 {
-                    // Broadphase can't intersect with entities on itself so skip.
-                    if (proxyBody.Owner == broadphase) continue;
-
-                    // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
-                    Box2 aabb;
-                    var proxyBroad = proxyBody.Broadphase!;
-
-                    // If it's the same broadphase as our body's one then don't need to translate the AABB.
-                    if (proxyBroad.Owner == broadphase)
-                    {
-                        aabb = proxy.AABB;
-                    }
-                    else
-                    {
-                        aabb = GetBroadphaseInvMatrix(broadphase).TransformBox(worldAABB);
-                    }
-
-                    var broadphaseComp = EntityManager.GetComponent<BroadphaseComponent>(broadphase);
-
-                    foreach (var other in broadphaseComp.Tree.QueryAabb(_queryBuffer, aabb))
-                    {
-                        // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
-
-                        // Do fast checks first and slower checks after (in ContactManager).
-                        if (proxy == other ||
-                            proxy.Fixture.Body == other.Fixture.Body ||
-                            !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
-
-                        // Don't add duplicates.
-                        // Look it disgusts me but we can't do it Box2D's way because we're getting pairs
-                        // with different broadphases so can't use Proxy sorting to skip duplicates.
-                        // TODO: This needs to be better
-                        if (_pairBuffer.TryGetValue(other, out var existing) &&
-                            existing.Contains(proxy))
-                        {
-                            continue;
-                        }
-
-                        if (!_pairBuffer.TryGetValue(proxy, out var proxyExisting))
-                        {
-                            proxyExisting = new HashSet<FixtureProxy>();
-                            _pairBuffer[proxy] = proxyExisting;
-                        }
-
-                        proxyExisting.Add(other);
-                    }
-
-                    _queryBuffer.Clear();
+                    FindPairs(proxy, worldAABB, grid.GridEntityId, xformQuery, broadphaseQuery);
                 }
+
+                FindPairs(proxy, worldAABB, _mapManager.GetMapEntityId(mapId), xformQuery, broadphaseQuery);
             }
 
             foreach (var (proxyA, proxies) in _pairBuffer)
@@ -274,7 +224,8 @@ namespace Robust.Shared.Physics
                     // to make sure the contact doesn't fail.
                     // This is because we generate a contact across 2 different broadphases where both bodies aren't
                     // moving locally but are moving in world-terms.
-                    if (proxyA.Fixture.Hard && other.Fixture.Hard)
+                    if (proxyA.Fixture.Hard && other.Fixture.Hard &&
+                        (_gridMoveBuffer.ContainsKey(proxyA) || _gridMoveBuffer.ContainsKey(other)))
                     {
                         proxyABody.WakeBody();
                         otherBody.WakeBody();
@@ -349,29 +300,74 @@ namespace Robust.Shared.Physics
         }
 
         #endregion
-
-        internal void Cleanup()
+        
+        private void FindPairs(
+            FixtureProxy proxy,
+            Box2 worldAABB,
+            EntityUid broadphase,
+            EntityQuery<TransformComponent> xformQuery,
+            EntityQuery<BroadphaseComponent> broadphaseQuery)
         {
-            // Can't just clear movebuffer / movedgrids here because this is called after transforms update.
-            _broadInvMatrices.Clear();
+            var proxyBody = proxy.Fixture.Body;
+
+            // Broadphase can't intersect with entities on itself so skip.
+            if (proxyBody.Owner == broadphase) return;
+
+            // Logger.DebugS("physics", $"Checking proxy for {proxy.Fixture.Body.Owner} on {broadphase.Owner}");
+            Box2 aabb;
+            var proxyBroad = proxyBody.Broadphase!;
+
+            // If it's the same broadphase as our body's one then don't need to translate the AABB.
+            if (proxyBroad.Owner == broadphase)
+            {
+                aabb = proxy.AABB;
+            }
+            else
+            {
+                var broadXform = xformQuery.GetComponent(broadphase);
+                aabb = broadXform.InvWorldMatrix.TransformBox(worldAABB);
+            }
+
+            var broadphaseComp = broadphaseQuery.GetComponent(broadphase);
+
+            foreach (var other in broadphaseComp.Tree.QueryAabb(_queryBuffer, aabb))
+            {
+                // Logger.DebugS("physics", $"Checking {proxy.Fixture.Body.Owner} against {other.Fixture.Body.Owner} at {aabb}");
+
+                // Do fast checks first and slower checks after (in ContactManager).
+                if (proxy == other ||
+                    proxy.Fixture.Body == other.Fixture.Body ||
+                    !ContactManager.ShouldCollide(proxy.Fixture, other.Fixture)) continue;
+
+                // Don't add duplicates.
+                // Look it disgusts me but we can't do it Box2D's way because we're getting pairs
+                // with different broadphases so can't use Proxy sorting to skip duplicates.
+                // TODO: This needs to be better
+                if (_pairBuffer.TryGetValue(other, out var existing) &&
+                    existing.Contains(proxy))
+                {
+                    continue;
+                }
+
+                if (!_pairBuffer.TryGetValue(proxy, out var proxyExisting))
+                {
+                    proxyExisting = new HashSet<FixtureProxy>();
+                    _pairBuffer[proxy] = proxyExisting;
+                }
+
+                proxyExisting.Add(other);
+            }
+
+            _queryBuffer.Clear();
         }
 
-        private void OnParentChange(EntityUid uid, PhysicsComponent component, ref EntParentChangedMessage args)
-        {
-            if (!component.CanCollide) return;
-
-            var lifestage = EntityManager.GetComponent<MetaDataComponent>(uid).EntityLifeStage;
-
-            if (lifestage is < EntityLifeStage.Initialized or > EntityLifeStage.MapInitialized) return;
-
-            UpdateBroadphase(component);
-        }
+        #endregion
 
         /// <summary>
         /// If our broadphase has changed then remove us from our old one and add to our new one.
         /// </summary>
         /// <param name="body"></param>
-        private void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
+        internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
             if (!Resolve(body.Owner, ref manager, ref xform)) return;
 
@@ -455,29 +451,16 @@ namespace Robust.Shared.Physics
 
         public void RegenerateContacts(PhysicsComponent body)
         {
-            var edge = body.ContactEdges;
-
             // TODO: PhysicsMap actually needs to be made nullable (or needs a re-design to not be on the body).
             // Eventually it'll be a component on the map so nullspace won't have one anyway and we need to handle that scenario.
             // Technically it is nullable coz of networking (previously it got away with being able to ignore it
             // but anchoring can touch BodyType in HandleComponentState so we need to handle this here).
             if (body.PhysicsMap != null)
             {
-                var contactManager = body.PhysicsMap.ContactManager;
-
-                while (edge != null)
-                {
-                    var ce0 = edge;
-                    edge = edge.Next;
-                    contactManager.Destroy(ce0.Contact!);
-                }
-            }
-            else
-            {
-                DebugTools.Assert(body.ContactEdges == null);
+                body.DestroyContacts();
             }
 
-            body.ContactEdges = null;
+            DebugTools.Assert(body.Contacts.Count == 0);
 
             var broadphase = body.Broadphase;
 
@@ -495,24 +478,18 @@ namespace Robust.Shared.Physics
         public void Refilter(Fixture fixture)
         {
             // TODO: Call this method whenever collisionmask / collisionlayer changes
-            if (fixture.Body == null) return;
+            // TODO: This should never becalled when body is null.
+            DebugTools.Assert(fixture.Body != null);
+            if (fixture.Body == null)
+            {
+                return;
+            }
 
             var body = fixture.Body;
 
-            var edge = body.ContactEdges;
-
-            while (edge != null)
+            foreach (var (_, contact) in fixture.Contacts)
             {
-                var contact = edge.Contact!;
-                var fixtureA = contact.FixtureA;
-                var fixtureB = contact.FixtureB;
-
-                if (fixtureA == fixture || fixtureB == fixture)
-                {
-                    contact.FilterFlag = true;
-                }
-
-                edge = edge.Next;
+                contact.FilterFlag = true;
             }
 
             var broadphase = body.Broadphase;
@@ -520,7 +497,7 @@ namespace Robust.Shared.Physics
             // If nullspace or whatever ignore it.
             if (broadphase == null) return;
 
-            TouchProxies(EntityManager.GetComponent<TransformComponent>(fixture.Body.Owner).MapID, broadphase, fixture);
+            TouchProxies(Transform(fixture.Body.Owner).MapID, broadphase, fixture);
         }
 
         private void TouchProxies(MapId mapId, BroadphaseComponent broadphase, Fixture fixture)
@@ -773,13 +750,11 @@ namespace Robust.Shared.Physics
             base.Shutdown();
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             configManager.UnsubValueChanged(CVars.BroadphaseExpand, SetBroadphaseExpand);
-            _mapManager.MapCreated -= OnMapCreated;
-            _mapManager.MapDestroyed -= OnMapDestroyed;
         }
 
         #region Broadphase management
 
-        private void OnMapCreated(object? sender, MapEventArgs e)
+        private void OnMapCreated(MapChangedEvent e)
         {
             if (e.Map == MapId.Nullspace) return;
 
@@ -787,7 +762,7 @@ namespace Robust.Shared.Physics
             _moveBuffer[e.Map] = new Dictionary<FixtureProxy, Box2>(64);
         }
 
-        private void OnMapDestroyed(object? sender, MapEventArgs e)
+        private void OnMapDestroyed(MapChangedEvent e)
         {
             _moveBuffer.Remove(e.Map);
         }

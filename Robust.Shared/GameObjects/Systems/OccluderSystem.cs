@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Robust.Shared.IoC;
@@ -22,7 +22,11 @@ namespace Robust.Shared.GameObjects
 
             UpdatesOutsidePrediction = true;
 
-            _mapManager.MapCreated += OnMapCreated;
+            SubscribeLocalEvent<MapChangedEvent>(ev =>
+            {
+                if (ev.Created)
+                    OnMapCreated(ev);
+            });
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<OccluderTreeComponent, ComponentInit>(HandleOccluderTreeInit);
@@ -92,7 +96,6 @@ namespace Robust.Shared.GameObjects
         public override void Shutdown()
         {
             base.Shutdown();
-            _mapManager.MapCreated -= OnMapCreated;
             _updates.Clear();
         }
 
@@ -156,7 +159,7 @@ namespace Robust.Shared.GameObjects
             _updates.Enqueue(new OccluderUpdateEvent(component));
         }
 
-        private void OnMapCreated(object? sender, MapEventArgs e)
+        private void OnMapCreated(MapChangedEvent e)
         {
             if (e.Map == MapId.Nullspace) return;
 
@@ -171,24 +174,34 @@ namespace Robust.Shared.GameObjects
         public IEnumerable<RayCastResults> IntersectRayWithPredicate(MapId mapId, in Ray ray, float maxLength,
             Func<EntityUid, bool>? predicate = null, bool returnOnFirstHit = true)
         {
+            // ReSharper disable once ConvertToLocalFunction
+            var wrapper = (EntityUid uid, Func<EntityUid, bool>? wrapped)
+                => wrapped != null && wrapped(uid);
+
+            return IntersectRayWithPredicate(mapId, in ray, maxLength, predicate, wrapper, returnOnFirstHit);
+        }
+
+        public IEnumerable<RayCastResults> IntersectRayWithPredicate<TState>(MapId mapId, in Ray ray, float maxLength,
+            TState state, Func<EntityUid, TState, bool> predicate, bool returnOnFirstHit = true)
+        {
             if (mapId == MapId.Nullspace) return Enumerable.Empty<RayCastResults>();
             var list = new List<RayCastResults>();
 
             var endPoint = ray.Position + ray.Direction * maxLength;
             var worldBox = new Box2(Vector2.ComponentMin(ray.Position, endPoint), Vector2.ComponentMax(ray.Position, endPoint));
+            var xforms = EntityManager.GetEntityQuery<TransformComponent>();
 
             foreach (var comp in GetOccluderTrees(mapId, worldBox))
             {
-                var transform = EntityManager.GetComponent<TransformComponent>(comp.Owner);
-                var matrix = transform.InvWorldMatrix;
-                var treeRot = transform.WorldRotation;
+                var transform = xforms.GetComponent(comp.Owner);
+                var (_, treeRot, matrix) = transform.GetWorldPositionRotationInvMatrix();
 
                 var relativeAngle = new Angle(-treeRot.Theta).RotateVec(ray.Direction);
 
                 var treeRay = new Ray(matrix.Transform(ray.Position), relativeAngle);
 
                 comp.Tree.QueryRay(ref list,
-                    (ref List<RayCastResults> state, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
+                    (ref List<RayCastResults> listState, in OccluderComponent value, in Vector2 point, float distFromOrigin) =>
                     {
                         if (distFromOrigin > maxLength)
                             return true;
@@ -196,11 +209,11 @@ namespace Robust.Shared.GameObjects
                         if (!value.Enabled)
                             return true;
 
-                        if (predicate != null && predicate.Invoke(value.Owner))
+                        if (predicate.Invoke(value.Owner, state))
                             return true;
 
                         var result = new RayCastResults(distFromOrigin, point, value.Owner);
-                        state.Add(result);
+                        listState.Add(result);
                         return !returnOnFirstHit;
                     }, treeRay);
             }

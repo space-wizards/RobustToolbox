@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Prometheus;
+using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Prototypes;
+using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.GameObjects
@@ -11,15 +13,16 @@ namespace Robust.Shared.GameObjects
     public delegate void EntityUidQueryCallback(EntityUid uid);
 
     /// <inheritdoc />
+    [Virtual]
     public partial class EntityManager : IEntityManager
     {
         #region Dependencies
 
-        [IoC.Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
-        [IoC.Dependency] protected readonly IEntitySystemManager EntitySystemManager = default!;
-        [IoC.Dependency] private readonly IMapManager _mapManager = default!;
-        [IoC.Dependency] private readonly IGameTiming _gameTiming = default!;
-        [IoC.Dependency] private readonly IPauseManager _pauseManager = default!;
+        [Dependency] protected readonly IPrototypeManager PrototypeManager = default!;
+        [Dependency] private readonly IEntitySystemManager _entitySystemManager = default!;
+        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IGameTiming _gameTiming = default!;
+        [Dependency] private readonly ISerializationManager _serManager = default!;
 
         #endregion Dependencies
 
@@ -29,7 +32,7 @@ namespace Robust.Shared.GameObjects
         IComponentFactory IEntityManager.ComponentFactory => ComponentFactory;
 
         /// <inheritdoc />
-        public IEntitySystemManager EntitySysManager => EntitySystemManager;
+        public IEntitySystemManager EntitySysManager => _entitySystemManager;
 
         /// <inheritdoc />
         public virtual IEntityNetworkManager? EntityNetManager => null;
@@ -53,6 +56,7 @@ namespace Robust.Shared.GameObjects
         public event EventHandler<EntityUid>? EntityInitialized;
         public event EventHandler<EntityUid>? EntityStarted;
         public event EventHandler<EntityUid>? EntityDeleted;
+        public event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
 
         public bool Started { get; protected set; }
         public bool Initialized { get; protected set; }
@@ -81,7 +85,8 @@ namespace Robust.Shared.GameObjects
             if (Started)
                 throw new InvalidOperationException("Startup() called multiple times");
 
-            EntitySystemManager.Initialize();
+            // TODO: Probably better to call this on its own given it's so infrequent.
+            _entitySystemManager.Initialize();
             Started = true;
         }
 
@@ -89,7 +94,7 @@ namespace Robust.Shared.GameObjects
         {
             FlushEntities();
             _eventBus.ClearEventTables();
-            EntitySystemManager.Shutdown();
+            _entitySystemManager.Shutdown();
             ClearComponents();
             Initialized = false;
             Started = false;
@@ -99,7 +104,7 @@ namespace Robust.Shared.GameObjects
         {
             QueuedDeletions.Clear();
             QueuedDeletionsSet.Clear();
-            EntitySystemManager.Clear();
+            _entitySystemManager.Clear();
             Entities.Clear();
             _eventBus.Dispose();
             _eventBus = null!;
@@ -113,7 +118,7 @@ namespace Robust.Shared.GameObjects
         {
             using (histogram?.WithLabels("EntitySystems").NewTimer())
             {
-                EntitySystemManager.TickUpdate(frameTime, noPredictions);
+                _entitySystemManager.TickUpdate(frameTime, noPredictions);
             }
 
             using (histogram?.WithLabels("EntityEventBus").NewTimer())
@@ -139,7 +144,7 @@ namespace Robust.Shared.GameObjects
 
         public virtual void FrameUpdate(float frameTime)
         {
-            EntitySystemManager.FrameUpdate(frameTime);
+            _entitySystemManager.FrameUpdate(frameTime);
         }
 
         #region Entity Management
@@ -228,8 +233,10 @@ namespace Robust.Shared.GameObjects
 
             metadata.EntityLastModifiedTick = currentTick;
 
-            var dirtyEvent = new EntityDirtyEvent {Uid = uid};
-            EventBus.RaiseLocalEvent(uid, ref dirtyEvent);
+            if (metadata.EntityLifeStage > EntityLifeStage.Initializing)
+            {
+                EntityDirtied?.Invoke(this, uid);
+            }
         }
 
         public void Dirty(Component component)
@@ -273,13 +280,13 @@ namespace Robust.Shared.GameObjects
 
         private void RecursiveDeleteEntity(EntityUid uid)
         {
-            if(Deleted(uid)) //TODO: Why was this still a child if it was already deleted?
-                return;
+            if (!TryGetComponent(uid, out MetaDataComponent metadata) || metadata.EntityDeleted)
+                return; //TODO: Why was this still a child if it was already deleted?
 
             var transform = GetComponent<TransformComponent>(uid);
-            var metadata = GetComponent<MetaDataComponent>(uid);
             metadata.EntityLifeStage = EntityLifeStage.Terminating;
-            EventBus.RaiseLocalEvent(uid, new EntityTerminatingEvent(), false);
+            var ev = new EntityTerminatingEvent(uid);
+            EventBus.RaiseLocalEvent(uid, ref ev, false);
 
             // DeleteEntity modifies our _children collection, we must cache the collection to iterate properly
             foreach (var child in transform._children.ToArray())
@@ -292,7 +299,7 @@ namespace Robust.Shared.GameObjects
             foreach (var component in InSafeOrder(_entCompIndex[uid]))
             {
                 if(component.Running)
-                    component.LifeShutdown();
+                    component.LifeShutdown(this);
             }
 
             // map does not have a parent node, everything else needs to be detached
@@ -391,7 +398,7 @@ namespace Robust.Shared.GameObjects
 
             Entities.Add(uid);
             // add the required MetaDataComponent directly.
-            AddComponentInternal(uid, metadata);
+            AddComponentInternal(uid, metadata, false, false);
 
             // allocate the required TransformComponent
             AddComponent<TransformComponent>(uid);
@@ -410,7 +417,7 @@ namespace Robust.Shared.GameObjects
             var entity = AllocEntity(prototypeName, uid);
             try
             {
-                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, null);
+                EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, null);
                 return entity;
             }
             catch (Exception e)
@@ -424,7 +431,7 @@ namespace Robust.Shared.GameObjects
 
         private protected void LoadEntity(EntityUid entity, IEntityLoadContext? context)
         {
-            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, context);
+            EntityPrototype.LoadEntity(GetComponent<MetaDataComponent>(entity).EntityPrototype, entity, ComponentFactory, PrototypeManager, this, _serManager, context);
         }
 
         private void InitializeAndStartEntity(EntityUid entity, MapId mapId)
@@ -435,7 +442,7 @@ namespace Robust.Shared.GameObjects
                 StartEntity(entity);
 
                 // If the map we're initializing the entity on is initialized, run map init on it.
-                if (_pauseManager.IsMapInitialized(mapId))
+                if (_mapManager.IsMapInitialized(mapId))
                     entity.RunMapInit();
             }
             catch (Exception e)
@@ -471,31 +478,7 @@ namespace Robust.Shared.GameObjects
 
 #endregion Entity Management
 
-        protected void DispatchComponentMessage(NetworkComponentMessage netMsg)
-        {
-            var compMsg = netMsg.Message;
-            var compChannel = netMsg.Channel;
-            var session = netMsg.Session;
-            compMsg.Remote = true;
-
-#pragma warning disable 618
-            var uid = netMsg.EntityUid;
-            if (compMsg.Directed)
-            {
-                if (TryGetComponent(uid, (ushort) netMsg.NetId, out var component))
-                    component.HandleNetworkMessage(compMsg, compChannel, session);
-            }
-            else
-            {
-                foreach (var component in GetComponents(uid))
-                {
-                    component.HandleNetworkMessage(compMsg, compChannel, session);
-                }
-            }
-#pragma warning restore 618
-        }
-
-        /// <summary>
+/// <summary>
         ///     Factory for generating a new EntityUid for an entity currently being created.
         /// </summary>
         /// <inheritdoc />
@@ -508,7 +491,6 @@ namespace Robust.Shared.GameObjects
     public enum EntityMessageType : byte
     {
         Error = 0,
-        ComponentMessage,
         SystemMessage
     }
 }

@@ -10,6 +10,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Shared.GameObjects
 {
     [NetworkedComponent()]
+    [Virtual]
     public class OccluderComponent : Component
     {
         [Dependency] private readonly IEntityManager _entMan = default!;

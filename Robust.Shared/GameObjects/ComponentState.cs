@@ -6,5 +6,6 @@ namespace Robust.Shared.GameObjects
 {
     [RequiresSerializable]
     [Serializable, NetSerializable]
+    [Virtual]
     public class ComponentState { }
 }

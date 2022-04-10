@@ -11,7 +11,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.GameObjects
 {
     [ComponentReference(typeof(SharedUserInterfaceComponent))]
-    public class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
+    public sealed class ClientUserInterfaceComponent : SharedUserInterfaceComponent, ISerializationHooks
     {
         [Dependency] private readonly IReflectionManager _reflectionManager = default!;
         [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
@@ -75,6 +75,10 @@ namespace Robust.Client.GameObjects
                 (BoundUserInterface) _dynamicTypeFactory.CreateInstance(type, new[] {this, wrapped.UiKey});
             boundInterface.Open();
             _openInterfaces[wrapped.UiKey] = boundInterface;
+
+            var playerSession = _playerManager.LocalPlayer?.Session;
+            if(playerSession != null)
+                _entityManager.EventBus.RaiseLocalEvent(Owner, new BoundUIOpenedEvent(wrapped.UiKey, Owner, playerSession));
         }
 
         internal void Close(object uiKey, bool remoteCall)

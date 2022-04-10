@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Timing
 {
     [TestFixture]
     [TestOf(typeof(GameLoop))]
-    class GameLoop_Test : RobustUnitTest
+    sealed class GameLoop_Test : RobustUnitTest
     {
         /// <summary>
         ///     With single step enabled, the game loop should run 1 tick and then pause again.

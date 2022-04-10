@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Console.Commands
 {
-    public class GridChunkBBCommand : IConsoleCommand
+    public sealed class GridChunkBBCommand : IConsoleCommand
     {
         public string Command => "showchunkbb";
         public string Description => "Displays chunk bounds for the purposes of rendering";

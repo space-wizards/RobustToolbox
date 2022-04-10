@@ -28,12 +28,15 @@ namespace Robust.Shared.GameStates
         public ComponentState? State { get; set; }
     }
 
-    public class ComponentGetStateAttemptEvent : CancellableEntityEventArgs
+    [ByRefEvent]
+    public struct ComponentGetStateAttemptEvent
     {
         /// <summary>
         ///     Input parameter. The player the state is being sent to.
         /// </summary>
         public readonly ICommonSession Player;
+
+        public bool Cancelled = false;
 
         public ComponentGetStateAttemptEvent(ICommonSession player)
         {

@@ -11,7 +11,7 @@ namespace Robust.Shared.Containers
 {
     [UsedImplicitly]
     [SerializedType(ClassName)]
-    public class ContainerSlot : BaseContainer
+    public sealed class ContainerSlot : BaseContainer
     {
         private const string ClassName = "ContainerSlot";
 
@@ -79,17 +79,17 @@ namespace Robust.Shared.Containers
         }
 
         /// <inheritdoc />
-        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+        protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta = null)
         {
             ContainedEntity = toinsert;
-            base.InternalInsert(toinsert, entMan);
+            base.InternalInsert(toinsert, entMan, meta);
         }
 
         /// <inheritdoc />
-        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
+        protected override void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta = null)
         {
             ContainedEntity = null;
-            base.InternalRemove(toremove, entMan);
+            base.InternalRemove(toremove, entMan, meta);
         }
 
         /// <inheritdoc />

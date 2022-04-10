@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 namespace Robust.Shared.Input.Binding
 {
     /// <inheritdoc cref="ICommandBindRegistry"/>
-    public class CommandBindRegistry : ICommandBindRegistry
+    public sealed class CommandBindRegistry : ICommandBindRegistry
     {
         // all registered bindings
         private List<TypedCommandBind> _bindings = new();
@@ -166,7 +166,7 @@ namespace Robust.Shared.Input.Binding
         /// The only time a client should need to think about the type for a binding is when they are
         /// registering a set of bindings, so we don't include this information in CommandBind
         /// </summary>
-        private class TypedCommandBind
+        private sealed class TypedCommandBind
         {
             public readonly Type ForType;
             public readonly CommandBind CommandBind;

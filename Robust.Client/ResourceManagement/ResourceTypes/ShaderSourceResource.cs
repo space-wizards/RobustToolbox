@@ -10,7 +10,7 @@ namespace Robust.Client.ResourceManagement
     /// <summary>
     ///     Loads the **source code** of a shader.
     /// </summary>
-    internal class ShaderSourceResource : BaseResource
+    internal sealed class ShaderSourceResource : BaseResource
     {
         internal ClydeHandle ClydeHandle { get; private set; }
         internal ParsedShader ParsedShader { get; private set; } = default!;

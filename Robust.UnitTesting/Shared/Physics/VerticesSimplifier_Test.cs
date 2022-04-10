@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture, Parallelizable]
     [TestOf(typeof(IVerticesSimplifier))]
-    public class VerticesSimplifier_Test : RobustUnitTest
+    public sealed class VerticesSimplifier_Test : RobustUnitTest
     {
         /*
          * Collinear tests

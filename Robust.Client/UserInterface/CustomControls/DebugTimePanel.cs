@@ -6,7 +6,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    public class DebugTimePanel : PanelContainer
+    public sealed class DebugTimePanel : PanelContainer
     {
         private readonly IGameTiming _gameTiming;
         private readonly IClientGameStateManager _gameState;

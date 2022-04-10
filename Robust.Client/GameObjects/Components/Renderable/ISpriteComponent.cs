@@ -25,6 +25,8 @@ namespace Robust.Client.GameObjects
         [Animatable]
         Vector2 Scale { get; set; }
 
+        Box2 Bounds { get; }
+
         /// <summary>
         ///     A rotation applied to all layers.
         /// </summary>
@@ -119,7 +121,8 @@ namespace Robust.Client.GameObjects
         ///     This is useful to allow layer map configs to be defined in prototypes,
         ///     while still allowing code to create configs if they're absent.
         /// </remarks>
-        void LayerMapReserveBlank(object key);
+        /// <returns>Index of the new layer.</returns>
+        int LayerMapReserveBlank(object key);
 
         /// <summary>
         ///     Adds a layer without texture (thus falling back to the error texture).
@@ -145,8 +148,8 @@ namespace Robust.Client.GameObjects
         void RemoveLayer(int layer);
         void RemoveLayer(object layerKey);
 
-        void LayerSetShader(int layer, ShaderInstance shader);
-        void LayerSetShader(object layerKey, ShaderInstance shader);
+        void LayerSetShader(int layer, ShaderInstance shader, string? prototype = null);
+        void LayerSetShader(object layerKey, ShaderInstance shader, string? prototype = null);
         void LayerSetShader(int layer, string shaderName);
         void LayerSetShader(object layerKey, string shaderName);
 
@@ -217,8 +220,8 @@ namespace Robust.Client.GameObjects
         int GetLayerDirectionCount(ISpriteLayer layer);
 
         /// <summary>
-        ///     Calculate sprite bounding box in world-space coordinates.
+        ///     Calculate the rotated sprite bounding box in world-space coordinates.
         /// </summary>
-        Box2 CalculateBoundingBox(Vector2 worldPos);
+        Box2Rotated CalculateRotatedBoundingBox(Vector2 worldPosition, Angle worldRotation, IEye? eye = null);
     }
 }

@@ -76,6 +76,11 @@ namespace Robust.Client.Graphics.Clyde
             return null;
         }
 
+        public void RegisterGridEcsEvents()
+        {
+            // Nada.
+        }
+
         public void SetWindowTitle(string title)
         {
             // Nada.
@@ -246,7 +251,12 @@ namespace Robust.Client.Graphics.Clyde
             // Nada.
         }
 
-        private class DummyCursor : ICursor
+        public void RunOnWindowThread(Action action)
+        {
+            action();
+        }
+
+        private sealed class DummyCursor : ICursor
         {
             public void Dispose()
             {
@@ -254,6 +264,7 @@ namespace Robust.Client.Graphics.Clyde
             }
         }
 
+        [Virtual]
         private class DummyAudioSource : IClydeAudioSource
         {
             public static DummyAudioSource Instance { get; } = new();

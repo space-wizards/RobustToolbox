@@ -15,7 +15,7 @@ namespace Robust.Server.Player
     /// <summary>
     /// This is the session of a connected client.
     /// </summary>
-    internal class PlayerSession : IPlayerSession
+    internal sealed class PlayerSession : IPlayerSession
     {
         private readonly PlayerManager _playerManager;
         public readonly PlayerState PlayerState;
@@ -39,6 +39,7 @@ namespace Robust.Server.Player
         }
 
         [ViewVariables] public IReadOnlySet<EntityUid> ViewSubscriptions => _viewSubscriptions;
+        public int ViewSubscriptionCount => _viewSubscriptions.Count;
 
         [ViewVariables] public INetChannel ConnectedClient { get; }
 

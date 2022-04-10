@@ -1,6 +1,6 @@
 using System;
 using System.IO;
-using System.Runtime;
+using System.Linq;
 using System.Threading;
 using Prometheus;
 using Robust.Server.Console;
@@ -20,6 +20,7 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
+using Robust.Shared.Enums;
 using Robust.Shared.Exceptions;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -65,18 +66,17 @@ namespace Robust.Server
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
         [Dependency] private readonly IServerEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly ILogManager _log = default!;
         [Dependency] private readonly IRobustSerializer _serializer = default!;
         [Dependency] private readonly IGameTiming _time = default!;
         [Dependency] private readonly IResourceManagerInternal _resources = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly ITimerManager timerManager = default!;
+        [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IServerGameStateManager _stateManager = default!;
         [Dependency] private readonly IServerNetManager _network = default!;
         [Dependency] private readonly ISystemConsoleManager _systemConsole = default!;
         [Dependency] private readonly ITaskManager _taskManager = default!;
-        [Dependency] private readonly IRuntimeLog runtimeLog = default!;
+        [Dependency] private readonly IRuntimeLog _runtimeLog = default!;
         [Dependency] private readonly IModLoaderInternal _modLoader = default!;
         [Dependency] private readonly IWatchdogApi _watchdogApi = default!;
         [Dependency] private readonly HubManager _hubManager = default!;
@@ -94,6 +94,7 @@ namespace Robust.Server
         private Func<ILogHandler>? _logHandlerFactory;
         private ILogHandler? _logHandler;
         private IGameLoop _mainLoop = default!;
+        private bool _autoPause;
 
         private string? _shutdownReason;
 
@@ -125,7 +126,7 @@ namespace Robust.Server
             else
                 Logger.InfoS("srv", $"{reason}, shutting down...");
 
-            _shutdownReason = reason;
+            _shutdownReason = reason ?? "Shutting down";
 
             if (_mainLoop != null) _mainLoop.Running = false;
             if (_logHandler != null)
@@ -319,7 +320,8 @@ namespace Robust.Server
             IoCManager.Resolve<IGameTiming>().InSimulation = true;
 
             IoCManager.Resolve<INetConfigurationManager>().SetupNetworking();
-            IoCManager.Resolve<IPlayerManager>().Initialize(MaxPlayers);
+            _playerManager.Initialize(MaxPlayers);
+            _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
             IoCManager.Resolve<IPlacementManager>().Initialize();
             IoCManager.Resolve<IViewVariablesHost>().Initialize();
 
@@ -336,12 +338,11 @@ namespace Robust.Server
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.Initialize();
             prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            prototypeManager.Resync();
+            prototypeManager.ResolveResults();
 
             _consoleHost.Initialize();
             _entityManager.Startup();
             _mapManager.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
             _stateManager.Initialize();
 
             var reg = _entityManager.ComponentFactory.GetRegistration<TransformComponent>();
@@ -487,10 +488,10 @@ namespace Robust.Server
 
             _mainLoop.Tick += (sender, args) => Update(args);
 
-            _mainLoop.Update += (sender, args) => { ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds); };
+            _mainLoop.Update += (sender, args) => FrameUpdate(args);
 
             // set GameLoop.Running to false to return from this function.
-            _time.Paused = false;
+            _time.Paused = _autoPause;
         }
 
         internal void FinishMainLoop()
@@ -543,6 +544,49 @@ namespace Robust.Server
             Logger.InfoS("srv", $"Name: {ServerName}");
             Logger.InfoS("srv", $"TickRate: {_time.TickRate}({_time.TickPeriod.TotalMilliseconds:0.00}ms)");
             Logger.InfoS("srv", $"Max players: {MaxPlayers}");
+
+            cfgMgr.OnValueChanged(CVars.GameAutoPauseEmpty, UpdateAutoPause, true);
+        }
+
+        private void UpdateAutoPause(bool doAutoPause)
+        {
+            _autoPause = doAutoPause;
+            if (doAutoPause)
+            {
+                if (!_time.Paused && CheckIfShouldAutoPause())
+                {
+                    Logger.DebugS("srv", "game.auto_pause_empty changed, pausing");
+                    _time.Paused = true;
+                }
+            }
+            else if (_time.Paused)
+            {
+                Logger.DebugS("srv", "game.auto_pause_empty changed, unpausing");
+                _time.Paused = false;
+            }
+        }
+
+        private void OnPlayerStatusChanged(object? sender, SessionStatusEventArgs e)
+        {
+            if (!_autoPause)
+                return;
+
+            if (e.NewStatus == SessionStatus.Connected && _time.Paused)
+            {
+                Logger.DebugS("srv", "Client connecting, unpausing automatically.");
+                _time.Paused = false;
+            }
+
+            if (e.NewStatus == SessionStatus.Disconnected && CheckIfShouldAutoPause())
+            {
+                Logger.DebugS("srv", "Last client disconnected, pausing automatically.");
+                _time.Paused = true;
+            }
+        }
+
+        private bool CheckIfShouldAutoPause()
+        {
+            return _playerManager.Sessions.All(s => s.Status == SessionStatus.Disconnected);
         }
 
         // called right before main loop returns, do all saving/cleanup in here
@@ -551,12 +595,12 @@ namespace Robust.Server
             _modLoader.Shutdown();
 
             _playerManager.Shutdown();
+            _playerManager.PlayerStatusChanged -= OnPlayerStatusChanged;
 
             // shut down networking, kicking all players.
             _network.Shutdown($"Server shutting down: {_shutdownReason}");
 
             // shutdown entities
-            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Cleanup();
 
             if (_config.GetCVar(CVars.LogRuntimeLog))
@@ -567,7 +611,7 @@ namespace Robust.Server
                 Directory.CreateDirectory(relPath);
                 var pathToWrite = Path.Combine(relPath,
                     "Runtime-" + DateTime.Now.ToString("yyyy-MM-dd-THH-mm-ss") + ".txt");
-                File.WriteAllText(pathToWrite, runtimeLog.Display(), EncodingHelpers.UTF8);
+                File.WriteAllText(pathToWrite, _runtimeLog.Display(), EncodingHelpers.UTF8);
             }
 
             AppDomain.CurrentDomain.ProcessExit -= ProcessExiting;
@@ -612,7 +656,8 @@ namespace Robust.Server
 
             using (TickUsage.WithLabels("Timers").NewTimer())
             {
-                timerManager.UpdateTimers(frameEventArgs);
+                _consoleHost.CommandBufferExecute();
+                _timerManager.UpdateTimers(frameEventArgs);
             }
 
             using (TickUsage.WithLabels("AsyncTasks").NewTimer())
@@ -623,8 +668,6 @@ namespace Robust.Server
             // Pass Histogram into the IEntityManager.Update so it can do more granular measuring.
             _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false, TickUsage);
 
-            _lookup.Update();
-
             using (TickUsage.WithLabels("PostEngine").NewTimer())
             {
                 _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
@@ -634,7 +677,11 @@ namespace Robust.Server
             {
                 _stateManager.SendGameStateUpdate();
             }
+        }
 
+        private void FrameUpdate(FrameEventArgs frameEventArgs)
+        {
+            ServerUpTime.Set(_uptimeStopwatch.Elapsed.TotalSeconds);
             _watchdogApi.Heartbeat();
             _hubManager.Heartbeat();
         }

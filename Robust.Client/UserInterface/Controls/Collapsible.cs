@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class Collapsible : BoxContainer
     {
         public BaseButton? Heading { get; private set; }
@@ -81,6 +82,7 @@ namespace Robust.Client.UserInterface.Controls
         }
     }
 
+    [Virtual]
     public class CollapsibleHeading : ContainerButton
     {
         private TextureRect _chevron = new TextureRect
@@ -126,6 +128,7 @@ namespace Robust.Client.UserInterface.Controls
         }
     }
 
+    [Virtual]
     public class CollapsibleBody : Container
     {
         public CollapsibleBody()

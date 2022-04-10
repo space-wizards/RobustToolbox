@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Shared.Containers;
 
-public class ContainerAttemptEventBase : CancellableEntityEventArgs
+public abstract class ContainerAttemptEventBase : CancellableEntityEventArgs
 {
     public readonly IContainer Container;
     public readonly EntityUid EntityUid;
@@ -16,28 +16,28 @@ public class ContainerAttemptEventBase : CancellableEntityEventArgs
     }
 }
 
-public class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
+public sealed class ContainerIsInsertingAttemptEvent : ContainerAttemptEventBase
 {
     public ContainerIsInsertingAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
     }
 }
 
-public class ContainerGettingInsertedAttemptEvent : ContainerAttemptEventBase
+public sealed class ContainerGettingInsertedAttemptEvent : ContainerAttemptEventBase
 {
     public ContainerGettingInsertedAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
     }
 }
 
-public class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
+public sealed class ContainerIsRemovingAttemptEvent : ContainerAttemptEventBase
 {
     public ContainerIsRemovingAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {
     }
 }
 
-public class ContainerGettingRemovedAttemptEvent : ContainerAttemptEventBase
+public sealed class ContainerGettingRemovedAttemptEvent : ContainerAttemptEventBase
 {
     public ContainerGettingRemovedAttemptEvent(IContainer container, EntityUid entityUid) : base(container, entityUid)
     {

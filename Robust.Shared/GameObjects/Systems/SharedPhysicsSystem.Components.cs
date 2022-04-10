@@ -1,3 +1,4 @@
+using System;
 using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 
@@ -29,6 +30,33 @@ public partial class SharedPhysicsSystem
 
         foreach (var fixture in fixtures.GetComponent(body.Owner).Fixtures.Values)
         {
+            for (var i = 0; i < fixture.Shape.ChildCount; i++)
+            {
+                var boundy = fixture.Shape.ComputeAABB(transform, i);
+                bounds = bounds.Union(boundy);
+            }
+        }
+
+        return bounds;
+    }
+
+    public Box2 GetHardAABB(PhysicsComponent body, TransformComponent? xform = null, FixturesComponent? fixtures = null)
+    {
+        if (!Resolve(body.Owner, ref xform, ref fixtures))
+        {
+            throw new InvalidOperationException();
+        }
+
+        var (worldPos, worldRot) = xform.GetWorldPositionRotation();
+
+        var transform = new Transform(worldPos, (float) worldRot.Theta);
+
+        var bounds = new Box2(transform.Position, transform.Position);
+
+        foreach (var fixture in fixtures.Fixtures.Values)
+        {
+            if (!fixture.Hard) continue;
+
             for (var i = 0; i < fixture.Shape.ChildCount; i++)
             {
                 var boundy = fixture.Shape.ComputeAABB(transform, i);

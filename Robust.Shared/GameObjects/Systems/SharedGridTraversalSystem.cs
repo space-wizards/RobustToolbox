@@ -11,11 +11,13 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     internal sealed class SharedGridTraversalSystem : EntitySystem
     {
-        [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly IMapManagerInternal _mapManager = default!;
         [Dependency] private readonly SharedContainerSystem _container = default!;
 
         private Stack<MoveEvent> _queuedEvents = new();
         private HashSet<EntityUid> _handledThisTick = new();
+
+        private List<MapGrid> _gridBuffer = new();
 
         public override void Initialize()
         {
@@ -38,22 +40,32 @@ namespace Robust.Shared.GameObjects
         {
             var maps = EntityManager.GetEntityQuery<MapComponent>();
             var grids = EntityManager.GetEntityQuery<MapGridComponent>();
+            var bodies = GetEntityQuery<PhysicsComponent>();
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+            var metas = EntityManager.GetEntityQuery<MetaDataComponent>();
 
             while (_queuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender)) continue;
-                HandleMove(ref moveEvent, xforms, maps, grids);
+
+                HandleMove(ref moveEvent, xforms, bodies, maps, grids, metas);
             }
 
             _handledThisTick.Clear();
         }
 
-        private void HandleMove(ref MoveEvent moveEvent, EntityQuery<TransformComponent> xforms, EntityQuery<MapComponent> maps, EntityQuery<MapGridComponent> grids)
+        private void HandleMove(
+            ref MoveEvent moveEvent,
+            EntityQuery<TransformComponent> xforms,
+            EntityQuery<PhysicsComponent> bodies,
+            EntityQuery<MapComponent> maps,
+            EntityQuery<MapGridComponent> grids,
+            EntityQuery<MetaDataComponent> metas)
         {
             var entity = moveEvent.Sender;
 
-            if (Deleted(entity) ||
+            if (!metas.TryGetComponent(entity, out MetaDataComponent? meta) ||
+                meta.EntityDeleted ||
                 maps.HasComponent(entity) ||
                 grids.HasComponent(entity))
             {
@@ -63,12 +75,13 @@ namespace Robust.Shared.GameObjects
             var xform = xforms.GetComponent(entity);
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if (_container.IsEntityInContainer(entity, xform)) return;
+            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) return;
 
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
+            _gridBuffer.Clear();
 
             // Change parent if necessary
-            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, out var grid) &&
+            if (_mapManager.TryFindGridAt(xform.MapID, mapPos, _gridBuffer, xforms, bodies, out var grid) &&
                 // TODO: Do we even need this?
                 EntityManager.EntityExists(grid.GridEntityId) &&
                 grid.GridEntityId != entity)

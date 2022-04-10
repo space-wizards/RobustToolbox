@@ -15,7 +15,7 @@ using Robust.Shared.Enums;
 
 namespace Robust.Client.GameObjects
 {
-    public class EffectSystem : EntitySystem
+    public sealed class EffectSystem : EntitySystem
     {
         [Dependency] private readonly IGameTiming gameTiming = default!;
         [Dependency] private readonly IResourceCache resourceCache = default!;
@@ -94,7 +94,7 @@ namespace Robust.Client.GameObjects
             }
         }
 
-        private class Effect
+        private sealed class Effect
         {
             /// <summary>
             /// Effect Sprite
@@ -323,7 +323,7 @@ namespace Robust.Client.GameObjects
         {
             private readonly IPlayerManager _playerManager;
 
-            public override OverlaySpace Space => OverlaySpace.WorldSpace;
+            public override OverlaySpace Space => OverlaySpace.WorldSpaceBelowFOV;
 
             private readonly ShaderInstance _unshadedShader;
             private readonly EffectSystem _owner;
@@ -342,7 +342,6 @@ namespace Robust.Client.GameObjects
                 var map = _owner.eyeManager.CurrentMap;
 
                 var worldHandle = args.WorldHandle;
-                ShaderInstance? currentShader = null;
 
                 if (_playerManager.LocalPlayer?.ControlledEntity is not {} playerEnt)
                     return;
@@ -362,13 +361,8 @@ namespace Robust.Client.GameObjects
                         continue;
                     }
 
-                    var newShader = effect.Shaded ? null : _unshadedShader;
-
-                    if (newShader != currentShader)
-                    {
-                        worldHandle.UseShader(newShader);
-                        currentShader = newShader;
-                    }
+                    if (!effect.Shaded)
+                        worldHandle.UseShader(_unshadedShader);
 
                     // TODO: Should be doing matrix transformations
                     var effectSprite = effect.EffectSprite;
@@ -376,6 +370,9 @@ namespace Robust.Client.GameObjects
                     var coordinates =
                         (attachedXform?.Coordinates ?? effect.Coordinates)
                         .Offset(effect.AttachedOffset);
+
+                    // If we've never seen the entity before then can't resolve coordinates.
+                    if (!coordinates.IsValid(_entityManager)) continue;
 
                     // ???
                     var rotation = attachedXform?.WorldRotation ?? _entityManager.GetComponent<TransformComponent>(coordinates.EntityId).WorldRotation;
@@ -386,6 +383,9 @@ namespace Robust.Client.GameObjects
                     var rotatedBox = new Box2Rotated(effectArea, effect.Rotation + rotation, effectOrigin);
 
                     worldHandle.DrawTextureRect(effectSprite, rotatedBox, ToColor(effect.Color));
+
+                    if (!effect.Shaded)
+                        worldHandle.UseShader(null);
                 }
             }
         }

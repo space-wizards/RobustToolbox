@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(AngleSerializer))]
-    public class AngleSerializerTest : SerializationTest
+    public sealed class AngleSerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()
@@ -29,7 +29,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var degrees = 75;
             var node = new ValueDataNode(degrees.ToString());
-            var deserializedAngle = Serialization.ReadValue<Angle>(node);
+            var deserializedAngle = Serialization.Read<Angle>(node);
             var angle = Angle.FromDegrees(degrees);
 
             Assert.That(deserializedAngle, Is.EqualTo(angle));

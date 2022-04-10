@@ -7,7 +7,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorUIBox2 : VVPropEditor
+    public sealed class VVPropEditorUIBox2 : VVPropEditor
     {
         private readonly BoxType _type;
 

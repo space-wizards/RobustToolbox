@@ -15,7 +15,7 @@ namespace Robust.Shared.Map
         /// <param name="chunk"></param>
         /// <param name="bounds">The overall bounds that covers every rectangle.</param>
         /// <param name="rectangles">Each individual rectangle comprising the chunk's bounds</param>
-        public static void PartitionChunk(IMapChunk chunk, out Box2i bounds, out List<Box2i> rectangles)
+        public static void PartitionChunk(MapChunk chunk, out Box2i bounds, out List<Box2i> rectangles)
         {
             rectangles = new List<Box2i>();
 

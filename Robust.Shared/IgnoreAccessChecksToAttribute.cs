@@ -2,7 +2,7 @@
 namespace System.Runtime.CompilerServices {
 
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    internal class IgnoresAccessChecksToAttribute : Attribute {
+    internal sealed class IgnoresAccessChecksToAttribute : Attribute {
 
         // ReSharper disable once InconsistentNaming
         private readonly string assemblyName;

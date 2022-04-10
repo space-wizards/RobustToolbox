@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Timing
 {
     [TestFixture]
     [TestOf(typeof(GameTiming))]
-    class GameTiming_Test
+    sealed class GameTiming_Test
     {
         /// <summary>
         ///     Checks that IGameTiming.RealTime returns the real(wall) uptime since the stopwatch was started.

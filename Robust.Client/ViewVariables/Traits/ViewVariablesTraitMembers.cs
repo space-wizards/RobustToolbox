@@ -9,7 +9,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Traits
 {
-    internal class ViewVariablesTraitMembers : ViewVariablesTrait
+    internal sealed class ViewVariablesTraitMembers : ViewVariablesTrait
     {
         private readonly IViewVariablesManagerInternal _vvm;
         private readonly IRobustSerializer _robustSerializer;

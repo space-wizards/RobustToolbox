@@ -14,7 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
 {
     [TestFixture]
-    public class ImmutableListSerializationTest : RobustUnitTest
+    public sealed class ImmutableListSerializationTest : RobustUnitTest
     {
         [OneTimeSetUp]
         public void Setup()
@@ -45,7 +45,7 @@ namespace Robust.UnitTesting.Shared.Serialization.YamlObjectSerializerTests
             var rootNode = YamlTextToNode(_serializedListYaml);
 
             // Act
-            var data = serMan.ReadValueOrThrow<ImmutableList<int>>(new SequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value));
+            var data = serMan.Read<ImmutableList<int>>(new SequenceDataNode((YamlSequenceNode)rootNode.Children[0].Value));
 
             // Assert
             Assert.That(data, Is.Not.Null);

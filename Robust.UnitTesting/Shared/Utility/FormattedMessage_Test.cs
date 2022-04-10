@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [Parallelizable(ParallelScope.All)]
     [TestFixture]
     [TestOf(typeof(FormattedMessage))]
-    public class FormattedMessage_Test
+    public sealed class FormattedMessage_Test
     {
         [Test]
         public static void TestParseMarkup()

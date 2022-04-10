@@ -58,7 +58,7 @@ namespace Robust.Shared.Input
     /// <summary>
     ///     Sets up a mapping of <see cref="BoundKeyFunction"/> to <see cref="KeyFunctionId"/> for network messages.
     /// </summary>
-    public class BoundKeyMap
+    public sealed class BoundKeyMap
     {
         private readonly IReflectionManager reflectionManager;
 

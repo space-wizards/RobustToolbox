@@ -1,19 +1,21 @@
 using System;
+using System.Buffers;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.ObjectPool;
 using Robust.Server.GameObjects;
-using Robust.Server.Map;
 using Robust.Server.Player;
-using Robust.Shared;
-using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
+using Robust.Shared.Map;
 using Robust.Shared.Network;
 using Robust.Shared.Network.Messages;
 using Robust.Shared.Timing;
@@ -23,7 +25,7 @@ namespace Robust.Server.GameStates
 {
     /// <inheritdoc cref="IServerGameStateManager"/>
     [UsedImplicitly]
-    public class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
+    public sealed class ServerGameStateManager : IServerGameStateManager, IPostInjectInit
     {
         // Mapping of net UID of clients -> last known acked state.
         private readonly Dictionary<long, GameTick> _ackedStates = new();
@@ -35,7 +37,7 @@ namespace Robust.Server.GameStates
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IServerNetManager _networkManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
-        [Dependency] private readonly IServerMapManager _mapManager = default!;
+        [Dependency] private readonly INetworkedMapManager _mapManager = default!;
         [Dependency] private readonly IEntitySystemManager _systemManager = default!;
         [Dependency] private readonly IServerEntityNetworkManager _entityNetworkManager = default!;
 
@@ -122,15 +124,78 @@ namespace Robust.Server.GameStates
             var mainThread = Thread.CurrentThread;
             var parentDeps = IoCManager.Instance!;
 
-            void SendStateUpdate(IPlayerSession session)
+            _pvs.ProcessCollections();
+
+            // people not in the game don't get states
+            var players = _playerManager.ServerSessions.Where(o => o.Status == SessionStatus.InGame).ToArray();
+
+            //todo paul oh my god make this less shit
+            EntityQuery<MetaDataComponent> metadataQuery = default!;
+            EntityQuery<TransformComponent> transformQuery = default!;
+            HashSet<int>[] playerChunks = default!;
+            EntityUid[][] viewerEntities = default!;
+            (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[] chunkCache = default!;
+
+            if (_pvs.CullingEnabled)
             {
+                List<(uint, IChunkIndexLocation)> chunks;
+                (chunks, playerChunks, viewerEntities) = _pvs.GetChunks(players);
+                const int ChunkBatchSize = 2;
+                var chunksCount = chunks.Count;
+                var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
+                chunkCache =
+                    new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
+
+                // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
+                var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
+
+                transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
+                metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
+                Parallel.For(0, chunkBatches, i =>
+                {
+                    var start = i * ChunkBatchSize;
+                    var end = Math.Min(start + ChunkBatchSize, chunksCount);
+
+                    for (var j = start; j < end; ++j)
+                    {
+                        var (visMask, chunkIndexLocation) = chunks[j];
+                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery, out var chunk);
+                        chunkCache[j] = chunk;
+                    }
+                });
+
+                _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache, reuse);
+                ArrayPool<bool>.Shared.Return(reuse);
+            }
+
+            const int BatchSize = 2;
+            var batches = (int) MathF.Ceiling((float) players.Length / BatchSize);
+
+            Parallel.For(0, batches, i =>
+            {
+                var start = i * BatchSize;
+                var end = Math.Min(start + BatchSize, players.Length);
+
+                for (var j = start; j < end; ++j)
+                {
+                    try
+                    {
+                        SendStateUpdate(j);
+                    }
+                    catch (Exception e) // Catch EVERY exception
+                    {
+                        _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
+                    }
+                }
+            });
+
+            void SendStateUpdate(int sessionIndex)
+            {
+                var session = players[sessionIndex];
+
                 // KILL IT WITH FIRE
                 if(mainThread != Thread.CurrentThread)
                     IoCManager.InitThread(new DependencyCollection(parentDeps), true);
-
-                // people not in the game don't get states
-                if (session.Status != SessionStatus.InGame)
-                    return;
 
                 var channel = session.ConnectedClient;
 
@@ -139,7 +204,10 @@ namespace Robust.Server.GameStates
                     DebugTools.Assert("Why does this channel not have an entry?");
                 }
 
-                var (entStates, deletions) = _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick);
+                var (entStates, deletions) = _pvs.CullingEnabled
+                    ? _pvs.CalculateEntityStates(session, lastAck, _gameTiming.CurTick, chunkCache,
+                        playerChunks[sessionIndex], metadataQuery, transformQuery, viewerEntities[sessionIndex])
+                    : _pvs.GetAllEntityStates(session, lastAck, _gameTiming.CurTick);
                 var playerStates = _playerManager.GetPlayerStates(lastAck);
                 var mapData = _mapManager.GetStateData(lastAck);
 
@@ -149,8 +217,6 @@ namespace Robust.Server.GameStates
                 var state = new GameState(lastAck, _gameTiming.CurTick, Math.Max(lastInputCommand, lastSystemMessage), entStates, playerStates, deletions, mapData);
 
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
-
-                DebugTools.Assert(state.MapData?.CreatedMaps is null || (state.MapData?.CreatedMaps is not null && state.EntityStates.HasContents), "Sending new maps, but no entity state.");
 
                 // actually send the state
                 var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
@@ -172,20 +238,8 @@ namespace Robust.Server.GameStates
                 _networkManager.ServerSendMessage(stateUpdateMessage, channel);
             }
 
-            _pvs.ProcessCollections();
-
-            Parallel.ForEach(_playerManager.ServerSessions, session =>
-            {
-                try
-                {
-                    SendStateUpdate(session);
-                }
-                catch (Exception e) // Catch EVERY exception
-                {
-                    _logger.Log(LogLevel.Error, e, "Caught exception while generating mail.");
-                }
-            });
-
+            if(_pvs.CullingEnabled)
+                _pvs.ReturnToPool(playerChunks);
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 

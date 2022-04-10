@@ -128,13 +128,13 @@ namespace Robust.Shared
         /// The amount of new entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSNewEntityBudget =
-            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
-        /// The amount of entity updates that can be sent to a client in a single game state, under PVS.
+        /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =
-            CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
+            CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
         /// Log late input messages from clients.
@@ -479,6 +479,12 @@ namespace Robust.Shared
         public static readonly CVarDef<bool> GameDeleteEmptyGrids =
             CVarDef.Create("game.delete_empty_grids", true, CVar.ARCHIVE | CVar.SERVER);
 
+        /// <summary>
+        /// Automatically pause simulation if there are no players connected to the game server.
+        /// </summary>
+        public static readonly CVarDef<bool> GameAutoPauseEmpty =
+            CVarDef.Create("game.auto_pause_empty", true, CVar.SERVERONLY);
+
         /*
          * LOG
          */
@@ -699,6 +705,12 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> DisplayAngleCustomSwapChain =
             CVarDef.Create("display.angle_custom_swap_chain", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Force ANGLE to create a GLES2 context (not a compatible GLES3 context).
+        /// </summary>
+        public static readonly CVarDef<bool> DisplayAngleForceEs2 =
+            CVarDef.Create("display.angle_force_es2", false, CVar.CLIENTONLY);
 
         /// <summary>
         /// Force usage of DXGI 1.1 when using custom swap chain setup.
@@ -993,6 +1005,17 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<bool> ResTexturePreloadCache =
             CVarDef.Create("res.texture_preload_cache", true, CVar.CLIENTONLY);
+
+        /// <summary>
+        /// Override seekability of resource streams returned by ResourceManager.
+        /// See <see cref="ContentPack.StreamSeekMode"/> for int values.
+        /// </summary>
+        /// <remarks>
+        /// This is intended to be a debugging tool primarily.
+        /// Non-default seek modes WILL result in worse performance.
+        /// </remarks>
+        public static readonly CVarDef<int> ResStreamSeekMode =
+            CVarDef.Create("res.stream_seek_mode", (int)ContentPack.StreamSeekMode.None);
 
         /*
          * DEBUG

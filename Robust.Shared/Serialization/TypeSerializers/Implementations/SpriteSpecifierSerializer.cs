@@ -3,7 +3,6 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -15,36 +14,36 @@ using static Robust.Shared.Utility.SpriteSpecifier;
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations
 {
     [TypeSerializer]
-    public class SpriteSpecifierSerializer :
+    public sealed class SpriteSpecifierSerializer :
         ITypeSerializer<Texture, ValueDataNode>,
         ITypeSerializer<EntityPrototype, ValueDataNode>,
         ITypeSerializer<Rsi, MappingDataNode>,
         ITypeSerializer<SpriteSpecifier, MappingDataNode>,
         ITypeSerializer<SpriteSpecifier, ValueDataNode>
     {
-        DeserializationResult ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
+        Texture ITypeReader<Texture, ValueDataNode>.Read(ISerializationManager serializationManager,
             ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, Texture? value)
         {
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(node, context, skipHook);
-            return new DeserializedValue<Texture>(new Texture(path));
+            var path = serializationManager.Read<ResourcePath>(node, context, skipHook);
+            return new Texture(path);
         }
 
-        DeserializationResult ITypeReader<SpriteSpecifier, ValueDataNode>.Read(
-            ISerializationManager serializationManager, ValueDataNode node,
+        SpriteSpecifier ITypeReader<SpriteSpecifier, ValueDataNode>.Read(ISerializationManager serializationManager,
+            ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
         {
             try
             {
-                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+                return ((ITypeReader<EntityPrototype, ValueDataNode>)this).Read(serializationManager, node, dependencies, skipHook, context, (EntityPrototype?) value);
             }
             catch { /* ignored */ }
 
             try
             {
-                return ((ITypeReader<EntityPrototype, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+                return ((ITypeReader<Texture, ValueDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Texture?)value);
             }
             catch { /* ignored */ }
 
@@ -52,18 +51,21 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 "SpriteSpecifier was neither a Texture nor an EntityPrototype but got provided a ValueDataNode");
         }
 
-        DeserializationResult ITypeReader<EntityPrototype, ValueDataNode>.Read(
-            ISerializationManager serializationManager, ValueDataNode node,
+        EntityPrototype ITypeReader<EntityPrototype, ValueDataNode>.Read(ISerializationManager serializationManager,
+            ValueDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, EntityPrototype? value)
         {
-            return new DeserializedValue<EntityPrototype>(new EntityPrototype(node.Value));
+            if (!IoCManager.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value))
+                throw new InvalidMappingException("Invalid Entity Prototype");
+
+            return new EntityPrototype(node.Value);
         }
 
-        DeserializationResult ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
+        Rsi ITypeReader<Rsi, MappingDataNode>.Read(ISerializationManager serializationManager,
             MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, Rsi? value)
         {
             if (!node.TryGet("sprite", out var pathNode))
             {
@@ -75,17 +77,17 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
                 throw new InvalidMappingException("Expected state-node as a valuenode");
             }
 
-            var path = serializationManager.ReadValueOrThrow<ResourcePath>(pathNode, context, skipHook);
-            return new DeserializedValue<Rsi>(new Rsi(path, valueDataNode.Value));
+            var path = serializationManager.Read<ResourcePath>(pathNode, context, skipHook);
+            return new Rsi(path, valueDataNode.Value);
         }
 
 
-        DeserializationResult ITypeReader<SpriteSpecifier, MappingDataNode>.Read(
-            ISerializationManager serializationManager, MappingDataNode node,
+        SpriteSpecifier ITypeReader<SpriteSpecifier, MappingDataNode>.Read(ISerializationManager serializationManager,
+            MappingDataNode node,
             IDependencyCollection dependencies,
-            bool skipHook, ISerializationContext? context)
+            bool skipHook, ISerializationContext? context, SpriteSpecifier? value)
         {
-            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context);
+            return ((ITypeReader<Rsi, MappingDataNode>) this).Read(serializationManager, node, dependencies, skipHook, context, (Rsi?) value);
         }
 
         ValidationNode ITypeValidator<SpriteSpecifier, ValueDataNode>.Validate(ISerializationManager serializationManager,
@@ -107,8 +109,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations
             IDependencyCollection dependencies,
             ISerializationContext? context)
         {
-            // TODO Serialization: actually validate the id
-            return string.IsNullOrWhiteSpace(node.Value)
+            return !IoCManager.Resolve<Prototypes.IPrototypeManager>().HasIndex<Prototypes.EntityPrototype>(node.Value)
                 ? new ErrorNode(node, $"Invalid {nameof(EntityPrototype)} id")
                 : new ValidatedValueNode(node);
         }

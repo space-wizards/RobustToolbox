@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Robust.Client.Graphics;
@@ -23,6 +23,7 @@ namespace Robust.Client.UserInterface
     internal sealed class UserInterfaceManager : IUserInterfaceManagerInternal
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
+        [Dependency] private readonly IFontManager _fontManager = default!;
         [Dependency] private readonly IClydeInternal _clyde = default!;
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
@@ -371,15 +372,20 @@ namespace Robust.Client.UserInterface
                 }
             }
 
-            ReleaseKeyboardFocus();
 
             if (hit == null)
             {
+                ReleaseKeyboardFocus();
                 hitData = null;
                 return false;
             }
 
             var (control, rel) = hit.Value;
+
+            if (control != KeyboardFocused)
+            {
+                ReleaseKeyboardFocus();
+            }
 
             ControlFocused = control;
 
@@ -838,9 +844,11 @@ namespace Robust.Client.UserInterface
             }
         }
 
-        private static void _doGuiInput<T>(Control? control, T guiEvent, Action<Control, T> action,
+        private static void _doGuiInput(
+            Control? control,
+            GUIBoundKeyEventArgs guiEvent,
+            Action<Control, GUIBoundKeyEventArgs> action,
             bool ignoreStop = false)
-            where T : GUIBoundKeyEventArgs
         {
             while (control != null)
             {
@@ -949,14 +957,37 @@ namespace Robust.Client.UserInterface
         private void WindowContentScaleChanged(WindowContentScaleEventArgs args)
         {
             if (_windowsToRoot.TryGetValue(args.Window.Id, out var root))
+            {
                 UpdateUIScale(root);
+                _fontManager.ClearFontCache();
+            }
+
+        }
+
+        private float CalculateAutoScale(WindowRoot root)
+        {
+            //Grab the OS UIScale or the value set through CVAR debug
+            var osScale = _configurationManager.GetCVar(CVars.DisplayUIScale);
+            osScale = osScale == 0f ? root.Window.ContentScale.X : osScale;
+            var windowSize = root.Window.RenderTarget.Size;
+            //Only run autoscale if it is enabled, otherwise default to just use OS UIScale
+            if (!root.AutoScale && (windowSize.X <= 0 || windowSize.Y <= 0)) return osScale;
+            var maxScaleRes = root.AutoScaleUpperCutoff;
+            var minScaleRes = root.AutoScaleLowerCutoff;
+            var autoScaleMin = root.AutoScaleMinimum;
+            float scaleRatioX;
+            float scaleRatioY;
+
+            //Calculate the scale ratios and clamp it between the maximums and minimums
+            scaleRatioX = Math.Clamp(((float) windowSize.X - minScaleRes.X) / (maxScaleRes.X - minScaleRes.X) * osScale, autoScaleMin, osScale);
+            scaleRatioY = Math.Clamp(((float) windowSize.Y - minScaleRes.Y) / (maxScaleRes.Y - minScaleRes.Y) * osScale, autoScaleMin, osScale);
+            //Take the smallest UIScale value and use it for UI scaling
+            return Math.Min(scaleRatioX, scaleRatioY);
         }
 
         private void UpdateUIScale(WindowRoot root)
         {
-            var newVal = _configurationManager.GetCVar(CVars.DisplayUIScale);
-            root.UIScaleSet = newVal == 0f ? root.Window.ContentScale.X : newVal;
-
+            root.UIScaleSet = CalculateAutoScale(root);
             _propagateUIScaleChanged(root);
             root.InvalidateMeasure();
         }
@@ -975,7 +1006,7 @@ namespace Robust.Client.UserInterface
         {
             if (!_windowsToRoot.TryGetValue(windowResizedEventArgs.Window.Id, out var root))
                 return;
-
+            UpdateUIScale(root);
             root.InvalidateMeasure();
         }
 

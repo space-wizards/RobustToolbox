@@ -10,7 +10,7 @@ using Robust.Shared.Localization;
 namespace Robust.Client.ViewVariables
 {
     [GenerateTypedNameReferences]
-    public partial class ViewVariablesAddWindow : DefaultWindow
+    public sealed partial class ViewVariablesAddWindow : DefaultWindow
     {
         private string? _lastSearch;
         private string[] _entries = Array.Empty<string>();
@@ -83,7 +83,7 @@ namespace Robust.Client.ViewVariables
             AddButtonPressed?.Invoke(new AddButtonPressedEventArgs(comp.Text));
         }
 
-        public class AddButtonPressedEventArgs : EventArgs
+        public sealed class AddButtonPressedEventArgs : EventArgs
         {
             public string Entry { get; }
 

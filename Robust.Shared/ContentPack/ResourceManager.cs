@@ -23,6 +23,8 @@ namespace Robust.Shared.ContentPack
         private readonly List<(ResourcePath prefix, IContentRoot root)> _contentRoots =
             new();
 
+        private StreamSeekMode _streamSeekMode;
+
         // Special file names on Windows like serial ports.
         private static readonly Regex BadPathSegmentRegex =
             new("^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])$", RegexOptions.IgnoreCase);
@@ -45,6 +47,8 @@ namespace Robust.Shared.ContentPack
             {
                 UserData = new VirtualWritableDirProvider();
             }
+
+            _config.OnValueChanged(CVars.ResStreamSeekMode, i => _streamSeekMode = (StreamSeekMode)i, true);
         }
 
         /// <inheritdoc />
@@ -191,8 +195,9 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    if (root.TryGetFile(relative, out fileStream))
+                    if (root.TryGetFile(relative, out var stream))
                     {
+                        fileStream = WrapStream(stream);
                         return true;
                     }
                 }
@@ -203,6 +208,35 @@ namespace Robust.Shared.ContentPack
             finally
             {
                 _contentRootsLock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Apply <see cref="_streamSeekMode"/> to the provided stream.
+        /// </summary>
+        private Stream WrapStream(Stream stream)
+        {
+            switch (_streamSeekMode)
+            {
+                case StreamSeekMode.None:
+                    return stream;
+
+                case StreamSeekMode.ForceSeekable:
+                    if (stream.CanSeek)
+                        return stream;
+
+                    var ms = new MemoryStream(stream.CopyToArray(), writable: false);
+                    stream.Dispose();
+                    return ms;
+
+                case StreamSeekMode.ForceNonSeekable:
+                    if (!stream.CanSeek)
+                        return stream;
+
+                    return new NonSeekableStream(stream);
+
+                default:
+                    throw new InvalidOperationException();
             }
         }
 

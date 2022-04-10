@@ -6,7 +6,7 @@ namespace Robust.Shared.GameObjects
     /// Defines Name that this component is represented with in prototypes.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class ComponentProtoNameAttribute : Attribute
+    public sealed class ComponentProtoNameAttribute : Attribute
     {
         public string PrototypeName { get; }
 

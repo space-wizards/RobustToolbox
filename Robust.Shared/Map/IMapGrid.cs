@@ -10,7 +10,7 @@ namespace Robust.Shared.Map
     ///     This is a collection of tiles in a grid format.
     /// </summary>
     [PublicAPI]
-    public interface IMapGrid : IDisposable
+    public interface IMapGrid
     {
         /// <summary>
         ///     The integer ID of the map this grid is currently located within.
@@ -127,11 +127,15 @@ namespace Robust.Shared.Map
 
         #region SnapGridAccess
 
+        IEnumerable<EntityUid> GetLocalAnchoredEntities(Box2 localAABB);
         IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(EntityCoordinates coords);
         IEnumerable<EntityUid> GetAnchoredEntities(Vector2i pos);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2 worldAABB);
         IEnumerable<EntityUid> GetAnchoredEntities(Box2Rotated worldBounds);
+
+        // Struct enumerators
+        AnchoredEntitiesEnumerator GetAnchoredEntitiesEnumerator(Vector2i pos);
 
         Vector2i TileIndicesFor(EntityCoordinates coords) => CoordinatesToTile(coords);
         Vector2i TileIndicesFor(MapCoordinates worldPos) => CoordinatesToTile(MapToGrid(worldPos));

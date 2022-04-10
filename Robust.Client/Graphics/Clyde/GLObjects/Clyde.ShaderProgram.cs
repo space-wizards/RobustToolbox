@@ -14,7 +14,7 @@ namespace Robust.Client.Graphics.Clyde
         ///     You've been warned:
         ///     using things like <see cref="SetUniformTexture" /> if this buffer isn't bound WILL mess things up!
         /// </summary>
-        private class GLShaderProgram
+        private sealed class GLShaderProgram
         {
             private readonly sbyte?[] _uniformIntCache = new sbyte?[UniCount];
             private readonly Dictionary<string, int> _uniformCache = new();

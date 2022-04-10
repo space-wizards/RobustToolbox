@@ -6,7 +6,7 @@ namespace Robust.Shared.ViewVariables
     ///     Attribute to make a property or field accessible to VV.
     /// </summary>
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class ViewVariablesAttribute : Attribute
+    public sealed class ViewVariablesAttribute : Attribute
     {
         public readonly VVAccess Access = VVAccess.ReadOnly;
 

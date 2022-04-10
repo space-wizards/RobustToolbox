@@ -19,7 +19,7 @@ namespace Robust.Client.Graphics
         [Dependency] private readonly IResourceCache _resourceCache = default!;
 
         [ViewVariables]
-        [DataField("id", required: true)]
+        [IdDataFieldAttribute]
         public string ID { get; } = default!;
 
         private ShaderKind Kind;
@@ -192,7 +192,7 @@ namespace Robust.Client.Graphics
         }
 
         [DataDefinition]
-        public class StencilData
+        public sealed class StencilData
         {
             [DataField("ref")] public int StencilRef;
 

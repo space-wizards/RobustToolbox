@@ -427,21 +427,66 @@ namespace Robust.Shared.Maths
             return CreateScale(scale.X, scale.Y);
         }
 
-        public static Matrix3 CreateTransform(in Vector2 position, in Angle rotation, in Vector2 scale)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 CreateTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
         {
-            var sMat = CreateScale(in scale);
-            var rMat = CreateRotation(rotation);
-            var tMat = CreateTranslation(position);
+            // returns a matrix that is equivalent to returning CreateScale(scale) * CreateRotation(angle) * CreateTranslation(posX, posY) 
 
-            return sMat * rMat * tMat;
+            var (sin, cos) = MathF.SinCos(angle);
+
+            return new Matrix3
+            {
+                R0C0 = cos * scaleX,
+                R0C1 = -sin * scaleY,
+                R0C2 = posX,
+                R1C0 = sin * scaleX,
+                R1C1 = cos * scaleY,
+                R1C2 = posY,
+                R2C2 = 1
+            };
         }
 
-        public static Matrix3 CreateTransform(in Vector2 position, in Angle rotation)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 CreateInverseTransform(float posX, float posY, float angle, float scaleX = 1, float scaleY = 1)
         {
-            var rMat = CreateRotation(rotation);
-            var tMat = CreateTranslation(position);
+            // returns a matrix that is equivalent to returning CreateTranslation(-posX, -posY) * CreateRotation(-angle) * CreateScale(1/scaleX, 1/scaleY) 
 
-            return rMat * tMat;
+            var (sin, cos) = MathF.SinCos(angle);
+
+            return new Matrix3
+            {
+                R0C0 = cos / scaleX,
+                R0C1 = sin / scaleX,
+                R0C2 = - (posX * cos + posY * sin) / scaleX,
+                R1C0 = -sin / scaleY,
+                R1C1 = cos / scaleY,
+                R1C2 = (posX * sin - posY * cos) / scaleY,
+                R2C2 = 1
+            };
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 CreateTransform(in Vector2 position, in Angle angle)
+        {
+            return CreateTransform(position.X, position.Y, (float)angle.Theta);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 CreateTransform(in Vector2 position, in Angle angle, in Vector2 scale)
+        {
+            return CreateTransform(position.X, position.Y, (float)angle.Theta, scale.X, scale.Y);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 CreateInverseTransform(in Vector2 position, in Angle angle)
+        {
+            return CreateInverseTransform(position.X, position.Y, (float)angle.Theta);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Matrix3 CreateInverseTransform(in Vector2 position, in Angle angle, in Vector2 scale)
+        {
+            return CreateInverseTransform(position.X, position.Y, (float)angle.Theta, scale.X, scale.Y);
         }
 
         #endregion Constructors

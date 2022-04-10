@@ -13,7 +13,7 @@ using Robust.Shared.Network;
 
 namespace Robust.Server.Console.Commands
 {
-    internal class TeleportCommand : IConsoleCommand
+    internal sealed class TeleportCommand : IConsoleCommand
     {
         public string Command => "tp";
         public string Description => "Teleports a player to any location in the round.";
@@ -70,7 +70,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class TeleportToCommand : IConsoleCommand
+    public sealed class TeleportToCommand : IConsoleCommand
     {
         public string Command => "tpto";
         public string Description => "Teleports the current player or the specified players/entities to the location of last player/entity specified.";
@@ -143,7 +143,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    public class ListPlayers : IConsoleCommand
+    public sealed class ListPlayers : IConsoleCommand
     {
         public string Command => "listplayers";
         public string Description => "Lists all players currently connected";
@@ -175,7 +175,7 @@ namespace Robust.Server.Console.Commands
         }
     }
 
-    internal class KickCommand : IConsoleCommand
+    internal sealed class KickCommand : IConsoleCommand
     {
         public string Command => "kick";
         public string Description => "Kicks a connected player out of the server, disconnecting them.";

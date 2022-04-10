@@ -59,7 +59,7 @@ namespace Robust.Client.Console.Commands
     }
 
     [UsedImplicitly]
-    public class SaveConfig : IConsoleCommand
+    public sealed class SaveConfig : IConsoleCommand
     {
         public string Command => "saveconfig";
         public string Description => "Saves the client configuration to the config file";

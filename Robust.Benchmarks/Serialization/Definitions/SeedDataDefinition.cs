@@ -11,7 +11,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
     ///     Taken from content.
     /// </summary>
     [Prototype("seed")]
-    public class SeedDataDefinition : IPrototype
+    public sealed class SeedDataDefinition : IPrototype
     {
         public const string Prototype = @"
 - type: seed
@@ -36,7 +36,7 @@ namespace Robust.Benchmarks.Serialization.Definitions
       Max: 10
       PotencyDivisor: 10";
 
-        [DataField("id", required: true)] public string ID { get; set; } = default!;
+        [IdDataFieldAttribute] public string ID { get; set; } = default!;
 
         #region Tracking
         [DataField("name")] public string Name { get; set; } = string.Empty;

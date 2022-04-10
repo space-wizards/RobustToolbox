@@ -10,7 +10,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Client.UserInterface
 {
     [TestFixture]
-    public class UserInterfaceManagerTest : RobustUnitTest
+    public sealed class UserInterfaceManagerTest : RobustUnitTest
     {
         public override UnitTestProject Project => UnitTestProject.Client;
 

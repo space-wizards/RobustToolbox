@@ -14,7 +14,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Traits
 {
-    internal class ViewVariablesTraitEnumerable : ViewVariablesTrait
+    internal sealed class ViewVariablesTraitEnumerable : ViewVariablesTrait
     {
         private const int ElementsPerPage = 25;
         private readonly List<object?> _cache = new();

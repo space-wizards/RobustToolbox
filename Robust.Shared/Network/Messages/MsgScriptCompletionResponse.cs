@@ -3,7 +3,7 @@ using Lidgren.Network;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgScriptCompletionResponse : NetMessage
+    public sealed class MsgScriptCompletionResponse : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 
@@ -33,7 +33,7 @@ namespace Robust.Shared.Network.Messages
                 res.WriteToBuffer(buffer);
         }
 
-        public class LiteResult {
+        public sealed class LiteResult {
             public string DisplayText;
             public string DisplayTextPrefix;
             public string DisplayTextSuffix;

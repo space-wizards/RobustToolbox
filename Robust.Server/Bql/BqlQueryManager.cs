@@ -7,7 +7,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server.Bql
 {
-    public partial class BqlQueryManager : IBqlQueryManager
+    public sealed partial class BqlQueryManager : IBqlQueryManager
     {
         private readonly IReflectionManager _reflectionManager;
         private readonly IComponentFactory _componentFactory;

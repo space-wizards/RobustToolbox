@@ -11,7 +11,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
 {
     [TestFixture]
     [TestOf(typeof(HashSetSerializer<>))]
-    public class HashSetSerializerTest : SerializationTest
+    public sealed class HashSetSerializerTest : SerializationTest
     {
         [Test]
         public void SerializationTest()
@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var list = new HashSet<string> {"A", "E"};
             var node = new SequenceDataNode("A", "E");
-            var deserializedList = Serialization.ReadValue<HashSet<string>>(node);
+            var deserializedList = Serialization.Read<HashSet<string>>(node);
 
             Assert.That(deserializedList, Is.EqualTo(list));
         }

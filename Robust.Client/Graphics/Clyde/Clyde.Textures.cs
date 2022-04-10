@@ -257,6 +257,16 @@ namespace Robust.Client.Graphics.Clyde
         private (PIF pif, PF pf, PT pt) PixelEnums<T>(bool srgb)
             where T : unmanaged, IPixel<T>
         {
+            if (_isGLES2)
+            {
+                return default(T) switch
+                {
+                    Rgba32 => (PIF.Rgba, PF.Rgba, PT.UnsignedByte),
+                    L8 => (PIF.Luminance, PF.Red, PT.UnsignedByte),
+                    _ => throw new NotSupportedException("Unsupported pixel type."),
+                };
+            }
+
             return default(T) switch
             {
                 // Note that if _hasGLSrgb is off, we import an sRGB texture as non-sRGB.

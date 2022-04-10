@@ -7,6 +7,7 @@ using Robust.Shared.ViewVariables;
 namespace Robust.Client.Graphics
 {
     /// <inheritdoc />
+    [Virtual]
     public class Eye : IEye
     {
         private Vector2 _scale = Vector2.One/2f;

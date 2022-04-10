@@ -31,6 +31,7 @@ using static Robust.Client.Input.Keyboard;
 
 namespace Robust.Client.Input
 {
+    [Virtual]
     internal class InputManager : IInputManager
     {
         // This is for both userdata and resources.
@@ -496,7 +497,7 @@ namespace Robust.Client.Input
 
             if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = serializationManager.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -525,7 +526,7 @@ namespace Robust.Client.Input
 
             if (userData && robustMapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
+                var leaveEmpty = serializationManager.Read<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {
@@ -698,7 +699,7 @@ namespace Robust.Client.Input
         }
 
         [DebuggerDisplay("KeyBinding {" + nameof(Function) + "}")]
-        private class KeyBinding : IKeyBinding
+        private sealed class KeyBinding : IKeyBinding
         {
             private readonly InputManager _inputManager;
 
@@ -906,7 +907,7 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class BindCommand : IConsoleCommand
+    internal sealed class BindCommand : IConsoleCommand
     {
         public string Command => "bind";
         public string Description => "Binds an input key to an input command.";
@@ -960,7 +961,7 @@ namespace Robust.Client.Input
     }
 
     [UsedImplicitly]
-    internal class SaveBindCommand : IConsoleCommand
+    internal sealed class SaveBindCommand : IConsoleCommand
     {
         public string Command => "svbind";
         public string Description => "";

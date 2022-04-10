@@ -8,7 +8,7 @@ namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
     [TestOf(typeof(FixtureSystem))]
-    public class FixtureShape_Test : RobustUnitTest
+    public sealed class FixtureShape_Test : RobustUnitTest
     {
         private FixtureSystem _shapeManager = default!;
 

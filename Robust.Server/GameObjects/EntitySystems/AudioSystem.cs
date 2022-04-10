@@ -11,13 +11,13 @@ using Robust.Shared.Players;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : SharedAudioSystem, IAudioSystem
+    public sealed class AudioSystem : SharedAudioSystem, IAudioSystem
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
         private uint _streamIndex;
 
-        private class AudioSourceServer : IPlayingAudioStream
+        private sealed class AudioSourceServer : IPlayingAudioStream
         {
             private readonly uint _id;
             private readonly AudioSystem _audioSystem;

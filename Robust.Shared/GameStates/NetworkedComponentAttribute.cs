@@ -6,5 +6,5 @@ namespace Robust.Shared.GameStates
     /// This attribute marks a component as networked, so that it is replicated to clients.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
-    public class NetworkedComponentAttribute : Attribute { }
+    public sealed class NetworkedComponentAttribute : Attribute { }
 }

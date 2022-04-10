@@ -4,7 +4,7 @@ using Robust.Shared.Physics.Dynamics;
 
 namespace Robust.Shared.Physics.Broadphase
 {
-    public class DynamicTreeBroadPhase : IBroadPhase
+    public sealed class DynamicTreeBroadPhase : IBroadPhase
     {
         private readonly B2DynamicTree<FixtureProxy> _tree;
 

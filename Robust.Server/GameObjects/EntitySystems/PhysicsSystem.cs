@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+using JetBrains.Annotations;
 using Robust.Server.Physics;
 using Robust.Shared;
 using Robust.Shared.Configuration;
@@ -10,7 +10,7 @@ using Robust.Shared.Physics;
 namespace Robust.Server.GameObjects
 {
     [UsedImplicitly]
-    public class PhysicsSystem : SharedPhysicsSystem
+    public sealed class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IConfigurationManager _configurationManager = default!;
 
@@ -37,7 +37,7 @@ namespace Robust.Server.GameObjects
             collideComp.BodyType = BodyType.Static;
         }
 
-        protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        protected override void HandleMapCreated(MapChangedEvent eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
             var mapUid = MapManager.GetMapEntityIdOrThrow(eventArgs.Map);

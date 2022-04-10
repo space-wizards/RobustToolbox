@@ -49,6 +49,7 @@ namespace Robust.Shared.GameObjects
         event EventHandler<EntityUid>? EntityInitialized;
         event EventHandler<EntityUid>? EntityStarted;
         event EventHandler<EntityUid>? EntityDeleted;
+        event EventHandler<EntityUid>? EntityDirtied; // only raised after initialization
 
         EntityUid CreateEntityUninitialized(string? prototypeName, EntityUid euid);
 

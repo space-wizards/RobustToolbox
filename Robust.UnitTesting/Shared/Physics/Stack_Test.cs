@@ -38,7 +38,7 @@ using Robust.Shared.Physics.Dynamics;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    public class PhysicsTestBedTest : RobustIntegrationTest
+    public sealed class PhysicsTestBedTest : RobustIntegrationTest
     {
         [Test]
         public async Task TestBoxStack()
@@ -62,12 +62,12 @@ namespace Robust.UnitTesting.Shared.Physics
                 mapId = mapManager.CreateMap();
 
                 EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                entityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-                var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
+                var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
 
-                var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
+                var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
                 var horizontalFixture = new Fixture(ground, horizontal)
                 {
                     CollisionLayer = 1,
@@ -100,7 +100,7 @@ namespace Robust.UnitTesting.Shared.Physics
 
                         EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
                             new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
-                        var box = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
+                        var box = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
 
                         box.BodyType = BodyType.Dynamic;
                         var poly = new PolygonShape(0.001f);
@@ -126,7 +126,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 }
 
                 EntityUid tempQualifier3 = bodies[0].Owner;
-                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
+                firstPos = entityManager.GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -135,12 +135,12 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 EntityUid tempQualifier = bodies[0].Owner;
-                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition);
+                Assert.That(firstPos, Is.Not.EqualTo(entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition));
             });
 
             // Assert
 
-            await server.WaitRunTicks(150);
+            await server.WaitRunTicks(300);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>
@@ -150,11 +150,12 @@ namespace Robust.UnitTesting.Shared.Physics
                     for (var i = 0; i < bodies.Length; i++)
                     {
                         var body = bodies[j * columnCount + i];
-                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner).WorldPosition;
+                        var worldPos = entityManager.GetComponent<TransformComponent>(body.Owner).WorldPosition;
 
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
-                        Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.1f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
+                        Assert.That(worldPos.EqualsApprox(new Vector2(0.0f, i + 0.5f), 0.2f), $"Expected y-value of {i + 0.5f} but found {worldPos.Y}");
+                        Assert.That(!body.Awake);
                     }
                 }
             });
@@ -181,12 +182,12 @@ namespace Robust.UnitTesting.Shared.Physics
             {
                 mapId = mapManager.CreateMap();
                 EntityUid tempQualifier2 = mapManager.GetMapEntityId(mapId);
-                IoCManager.Resolve<IEntityManager>().GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
+                entityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier2).Gravity = new Vector2(0, -9.8f);
 
                 EntityUid tempQualifier = entityManager.SpawnEntity(null, new MapCoordinates(0, 0, mapId));
-                var ground = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier);
+                var ground = entityManager.AddComponent<PhysicsComponent>(tempQualifier);
 
-                var horizontal = new EdgeShape(new Vector2(-20, 0), new Vector2(20, 0));
+                var horizontal = new EdgeShape(new Vector2(-40, 0), new Vector2(40, 0));
                 var horizontalFixture = new Fixture(ground, horizontal)
                 {
                     CollisionLayer = 1,
@@ -220,8 +221,8 @@ namespace Robust.UnitTesting.Shared.Physics
                         var x = 0.0f;
 
                         EntityUid tempQualifier1 = entityManager.SpawnEntity(null,
-                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 2.1f * i), mapId));
-                        var circle = IoCManager.Resolve<IEntityManager>().AddComponent<PhysicsComponent>(tempQualifier1);
+                            new MapCoordinates(new Vector2(xs[j] + x, 0.55f + 1.1f * i), mapId));
+                        var circle = entityManager.AddComponent<PhysicsComponent>(tempQualifier1);
 
                         circle.LinearDamping = 0.05f;
                         circle.BodyType = BodyType.Dynamic;
@@ -241,7 +242,7 @@ namespace Robust.UnitTesting.Shared.Physics
                 }
 
                 EntityUid tempQualifier3 = bodies[0].Owner;
-                firstPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
+                firstPos = entityManager.GetComponent<TransformComponent>(tempQualifier3).WorldPosition;
             });
 
             await server.WaitRunTicks(1);
@@ -250,12 +251,12 @@ namespace Robust.UnitTesting.Shared.Physics
             await server.WaitAssertion(() =>
             {
                 EntityUid tempQualifier = bodies[0].Owner;
-                Assert.That(firstPos != IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(tempQualifier).WorldPosition);
+                Assert.That(firstPos, Is.Not.EqualTo(entityManager.GetComponent<TransformComponent>(tempQualifier).WorldPosition));
             });
 
             // Assert
 
-            await server.WaitRunTicks(200);
+            await server.WaitRunTicks(300);
 
             // Assert settled, none below 0, etc.
             await server.WaitAssertion(() =>
@@ -265,13 +266,14 @@ namespace Robust.UnitTesting.Shared.Physics
                     for (var i = 0; i < bodies.Length; i++)
                     {
                         var body = bodies[j * columnCount + i];
-                        var worldPos = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(body.Owner).WorldPosition;
+                        var worldPos = entityManager.GetComponent<TransformComponent>(body.Owner).WorldPosition;
 
                         var expectedY = 0.5f + i;
 
                         // TODO: Multi-column support but I cbf right now
                         // Can't be more exact as some level of sinking is allowed.
                         Assert.That(worldPos.EqualsApproxPercent(new Vector2(0.0f, expectedY), 0.1f), $"Expected y-value of {expectedY} but found {worldPos.Y}");
+                        Assert.That(!body.Awake);
                     }
                 }
             });

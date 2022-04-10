@@ -53,6 +53,7 @@ namespace Robust.Client.Input
         }
     }
 
+    [Virtual]
     public class TextEventArgs : EventArgs
     {
         public TextEventArgs(uint codePoint)
@@ -64,6 +65,7 @@ namespace Robust.Client.Input
         public Rune AsRune => new Rune(CodePoint);
     }
 
+    [Virtual]
     public class KeyEventArgs : ModifierInputEventArgs
     {
         /// <summary>
@@ -104,7 +106,7 @@ namespace Robust.Client.Input
         }
     }
 
-    public class MouseButtonEventArgs : MouseEventArgs
+    public sealed  class MouseButtonEventArgs : MouseEventArgs
     {
         /// <summary>
         ///     The mouse button that has been pressed or released.
@@ -119,7 +121,7 @@ namespace Robust.Client.Input
         }
     }
 
-    public class MouseWheelEventArgs : MouseEventArgs
+    public sealed class MouseWheelEventArgs : MouseEventArgs
     {
         /// <summary>
         ///     The direction the mouse wheel was moved in.
@@ -134,7 +136,7 @@ namespace Robust.Client.Input
         }
     }
 
-    public class MouseMoveEventArgs : MouseEventArgs
+    public sealed class MouseMoveEventArgs : MouseEventArgs
     {
         /// <summary>
         ///     The new position relative to the previous position.
@@ -149,7 +151,7 @@ namespace Robust.Client.Input
         }
     }
 
-    public class MouseEnterLeaveEventArgs : EventArgs
+    public sealed class MouseEnterLeaveEventArgs : EventArgs
     {
         public IClydeWindow Window { get; }
 

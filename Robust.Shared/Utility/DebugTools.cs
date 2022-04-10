@@ -88,6 +88,7 @@ namespace Robust.Shared.Utility
         }
     }
 
+    [Virtual]
     public class DebugAssertException : Exception
     {
         public DebugAssertException()

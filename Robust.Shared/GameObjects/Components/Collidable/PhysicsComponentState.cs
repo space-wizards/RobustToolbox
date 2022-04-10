@@ -9,7 +9,7 @@ using Robust.Shared.Serialization;
 namespace Robust.Shared.GameObjects
 {
     [Serializable, NetSerializable]
-    public class PhysicsComponentState : ComponentState
+    public sealed class PhysicsComponentState : ComponentState
     {
         public readonly bool CanCollide;
         public readonly bool SleepingAllowed;

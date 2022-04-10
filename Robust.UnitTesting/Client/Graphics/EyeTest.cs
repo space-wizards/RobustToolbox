@@ -7,7 +7,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Client.Graphics
 {
     [TestFixture, Parallelizable, TestOf(typeof(Eye))]
-    class EyeTest
+    sealed class EyeTest
     {
         [Test]
         public void Constructor_DefaultZoom_isTwo()

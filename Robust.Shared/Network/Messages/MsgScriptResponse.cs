@@ -8,7 +8,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgScriptResponse : NetMessage
+    public sealed class MsgScriptResponse : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

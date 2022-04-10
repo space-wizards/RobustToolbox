@@ -9,6 +9,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A control to handle output of message-by-message output panels, like the debug console and chat panel.
     /// </summary>
+    [Virtual]
     public class OutputPanel : Control
     {
         public const string StylePropertyStyleBox = "stylebox";

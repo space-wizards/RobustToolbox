@@ -3,7 +3,6 @@ using JetBrains.Annotations;
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
-using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom;
 using Robust.Shared.Timing;
 using Robust.Shared.ViewVariables;
 
@@ -172,7 +171,7 @@ namespace Robust.Shared.GameObjects
             set
             {
                 if (MetaData is {} metaData)
-                    metaData.EntityName = value;
+                    metaData.EntityDescription = value;
             }
         }
 

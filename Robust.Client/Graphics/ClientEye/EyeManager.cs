@@ -153,7 +153,7 @@ namespace Robust.Client.Graphics
         }
     }
 
-    public class CurrentEyeChangedEvent : EntityEventArgs
+    public sealed class CurrentEyeChangedEvent : EntityEventArgs
     {
         public IEye? Old { get; }
         public IEye New { get; }

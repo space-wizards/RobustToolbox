@@ -81,10 +81,34 @@ namespace Robust.Shared.Console
         IConsoleShell GetSessionShell(ICommonSession session);
 
         /// <summary>
-        /// Execute a command string on the local shell.
+        /// Execute a command string immediately on the local shell, bypassing the command buffer completely.
         /// </summary>
         /// <param name="command">Command string to execute.</param>
         void ExecuteCommand(string command);
+
+        /// <summary>
+        /// Appends a command into the end of the command buffer on the local shell.
+        /// </summary>
+        /// <remarks>
+        ///  This command will be ran *sometime* in the future, depending on how many waits are in the buffer.
+        /// </remarks>
+        /// <param name="command">Command string to execute.</param>
+        void AppendCommand(string command);
+
+        /// <summary>
+        /// Inserts a command into the front of the command buffer on the local shell.
+        /// </summary>
+        /// <remarks>
+        ///  This command will preempt the next command executed in the command buffer.
+        /// </remarks>
+        /// <param name="command">Command string to execute.</param>
+        void InsertCommand(string command);
+
+        /// <summary>
+        /// Processes any contents of the command buffer on the local shell. This needs to be called regularly (once a tick),
+        /// inside the simulation. Pausing the server should prevent the buffer from being processed.
+        /// </summary>
+        void CommandBufferExecute();
 
         /// <summary>
         /// Executes a command string on this specific session shell. If the command does not exist, the command will be forwarded

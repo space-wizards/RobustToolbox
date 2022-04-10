@@ -14,7 +14,7 @@ namespace Robust.Shared.Serialization
     /// be reused between multiple fields.
     /// </summary>
     [AttributeUsage(AttributeTargets.Enum, AllowMultiple = true, Inherited = false)]
-    public class FlagsForAttribute : Attribute
+    public sealed class FlagsForAttribute : Attribute
     {
         private readonly Type _tag;
         public Type Tag => _tag;

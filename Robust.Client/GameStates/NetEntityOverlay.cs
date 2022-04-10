@@ -19,7 +19,7 @@ namespace Robust.Client.GameStates
     /// A network entity report that lists all entities as they are updated through game states.
     /// https://developer.valvesoftware.com/wiki/Networking_Entities#cl_entityreport
     /// </summary>
-    class NetEntityOverlay : Overlay
+    sealed class NetEntityOverlay : Overlay
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientNetManager _netManager = default!;
@@ -244,7 +244,7 @@ namespace Robust.Client.GameStates
             }
         }
 
-        private class NetEntityReportCommand : IConsoleCommand
+        private sealed class NetEntityReportCommand : IConsoleCommand
         {
             public string Command => "net_entityreport";
             public string Help => "net_entityreport <0|1>";

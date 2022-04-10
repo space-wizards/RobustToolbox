@@ -10,6 +10,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     A good simple menu bar control, like the one at the top of your IDE!
     /// </summary>
+    [Virtual]
     public class MenuBar : PanelContainer
     {
         private readonly List<Menu> _menus = new();

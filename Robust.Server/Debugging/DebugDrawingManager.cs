@@ -7,7 +7,7 @@ using Robust.Shared.Physics;
 namespace Robust.Server.Debugging
 {
     [UsedImplicitly]
-    internal class DebugDrawingManager : IDebugDrawingManager, IEntityEventSubscriber
+    internal sealed class DebugDrawingManager : IDebugDrawingManager, IEntityEventSubscriber
     {
         [Dependency] private readonly IEntityManager _entManager = default!;
 

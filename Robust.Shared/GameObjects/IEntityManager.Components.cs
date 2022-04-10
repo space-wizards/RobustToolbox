@@ -42,6 +42,18 @@ namespace Robust.Shared.GameObjects
         T AddComponent<T>(EntityUid uid) where T : Component, new();
 
         /// <summary>
+        ///     Adds an uninitialized Component type to an entity.
+        /// </summary>
+        /// <remarks>
+        ///     This function returns a disposable initialize handle that you can use in a <see langword="using" /> statement, to set up a component
+        ///     before initialization is ran on it. 
+        /// </remarks>
+        /// <typeparam name="T">Concrete component type to add.</typeparam>
+        /// <param name="uid">Entity being modified.</param>
+        /// <returns>Component initialization handle. When you are done setting up the component, make sure to dispose this.</returns>
+        EntityManager.CompInitializeHandle<T> AddComponentUninitialized<T>(EntityUid uid) where T : Component, new();
+
+        /// <summary>
         ///     Adds a Component to an entity. If the entity is already Initialized, the component will
         ///     automatically be Initialized and Started.
         /// </summary>
@@ -150,6 +162,15 @@ namespace Robust.Shared.GameObjects
         /// <typeparam name="T">Component to add.</typeparam>
         /// <returns>The component in question</returns>
         T EnsureComponent<T>(EntityUid uid) where T : Component, new();
+
+        /// <summary>
+        ///     This method will always return a component for a certain entity, adding it if it's not there already.
+        /// </summary>
+        /// <param name="uid">Entity to modify.</param>
+        /// <param name="component">The output component after being ensured.</param>
+        /// <typeparam name="T">Component to add.</typeparam>
+        /// <returns>The component in question</returns>
+        bool EnsureComponent<T>(EntityUid uid, out T component) where T : Component, new();
 
         /// <summary>
         ///     Returns the component of a specific type.
@@ -278,13 +299,6 @@ namespace Robust.Shared.GameObjects
         /// <param name="player">The player to generate the state for.</param>
         /// <returns>True if the player should get the component state.</returns>
         bool CanGetComponentState(IEventBus eventBus, IComponent component, ICommonSession player);
-
-        /// <summary>
-        ///     Returns ALL component instances of a specified type.
-        /// </summary>
-        /// <typeparam name="T">A trait or type of a component to retrieve.</typeparam>
-        /// <returns>All components that have the specified type.</returns>
-        EntityManager.EntQueryEnumerator<T> EntityQueryEnumerator<T>(bool includePaused = false) where T : Component;
 
         /// <summary>
         ///     Returns ALL component instances of a specified type.

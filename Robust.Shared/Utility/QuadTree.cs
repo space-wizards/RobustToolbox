@@ -9,7 +9,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Shared.Utility
 {
-    public class QuadTree<T> where T : class, IQuadObject
+    public sealed class QuadTree<T> where T : class, IQuadObject
     {
         private readonly bool sort;
         private readonly Vector2 minLeafSizeF;
@@ -439,7 +439,7 @@ namespace Robust.Shared.Utility
             }
         }
 
-        public class QuadNode
+        public sealed class QuadNode
         {
             private static int _id = 0;
             public readonly int ID = _id++;

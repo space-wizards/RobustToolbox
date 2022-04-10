@@ -16,7 +16,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Shared.GameObjects
 {
     [TestFixture, Serializable]
-    class EntityState_Tests
+    sealed class EntityState_Tests
     {
         /// <summary>
         ///     Used to measure the size of <see cref="object"/>s in bytes. This is not actually a test,
@@ -60,7 +60,7 @@ namespace Robust.UnitTesting.Shared.GameObjects
                     new EntityUid(512),
                     new []
                     {
-                        new ComponentChange(0, true, false, new MapGridComponentState(new GridId(0)))
+                        new ComponentChange(0, true, false, new MapGridComponentState(new GridId(0), 16))
                     });
 
                 serializer.Serialize(stream, payload);

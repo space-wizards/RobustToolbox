@@ -111,7 +111,7 @@ namespace Robust.Shared.ContentPack
             var fullStopwatch = Stopwatch.StartNew();
 
             var resolver = CreateResolver();
-            using var peReader = new PEReader(assembly, PEStreamOptions.LeaveOpen);
+            using var peReader = ModLoader.MakePEReader(assembly, leaveOpen: true);
             var reader = peReader.GetMetadataReader();
 
             var asmName = reader.GetString(reader.GetAssemblyDefinition().Name);
@@ -853,13 +853,13 @@ namespace Robust.Shared.ContentPack
                         continue;
                     }
 
-                    return ReaderFromStream(File.OpenRead(path));
+                    return ModLoader.MakePEReader(File.OpenRead(path));
                 }
 
                 var extraStream = _parent.ExtraRobustLoader?.Invoke(dllName);
                 if (extraStream != null)
                 {
-                    return ReaderFromStream(extraStream);
+                    return ModLoader.MakePEReader(extraStream);
                 }
 
                 foreach (var resLoadPath in _resLoadPaths)
@@ -867,7 +867,7 @@ namespace Robust.Shared.ContentPack
                     try
                     {
                         var path = resLoadPath / dllName;
-                        return ReaderFromStream(_parent._res.ContentFileRead(path));
+                        return ModLoader.MakePEReader(_parent._res.ContentFileRead(path));
                     }
                     catch (FileNotFoundException)
                     {
@@ -875,23 +875,6 @@ namespace Robust.Shared.ContentPack
                 }
 
                 return null;
-            }
-
-            private static PEReader ReaderFromStream(Stream stream)
-            {
-                if (OperatingSystem.IsLinux() && stream is FileStream)
-                {
-                    // PEReader is bugged on Linux and not properly thread safe when doing memory mapping.
-                    // As such, we never pass it a file stream so it uses a different, non-bugged code path.
-                    // See https://github.com/dotnet/runtime/issues/60545
-                    var ms = new MemoryStream();
-                    stream.CopyTo(ms);
-                    ms.Seek(0, SeekOrigin.Begin);
-                    stream.Dispose();
-                    stream = ms;
-                }
-
-                return new PEReader(stream);
             }
 
             public PEReader? Resolve(string simpleName)

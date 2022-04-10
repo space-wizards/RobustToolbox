@@ -9,7 +9,7 @@ namespace Robust.UnitTesting.Shared.Serialization
     // Tests NetSerializer itself because we have specific modifications.
     // e.g. (at the time of writing) list serialization being more compact.
     [Parallelizable(ParallelScope.All)]
-    public class NetSerializer_Test
+    public sealed class NetSerializer_Test
     {
         public static readonly List<int>?[] ListValues =
         {

@@ -343,6 +343,7 @@ namespace Robust.Client.UserInterface.Controls
             Disabled = 3
         }
 
+        [Virtual]
         public class ButtonEventArgs : EventArgs
         {
             /// <summary>
@@ -362,7 +363,7 @@ namespace Robust.Client.UserInterface.Controls
         /// <summary>
         ///     Fired when a <see cref="BaseButton"/> is toggled.
         /// </summary>
-        public class ButtonToggledEventArgs : ButtonEventArgs
+        public sealed class ButtonToggledEventArgs : ButtonEventArgs
         {
             /// <summary>
             ///     The new pressed state of the button.

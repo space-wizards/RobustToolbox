@@ -68,7 +68,7 @@ namespace Robust.UnitTesting.Server
 
     internal delegate void PrototypeRegistrationDelegate(IPrototypeManager protoMan);
 
-    internal class RobustServerSimulation : ISimulation, ISimulationFactory
+    internal sealed class RobustServerSimulation : ISimulation, ISimulationFactory
     {
         private DiContainerDelegate? _diFactory;
         private CompRegistrationDelegate? _regDelegate;
@@ -200,14 +200,13 @@ namespace Robust.UnitTesting.Server
             container.Register<IEntityManager, EntityManager>();
             container.Register<IMapManager, MapManager>();
             container.Register<ISerializationManager, SerializationManager>();
-            container.Register<IEntityLookup, EntityLookup>();
             container.Register<IPrototypeManager, PrototypeManager>();
             container.Register<IComponentFactory, ComponentFactory>();
             container.Register<IEntitySystemManager, EntitySystemManager>();
             container.Register<IIslandManager, IslandManager>();
             container.Register<IManifoldManager, CollisionManager>();
             container.Register<IMapManagerInternal, MapManager>();
-            container.RegisterInstance<IPauseManager>(new Mock<IPauseManager>().Object); // TODO: get timing working similar to RobustIntegrationTest
+            container.Register<IPauseManager, MapManager>();
             container.Register<IPhysicsManager, PhysicsManager>();
 
             _diFactory?.Invoke(container);
@@ -257,6 +256,7 @@ namespace Robust.UnitTesting.Server
             entitySystemMan.LoadExtraSystemType<FixtureSystem>();
             entitySystemMan.LoadExtraSystemType<GridFixtureSystem>();
             entitySystemMan.LoadExtraSystemType<TransformSystem>();
+            entitySystemMan.LoadExtraSystemType<EntityLookupSystem>();
 
             _systemDelegate?.Invoke(entitySystemMan);
 
@@ -265,14 +265,13 @@ namespace Robust.UnitTesting.Server
 
             entityMan.Startup();
             mapManager.Startup();
-            IoCManager.Resolve<IEntityLookup>().Startup();
 
             container.Resolve<ISerializationManager>().Initialize();
 
             var protoMan = container.Resolve<IPrototypeManager>();
             protoMan.RegisterType(typeof(EntityPrototype));
             _protoDelegate?.Invoke(protoMan);
-            protoMan.Resync();
+            protoMan.ResolveResults();
 
             return this;
         }

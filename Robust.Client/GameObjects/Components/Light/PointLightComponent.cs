@@ -11,7 +11,7 @@ namespace Robust.Client.GameObjects
 {
     [RegisterComponent]
     [ComponentReference(typeof(SharedPointLightComponent))]
-    public class PointLightComponent : SharedPointLightComponent, ISerializationHooks
+    public sealed class PointLightComponent : SharedPointLightComponent, ISerializationHooks
     {
         [Dependency] private readonly IEntityManager _entityManager = default!;
 
@@ -139,7 +139,7 @@ namespace Robust.Client.GameObjects
         internal RenderingTreeComponent? RenderTree { get; set; }
     }
 
-    public class PointLightRadiusChangedEvent : EntityEventArgs
+    public sealed class PointLightRadiusChangedEvent : EntityEventArgs
     {
         public PointLightComponent PointLightComponent { get; }
 

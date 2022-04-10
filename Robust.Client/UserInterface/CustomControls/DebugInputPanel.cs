@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class DebugInputPanel : PanelContainer
+    internal sealed class DebugInputPanel : PanelContainer
     {
         [Dependency] private readonly IInputManager _inputManager = default!;
 

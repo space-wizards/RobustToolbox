@@ -9,7 +9,7 @@ using Robust.Shared.Timing;
 namespace Robust.Client.Physics
 {
     [UsedImplicitly]
-    public class PhysicsSystem : SharedPhysicsSystem
+    public sealed class PhysicsSystem : SharedPhysicsSystem
     {
         [Dependency] private readonly IGameTiming _gameTiming = default!;
         [Dependency] private readonly IClientGameStateManager _gameState = default!;
@@ -37,7 +37,7 @@ namespace Robust.Client.Physics
             SimulateWorld((float) diff.TotalSeconds, true);
         }
 
-        protected override void HandleMapCreated(object? sender, MapEventArgs eventArgs)
+        protected override void HandleMapCreated(MapChangedEvent eventArgs)
         {
             if (eventArgs.Map == MapId.Nullspace) return;
             var mapUid = MapManager.GetMapEntityId(eventArgs.Map);

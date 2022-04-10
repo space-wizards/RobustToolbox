@@ -6,7 +6,7 @@ namespace Robust.UnitTesting.Client.ResourceManagement
     [TestOf(typeof(RSIResource))]
     [Parallelizable(ParallelScope.All)]
     [TestFixture]
-    public class RsiResourceTest
+    public sealed class RsiResourceTest
     {
         /// <summary>
         ///     Simple test in which the delays are already identical so nothing should change much.

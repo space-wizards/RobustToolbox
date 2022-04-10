@@ -10,6 +10,7 @@ namespace Robust.Client.UserInterface.Controls
     ///     that limit. Alternatively, can define a maximum width or height, and grid will
     ///     lay out elements (aligned in a grid pattern, not floated) within the defined limit.
     /// </summary>
+    [Virtual]
     public class GridContainer : Container
     {
         // limit - depending on mode, this is either rows or columns

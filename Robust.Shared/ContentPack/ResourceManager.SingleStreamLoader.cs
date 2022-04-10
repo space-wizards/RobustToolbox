@@ -7,7 +7,7 @@ namespace Robust.Shared.ContentPack
 {
     internal partial class ResourceManager
     {
-        private class SingleStreamLoader : IContentRoot
+        private sealed class SingleStreamLoader : IContentRoot
         {
             private readonly MemoryStream _stream;
             private readonly ResourcePath _resourcePath;

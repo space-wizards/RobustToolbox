@@ -6,7 +6,7 @@ namespace Robust.Shared.Utility
     /// <summary>
     ///     Helper class for parsing text.
     /// </summary>
-    internal class TextParser
+    internal sealed class TextParser
     {
         private readonly TextReader _reader;
 
@@ -178,6 +178,7 @@ namespace Robust.Shared.Utility
             return char.IsDigit(_currentLine!, CurrentIndex);
         }
 
+        [Virtual]
         public class ParserException : Exception
         {
             public ParserException(string message) : base(message)

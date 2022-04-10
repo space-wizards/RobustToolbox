@@ -5,7 +5,7 @@ namespace Robust.Shared.Serialization.Manager.Attributes
 {
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     [MeansImplicitUse]
-    public class TypeSerializerAttribute : Attribute
+    public sealed class TypeSerializerAttribute : Attribute
     {
     }
 }

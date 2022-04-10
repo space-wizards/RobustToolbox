@@ -8,7 +8,7 @@ using Robust.Shared.Physics;
 
 namespace Robust.UnitTesting.Shared.Map
 {
-    public class GridCollision_Test : RobustIntegrationTest
+    public sealed class GridCollision_Test : RobustIntegrationTest
     {
         [Test]
         public async Task TestGridsCollide()
@@ -48,12 +48,19 @@ namespace Robust.UnitTesting.Shared.Map
             // No tiles set hence should be no collision
             await server.WaitAssertion(() =>
             {
-                var edge = physics1?.ContactEdges;
+                var node = physics1?.Contacts.First;
 
-                while (edge != null)
+                while (node != null)
                 {
-                    Assert.That(edge.Other, Is.Not.EqualTo(physics2));
-                    edge = edge.Next;
+                    var contact = node.Value;
+                    node = node.Next;
+
+                    var bodyA = contact.FixtureA!.Body;
+                    var bodyB = contact.FixtureB!.Body;
+
+                    var other = physics1 == bodyA ? bodyB : bodyA;
+
+                    Assert.That(other, Is.Not.EqualTo(physics2));
                 }
             });
 
@@ -68,17 +75,23 @@ namespace Robust.UnitTesting.Shared.Map
             await server.WaitAssertion(() =>
             {
                 var colliding = false;
-                var edge = physics1?.ContactEdges;
+                var node = physics1?.Contacts.First;
 
-                while (edge != null)
+                while (node != null)
                 {
-                    if (edge.Other == physics2)
+                    var contact = node.Value;
+                    node = node.Next;
+
+                    var bodyA = contact.FixtureA!.Body;
+                    var bodyB = contact.FixtureB!.Body;
+
+                    var other = physics1 == bodyA ? bodyB : bodyA;
+
+                    if (other == physics2)
                     {
                         colliding = true;
                         break;
                     }
-
-                    edge = edge.Next;
                 }
 
                 Assert.That(colliding);

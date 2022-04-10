@@ -6,6 +6,7 @@ namespace Robust.Client.UserInterface.Controls
     /// <summary>
     ///     Most common button type that draws text in a fancy box.
     /// </summary>
+    [Virtual]
     public class Button : ContainerButton
     {
         public Label Label { get; }

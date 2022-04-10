@@ -9,7 +9,7 @@ namespace Robust.Shared.Input.Binding
     ///
     /// Immutable. Use Bindings.Builder() to create.
     /// </summary>
-    public class CommandBinds
+    public sealed class CommandBinds
     {
         private readonly List<CommandBind> _bindings;
 
@@ -56,7 +56,7 @@ namespace Robust.Shared.Input.Binding
         /// <summary>
         /// For creating Bindings.
         /// </summary>
-        public class BindingsBuilder
+        public sealed class BindingsBuilder
         {
             private readonly List<CommandBind> _bindings = new();
 

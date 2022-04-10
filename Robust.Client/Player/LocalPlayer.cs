@@ -12,7 +12,7 @@ namespace Robust.Client.Player
     /// <summary>
     ///     Variables and functions that deal with the local client's session.
     /// </summary>
-    public class LocalPlayer
+    public sealed class LocalPlayer
     {
         /// <summary>
         ///     An entity has been attached to the local player.
@@ -127,7 +127,7 @@ namespace Robust.Client.Player
     /// <summary>
     ///     Event arguments for when the status of a session changes.
     /// </summary>
-    public class StatusEventArgs : EventArgs
+    public sealed class StatusEventArgs : EventArgs
     {
         /// <summary>
         ///     Status that the session switched from.
@@ -149,7 +149,7 @@ namespace Robust.Client.Player
         }
     }
 
-    public class EntityDetachedEventArgs : EventArgs
+    public sealed class EntityDetachedEventArgs : EventArgs
     {
         public EntityDetachedEventArgs(EntityUid oldEntity)
         {
@@ -159,7 +159,7 @@ namespace Robust.Client.Player
         public EntityUid OldEntity { get; }
     }
 
-    public class EntityAttachedEventArgs : EventArgs
+    public sealed class EntityAttachedEventArgs : EventArgs
     {
         public EntityAttachedEventArgs(EntityUid newEntity)
         {

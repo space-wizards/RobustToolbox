@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
-using Robust.Shared.Serialization.Manager.Result;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -12,6 +12,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Benchmarks.Serialization.Read
 {
     [MemoryDiagnoser]
+    [Virtual]
     public class SerializationReadBenchmark : SerializationBenchmark
     {
         public SerializationReadBenchmark()
@@ -40,32 +41,32 @@ namespace Robust.Benchmarks.Serialization.Read
         private ValueDataNode FlagThirtyOne { get; } = new("ThirtyOne");
 
         [Benchmark]
-        public string? ReadString()
+        public string ReadString()
         {
-            return SerializationManager.ReadValue<string>(StringNode);
+            return SerializationManager.Read<string>(StringNode);
         }
 
         [Benchmark]
-        public int? ReadInteger()
+        public int ReadInteger()
         {
-            return SerializationManager.ReadValue<int>(IntNode);
+            return SerializationManager.Read<int>(IntNode);
         }
 
         [Benchmark]
-        public DataDefinitionWithString? ReadDataDefinitionWithString()
+        public DataDefinitionWithString ReadDataDefinitionWithString()
         {
-            return SerializationManager.ReadValue<DataDefinitionWithString>(StringDataDefNode);
+            return SerializationManager.Read<DataDefinitionWithString>(StringDataDefNode);
         }
 
         [Benchmark]
-        public SeedDataDefinition? ReadSeedDataDefinition()
+        public SeedDataDefinition ReadSeedDataDefinition()
         {
-            return SerializationManager.ReadValue<SeedDataDefinition>(SeedNode);
+            return SerializationManager.Read<SeedDataDefinition>(SeedNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("flag")]
-        public DeserializationResult ReadFlagZero()
+        public object? ReadFlagZero()
         {
             return SerializationManager.ReadWithTypeSerializer(
                 typeof(int),
@@ -75,7 +76,7 @@ namespace Robust.Benchmarks.Serialization.Read
 
         [Benchmark]
         [BenchmarkCategory("flag")]
-        public DeserializationResult ReadThirtyOne()
+        public object? ReadThirtyOne()
         {
             return SerializationManager.ReadWithTypeSerializer(
                 typeof(int),
@@ -85,7 +86,7 @@ namespace Robust.Benchmarks.Serialization.Read
 
         [Benchmark]
         [BenchmarkCategory("customTypeSerializer")]
-        public DeserializationResult ReadIntegerCustomSerializer()
+        public object? ReadIntegerCustomSerializer()
         {
             return SerializationManager.ReadWithTypeSerializer(
                 typeof(int),

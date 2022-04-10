@@ -13,7 +13,7 @@ namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
     [TestOf(typeof(PhysicsComponent))]
-    public class PhysicsComponent_Test : RobustIntegrationTest
+    public sealed class PhysicsComponent_Test : RobustIntegrationTest
     {
         [Test]
         public async Task TestPointLinearImpulse()

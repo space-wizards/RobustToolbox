@@ -12,7 +12,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgState : NetMessage
+    public sealed class MsgState : NetMessage
     {
         // If a state is large enough we send it ReliableUnordered instead.
         // This is to avoid states being so large that they consistently fail to reach the other end

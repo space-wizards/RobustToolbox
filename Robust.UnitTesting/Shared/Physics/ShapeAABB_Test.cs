@@ -8,7 +8,7 @@ using Robust.Shared.Physics.Collision.Shapes;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture]
-    public class ShapeAABB_Test : RobustUnitTest
+    public sealed class ShapeAABB_Test : RobustUnitTest
     {
         private Transform _transform;
         private Transform _rotatedTransform;

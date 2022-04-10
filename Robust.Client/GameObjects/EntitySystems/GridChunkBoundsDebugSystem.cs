@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Client.GameObjects
 {
-    public class GridChunkBoundsDebugSystem : EntitySystem
+    public sealed class GridChunkBoundsDebugSystem : EntitySystem
     {
         [Dependency] private readonly IEyeManager _eyeManager = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;

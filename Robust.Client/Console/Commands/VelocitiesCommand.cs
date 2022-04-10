@@ -4,7 +4,7 @@ using Robust.Shared.GameObjects;
 
 namespace Robust.Client.Console.Commands
 {
-    public class VelocitiesCommand : IConsoleCommand
+    public sealed class VelocitiesCommand : IConsoleCommand
     {
         public string Command => "showvelocities";
         public string Description => "Displays your angular and linear velocities";

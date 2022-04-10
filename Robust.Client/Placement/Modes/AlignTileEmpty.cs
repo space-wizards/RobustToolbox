@@ -5,7 +5,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.Placement.Modes
 {
-    public class AlignTileEmpty : PlacementMode
+    public sealed class AlignTileEmpty : PlacementMode
     {
         public override bool HasLineMode => true;
         public override bool HasGridMode => true;
@@ -53,7 +53,7 @@ namespace Robust.Client.Placement.Modes
             var topRight = new Vector2(CurrentTile.X + 0.99f, CurrentTile.Y + 0.99f);
             var box = new Box2(bottomLeft, topRight);
 
-            return !IoCManager.Resolve<IEntityLookup>().AnyEntitiesIntersecting(map, box);
+            return !EntitySystem.Get<EntityLookupSystem>().AnyEntitiesIntersecting(map, box);
         }
     }
 }

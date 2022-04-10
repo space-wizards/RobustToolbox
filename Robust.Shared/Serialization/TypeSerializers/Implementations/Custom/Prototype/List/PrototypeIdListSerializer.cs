@@ -2,7 +2,6 @@
 using Robust.Shared.IoC;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Sequence;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -11,7 +10,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
-    public partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode> where T : class, IPrototype
+    public sealed partial class PrototypeIdListSerializer<T> : ITypeSerializer<List<string>, SequenceDataNode> where T : class, IPrototype
     {
         private readonly PrototypeIdSerializer<T> _prototypeSerializer = new();
 
@@ -62,31 +61,25 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
             return ValidateInternal(serializationManager, node, dependencies, context);
         }
 
-        DeserializationResult ITypeReader<List<string>, SequenceDataNode>.Read(
-            ISerializationManager serializationManager,
+        List<string> ITypeReader<List<string>, SequenceDataNode>.Read(ISerializationManager serializationManager,
             SequenceDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context)
+            ISerializationContext? context, List<string>? list)
         {
-            var list = new List<string>();
-            var mappings = new List<DeserializationResult>();
+            list ??= new List<string>();
 
             foreach (var dataNode in node.Sequence)
             {
-                var result = _prototypeSerializer.Read(
+                list.Add(_prototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
                     skipHook,
-                    context);
-
-                list.Add((string) result.RawValue!);
-                mappings.Add(result);
+                    context));
             }
 
-            return new DeserializedCollection<List<string>, string>(list, mappings,
-                elements => new List<string>(elements));
+            return list;
         }
 
         DataNode ITypeWriter<List<string>>.Write(

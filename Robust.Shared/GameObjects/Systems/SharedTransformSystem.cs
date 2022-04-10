@@ -7,10 +7,10 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
 {
-    public abstract class SharedTransformSystem : EntitySystem
+    public abstract partial class SharedTransformSystem : EntitySystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
-        [Dependency] private readonly IEntityLookup _entityLookup = default!;
+        [Dependency] private readonly EntityLookupSystem _entityLookup = default!;
 
         private readonly Queue<MoveEvent> _gridMoves = new();
         private readonly Queue<MoveEvent> _otherMoves = new();
@@ -21,33 +21,10 @@ namespace Robust.Shared.GameObjects
 
             UpdatesOutsidePrediction = true;
 
-            _mapManager.TileChanged += MapManagerOnTileChanged;
-            SubscribeLocalEvent<TransformComponent, EntityDirtyEvent>(OnTransformDirty);
+            SubscribeLocalEvent<TileChangedEvent>(MapManagerOnTileChanged);
         }
 
-        private void OnTransformDirty(EntityUid uid, TransformComponent component, ref EntityDirtyEvent args)
-        {
-            if (!component.Anchored ||
-                !component.ParentUid.IsValid() ||
-                MetaData(uid).EntityLifeStage < EntityLifeStage.Initialized)
-                return;
-
-            // Anchor dirty
-            // May not even need this in future depending what happens with chunk anchoring (paulVS plz).
-            var gridComp = EntityManager.GetComponent<IMapGridComponent>(component.ParentUid);
-
-            var grid = (IMapGridInternal) gridComp.Grid;
-            DebugTools.Assert(component.GridID == gridComp.GridIndex);
-            grid.AnchoredEntDirty(grid.TileIndicesFor(component.Coordinates));
-        }
-
-        public override void Shutdown()
-        {
-            _mapManager.TileChanged -= MapManagerOnTileChanged;
-            base.Shutdown();
-        }
-
-        private void MapManagerOnTileChanged(object? sender, TileChangedEventArgs e)
+        private void MapManagerOnTileChanged(TileChangedEvent e)
         {
             if(e.NewTile.Tile != Tile.Empty)
                 return;
@@ -116,6 +93,66 @@ namespace Robust.Shared.GameObjects
                     RaiseLocalEvent(ev.Sender, ref ev);
                 }
             }
+        }
+
+        public EntityCoordinates GetMoverCoordinates(TransformComponent xform)
+        {
+            // If they're parented directly to the map or grid then just return the coordinates.
+            if (!_mapManager.TryGetGrid(xform.GridID, out var grid))
+            {
+                var mapUid = _mapManager.GetMapEntityId(xform.MapID);
+                var coordinates = xform.Coordinates;
+
+                // Parented directly to the map.
+                if (xform.ParentUid == mapUid)
+                    return coordinates;
+
+                return new EntityCoordinates(mapUid, coordinates.ToMapPos(EntityManager));
+            }
+
+            // Parented directly to the grid
+            if (grid.GridEntityId == xform.ParentUid)
+                return xform.Coordinates;
+
+            // Parented to grid so convert their pos back to the grid.
+            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(xform.WorldPosition);
+            return new EntityCoordinates(grid.GridEntityId, gridPos);
+        }
+
+        public EntityCoordinates GetMoverCoordinates(EntityCoordinates coordinates, EntityQuery<TransformComponent> xformQuery)
+        {
+            // GridID isn't ready during EntityInit so YAY
+            IMapGrid? grid = null;
+            var ent = coordinates.EntityId;
+
+            while (ent.IsValid())
+            {
+                if (_mapManager.TryGetGrid(ent, out grid))
+                    break;
+
+                ent = xformQuery.GetComponent(ent).ParentUid;
+            }
+
+            // If they're parented directly to the map or grid then just return the coordinates.
+            if (grid == null)
+            {
+                var mapPos = coordinates.ToMap(EntityManager);
+                var mapUid = _mapManager.GetMapEntityId(mapPos.MapId);
+
+                // Parented directly to the map.
+                if (coordinates.EntityId == mapUid)
+                    return coordinates;
+
+                return new EntityCoordinates(mapUid, mapPos.Position);
+            }
+
+            // Parented directly to the grid
+            if (grid.GridEntityId == coordinates.EntityId)
+                return coordinates;
+
+            // Parented to grid so convert their pos back to the grid.
+            var gridPos = Transform(grid.GridEntityId).InvWorldMatrix.Transform(coordinates.ToMapPos(EntityManager));
+            return new EntityCoordinates(grid.GridEntityId, gridPos);
         }
     }
 }

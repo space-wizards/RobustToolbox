@@ -33,11 +33,15 @@ namespace Robust.UnitTesting.Shared.GameObjects
 
             xform1.LocalRotation = MathF.PI;
 
-            var (worldPos, worldRot, worldMatrix) = xform1.GetWorldPositionRotationMatrix();
+            var (worldPos, worldRot, worldMatrix) = xform2.GetWorldPositionRotationMatrix();
 
-            Assert.That(worldPos, Is.EqualTo(xform1.WorldPosition));
-            Assert.That(worldRot, Is.EqualTo(xform1.WorldRotation));
-            Assert.That(worldMatrix, Is.EqualTo(xform1.WorldMatrix));
+            Assert.That(worldPos, Is.EqualTo(xform2.WorldPosition));
+            Assert.That(worldRot, Is.EqualTo(xform2.WorldRotation));
+            Assert.That(worldMatrix, Is.EqualTo(xform2.WorldMatrix));
+
+            var (_, _, invWorldMatrix) = xform2.GetWorldPositionRotationInvMatrix();
+
+            Assert.That(invWorldMatrix, Is.EqualTo(xform2.InvWorldMatrix));
         }
     }
 }

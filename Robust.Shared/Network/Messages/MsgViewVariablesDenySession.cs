@@ -7,7 +7,7 @@ namespace Robust.Shared.Network.Messages
     /// <summary>
     ///     Sent server to client to deny a <see cref="MsgViewVariablesReqSession"/>.
     /// </summary>
-    public class MsgViewVariablesDenySession : NetMessage
+    public sealed class MsgViewVariablesDenySession : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

@@ -15,7 +15,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.Console
 {
-    public class WatchWindow : DefaultWindow
+    public sealed class WatchWindow : DefaultWindow
     {
         private readonly IReflectionManager _reflectionManager;
 

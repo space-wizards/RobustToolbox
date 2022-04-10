@@ -8,7 +8,7 @@ using Robust.Shared.Maths;
 namespace Robust.UnitTesting.Shared.Physics
 {
     [TestFixture, TestOf(typeof(CollisionWakeSystem))]
-    public class CollisionWake_Test : RobustIntegrationTest
+    public sealed class CollisionWake_Test : RobustIntegrationTest
     {
         private const string Prototype = @"
 - type: entity

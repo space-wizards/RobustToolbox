@@ -9,12 +9,13 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.ContentPack
 {
+    [Virtual]
     internal partial class ResourceManager
     {
         /// <summary>
         ///     Holds info about a directory that is mounted in the VFS.
         /// </summary>
-        class DirLoader : IContentRoot
+        sealed class DirLoader : IContentRoot
         {
             private readonly DirectoryInfo _directory;
             private readonly ISawmill _sawmill;

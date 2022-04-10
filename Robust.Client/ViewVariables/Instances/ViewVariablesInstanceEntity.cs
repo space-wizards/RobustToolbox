@@ -30,7 +30,7 @@ namespace Robust.Client.ViewVariables.Instances
     // Anyways, the different tabs in the entity view need to be moved to traits,
     // and this class basically made a child of InstanceObject for the code that doesn't fit in a trait.
 
-    internal class ViewVariablesInstanceEntity : ViewVariablesInstance
+    internal sealed class ViewVariablesInstanceEntity : ViewVariablesInstance
     {
         private readonly IEntityManager _entityManager;
 

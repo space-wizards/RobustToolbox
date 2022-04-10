@@ -1,4 +1,4 @@
-﻿using Robust.Shared.Asynchronous;
+using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
 using Robust.Shared.Exceptions;
@@ -32,7 +32,7 @@ namespace Robust.Shared
             IoCManager.Register<ILocalizationManager, LocalizationManager>();
             IoCManager.Register<ILocalizationManagerInternal, LocalizationManager>();
             IoCManager.Register<ILogManager, LogManager>();
-            IoCManager.Register<IPauseManager, PauseManager>();
+            IoCManager.Register<IPauseManager, NetworkedMapManager>();
             IoCManager.Register<IModLoader, ModLoader>();
             IoCManager.Register<IModLoaderInternal, ModLoader>();
             IoCManager.Register<INetManager, NetManager>();

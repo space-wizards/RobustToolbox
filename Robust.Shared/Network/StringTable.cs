@@ -22,7 +22,7 @@ namespace Robust.Shared.Network
     /// <summary>
     ///     Contains a networked mapping of IDs -> Strings.
     /// </summary>
-    public class StringTable
+    public sealed class StringTable
     {
         /// <summary>
         ///     The ID of the <see cref="MsgStringTableEntries"/> packet.
@@ -276,7 +276,7 @@ namespace Robust.Shared.Network
     /// <summary>
     /// A net message for transmitting a string table entry to clients.
     /// </summary>
-    public class MsgStringTableEntries : NetMessage
+    public sealed class MsgStringTableEntries : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.String;
 

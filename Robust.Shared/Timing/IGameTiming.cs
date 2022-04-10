@@ -78,6 +78,11 @@ namespace Robust.Shared.Timing
         GameTick CurTick { get; set; }
 
         /// <summary>
+        ///     Timespan for the last tick.
+        /// </summary>
+        TimeSpan LastTick { get; set; }
+
+        /// <summary>
         ///     The target ticks/second of the simulation.
         /// </summary>
         byte TickRate { get; set; }

@@ -1,10 +1,12 @@
 ﻿using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using System;
+using Robust.Benchmarks.Configs;
+using Robust.Benchmarks.Exporters;
 
 namespace Robust.Benchmarks
 {
-    internal class Program
+    internal static class Program
     {
         // --allCategories=ctg1,ctg2
         // --anyCategories=ctg1,ctg2
@@ -16,7 +18,8 @@ namespace Robust.Benchmarks
             Console.WriteLine("THE DEBUG BUILD IS ONLY GOOD FOR FIXING A CRASHING BENCHMARK\n");
             BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, new DebugInProcessConfig());
 #else
-            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+            var config = Environment.GetEnvironmentVariable("ROBUST_BENCHMARKS_ENABLE_SQL") != null ? DefaultSQLConfig.Instance : null;
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 #endif
         }
     }

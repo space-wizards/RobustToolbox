@@ -7,7 +7,7 @@ namespace Robust.UnitTesting.Shared.Utility
     [TestFixture]
     [Parallelizable(ParallelScope.Fixtures | ParallelScope.All)]
     [TestOf(typeof(ResourcePath))]
-    public class ResourcePath_Test
+    public sealed class ResourcePath_Test
     {
         public static List<(string, string)> InputClean_Values = new()
         {

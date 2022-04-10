@@ -7,7 +7,7 @@ using Robust.Shared.GameStates;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgPlayerList : NetMessage
+    public sealed class MsgPlayerList : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Core;
 

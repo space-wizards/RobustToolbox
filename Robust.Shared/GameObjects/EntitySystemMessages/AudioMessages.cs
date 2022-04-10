@@ -19,25 +19,25 @@ namespace Robust.Shared.GameObjects
     }
 
     [Serializable, NetSerializable]
-    public class StopAudioMessageClient : EntityEventArgs
+    public sealed class StopAudioMessageClient : EntityEventArgs
     {
         public uint Identifier {get; set;}
     }
 
     [Serializable, NetSerializable]
-    public class PlayAudioGlobalMessage : AudioMessage
+    public sealed class PlayAudioGlobalMessage : AudioMessage
     {
     }
 
     [Serializable, NetSerializable]
-    public class PlayAudioPositionalMessage : AudioMessage
+    public sealed class PlayAudioPositionalMessage : AudioMessage
     {
         public EntityCoordinates Coordinates { get; set; }
         public EntityCoordinates FallbackCoordinates { get; set; }
     }
 
     [Serializable, NetSerializable]
-    public class PlayAudioEntityMessage : AudioMessage
+    public sealed class PlayAudioEntityMessage : AudioMessage
     {
         public EntityUid EntityUid { get; set; }
         public EntityCoordinates Coordinates { get; set; }

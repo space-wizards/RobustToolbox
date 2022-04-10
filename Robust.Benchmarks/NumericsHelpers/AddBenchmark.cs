@@ -1,11 +1,16 @@
 ﻿using BenchmarkDotNet.Attributes;
+using Robust.Shared.Analyzers;
 
 namespace Robust.Benchmarks.NumericsHelpers
 {
+    [Virtual]
     public class AddBenchmark
     {
         [Params(32, 128)]
         public int N { get; set; }
+
+        [Params(1,2)]
+        public int T { get; set; }
 
         private float[] _inputA = default!;
         private float[] _inputB = default!;

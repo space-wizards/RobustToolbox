@@ -76,3 +76,5 @@ MSBuild/Robust.Custom.targets
 
 
 release/
+Robust.Docfx/*-site
+Robust.Docfx/api

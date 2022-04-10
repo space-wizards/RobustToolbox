@@ -1,6 +1,6 @@
 namespace Robust.Shared.GameObjects
 {
-    public class CollisionChangeMessage : EntityEventArgs
+    public sealed class CollisionChangeMessage : EntityEventArgs
     {
         public PhysicsComponent Body { get; }
 

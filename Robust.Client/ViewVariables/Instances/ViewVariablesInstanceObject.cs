@@ -13,7 +13,7 @@ using Timer = Robust.Shared.Timing.Timer;
 
 namespace Robust.Client.ViewVariables.Instances
 {
-    internal class ViewVariablesInstanceObject : ViewVariablesInstance
+    internal sealed class ViewVariablesInstanceObject : ViewVariablesInstance
     {
         private TabContainer _tabs = default!;
         private Button _refreshButton = default!;

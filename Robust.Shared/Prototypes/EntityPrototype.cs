@@ -10,6 +10,9 @@ using Robust.Shared.Maths;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.Markdown.Mapping;
+using Robust.Shared.Serialization.Markdown.Sequence;
+using Robust.Shared.Serialization.Markdown.Value;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype;
 using Robust.Shared.ViewVariables;
 
@@ -19,7 +22,7 @@ namespace Robust.Shared.Prototypes
     /// Prototype that represents game entities.
     /// </summary>
     [Prototype("entity", -1)]
-    public class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
+    public sealed class EntityPrototype : IPrototype, IInheritingPrototype, ISerializationHooks
     {
         private ILocalizationManager _loc = default!;
 
@@ -31,7 +34,6 @@ namespace Robust.Shared.Prototypes
 
         private const int DEFAULT_RANGE = 200;
 
-        [NeverPushInheritance]
         [DataField("loc")]
         private Dictionary<string, string>? _locPropertiesSet;
 
@@ -39,7 +41,7 @@ namespace Robust.Shared.Prototypes
         /// The "in code name" of the object. Must be unique.
         /// </summary>
         [ViewVariables]
-        [DataField("id")]
+        [IdDataFieldAttribute]
         public string ID { get; private set; } = default!;
 
         /// <summary>
@@ -48,17 +50,14 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         /// <seealso cref="Name"/>
         [ViewVariables]
-        [NeverPushInheritance]
         [DataField("name")]
         public string? SetName { get; private set; }
 
         [ViewVariables]
-        [NeverPushInheritance]
         [DataField("description")]
         public string? SetDesc { get; private set; }
 
         [ViewVariables]
-        [NeverPushInheritance]
         [DataField("suffix")]
         public string? SetSuffix { get; private set; }
 
@@ -89,7 +88,6 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("localizationId")]
-        [NeverPushInheritance]
         public string? CustomLocalizationID { get; private set; }
 
 
@@ -98,8 +96,8 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [NeverPushInheritance]
-        [DataField("abstract")]
-        public bool Abstract { get; private set; }
+        [DataField("noSpawn")]
+        public bool NoSpawn { get; private set; }
 
         [DataField("placement")] private EntityPlacementProperties PlacementProperties = new();
 
@@ -132,14 +130,19 @@ namespace Robust.Shared.Prototypes
         /// </summary>
         [ViewVariables]
         [DataField("save")]
-        public bool MapSavable { get; protected set; } = true;
+        public bool MapSavable { get; set; } = true;
 
         /// <summary>
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [DataField("parent", customTypeSerializer:typeof(PrototypeIdSerializer<EntityPrototype>))]
+        [ParentDataFieldAttribute(typeof(PrototypeIdSerializer<EntityPrototype>))]
         public string? Parent { get; private set; }
+
+        [ViewVariables]
+        [NeverPushInheritance]
+        [AbstractDataField]
+        public bool Abstract { get; }
 
         /// <summary>
         /// A dictionary mapping the component type list to the YAML mapping containing their settings.
@@ -229,7 +232,13 @@ namespace Robust.Shared.Prototypes
             metaData.EntityPrototype = this;
         }
 
-        internal static void LoadEntity(EntityPrototype? prototype, EntityUid entity, IComponentFactory factory,
+        internal static void LoadEntity(
+            EntityPrototype? prototype,
+            EntityUid entity,
+            IComponentFactory factory,
+            IPrototypeManager prototypeManager,
+            IEntityManager entityManager,
+            ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
             /*YamlObjectSerializer.Context? defaultContext = null;
@@ -240,15 +249,25 @@ namespace Robust.Shared.Prototypes
 
             if (prototype != null)
             {
-                foreach (var (name, data) in prototype.Components)
+                prototypeManager.TryGetMapping(typeof(EntityPrototype), prototype.ID, out var prototypeData);
+
+                foreach (var (name, _) in prototype.Components)
                 {
-                    var fullData = data;
-                    if (context != null)
+                    MappingDataNode? fullData = null;
+                    if (prototypeData != null && prototypeData.TryGet<SequenceDataNode>("components", out var compList))
                     {
-                        fullData = context.GetComponentData(name, data);
+                        fullData = compList.Cast<MappingDataNode>().FirstOrDefault(x =>
+                            x.TryGet<ValueDataNode>("type", out var typeNode) && typeNode.Value == name);
                     }
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, fullData, context as ISerializationContext);
+                    fullData ??= new MappingDataNode();
+
+                    if (context != null)
+                    {
+                        fullData = context.GetComponentData(name, fullData);
+                    }
+
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, fullData, context as ISerializationContext);
                 }
             }
 
@@ -266,15 +285,18 @@ namespace Robust.Shared.Prototypes
 
                     var ser = context.GetComponentData(name, null);
 
-                    EnsureCompExistsAndDeserialize(entity, factory, name, ser, context as ISerializationContext);
+                    EnsureCompExistsAndDeserialize(entity, factory, entityManager, serManager, name, ser, context as ISerializationContext);
                 }
             }
         }
 
-        private static void EnsureCompExistsAndDeserialize(EntityUid entity, IComponentFactory factory, string compName,
-            IComponent data, ISerializationContext? context)
+        private static void EnsureCompExistsAndDeserialize(EntityUid entity,
+            IComponentFactory factory,
+            IEntityManager entityManager,
+            ISerializationManager serManager,
+            string compName,
+            MappingDataNode data, ISerializationContext? context)
         {
-            var entityManager = IoCManager.Resolve<IEntityManager>();
             var compType = factory.GetRegistration(compName).Type;
 
             if (!entityManager.TryGetComponent(entity, compType, out var component))
@@ -286,7 +308,7 @@ namespace Robust.Shared.Prototypes
             }
 
             // TODO use this value to support struct components
-            _ = IoCManager.Resolve<ISerializationManager>().Copy(data, component, context);
+            serManager.Read(compType, data, context, value: component);
         }
 
         public override string ToString()
@@ -294,7 +316,7 @@ namespace Robust.Shared.Prototypes
             return $"EntityPrototype({ID})";
         }
 
-        public class ComponentRegistry : Dictionary<string, IComponent>
+        public sealed class ComponentRegistry : Dictionary<string, IComponent>
         {
             public ComponentRegistry()
             {
@@ -306,7 +328,7 @@ namespace Robust.Shared.Prototypes
         }
 
         [DataDefinition]
-        public class EntityPlacementProperties
+        public sealed class EntityPlacementProperties
         {
             public bool PlacementOverriden { get; private set; }
             public bool SnapOverriden { get; private set; }

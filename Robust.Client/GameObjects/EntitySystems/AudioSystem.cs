@@ -17,7 +17,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameObjects
 {
     [UsedImplicitly]
-    public class AudioSystem : SharedAudioSystem, IAudioSystem
+    public sealed class AudioSystem : SharedAudioSystem, IAudioSystem
     {
         [Dependency] private readonly IResourceCache _resourceCache = default!;
         [Dependency] private readonly IMapManager _mapManager = default!;
@@ -420,7 +420,7 @@ namespace Robust.Client.GameObjects
             source.IsLooping = audioParams.Value.Loop;
         }
 
-        private class PlayingStream : IPlayingAudioStream
+        private sealed class PlayingStream : IPlayingAudioStream
         {
             public uint? NetIdentifier;
             public IClydeAudioSource Source = default!;

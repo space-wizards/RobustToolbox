@@ -4,7 +4,7 @@ using Robust.Shared.Console;
 
 namespace Robust.Server.Console.Commands
 {
-    public class ListCommands : IConsoleCommand
+    public sealed class ListCommands : IConsoleCommand
     {
         public string Command => "list";
 

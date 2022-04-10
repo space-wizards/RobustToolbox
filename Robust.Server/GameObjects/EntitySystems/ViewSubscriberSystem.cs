@@ -6,7 +6,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     ///     Entity System that handles subscribing and unsubscribing to PVS views.
     /// </summary>
-    public class ViewSubscriberSystem : EntitySystem
+    public sealed class ViewSubscriberSystem : EntitySystem
     {
         public override void Initialize()
         {
@@ -59,7 +59,7 @@ namespace Robust.Server.GameObjects
     /// <summary>
     ///     Raised when a session subscribes to an entity's PVS view.
     /// </summary>
-    public class ViewSubscriberAddedEvent : EntityEventArgs
+    public sealed class ViewSubscriberAddedEvent : EntityEventArgs
     {
         public EntityUid View { get; }
         public IPlayerSession Subscriber { get; }
@@ -75,7 +75,7 @@ namespace Robust.Server.GameObjects
     ///     Raised when a session is unsubscribed from an entity's PVS view.
     ///     Not raised when sessions are unsubscribed due to the component being removed.
     /// </summary>
-    public class ViewSubscriberRemovedEvent : EntityEventArgs
+    public sealed class ViewSubscriberRemovedEvent : EntityEventArgs
     {
         public EntityUid View { get; }
         public IPlayerSession Subscriber { get; }

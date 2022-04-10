@@ -4,6 +4,7 @@ using Robust.Shared.Maths;
 
 namespace Robust.Client.UserInterface.Controls
 {
+    [Virtual]
     public class ScrollContainer : Container
     {
         private bool _vScrollEnabled = true;

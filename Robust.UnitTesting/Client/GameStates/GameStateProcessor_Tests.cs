@@ -7,7 +7,7 @@ using Robust.Shared.Timing;
 namespace Robust.UnitTesting.Client.GameStates
 {
     [TestFixture, Parallelizable, TestOf(typeof(GameStateProcessor))]
-    class GameStateProcessor_Tests
+    sealed class GameStateProcessor_Tests
     {
         [Test]
         public void FillBufferBlocksProcessing()

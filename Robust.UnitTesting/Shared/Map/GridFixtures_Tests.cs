@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Map
     /// Tests whether grid fixtures are being generated correctly.
     /// </summary>
     [TestFixture]
-    public class GridFixtures_Tests : RobustIntegrationTest
+    public sealed class GridFixtures_Tests : RobustIntegrationTest
     {
         [Test]
         public async Task TestGridFixtures()

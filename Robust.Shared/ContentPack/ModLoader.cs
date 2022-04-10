@@ -160,7 +160,7 @@ namespace Robust.Shared.ContentPack
 
         private static (string[] refs, string name) GetAssemblyReferenceData(Stream stream)
         {
-            using var reader = new PEReader(stream);
+            using var reader = ModLoader.MakePEReader(stream);
             var metaReader = reader.GetMetadataReader();
 
             var name = metaReader.GetString(metaReader.GetAssemblyDefinition().Name);
@@ -382,6 +382,14 @@ namespace Robust.Shared.ContentPack
                 ExtraRobustLoader = VerifierExtraLoadHandler,
                 EngineModuleDirectories = _engineModuleDirectories.ToArray()
             };
+        }
+
+        internal static PEReader MakePEReader(Stream stream, bool leaveOpen=false)
+        {
+            if (!stream.CanSeek)
+                stream = leaveOpen ? stream.CopyToMemoryStream() : stream.ConsumeToMemoryStream();
+
+            return new PEReader(stream, leaveOpen ? PEStreamOptions.LeaveOpen : default);
         }
     }
 }

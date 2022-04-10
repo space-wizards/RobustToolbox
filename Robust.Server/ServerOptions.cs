@@ -3,7 +3,7 @@ using Robust.Shared.Utility;
 
 namespace Robust.Server
 {
-    public class ServerOptions
+    public sealed class ServerOptions
     {
         /// <summary>
         ///     Whether content sandboxing will be enabled & enforced.

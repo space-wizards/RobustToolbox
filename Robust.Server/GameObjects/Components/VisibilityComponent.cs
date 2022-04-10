@@ -7,7 +7,7 @@ namespace Robust.Server.GameObjects
 {
     [RegisterComponent]
     [Friend(typeof(VisibilitySystem))]
-    public class VisibilityComponent : Component
+    public sealed class VisibilityComponent : Component
     {
         /// <summary>
         ///     The visibility layer for the entity.

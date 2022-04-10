@@ -8,7 +8,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables.Editors
 {
-    public class VVPropEditorEntityUid : VVPropEditor
+    public sealed class VVPropEditorEntityUid : VVPropEditor
     {
         protected override Control MakeUI(object? value)
         {

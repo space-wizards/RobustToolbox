@@ -50,7 +50,6 @@ namespace Robust.Client
         [Dependency] private readonly IClientConsoleHost _console = default!;
         [Dependency] private readonly ITimerManager _timerManager = default!;
         [Dependency] private readonly IClientEntityManager _entityManager = default!;
-        [Dependency] private readonly IEntityLookup _lookup = default!;
         [Dependency] private readonly IPlacementManager _placementManager = default!;
         [Dependency] private readonly IClientGameStateManager _gameStateManager = default!;
         [Dependency] private readonly IOverlayManagerInternal _overlayManager = default!;
@@ -133,7 +132,7 @@ namespace Robust.Client
             _console.Initialize();
             _prototypeManager.Initialize();
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            _prototypeManager.Resync();
+            _prototypeManager.ResolveResults();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();
@@ -455,6 +454,7 @@ namespace Robust.Client
         private void Tick(FrameEventArgs frameEventArgs)
         {
             _modLoader.BroadcastUpdate(ModUpdateLevel.PreEngine, frameEventArgs);
+            _console.CommandBufferExecute();
             _timerManager.UpdateTimers(frameEventArgs);
             _taskManager.ProcessPendingTasks();
 
@@ -470,7 +470,6 @@ namespace Robust.Client
                 // The last real tick is the current tick! This way we won't be in "prediction" mode.
                 _gameTiming.LastRealTick = _gameTiming.CurTick;
                 _entityManager.TickUpdate(frameEventArgs.DeltaSeconds, noPredictions: false);
-                _lookup.Update();
             }
 
             _modLoader.BroadcastUpdate(ModUpdateLevel.PostEngine, frameEventArgs);
@@ -510,7 +509,7 @@ namespace Robust.Client
             logManager.GetSawmill("discord").Level = LogLevel.Warning;
             logManager.GetSawmill("net.predict").Level = LogLevel.Info;
             logManager.GetSawmill("szr").Level = LogLevel.Info;
-            logManager.GetSawmill("loc").Level = LogLevel.Error;
+            logManager.GetSawmill("loc").Level = LogLevel.Warning;
 
 #if DEBUG_ONLY_FCE_INFO
 #if DEBUG_ONLY_FCE_LOG
@@ -575,7 +574,6 @@ namespace Robust.Client
 
             _networkManager.Shutdown("Client shutting down");
             _midiManager.Shutdown();
-            IoCManager.Resolve<IEntityLookup>().Shutdown();
             _entityManager.Shutdown();
             _clyde.Shutdown();
             _clydeAudio.Shutdown();

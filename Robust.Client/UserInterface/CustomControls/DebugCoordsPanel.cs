@@ -11,7 +11,7 @@ using Robust.Shared.Timing;
 
 namespace Robust.Client.UserInterface.CustomControls
 {
-    internal class DebugCoordsPanel : PanelContainer
+    internal sealed class DebugCoordsPanel : PanelContainer
     {
         [Dependency] private readonly IPlayerManager _playerManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
@@ -102,13 +102,18 @@ Mouse Pos:
                 var playerScreen = _eyeManager.WorldToScreen(playerWorldOffset.Position);
 
                 var playerCoordinates = entityTransform.Coordinates;
+                var playerRotation = entityTransform.WorldRotation;
+
+                Angle gridRotation = _mapManager.TryGetGrid(entityTransform.GridID, out var grid) ? grid.WorldRotation : Angle.Zero;
 
                 stringBuilder.AppendFormat(@"    Screen: {0}
     {1}
     {2}
-    EntId: {3}
-    GridID: {4}", playerScreen, playerWorldOffset, playerCoordinates, entityTransform.Owner,
-                    entityTransform.GridID);
+    Rotation: {3:F2}°
+    EntId: {4}
+    GridID: {5}
+    Grid Rotation: {6:F2}°", playerScreen, playerWorldOffset, playerCoordinates, playerRotation.Degrees, entityTransform.Owner,
+                    entityTransform.GridID, gridRotation.Degrees);
             }
 
             if (controlHovered != null)

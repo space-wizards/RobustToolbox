@@ -11,6 +11,7 @@ namespace Robust.Client.UserInterface.Controls
     /// Represents an operating system-based UI window.
     /// </summary>
     /// <seealso cref="BaseWindow"/>
+    [Virtual]
     public class OSWindow : Control
     {
         [Dependency] private readonly IClyde _clyde = default!;

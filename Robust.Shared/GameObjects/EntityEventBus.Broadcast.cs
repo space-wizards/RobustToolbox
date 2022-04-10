@@ -120,7 +120,7 @@ namespace Robust.Shared.GameObjects
     /// <summary>
     /// Implements the event broadcast functions.
     /// </summary>
-    internal partial class EntityEventBus : IBroadcastEventBusInternal
+    internal sealed partial class EntityEventBus : IBroadcastEventBusInternal
     {
         // Inside this class we pass a lot of things around as "ref Unit unitRef".
         // The idea behind this is to avoid using type arguments in core dispatch that only needs to pass around a ref*
@@ -469,7 +469,7 @@ namespace Robust.Shared.GameObjects
         }
 
         [StructLayout(LayoutKind.Sequential)]
-        private class UnitBox
+        private sealed class UnitBox
         {
             [UsedImplicitly] public Unit Value;
         }

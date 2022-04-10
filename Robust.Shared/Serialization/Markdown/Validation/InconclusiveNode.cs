@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Robust.Shared.Serialization.Markdown.Validation
 {
-    public class InconclusiveNode : ValidationNode
+    public sealed class InconclusiveNode : ValidationNode
     {
         public InconclusiveNode(DataNode dataNode)
         {

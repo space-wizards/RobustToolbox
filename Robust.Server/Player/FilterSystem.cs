@@ -4,7 +4,7 @@ using Robust.Shared.Player;
 
 namespace Robust.Server.Player
 {
-    internal class FilterSystem : SharedFilterSystem
+    internal sealed class FilterSystem : SharedFilterSystem
     {
         public override Filter FromEntities(Filter filter, params EntityUid[] entities)
         {

@@ -10,7 +10,7 @@ using Robust.Shared.Utility;
 namespace Robust.Client.GameStates
 {
     /// <inheritdoc />
-    internal class GameStateProcessor : IGameStateProcessor
+    internal sealed class GameStateProcessor : IGameStateProcessor
     {
         private readonly IGameTiming _timing;
 

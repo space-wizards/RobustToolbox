@@ -12,7 +12,7 @@ namespace Robust.Shared.Serialization
     /// be reused between multiple fields.
     /// </summary>
     [AttributeUsage(AttributeTargets.Enum, AllowMultiple = true)]
-    public class ConstantsForAttribute : Attribute
+    public sealed class ConstantsForAttribute : Attribute
     {
         public Type Tag { get; }
 

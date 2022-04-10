@@ -16,7 +16,7 @@ namespace Robust.Shared.IoC
         where T : class;
 
     /// <inheritdoc />
-    internal class DependencyCollection : IDependencyCollection
+    internal sealed class DependencyCollection : IDependencyCollection
     {
         private delegate void InjectorDelegate(object target, object[] services);
         private static readonly Type[] InjectorParameters = {typeof(object), typeof(object[])};

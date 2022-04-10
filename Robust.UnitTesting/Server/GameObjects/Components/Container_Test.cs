@@ -11,7 +11,7 @@ using Robust.Shared.Map;
 namespace Robust.UnitTesting.Server.GameObjects.Components
 {
     [TestFixture, Parallelizable]
-    public class ContainerTest
+    public sealed class ContainerTest
     {
         private static ISimulation SimulationFactory()
         {
@@ -276,7 +276,7 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             Assert.That(state.ContainerSet[0].ContainedEntities[0], Is.EqualTo(childEnt));
         }
 
-        private class ContainerOnlyContainer : BaseContainer
+        private sealed class ContainerOnlyContainer : BaseContainer
         {
             /// <summary>
             /// The generic container class uses a list of entities
@@ -292,17 +292,17 @@ namespace Robust.UnitTesting.Server.GameObjects.Components
             public override List<EntityUid> ExpectedEntities => _expectedEntities;
 
             /// <inheritdoc />
-            protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan)
+            protected override void InternalInsert(EntityUid toinsert, IEntityManager entMan, MetaDataComponent? meta = null)
             {
                 _containerList.Add(toinsert);
-                base.InternalInsert(toinsert, entMan);
+                base.InternalInsert(toinsert, entMan, meta);
             }
 
             /// <inheritdoc />
-            protected override void InternalRemove(EntityUid toremove, IEntityManager entMan)
+            protected override void InternalRemove(EntityUid toremove, IEntityManager entMan, MetaDataComponent? meta = null)
             {
                 _containerList.Remove(toremove);
-                base.InternalRemove(toremove, entMan);
+                base.InternalRemove(toremove, entMan, meta);
             }
 
             /// <inheritdoc />

@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using Lidgren.Network;
 using Robust.Shared.Log;
+using Robust.Shared.Maths;
 using Robust.Shared.Timing;
 
 namespace Robust.Shared.Network.Messages
 {
-    internal class MsgConVars : NetMessage
+    internal sealed class MsgConVars : NetMessage
     {
         // Max buffer could potentially be 255 * 128 * 1024 = ~33MB, so if MaxMessageSize starts being a problem it can be increased.
         private const int MaxMessageSize = 0x4000; // Arbitrarily chosen as a 'sane' value as the maximum size of the entire message.
@@ -67,7 +68,7 @@ namespace Robust.Shared.Network.Messages
                         value = buffer.ReadDouble();
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(value), valType, $"CVar {name} is not of a valid CVar type!");
                 }
 
                 NetworkedVars.Add((name, value));
@@ -117,7 +118,7 @@ namespace Robust.Shared.Network.Messages
                         buffer.Write(val);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(value), value.GetType(), $"CVar {name} is not of a valid CVar type!");
                 }
             }
         }

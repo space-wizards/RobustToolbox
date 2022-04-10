@@ -6,7 +6,7 @@ namespace Robust.UnitTesting.Shared.Maths
 {
     [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
     [TestFixture]
-    internal class DirectionTest
+    internal sealed class DirectionTest
     {
         private const double Epsilon = 1.0e-8;
 
@@ -46,15 +46,15 @@ namespace Robust.UnitTesting.Shared.Maths
             Assert.That(val, Is.Approximately(control));
             Assert.That(intVec, Is.EqualTo(controlInt));
         }
-        
+
         [Test]
         [Parallelizable]
         public void TestDirectionOffset()
         {
             var v = new Vector2i(1, 1);
             var expected = new Vector2i(2, 2);
-            var dir = Direction.NorthEast; 
-            
+            var dir = Direction.NorthEast;
+
             Assert.That(v.Offset(dir), Is.EqualTo(expected));
         }
 

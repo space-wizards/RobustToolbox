@@ -12,7 +12,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
 {
     [UsedImplicitly]
     [TestFixture]
-    public class PrototypeManager_Test : RobustUnitTest
+    public sealed class PrototypeManager_Test : RobustUnitTest
     {
         private const string LoadStringTestDummyId = "LoadStringTestDummy";
         private IPrototypeManager manager = default!;
@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
             manager = IoCManager.Resolve<IPrototypeManager>();
             manager.RegisterType(typeof(EntityPrototype));
             manager.LoadString(DOCUMENT);
-            manager.Resync();
+            manager.ResolveResults();
         }
 
         [Test]
@@ -107,7 +107,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
         public void TestLoadString()
         {
             manager.LoadString(LoadStringDocument);
-            manager.Resync();
+            manager.ResolveResults();
 
             var prototype = manager.Index<EntityPrototype>(LoadStringTestDummyId);
 
@@ -183,7 +183,7 @@ namespace Robust.UnitTesting.Shared.Prototypes
   name: {LoadStringTestDummyId}";
     }
 
-    public class TestBasicPrototypeComponent : Component
+    public sealed class TestBasicPrototypeComponent : Component
     {
 
         [DataField("foo")] public string Foo = null!;

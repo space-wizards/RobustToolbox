@@ -2,6 +2,7 @@
 using System.IO;
 using BenchmarkDotNet.Attributes;
 using Robust.Benchmarks.Serialization.Definitions;
+using Robust.Shared.Analyzers;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
@@ -13,6 +14,7 @@ using YamlDotNet.RepresentationModel;
 namespace Robust.Benchmarks.Serialization.Write
 {
     [MemoryDiagnoser]
+    [Virtual]
     public class SerializationWriteBenchmark : SerializationBenchmark
     {
         public SerializationWriteBenchmark()
@@ -26,7 +28,7 @@ namespace Robust.Benchmarks.Serialization.Write
 
             var seedMapping = yamlStream.Documents[0].RootNode.ToDataNodeCast<SequenceDataNode>().Cast<MappingDataNode>(0);
 
-            Seed = SerializationManager.ReadValueOrThrow<SeedDataDefinition>(seedMapping);
+            Seed = SerializationManager.Read<SeedDataDefinition>(seedMapping);
         }
 
         private const string String = "ABC";

@@ -20,7 +20,7 @@ namespace Robust.Client.GameObjects
     /// Updates the position of every Eye every frame, so that the camera follows the player around.
     /// </summary>
     [UsedImplicitly]
-    public class EyeUpdateSystem : EntitySystem
+    public sealed class EyeUpdateSystem : EntitySystem
     {
         /// <inheritdoc />
         public override void Initialize()

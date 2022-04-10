@@ -18,6 +18,7 @@ namespace Robust.Client.Graphics.Audio
     /// <summary>
     ///     Hey look, it's ClydeAudio.AudioSource's evil twin brother!
     /// </summary>
+    [Virtual]
     internal class DummyAudioSource : IClydeAudioSource
     {
         public static DummyAudioSource Instance { get; } = new();

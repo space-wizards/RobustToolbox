@@ -12,7 +12,7 @@ using static Robust.Client.UserInterface.Controls.BoxContainer;
 
 namespace Robust.Client.ViewVariables
 {
-    internal class ViewVariablesPropertyControl : PanelContainer
+    internal sealed class ViewVariablesPropertyControl : PanelContainer
     {
         public BoxContainer VBox { get; }
         public BoxContainer TopContainer { get; }

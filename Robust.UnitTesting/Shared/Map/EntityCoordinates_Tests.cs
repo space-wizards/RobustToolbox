@@ -16,7 +16,7 @@ using Robust.Shared.Serialization.Manager;
 namespace Robust.UnitTesting.Shared.Map
 {
     [TestFixture, Parallelizable, TestOf(typeof(EntityCoordinates))]
-    public class EntityCoordinates_Tests : RobustUnitTest
+    public sealed class EntityCoordinates_Tests : RobustUnitTest
     {
         private const string PROTOTYPES = @"
 - type: entity
@@ -25,18 +25,6 @@ namespace Robust.UnitTesting.Shared.Map
   components:
   - type: Transform";
 
-        protected override void OverrideIoC()
-        {
-            base.OverrideIoC();
-            var mock = new Mock<IEntitySystemManager>();
-            var broady = new BroadPhaseSystem();
-            var physics = new PhysicsSystem();
-            mock.Setup(m => m.GetEntitySystem<SharedBroadphaseSystem>()).Returns(broady);
-            mock.Setup(m => m.GetEntitySystem<SharedPhysicsSystem>()).Returns(physics);
-
-            IoCManager.RegisterInstance<IEntitySystemManager>(mock.Object, true);
-        }
-
         [OneTimeSetUp]
         public void Setup()
         {
@@ -44,7 +32,7 @@ namespace Robust.UnitTesting.Shared.Map
             var prototypeManager = IoCManager.Resolve<IPrototypeManager>();
             prototypeManager.RegisterType(typeof(EntityPrototype));
             prototypeManager.LoadFromStream(new StringReader(PROTOTYPES));
-            prototypeManager.Resync();
+            prototypeManager.ResolveResults();
 
             var factory = IoCManager.Resolve<IComponentFactory>();
             factory.GenerateNetIds();

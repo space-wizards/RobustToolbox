@@ -8,7 +8,7 @@ using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Network.Messages
 {
-    public class MsgViewVariablesModifyRemote : NetMessage
+    public sealed class MsgViewVariablesModifyRemote : NetMessage
     {
         public override MsgGroups MsgGroup => MsgGroups.Command;
 

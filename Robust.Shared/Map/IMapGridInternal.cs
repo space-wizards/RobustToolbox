@@ -1,32 +1,14 @@
 using System.Collections.Generic;
-using System.Text;
 using Robust.Shared.Maths;
-using Robust.Shared.Timing;
 
 namespace Robust.Shared.Map
 {
     internal interface IMapGridInternal : IMapGrid
     {
-        GameTick LastTileModifiedTick { get; }
-
-        GameTick CurTick { get; }
-
         /// <summary>
         ///     The total number of chunks contained on this grid.
         /// </summary>
         int ChunkCount { get; }
-
-        GameTick LastAnchoredModifiedTick { get; }
-
-        void NotifyTileChanged(in TileRef tileRef, in Tile oldTile);
-
-        /// <summary>
-        /// Notifies the grid that an anchored entity is dirty.
-        /// </summary>
-        /// <param name="pos">Position of the entity in local tile indices.</param>
-        void AnchoredEntDirty(Vector2i pos);
-
-        void UpdateAABB();
 
         /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
@@ -35,7 +17,7 @@ namespace Robust.Shared.Map
         /// <param name="xIndex">The X index of the chunk in this grid.</param>
         /// <param name="yIndex">The Y index of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
-        IMapChunkInternal GetChunk(int xIndex, int yIndex);
+        MapChunk GetChunk(int xIndex, int yIndex);
 
         /// <summary>
         /// Removes the chunk with the specified origin.
@@ -48,7 +30,7 @@ namespace Robust.Shared.Map
         /// </summary>
         /// <param name="chunkIndices">The indices of the chunk in this grid.</param>
         /// <returns>The existing or new chunk.</returns>
-        IMapChunkInternal GetChunk(Vector2i chunkIndices);
+        MapChunk GetChunk(Vector2i chunkIndices);
 
         /// <summary>
         /// Returns whether a chunk exists with the specified indices.
@@ -59,13 +41,36 @@ namespace Robust.Shared.Map
         ///     Returns all chunks in this grid. This will not generate new chunks.
         /// </summary>
         /// <returns>All chunks in the grid.</returns>
-        IReadOnlyDictionary<Vector2i, IMapChunkInternal> GetMapChunks();
+        IReadOnlyDictionary<Vector2i, MapChunk> GetMapChunks();
 
         /// <summary>
-        ///     Returns all the <see cref="IMapChunkInternal"/> intersecting the worldAABB.
+        ///     Returns all the <see cref="MapChunk"/> intersecting the worldAABB.
         /// </summary>
         void GetMapChunks(Box2 worldAABB, out MapGrid.ChunkEnumerator enumerator);
 
+        /// <summary>
+        ///     Returns all the <see cref="MapChunk"/> intersecting the rotated world box.
+        /// </summary>
         void GetMapChunks(Box2Rotated worldArea, out MapGrid.ChunkEnumerator enumerator);
+
+        /// <summary>
+        /// Regenerates the chunk local bounds of this chunk.
+        /// </summary>
+        void RegenerateCollision(MapChunk mapChunk);
+
+        /// <summary>
+        /// Calculate the world space AABB for this chunk.
+        /// </summary>
+        Box2 CalcWorldAABB(MapChunk mapChunk);
+
+        /// <summary>
+        ///     Returns the tile at the given chunk indices.
+        /// </summary>
+        /// <param name="mapId"></param>
+        /// <param name="mapChunk"></param>
+        /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
+        /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
+        /// <returns>A reference to a tile.</returns>
+        TileRef GetTileRef(MapId mapId, MapChunk mapChunk, ushort xIndex, ushort yIndex);
     }
 }

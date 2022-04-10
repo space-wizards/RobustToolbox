@@ -7,7 +7,7 @@ namespace Robust.Client.Graphics
     /// <summary>
     ///     Style box based on a 9-patch texture.
     /// </summary>
-    public class StyleBoxTexture : StyleBox
+    public sealed class StyleBoxTexture : StyleBox
     {
         public StyleBoxTexture()
         {

@@ -10,7 +10,7 @@ namespace Robust.UnitTesting.Client.UserInterface
 {
     [TestFixture]
     [TestOf(typeof(Control))]
-    public class ControlTest : RobustUnitTest
+    public sealed class ControlTest : RobustUnitTest
     {
         private static readonly AttachedProperty _refTypeAttachedProperty
             = AttachedProperty.Create("_refType", typeof(ControlTest), typeof(string), "foo", v => (string?) v != "bar");

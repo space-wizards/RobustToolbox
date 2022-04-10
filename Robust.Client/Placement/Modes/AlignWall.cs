@@ -5,7 +5,7 @@ using Vector2 = Robust.Shared.Maths.Vector2;
 
 namespace Robust.Client.Placement.Modes
 {
-    public class AlignWall : PlacementMode
+    public sealed class AlignWall : PlacementMode
     {
         public AlignWall(PlacementManager pMan) : base(pMan) { }
 

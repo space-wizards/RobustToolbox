@@ -1,10 +1,10 @@
+using System;
 using Robust.Client.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
 using Robust.Shared.Serialization.Manager.Attributes;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Validation;
@@ -14,28 +14,42 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 namespace Robust.Client.Serialization
 {
     [TypeSerializer]
-    public class AppearanceVisualizerSerializer : ITypeSerializer<AppearanceVisualizer, MappingDataNode>
+    public sealed class AppearanceVisualizerSerializer : ITypeSerializer<AppearanceVisualizer, MappingDataNode>
     {
-        public DeserializationResult Read(ISerializationManager serializationManager, MappingDataNode node,
+        public AppearanceVisualizer Read(ISerializationManager serializationManager, MappingDataNode node,
             IDependencyCollection dependencies,
             bool skipHook,
-            ISerializationContext? context = null)
+            ISerializationContext? context = null, AppearanceVisualizer? value = null)
         {
+            Type? type = null;
             if (!node.TryGet("type", out var typeNode))
-                throw new InvalidMappingException("No type specified for AppearanceVisualizer!");
+            {
+                if (value == null)
+                    throw new InvalidMappingException("No type specified for AppearanceVisualizer!");
 
-            if (typeNode is not ValueDataNode typeValueDataNode)
-                throw new InvalidMappingException("Type node not a value node for AppearanceVisualizer!");
+                type = value.GetType();
+            }
+            else
+            {
+                if (typeNode is not ValueDataNode typeValueDataNode)
+                    throw new InvalidMappingException("Type node not a value node for AppearanceVisualizer!");
 
-            var type = IoCManager.Resolve<IReflectionManager>()
-                .YamlTypeTagLookup(typeof(AppearanceVisualizer), typeValueDataNode.Value);
-            if (type == null)
-                throw new InvalidMappingException(
-                    $"Invalid type {typeValueDataNode.Value} specified for AppearanceVisualizer!");
+                type = IoCManager.Resolve<IReflectionManager>()
+                    .YamlTypeTagLookup(typeof(AppearanceVisualizer), typeValueDataNode.Value);
+                if (type == null)
+                    throw new InvalidMappingException(
+                        $"Invalid type {typeValueDataNode.Value} specified for AppearanceVisualizer!");
+
+                if(value != null && !type.IsInstanceOfType(value))
+                {
+                    throw new InvalidMappingException(
+                        $"Specified Type does not match type of provided Value for AppearanceVisualizer! (TypeOfValue: {value.GetType()}, ProvidedValue: {type})");
+                }
+            }
 
             var newNode = node.Copy();
             newNode.Remove("type");
-            return serializationManager.Read(type, newNode, context, skipHook);
+            return (AppearanceVisualizer) serializationManager.Read(type, newNode, context, skipHook, value)!;
         }
 
         public ValidationNode Validate(ISerializationManager serializationManager, MappingDataNode node,

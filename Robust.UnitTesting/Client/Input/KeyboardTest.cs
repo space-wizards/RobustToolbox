@@ -7,7 +7,7 @@ using Robust.Client.Input;
 namespace Robust.UnitTesting.Client.Input
 {
     [Parallelizable(ParallelScope.All)]
-    public class KeyboardTest
+    public sealed class KeyboardTest
     {
         public static IEnumerable<object[]> TestCases =>
             ((Keyboard.Key[]) Enum.GetValues(typeof(Keyboard.Key)))

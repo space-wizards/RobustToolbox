@@ -226,7 +226,7 @@ internal sealed partial class MidiManager : IMidiManager
             }
 
             var customFont = _cfgMan.GetCVar(CVars.MidiSoundfont);
-            if (customFont.Length > 0)
+            if (!string.IsNullOrEmpty(customFont))
             {
                 if (File.Exists(customFont) && SoundFont.IsSoundFont(customFont))
                     renderer.LoadSoundfont(customFont, true);

@@ -48,7 +48,7 @@ public interface IMidiManager
     /// <summary>
     ///     Redirect for the MIDI library's soundfont checker
     /// </summary>
-    public bool IsSoundFont(string filename);
+    bool IsSoundFont(string filename);
 
     /// <summary>
     ///     Method called every frame.

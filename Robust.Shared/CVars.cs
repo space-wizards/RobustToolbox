@@ -1035,7 +1035,7 @@ namespace Robust.Shared
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         public static readonly CVarDef<string> MidiSoundfont =
-            CVarDef.Create("midi.soundfont", "", CVar.CLIENTONLY | CVar.ARCHIVE);
+            CVarDef.Create("midi.soundfont", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
 
         /*
          * HUB

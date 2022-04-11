@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NFluidsynth;
 using Robust.Shared.Audio.Midi;
 
@@ -5,6 +6,11 @@ namespace Robust.Client.Audio.Midi;
 
 public interface IMidiManager
 {
+    /// <summary>
+    ///     A read-only list of all existing MIDI Renderers.
+    /// </summary>
+    IReadOnlyList<IMidiRenderer> Renderers { get; }
+
     /// <summary>
     ///     If true, MIDI support is available.
     /// </summary>

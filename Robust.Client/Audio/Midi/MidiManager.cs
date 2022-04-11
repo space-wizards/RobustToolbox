@@ -225,6 +225,13 @@ internal sealed partial class MidiManager : IMidiManager
                     renderer.LoadSoundfont(WindowsSoundfont, true);
             }
 
+            var customFont = _cfgMan.GetCVar(CVars.MidiSoundfont);
+            if (customFont.Length > 0)
+            {
+                if (File.Exists(customFont) && SoundFont.IsSoundFont(customFont))
+                    renderer.LoadSoundfont(customFont, true);
+            }
+
             renderer.Source.SetVolume(Volume);
 
             lock (_renderers)
@@ -376,6 +383,12 @@ internal sealed partial class MidiManager : IMidiManager
             midiEvent.Program,
             midiEvent.Value,
             midiEvent.Velocity);
+    }
+
+    // really lazy, this could be a static i guess if the interface allowed for it
+    public bool IsSoundFont(string filename)
+    {
+        return SoundFont.IsSoundFont(filename);
     }
 
     /// <summary>

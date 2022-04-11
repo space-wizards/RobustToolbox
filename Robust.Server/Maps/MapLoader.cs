@@ -70,7 +70,7 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid? LoadBlueprint(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid>, GridId?) LoadBlueprint(MapId mapId, string path)
         {
             return LoadBlueprint(mapId, path, DefaultLoadOptions);
         }
@@ -80,13 +80,14 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public IMapGrid? LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid>, GridId?) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
-            if (!TryGetReader(resPath, out var reader)) return null;
+            if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
 
-            IMapGrid grid;
+            IMapGrid? grid;
+            IReadOnlyList<EntityUid> entities;
             using (reader)
             {
                 Logger.InfoS("map", $"Loading Grid: {resPath}");
@@ -103,12 +104,13 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
-                grid = context.Grids[0];
+                grid = context.Grids.FirstOrDefault();
+                entities = context.Entities;
 
                 PostDeserialize(mapId, context);
             }
 
-            return grid;
+            return (entities, grid?.Index);
         }
 
         private void PostDeserialize(MapId mapId, MapContext context)
@@ -161,9 +163,9 @@ namespace Robust.Server.Maps
             Logger.InfoS("map", "Save completed!");
         }
 
-        public void LoadMap(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid>, IReadOnlyList<GridId>) LoadMap(MapId mapId, string path)
         {
-            LoadMap(mapId, path, DefaultLoadOptions);
+            return LoadMap(mapId, path, DefaultLoadOptions);
         }
 
         private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
@@ -193,12 +195,14 @@ namespace Robust.Server.Maps
             return true;
         }
 
-        public void LoadMap(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid>, IReadOnlyList<GridId>) LoadMap(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
-            if (!TryGetReader(resPath, out var reader)) return;
+            if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), Array.Empty<GridId>());
 
+            IReadOnlyList<GridId> grids;
+            IReadOnlyList<EntityUid> entities;
             using (reader)
             {
                 Logger.InfoS("map", $"Loading Map: {resPath}");
@@ -210,9 +214,13 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
+                grids = context.Grids.Select(x => x.Index).ToArray(); // TODO: make context use grid IDs.
+                entities = context.Entities;
 
                 PostDeserialize(mapId, context);
             }
+
+            return (entities, grids);
         }
 
         /// <summary>
@@ -352,6 +360,8 @@ namespace Robust.Server.Maps
                 AttachMapEntities();
 
                 ApplyGridFixtures();
+
+                AdjustEntityTransforms();
 
                 // Run Initialize on all components.
                 FinishEntitiesInitialization();
@@ -706,6 +716,25 @@ namespace Robust.Server.Maps
                     }
 
                     _serverEntityManager.FinishEntityLoad(entity, this);
+                }
+            }
+
+            private void AdjustEntityTransforms()
+            {
+                var map = _mapManager.GetMapEntityId(TargetMap);
+
+                if (_loadOptions is null || _loadOptions.TransformMatrix.EqualsApprox(Matrix3.Identity))
+                    return;
+
+                foreach (var entity in Entities)
+                {
+                    if (!_serverEntityManager.TryGetComponent<TransformComponent>(entity, out var transform) ||
+                        transform.ParentUid != map) continue;
+
+                    var off = _loadOptions.TransformMatrix.Transform(transform.Coordinates.Position);
+
+                    transform.Coordinates = transform.Coordinates.WithPosition(off);
+                    transform.WorldRotation += _loadOptions.Rotation;
                 }
             }
 

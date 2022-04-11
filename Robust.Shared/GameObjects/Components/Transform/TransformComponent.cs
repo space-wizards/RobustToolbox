@@ -665,11 +665,8 @@ namespace Robust.Shared.GameObjects
             }
 
             // nothing to do
-            var oldParent = Parent;
-            if (oldParent == null)
-            {
+            if (!_parent.IsValid())
                 return;
-            }
 
             var mapPos = MapPosition;
 
@@ -691,8 +688,7 @@ namespace Robust.Shared.GameObjects
             }
 
             // this would be a no-op
-            var oldParentEnt = oldParent.Owner;
-            if (newMapEntity == oldParentEnt)
+            if (newMapEntity == _parent)
             {
                 return;
             }

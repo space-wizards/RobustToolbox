@@ -67,7 +67,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleParentChange(EntityUid uid, CollisionWakeComponent component, ref EntParentChangedMessage args)
         {
-            UpdateCanCollide(uid, component);
+            UpdateCanCollide(uid, component, xform: args.Transform);
         }
 
         private void HandleInitialize(EntityUid uid, CollisionWakeComponent component, EntityInitializedMessage args)
@@ -89,7 +89,7 @@ namespace Robust.Shared.GameObjects
 
         private void HandleWake(EntityUid uid, CollisionWakeComponent component, PhysicsWakeMessage args)
         {
-            UpdateCanCollide(uid, component, args.Body, false);
+            UpdateCanCollide(uid, component, args.Body, checkTerminating: false);
         }
 
         private void HandleSleep(EntityUid uid, CollisionWakeComponent component, PhysicsSleepMessage args)
@@ -97,7 +97,12 @@ namespace Robust.Shared.GameObjects
             UpdateCanCollide(uid, component, args.Body);
         }
 
-        private void UpdateCanCollide(EntityUid uid, CollisionWakeComponent component, IPhysBody? body = null, bool checkTerminating = true)
+        private void UpdateCanCollide(
+            EntityUid uid,
+            CollisionWakeComponent component,
+            IPhysBody? body = null,
+            TransformComponent? xform = null,
+            bool checkTerminating = true)
         {
             if (!component.Enabled)
                 return;
@@ -105,13 +110,15 @@ namespace Robust.Shared.GameObjects
             if (checkTerminating && Terminating(uid))
                 return;
 
-            if (!Resolve(uid, ref body, false))
+            if (!Resolve(uid, ref body, false) ||
+                !Resolve(uid, ref xform) ||
+                xform.MapID == MapId.Nullspace)
                 return;
 
             // If we're attached to the map we'll also just never disable collision due to how grid movement works.
             body.CanCollide = body.Awake ||
                               (TryComp(uid, out JointComponent? jointComponent) && jointComponent.JointCount > 0) ||
-                              Transform(uid).GridID == GridId.Invalid;
+                              xform.GridID == GridId.Invalid;
         }
     }
 }

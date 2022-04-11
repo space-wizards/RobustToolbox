@@ -66,6 +66,7 @@ public sealed class UiThemeManager : IUIThemeManager
             return;
         }
         DefaultTheme = theme;
+        CurrentTheme = theme;
         _defaultOverriden = true;
     }
 

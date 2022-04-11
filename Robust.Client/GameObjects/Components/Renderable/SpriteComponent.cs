@@ -1971,7 +1971,7 @@ namespace Robust.Client.GameObjects
             /// <inheritdoc/>
             public Box2 CalculateBoundingBox()
             {
-                var textureSize = PixelSize / EyeManager.PixelsPerMeter;
+                var textureSize = (Vector2) PixelSize / EyeManager.PixelsPerMeter;
 
                 // If the parent has locked rotation and we don't have any rotation,
                 // we can take the quick path of just making a box the size of the texture.

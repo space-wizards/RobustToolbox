@@ -305,8 +305,6 @@ namespace Robust.Server.ServerStatus
 
                 await outStream.WriteAsync(streamHeader);
 
-                using var zip = OpenZip(aczInfo.ZipData);
-
                 offset = 0;
                 while (offset < buf.Length)
                 {

@@ -325,35 +325,50 @@ namespace Robust.Shared.GameObjects
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent<T>(EntityUid uid)
+        public bool RemoveComponent<T>(EntityUid uid)
         {
-            RemoveComponent(uid, typeof(T));
+            return RemoveComponent(uid, typeof(T));
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, Type type)
+        public bool RemoveComponent(EntityUid uid, Type type)
         {
-            RemoveComponentImmediate((Component)GetComponent(uid, type), uid, false);
+            if (!TryGetComponent(uid, type, out var comp))
+                return false;
+
+            RemoveComponentImmediate((Component)comp, uid, false);
+            return true;
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveComponent(EntityUid uid, ushort netId)
+        public bool RemoveComponent(EntityUid uid, ushort netId)
         {
-            RemoveComponentImmediate((Component)GetComponent(uid, netId), uid, false);
+            if (!TryGetComponent(uid, netId, out var comp))
+                return false;
+
+            RemoveComponentImmediate((Component)comp, uid, false);
+            return true;
         }
 
         /// <inheritdoc />
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveComponent(EntityUid uid, IComponent component)
         {
+            RemoveComponent(uid, (Component)component);
+        }
+
+        /// <inheritdoc />
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void RemoveComponent(EntityUid uid, Component component)
+        {
             if (component == null) throw new ArgumentNullException(nameof(component));
 
             if (component.Owner != uid)
                 throw new InvalidOperationException("Component is not owned by entity.");
 
-            RemoveComponentImmediate((Component)component, uid, false);
+            RemoveComponentImmediate(component, uid, false);
         }
 
         private static IEnumerable<Component> InSafeOrder(IEnumerable<Component> comps, bool forCreation = false)

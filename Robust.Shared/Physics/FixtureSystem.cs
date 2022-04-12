@@ -134,7 +134,7 @@ namespace Robust.Shared.Physics
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData();
+                body.ResetMassData(manager);
                 Dirty(manager);
             }
             // TODO: Set newcontacts to true.
@@ -248,8 +248,8 @@ namespace Robust.Shared.Physics
             if (updates)
             {
                 FixtureUpdate(manager, body);
-                body.ResetMassData();
-                manager.Dirty();
+                body.ResetMassData(manager);
+                Dirty(manager);
             }
         }
 
@@ -361,7 +361,7 @@ namespace Robust.Shared.Physics
 
             if (computeProperties)
             {
-                physics.ResetMassData();
+                physics.ResetMassData(component);
             }
         }
 

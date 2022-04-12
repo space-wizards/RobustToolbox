@@ -68,28 +68,37 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         /// <typeparam name="T">The component reference type to remove.</typeparam>
         /// <param name="uid">Entity UID to modify.</param>
-        void RemoveComponent<T>(EntityUid uid);
+        bool RemoveComponent<T>(EntityUid uid);
 
         /// <summary>
         ///     Removes the component with a specified type.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="type">A trait or component type to check for.</param>
-        void RemoveComponent(EntityUid uid, Type type);
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponent(EntityUid uid, Type type);
 
         /// <summary>
         ///     Removes the component with a specified network ID.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="netID">Network ID of the component to remove.</param>
-        void RemoveComponent(EntityUid uid, ushort netID);
+        /// <returns>Returns false if the entity did not have the specified component.</returns>
+        bool RemoveComponent(EntityUid uid, ushort netID);
 
         /// <summary>
-        ///     Removes the specified component.
+        ///     Removes the specified component. Throws if the given component does not belong to the entity.
         /// </summary>
         /// <param name="uid">Entity UID to modify.</param>
         /// <param name="component">Component to remove.</param>
         void RemoveComponent(EntityUid uid, IComponent component);
+
+        /// <summary>
+        ///     Removes the specified component. Throws if the given component does not belong to the entity.
+        /// </summary>
+        /// <param name="uid">Entity UID to modify.</param>
+        /// <param name="component">Component to remove.</param>
+        void RemoveComponent(EntityUid uid, Component component);
 
         /// <summary>
         ///     Removes all components from an entity, except the required components.

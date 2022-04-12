@@ -352,6 +352,8 @@ internal sealed partial class PVSSystem : EntitySystem
             {
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
+                if(mapId == MapId.Nullspace) continue;
+
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;

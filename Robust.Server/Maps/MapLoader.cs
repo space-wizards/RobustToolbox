@@ -241,6 +241,7 @@ namespace Robust.Server.Maps
             private readonly Dictionary<GridId, int> GridIDMap = new();
             public readonly List<MapGrid> Grids = new();
             private readonly List<GridId> _readGridIndices = new();
+            private EntityQuery<TransformComponent>? _xformQuery = null;
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
             private readonly Dictionary<int, EntityUid> UidEntityMap = new();
@@ -354,6 +355,8 @@ namespace Robust.Server.Maps
                 // Grid entities were NOT created inside ReadGridSection().
                 // We have to fix the created grids up with the grid entities deserialized from the map.
                 FixMapEntities();
+
+                _xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
 
                 // We have to attach grids to the target map here.
                 // If we don't, initialization & startup can fail for some entities.
@@ -581,7 +584,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var transform = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                    var transform = _xformQuery!.Value.GetComponent(grid.GridEntityId);
                     if (transform.Parent != null)
                         continue;
 
@@ -728,7 +731,7 @@ namespace Robust.Server.Maps
 
                 foreach (var entity in Entities)
                 {
-                    if (!_serverEntityManager.TryGetComponent<TransformComponent>(entity, out var transform) ||
+                    if (!_xformQuery!.Value.TryGetComponent(entity, out var transform) ||
                         transform.ParentUid != map) continue;
 
                     var off = _loadOptions.TransformMatrix.Transform(transform.Coordinates.Position);

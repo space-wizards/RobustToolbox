@@ -114,11 +114,11 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loadbp";
         public string Description => "Loads a blueprint from disk into the game.";
-        public string Help => "loadbp <MapID> <Path> [storeUids]";
+        public string Help => "loadbp <MapID> <Path> [storeUids] [x y] [rotation]";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 2)
+            if (args.Length != 2 && args.Length != 3 && args.Length != 5 && args.Length != 6)
             {
                 return;
             }
@@ -148,6 +148,23 @@ namespace Robust.Server.Console.Commands
             if (args.Length > 2)
             {
                 loadOptions.StoreMapUids = bool.Parse(args[2]);
+            }
+
+            if (args.Length >= 5)
+            {
+                if (!int.TryParse(args[3], out var x))
+                    return;
+                if (!int.TryParse(args[4], out var y))
+                    return;
+                loadOptions.Offset = new Vector2(x, y);
+            }
+
+            if (args.Length == 6)
+            {
+                if (!float.TryParse(args[5], out var rotation))
+                    return;
+
+                loadOptions.Rotation = new Angle(rotation);
             }
 
             var mapLoader = IoCManager.Resolve<IMapLoader>();
@@ -191,11 +208,11 @@ namespace Robust.Server.Console.Commands
     {
         public string Command => "loadmap";
         public string Description => "Loads a map from disk into the game.";
-        public string Help => "loadmap <MapID> <Path>";
+        public string Help => "loadmap <MapID> <Path> [x y] [rotation]";
 
         public void Execute(IConsoleShell shell, string argStr, string[] args)
         {
-            if (args.Length < 1)
+            if (args.Length != 1 && args.Length != 3 && args.Length != 4)
                 return;
 
             if (!int.TryParse(args[0], out var intMapId))
@@ -217,7 +234,26 @@ namespace Robust.Server.Console.Commands
                 return;
             }
 
-            IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1]);
+            var loadOptions = new MapLoadOptions();
+
+            if (args.Length >= 3)
+            {
+                if (!int.TryParse(args[1], out var x))
+                    return;
+                if (!int.TryParse(args[2], out var y))
+                    return;
+                loadOptions.Offset = new Vector2(x, y);
+            }
+
+            if (args.Length == 4)
+            {
+                if (!float.TryParse(args[3], out var rotation))
+                    return;
+
+                loadOptions.Rotation = new Angle(rotation);
+            }
+
+            IoCManager.Resolve<IMapLoader>().LoadMap(mapId, args[1], loadOptions);
 
             if (mapManager.MapExists(mapId))
                 shell.WriteLine($"Map {mapId} has been loaded from {args[1]}.");

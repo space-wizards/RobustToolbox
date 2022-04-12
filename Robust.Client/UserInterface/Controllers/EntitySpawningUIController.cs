@@ -15,6 +15,7 @@ using static Robust.Client.UserInterface.Controls.LineEdit;
 
 namespace Robust.Client.UserInterface.Controllers;
 
+// TODO hud refactor BEFORE MERGE fix only showing one entity on first open
 public sealed class EntitySpawningUIController : UIController
 {
     [Dependency] private readonly IPlacementManager _placement = default!;

@@ -82,6 +82,9 @@ namespace Robust.Server.ServerStatus
                     ["download_url"] = downloadUrl,
                     ["hash"] = hash,
                     ["acz"] = false,
+                    ["manifest_download_url"] = _configurationManager.GetCVar(CVars.BuildManifestDownloadUrl),
+                    ["manifest_url"] = _configurationManager.GetCVar(CVars.BuildManifestUrl),
+                    ["manifest_hash"] = _configurationManager.GetCVar(CVars.BuildManifestHash)
                 };
             }
 

@@ -152,6 +152,14 @@ namespace Robust.Server.ServerStatus
             if (context.Url.AbsolutePath != "/download")
                 return false;
 
+            if (context.RequestHeaders.ContainsKey("Content-Type")
+                && context.RequestHeaders["Content-Type"] != "application/octet-stream")
+            {
+                await context.RespondAsync(
+                    "Must specify application/octet-stream Content-Type",
+                    HttpStatusCode.BadRequest);
+            }
+
             if (!string.IsNullOrEmpty(_configurationManager.GetCVar(CVars.BuildManifestUrl)))
             {
                 await context.RespondAsync("This server has a build manifest URL.", HttpStatusCode.NotFound);
@@ -252,7 +260,7 @@ namespace Robust.Server.ServerStatus
             }
 
             // There is a theoretical tiny race condition here where the main thread may change these parameters
-            // between use acquiring the ACZ info above and reading them here.
+            // between us acquiring the ACZ info above and reading them here.
             // The worst that could happen here is that the stream is either double-compressed or not compressed at all,
             // So I am not too worried and am just gonna leave it as-is.
 

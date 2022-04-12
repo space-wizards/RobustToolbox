@@ -11,7 +11,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
-    public sealed partial class PrototypeIdListSerializer<T> :
+    public partial class PrototypeIdListSerializer<T> :
         ITypeSerializer<IReadOnlyCollection<string>, SequenceDataNode>
         where T : class, IPrototype
     {
@@ -38,7 +38,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(_prototypeSerializer.Read(
+                list.Add(PrototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,

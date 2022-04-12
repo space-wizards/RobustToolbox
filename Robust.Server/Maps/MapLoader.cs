@@ -70,7 +70,7 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public (IReadOnlyList<EntityUid>, GridId?) LoadBlueprint(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, GridId? gridId) LoadBlueprint(MapId mapId, string path)
         {
             return LoadBlueprint(mapId, path, DefaultLoadOptions);
         }
@@ -80,7 +80,7 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public (IReadOnlyList<EntityUid>, GridId?) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, GridId? gridId) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
@@ -163,7 +163,7 @@ namespace Robust.Server.Maps
             Logger.InfoS("map", "Save completed!");
         }
 
-        public (IReadOnlyList<EntityUid>, IReadOnlyList<GridId>) LoadMap(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<GridId> gridIds) LoadMap(MapId mapId, string path)
         {
             return LoadMap(mapId, path, DefaultLoadOptions);
         }
@@ -195,7 +195,7 @@ namespace Robust.Server.Maps
             return true;
         }
 
-        public (IReadOnlyList<EntityUid>, IReadOnlyList<GridId>) LoadMap(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<GridId> gridIds) LoadMap(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 

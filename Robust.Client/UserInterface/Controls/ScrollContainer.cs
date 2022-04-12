@@ -23,6 +23,8 @@ namespace Robust.Client.UserInterface.Controls
 
         public bool ReturnMeasure { get; set; } = false;
 
+        public event Action? OnScrolled;
+
         public ScrollContainer()
         {
             MouseFilter = MouseFilterMode.Pass;
@@ -261,6 +263,7 @@ namespace Robust.Client.UserInterface.Controls
             }
 
             InvalidateArrange();
+            OnScrolled?.Invoke();
         }
     }
 }

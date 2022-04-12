@@ -12,6 +12,7 @@ namespace Robust.Client.UserInterface;
 [Virtual]
 public abstract class UIController
 {
+    // TODO hud refactor BEFORE MERGE cleanup subscriptions for all implementations when switching out of gameplay state
     public virtual void OnStateChanged(StateChangedEventArgs args) {}
 
     public virtual void OnSystemLoaded(IEntitySystem system) {}
@@ -34,7 +35,7 @@ public sealed class UISystemDependency : Attribute {}
 internal sealed class UIControllerManager: IUIControllerManagerInternal
 {
     [Dependency] private readonly IReflectionManager _reflectionManager = default!;
-    [Dependency] private readonly IDynamicTypeFactory _dynamicTypeFactory = default!;
+    [Dependency] private readonly IDynamicTypeFactoryInternal _dynamicTypeFactory = default!;
     [Dependency] private readonly IEntitySystemManager _systemManager = default!;
     [Dependency] private readonly IStateManager _stateManager = default!;
 
@@ -78,8 +79,9 @@ internal sealed class UIControllerManager: IUIControllerManagerInternal
         foreach (var uiControllerType in _reflectionManager.GetAllChildren<UIController>())
         {
             if (uiControllerType.IsAbstract) continue;
-            var newController = _dynamicTypeFactory.CreateInstance(uiControllerType);
-            AddUiControllerToRegistry(tempList, uiControllerType, (UIController)newController);
+            var newController = _dynamicTypeFactory.CreateInstanceUnchecked<UIController>(uiControllerType);
+            // TODO hud refactor BEFORE MERGE add them all at the end to prevent people from being too smart
+            AddUiControllerToRegistry(tempList, uiControllerType, newController);
             foreach (var fieldInfo in uiControllerType.GetAllPropertiesAndFields())
             {
                 if (!fieldInfo.HasAttribute<UISystemDependency>())

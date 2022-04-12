@@ -6,8 +6,8 @@ using Robust.Shared.Collections;
 namespace Robust.UnitTesting.Shared.Collections;
 
 [Parallelizable(ParallelScope.All | ParallelScope.Fixtures)]
-[TestFixture, TestOf(typeof(CircularQueue<>))]
-public sealed class CircularQueue_Test
+[TestFixture, TestOf(typeof(OverflowQueue<>))]
+public sealed class OverflowQueue_Test
 {
     private static IEnumerable<(int size, int iterations)> TestParams => new[]
     {
@@ -18,7 +18,7 @@ public sealed class CircularQueue_Test
     [Test]
     public void TestQueue([ValueSource(nameof(TestParams))] (int size, int iterations) test)
     {
-        var queue = new CircularQueue<int>(test.size);
+        var queue = new OverflowQueue<int>(test.size);
 
         Assert.False(queue.Contains(0));
 

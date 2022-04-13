@@ -24,7 +24,6 @@ public sealed class OverflowQueue<T>
     public OverflowQueue(int size)
     {
         _queue = new T[size];
-        Size = size;
     }
 
     /// <summary>

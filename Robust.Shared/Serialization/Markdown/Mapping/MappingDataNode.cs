@@ -276,7 +276,8 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             if (_children.Count != other._children.Count)
                 return false;
 
-            // If removing identical entries leaves us with nothing, then the mappings are equal.
+            // Given that keys are unique and we do not care about the ordering, we know that if removing identical
+            // key-value pairs leaves us with an empty list then the mappings are equal.
             return Except(other) == null;
         }
 

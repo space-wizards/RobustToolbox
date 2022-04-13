@@ -168,8 +168,16 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             if (_nodes.Count != other._nodes.Count)
                 return false;
 
-            // If removing identical entries leaves us with nothing, then the mappings are equal.
-            return Except(other) == null;
+            // We cannot just use Except() to check equality, because the sequence [a, a, b] would be equivalent to
+            // [a, b ,b]. I.e., the number of entries matter. Similarly, for anyone serializing an ordered list, the
+            // order of entries matters.
+
+            for (int i = 0; i < _nodes.Count; i++)
+            {
+                if (!_nodes[i].Equals(other._nodes[i]))
+                    return false;
+            }
+            return true;
         }
 
         public override SequenceDataNode PushInheritance(SequenceDataNode node)

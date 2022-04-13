@@ -263,9 +263,7 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 }
             }
 
-            if (mappingNode._children.Count == 0) return null;
-
-            return mappingNode;
+            return mappingNode._children.Count == 0 ? null : mappingNode;
         }
 
         public override bool Equals(object? obj)

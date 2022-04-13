@@ -44,6 +44,10 @@ namespace Robust.Shared.Serialization.Markdown
 
         public abstract override T Copy();
 
+        /// <summary>
+        ///     This function will return a data node that contains only the elements within this data node that do not
+        ///     have an equivalent entry in some other data node.
+        /// </summary>
         public abstract T? Except(T node);
 
         public abstract T PushInheritance(T node);

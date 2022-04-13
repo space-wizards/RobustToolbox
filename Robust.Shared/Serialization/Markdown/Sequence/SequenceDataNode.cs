@@ -160,6 +160,18 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             return null;
         }
 
+        public override bool Equals(object? obj)
+        {
+            if (obj is not SequenceDataNode other)
+                return false;
+
+            if (_nodes.Count != other._nodes.Count)
+                return false;
+
+            // If removing identical entries leaves us with nothing, then the mappings are equal.
+            return Except(other) == null;
+        }
+
         public override SequenceDataNode PushInheritance(SequenceDataNode node)
         {
             var newNode = Copy();

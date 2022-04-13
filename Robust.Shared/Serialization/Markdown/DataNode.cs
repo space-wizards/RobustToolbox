@@ -19,19 +19,16 @@ namespace Robust.Shared.Serialization.Markdown
 
         public abstract DataNode Copy();
 
+        /// <summary>
+        ///     Return a new DataNode that contains only data that is not present in some other data node. Will return
+        ///     null if ever bit of data in this node is also present in the other node.
+        /// </summary>
+        /// <remarks>
+        ///     This only performs equality comparisons on the data, it does not recursively call Except().
+        /// </remarks>
         public abstract DataNode? Except(DataNode node);
 
         public abstract DataNode PushInheritance(DataNode parent);
-
-        public override bool Equals(object? obj)
-        {
-            if (obj is not DataNode other)
-                return false;
-
-            // mapping and sequences nodes are equal if removing duplicate entires leaves us with nothing. Value nodes
-            // override this and directly check equality.
-            return Except(other) == null;
-        }
 
         public T CopyCast<T>() where T : DataNode
         {

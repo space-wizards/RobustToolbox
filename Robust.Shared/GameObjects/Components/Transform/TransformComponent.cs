@@ -669,6 +669,7 @@ namespace Robust.Shared.GameObjects
                 return;
 
             var mapPos = MapPosition;
+            Logger.InfoS("transform", $"Attempting AttachToGridOrMap for {_entMan.ToPrettyString(Owner)}");
 
             EntityUid newMapEntity;
             if (_mapManager.TryFindGridAt(mapPos, out var mapGrid) && !TerminatingOrDeleted(mapGrid.GridEntityId))

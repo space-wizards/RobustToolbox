@@ -18,7 +18,7 @@ public sealed class OverflowQueue<T>
     /// <summary>
     /// The size of the queue-buffer.
     /// </summary>
-    public readonly int Size;
+    public int Size => _queue.Length;
 
     /// <param name="size">size of the queue-buffer</param>
     public OverflowQueue(int size)

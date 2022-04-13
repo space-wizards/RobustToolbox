@@ -28,7 +28,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
         {
             var list = new List<string> {"A", "E"};
             var node = new SequenceDataNode("A", "E");
-            var deserializedList = Serialization.ReadValue<List<string>>(node);
+            var deserializedList = Serialization.Read<List<string>>(node);
 
             Assert.That(deserializedList, Is.EqualTo(list));
         }
@@ -39,7 +39,7 @@ namespace Robust.UnitTesting.Shared.Serialization.TypeSerializers
             var node = new SequenceDataNode("A", "E");
 
             var result = Serialization.ReadWithTypeSerializer(typeof(List<string>), typeof(ListSerializers<string>), node);
-            var list = (List<string>?) result.RawValue;
+            var list = (List<string>?) result;
 
             Assert.NotNull(list);
             Assert.IsNotEmpty(list!);

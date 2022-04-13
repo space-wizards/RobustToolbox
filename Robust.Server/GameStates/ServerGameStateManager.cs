@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -144,6 +145,10 @@ namespace Robust.Server.GameStates
                 var chunkBatches = (int) MathF.Ceiling((float) chunksCount / ChunkBatchSize);
                 chunkCache =
                     new (Dictionary<EntityUid, MetaDataComponent> metadata, RobustTree<EntityUid> tree)?[chunksCount];
+
+                // Update the reused trees sequentially to avoid having to lock the dictionary per chunk.
+                var reuse = ArrayPool<bool>.Shared.Rent(chunksCount);
+
                 transformQuery = _entityManager.GetEntityQuery<TransformComponent>();
                 metadataQuery = _entityManager.GetEntityQuery<MetaDataComponent>();
                 Parallel.For(0, chunkBatches, i =>
@@ -154,9 +159,13 @@ namespace Robust.Server.GameStates
                     for (var j = start; j < end; ++j)
                     {
                         var (visMask, chunkIndexLocation) = chunks[j];
-                        chunkCache[j] = _pvs.CalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery);
+                        reuse[j] = _pvs.TryCalculateChunk(chunkIndexLocation, visMask, transformQuery, metadataQuery, out var chunk);
+                        chunkCache[j] = chunk;
                     }
                 });
+
+                _pvs.RegisterNewPreviousChunkTrees(chunks, chunkCache, reuse);
+                ArrayPool<bool>.Shared.Return(reuse);
             }
 
             const int BatchSize = 2;
@@ -230,7 +239,7 @@ namespace Robust.Server.GameStates
             }
 
             if(_pvs.CullingEnabled)
-                _pvs.ReturnToPool(chunkCache, playerChunks);
+                _pvs.ReturnToPool(playerChunks);
             _pvs.Cleanup(_playerManager.ServerSessions);
             var oldestAck = new GameTick(oldestAckValue);
 

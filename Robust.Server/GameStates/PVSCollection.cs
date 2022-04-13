@@ -8,6 +8,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.GameStates;
 
@@ -32,6 +33,13 @@ public interface IPVSCollection
     /// </summary>
     /// <param name="tick">The <see cref="GameTick"/> before which all deletions should be removed.</param>
     public void CullDeletionHistoryUntil(GameTick tick);
+
+    public bool IsDirty(IChunkIndexLocation location);
+
+    public bool MarkDirty(IChunkIndexLocation location);
+
+    public void ClearDirty();
+
 }
 
 public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : IComparable<TIndex>, IEquatable<TIndex>
@@ -98,6 +106,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     /// </summary>
     private HashSet<TIndex> _changedIndices = new();
 
+    /// <summary>
+    /// A set of all chunks changed last tick
+    /// </summary>
+    private HashSet<IChunkIndexLocation> _dirtyChunks = new();
+
     public PVSCollection()
     {
         IoCManager.InjectDependencies(this);
@@ -107,12 +120,11 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
     {
         _changedIndices.EnsureCapacity(_locationChangeBuffer.Count);
 
-        foreach (var (key, _) in _locationChangeBuffer)
+        foreach (var (key, loc) in _locationChangeBuffer)
         {
             _changedIndices.Add(key);
         }
 
-        var changedChunkLocations = new HashSet<IIndexLocation>();
         foreach (var (index, tick) in _removalBuffer)
         {
             //changes dont need to be computed if we are removing the index anyways
@@ -124,37 +136,49 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
             var location = RemoveIndexInternal(index);
             if(location is GridChunkLocation or MapChunkLocation)
-                changedChunkLocations.Add(location);
+                _dirtyChunks.Add((IChunkIndexLocation) location);
             _deletionHistory.Add((tick, index));
         }
 
         // remove empty chunk-subsets
-        foreach (var chunkLocation in changedChunkLocations)
+        foreach (var chunkLocation in _dirtyChunks)
         {
             switch (chunkLocation)
             {
                 case GridChunkLocation gridChunkLocation:
-                    if (_gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Count == 0)
-                        _gridChunkContents[gridChunkLocation.GridId].Remove(gridChunkLocation.ChunkIndices);
+                    if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridId, out var gridChunks)) continue;
+                    if(!gridChunks.TryGetValue(gridChunkLocation.ChunkIndices, out var chunk)) continue;
+                    if(chunk.Count == 0)
+                        gridChunks.Remove(gridChunkLocation.ChunkIndices);
                     break;
                 case MapChunkLocation mapChunkLocation:
-                    if (_mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Count == 0)
-                        _mapChunkContents[mapChunkLocation.MapId].Remove(mapChunkLocation.ChunkIndices);
+                    if(!_mapChunkContents.TryGetValue(mapChunkLocation.MapId, out var mapChunks)) continue;
+                    if(!mapChunks.TryGetValue(mapChunkLocation.ChunkIndices, out chunk)) continue;
+                    if(chunk.Count == 0)
+                        mapChunks.Remove(mapChunkLocation.ChunkIndices);
                     break;
             }
         }
 
         foreach (var index in _changedIndices)
         {
-            RemoveIndexInternal(index);
+            var oldLoc = RemoveIndexInternal(index);
+            if(oldLoc is GridChunkLocation or MapChunkLocation)
+                _dirtyChunks.Add((IChunkIndexLocation) oldLoc);
 
-            AddIndexInternal(index, _locationChangeBuffer[index]);
+            AddIndexInternal(index, _locationChangeBuffer[index], _dirtyChunks);
         }
 
         _changedIndices.Clear();
         _locationChangeBuffer.Clear();
         _removalBuffer.Clear();
     }
+
+    public bool IsDirty(IChunkIndexLocation location) => _dirtyChunks.Contains(location);
+
+    public bool MarkDirty(IChunkIndexLocation location) => _dirtyChunks.Add(location);
+
+    public void ClearDirty() => _dirtyChunks.Clear();
 
     public bool TryGetChunk(MapId mapId, Vector2i chunkIndices, [NotNullWhen(true)] out HashSet<TIndex>? indices) =>
         _mapChunkContents[mapId].TryGetValue(chunkIndices, out indices);
@@ -164,7 +188,7 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
 
     public HashSet<TIndex>.Enumerator GetElementsForSession(ICommonSession session) => _localOverrides[session].GetEnumerator();
 
-    private void AddIndexInternal(TIndex index, IIndexLocation location)
+    private void AddIndexInternal(TIndex index, IIndexLocation location, HashSet<IChunkIndexLocation> dirtyChunks)
     {
         switch (location)
         {
@@ -173,10 +197,10 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 break;
             case GridChunkLocation gridChunkLocation:
                 // might be gone due to grid-deletions
-                if(!_gridChunkContents.ContainsKey(gridChunkLocation.GridId)) return;
-                if(!_gridChunkContents[gridChunkLocation.GridId].ContainsKey(gridChunkLocation.ChunkIndices))
-                    _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices] = new();
-                _gridChunkContents[gridChunkLocation.GridId][gridChunkLocation.ChunkIndices].Add(index);
+                if(!_gridChunkContents.TryGetValue(gridChunkLocation.GridId, out var gridChunk)) return;
+                var gridLoc = gridChunk.GetOrNew(gridChunkLocation.ChunkIndices);
+                gridLoc.Add(index);
+                dirtyChunks.Add(gridChunkLocation);
                 break;
             case LocalOverride localOverride:
                 // might be gone due to disconnects
@@ -185,10 +209,10 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
                 break;
             case MapChunkLocation mapChunkLocation:
                 // might be gone due to map-deletions
-                if(!_mapChunkContents.ContainsKey(mapChunkLocation.MapId)) return;
-                if(!_mapChunkContents[mapChunkLocation.MapId].ContainsKey(mapChunkLocation.ChunkIndices))
-                    _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices] = new();
-                _mapChunkContents[mapChunkLocation.MapId][mapChunkLocation.ChunkIndices].Add(index);
+                if(!_mapChunkContents.TryGetValue(mapChunkLocation.MapId, out var mapChunk)) return;
+                var mapLoc = mapChunk.GetOrNew(mapChunkLocation.ChunkIndices);
+                mapLoc.Add(index);
+                dirtyChunks.Add(mapChunkLocation);
                 break;
         }
 
@@ -377,6 +401,20 @@ public sealed class PVSCollection<TIndex> : IPVSCollection where TIndex : ICompa
         var mapCoordinates = coordinates.ToMap(_entityManager);
         var mapIndices = GetChunkIndices(coordinates.Position);
         UpdateIndex(index, mapCoordinates.MapId, mapIndices, true); //skip overridecheck bc we already did it (saves some dict lookups)
+    }
+
+    public IChunkIndexLocation GetChunkIndex(EntityCoordinates coordinates)
+    {
+        var gridId = coordinates.GetGridId(_entityManager);
+        if (gridId != GridId.Invalid)
+        {
+            var gridIndices = GetChunkIndices(coordinates.Position);
+            return new GridChunkLocation(gridId, gridIndices);
+        }
+
+        var mapCoordinates = coordinates.ToMap(_entityManager);
+        var mapIndices = GetChunkIndices(coordinates.Position);
+        return new MapChunkLocation(mapCoordinates.MapId, mapIndices);
     }
 
     /// <summary>

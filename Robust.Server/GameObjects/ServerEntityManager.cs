@@ -37,7 +37,6 @@ namespace Robust.Server.GameObjects
         public override void Initialize()
         {
             SetupNetworking();
-            ReceivedComponentMessage += (_, compMsg) => DispatchComponentMessage(compMsg);
             ReceivedSystemMessage += (_, systemMsg) => EventBus.RaiseEvent(EventSource.Network, systemMsg);
 
             base.Initialize();
@@ -97,9 +96,6 @@ namespace Robust.Server.GameObjects
         #region IEntityNetworkManager impl
 
         public override IEntityNetworkManager EntityNetManager => this;
-
-        /// <inheritdoc />
-        public event EventHandler<NetworkComponentMessage>? ReceivedComponentMessage;
 
         /// <inheritdoc />
         public event EventHandler<object>? ReceivedSystemMessage;
@@ -208,35 +204,6 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public void SendComponentNetworkMessage(INetChannel? channel, EntityUid entity, IComponent component,
-            ComponentMessage message)
-        {
-            if (_networkManager.IsClient)
-                return;
-
-            var netId = ComponentFactory.GetRegistration(component.GetType()).NetID;
-
-            if (!netId.HasValue)
-                throw new ArgumentException($"Component {component.GetType()} does not have a NetID.", nameof(component));
-
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
-            msg.Type = EntityMessageType.ComponentMessage;
-            msg.EntityUid = entity;
-            msg.NetId = netId.Value;
-            msg.ComponentMessage = message;
-            msg.SourceTick = _gameTiming.CurTick;
-
-            // Logger.DebugS("net.ent", "Sending: {0}", msg);
-
-            //Send the message
-            if (channel == null)
-                _networkManager.ServerSendToAll(msg);
-            else
-                _networkManager.ServerSendMessage(msg, channel);
-        }
-
-        /// <inheritdoc />
         public void SendSystemNetworkMessage(EntityEventArgs message)
         {
             var newMsg = _networkManager.CreateNetMessage<MsgEntity>();
@@ -302,10 +269,6 @@ namespace Robust.Server.GameObjects
             {
                 switch (message.Type)
                 {
-                    case EntityMessageType.ComponentMessage:
-                        ReceivedComponentMessage?.Invoke(this, new NetworkComponentMessage(message, player));
-                        return;
-
                     case EntityMessageType.SystemMessage:
                         var msg = message.SystemMessage;
                         var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());

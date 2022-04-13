@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Validation;
 using Robust.Shared.Serialization.TypeSerializers.Interfaces;
@@ -12,10 +11,11 @@ namespace Robust.Shared.Serialization.Manager
 {
     public partial class SerializationManager
     {
-        private delegate DeserializationResult ReadSerializerDelegate(
+        private delegate object? ReadSerializerDelegate(
             DataNode node,
             ISerializationContext? context = null,
-            bool skipHook = false);
+            bool skipHook = false,
+            object? value = null);
 
         private delegate DataNode WriteSerializerDelegate(
             object value,
@@ -47,6 +47,7 @@ namespace Robust.Shared.Serialization.Manager
                 var nodeParam = Expression.Parameter(typeof(DataNode), "node");
                 var contextParam = Expression.Parameter(typeof(ISerializationContext), "context");
                 var skipHookParam = Expression.Parameter(typeof(bool), "skipHook");
+                var valueParam = Expression.Parameter(typeof(object), "value");
 
                 var call = Expression.Call(
                     instanceParam,
@@ -54,13 +55,15 @@ namespace Robust.Shared.Serialization.Manager
                     new[] {tuple.value, tuple.node, tuple.serializer},
                     Expression.Convert(nodeParam, tuple.node),
                     contextParam,
-                    skipHookParam);
+                    skipHookParam,
+                    valueParam);
 
                 return Expression.Lambda<ReadSerializerDelegate>(
-                    call,
+                    Expression.Convert(call, typeof(object)),
                     nodeParam,
                     contextParam,
-                    skipHookParam).Compile();
+                    skipHookParam,
+                    valueParam).Compile();
             }, this);
         }
 
@@ -126,25 +129,27 @@ namespace Robust.Shared.Serialization.Manager
             }, (common, source, target, serializer));
         }
 
-        private DeserializationResult ReadWithSerializerRaw(
-            Type value,
+        private object? ReadWithSerializerRaw(
+            Type type,
             DataNode node,
             Type serializer,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? value = null)
         {
-            return GetOrCreateReadSerializerDelegate(value, node.GetType(), serializer)(node, context, skipHook);
+            return GetOrCreateReadSerializerDelegate(type, node.GetType(), serializer)(node, context, skipHook, value);
         }
 
-        private DeserializationResult ReadWithSerializer<T, TNode, TSerializer>(
+        private T ReadWithSerializer<T, TNode, TSerializer>(
             TNode node,
             ISerializationContext? context = null,
-            bool skipHook = false)
+            bool skipHook = false,
+            object? value = default)
             where TSerializer : ITypeReader<T, TNode>
             where TNode : DataNode
         {
             var serializer = (ITypeReader<T, TNode>) GetTypeSerializer(typeof(TSerializer));
-            return serializer.Read(this, node, DependencyCollection, skipHook, context);
+            return serializer.Read(this, node, DependencyCollection, skipHook, context, value == null ? default : (T)value);
         }
 
         private DataNode WriteWithSerializerRaw(

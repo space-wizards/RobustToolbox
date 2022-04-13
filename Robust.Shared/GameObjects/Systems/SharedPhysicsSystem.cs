@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Dynamics;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 using DependencyAttribute = Robust.Shared.IoC.DependencyAttribute;
 
 namespace Robust.Shared.GameObjects
@@ -113,7 +114,9 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            if (LifeStage(uid) < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
+            var meta = MetaData(uid);
+
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
             {
                 return;
             }
@@ -122,15 +125,13 @@ namespace Robust.Shared.GameObjects
                 _broadphase.UpdateBroadphase(body, xform: xform);
 
             // Handle map change
-            var oldMapId = _transform.GetMapId(args.OldParent);
             var mapId = _transform.GetMapId(args.Entity);
 
-            if (oldMapId != mapId)
-            {
-                HandleMapChange(body, xform, oldMapId, mapId);
-            }
+            if (args.OldMapId != mapId)
+                HandleMapChange(body, xform, args.OldMapId, mapId);
 
-            HandleParentChangeVelocity(uid, body, ref args, xform);
+            if (mapId != MapId.Nullspace && !_container.IsEntityInContainer(uid, meta))
+                HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 
         private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId mapId)
@@ -158,10 +159,10 @@ namespace Robust.Shared.GameObjects
                 map.AddBody(body);
             }
 
-            if (_mapManager.IsGrid(body.Owner) ||
-                _mapManager.IsMap(body.Owner) ||
-                xform.ChildCount == 0 ||
-                (oldMap == null && map == null)) return;
+            if (xform.ChildCount == 0 ||
+                (oldMap == null && map == null) ||
+                _mapManager.IsGrid(body.Owner) ||
+                _mapManager.IsMap(body.Owner)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
             var bodyQuery = GetEntityQuery<PhysicsComponent>();
@@ -272,14 +273,17 @@ namespace Robust.Shared.GameObjects
 
         private void HandleContainerRemoved(EntRemovedFromContainerMessage message)
         {
-            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent)) return;
+            // If entity being deleted then the parent change will already be handled elsewhere and we don't want to re-add it to the map.
+            if (!EntityManager.TryGetComponent(message.Entity, out PhysicsComponent? physicsComponent) ||
+                MetaData(message.Entity).EntityLifeStage >= EntityLifeStage.Terminating) return;
 
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Container.Owner).MapID;
+            var mapId = Transform(message.Container.Owner).MapID;
 
             if (mapId != MapId.Nullspace)
             {
-                EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-                EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
+                DebugTools.Assert(!physicsComponent.Deleted);
+                var tempQualifier = MapManager.GetMapEntityId(mapId);
+                Comp<SharedPhysicsMapComponent>(tempQualifier).AddBody(physicsComponent);
             }
         }
 

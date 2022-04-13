@@ -3,22 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using Robust.Client.Graphics;
 using Robust.Client.ResourceManagement;
-using Robust.Client.UserInterface.Themes;
 using Robust.Shared.IoC;
 using Robust.Shared.Maths;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Utility;
+using Robust.Shared.ViewVariables;
 
-namespace Robust.Client.UserInterface;
-
+namespace Robust.Client.UserInterface.Themes;
 
 [Prototype("uiTheme")]
 public sealed class UITheme : IPrototype
 { //this is used for ease of access
     public const string DefaultPath = "/Textures/Interface";
     public const string DefaultName = "Default";
-    [DataField("id", required: true)]
+
+    [ViewVariables]
+    [IdDataField]
     public string ID { get; } = default!;
 
     [DataField("path")]

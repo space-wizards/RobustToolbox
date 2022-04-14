@@ -29,9 +29,6 @@ namespace Robust.Server.ServerStatus
 
     internal sealed partial class StatusHost
     {
-        // Enough buffer for a request of 100k files.
-        private const int MaxAczDownloadRequestSize = 4 * 100_000;
-
         // Lock used while working on the ACZ.
         private readonly SemaphoreSlim _aczLock = new(1, 1);
 
@@ -208,11 +205,13 @@ namespace Robust.Server.ServerStatus
                 return true;
             }
 
-            // TODO: Don't overallocate.
-            // Important: don't allow memory stream to buffer indefinitely, limit request size.
+            var fileCount = aczInfo.ManifestEntries.Length;
+
+            var requestBufSize = fileCount * 4;
+            var pool = ArrayPool<byte>.Shared.Rent(requestBufSize);
             var buffer = new MemoryStream(
-                new byte[MaxAczDownloadRequestSize],
-                0, MaxAczDownloadRequestSize,
+                pool,
+                0, requestBufSize,
                 writable: true,
                 publiclyVisible: true);
 

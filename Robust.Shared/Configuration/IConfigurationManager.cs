@@ -6,6 +6,13 @@ namespace Robust.Shared.Configuration
     /// <summary>
     /// Stores and manages global configuration variables.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Accessing (getting/setting) main CVars is thread safe.
+    /// Note that value-changed callbacks are ran synchronously from the thread using <see cref="SetCVar"/>,
+    /// so it is not recommended to modify CVars from other threads.
+    /// </para>
+    /// </remarks>
     public interface IConfigurationManager
     {
         /// <summary>

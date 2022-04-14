@@ -47,12 +47,6 @@ internal sealed class ZStdException : Exception
     {
     }
 
-    protected ZStdException(
-        SerializationInfo info,
-        StreamingContext context) : base(info, context)
-    {
-    }
-
     public static unsafe ZStdException FromCode(nuint code)
     {
         return new ZStdException(Marshal.PtrToStringUTF8((IntPtr)ZSTD_getErrorName(code))!);

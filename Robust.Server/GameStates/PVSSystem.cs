@@ -7,6 +7,7 @@ using NetSerializer;
 using Robust.Server.GameObjects;
 using Robust.Server.Player;
 using Robust.Shared;
+using Robust.Shared.Collections;
 using Robust.Shared.Configuration;
 using Robust.Shared.Enums;
 using Robust.Shared.GameObjects;
@@ -29,6 +30,7 @@ internal sealed partial class PVSSystem : EntitySystem
     [Shared.IoC.Dependency] private readonly INetConfigurationManager _netConfigManager = default!;
 
     public const float ChunkSize = 8;
+    public const int TickBuffer = 10;
 
     /// <summary>
     /// Maximum number of pooled objects
@@ -54,11 +56,7 @@ internal sealed partial class PVSSystem : EntitySystem
     /// <summary>
     /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw last iteration.
     /// </summary>
-    private readonly Dictionary<ICommonSession, Dictionary<EntityUid, PVSEntityVisiblity>> _playerVisibleSets = new();
-    /// <summary>
-    /// All <see cref="Robust.Shared.GameObjects.EntityUid"/>s a <see cref="ICommonSession"/> saw along its entire connection.
-    /// </summary>
-    private readonly Dictionary<ICommonSession, HashSet<EntityUid>> _playerSeenSets = new();
+    private readonly Dictionary<ICommonSession, OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>>> _playerVisibleSets = new();
 
     private PVSCollection<EntityUid> _entityPvsCollection = default!;
     public PVSCollection<EntityUid> EntityPVSCollection => _entityPvsCollection;
@@ -66,7 +64,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>> _visSetPool
         = new DefaultObjectPool<Dictionary<EntityUid, PVSEntityVisiblity>>(
-            new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize);
+            new DictPolicy<EntityUid, PVSEntityVisiblity>(), MaxVisPoolSize*TickBuffer);
 
     private readonly ObjectPool<HashSet<EntityUid>> _uidSetPool
         = new DefaultObjectPool<HashSet<EntityUid>>(new SetPolicy<EntityUid>(), MaxVisPoolSize);
@@ -257,8 +255,7 @@ internal sealed partial class PVSSystem : EntitySystem
     {
         if (e.NewStatus == SessionStatus.InGame)
         {
-            _playerVisibleSets.Add(e.Session, _visSetPool.Get());
-            _playerSeenSets.Add(e.Session, new HashSet<EntityUid>());
+            _playerVisibleSets.Add(e.Session, new OverflowDictionary<GameTick, Dictionary<EntityUid, PVSEntityVisiblity>>(TickBuffer, _visSetPool.Return));
             foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.AddPlayer(e.Session);
@@ -266,10 +263,12 @@ internal sealed partial class PVSSystem : EntitySystem
         }
         else if (e.NewStatus == SessionStatus.Disconnected)
         {
-            var playerVisSet = _playerVisibleSets[e.Session];
+            var overflowDict = _playerVisibleSets[e.Session];
             _playerVisibleSets.Remove(e.Session);
-            _visSetPool.Return(playerVisSet);
-            _playerSeenSets.Remove(e.Session);
+            foreach (var (_, playerVisSet) in overflowDict)
+            {
+                _visSetPool.Return(playerVisSet);
+            }
             foreach (var pvsCollection in _pvsCollections)
             {
                 pvsCollection.RemovePlayer(e.Session);
@@ -559,13 +558,10 @@ internal sealed partial class PVSSystem : EntitySystem
         EntityUid[] viewerEntities)
     {
         DebugTools.Assert(session.Status == SessionStatus.InGame);
-        var newEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSNewEntityBudget);
         var enteredEntityBudget = _netConfigManager.GetClientCVar(session.ConnectedClient, CVars.NetPVSEntityBudget);
-        var newEntitiesSent = 0;
         var entitiesSent = 0;
-        var playerVisibleSet = _playerVisibleSets[session];
+        _playerVisibleSets[session].TryGetValue(fromTick, out var playerVisibleSet);
         var visibleEnts = _visSetPool.Get();
-        var seenSet = _playerSeenSets[session];
         var deletions = _entityPvsCollection.GetDeletedIndices(fromTick);
 
         foreach (var i in chunkIndices)
@@ -574,8 +570,8 @@ internal sealed partial class PVSSystem : EntitySystem
             if(!cache.HasValue) continue;
             foreach (var rootNode in cache.Value.tree.RootNodes)
             {
-                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                        ref entitiesSent, cache.Value.metadata, in enteredEntityBudget, in newEntityBudget);
+                RecursivelyAddTreeNode(in rootNode, cache.Value.tree, playerVisibleSet, visibleEnts, fromTick,
+                        ref entitiesSent, cache.Value.metadata, in enteredEntityBudget);
             }
         }
 
@@ -583,8 +579,8 @@ internal sealed partial class PVSSystem : EntitySystem
         while (globalEnumerator.MoveNext())
         {
             var uid = globalEnumerator.Current;
-            RecursivelyAddOverride(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+            RecursivelyAddOverride(in uid, playerVisibleSet, visibleEnts, fromTick,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
         }
         globalEnumerator.Dispose();
 
@@ -592,23 +588,23 @@ internal sealed partial class PVSSystem : EntitySystem
         while (localEnumerator.MoveNext())
         {
             var uid = localEnumerator.Current;
-            RecursivelyAddOverride(in uid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+            RecursivelyAddOverride(in uid, playerVisibleSet, visibleEnts, fromTick,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
         }
         localEnumerator.Dispose();
 
         foreach (var viewerEntity in viewerEntities)
         {
-            RecursivelyAddOverride(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+            RecursivelyAddOverride(in viewerEntity, playerVisibleSet, visibleEnts, fromTick,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
         }
 
         var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
         RaiseLocalEvent(ref expandEvent);
         foreach (var entityUid in expandEvent.Entities)
         {
-            RecursivelyAddOverride(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
-                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+            RecursivelyAddOverride(in entityUid, playerVisibleSet, visibleEnts, fromTick,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget);
         }
 
         var entityStates = new List<EntityState>();
@@ -627,24 +623,26 @@ internal sealed partial class PVSSystem : EntitySystem
             entityStates.Add(state);
         }
 
-        foreach (var (entityUid, _) in playerVisibleSet)
+        if(playerVisibleSet != null)
         {
-            // it was deleted, so we dont need to exit pvs
-            if(deletions.Contains(entityUid)) continue;
-
-            //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
-            // deleted list. This seems to happen with the map entity on round restart.
-            if (!EntityManager.EntityExists(entityUid))
-                continue;
-
-            entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
+            foreach (var (entityUid, _) in playerVisibleSet)
             {
-                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
-            }), true));
+                // it was deleted, so we dont need to exit pvs
+                if(deletions.Contains(entityUid)) continue;
+
+                //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
+                // deleted list. This seems to happen with the map entity on round restart.
+                if (!EntityManager.EntityExists(entityUid))
+                    continue;
+
+                entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
+                {
+                    ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+                }), true));
+            }
         }
 
-        _playerVisibleSets[session] = visibleEnts;
-        _visSetPool.Return(playerVisibleSet);
+        _playerVisibleSets[session].Add(toTick, visibleEnts);
 
         if (deletions.Count == 0) deletions = default;
         if (entityStates.Count == 0) entityStates = default;
@@ -652,18 +650,14 @@ internal sealed partial class PVSSystem : EntitySystem
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private void RecursivelyAddTreeNode(
-        in EntityUid nodeIndex,
+    private void RecursivelyAddTreeNode(in EntityUid nodeIndex,
         RobustTree<EntityUid> tree,
-        HashSet<EntityUid> seenSet,
-        Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
+        Dictionary<EntityUid, PVSEntityVisiblity>? previousVisibleEnts,
         Dictionary<EntityUid, PVSEntityVisiblity> toSend,
         GameTick fromTick,
-        ref int newEntitiesSent,
         ref int totalEnteredEntities,
         Dictionary<EntityUid, MetaDataComponent> metaDataCache,
-        in int enteredEntityBudget,
-        in int newEntityBudget)
+        in int enteredEntityBudget)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -674,8 +668,8 @@ internal sealed partial class PVSSystem : EntitySystem
         if (nodeIndex.IsValid() && !toSend.ContainsKey(nodeIndex))
         {
             //are we new?
-            var (entered, budgetFail) = ProcessEntry(in nodeIndex, seenSet, previousVisibleEnts, ref newEntitiesSent,
-                ref totalEnteredEntities, in enteredEntityBudget, in newEntityBudget);
+            var (entered, budgetFail) = ProcessEntry(in nodeIndex, previousVisibleEnts,
+                ref totalEnteredEntities, in enteredEntityBudget);
 
             if (budgetFail) return;
 
@@ -688,24 +682,21 @@ internal sealed partial class PVSSystem : EntitySystem
         {
             foreach (var child in node.Children)
             {
-                RecursivelyAddTreeNode(in child, tree, seenSet, previousVisibleEnts, toSend, fromTick, ref newEntitiesSent,
-                    ref totalEnteredEntities, metaDataCache, in enteredEntityBudget, in newEntityBudget);
+                RecursivelyAddTreeNode(in child, tree, previousVisibleEnts, toSend, fromTick,
+                    ref totalEnteredEntities, metaDataCache, in enteredEntityBudget);
             }
         }
     }
 
     public bool RecursivelyAddOverride(
         in EntityUid uid,
-        HashSet<EntityUid> seenSet,
-        Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
+        Dictionary<EntityUid, PVSEntityVisiblity>? previousVisibleEnts,
         Dictionary<EntityUid, PVSEntityVisiblity> toSend,
         GameTick fromTick,
-        ref int newEntitiesSent,
         ref int totalEnteredEntities,
         EntityQuery<MetaDataComponent> metaQuery,
         EntityQuery<TransformComponent> transQuery,
-        in int enteredEntityBudget,
-        in int newEntityBudget)
+        in int enteredEntityBudget)
     {
         //are we valid?
         //sometimes uids gets added without being valid YET (looking at you mapmanager) (mapcreate & gridcreated fire before the uids becomes valid)
@@ -715,24 +706,22 @@ internal sealed partial class PVSSystem : EntitySystem
         if (toSend.ContainsKey(uid)) return true;
 
         var parent = transQuery.GetComponent(uid).ParentUid;
-        if (parent.IsValid() && !RecursivelyAddOverride(in parent, seenSet, previousVisibleEnts, toSend, fromTick,
-                ref newEntitiesSent, ref totalEnteredEntities, metaQuery, transQuery, in enteredEntityBudget, in newEntityBudget))
+        if (parent.IsValid() && !RecursivelyAddOverride(in parent, previousVisibleEnts, toSend, fromTick,
+                ref totalEnteredEntities, metaQuery, transQuery, in enteredEntityBudget))
             return false;
 
-        var (entered, _) = ProcessEntry(in uid, seenSet, previousVisibleEnts, ref newEntitiesSent,
-            ref totalEnteredEntities, in enteredEntityBudget, in newEntityBudget);
+        var (entered, _) = ProcessEntry(in uid, previousVisibleEnts,
+            ref totalEnteredEntities, in enteredEntityBudget);
 
         AddToSendSet(in uid, metaQuery.GetComponent(uid), toSend, fromTick, entered);
         return true;
     }
 
-    private (bool entered, bool budgetFail) ProcessEntry(in EntityUid uid, HashSet<EntityUid> seenSet,
-        Dictionary<EntityUid, PVSEntityVisiblity> previousVisibleEnts,
-        ref int newEntitiesSent,
-        ref int totalEnteredEntities, in int enteredEntityBudget, in int newEntityBudget)
+    private (bool entered, bool budgetFail) ProcessEntry(in EntityUid uid,
+        Dictionary<EntityUid, PVSEntityVisiblity>? previousVisibleEnts,
+        ref int totalEnteredEntities, in int enteredEntityBudget)
     {
-        var @new = !seenSet.Contains(uid);
-        var entered = @new | !previousVisibleEnts.Remove(uid);
+        var entered = previousVisibleEnts?.Remove(uid) == false;
 
         if (entered)
         {
@@ -740,16 +729,6 @@ internal sealed partial class PVSSystem : EntitySystem
                 return (entered, true);
 
             totalEnteredEntities++;
-        }
-
-        if (@new)
-        {
-            //we just entered pvs, do we still have enough budget to send us?
-            if(newEntitiesSent >= newEntityBudget)
-                return (entered, true);
-
-            newEntitiesSent++;
-            seenSet.Add(uid);
         }
 
         return (entered, false);

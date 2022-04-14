@@ -125,12 +125,6 @@ namespace Robust.Shared
             CVarDef.Create("net.maxupdaterange", 12.5f, CVar.ARCHIVE | CVar.REPLICATED | CVar.SERVER);
 
         /// <summary>
-        /// The amount of new entities that can be sent to a client in a single game state, under PVS.
-        /// </summary>
-        public static readonly CVarDef<int> NetPVSNewEntityBudget =
-            CVarDef.Create("net.pvs_new_budget", 20, CVar.ARCHIVE | CVar.REPLICATED);
-
-        /// <summary>
         /// The amount of entered entities that can be sent to a client in a single game state, under PVS.
         /// </summary>
         public static readonly CVarDef<int> NetPVSEntityBudget =

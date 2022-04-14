@@ -177,6 +177,9 @@ namespace Robust.Server.ServerStatus
                 SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
                 SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
                 SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
+                SetCVarIfUnmodified(CVars.BuildManifestHash, info.ManifestHash ?? "");
+                SetCVarIfUnmodified(CVars.BuildManifestDownloadUrl, info.ManifestDownloadUrl ?? "");
+                SetCVarIfUnmodified(CVars.BuildManifestUrl, info.ManifestUrl ?? "");
             }
 
             // Automatically determine engine version if no other source has provided a result
@@ -215,7 +218,13 @@ namespace Robust.Server.ServerStatus
             [property: JsonPropertyName("fork_id")]
             string ForkId,
             [property: JsonPropertyName("version")]
-            string Version);
+            string Version,
+            [property: JsonPropertyName("manifest_hash")]
+            string? ManifestHash,
+            [property: JsonPropertyName("manifest_url")]
+            string? ManifestUrl,
+            [property: JsonPropertyName("manifest_download_url")]
+            string? ManifestDownloadUrl);
 
         private sealed class ContextImpl : IStatusHandlerContext
         {

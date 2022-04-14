@@ -336,7 +336,7 @@ namespace Robust.Shared.Physics
                 !TryComp(broadphase.Owner, out MetaDataComponent? meta) ||
                 meta.EntityLifeStage >= EntityLifeStage.Terminating)
             {
-                _logger.Error($"Unable to find broadphase {ToPrettyString(broadphase.Owner)}, cleaning up {ToPrettyString(body.Owner)}");
+                // Don't log because this may happen due to recursive deletions.
                 body.Broadphase = null;
 
                 foreach (var (_, fixture) in manager.Fixtures)

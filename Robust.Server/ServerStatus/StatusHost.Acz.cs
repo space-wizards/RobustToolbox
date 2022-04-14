@@ -209,6 +209,7 @@ namespace Robust.Server.ServerStatus
 
             var requestBufSize = fileCount * 4;
             var pool = ArrayPool<byte>.Shared.Rent(requestBufSize);
+            using var poolGuard = ArrayPool<byte>.Shared.ReturnGuard(pool);
             var buffer = new MemoryStream(
                 pool,
                 0, requestBufSize,
@@ -232,7 +233,7 @@ namespace Robust.Server.ServerStatus
             // Request body read. Validate it.
             // Do not allow out-of-bounds files or duplicate requests.
 
-            var buf = buffer.GetBuffer().AsMemory(0, (int)buffer.Position);
+            var buf = pool.AsMemory(0, (int)buffer.Position);
 
             var manifestLength = aczInfo.ManifestEntries.Length;
             var bits = new BitArray(manifestLength);

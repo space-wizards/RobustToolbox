@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Robust.Client.GameObjects;
 using Robust.Server.Player;
+using Robust.Shared;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
@@ -141,8 +142,11 @@ namespace Robust.UnitTesting.Shared.GameObjects
          [Test]
          public async Task TestContainerExpectedEntityDeleted()
          {
+             // TODO tests that rely on precise tick timing are kind of CBT
+             var options = new ClientIntegrationOptions();
+             options.CVarOverrides.TryAdd(CVars.NetInterpRatio.Name, "0");
              var server = StartServer();
-             var client = StartClient();
+             var client = StartClient(options);
 
              await Task.WhenAll(client.WaitIdleAsync(), server.WaitIdleAsync());
 

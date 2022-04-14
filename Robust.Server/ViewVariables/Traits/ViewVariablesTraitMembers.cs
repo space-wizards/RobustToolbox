@@ -44,7 +44,7 @@ namespace Robust.Server.ViewVariables.Traits
                         Editable = access == VVAccess.ReadWrite,
                         Name = property.Name,
                         Type = property.PropertyType.AssemblyQualifiedName,
-                        TypePretty = TypeAbbreviation.Abbreviate(property.PropertyType),
+                        TypePretty = PrettyPrint.PrintUserFacingTypeShort(property.PropertyType, 2),
                         Value = property.GetValue(Session.Object),
                         PropertyIndex = _members.Count
                     }, property));
@@ -63,7 +63,7 @@ namespace Robust.Server.ViewVariables.Traits
                         Editable = access == VVAccess.ReadWrite,
                         Name = field.Name,
                         Type = field.FieldType.AssemblyQualifiedName,
-                        TypePretty = TypeAbbreviation.Abbreviate(field.FieldType),
+                        TypePretty = PrettyPrint.PrintUserFacingTypeShort(field.FieldType, 2),
                         Value = field.GetValue(Session.Object),
                         PropertyIndex = _members.Count
                     }, field));

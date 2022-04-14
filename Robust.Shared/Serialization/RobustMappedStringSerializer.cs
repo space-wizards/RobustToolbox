@@ -56,8 +56,6 @@ namespace Robust.Shared.Serialization
             '{', '}', ':', ';', '-'
         };
 
-        private static readonly HashAlgorithmName PackHashAlgo = HashAlgorithmName.SHA512;
-
         /// <summary>
         /// The shortest a string can be in order to be inserted in the mapping.
         /// </summary>

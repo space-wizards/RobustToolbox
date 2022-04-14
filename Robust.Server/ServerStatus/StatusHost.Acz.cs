@@ -52,13 +52,13 @@ namespace Robust.Server.ServerStatus
 
         private void InitAcz()
         {
-            _configurationManager.OnValueChanged(CVars.AczStreamCompress, _ => InvalidateAcz());
-            _configurationManager.OnValueChanged(CVars.AczStreamCompressLevel, _ => InvalidateAcz());
-            _configurationManager.OnValueChanged(CVars.AczBlobCompress, _ => InvalidateAcz());
-            _configurationManager.OnValueChanged(CVars.AczBlobCompressLevel, _ => InvalidateAcz());
-            _configurationManager.OnValueChanged(CVars.AczBlobCompressSaveThreshold, _ => InvalidateAcz());
-            _configurationManager.OnValueChanged(CVars.AczManifestCompress, _ => InvalidateAcz());
-            _configurationManager.OnValueChanged(CVars.AczManifestCompressLevel, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczStreamCompress, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczStreamCompressLevel, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczBlobCompress, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczBlobCompressLevel, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczBlobCompressSaveThreshold, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczManifestCompress, _ => InvalidateAcz());
+            _cfg.OnValueChanged(CVars.AczManifestCompressLevel, _ => InvalidateAcz());
         }
 
         private void InvalidateAcz()
@@ -81,7 +81,7 @@ namespace Robust.Server.ServerStatus
                 return false;
             }
 
-            if (!string.IsNullOrEmpty(_configurationManager.GetCVar(CVars.BuildDownloadUrl)))
+            if (!string.IsNullOrEmpty(_cfg.GetCVar(CVars.BuildDownloadUrl)))
             {
                 await context.RespondAsync("This server has a build download URL.", HttpStatusCode.NotFound);
                 return true;
@@ -104,7 +104,7 @@ namespace Robust.Server.ServerStatus
             if (!context.IsGetLike || context.Url!.AbsolutePath != "/manifest.txt")
                 return false;
 
-            if (!string.IsNullOrEmpty(_configurationManager.GetCVar(CVars.BuildManifestUrl)))
+            if (!string.IsNullOrEmpty(_cfg.GetCVar(CVars.BuildManifestUrl)))
             {
                 await context.RespondAsync("This server has a build manifest URL.", HttpStatusCode.NotFound);
                 return true;
@@ -160,7 +160,7 @@ namespace Robust.Server.ServerStatus
                     HttpStatusCode.BadRequest);
             }
 
-            if (!string.IsNullOrEmpty(_configurationManager.GetCVar(CVars.BuildManifestUrl)))
+            if (!string.IsNullOrEmpty(_cfg.GetCVar(CVars.BuildManifestUrl)))
             {
                 await context.RespondAsync("This server has a build manifest URL.", HttpStatusCode.NotFound);
                 return true;
@@ -264,8 +264,8 @@ namespace Robust.Server.ServerStatus
             // The worst that could happen here is that the stream is either double-compressed or not compressed at all,
             // So I am not too worried and am just gonna leave it as-is.
 
-            var cVarStreamCompression = _configurationManager.GetCVar(CVars.AczStreamCompress);
-            var cVarStreamCompressionLevel = _configurationManager.GetCVar(CVars.AczStreamCompressLevel);
+            var cVarStreamCompression = _cfg.GetCVar(CVars.AczStreamCompress);
+            var cVarStreamCompressionLevel = _cfg.GetCVar(CVars.AczStreamCompressLevel);
 
             // Only do zstd stream compression if the client asks for it and we have it enabled.
             var doStreamCompression = RequestWantsZStd(context)
@@ -387,12 +387,12 @@ namespace Robust.Server.ServerStatus
             if (zipData == null)
                 return null;
 
-            var streamCompression = _configurationManager.GetCVar(CVars.AczStreamCompress);
-            var blobCompress = _configurationManager.GetCVar(CVars.AczBlobCompress);
-            var blobCompressLevel = _configurationManager.GetCVar(CVars.AczBlobCompressLevel);
-            var blobCompressSaveThresh = _configurationManager.GetCVar(CVars.AczBlobCompressSaveThreshold);
-            var manifestCompress = _configurationManager.GetCVar(CVars.AczManifestCompress);
-            var manifestCompressLevel = _configurationManager.GetCVar(CVars.AczManifestCompressLevel);
+            var streamCompression = _cfg.GetCVar(CVars.AczStreamCompress);
+            var blobCompress = _cfg.GetCVar(CVars.AczBlobCompress);
+            var blobCompressLevel = _cfg.GetCVar(CVars.AczBlobCompressLevel);
+            var blobCompressSaveThresh = _cfg.GetCVar(CVars.AczBlobCompressSaveThreshold);
+            var manifestCompress = _cfg.GetCVar(CVars.AczManifestCompress);
+            var manifestCompressLevel = _cfg.GetCVar(CVars.AczManifestCompressLevel);
 
             // Stream compression disables individual compression.
             blobCompress &= !streamCompression;

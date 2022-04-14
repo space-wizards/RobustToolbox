@@ -31,7 +31,7 @@ namespace Robust.Server.ServerStatus
     {
         private const string Sawmill = "statushost";
 
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
@@ -101,9 +101,9 @@ namespace Robust.Server.ServerStatus
 
             // Cache this in a field to avoid thread safety shenanigans.
             // Writes/reads of references are atomic in C# so no further synchronization necessary.
-            _configurationManager.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
+            _cfg.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
 
-            if (!_configurationManager.GetCVar(CVars.StatusEnabled))
+            if (!_cfg.GetCVar(CVars.StatusEnabled))
             {
                 return;
             }
@@ -112,7 +112,7 @@ namespace Robust.Server.ServerStatus
 
             _stopSource = new TaskCompletionSource();
             _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://{_configurationManager.GetCVar(CVars.StatusBind)}/");
+            _listener.Prefixes.Add($"http://{_cfg.GetCVar(CVars.StatusBind)}/");
             _listener.Start();
 
             Task.Run(ListenerThread);
@@ -121,7 +121,7 @@ namespace Robust.Server.ServerStatus
         // Not a real thread but whatever.
         private async Task ListenerThread()
         {
-            var maxConnections = _configurationManager.GetCVar(CVars.StatusMaxConnections);
+            var maxConnections = _cfg.GetCVar(CVars.StatusMaxConnections);
             var connectionsSemaphore = new SemaphoreSlim(maxConnections, maxConnections);
             while (true)
             {
@@ -188,8 +188,8 @@ namespace Robust.Server.ServerStatus
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {
-                if (_configurationManager.GetCVar(cvar) == "")
-                    _configurationManager.SetCVar(cvar, val);
+                if (_cfg.GetCVar(cvar) == "")
+                    _cfg.SetCVar(cvar, val);
             }
 
         }

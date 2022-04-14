@@ -22,6 +22,15 @@ namespace Robust.Client.UserInterface
         Task<Stream?> OpenFile(FileDialogFilters? filters = null);
 
         /// <summary>
+        ///     Open a file dialog used for getting a file's name.
+        /// </summary>
+        /// <returns>
+        /// The file name for the file the user opened.
+        /// <see langword="null" /> if the user cancelled the action.
+        /// </returns>
+        Task<string?> GetOpenFileName(FileDialogFilters? filters = null);
+
+        /// <summary>
         ///     Open a file dialog used for saving a single file.
         /// </summary>
         /// <returns>

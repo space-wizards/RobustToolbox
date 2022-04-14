@@ -52,6 +52,11 @@ public interface IMidiManager
     RobustMidiEvent FromSequencerEvent(SequencerEvent midiEvent, uint tick);
 
     /// <summary>
+    ///     Redirect for the MIDI library's soundfont checker
+    /// </summary>
+    bool IsSoundFont(string filename);
+
+    /// <summary>
     ///     Method called every frame.
     ///     Should be used to update positional audio.
     /// </summary>

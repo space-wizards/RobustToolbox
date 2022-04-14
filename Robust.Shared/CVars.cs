@@ -1052,6 +1052,9 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
+        public static readonly CVarDef<string> MidiSoundfont =
+            CVarDef.Create("midi.soundfont", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
+
         /*
          * HUB
          * CVars related to public master server hub

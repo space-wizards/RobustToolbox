@@ -13,6 +13,11 @@ namespace Robust.Client.UserInterface
             return Task.FromResult<Stream?>(null);
         }
 
+        public Task<string?> GetOpenFileName(FileDialogFilters? filters = null)
+        {
+            return Task.FromResult<string?>(null);
+        }
+
         public Task<(Stream fileStream, bool alreadyExisted)?> SaveFile(FileDialogFilters? filters = null)
         {
             return Task.FromResult<(Stream fileStream, bool alreadyExisted)?>(null);

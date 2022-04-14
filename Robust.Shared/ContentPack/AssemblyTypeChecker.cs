@@ -746,7 +746,7 @@ namespace Robust.Shared.ContentPack
         /// <exception href="UnsupportedMetadataException">
         ///     Thrown if the metadata does something funny we don't "support" like type forwarding.
         /// </exception>
-        private static MTypeReferenced ParseTypeReference(MetadataReader reader, TypeReferenceHandle handle)
+        internal static MTypeReferenced ParseTypeReference(MetadataReader reader, TypeReferenceHandle handle)
         {
             var typeRef = reader.GetTypeReference(handle);
             var name = reader.GetString(typeRef.Name);
@@ -883,7 +883,7 @@ namespace Robust.Shared.ContentPack
             }
         }
 
-        private sealed class TypeProvider : ISignatureTypeProvider<MType, int>
+        internal sealed class TypeProvider : ISignatureTypeProvider<MType, int>
         {
             public MType GetSZArrayType(MType elementType)
             {

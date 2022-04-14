@@ -90,7 +90,11 @@ namespace Robust.Shared.ContentPack
                 Logger.DebugS("res.mod", $"Found module '{fullPath}'");
 
                 using var asmFile = _res.ContentFileRead(fullPath);
-                var (asmRefs, asmName) = GetAssemblyReferenceData(asmFile);
+                var refData = GetAssemblyReferenceData(asmFile);
+                if (refData == null)
+                    continue;
+
+                var (asmRefs, asmName) = refData.Value;
 
                 if (!files.TryAdd(asmName, (fullPath, asmRefs)))
                 {
@@ -158,16 +162,46 @@ namespace Robust.Shared.ContentPack
             return true;
         }
 
-        private static (string[] refs, string name) GetAssemblyReferenceData(Stream stream)
+        private (string[] refs, string name)? GetAssemblyReferenceData(Stream stream)
         {
             using var reader = ModLoader.MakePEReader(stream);
             var metaReader = reader.GetMetadataReader();
 
             var name = metaReader.GetString(metaReader.GetAssemblyDefinition().Name);
 
+            // Try to find SkipIfSandboxedAttribute.
+
+            if (_sandboxingEnabled && TryFindSkipIfSandboxed(metaReader))
+            {
+                Logger.DebugS("res.mod", "Module {ModuleName} has SkipIfSandboxedAttribute, ignoring.", name);
+                return null;
+            }
+
             return (metaReader.AssemblyReferences
                 .Select(a => metaReader.GetAssemblyReference(a))
                 .Select(a => metaReader.GetString(a.Name)).ToArray(), name);
+        }
+
+        private static bool TryFindSkipIfSandboxed(MetadataReader reader)
+        {
+            foreach (var attribHandle in reader.CustomAttributes)
+            {
+                var attrib = reader.GetCustomAttribute(attribHandle);
+                if (attrib.Parent.Kind != HandleKind.AssemblyDefinition)
+                    continue;
+
+                var ctor = attrib.Constructor;
+                if (ctor.Kind != HandleKind.MemberReference)
+                    continue;
+
+                var memberRef = reader.GetMemberReference((MemberReferenceHandle) ctor);
+                var typeRef = AssemblyTypeChecker.ParseTypeReference(reader, (TypeReferenceHandle)memberRef.Parent);
+
+                if (typeRef.Namespace == "Robust.Shared.ContentPack" && typeRef.Name == "SkipIfSandboxedAttribute")
+                    return true;
+            }
+
+            return false;
         }
 
         public void LoadGameAssembly(Stream assembly, Stream? symbols = null, bool skipVerify = false)

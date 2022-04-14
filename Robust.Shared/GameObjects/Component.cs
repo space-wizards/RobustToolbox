@@ -35,7 +35,7 @@ namespace Robust.Shared.GameObjects
 
         /// <summary>
         /// Increases the life stage from <see cref="ComponentLifeStage.PreAdd" /> to <see cref="ComponentLifeStage.Added" />,
-        /// calling <see cref="OnAdd" />.
+        /// after raising a <see cref="ComponentAdd"/> event.
         /// </summary>
         internal void LifeAddToEntity(IEntityManager entManager)
         {
@@ -44,14 +44,7 @@ namespace Robust.Shared.GameObjects
             LifeStage = ComponentLifeStage.Adding;
             CreationTick = entManager.CurrentTick;
             entManager.EventBus.RaiseComponentEvent(this, CompAddInstance);
-            OnAdd();
-
-#if DEBUG
-            if (LifeStage != ComponentLifeStage.Added)
-            {
-                DebugTools.Assert($"Component {this.GetType().Name} did not call base {nameof(OnAdd)} in derived method.");
-            }
-#endif
+            LifeStage = ComponentLifeStage.Added;
         }
 
         /// <summary>
@@ -167,14 +160,6 @@ namespace Robust.Shared.GameObjects
         private static readonly ComponentRemove CompRemoveInstance = new();
 
         /// <summary>
-        /// Called when the component gets added to an entity.
-        /// </summary>
-        protected virtual void OnAdd()
-        {
-            LifeStage = ComponentLifeStage.Added;
-        }
-
-        /// <summary>
         /// Called when all of the entity's other components have been added and are available,
         /// But are not necessarily initialized yet. DO NOT depend on the values of other components to be correct.
         /// </summary>
@@ -218,22 +203,6 @@ namespace Robust.Shared.GameObjects
             IoCManager.Resolve(ref entManager);
             entManager.Dirty(this);
         }
-
-        /// <summary>
-        ///     Sends a message over the network to all other components on the networked entity. This works both ways.
-        ///     This is an alias of 'Owner.SendNetworkMessage(this, message);'
-        /// </summary>
-        /// <param name="message">Message to send.</param>
-        /// <param name="channel">Network channel to send the message over. If null, broadcast to all channels.</param>
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        protected void SendNetworkMessage(ComponentMessage message, INetChannel? channel = null)
-        {
-            IoCManager.Resolve<IEntityManager>().EntityNetManager?.SendComponentNetworkMessage(channel, Owner, this, message);
-        }
-
-        /// <inheritdoc />
-        [Obsolete("Component Messages are deprecated, use Entity Events instead.")]
-        public virtual void HandleNetworkMessage(ComponentMessage message, INetChannel netChannel, ICommonSession? session = null) { }
 
         private static readonly ComponentState DefaultComponentState = new();
 

@@ -46,84 +46,84 @@ namespace Robust.Benchmarks.Serialization
         [BenchmarkCategory("read")]
         public string[]? ReadEmptyString()
         {
-            return SerializationManager.ReadValue<string[]>(EmptyNode);
+            return SerializationManager.Read<string[]>(EmptyNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public string[]? ReadOneString()
         {
-            return SerializationManager.ReadValue<string[]>(OneIntNode);
+            return SerializationManager.Read<string[]>(OneIntNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public string[]? ReadTenStrings()
         {
-            return SerializationManager.ReadValue<string[]>(TenIntsNode);
+            return SerializationManager.Read<string[]>(TenIntsNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public int[]? ReadEmptyInt()
         {
-            return SerializationManager.ReadValue<int[]>(EmptyNode);
+            return SerializationManager.Read<int[]>(EmptyNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public int[]? ReadOneInt()
         {
-            return SerializationManager.ReadValue<int[]>(OneIntNode);
+            return SerializationManager.Read<int[]>(OneIntNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public int[]? ReadTenInts()
         {
-            return SerializationManager.ReadValue<int[]>(TenIntsNode);
+            return SerializationManager.Read<int[]>(TenIntsNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public DataDefinitionWithString[]? ReadEmptyStringDataDef()
         {
-            return SerializationManager.ReadValue<DataDefinitionWithString[]>(EmptyNode);
+            return SerializationManager.Read<DataDefinitionWithString[]>(EmptyNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public DataDefinitionWithString[]? ReadOneStringDataDef()
         {
-            return SerializationManager.ReadValue<DataDefinitionWithString[]>(OneStringDefNode);
+            return SerializationManager.Read<DataDefinitionWithString[]>(OneStringDefNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public DataDefinitionWithString[]? ReadTenStringDataDefs()
         {
-            return SerializationManager.ReadValue<DataDefinitionWithString[]>(TenStringDefsNode);
+            return SerializationManager.Read<DataDefinitionWithString[]>(TenStringDefsNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public SealedDataDefinitionWithString[]? ReadEmptySealedStringDataDef()
         {
-            return SerializationManager.ReadValue<SealedDataDefinitionWithString[]>(EmptyNode);
+            return SerializationManager.Read<SealedDataDefinitionWithString[]>(EmptyNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public SealedDataDefinitionWithString[]? ReadOneSealedStringDataDef()
         {
-            return SerializationManager.ReadValue<SealedDataDefinitionWithString[]>(OneStringDefNode);
+            return SerializationManager.Read<SealedDataDefinitionWithString[]>(OneStringDefNode);
         }
 
         [Benchmark]
         [BenchmarkCategory("read")]
         public SealedDataDefinitionWithString[]? ReadTenSealedStringDataDefs()
         {
-            return SerializationManager.ReadValue<SealedDataDefinitionWithString[]>(TenStringDefsNode);
+            return SerializationManager.Read<SealedDataDefinitionWithString[]>(TenStringDefsNode);
         }
     }
 }

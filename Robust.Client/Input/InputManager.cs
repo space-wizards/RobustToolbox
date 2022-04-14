@@ -497,7 +497,7 @@ namespace Robust.Client.Input
 
             if (robustMapping.TryGet("binds", out var BaseKeyRegsNode))
             {
-                var baseKeyRegs = serializationManager.ReadValueOrThrow<KeyBindingRegistration[]>(BaseKeyRegsNode);
+                var baseKeyRegs = serializationManager.Read<KeyBindingRegistration[]>(BaseKeyRegsNode);
 
                 foreach (var reg in baseKeyRegs)
                 {
@@ -526,7 +526,7 @@ namespace Robust.Client.Input
 
             if (userData && robustMapping.TryGet("leaveEmpty", out var node))
             {
-                var leaveEmpty = serializationManager.ReadValueOrThrow<BoundKeyFunction[]>(node);
+                var leaveEmpty = serializationManager.Read<BoundKeyFunction[]>(node);
 
                 if (leaveEmpty.Length > 0)
                 {

@@ -14,7 +14,6 @@ using Robust.Shared.Log;
 using Robust.Shared.Reflection;
 using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Manager.Definition;
-using Robust.Shared.Serialization.Manager.Result;
 using Robust.Shared.Serialization.Markdown;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.Markdown.Sequence;
@@ -304,39 +303,6 @@ namespace Robust.Shared.Serialization.Manager
             return ValidateNodeWith(typeof(TType), typeof(TSerializer), node, context);
         }
 
-        public DeserializationResult CreateDataDefinition<T>(DeserializedFieldEntry[] fields, bool skipHook = false)
-            where T : notnull, new()
-        {
-            var obj = new T();
-            return PopulateDataDefinition(obj, new DeserializedDefinition<T>(obj, fields), skipHook);
-        }
-
-        public DeserializationResult PopulateDataDefinition<T>(T obj, DeserializedDefinition<T> definition, bool skipHook = false)
-            where T : notnull, new()
-        {
-            return PopulateDataDefinition(obj, (IDeserializedDefinition) definition, skipHook);
-        }
-
-        public DeserializationResult PopulateDataDefinition(object obj, IDeserializedDefinition definition, bool skipHook = false)
-        {
-            if (!TryGetDefinition(obj.GetType(), out var dataDefinition))
-                throw new ArgumentException($"Provided Type is not a data definition ({obj.GetType()})");
-
-            if (obj is IPopulateDefaultValues populateDefaultValues)
-            {
-                populateDefaultValues.PopulateDefaultValues();
-            }
-
-            var res = dataDefinition.Populate(obj, definition.Mapping);
-
-            if (!skipHook && res.RawValue is ISerializationHooks serializationHooksAfter)
-            {
-                serializationHooksAfter.AfterDeserialization();
-            }
-
-            return res;
-        }
-
         internal DataDefinition? GetDefinition(Type type)
         {
             return DataDefinitions.TryGetValue(type, out var dataDefinition)
@@ -344,7 +310,7 @@ namespace Robust.Shared.Serialization.Manager
                 : null;
         }
 
-        private bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
+        internal bool TryGetDefinition(Type type, [NotNullWhen(true)] out DataDefinition? dataDefinition)
         {
             dataDefinition = GetDefinition(type);
             return dataDefinition != null;

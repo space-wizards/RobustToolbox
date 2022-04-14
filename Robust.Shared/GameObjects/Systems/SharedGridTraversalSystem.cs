@@ -42,11 +42,13 @@ namespace Robust.Shared.GameObjects
             var grids = EntityManager.GetEntityQuery<MapGridComponent>();
             var bodies = GetEntityQuery<PhysicsComponent>();
             var xforms = EntityManager.GetEntityQuery<TransformComponent>();
+            var metas = EntityManager.GetEntityQuery<MetaDataComponent>();
 
             while (_queuedEvents.TryPop(out var moveEvent))
             {
                 if (!_handledThisTick.Add(moveEvent.Sender)) continue;
-                HandleMove(ref moveEvent, xforms, bodies, maps, grids);
+
+                HandleMove(ref moveEvent, xforms, bodies, maps, grids, metas);
             }
 
             _handledThisTick.Clear();
@@ -57,11 +59,13 @@ namespace Robust.Shared.GameObjects
             EntityQuery<TransformComponent> xforms,
             EntityQuery<PhysicsComponent> bodies,
             EntityQuery<MapComponent> maps,
-            EntityQuery<MapGridComponent> grids)
+            EntityQuery<MapGridComponent> grids,
+            EntityQuery<MetaDataComponent> metas)
         {
             var entity = moveEvent.Sender;
 
-            if (Deleted(entity) ||
+            if (!metas.TryGetComponent(entity, out MetaDataComponent? meta) ||
+                meta.EntityDeleted ||
                 maps.HasComponent(entity) ||
                 grids.HasComponent(entity))
             {
@@ -71,7 +75,7 @@ namespace Robust.Shared.GameObjects
             var xform = xforms.GetComponent(entity);
             DebugTools.Assert(!float.IsNaN(moveEvent.NewPosition.X) && !float.IsNaN(moveEvent.NewPosition.Y));
 
-            if (_container.IsEntityInContainer(entity, xform)) return;
+            if ((meta.Flags & MetaDataFlags.InContainer) == MetaDataFlags.InContainer) return;
 
             var mapPos = moveEvent.NewPosition.ToMapPos(EntityManager);
             _gridBuffer.Clear();

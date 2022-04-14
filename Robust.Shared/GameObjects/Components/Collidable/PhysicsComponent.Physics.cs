@@ -87,6 +87,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         internal LinkedList<Contact> Contacts = new();
 
+        [DataField("ignorePaused"), ViewVariables(VVAccess.ReadWrite)]
         public bool IgnorePaused { get; set; }
 
         internal SharedPhysicsMapComponent? PhysicsMap { get; set; }
@@ -113,7 +114,8 @@ namespace Robust.Shared.GameObjects
                     _angularVelocity = 0.0f;
                     // SynchronizeFixtures(); TODO: When CCD
                 }
-                else
+                // Even if it's dynamic if it can't collide then don't force it awake.
+                else if (_canCollide)
                 {
                     SetAwake(true);
                 }

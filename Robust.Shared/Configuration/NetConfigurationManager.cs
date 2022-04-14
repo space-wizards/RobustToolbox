@@ -190,6 +190,8 @@ namespace Robust.Shared.Configuration
                 return;
             }
 
+            using var _ = Lock.ReadGuard();
+
             foreach (var (name, value) in networkedVars)
             {
                 if (!_configVars.TryGetValue(name, out var cVar))
@@ -219,6 +221,8 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public T GetClientCVar<T>(INetChannel channel, string name)
         {
+            using var _ = Lock.ReadGuard();
+
             if (!_configVars.TryGetValue(name, out var cVar) || !cVar.Registered)
                 throw new InvalidConfigurationException($"Trying to get unregistered variable '{name}'");
 
@@ -233,42 +237,45 @@ namespace Robust.Shared.Configuration
         /// <inheritdoc />
         public override void SetCVar(string name, object value)
         {
-            if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
+            CVar flags;
+            using (Lock.ReadGuard())
             {
-                if (_netManager.IsClient)
+                if (_configVars.TryGetValue(name, out var cVar) && cVar.Registered)
                 {
-                    if (_netManager.IsConnected)
+                    flags = cVar.Flags;
+                    if (_netManager.IsClient)
                     {
-                        if ((cVar.Flags & CVar.NOT_CONNECTED) != 0)
+                        if (_netManager.IsConnected)
                         {
-                            Logger.WarningS("cfg", $"'{name}' can only be changed when not connected to a server.");
+                            if ((cVar.Flags & CVar.NOT_CONNECTED) != 0)
+                            {
+                                Logger.WarningS("cfg", $"'{name}' can only be changed when not connected to a server.");
+                                return;
+                            }
+                        }
+
+                        if ((cVar.Flags & CVar.SERVER) != 0)
+                        {
+                            Logger.WarningS("cfg", $"Only the server can change '{name}'.");
                             return;
                         }
                     }
-
-                    if ((cVar.Flags & CVar.SERVER) != 0)
-                    {
-                        Logger.WarningS("cfg", $"Only the server can change '{name}'.");
-                        return;
-                    }
                 }
-            }
-            else
-            {
-                throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+                else
+                {
+                    throw new InvalidConfigurationException($"Trying to set unregistered variable '{name}'");
+                }
             }
 
             // Actually set the CVar
             base.SetCVar(name, value);
 
-            var cvar = _configVars[name];
+            if ((flags & CVar.REPLICATED) == 0)
+                return;
 
             // replicate if needed
             if (_netManager.IsClient)
             {
-                if ((cvar.Flags & CVar.REPLICATED) == 0)
-                    return;
-
                 var msg = _netManager.CreateNetMessage<MsgConVars>();
                 msg.Tick = _timing.CurTick;
                 msg.NetworkedVars = new List<(string name, object value)>
@@ -279,9 +286,6 @@ namespace Robust.Shared.Configuration
             }
             else // Server
             {
-                if ((cvar.Flags & CVar.REPLICATED) == 0)
-                    return;
-
                 var msg = _netManager.CreateNetMessage<MsgConVars>();
                 msg.Tick = _timing.CurTick;
                 msg.NetworkedVars = new List<(string name, object value)>
@@ -327,6 +331,8 @@ namespace Robust.Shared.Configuration
 
         private List<(string name, object value)> GetReplicatedVars()
         {
+            using var _ = Lock.ReadGuard();
+
             var nwVars = new List<(string name, object value)>();
 
             foreach (var cVar in _configVars.Values)

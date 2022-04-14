@@ -44,15 +44,17 @@ public sealed class MetaDataSystem : EntitySystem
     /// </summary>
     public void RemoveFlag(EntityUid uid, MetaDataFlags flags, MetaDataComponent? component = null)
     {
-        if (!Resolve(uid, ref component) ||
-            (component.Flags & flags) == 0x0) return;
+        if (!Resolve(uid, ref component))
+            return;
 
-        var ev = new MetaFlagRemoveAttemptEvent();
+        var toRemove = component.Flags & flags;
+        if (toRemove == 0x0)
+            return;
+
+        var ev = new MetaFlagRemoveAttemptEvent(toRemove);
         EntityManager.EventBus.RaiseLocalEvent(component.Owner, ref ev);
 
-        if (ev.Cancelled) return;
-
-        component.Flags &= ~flags;
+        component.Flags &= ~ev.ToRemove;
     }
 }
 
@@ -62,9 +64,10 @@ public sealed class MetaDataSystem : EntitySystem
 [ByRefEvent]
 public struct MetaFlagRemoveAttemptEvent
 {
-    public bool Cancelled = false;
+    public MetaDataFlags ToRemove;
 
-    public MetaFlagRemoveAttemptEvent()
+    public MetaFlagRemoveAttemptEvent(MetaDataFlags toRemove)
     {
+        ToRemove = toRemove;
     }
 }

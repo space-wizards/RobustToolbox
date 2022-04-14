@@ -21,7 +21,6 @@ using Robust.Shared;
 using Robust.Shared.Asynchronous;
 using Robust.Shared.Configuration;
 using Robust.Shared.ContentPack;
-using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Map;
@@ -131,8 +130,9 @@ namespace Robust.Client
             _inputManager.Initialize();
             _console.Initialize();
             _prototypeManager.Initialize();
+            _prototypeManager.LoadDirectory(new ResourcePath("/EnginePrototypes/"));
             _prototypeManager.LoadDirectory(Options.PrototypeDirectory);
-            _prototypeManager.Resync();
+            _prototypeManager.ResolveResults();
             _entityManager.Initialize();
             _mapManager.Initialize();
             _gameStateManager.Initialize();

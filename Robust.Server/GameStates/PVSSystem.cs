@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -84,11 +83,11 @@ internal sealed partial class PVSSystem : EntitySystem
 
     private readonly ObjectPool<Dictionary<MapChunkLocation, int>> _mapChunkPool =
         new DefaultObjectPool<Dictionary<MapChunkLocation, int>>(
-            new ChunkPoolPolicy<MapChunkLocation>(), 256);
+            new ChunkPoolPolicy<MapChunkLocation>(), MaxVisPoolSize);
 
     private readonly ObjectPool<Dictionary<GridChunkLocation, int>> _gridChunkPool =
         new DefaultObjectPool<Dictionary<GridChunkLocation, int>>(
-            new ChunkPoolPolicy<GridChunkLocation>(), 256);
+            new ChunkPoolPolicy<GridChunkLocation>(), MaxVisPoolSize);
 
     private readonly Dictionary<uint, Dictionary<MapChunkLocation, int>> _mapIndices = new(4);
     private readonly Dictionary<uint, Dictionary<GridChunkLocation, int>> _gridIndices = new(4);
@@ -114,6 +113,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
+        SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
         SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
@@ -123,6 +123,17 @@ internal sealed partial class PVSSystem : EntitySystem
         InitializeDirty();
     }
 
+    private void OnParentChange(ref EntParentChangedMessage ev)
+    {
+        if (_mapManager.IsGrid(ev.Entity) || _mapManager.IsMap(ev.Entity)) return;
+
+        // If parent changes then the RobustTree for that chunk will no longer be valid and we need to force it as dirty.
+        // Should still be at its old location as moveevent is called after.
+        var xform = Transform(ev.Entity);
+        var coordinates = _transform.GetMoverCoordinates(xform);
+        var index = _entityPvsCollection.GetChunkIndex(coordinates);
+        _entityPvsCollection.MarkDirty(index);
+    }
 
     public override void Shutdown()
     {
@@ -174,6 +185,11 @@ internal sealed partial class PVSSystem : EntitySystem
         }
 
         CleanupDirty(playerSessions);
+
+        foreach (var collection in _pvsCollections)
+        {
+            collection.ClearDirty();
+        }
     }
 
     public void CullDeletionHistory(GameTick oldestAck)
@@ -335,6 +351,8 @@ internal sealed partial class PVSSystem : EntitySystem
             foreach (var eyeEuid in viewers)
             {
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
+
+                if(mapId == MapId.Nullspace) continue;
 
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
@@ -582,6 +600,14 @@ internal sealed partial class PVSSystem : EntitySystem
         foreach (var viewerEntity in viewerEntities)
         {
             RecursivelyAddOverride(in viewerEntity, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
+                ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
+        }
+
+        var expandEvent = new ExpandPvsEvent(session, new List<EntityUid>());
+        RaiseLocalEvent(ref expandEvent);
+        foreach (var entityUid in expandEvent.Entities)
+        {
+            RecursivelyAddOverride(in entityUid, seenSet, playerVisibleSet, visibleEnts, fromTick, ref newEntitiesSent,
                 ref entitiesSent, mQuery, tQuery, in enteredEntityBudget, in newEntityBudget);
         }
 

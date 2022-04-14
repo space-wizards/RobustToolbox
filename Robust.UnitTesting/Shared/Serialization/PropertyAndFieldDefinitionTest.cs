@@ -35,7 +35,7 @@ namespace Robust.UnitTesting.Shared.Serialization
             mapping.Add(GetOnlyPropertyWithOtherAttributeFieldTargetedName, new ValueDataNode("25"));
             mapping.Add(GetOnlyPropertyFieldTargetedAndOtherAttributeName, new ValueDataNode("30"));
 
-            var definition = Serialization.ReadValue<PropertyAndFieldDefinitionTestDefinition>(mapping);
+            var definition = Serialization.Read<PropertyAndFieldDefinitionTestDefinition>(mapping);
 
             Assert.NotNull(definition);
 

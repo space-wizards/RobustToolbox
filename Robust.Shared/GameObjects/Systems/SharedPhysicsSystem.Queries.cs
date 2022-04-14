@@ -95,6 +95,45 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <summary>
+        ///     Get all the entities whose fixtures intersect the fixtures of the given entity. Basically a variant of
+        ///     <see cref="GetCollidingEntities(PhysicsComponent, Vector2, bool)"/> that allows the user to specify
+        ///     their own collision mask.
+        /// </summary>
+        public HashSet<EntityUid> GetEntitiesIntersectingBody(
+            EntityUid uid,
+            int collisionMask,
+            bool approximate = true,
+            PhysicsComponent? body = null,
+            FixturesComponent? fixtureComp = null)
+        {
+            var entities = new HashSet<EntityUid>();
+
+            if (!Resolve(uid, ref body, ref fixtureComp, false) || body.Broadphase == null)
+                return entities;
+
+            var state = (body, entities);
+
+            foreach (var (_, fixture) in fixtureComp.Fixtures)
+            {
+                foreach (var proxy in fixture.Proxies)
+                {
+                    body.Broadphase.Tree.QueryAabb(ref state,
+                        (ref (PhysicsComponent body, HashSet<EntityUid> entities) state,
+                            in FixtureProxy other) =>
+                        {
+                            if (other.Fixture.Body.Deleted || other.Fixture.Body == body) return true;
+                            if ((collisionMask & other.Fixture.CollisionLayer) == 0x0) return true;
+
+                            state.entities.Add(other.Fixture.Body.Owner);
+                            return true;
+                        }, proxy.AABB, approximate);
+                }
+            }
+
+            return entities;
+        }
+
+        /// <summary>
         /// Get all entities colliding with a certain body.
         /// </summary>
         public IEnumerable<PhysicsComponent> GetCollidingEntities(MapId mapId, in Box2 worldAABB)

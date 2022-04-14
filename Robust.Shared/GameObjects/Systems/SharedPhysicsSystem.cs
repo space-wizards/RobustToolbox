@@ -114,7 +114,9 @@ namespace Robust.Shared.GameObjects
 
         private void OnParentChange(EntityUid uid, PhysicsComponent body, ref EntParentChangedMessage args)
         {
-            if (LifeStage(uid) < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
+            var meta = MetaData(uid);
+
+            if (meta.EntityLifeStage < EntityLifeStage.Initialized || !TryComp(uid, out TransformComponent? xform))
             {
                 return;
             }
@@ -123,15 +125,13 @@ namespace Robust.Shared.GameObjects
                 _broadphase.UpdateBroadphase(body, xform: xform);
 
             // Handle map change
-            var oldMapId = _transform.GetMapId(args.OldParent);
             var mapId = _transform.GetMapId(args.Entity);
 
-            if (oldMapId != mapId)
-            {
-                HandleMapChange(body, xform, oldMapId, mapId);
-            }
+            if (args.OldMapId != mapId)
+                HandleMapChange(body, xform, args.OldMapId, mapId);
 
-            HandleParentChangeVelocity(uid, body, ref args, xform);
+            if (mapId != MapId.Nullspace && !_container.IsEntityInContainer(uid, meta))
+                HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 
         private void HandleMapChange(PhysicsComponent body, TransformComponent xform, MapId oldMapId, MapId mapId)
@@ -159,10 +159,10 @@ namespace Robust.Shared.GameObjects
                 map.AddBody(body);
             }
 
-            if (_mapManager.IsGrid(body.Owner) ||
-                _mapManager.IsMap(body.Owner) ||
-                xform.ChildCount == 0 ||
-                (oldMap == null && map == null)) return;
+            if (xform.ChildCount == 0 ||
+                (oldMap == null && map == null) ||
+                _mapManager.IsGrid(body.Owner) ||
+                _mapManager.IsMap(body.Owner)) return;
 
             var xformQuery = GetEntityQuery<TransformComponent>();
             var bodyQuery = GetEntityQuery<PhysicsComponent>();

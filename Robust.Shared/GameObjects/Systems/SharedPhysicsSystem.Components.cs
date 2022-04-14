@@ -8,7 +8,8 @@ public partial class SharedPhysicsSystem
 {
     public void SetLinearVelocity(PhysicsComponent body, Vector2 velocity)
     {
-        if (body.BodyType == BodyType.Static) return;
+        if (body.BodyType == BodyType.Static ||
+            !body.CanCollide) return;
 
         if (Vector2.Dot(velocity, velocity) > 0.0f)
             body.Awake = true;

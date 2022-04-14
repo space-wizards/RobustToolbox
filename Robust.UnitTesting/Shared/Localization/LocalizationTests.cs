@@ -27,13 +27,13 @@ namespace Robust.UnitTesting.Shared.Localization
 
             var res = IoCManager.Resolve<IResourceManagerInternal>();
             res.MountString("/Locale/en-US/a.ftl", FluentCode);
-            res.MountString("/Prototypes/a.yml", YAMLCode);
+            res.MountString("/EnginePrototypes/a.yml", YAMLCode);
 
             var protoMan = IoCManager.Resolve<IPrototypeManager>();
 
             protoMan.RegisterType(typeof(EntityPrototype));
-            protoMan.LoadDirectory(new ResourcePath("/Prototypes"));
-            protoMan.Resync();
+            protoMan.LoadDirectory(new ResourcePath("/EnginePrototypes"));
+            protoMan.ResolveResults();
 
             var loc = IoCManager.Resolve<ILocalizationManager>();
             var culture = new CultureInfo("en-US", false);

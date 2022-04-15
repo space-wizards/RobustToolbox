@@ -188,6 +188,33 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
+#if DEBUG
+        /// <summary>
+        /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
+        /// 0 = no packet loss, 1 = all packets dropped
+        /// </summary>
+        public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add fake extra delay to all outgoing UDP network packets, in seconds.
+        /// </summary>
+        /// <seealso cref="NetFakeLagRand"/>
+        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add fake extra random delay to all outgoing UDP network packets, in seconds.
+        /// The actual delay added for each packet is random between 0 and the specified value.
+        /// </summary>
+        /// <seealso cref="NetFakeLagMin"/>
+        public static readonly CVarDef<float> NetFakeLagRand = CVarDef.Create("net.fakelagrand", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add random fake duplicates to all outgoing UDP network packets, as a ratio of how many packets to duplicate.
+        /// 0 = no packets duplicated, 1 = all packets duplicated.
+        /// </summary>
+        public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
+#endif
+
         /**
          * SUS
          */
@@ -217,33 +244,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
-
-#if DEBUG
-        /// <summary>
-        /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
-        /// 0 = no packet loss, 1 = all packets dropped
-        /// </summary>
-        public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add fake extra delay to all outgoing UDP network packets, in seconds.
-        /// </summary>
-        /// <seealso cref="NetFakeLagRand"/>
-        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add fake extra random delay to all outgoing UDP network packets, in seconds.
-        /// The actual delay added for each packet is random between 0 and the specified value.
-        /// </summary>
-        /// <seealso cref="NetFakeLagMin"/>
-        public static readonly CVarDef<float> NetFakeLagRand = CVarDef.Create("net.fakelagrand", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add random fake duplicates to all outgoing UDP network packets, as a ratio of how many packets to duplicate.
-        /// 0 = no packets duplicated, 1 = all packets duplicated.
-        /// </summary>
-        public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /*
          * METRICS

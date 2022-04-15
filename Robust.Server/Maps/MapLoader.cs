@@ -866,15 +866,16 @@ namespace Robust.Server.Maps
 
                     var md = metaQuery.GetComponent(entityUid);
 
+                    Dictionary<string, MappingDataNode>? cache = null;
                     if (md.EntityPrototype is {} prototype)
                     {
                         mapping.Add("type", prototype.ID);
-                        if (!prototypeCompCache.ContainsKey(prototype.ID))
+                        if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
                         {
-                            prototypeCompCache[prototype.ID] = new Dictionary<string, MappingDataNode>();
+                            prototypeCompCache[prototype.ID] = cache =  new Dictionary<string, MappingDataNode>();
                             foreach (var (compType, comp) in prototype.Components)
                             {
-                                prototypeCompCache[prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                                cache.Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
                             }
                         }
                     }
@@ -892,8 +893,10 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = compName;
                         var compMapping = serializationManager.WriteValueAs<MappingDataNode>(compType, component, context: this);
 
-                        if (md.EntityPrototype != null && prototypeCompCache[md.EntityPrototype.ID].TryGetValue(compName, out var protMapping))
+                        if (cache != null && cache.TryGetValue(compName, out var protMapping))
                         {
+                            // This will NOT recursively call Except() on the values of the mapping. It will only remove
+                            // key-value pairs if both the keys and values are equal.
                             compMapping = compMapping.Except(protMapping);
                             if(compMapping == null) continue;
                         }

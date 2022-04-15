@@ -2,6 +2,7 @@ using System.IO;
 using Lidgren.Network;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
+using Robust.Shared.Utility;
 using Robust.Shared.ViewVariables;
 
 #nullable disable
@@ -46,13 +47,12 @@ namespace Robust.Shared.Network.Messages
             buffer.Write(RequestId);
             buffer.Write(SessionId);
             var serializer = IoCManager.Resolve<IRobustSerializer>();
-            using (var stream = new MemoryStream())
-            {
-                serializer.Serialize(stream, RequestMeta);
-                buffer.Write((int)stream.Length);
-                stream.TryGetBuffer(out var segment);
-                buffer.Write(segment);
-            }
+
+            var stream = new MemoryStream();
+            serializer.Serialize(stream, RequestMeta);
+
+            buffer.Write((int)stream.Length);
+            buffer.Write(stream.AsSpan());
         }
     }
 }

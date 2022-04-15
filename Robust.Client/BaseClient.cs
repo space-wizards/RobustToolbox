@@ -74,7 +74,7 @@ namespace Robust.Client
         {
             if (RunLevel == ClientRunLevel.Connecting)
             {
-                _net.Shutdown("Client mashing that connect button.");
+                _net.Reset("Client mashing that connect button.");
                 Reset();
             }
 

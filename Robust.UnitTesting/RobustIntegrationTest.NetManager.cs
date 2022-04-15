@@ -83,6 +83,11 @@ namespace Robust.UnitTesting
 
             public void Shutdown(string reason)
             {
+                Reset(reason);
+            }
+
+            public void Reset(string reason)
+            {
                 foreach (var channel in _channels.Values.ToList())
                 {
                     channel.Disconnect(reason);

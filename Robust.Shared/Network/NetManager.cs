@@ -375,11 +375,12 @@ namespace Robust.Shared.Network
                 InitUpnp();
         }
 
-        /// <inheritdoc />
-        public void Shutdown(string reason)
+        public void Reset(string reason)
         {
             foreach (var kvChannel in _channels)
+            {
                 DisconnectChannel(kvChannel.Value, reason);
+            }
 
             // request shutdown of the netPeer
             _netPeers.ForEach(p => p.Peer.Shutdown(reason));
@@ -398,10 +399,22 @@ namespace Robust.Shared.Network
 
             // Clear cached message functions.
             Array.Clear(_netMsgFunctions, 0, _netMsgFunctions.Length);
-            _blankNetMsgFunctions.Clear();
+
             // Clear string table.
             // This has to be done AFTER clearing _netMsgFunctions so that it re-initializes NetMsg 0.
             _strings.Reset();
+
+            _cancelConnectTokenSource?.Cancel();
+            ClientConnectState = ClientConnectionState.NotConnecting;
+        }
+
+        /// <inheritdoc />
+        public void Shutdown(string reason)
+        {
+            Reset(reason);
+
+            _blankNetMsgFunctions.Clear();
+
             _messages.Clear();
 
             _config.UnsubValueChanged(CVars.NetVerbose, NetVerboseChanged);
@@ -417,9 +430,6 @@ namespace Robust.Shared.Network
 #endif
 
             _serializer.ClientHandshakeComplete -= OnSerializerOnClientHandshakeComplete;
-
-            _cancelConnectTokenSource?.Cancel();
-            ClientConnectState = ClientConnectionState.NotConnecting;
 
             ConnectFailed = null;
             Connected = null;
@@ -555,7 +565,7 @@ namespace Robust.Shared.Network
                 Disconnect?.Invoke(this, new NetDisconnectedArgs(ServerChannel, reason));
             }
 
-            Shutdown(reason);
+            Reset(reason);
         }
 
         private NetPeerConfiguration _getBaseNetPeerConfig()

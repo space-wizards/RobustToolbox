@@ -18,8 +18,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using HttpListener = ManagedHttpListener.HttpListener;
-using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
+using HttpListener = SpaceWizards.HttpListener.HttpListener;
+using HttpListenerContext = SpaceWizards.HttpListener.HttpListenerContext;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.

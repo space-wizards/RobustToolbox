@@ -137,6 +137,12 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
+        /// ZSTD compression level to use when compressing game states.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSCompressLevel =
+            CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
+
+        /// <summary>
         /// Log late input messages from clients.
         /// </summary>
         public static readonly CVarDef<bool> NetLogLateMsg =

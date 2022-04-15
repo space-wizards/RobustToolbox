@@ -1145,5 +1145,15 @@ namespace Robust.Shared
         public static readonly CVarDef<int> AczManifestCompressLevel =
             CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
 
+        /*
+         * THREAD
+         */
+
+        /// <summary>
+        /// The nominal parallel processing count to use for parallelized operations.
+        /// The default of 0 automatically selects the system's processor count.
+        /// </summary>
+        public static readonly CVarDef<int> ThreadParallelCount =
+            CVarDef.Create("thread.parallel_count", 0);
     }
 }

@@ -10,9 +10,17 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Set
 {
-    public sealed class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
+    public sealed class AbstractPrototypeIdHashSetSerializer<TPrototype> : PrototypeIdHashSetSerializer<TPrototype>
+        where TPrototype : class, IPrototype
     {
-        private readonly PrototypeIdSerializer<TPrototype> _prototypeSerializer = new();
+        protected override PrototypeIdSerializer<TPrototype> PrototypeSerializer =>
+            new AbstractPrototypeIdSerializer<TPrototype>();
+    }
+
+    [Virtual]
+    public class PrototypeIdHashSetSerializer<TPrototype> : ITypeSerializer<HashSet<string>, SequenceDataNode> where TPrototype : class, IPrototype
+    {
+        protected virtual PrototypeIdSerializer<TPrototype> PrototypeSerializer => new();
 
         public ValidationNode Validate(ISerializationManager serializationManager, SequenceDataNode node, IDependencyCollection dependencies, ISerializationContext? context = null)
         {
@@ -26,7 +34,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(_prototypeSerializer.Validate(serializationManager, value, dependencies, context));
+                list.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context));
             }
 
             return new ValidatedSequenceNode(list);
@@ -40,7 +48,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var dataNode in node.Sequence)
             {
-                set.Add(_prototypeSerializer.Read(
+                set.Add(PrototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
@@ -57,7 +65,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var str in value)
             {
-                list.Add(_prototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
+                list.Add(PrototypeSerializer.Write(serializationManager, str, alwaysWrite, context));
             }
 
             return new SequenceDataNode(list);

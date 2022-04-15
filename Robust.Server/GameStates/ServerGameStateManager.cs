@@ -219,7 +219,7 @@ namespace Robust.Server.GameStates
                 InterlockedHelper.Min(ref oldestAckValue, lastAck.Value);
 
                 // actually send the state
-                var stateUpdateMessage = _networkManager.CreateNetMessage<MsgState>();
+                var stateUpdateMessage = new MsgState();
                 stateUpdateMessage.State = state;
 
                 // If the state is too big we let Lidgren send it reliably.

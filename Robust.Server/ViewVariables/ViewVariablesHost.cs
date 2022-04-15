@@ -91,7 +91,7 @@ namespace Robust.Server.ViewVariables
 
             var blob = session.DataRequest(message.RequestMeta);
 
-            var dataMsg = _netManager.CreateNetMessage<MsgViewVariablesRemoteData>();
+            var dataMsg = new MsgViewVariablesRemoteData();
             dataMsg.RequestId = message.RequestId;
             dataMsg.Blob = blob;
             _netManager.ServerSendMessage(dataMsg, message.MsgChannel);
@@ -101,7 +101,7 @@ namespace Robust.Server.ViewVariables
         {
             void Deny(DenyReason reason)
             {
-                var denyMsg = _netManager.CreateNetMessage<MsgViewVariablesDenySession>();
+                var denyMsg = new MsgViewVariablesDenySession();
                 denyMsg.RequestId = message.RequestId;
                 denyMsg.Reason = reason;
                 _netManager.ServerSendMessage(denyMsg, message.MsgChannel);
@@ -217,7 +217,7 @@ namespace Robust.Server.ViewVariables
 
             _sessions.Add(sessionId, session);
 
-            var allowMsg = _netManager.CreateNetMessage<MsgViewVariablesOpenSession>();
+            var allowMsg = new MsgViewVariablesOpenSession();
             allowMsg.RequestId = message.RequestId;
             allowMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(allowMsg, message.MsgChannel);
@@ -245,7 +245,7 @@ namespace Robust.Server.ViewVariables
                 return;
             }
 
-            var closeMsg = _netManager.CreateNetMessage<MsgViewVariablesCloseSession>();
+            var closeMsg = new MsgViewVariablesCloseSession();
             closeMsg.SessionId = session.SessionId;
             _netManager.ServerSendMessage(closeMsg, player.ConnectedClient);
         }

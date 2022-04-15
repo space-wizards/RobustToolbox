@@ -106,10 +106,6 @@ namespace Robust.Shared.Network
         // Used for processing incoming net messages.
         private readonly NetMsgEntry[] _netMsgFunctions = new NetMsgEntry[256];
 
-        // Used for processing outgoing net messages.
-        private readonly Dictionary<Type, Func<NetMessage>> _blankNetMsgFunctions =
-            new();
-
         private readonly Dictionary<Type, long> _bandwidthUsage = new();
 
         [Dependency] private readonly IConfigurationManagerInternal _config = default!;
@@ -412,8 +408,6 @@ namespace Robust.Shared.Network
         public void Shutdown(string reason)
         {
             Reset(reason);
-
-            _blankNetMsgFunctions.Clear();
 
             _messages.Clear();
 
@@ -990,45 +984,13 @@ namespace Robust.Shared.Network
                     CacheNetMsgFunction((byte) id);
                 }
             }
-
-            // This means we *will* be caching creation delegates for messages that are never sent (by this side).
-            // But it means the caching logic isn't behind a TryGetValue in CreateNetMessage<T>,
-            // so it no thread safety crap.
-            CacheBlankFunction(typeof(T));
         }
 
         /// <inheritdoc />
         public T CreateNetMessage<T>()
-            where T : NetMessage
+            where T : NetMessage, new()
         {
-            return (T) _blankNetMsgFunctions[typeof(T)]();
-        }
-
-        private void CacheBlankFunction(Type type)
-        {
-            var dynamicMethod = new DynamicMethod($"_netMsg<>{type.Name}", typeof(NetMessage), Array.Empty<Type>(),
-                type, false);
-            var gen = dynamicMethod.GetILGenerator().GetRobustGen();
-
-            // Obsolete path for content
-            if (type.GetConstructor(new[] {typeof(INetChannel)}) is { } constructor)
-            {
-                gen.Emit(OpCodes.Ldnull);
-                gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Ret);
-            }
-            else
-            {
-                constructor = type.GetConstructor(Type.EmptyTypes)!;
-                DebugTools.AssertNotNull(constructor);
-
-                gen.Emit(OpCodes.Newobj, constructor);
-                gen.Emit(OpCodes.Ret);
-            }
-
-            var @delegate = (Func<NetMessage>) dynamicMethod.CreateDelegate(typeof(Func<NetMessage>));
-
-            _blankNetMsgFunctions.Add(type, @delegate);
+            return new T();
         }
 
         private NetOutgoingMessage BuildMessage(NetMessage message, NetPeer peer)

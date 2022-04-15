@@ -287,7 +287,7 @@ namespace Robust.UnitTesting
                     _callbacks.Add(typeof(T), msg => rxCallback((T) msg));
             }
 
-            public T CreateNetMessage<T>() where T : NetMessage
+            public T CreateNetMessage<T>() where T : NetMessage, new()
             {
                 var type = typeof(T);
 
@@ -429,7 +429,7 @@ namespace Robust.UnitTesting
                     RemoteUid = remoteUid;
                 }
 
-                public T CreateNetMessage<T>() where T : NetMessage
+                public T CreateNetMessage<T>() where T : NetMessage, new()
                 {
                     return _owner.CreateNetMessage<T>();
                 }

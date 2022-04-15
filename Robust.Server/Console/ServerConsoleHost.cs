@@ -33,7 +33,7 @@ namespace Robust.Server.Console
             if (!NetManager.IsConnected || session is null)
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            var msg = new MsgConCmd();
             msg.Text = command;
             NetManager.ServerSendMessage(msg, ((IPlayerSession)session).ConnectedClient);
         }
@@ -121,7 +121,7 @@ namespace Robust.Server.Console
         private void HandleRegistrationRequest(INetChannel senderConnection)
         {
             var netMgr = IoCManager.Resolve<IServerNetManager>();
-            var message = netMgr.CreateNetMessage<MsgConCmdReg>();
+            var message = new MsgConCmdReg();
 
             var counter = 0;
             message.Commands = new MsgConCmdReg.Command[RegisteredCommands.Count];
@@ -154,7 +154,7 @@ namespace Robust.Server.Console
         {
             if (session != null)
             {
-                var replyMsg = NetManager.CreateNetMessage<MsgConCmdAck>();
+                var replyMsg = new MsgConCmdAck();
                 replyMsg.Error = error;
                 replyMsg.Text = text;
                 NetManager.ServerSendMessage(replyMsg, session.ConnectedClient);

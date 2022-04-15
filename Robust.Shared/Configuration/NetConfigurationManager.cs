@@ -276,7 +276,7 @@ namespace Robust.Shared.Configuration
             // replicate if needed
             if (_netManager.IsClient)
             {
-                var msg = _netManager.CreateNetMessage<MsgConVars>();
+                var msg = new MsgConVars();
                 msg.Tick = _timing.CurTick;
                 msg.NetworkedVars = new List<(string name, object value)>
                 {
@@ -286,7 +286,7 @@ namespace Robust.Shared.Configuration
             }
             else // Server
             {
-                var msg = _netManager.CreateNetMessage<MsgConVars>();
+                var msg = new MsgConVars();
                 msg.Tick = _timing.CurTick;
                 msg.NetworkedVars = new List<(string name, object value)>
                 {
@@ -304,7 +304,7 @@ namespace Robust.Shared.Configuration
 
             Logger.InfoS("cfg", $"{client}: Sending server info...");
 
-            var msg = _netManager.CreateNetMessage<MsgConVars>();
+            var msg = new MsgConVars();
             msg.Tick = _timing.CurTick;
             msg.NetworkedVars = GetReplicatedVars();
             _netManager.ServerSendMessage(msg, client);
@@ -318,7 +318,7 @@ namespace Robust.Shared.Configuration
 
             Logger.InfoS("cfg", "Sending client info...");
 
-            var msg = _netManager.CreateNetMessage<MsgConVars>();
+            var msg = new MsgConVars();
             msg.Tick = default;
             msg.NetworkedVars = GetReplicatedVars();
             _netManager.ClientSendMessage(msg);

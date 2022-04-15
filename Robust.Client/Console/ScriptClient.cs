@@ -65,7 +65,7 @@ namespace Robust.Client.Console
                 throw new InvalidOperationException("We do not have scripting permission.");
             }
 
-            var msg = _netManager.CreateNetMessage<MsgScriptStart>();
+            var msg = new MsgScriptStart();
             msg.ScriptSession = _nextSessionId++;
             _netManager.ClientSendMessage(msg);
         }
@@ -74,7 +74,7 @@ namespace Robust.Client.Console
         {
             _activeConsoles.Remove(session);
 
-            var msg = _netManager.CreateNetMessage<MsgScriptStop>();
+            var msg = new MsgScriptStop();
             msg.ScriptSession = session;
             _netManager.ClientSendMessage(msg);
         }

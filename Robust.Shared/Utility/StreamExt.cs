@@ -98,5 +98,28 @@ namespace Robust.Shared.Utility
                     return totalRead;
             }
         }
+
+        /// <summary>
+        /// Gets the span over the currently filled region of the memory stream, based on its length.
+        /// </summary>
+        public static Span<byte> AsSpan(this MemoryStream ms)
+        {
+            // Let it be forever immortalized that, while I was writing this function,
+            // Julian suggested that I should name it "AssSpan" to test if that would slip through review.
+
+            var buf = ms.GetBuffer();
+
+            return buf.AsSpan(0, (int) ms.Length);
+        }
+
+        /// <summary>
+        /// Gets the memory over the currently filled region of the memory stream, based on its length.
+        /// </summary>
+        public static Memory<byte> AsMemory(this MemoryStream ms)
+        {
+            var buf = ms.GetBuffer();
+
+            return buf.AsMemory(0, (int) ms.Length);
+        }
     }
 }

@@ -51,8 +51,7 @@ namespace Robust.Shared.Network.Messages
                 serializer.SerializeDirect(memoryStream, Response);
 
                 buffer.WriteVariableInt32((int)memoryStream.Length);
-                memoryStream.TryGetBuffer(out var segment);
-                buffer.Write(segment);
+                buffer.Write(memoryStream.AsSpan());
             }
         }
     }

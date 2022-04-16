@@ -28,6 +28,7 @@ using Robust.Shared.Network;
 using Robust.Shared.Prototypes;
 using Robust.Shared.Serialization;
 using Robust.Shared.Serialization.Manager;
+using Robust.Shared.Threading;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using YamlDotNet.RepresentationModel;
@@ -65,6 +66,7 @@ namespace Robust.Client
         [Dependency] private readonly IAuthManager _authManager = default!;
         [Dependency] private readonly IMidiManager _midiManager = default!;
         [Dependency] private readonly IEyeManager _eyeManager = default!;
+        [Dependency] private readonly IParallelManagerInternal _parallelMgr = default!;
 
         private IWebViewManagerHook? _webViewHook;
 
@@ -325,6 +327,8 @@ namespace Robust.Client
             }
 
             ProfileOptSetup.Setup(_configurationManager);
+
+            _parallelMgr.Initialize();
 
             _resourceCache.Initialize(Options.LoadConfigAndUserData ? userDataDir : null);
 

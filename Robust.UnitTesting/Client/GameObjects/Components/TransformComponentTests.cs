@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using Robust.Shared.Containers;
 using Robust.Shared.GameObjects;
+using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
@@ -81,6 +82,7 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var sim = SimulationFactory();
             var entMan = sim.Resolve<IEntityManager>();
             var mapMan = sim.Resolve<IMapManager>();
+            var xformSystem = sim.Resolve<IEntitySystemManager>().GetEntitySystem<SharedTransformSystem>();
 
             var gridA = mapMan.GetGrid(TestGridAId);
             var gridB = mapMan.GetGrid(TestGridBId);
@@ -91,20 +93,25 @@ namespace Robust.UnitTesting.Client.GameObjects.Components
             var node2 = entMan.SpawnEntity(null, initalPos);
             var node3 = entMan.SpawnEntity(null, initalPos);
 
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(node1).EntityName = "node1_dummy";
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(node2).EntityName = "node2_dummy";
-            IoCManager.Resolve<IEntityManager>().GetComponent<MetaDataComponent>(node3).EntityName = "node3_dummy";
+            entMan.GetComponent<MetaDataComponent>(node1).EntityName = "node1_dummy";
+            entMan.GetComponent<MetaDataComponent>(node2).EntityName = "node2_dummy";
+            entMan.GetComponent<MetaDataComponent>(node3).EntityName = "node3_dummy";
 
-            var node1Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node1);
-            var node2Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node2);
-            var node3Trans = IoCManager.Resolve<IEntityManager>().GetComponent<TransformComponent>(node3);
+            var node1Trans = entMan.GetComponent<TransformComponent>(node1);
+            var node2Trans = entMan.GetComponent<TransformComponent>(node2);
+            var node3Trans = entMan.GetComponent<TransformComponent>(node3);
 
             var compState = new TransformComponentState(new Vector2(6, 6), Angle.FromDegrees(135), gridB.GridEntityId, false, false);
-            node1Trans.HandleComponentState(compState, null);
+            var handleState = new ComponentHandleState(compState, null);
+            xformSystem.OnHandleState(node1, node1Trans, ref handleState);
+
             compState = new TransformComponentState(new Vector2(1, 1), Angle.FromDegrees(45), node1, false, false);
-            node2Trans.HandleComponentState(compState, null);
+            handleState = new ComponentHandleState(compState, null);
+            xformSystem.OnHandleState(node2, node2Trans, ref handleState);
+
             compState = new TransformComponentState(new Vector2(0, 0), Angle.FromDegrees(45), node2, false, false);
-            node3Trans.HandleComponentState(compState, null);
+            handleState = new ComponentHandleState(compState, null);
+            xformSystem.OnHandleState(node3, node3Trans, ref handleState);
 
             // Act
             var result = node3Trans.WorldRotation;

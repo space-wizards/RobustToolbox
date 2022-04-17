@@ -23,7 +23,7 @@ public abstract partial class SharedTransformSystem
         RaiseLocalEvent(xform.Owner, new TransformStartLerpMessage(xform));
     }
 
-    private void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
+    internal void OnGetState(EntityUid uid, TransformComponent component, ref ComponentGetState args)
     {
         args.State = new TransformComponentState(
             component.LocalPosition,
@@ -33,7 +33,7 @@ public abstract partial class SharedTransformSystem
             component.Anchored);
     }
 
-    private void OnHandleState(EntityUid uid, TransformComponent component, ref ComponentHandleState args)
+    internal void OnHandleState(EntityUid uid, TransformComponent component, ref ComponentHandleState args)
     {
         if (args.Current is TransformComponentState newState)
         {

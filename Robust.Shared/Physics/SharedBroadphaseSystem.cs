@@ -378,7 +378,8 @@ namespace Robust.Shared.Physics
         /// </summary>
         internal void UpdateBroadphase(PhysicsComponent body, FixturesComponent? manager = null, TransformComponent? xform = null)
         {
-            if (!Resolve(body.Owner, ref manager, ref xform)) return;
+            if (!Resolve(body.Owner, ref manager, ref xform) ||
+                _mapManager.IsGrid(body.Owner)) return;
 
             var oldBroadphase = body.Broadphase;
             var newBroadphase = GetBroadphase(xform);

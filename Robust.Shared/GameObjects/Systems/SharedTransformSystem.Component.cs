@@ -10,6 +10,142 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedTransformSystem
 {
+
+    #region Contains
+
+    /// <summary>
+    ///     Returns whether the given entity is a child of this transform or one of its descendants.
+    /// </summary>
+    public bool ContainsEntity(TransformComponent xform, EntityUid entity)
+    {
+        return ContainsEntity(xform, entity, GetEntityQuery<TransformComponent>());
+    }
+
+    /// <inheritdoc cref="ContainsEntity(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.EntityUid)"/>
+    public bool ContainsEntity(TransformComponent xform, EntityUid entity, EntityQuery<TransformComponent> xformQuery)
+    {
+        return ContainsEntity(xform, xformQuery.GetComponent(entity), xformQuery);
+    }
+
+    /// <inheritdoc cref="ContainsEntity(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.EntityUid)"/>
+    public bool ContainsEntity(TransformComponent xform, TransformComponent entityTransform)
+    {
+        return ContainsEntity(xform, entityTransform, GetEntityQuery<TransformComponent>());
+    }
+
+    /// <inheritdoc cref="ContainsEntity(Robust.Shared.GameObjects.TransformComponent,Robust.Shared.GameObjects.EntityUid)"/>
+    public bool ContainsEntity(TransformComponent xform, TransformComponent entityTransform, EntityQuery<TransformComponent> xformQuery)
+    {
+        // Is the entity the scene root
+        if (!entityTransform.ParentUid.IsValid())
+            return false;
+
+        // Is this the direct parent of the entity
+        if (xform.Owner == entityTransform.ParentUid)
+            return true;
+
+        // Recursively search up the parents for this object
+        var parentXform = xformQuery.GetComponent(entityTransform.ParentUid);
+        return ContainsEntity(xform, parentXform, xformQuery);
+    }
+
+    #endregion
+
+    #region Component Lifetime
+
+    private void OnCompInit(EntityUid uid, TransformComponent component, ComponentInit args)
+    {
+        // Children MAY be initialized here before their parents are.
+        // We do this whole dance to handle this recursively,
+        // setting _mapIdInitialized along the way to avoid going to the IMapComponent every iteration.
+        static MapId FindMapIdAndSet(TransformComponent xform, IEntityManager entMan, EntityQuery<TransformComponent> xformQuery)
+        {
+            if (xform._mapIdInitialized)
+                return xform.MapID;
+
+            MapId value;
+
+            if (xform.ParentUid.IsValid())
+            {
+                value = FindMapIdAndSet(xformQuery.GetComponent(xform.ParentUid), entMan, xformQuery);
+            }
+            else
+            {
+                // second level node, terminates recursion up the branch of the tree
+                if (entMan.TryGetComponent(xform.Owner, out IMapComponent? mapComp))
+                {
+                    value = mapComp.WorldMap;
+                }
+                else
+                {
+                    throw new InvalidOperationException("Transform node does not exist inside scene tree!");
+                }
+            }
+
+            xform.MapID = value;
+            xform._mapIdInitialized = true;
+            return value;
+        }
+
+        var xformQuery = GetEntityQuery<TransformComponent>();
+
+        if (!component._mapIdInitialized)
+        {
+            FindMapIdAndSet(component, EntityManager, xformQuery);
+            component._mapIdInitialized = true;
+        }
+
+        // Has to be done if _parent is set from ExposeData.
+        if (component.ParentUid.IsValid())
+        {
+            // Note that _children is a SortedSet<EntityUid>,
+            // so duplicate additions (which will happen) don't matter.
+            xformQuery.GetComponent(component.ParentUid)._children.Add(uid);
+        }
+
+        component.GridID = component.GetGridIndex(xformQuery);
+        component.RebuildMatrices();
+    }
+
+    private void OnCompStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
+    {
+        // Re-Anchor the entity if needed.
+        if (component.Anchored)
+            component.Anchored = true;
+
+        // Keep the cached matrices in sync with the fields.
+        Dirty(component);
+        var ev = new TransformStartupEvent(component);
+        RaiseLocalEvent(uid, ref ev);
+    }
+
+    #endregion
+
+    #region Parent
+
+    public TransformComponent? GetParent(EntityUid uid)
+    {
+        return GetParent(uid, GetEntityQuery<TransformComponent>());
+    }
+
+    public TransformComponent? GetParent(EntityUid uid, EntityQuery<TransformComponent> xformQuery)
+    {
+        return GetParent(xformQuery.GetComponent(uid), xformQuery);
+    }
+
+    public TransformComponent? GetParent(TransformComponent xform)
+    {
+        return GetParent(xform, GetEntityQuery<TransformComponent>());
+    }
+
+    public TransformComponent? GetParent(TransformComponent xform, EntityQuery<TransformComponent> xformQuery)
+    {
+        if (!xform.ParentUid.IsValid()) return null;
+        return xformQuery.GetComponent(xform.ParentUid);
+    }
+
+    #endregion
+
     #region States
 
     private void ActivateLerp(TransformComponent xform)

@@ -104,9 +104,11 @@ namespace Robust.Shared.Containers
             if (entMan.HasComponent<IMapComponent>(toinsert) || entMan.HasComponent<IMapGridComponent>(toinsert))
                 return false;
 
+            var xformSystem = entMan.EntitySysManager.GetEntitySystem<SharedTransformSystem>();
+            var xformQuery = entMan.GetEntityQuery<TransformComponent>();
+
             // Crucial, prevent circular insertion.
-            if (entMan.GetComponent<TransformComponent>(toinsert)
-                    .ContainsEntity(entMan.GetComponent<TransformComponent>(Owner)))
+            if (xformSystem.ContainsEntity(xformQuery.GetComponent(toinsert), Owner, xformQuery))
                 return false;
 
             //Improvement: Traverse the entire tree to make sure we are not creating a loop.
@@ -200,7 +202,7 @@ namespace Robust.Shared.Containers
             DebugTools.Assert(meta == null || meta.Owner == toinsert);
 
             meta ??= entMan.GetComponent<MetaDataComponent>(toinsert);
-            meta.Flags |= MetaDataFlags.InContainer;    
+            meta.Flags |= MetaDataFlags.InContainer;
             entMan.EventBus.RaiseLocalEvent(Owner, new EntInsertedIntoContainerMessage(toinsert, this));
             entMan.EventBus.RaiseEvent(EventSource.Local, new UpdateContainerOcclusionMessage(toinsert));
             Manager.Dirty(entMan);

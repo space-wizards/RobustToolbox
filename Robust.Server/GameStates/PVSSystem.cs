@@ -114,7 +114,7 @@ internal sealed partial class PVSSystem : EntitySystem
         _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
         SubscribeLocalEvent<MoveEvent>(OnEntityMove);
         SubscribeLocalEvent<EntParentChangedMessage>(OnParentChange);
-        SubscribeLocalEvent<TransformComponent, ComponentStartup>(OnTransformStartup);
+        SubscribeLocalEvent<TransformComponent, TransformStartupEvent>(OnTransformStartup);
         EntityManager.EntityDeleted += OnEntityDeleted;
 
         _configManager.OnValueChanged(CVars.NetPVS, SetPvs, true);
@@ -225,10 +225,10 @@ internal sealed partial class PVSSystem : EntitySystem
         UpdateEntityRecursive(ev.Sender, ev.Component, coordinates, xformQuery, false);
     }
 
-    private void OnTransformStartup(EntityUid uid, TransformComponent component, ComponentStartup args)
+    private void OnTransformStartup(EntityUid uid, TransformComponent component, ref TransformStartupEvent args)
     {
         // use Startup because GridId is not set during the eventbus init yet!
-        var xformQuery = EntityManager.GetEntityQuery<TransformComponent>();
+        var xformQuery = GetEntityQuery<TransformComponent>();
         var coordinates = _transform.GetMoverCoordinates(component);
         UpdateEntityRecursive(uid, component, coordinates, xformQuery, false);
     }

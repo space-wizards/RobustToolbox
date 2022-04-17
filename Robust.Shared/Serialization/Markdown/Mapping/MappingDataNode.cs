@@ -52,7 +52,6 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             set => Add(new ValueDataNode(index), value);
         }
 
-        //todo paul i dont think this is thread-safe
         private static ValueDataNode GetFetchNode(string key)
         {
             var node = FetchNode.Value!;

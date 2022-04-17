@@ -3,7 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Robust.Server.Console;
 using Robust.Server.Player;
-using Robust.Shared.Console;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Map;
@@ -30,6 +29,7 @@ namespace Robust.Server.Physics
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
+            SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
         }
 
         private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
@@ -39,7 +39,12 @@ namespace Robust.Server.Physics
 
             if (!adminManager.CanCommand(pSession, ShowGridNodesCommand)) return;
 
+            AddDebugSubscriber(args.SenderSession);
+        }
 
+        private void OnDebugStopRequest(StopGridNodesMessage msg, EntitySessionEventArgs args)
+        {
+            RemoveDebugSubscriber(args.SenderSession);
         }
 
         public override void Shutdown()
@@ -90,8 +95,13 @@ namespace Robust.Server.Physics
         internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk)
         {
             var nodes = _nodes[gridEuid];
-            nodes.Remove(chunk.Indices);
-            var group = new ChunkNodeGroup();
+            var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
+            Cleanup(gridEuid, chunk);
+
+            var group = new ChunkNodeGroup()
+            {
+                Chunk = chunk,
+            };
             var tiles = new HashSet<Vector2i>(chunk.ChunkSize * chunk.ChunkSize);
 
             for (var x = 0; x < chunk.ChunkSize; x++)
@@ -103,9 +113,12 @@ namespace Robust.Server.Physics
             }
 
             var frontier = new Queue<Vector2i>();
-            var node = new ChunkSplitNode();
+            var node = new ChunkSplitNode
+            {
+                Group = group,
+            };
 
-            // Simple BFS search
+            // Simple BFS search to get all of the nodes in the chunk.
             while (tiles.Count > 0)
             {
                 var originEnumerator = tiles.GetEnumerator();
@@ -117,7 +130,12 @@ namespace Robust.Server.Physics
                 // Just reuse the node if we couldn't use it last time.
                 // This is in case weh ave 1 chunk with 255 empty tiles and 1 valid tile.
                 if (node.Indices.Count > 0)
-                    node = new ChunkSplitNode();
+                {
+                    node = new ChunkSplitNode
+                    {
+                        Group = group,
+                    };
+                }
 
                 tiles.Remove(origin);
 
@@ -142,9 +160,110 @@ namespace Robust.Server.Physics
                 group.Nodes.Add(node);
             }
 
+            // Build neighbors
+            ChunkSplitNode? neighborNode = null;
+            MapChunk? neighborChunk = null;
+
+            foreach (var chunkNode in group.Nodes)
+            {
+                foreach (var index in chunkNode.Indices)
+                {
+                    // Check for edge tiles.
+                    if (index.X == 0)
+                    {
+                        // Check West
+                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X - 1, chunk.Indices.Y), out neighborChunk) &&
+                            TryGetNode(gridEuid, neighborChunk, new Vector2i(chunk.ChunkSize - 1, index.Y), out neighborNode))
+                        {
+                            chunkNode.Neighbors.Add(neighborNode);
+                            neighborNode.Neighbors.Add(chunkNode);
+                        }
+                    }
+
+                    if (index.Y == 0)
+                    {
+                        // Check South
+                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X, chunk.Indices.Y - 1), out neighborChunk) &&
+                            TryGetNode(gridEuid, neighborChunk, new Vector2i(index.X, chunk.ChunkSize - 1), out neighborNode))
+                        {
+                            chunkNode.Neighbors.Add(neighborNode);
+                            neighborNode.Neighbors.Add(chunkNode);
+                        }
+                    }
+
+                    if (index.X == chunk.ChunkSize - 1)
+                    {
+                        // Check East
+                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X + 1, chunk.Indices.Y), out neighborChunk) &&
+                            TryGetNode(gridEuid, neighborChunk, new Vector2i(0, index.Y), out neighborNode))
+                        {
+                            chunkNode.Neighbors.Add(neighborNode);
+                            neighborNode.Neighbors.Add(chunkNode);
+                        }
+                    }
+
+                    if (index.Y == chunk.ChunkSize - 1)
+                    {
+                        // Check North
+                        if (grid.TryGetChunk(new Vector2i(chunk.Indices.X, chunk.Indices.Y + 1), out neighborChunk) &&
+                            TryGetNode(gridEuid, neighborChunk, new Vector2i(index.X, 0), out neighborNode))
+                        {
+                            chunkNode.Neighbors.Add(neighborNode);
+                            neighborNode.Neighbors.Add(chunkNode);
+                        }
+                    }
+                }
+            }
+
             nodes[chunk.Indices] = group;
 
+            // TODO: At this point detect splits.
+            // Foreach touched neighbor node we need to pathfind to every other neighbor
+            // For all nodes outstanding (including this chunks own nodes) we then pathfind each individually
+            // and determine the new grids.
+
             SendNodeDebug(gridEuid);
+        }
+
+        /// <summary>
+        /// Tries to get the relevant split node from a neighbor chunk.
+        /// </summary>
+        private bool TryGetNode(EntityUid gridEuid, MapChunk chunk, Vector2i index, [NotNullWhen(true)] out ChunkSplitNode? node)
+        {
+            if (!_nodes[gridEuid].TryGetValue(chunk.Indices, out var neighborGroup))
+            {
+                node = null;
+                return false;
+            }
+
+            foreach (var neighborNode in neighborGroup.Nodes)
+            {
+                if (!neighborNode.Indices.Contains(index)) continue;
+                node = neighborNode;
+                return true;
+            }
+
+            node = null;
+            return false;
+        }
+
+        private void Cleanup(EntityUid gridEuid, MapChunk chunk)
+        {
+            if (!_nodes[gridEuid].TryGetValue(chunk.Indices, out var group)) return;
+
+            foreach (var node in group.Nodes)
+            {
+                // Most important thing is updating our neighbor nodes.
+                foreach (var neighbor in node.Neighbors)
+                {
+                    neighbor.Neighbors.Remove(node);
+                }
+
+                node.Indices.Clear();
+                node.Neighbors.Clear();
+            }
+
+            _nodes[gridEuid].Remove(chunk.Indices);
         }
 
         private void SendNodeDebug(EntityUid uid)
@@ -159,10 +278,22 @@ namespace Robust.Server.Physics
             foreach (var (index, group) in _nodes[uid])
             {
                 var list = new List<List<Vector2i>>();
+                // To avoid double-sending connections.
+                var conns = new HashSet<ChunkSplitNode>();
 
                 foreach (var node in group.Nodes)
                 {
+                    conns.Add(node);
                     list.Add(node.Indices.ToList());
+
+                    foreach (var neighbor in node.Neighbors)
+                    {
+                        if (conns.Contains(neighbor)) continue;
+
+                        msg.Connections.Add((
+                            node.GetCentre() + (node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize),
+                            neighbor.GetCentre() + (neighbor.Group.Chunk.Indices * neighbor.Group.Chunk.ChunkSize)));
+                    }
                 }
 
                 msg.Nodes.Add(index, list);
@@ -176,12 +307,28 @@ namespace Robust.Server.Physics
 
         private sealed class ChunkNodeGroup
         {
+            internal MapChunk Chunk = default!;
             public HashSet<ChunkSplitNode> Nodes = new();
         }
 
         private sealed class ChunkSplitNode
         {
+            public ChunkNodeGroup Group = default!;
             public HashSet<Vector2i> Indices { get; set; } = new();
+            public HashSet<ChunkSplitNode> Neighbors { get; set; } = new();
+
+            public Vector2 GetCentre()
+            {
+                var centre = Vector2.Zero;
+
+                foreach (var index in Indices)
+                {
+                    centre += index;
+                }
+
+                centre /= Indices.Count;
+                return centre;
+            }
         }
 
         private struct NeighborEnumerator

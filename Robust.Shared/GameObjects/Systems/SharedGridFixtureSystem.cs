@@ -184,6 +184,7 @@ namespace Robust.Shared.GameObjects
     {
         public EntityUid Grid;
         public Dictionary<Vector2i, List<List<Vector2i>>> Nodes = new ();
+        public List<(Vector2 Start, Vector2 End)> Connections = new();
     }
 
     /// <summary>
@@ -191,4 +192,7 @@ namespace Robust.Shared.GameObjects
     /// </summary>
     [Serializable, NetSerializable]
     public sealed class RequestGridNodesMessage : EntityEventArgs {}
+
+    [Serializable, NetSerializable]
+    public sealed class StopGridNodesMessage : EntityEventArgs {}
 }

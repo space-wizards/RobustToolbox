@@ -396,6 +396,11 @@ namespace Robust.Shared.Map
             }
         }
 
+        public bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk)
+        {
+            return _chunks.TryGetValue(chunkIndices, out chunk);
+        }
+
         /// <inheritdoc />
         public MapChunk GetChunk(Vector2i chunkIndices)
         {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Robust.Shared.Maths;
 
 namespace Robust.Shared.Map
@@ -25,6 +26,13 @@ namespace Robust.Shared.Map
         void RemoveChunk(Vector2i origin);
 
         /// <summary>
+        ///     Tries to return a chunk at the given indices.
+        /// </summary>
+        /// <param name="chunk"></param>
+        /// <returns></returns>
+        bool TryGetChunk(Vector2i chunkIndices, [NotNullWhen(true)] out MapChunk? chunk);
+
+        /// <summary>
         ///     Returns the chunk at the given indices. If the chunk does not exist,
         ///     then a new one is generated that is filled with empty space.
         /// </summary>
@@ -33,7 +41,7 @@ namespace Robust.Shared.Map
         MapChunk GetChunk(Vector2i chunkIndices);
 
         /// <summary>
-        /// Returns whether a chunk exists with the specified indices.
+        ///     Returns whether a chunk exists with the specified indices.
         /// </summary>
         bool HasChunk(Vector2i chunkIndices);
 

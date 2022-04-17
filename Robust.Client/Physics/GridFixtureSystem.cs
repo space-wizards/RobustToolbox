@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Robust.Client.Graphics;
 using Robust.Shared.Enums;
@@ -23,18 +24,21 @@ namespace Robust.Client.Physics
 
                 if (_enableDebug)
                 {
-                    overlayManager.AddOverlay(new GridSplitNodeOverlay());
+                    var overlay = new GridSplitNodeOverlay(EntityManager, IoCManager.Resolve<IMapManager>(), this);
+                    overlayManager.AddOverlay(overlay);
                     RaiseNetworkEvent(new RequestGridNodesMessage());
                 }
                 else
                 {
                     overlayManager.RemoveOverlay<GridSplitNodeOverlay>();
+                    RaiseNetworkEvent(new StopGridNodesMessage());
                 }
             }
         }
 
         private bool _enableDebug = false;
-        private Dictionary<EntityUid, Dictionary<Vector2i, List<List<Vector2i>>>> _nodes = new();
+        private readonly Dictionary<EntityUid, Dictionary<Vector2i, List<List<Vector2i>>>> _nodes = new();
+        private readonly Dictionary<EntityUid, List<(Vector2, Vector2)>> _connections = new();
 
         public override void Initialize()
         {
@@ -42,20 +46,35 @@ namespace Robust.Client.Physics
             SubscribeNetworkEvent<ChunkSplitDebugMessage>(OnDebugMessage);
         }
 
+        public override void Shutdown()
+        {
+            base.Shutdown();
+            _nodes.Clear();
+            _connections.Clear();
+        }
+
         private void OnDebugMessage(ChunkSplitDebugMessage ev)
         {
             if (!_enableDebug) return;
 
             _nodes[ev.Grid] = ev.Nodes;
+            _connections[ev.Grid] = ev.Connections;
         }
 
         private sealed class GridSplitNodeOverlay : Overlay
         {
             public override OverlaySpace Space => OverlaySpace.WorldSpace;
 
-            private IEntityManager _entManager = default!;
-            private IMapManager _mapManager = default!;
-            private GridFixtureSystem _system = default!;
+            private IEntityManager _entManager;
+            private IMapManager _mapManager;
+            private GridFixtureSystem _system;
+
+            public GridSplitNodeOverlay(IEntityManager entManager, IMapManager mapManager, GridFixtureSystem system)
+            {
+                _entManager = entManager;
+                _mapManager = mapManager;
+                _system = system;
+            }
 
             protected internal override void Draw(in OverlayDrawArgs args)
             {
@@ -79,19 +98,32 @@ namespace Robust.Client.Physics
                         for (var i = 0; i < chunkNodes.Count; i++)
                         {
                             var group = chunkNodes[i];
+                            var offset = chunk.Indices * chunk.ChunkSize;
+                            var color = GetColor(chunk, i);
 
                             foreach (var index in group)
                             {
-                                worldHandle.DrawRect(new Box2(index, index + 1).Enlarged(-0.1f), GetColor(chunk, i));
+                                worldHandle.DrawRect(new Box2(offset + index, offset + index + 1).Enlarged(-0.1f), color);
                             }
                         }
+                    }
+
+                    var connections = _system._connections[iGrid.GridEntityId];
+
+                    foreach (var (start, end) in connections)
+                    {
+                        worldHandle.DrawLine(start, end, Color.Aquamarine);
                     }
                 }
             }
 
             private Color GetColor(MapChunk chunk, int index)
             {
-                return Color.Red;
+                var red = Math.Abs(chunk.Indices.X * 30 % 255);
+                var green = Math.Abs(chunk.Indices.Y * 30 % 255);
+                var blue = index * 30 % 255;
+
+                return new Color(red, green, blue, 0.3f);
             }
         }
     }

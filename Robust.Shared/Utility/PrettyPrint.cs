@@ -74,6 +74,31 @@ namespace Robust.Shared.Utility
             return stringRep!;
         }
 
+        /// <summary>
+        ///     Creates an even shorter, even more readable abbreviation of a type.
+        ///     Reduces the amount of 'sections' (excluding the type name, which is always shown) to <see cref="maxSections"/>
+        /// </summary>
+        /// <remarks>
+        ///     Not guaranteed to make a unique name, obviously.
+        ///     This is mostly just for ViewVariables since the long type names don't give very useful info. and really
+        ///     the only things we need are whether it's engine/content, the project (client/shared/server) and the type name.
+        /// </remarks>
+        /// <param name="type">The type to abbreviate.</param>
+        /// <param name="maxSections">Max sections that the full name should have, excluding the type name.</param>
+        /// <returns>A shorter representation of the passed type than given by `ToString()` or <see cref="TypeAbbreviation.Abbreviate(System.Type)"/>.</returns>
+        public static string PrintUserFacingTypeShort(Type type, int maxSections)
+        {
+            var str = TypeAbbreviation.Abbreviate(type);
+            var split = str.Split('.').ToList();
+
+            var toRemove = split.Count - maxSections - 1;
+            if (toRemove <= 0)
+                return str;
+
+            split.RemoveRange(maxSections, toRemove);
+            return string.Join('.', split);
+        }
+
         public static string PrintTypeSignature(this Type type)
         {
             if (TypeShortHand.TryGetValue(type, out var value))

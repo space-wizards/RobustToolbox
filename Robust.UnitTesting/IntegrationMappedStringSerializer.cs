@@ -21,7 +21,7 @@ namespace Robust.UnitTesting
 
         public Task Handshake(INetChannel channel)
         {
-            var message = _net.CreateNetMessage<MsgMapStrServerHandshake>();
+            var message = new MsgMapStrServerHandshake();
             message.Hash = _hash;
             _net.ServerSendMessage(message, channel);
 

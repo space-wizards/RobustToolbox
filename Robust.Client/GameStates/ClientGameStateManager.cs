@@ -409,7 +409,7 @@ namespace Robust.Client.GameStates
 
         private void AckGameState(GameTick sequence)
         {
-            var msg = _network.CreateNetMessage<MsgStateAck>();
+            var msg = new MsgStateAck();
             msg.Sequence = sequence;
             _network.ClientSendMessage(msg);
         }

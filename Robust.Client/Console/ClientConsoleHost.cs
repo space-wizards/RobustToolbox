@@ -134,7 +134,7 @@ namespace Robust.Client.Console
             if (!NetManager.IsConnected) // we don't care about session on client
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmd>();
+            var msg = new MsgConCmd();
             msg.Text = command;
             NetManager.ClientSendMessage(msg);
         }
@@ -198,7 +198,7 @@ namespace Robust.Client.Console
             if (!NetManager.IsConnected)
                 return;
 
-            var msg = NetManager.CreateNetMessage<MsgConCmdReg>();
+            var msg = new MsgConCmdReg();
             NetManager.ClientSendMessage(msg);
 
             _requestedCommands = true;

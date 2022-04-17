@@ -32,7 +32,7 @@ internal sealed partial class PVSSystem : EntitySystem
     public const float ChunkSize = 8;
     public const int TickBuffer = 10;
 
-    private static TransformComponent.TransformComponentState _transformCullState =
+    private static TransformComponentState _transformCullState =
         new(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false);
 
     /// <summary>

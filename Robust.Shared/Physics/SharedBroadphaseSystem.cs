@@ -184,11 +184,7 @@ namespace Robust.Shared.Physics
             // Handle grids first as they're not stored on map broadphase at all.
             HandleGridCollisions(mapId, contactManager, movedGrids, physicsQuery, xformQuery);
 
-            if (moveBuffer.Count == 0)
-            {
-                movedGrids.Clear();
-                return;
-            }
+            DebugTools.Assert(moveBuffer.Count > 0 || _pairBuffer.Count == 0);
 
             // TODO: Could store fixtures by broadphase for more perf?
             foreach (var (proxy, worldAABB) in moveBuffer)

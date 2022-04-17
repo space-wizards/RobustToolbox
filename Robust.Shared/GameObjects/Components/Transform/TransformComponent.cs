@@ -707,8 +707,11 @@ namespace Robust.Shared.GameObjects
         public void DetachParentToNull()
         {
             var oldParent = _parent;
+
+            // Even though they may already be in nullspace we may want to deparent them anyway
             if (!oldParent.IsValid())
             {
+                DebugTools.Assert(!Anchored);
                 return;
             }
 
@@ -731,9 +734,11 @@ namespace Robust.Shared.GameObjects
             oldConcrete._children.Remove(uid);
 
             _parent = EntityUid.Invalid;
-            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, MapID, this);
+            var oldMap = MapID;
             MapID = MapId.Nullspace;
             GridID = GridId.Invalid;
+
+            var entParentChangedMessage = new EntParentChangedMessage(Owner, oldParent, oldMap, this);
             _entMan.EventBus.RaiseLocalEvent(Owner, ref entParentChangedMessage);
 
             // Does it even make sense to call these since this is called purely from OnRemove right now?

@@ -459,6 +459,7 @@ namespace Robust.Server.Maps
                     body.Broadphase = entManager.GetComponent<BroadphaseComponent>(mapUid);
                     var fixtures = entManager.EnsureComponent<FixturesComponent>(grid.GridEntityId);
                     // Regenerate grid collision.
+                    gridFixtures.EnsureGrid(grid.GridEntityId);
                     gridFixtures.ProcessGrid(gridInternal);
                     // Avoid duplicating the deserialization in FixtureSystem.
                     fixtures.SerializedFixtures.Clear();

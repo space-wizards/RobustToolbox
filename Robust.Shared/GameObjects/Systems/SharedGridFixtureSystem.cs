@@ -9,6 +9,7 @@ using Robust.Shared.Maths;
 using Robust.Shared.Physics;
 using Robust.Shared.Physics.Collision.Shapes;
 using Robust.Shared.Physics.Dynamics;
+using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
 namespace Robust.Shared.GameObjects
@@ -18,8 +19,9 @@ namespace Robust.Shared.GameObjects
         [Dependency] private readonly FixtureSystem _fixtures = default!;
 
         private bool _enabled;
-
         private float _fixtureEnlargement;
+
+        internal const string ShowGridNodesCommand = "showgridnodes";
 
         public override void Initialize()
         {
@@ -165,12 +167,28 @@ namespace Robust.Shared.GameObjects
             {
                 _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
                 EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+                GenerateSplitNode(gridEuid, chunk);
             }
         }
+
+        internal virtual void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk) {}
     }
 
     public sealed class GridFixtureChangeEvent : EntityEventArgs
     {
         public List<Fixture> NewFixtures { get; init; } = default!;
     }
+
+    [Serializable, NetSerializable]
+    public sealed class ChunkSplitDebugMessage : EntityEventArgs
+    {
+        public EntityUid Grid;
+        public Dictionary<Vector2i, List<List<Vector2i>>> Nodes = new ();
+    }
+
+    /// <summary>
+    /// Raised by a client who wants to receive gridsplitnode messages.
+    /// </summary>
+    [Serializable, NetSerializable]
+    public sealed class RequestGridNodesMessage : EntityEventArgs {}
 }

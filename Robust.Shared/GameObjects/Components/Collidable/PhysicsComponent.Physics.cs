@@ -57,6 +57,7 @@ namespace Robust.Shared.GameObjects
         /// </summary>
         public bool Island { get; set; }
 
+        [ViewVariables]
         internal BroadphaseComponent? Broadphase { get; set; }
 
         /// <summary>

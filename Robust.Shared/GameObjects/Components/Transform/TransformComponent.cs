@@ -711,8 +711,8 @@ namespace Robust.Shared.GameObjects
         {
             var oldParent = _parent;
 
-            // Could be parented to something in nullspace.
-            if (!oldParent.IsValid() || MapID == MapId.Nullspace)
+            // Even though they may already be in nullspace we may want to deparent them anyway
+            if (!oldParent.IsValid())
             {
                 DebugTools.Assert(!Anchored);
                 return;

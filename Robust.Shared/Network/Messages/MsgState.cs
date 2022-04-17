@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Buffers;
+using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using Lidgren.Network;
 using Robust.Shared.GameStates;
 using Robust.Shared.IoC;
-using Robust.Shared.Log;
 using Robust.Shared.Serialization;
 using Robust.Shared.Utility;
 
@@ -25,6 +25,7 @@ namespace Robust.Shared.Network.Messages
         public override MsgGroups MsgGroup => MsgGroups.Entity;
 
         public GameState State;
+        public ZStdCompressionContext CompressionContext;
 
         private bool _hasWritten;
 
@@ -39,7 +40,7 @@ namespace Robust.Shared.Network.Messages
             if (compressedLength > 0)
             {
                 var stream = buffer.ReadAlignedMemory(compressedLength);
-                using var decompressStream = new DeflateStream(stream, CompressionMode.Decompress);
+                using var decompressStream = new ZStdDecompressStream(stream);
                 var decompressedStream = new MemoryStream(uncompressedLength);
                 decompressStream.CopyTo(decompressedStream, uncompressedLength);
                 decompressedStream.Position = 0;
@@ -62,35 +63,37 @@ namespace Robust.Shared.Network.Messages
         public override void WriteToBuffer(NetOutgoingMessage buffer)
         {
             var serializer = IoCManager.Resolve<IRobustSerializer>();
-            MemoryStream finalStream;
             var stateStream = new MemoryStream();
             serializer.SerializeDirect(stateStream, State);
-            buffer.WriteVariableInt32((int) stateStream.Length);
+            buffer.WriteVariableInt32((int)stateStream.Length);
 
             // We compress the state.
             if (stateStream.Length > CompressionThreshold)
             {
+                var sw = Stopwatch.StartNew();
                 stateStream.Position = 0;
-                var compressedStream = new MemoryStream();
-                using (var deflateStream = new DeflateStream(compressedStream, CompressionMode.Compress, true))
-                {
-                    stateStream.CopyTo(deflateStream);
-                }
+                var buf = ArrayPool<byte>.Shared.Rent(ZStd.CompressBound((int)stateStream.Length));
+                var length = CompressionContext.Compress2(buf, stateStream.AsSpan());
 
-                buffer.WriteVariableInt32((int) compressedStream.Length);
-                finalStream = compressedStream;
+                buffer.WriteVariableInt32(length);
+
+                buffer.Write(buf.AsSpan(0, length));
+
+                var elapsed = sw.Elapsed;
+                System.Console.WriteLine(
+                    $"From: {State.FromSequence} To: {State.ToSequence} Size: {length} B Before: {stateStream.Length} B time: {elapsed}");
+
+                ArrayPool<byte>.Shared.Return(buf);
             }
             // The state is sent as is.
             else
             {
                 // 0 means that the state isn't compressed.
                 buffer.WriteVariableInt32(0);
-                finalStream = stateStream;
+
+                buffer.Write(stateStream.AsSpan());
             }
 
-            finalStream.TryGetBuffer(out var segment);
-            buffer.Write(segment);
-            finalStream.Dispose();
 
             _hasWritten = false;
             MsgSize = buffer.LengthBytes;
@@ -109,6 +112,7 @@ namespace Robust.Shared.Network.Messages
             {
                 return true;
             }
+
             return MsgSize > ReliableThreshold;
         }
 

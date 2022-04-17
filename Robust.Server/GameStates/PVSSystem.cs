@@ -352,6 +352,8 @@ internal sealed partial class PVSSystem : EntitySystem
             {
                 var (viewPos, range, mapId) = CalcViewBounds(in eyeEuid, transformQuery);
 
+                if(mapId == MapId.Nullspace) continue;
+
                 uint visMask = EyeComponent.DefaultVisibilityMask;
                 if (eyeQuery.TryGetComponent(eyeEuid, out var eyeComp))
                     visMask = eyeComp.VisibilityMask;
@@ -637,7 +639,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
             {
-                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
             }), true));
         }
 

@@ -33,6 +33,18 @@ internal sealed partial class MidiManager : IMidiManager
 
     private SharedPhysicsSystem _broadPhaseSystem = default!;
 
+    public IReadOnlyList<IMidiRenderer> Renderers
+    {
+        get
+        {
+            lock (_renderers)
+            {
+                // Perform a copy. Sadly, we can't return a reference to the original list due to threading concerns.
+                return _renderers.ToArray();
+            }
+        }
+    }
+
     [ViewVariables]
     public bool IsAvailable
     {

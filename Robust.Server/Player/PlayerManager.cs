@@ -445,7 +445,7 @@ namespace Robust.Server.Player
         {
             var channel = message.MsgChannel;
             var players = Sessions;
-            var netMsg = channel.CreateNetMessage<MsgPlayerList>();
+            var netMsg = new MsgPlayerList();
 
             // client session is complete, set their status accordingly.
             // This is done before the packet is built, so that the client

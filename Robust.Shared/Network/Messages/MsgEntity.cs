@@ -5,6 +5,7 @@ using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Serialization;
 using Robust.Shared.Timing;
+using Robust.Shared.Utility;
 
 #nullable disable
 
@@ -52,13 +53,12 @@ namespace Robust.Shared.Network.Messages
                 case EntityMessageType.SystemMessage:
                 {
                     var serializer = IoCManager.Resolve<IRobustSerializer>();
-                    using (var stream = new MemoryStream())
-                    {
-                        serializer.Serialize(stream, SystemMessage);
-                        buffer.WriteVariableInt32((int)stream.Length);
-                        stream.TryGetBuffer(out var segment);
-                        buffer.Write(segment);
-                    }
+                    var stream = new MemoryStream();
+
+                    serializer.Serialize(stream, SystemMessage);
+
+                    buffer.WriteVariableInt32((int)stream.Length);
+                    buffer.Write(stream.AsSpan());
                 }
                     break;
             }

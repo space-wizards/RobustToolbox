@@ -66,8 +66,9 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <typeparam name="T">The derived NetMessage type to send.</typeparam>
         /// <returns>A new instance of the net message.</returns>
+        [Obsolete("Just new NetMessage directly")]
         T CreateNetMessage<T>()
-            where T : NetMessage;
+            where T : NetMessage, new();
 
         /// <summary>
         ///     Sends a NetMessage over this NetChannel.

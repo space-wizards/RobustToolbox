@@ -136,7 +136,7 @@ namespace Robust.Shared.Prototypes
         /// The prototype we inherit from.
         /// </summary>
         [ViewVariables]
-        [ParentDataFieldAttribute(typeof(PrototypeIdSerializer<EntityPrototype>))]
+        [ParentDataFieldAttribute(typeof(AbstractPrototypeIdSerializer<EntityPrototype>))]
         public string? Parent { get; private set; }
 
         [ViewVariables]

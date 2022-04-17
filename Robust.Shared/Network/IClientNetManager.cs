@@ -40,5 +40,7 @@ namespace Robust.Shared.Network
         /// </summary>
         /// <param name="reason">The reason why disconnect was called.</param>
         void ClientDisconnect(string reason);
+
+        void Reset(string reason);
     }
 }

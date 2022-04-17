@@ -28,16 +28,17 @@ namespace Robust.Shared.GameObjects
         /// </remarks>
         public MapId OldMapId { get; }
 
+        public TransformComponent Transform { get; }
+
         /// <summary>
         ///     Creates a new instance of <see cref="EntParentChangedMessage"/>.
         /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="oldParent"></param>
-        public EntParentChangedMessage(EntityUid entity, EntityUid? oldParent, MapId oldMapId)
+        public EntParentChangedMessage(EntityUid entity, EntityUid? oldParent, MapId oldMapId, TransformComponent xform)
         {
             Entity = entity;
             OldParent = oldParent;
             OldMapId = oldMapId;
+            Transform = xform;
         }
     }
 }

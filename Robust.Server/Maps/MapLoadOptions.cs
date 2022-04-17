@@ -1,5 +1,9 @@
-﻿namespace Robust.Server.Maps
+﻿using JetBrains.Annotations;
+using Robust.Shared.Maths;
+
+namespace Robust.Server.Maps
 {
+    [PublicAPI]
     public sealed class MapLoadOptions
     {
         /// <summary>
@@ -7,5 +11,38 @@
         ///     to maintain consistency upon subsequent savings.
         /// </summary>
         public bool StoreMapUids { get; set; }
+
+        /// <summary>
+        ///     Offset to apply to the loaded objects.
+        /// </summary>
+        public Vector2 Offset
+        {
+            get => _offset;
+            set
+            {
+                TransformMatrix = Matrix3.CreateTransform(value, Rotation);
+                _offset = value;
+            }
+        }
+
+        private Vector2 _offset = Vector2.Zero;
+
+        /// <summary>
+        ///     Rotation to apply to the loaded objects as a collective, around 0, 0.
+        /// </summary>
+        /// <remarks>Setting this overrides <</remarks>
+        public Angle Rotation
+        {
+            get => _rotation;
+            set
+            {
+                TransformMatrix = Matrix3.CreateTransform(Offset, value);
+                _rotation = value;
+            }
+        }
+
+        private Angle _rotation = Angle.Zero;
+
+        public Matrix3 TransformMatrix { get; set; } = Matrix3.Identity;
     }
 }

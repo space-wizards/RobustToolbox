@@ -18,8 +18,8 @@ using Robust.Shared.IoC;
 using Robust.Shared.Log;
 using Robust.Shared.Network;
 using Robust.Shared.Utility;
-using HttpListener = ManagedHttpListener.HttpListener;
-using HttpListenerContext = ManagedHttpListener.HttpListenerContext;
+using HttpListener = SpaceWizards.HttpListener.HttpListener;
+using HttpListenerContext = SpaceWizards.HttpListener.HttpListenerContext;
 
 // This entire file is NIHing a REST server because pulling in libraries is effort.
 // Also it was fun to write.
@@ -31,7 +31,7 @@ namespace Robust.Server.ServerStatus
     {
         private const string Sawmill = "statushost";
 
-        [Dependency] private readonly IConfigurationManager _configurationManager = default!;
+        [Dependency] private readonly IConfigurationManager _cfg = default!;
         [Dependency] private readonly IServerNetManager _netManager = default!;
         [Dependency] private readonly IPlayerManager _playerManager = default!;
 
@@ -39,6 +39,7 @@ namespace Robust.Server.ServerStatus
         private HttpListener? _listener;
         private TaskCompletionSource? _stopSource;
         private ISawmill _httpSawmill = default!;
+        private ISawmill _aczSawmill = default!;
 
         private string? _serverNameCache;
 
@@ -95,13 +96,14 @@ namespace Robust.Server.ServerStatus
         public void Start()
         {
             _httpSawmill = Logger.GetSawmill($"{Sawmill}.http");
+            _aczSawmill = Logger.GetSawmill($"{Sawmill}.acz");
             RegisterCVars();
 
             // Cache this in a field to avoid thread safety shenanigans.
             // Writes/reads of references are atomic in C# so no further synchronization necessary.
-            _configurationManager.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
+            _cfg.OnValueChanged(CVars.GameHostName, n => _serverNameCache = n, true);
 
-            if (!_configurationManager.GetCVar(CVars.StatusEnabled))
+            if (!_cfg.GetCVar(CVars.StatusEnabled))
             {
                 return;
             }
@@ -110,7 +112,7 @@ namespace Robust.Server.ServerStatus
 
             _stopSource = new TaskCompletionSource();
             _listener = new HttpListener();
-            _listener.Prefixes.Add($"http://{_configurationManager.GetCVar(CVars.StatusBind)}/");
+            _listener.Prefixes.Add($"http://{_cfg.GetCVar(CVars.StatusBind)}/");
             _listener.Start();
 
             Task.Run(ListenerThread);
@@ -119,7 +121,7 @@ namespace Robust.Server.ServerStatus
         // Not a real thread but whatever.
         private async Task ListenerThread()
         {
-            var maxConnections = _configurationManager.GetCVar(CVars.StatusMaxConnections);
+            var maxConnections = _cfg.GetCVar(CVars.StatusMaxConnections);
             var connectionsSemaphore = new SemaphoreSlim(maxConnections, maxConnections);
             while (true)
             {
@@ -157,6 +159,8 @@ namespace Robust.Server.ServerStatus
 
         private void RegisterCVars()
         {
+            InitAcz();
+
             // Set status host binding to match network manager by default
             SetCVarIfUnmodified(CVars.StatusBind, $"*:{_netManager.Port}");
 
@@ -173,19 +177,22 @@ namespace Robust.Server.ServerStatus
                 SetCVarIfUnmodified(CVars.BuildVersion, info.Version);
                 SetCVarIfUnmodified(CVars.BuildDownloadUrl, info.Download ?? "");
                 SetCVarIfUnmodified(CVars.BuildHash, info.Hash ?? "");
+                SetCVarIfUnmodified(CVars.BuildManifestHash, info.ManifestHash ?? "");
+                SetCVarIfUnmodified(CVars.BuildManifestDownloadUrl, info.ManifestDownloadUrl ?? "");
+                SetCVarIfUnmodified(CVars.BuildManifestUrl, info.ManifestUrl ?? "");
             }
 
             // Automatically determine engine version if no other source has provided a result
             var asmVer = typeof(StatusHost).Assembly.GetName().Version;
             if (asmVer != null)
             {
-                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(3));
+                SetCVarIfUnmodified(CVars.BuildEngineVersion, asmVer.ToString(4));
             }
 
             void SetCVarIfUnmodified(CVarDef<string> cvar, string val)
             {
-                if (_configurationManager.GetCVar(cvar) == "")
-                    _configurationManager.SetCVar(cvar, val);
+                if (_cfg.GetCVar(cvar) == "")
+                    _cfg.SetCVar(cvar, val);
             }
 
         }
@@ -211,16 +218,32 @@ namespace Robust.Server.ServerStatus
             [property: JsonPropertyName("fork_id")]
             string ForkId,
             [property: JsonPropertyName("version")]
-            string Version);
+            string Version,
+            [property: JsonPropertyName("manifest_hash")]
+            string? ManifestHash,
+            [property: JsonPropertyName("manifest_url")]
+            string? ManifestUrl,
+            [property: JsonPropertyName("manifest_download_url")]
+            string? ManifestDownloadUrl);
 
         private sealed class ContextImpl : IStatusHandlerContext
         {
             private readonly HttpListenerContext _context;
+            private readonly Dictionary<string, string> _responseHeaders;
             public HttpMethod RequestMethod { get; }
             public IPEndPoint RemoteEndPoint => _context.Request.RemoteEndPoint!;
+            public Stream RequestBody => _context.Request.InputStream;
             public Uri Url => _context.Request.Url!;
             public bool IsGetLike => RequestMethod == HttpMethod.Head || RequestMethod == HttpMethod.Get;
             public IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+
+            public bool KeepAlive
+            {
+                get => _context.Response.KeepAlive;
+                set => _context.Response.KeepAlive = value;
+            }
+
+            public IDictionary<string, string> ResponseHeaders => _responseHeaders;
 
             public ContextImpl(HttpListenerContext context)
             {
@@ -237,16 +260,17 @@ namespace Robust.Server.ServerStatus
                 }
 
                 RequestHeaders = headers;
+                _responseHeaders = new Dictionary<string, string>();
             }
 
             public T? RequestBodyJson<T>()
             {
-                return JsonSerializer.Deserialize<T>(_context.Request.InputStream);
+                return JsonSerializer.Deserialize<T>(RequestBody);
             }
 
             public async Task<T?> RequestBodyJsonAsync<T>()
             {
-                return await JsonSerializer.DeserializeAsync<T>(_context.Request.InputStream);
+                return await JsonSerializer.DeserializeAsync<T>(RequestBody);
             }
 
             public void Respond(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = MediaTypeNames.Text.Plain)
@@ -290,6 +314,16 @@ namespace Robust.Server.ServerStatus
                 _context.Response.Close();
             }
 
+            public Task RespondNoContentAsync()
+            {
+                RespondShared();
+
+                _context.Response.StatusCode = (int) HttpStatusCode.NoContent;
+                _context.Response.Close();
+
+                return Task.CompletedTask;
+            }
+
             public Task RespondAsync(string text, HttpStatusCode code = HttpStatusCode.OK, string contentType = "text/plain")
             {
                 return RespondAsync(text, (int) code, contentType);
@@ -297,6 +331,8 @@ namespace Robust.Server.ServerStatus
 
             public async Task RespondAsync(string text, int code = 200, string contentType = "text/plain")
             {
+                RespondShared();
+
                 _context.Response.StatusCode = code;
                 _context.Response.ContentType = contentType;
 
@@ -315,6 +351,8 @@ namespace Robust.Server.ServerStatus
 
             public async Task RespondAsync(byte[] data, int code = 200, string contentType = "text/plain")
             {
+                RespondShared();
+
                 _context.Response.StatusCode = code;
                 _context.Response.ContentType = contentType;
                 _context.Response.ContentLength64 = data.Length;
@@ -341,6 +379,8 @@ namespace Robust.Server.ServerStatus
 
             public void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
+                RespondShared();
+
                 _context.Response.ContentType = "application/json";
 
                 JsonSerializer.Serialize(_context.Response.OutputStream, jsonData);
@@ -350,11 +390,30 @@ namespace Robust.Server.ServerStatus
 
             public async Task RespondJsonAsync(object jsonData, HttpStatusCode code = HttpStatusCode.OK)
             {
+                RespondShared();
+
                 _context.Response.ContentType = "application/json";
 
                 await JsonSerializer.SerializeAsync(_context.Response.OutputStream, jsonData);
 
                 _context.Response.Close();
+            }
+
+            public Task<Stream> RespondStreamAsync(HttpStatusCode code = HttpStatusCode.OK)
+            {
+                RespondShared();
+
+                _context.Response.StatusCode = (int) code;
+
+                return Task.FromResult(_context.Response.OutputStream);
+            }
+
+            private void RespondShared()
+            {
+                foreach (var (header, value) in _responseHeaders)
+                {
+                    _context.Response.AddHeader(header, value);
+                }
             }
         }
     }

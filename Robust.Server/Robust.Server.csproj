@@ -11,6 +11,7 @@
   <Import Project="..\MSBuild\Robust.DefineConstants.targets" />
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2021.3.0" PrivateAssets="All" />
+    <PackageReference Include="SpaceWizards.HttpListener" Version="0.1.0" />
     <!--  -->
     <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.0.7" />
     <PackageReference Include="prometheus-net" Version="4.1.1" />

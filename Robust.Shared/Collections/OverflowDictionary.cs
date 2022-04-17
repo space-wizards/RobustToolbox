@@ -7,14 +7,30 @@ using Robust.Shared.Utility;
 
 namespace Robust.Shared.Collections;
 
+/// <summary>
+/// A dictionary with a maximum capacity which will override the oldest inserted value when a new value is inserted.
+/// </summary>
+/// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
+/// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
 public sealed class OverflowDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable where TKey : notnull
 {
     private TKey[] _insertionQueue;
     private int _currentIndex = 0;
     private IDictionary<TKey, TValue> _dict;
+
+    /// <summary>
+    /// The maximum capacity of the dictionary.
+    /// </summary>
     public int Capacity => _insertionQueue.Length;
+
+    /// <summary>
+    /// A function used to dispose of values overwritten by the overflow functionality.
+    /// </summary>
     private Action<TValue>? _valueDisposer;
 
+    /// <param name="capacity">The maximum capacity of the dictionary.</param>
+    /// <param name="valueDisposer">A function used to dispose of values overwritten by the overflow functionality.</param>
+    /// <exception cref="InvalidOperationException">Thrown in the <paramref name="capacity"/> is less than 1.</exception>
     public OverflowDictionary(int capacity, Action<TValue>? valueDisposer = null)
     {
         if (capacity <= 0)

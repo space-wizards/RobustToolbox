@@ -67,6 +67,11 @@ public sealed class OverflowDictionary_Test
         dict.Clear();
         Assert.That(dict.Count, Is.EqualTo(0));
 
+        //assert that the clear didnt mess up our internal ordering & array. just to make sure we didnt forget to reset something
+        dict.Add(0, 1);
+        Assert.That(dict.TryGetValue(0, out var value));
+        Assert.That(value, Is.EqualTo(1));
+
         Assert.Throws<NotImplementedException>(() => dict.Remove(0));
     }
 

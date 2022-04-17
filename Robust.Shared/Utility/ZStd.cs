@@ -77,7 +77,7 @@ public sealed unsafe class ZStdCompressionContext : IDisposable
         ZSTD_CCtx_setParameter(Context, parameter, value);
     }
 
-    public int Compress(Span<byte> destination, Span<byte> source, int compressionLevel = ZSTD_CLEVEL_DEFAULT)
+    public int Compress(Span<byte> destination, ReadOnlySpan<byte> source, int compressionLevel = ZSTD_CLEVEL_DEFAULT)
     {
         CheckDisposed();
 
@@ -89,6 +89,23 @@ public sealed unsafe class ZStdCompressionContext : IDisposable
                 dst, (nuint)destination.Length,
                 src, (nuint)source.Length,
                 compressionLevel);
+
+            ZStdException.ThrowIfError(ret);
+            return (int)ret;
+        }
+    }
+
+    public int Compress2(Span<byte> destination, ReadOnlySpan<byte> source)
+    {
+        CheckDisposed();
+
+        fixed (byte* dst = destination)
+        fixed (byte* src = source)
+        {
+            var ret = ZSTD_compress2(
+                Context,
+                dst, (nuint)destination.Length,
+                src, (nuint)source.Length);
 
             ZStdException.ThrowIfError(ret);
             return (int)ret;

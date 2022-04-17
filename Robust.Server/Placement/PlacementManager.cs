@@ -230,7 +230,7 @@ namespace Robust.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var message = _networkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.Range = range;
             message.IsTile = false;
@@ -251,7 +251,7 @@ namespace Robust.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var message = _networkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.StartPlacement;
             message.Range = range;
             message.IsTile = true;
@@ -272,7 +272,7 @@ namespace Robust.Server.Placement
             if (playerConnection == null)
                 return;
 
-            var message = _networkManager.CreateNetMessage<MsgPlacement>();
+            var message = new MsgPlacement();
             message.PlaceType = PlacementManagerMessage.CancelPlacement;
             _networkManager.ServerSendMessage(message, playerConnection);
         }

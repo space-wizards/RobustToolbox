@@ -207,7 +207,10 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
             return newMapping;
         }
 
-        public override MappingDataNode? Except(MappingDataNode node)
+        /// <summary>
+        ///     Variant of <see cref="Except(MappingDataNode)"/> that will recursively call except rather than only checking equality.
+        /// </summary>
+        public MappingDataNode? RecursiveExcept(MappingDataNode node)
         {
             var mappingNode = new MappingDataNode()
             {
@@ -225,15 +228,55 @@ namespace Robust.Shared.Serialization.Markdown.Mapping
                 }
                 else
                 {
+                    // We recursively call except on the values and keep only the differences.
                     var newValue = val.Except(other.Value.Value);
                     if (newValue == null) continue;
                     mappingNode.Add(key.Copy(), newValue);
                 }
             }
 
-            if (mappingNode._children.Count == 0) return null;
+            return mappingNode._children.Count == 0 ? null : mappingNode;
+        }
 
-            return mappingNode;
+        public override MappingDataNode? Except(MappingDataNode node)
+        {
+            var mappingNode = new MappingDataNode()
+            {
+                Tag = Tag,
+                Start = Start,
+                End = End
+            };
+
+            foreach (var (key, val) in _children)
+            {
+                var other = node._children.FirstOrNull(p => p.Key.Equals(key));
+
+                if (other == null)
+                {
+                    mappingNode.Add(key.Copy(), val.Copy());
+                }
+                else
+                {
+                    // We only keep the entry if the values are not equal
+                    if (!val.Equals(other.Value.Value))
+                        mappingNode.Add(key.Copy(), val.Copy());
+                }
+            }
+
+            return mappingNode._children.Count == 0 ? null : mappingNode;
+        }
+
+        public override bool Equals(object? obj)
+        {
+            if (obj is not MappingDataNode other)
+                return false;
+
+            if (_children.Count != other._children.Count)
+                return false;
+
+            // Given that keys are unique and we do not care about the ordering, we know that if removing identical
+            // key-value pairs leaves us with an empty list then the mappings are equal.
+            return Except(other) == null;
         }
 
         public override MappingDataNode PushInheritance(MappingDataNode node)

@@ -42,7 +42,7 @@ namespace Robust.Client.UserInterface
             return File.Open(name, FileMode.Open);
         }
 
-        public async Task<string?> GetOpenFileName(FileDialogFilters? filters)
+        private async Task<string?> GetOpenFileName(FileDialogFilters? filters)
         {
             if (await IsKDialogAvailable())
             {

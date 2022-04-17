@@ -12,7 +12,7 @@ using Robust.Shared.Serialization.TypeSerializers.Interfaces;
 
 namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.List
 {
-    public sealed partial class PrototypeIdListSerializer<T> : ITypeSerializer<IReadOnlyList<string>, SequenceDataNode>
+    public partial class PrototypeIdListSerializer<T> : ITypeSerializer<IReadOnlyList<string>, SequenceDataNode>
         where T : class, IPrototype
     {
         DataNode ITypeWriter<IReadOnlyList<string>>.Write(
@@ -49,7 +49,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
 
             foreach (var dataNode in node.Sequence)
             {
-                list.Add(_prototypeSerializer.Read(
+                list.Add(PrototypeSerializer.Read(
                     serializationManager,
                     (ValueDataNode) dataNode,
                     dependencies,
@@ -76,7 +76,7 @@ namespace Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Pro
                     continue;
                 }
 
-                list.Add(_prototypeSerializer.Validate(serializationManager, value, dependencies, context));
+                list.Add(PrototypeSerializer.Validate(serializationManager, value, dependencies, context));
             }
 
             return new ValidatedSequenceNode(list);

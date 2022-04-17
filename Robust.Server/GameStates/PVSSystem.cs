@@ -631,14 +631,14 @@ internal sealed partial class PVSSystem : EntitySystem
             foreach (var (entityUid, _) in playerVisibleSet)
             {
                 // it was deleted, so we dont need to exit pvs
-                if(deletions.Contains(entityUid)) continue;
+                if (deletions.Contains(entityUid)) continue;
 
                 //TODO: HACK: somehow an entity left the view, transform does not exist (deleted?), but was not in the
                 // deleted list. This seems to happen with the map entity on round restart.
                 if (!EntityManager.EntityExists(entityUid))
                     continue;
 
-                entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
+                entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new[]
                 {
                     ComponentChange.Changed(_stateManager.TransformNetId, _transformCullState),
                 }), true));

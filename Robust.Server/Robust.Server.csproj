@@ -21,7 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Lidgren.Network\Lidgren.Network.csproj" />
-    <ProjectReference Include="..\ManagedHttpListener\src\System.Net.HttpListener.csproj" />
     <ProjectReference Include="..\Robust.Physics\Robust.Physics.csproj" />
     <ProjectReference Include="..\Robust.Shared.Maths\Robust.Shared.Maths.csproj" />
     <ProjectReference Include="..\Robust.Shared.Scripting\Robust.Shared.Scripting.csproj" />

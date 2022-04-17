@@ -639,7 +639,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
             {
-                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
             }), true));
         }
 

@@ -46,10 +46,7 @@ public sealed class OverflowDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 
     private int GetArrayStartIndex()
     {
-        var idx = _currentIndex - Count;
-        if (idx < 0)
-            idx += Capacity;
-        return idx;
+        return _currentIndex % Capacity;
     }
 
     public void Clear()

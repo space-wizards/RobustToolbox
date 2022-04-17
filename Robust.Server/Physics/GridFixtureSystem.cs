@@ -96,7 +96,9 @@ namespace Robust.Server.Physics
         {
             var nodes = _nodes[gridEuid];
             var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
-            Cleanup(gridEuid, chunk);
+            var dirtyNodes = new HashSet<ChunkSplitNode>();
+
+            Cleanup(gridEuid, chunk, dirtyNodes);
 
             var group = new ChunkNodeGroup()
             {
@@ -217,6 +219,11 @@ namespace Robust.Server.Physics
 
             nodes[chunk.Indices] = group;
 
+            foreach (var chunkNode in group.Nodes)
+            {
+                dirtyNodes.Add(chunkNode);
+            }
+
             // TODO: At this point detect splits.
             // Foreach touched neighbor node we need to pathfind to every other neighbor
             // For all nodes outstanding (including this chunks own nodes) we then pathfind each individually
@@ -247,7 +254,7 @@ namespace Robust.Server.Physics
             return false;
         }
 
-        private void Cleanup(EntityUid gridEuid, MapChunk chunk)
+        private void Cleanup(EntityUid gridEuid, MapChunk chunk, HashSet<ChunkSplitNode> dirtyNodes)
         {
             if (!_nodes[gridEuid].TryGetValue(chunk.Indices, out var group)) return;
 
@@ -257,6 +264,9 @@ namespace Robust.Server.Physics
                 foreach (var neighbor in node.Neighbors)
                 {
                     neighbor.Neighbors.Remove(node);
+                    // If neighbor is on a different chunk mark it for checking connections later.
+                    if (neighbor.Group.Equals(group)) continue;
+                    dirtyNodes.Add(neighbor);
                 }
 
                 node.Indices.Clear();

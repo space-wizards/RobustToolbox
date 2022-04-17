@@ -10,7 +10,7 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedTransformSystem
 {
-
+  
     #region Contains
 
     /// <summary>

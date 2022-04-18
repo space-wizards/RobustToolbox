@@ -208,15 +208,21 @@ namespace Robust.Server.Physics
                         }
 
                         // Update lookup ents
+                        // Needs to be done before setting old tiles as they will be re-parented to the map.
                         // TODO: Combine tiles into larger rectangles or something; this is gonna be the killer bit.
                         foreach (var tile in node.Indices)
                         {
                             var tilePos = offset + tile;
+                            var bounds = _lookup.GetLocalBounds(tilePos, mapGrid.TileSize);
 
                             foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Index, tilePos, LookupFlags.None))
                             {
                                 // Consider centre of entity position maybe?
                                 var entXform = xformQuery.GetComponent(ent);
+
+                                if (entXform.ParentUid != mapGrid.GridEntityId ||
+                                    !bounds.Contains(entXform.LocalPosition)) continue;
+
                                 entXform.AttachParent(splitXform);
                             }
                         }

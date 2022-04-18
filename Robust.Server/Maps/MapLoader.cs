@@ -683,6 +683,8 @@ namespace Robust.Server.Maps
                         type = typeNode.Value;
                     }
 
+                    // TODO Fix this. If the entities are ever defined out of order, and if one of them does not have a
+                    // "uid" node, then defaulting to Entities.Count will error.
                     var uid = Entities.Count;
                     if (entityDef.TryGet<ValueDataNode>("uid", out var uidNode))
                     {

@@ -41,8 +41,8 @@ public sealed class UITheme : IPrototype
     }
     public Texture ResolveTexture(IResourceCache cache, string texturePath)
     {
-        return cache.TryGetResource<TextureResource>( new ResourcePath(Path + texturePath+".png"), out var texture) ? texture :
-            cache.GetResource<TextureResource>(DefaultPath+"/"+DefaultName+"/" + texturePath+".png");
+        return cache.TryGetResource<TextureResource>( new ResourcePath($"{Path}/{texturePath}.png"), out var texture) ? texture :
+            cache.GetResource<TextureResource>($"{DefaultPath}/{DefaultName}/{texturePath}.png");
     }
 
     public Color? ResolveColor(string colorName)

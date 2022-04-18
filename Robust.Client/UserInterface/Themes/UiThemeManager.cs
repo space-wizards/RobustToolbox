@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using NFluidsynth;
+using Robust.Client.ResourceManagement;
 using Robust.Shared;
 using Robust.Shared.Configuration;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Prototypes;
-using Logger = Robust.Shared.Log.Logger;
 
 namespace Robust.Client.UserInterface.Themes;
 
@@ -23,6 +23,7 @@ public interface IUIThemeManager
 
 public sealed class UiThemeManager : IUIThemeManager
 {
+    [Dependency] private readonly IResourceCache _cache = default!;
     [Dependency] private readonly IPrototypeManager _protoManager = default!;
     [Dependency] private readonly IConfigurationManager _configurationManager = default!;
     [Dependency] private readonly IUserInterfaceManagerInternal _userInterfaceManager = default!;
@@ -43,12 +44,27 @@ public sealed class UiThemeManager : IUIThemeManager
             _themes.Add(proto.ID, proto);
         }
         _configurationManager.OnValueChanged(CVars.InterfaceTheme, SetThemeOrPrevious, true);
+        CacheTheme();
     }
+
+    private void CacheTheme()
+    {
+        foreach (var path in _cache.ContentFindFiles(CurrentTheme.Path))
+        {
+            if (path.Extension != "png")
+                continue;
+
+            var texture = _cache.GetResource<TextureResource>(path);
+            _cache.CacheResource(path, texture);
+        }
+    }
+
     //Try to set the current theme, if the theme is not found do nothing
     public void SetActiveTheme(string themeName)
     {
         if (!_themes.TryGetValue(themeName, out var theme) || (theme == CurrentTheme)) return;
         CurrentTheme = theme;
+        CacheTheme();
     }
 
     public void SetDefaultTheme(string themeId)

@@ -131,6 +131,12 @@ internal sealed partial class MidiManager : IMidiManager
         {
             _resourceManager.UserData.CreateDir(CustomSoundfontDirectory);
         }
+        // not a directory, preserve the old file and create an actual directory
+        else if (!_resourceManager.UserData.IsDir(CustomSoundfontDirectory))
+        {
+            _resourceManager.UserData.Rename(CustomSoundfontDirectory, CustomSoundfontDirectory.WithName(CustomSoundfontDirectory.Filename + ".old"));
+            _resourceManager.UserData.CreateDir(CustomSoundfontDirectory);
+        }
 
         try
         {

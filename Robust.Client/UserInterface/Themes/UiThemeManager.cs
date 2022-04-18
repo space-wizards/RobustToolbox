@@ -44,19 +44,6 @@ public sealed class UiThemeManager : IUIThemeManager
             _themes.Add(proto.ID, proto);
         }
         _configurationManager.OnValueChanged(CVars.InterfaceTheme, SetThemeOrPrevious, true);
-        CacheTheme();
-    }
-
-    private void CacheTheme()
-    {
-        foreach (var path in _cache.ContentFindFiles(CurrentTheme.Path))
-        {
-            if (path.Extension != "png")
-                continue;
-
-            var texture = _cache.GetResource<TextureResource>(path);
-            _cache.CacheResource(path, texture);
-        }
     }
 
     //Try to set the current theme, if the theme is not found do nothing
@@ -64,7 +51,6 @@ public sealed class UiThemeManager : IUIThemeManager
     {
         if (!_themes.TryGetValue(themeName, out var theme) || (theme == CurrentTheme)) return;
         CurrentTheme = theme;
-        CacheTheme();
     }
 
     public void SetDefaultTheme(string themeId)

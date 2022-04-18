@@ -98,6 +98,8 @@ internal sealed partial class MidiManager : IMidiManager
 
     private const string FallbackSoundfont = "/Midi/fallback.sf2";
 
+    private static ResourcePath CustomSoundfontDirectory = new ResourcePath("/soundfonts/");
+
     private readonly ResourceLoaderCallbacks _soundfontLoaderCallbacks = new();
 
     private bool FluidsynthInitialized;
@@ -124,6 +126,11 @@ internal sealed partial class MidiManager : IMidiManager
         _midiSawmill.Level = LogLevel.Info;
         _sawmill = _logger.GetSawmill("midi.fluidsynth");
         _loggerDelegate = LoggerDelegate;
+
+        if (!_resourceManager.UserData.Exists(CustomSoundfontDirectory))
+        {
+            _resourceManager.UserData.CreateDir(CustomSoundfontDirectory);
+        }
 
         try
         {
@@ -235,6 +242,16 @@ internal sealed partial class MidiManager : IMidiManager
             {
                 if (File.Exists(WindowsSoundfont) && SoundFont.IsSoundFont(WindowsSoundfont))
                     renderer.LoadSoundfont(WindowsSoundfont, true);
+            }
+
+            // load every soundfont from the user data directory
+            _midiSawmill.Debug($"loading soundfonts from {CustomSoundfontDirectory.ToRelativePath().ToString()}/*");
+            var enumerator = _resourceManager.UserData.Find($"{CustomSoundfontDirectory.ToRelativePath().ToString()}/*").Item1;
+            foreach (var soundfont in enumerator)
+            {
+                if (soundfont.Extension != "sf2" && soundfont.Extension != "dls") continue;
+                _midiSawmill.Debug($"loading soundfont {soundfont}");
+                renderer.LoadSoundfont(soundfont.ToString());
             }
 
             renderer.Source.SetVolume(Volume);
@@ -409,10 +426,23 @@ internal sealed partial class MidiManager : IMidiManager
             var resourceCache = IoCManager.Resolve<IResourceCache>();
             var resourcePath = new ResourcePath(filename);
 
-            if (resourcePath.IsRooted && resourceCache.ContentFileExists(filename))
+            if (resourcePath.IsRooted)
             {
-                if (!resourceCache.TryContentFileRead(filename, out stream))
+                // is it in content?
+                if (resourceCache.ContentFileExists(filename))
+                {
+                    if (!resourceCache.TryContentFileRead(filename, out stream))
+                        return IntPtr.Zero;
+                }
+                // is it in userdata?
+                else if (resourceCache.UserData.Exists(resourcePath))
+                {
+                    stream = resourceCache.UserData.OpenRead(resourcePath);
+                }
+                else
+                {
                     return IntPtr.Zero;
+                }
             }
             else if (File.Exists(filename))
             {

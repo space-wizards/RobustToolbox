@@ -18,6 +18,7 @@ namespace Robust.Server.Physics
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
+        [Dependency] private readonly EntityLookupSystem _lookup = default!;
 
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
@@ -176,6 +177,7 @@ namespace Robust.Server.Physics
                     splitGrid.WorldPosition = gridPos;
                     splitGrid.WorldRotation = gridRot;
                     var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
+                    var splitXform = xformQuery.GetComponent(splitGrid.GridEntityId);
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
@@ -205,11 +207,22 @@ namespace Robust.Server.Physics
                             }
                         }
 
+                        // Update lookup ents
+                        // TODO: Combine tiles into larger rectangles or something; this is gonna be the killer bit.
+                        foreach (var tile in node.Indices)
+                        {
+                            var tilePos = offset + tile;
+
+                            foreach (var ent in _lookup.GetEntitiesIntersecting(mapGrid.Index, tilePos, LookupFlags.None))
+                            {
+                                // Consider centre of entity position maybe?
+                                var entXform = xformQuery.GetComponent(ent);
+                                entXform.AttachParent(splitXform);
+                            }
+                        }
+
                         _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
                     }
-
-                    // TODO
-                    // Update lookup ents
 
                     // Set tiles on old grid
                     foreach (var node in group)

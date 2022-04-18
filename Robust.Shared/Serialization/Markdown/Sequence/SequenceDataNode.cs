@@ -8,17 +8,26 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
 {
     public sealed class SequenceDataNode : DataNode<SequenceDataNode>, IList<DataNode>
     {
-        private readonly List<DataNode> _nodes = new();
+        private readonly List<DataNode> _nodes;
 
-        public SequenceDataNode() : base(NodeMark.Invalid, NodeMark.Invalid) { }
+        public SequenceDataNode() : base(NodeMark.Invalid, NodeMark.Invalid)
+        {
+            _nodes = new();
+        }
 
-        public SequenceDataNode(List<DataNode> nodes) : this()
+        public SequenceDataNode(int size) : base(NodeMark.Invalid, NodeMark.Invalid)
+        {
+            _nodes = new(size);
+        }
+
+        public SequenceDataNode(List<DataNode> nodes) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
             _nodes = nodes;
         }
 
-        public SequenceDataNode(List<string> values) : this()
+        public SequenceDataNode(List<string> values) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _nodes = new(values.Count);
             foreach (var value in values)
             {
                 _nodes.Add(new ValueDataNode(value));
@@ -27,6 +36,7 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
 
         public SequenceDataNode(YamlSequenceNode sequence) : base(sequence.Start, sequence.End)
         {
+            _nodes = new(sequence.Children.Count);
             foreach (var node in sequence.Children)
             {
                 _nodes.Add(node.ToDataNode());
@@ -35,16 +45,18 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
             Tag = sequence.Tag;
         }
 
-        public SequenceDataNode(params DataNode[] nodes) : this()
+        public SequenceDataNode(params DataNode[] nodes) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _nodes = new(nodes.Length);
             foreach (var node in nodes)
             {
                 _nodes.Add(node);
             }
         }
 
-        public SequenceDataNode(params string[] strings) : this()
+        public SequenceDataNode(params string[] strings) : base(NodeMark.Invalid, NodeMark.Invalid)
         {
+            _nodes = new(strings.Length);
             foreach (var s in strings)
             {
                 _nodes.Add(new ValueDataNode(s));
@@ -106,7 +118,7 @@ namespace Robust.Shared.Serialization.Markdown.Sequence
 
         public override SequenceDataNode Copy()
         {
-            var newSequence = new SequenceDataNode()
+            var newSequence = new SequenceDataNode(Sequence.Count)
             {
                 Tag = Tag,
                 Start = Start,

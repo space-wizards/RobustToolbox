@@ -862,7 +862,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Regenerates the chunk local bounds of this chunk.
         /// </summary>
-        public void RegenerateCollision(MapChunk mapChunk)
+        public void RegenerateCollision(MapChunk mapChunk, bool checkSplit = true)
         {
             // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
             if (mapChunk.FilledTiles == 0)
@@ -896,7 +896,7 @@ namespace Robust.Shared.Map
 
             // TryGet because unit tests YAY
             if (mapChunk.FilledTiles > 0 && _entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
-                system.RegenerateCollision(GridEntityId, mapChunk, rectangles);
+                system.RegenerateCollision(GridEntityId, mapChunk, rectangles, checkSplit);
         }
 
         /// <summary>

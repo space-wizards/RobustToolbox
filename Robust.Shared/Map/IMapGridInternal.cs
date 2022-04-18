@@ -64,7 +64,7 @@ namespace Robust.Shared.Map
         /// <summary>
         /// Regenerates the chunk local bounds of this chunk.
         /// </summary>
-        void RegenerateCollision(MapChunk mapChunk);
+        void RegenerateCollision(MapChunk mapChunk, bool checkSplit = true);
 
         /// <summary>
         /// Calculate the world space AABB for this chunk.

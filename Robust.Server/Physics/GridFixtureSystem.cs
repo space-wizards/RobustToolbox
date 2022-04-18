@@ -8,6 +8,7 @@ using Robust.Shared.IoC;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
+using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics
 {
@@ -92,7 +93,69 @@ namespace Robust.Server.Physics
             _subscribedSessions.Remove(session);
         }
 
-        internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk)
+        internal void CheckSplits(EntityUid uid)
+        {
+            var nodes = _nodes[uid];
+            var dirtyNodes = new HashSet<ChunkSplitNode>(nodes.Count);
+
+            foreach (var (_, group) in nodes)
+            {
+                foreach (var node in group.Nodes)
+                {
+                    dirtyNodes.Add(node);
+                }
+            }
+
+            CheckSplits(dirtyNodes);
+        }
+
+        private void CheckSplits(HashSet<ChunkSplitNode> dirtyNodes)
+        {
+            var splitFrontier = new Queue<ChunkSplitNode>();
+            var grids = new List<HashSet<ChunkSplitNode>>(1);
+
+            // TODO: At this point detect splits.
+            while (dirtyNodes.Count > 0)
+            {
+                var originEnumerator = dirtyNodes.GetEnumerator();
+                originEnumerator.MoveNext();
+                var origin = originEnumerator.Current;
+                originEnumerator.Dispose();
+                splitFrontier.Enqueue(origin);
+                var foundSplits = new HashSet<ChunkSplitNode>
+                {
+                    origin
+                };
+
+                while (splitFrontier.TryDequeue(out var split))
+                {
+                    dirtyNodes.Remove(split);
+
+                    foreach (var neighbor in split.Neighbors)
+                    {
+                        if (!foundSplits.Add(neighbor)) continue;
+
+                        splitFrontier.Enqueue(neighbor);
+                    }
+                }
+
+                grids.Add(foundSplits);
+            }
+
+            // Split time
+            if (grids.Count > 1)
+            {
+                // We'll leave the biggest group as the original grid
+                // anything smaller gets split off.
+
+                foreach (var splitNode in grids)
+                {
+
+                }
+            }
+        }
+
+        internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true)
         {
             var nodes = _nodes[gridEuid];
             var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
@@ -224,7 +287,11 @@ namespace Robust.Server.Physics
                 dirtyNodes.Add(chunkNode);
             }
 
-            // TODO: At this point detect splits.
+            if (checkSplit)
+            {
+                CheckSplits(dirtyNodes);
+            }
+
             // Foreach touched neighbor node we need to pathfind to every other neighbor
             // For all nodes outstanding (including this chunks own nodes) we then pathfind each individually
             // and determine the new grids.

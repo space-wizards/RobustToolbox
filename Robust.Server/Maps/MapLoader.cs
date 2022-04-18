@@ -496,6 +496,7 @@ namespace Robust.Server.Maps
                     }
 
                     fixtureSystem.FixtureUpdate(fixtures, body);
+                    gridFixtures.CheckSplits(grid.GridEntityId);
                 }
             }
 

@@ -17,12 +17,19 @@ namespace Robust.Server.Physics
     /// </summary>
     internal sealed class GridFixtureSystem : SharedGridFixtureSystem
     {
+        [Dependency] private readonly IMapManager _mapManager = default!;
+
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
         /// <summary>
         /// Sessions to receive nodes for debug purposes.
         /// </summary>
         private readonly HashSet<ICommonSession> _subscribedSessions = new();
+
+        /// <summary>
+        /// Recursion detection to avoid splitting while handling an existing split
+        /// </summary>
+        private bool _splitting;
 
         public override void Initialize()
         {
@@ -106,11 +113,14 @@ namespace Robust.Server.Physics
                 }
             }
 
-            CheckSplits(dirtyNodes);
+            CheckSplits(uid, dirtyNodes);
         }
 
-        private void CheckSplits(HashSet<ChunkSplitNode> dirtyNodes)
+        private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
         {
+            if (_splitting) return;
+
+            _splitting = true;
             var splitFrontier = new Queue<ChunkSplitNode>();
             var grids = new List<HashSet<ChunkSplitNode>>(1);
 
@@ -142,21 +152,102 @@ namespace Robust.Server.Physics
                 grids.Add(foundSplits);
             }
 
+            var mapGrid = _mapManager.GetGrid(uid);
+
             // Split time
             if (grids.Count > 1)
             {
                 // We'll leave the biggest group as the original grid
                 // anything smaller gets split off.
+                // Do it in reverse order as we don't want to set the tiles on the original grid until last.
+                grids.Sort((x, y) => x.Count.CompareTo(y.Count));
+                var xformQuery = GetEntityQuery<TransformComponent>();
+                var (gridPos, gridRot) =
+                    xformQuery.GetComponent(mapGrid.GridEntityId).GetWorldPositionRotation(xformQuery);
 
-                foreach (var splitNode in grids)
+                for (var i = 0; i < grids.Count - 1; i++)
                 {
+                    var group = grids[i];
+                    var splitGrid = _mapManager.CreateGrid(mapGrid.ParentMapId);
 
+                    splitGrid.WorldPosition = gridPos;
+                    splitGrid.WorldRotation = gridRot;
+
+                    var gridComp = Comp<IMapGridComponent>(splitGrid.GridEntityId);
+
+                    // TODO: Need to:
+                    // Set tiles on new grid (no split detection)
+                    // Update anchored ents
+                    // Update lookup ents
+                    // Set tiles on old grid.
+
+                    // Set tiles on new grid + update anchored entities
+                    foreach (var node in group)
+                    {
+                        var offset = node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize;
+
+                        // TODO: Use the group version
+                        foreach (var tile in node.Indices)
+                        {
+                            var tilePos = offset + tile;
+
+                            // TODO: Could be faster getting tile data.
+                            splitGrid.SetTile(tilePos, mapGrid.GetTileRef(tilePos).Tile);
+
+                            // TODO: This is gonna allocate out the ass.
+                            var anchored = mapGrid.GetAnchoredEntities(tilePos).ToArray();
+
+                            foreach (var ent in anchored)
+                            {
+                                var xform = xformQuery.GetComponent(ent);
+                                xform.Anchored = false;
+                                gridComp.AnchorEntity(xform);
+                            }
+                        }
+
+                        _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
+                    }
+
+                    // Update anchored ents
+
+                    // Update lookup ents
+
+                    // Set tiles on old grid
+                    foreach (var node in group)
+                    {
+                        var offset = node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize;
+
+                        // TODO: Use the group version
+                        foreach (var tile in node.Indices)
+                        {
+                            mapGrid.SetTile(offset + tile, Tile.Empty);
+                        }
+                    }
+
+                    // TODO: Regenerate split nodes.
+                }
+
+                var toRemove = new RemQueue<ChunkNodeGroup>();
+
+                foreach (var (_, group) in _nodes[mapGrid.GridEntityId])
+                {
+                    if (group.Nodes.Count > 0) continue;
+                    toRemove.Add(group);
+                }
+
+                foreach (var group in toRemove)
+                {
+                    _nodes[mapGrid.GridEntityId].Remove(group.Chunk.Indices);
                 }
             }
+
+            _splitting = false;
         }
 
         internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true)
         {
+            if (_splitting) return;
+
             var nodes = _nodes[gridEuid];
             var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
             var dirtyNodes = new HashSet<ChunkSplitNode>();
@@ -289,7 +380,7 @@ namespace Robust.Server.Physics
 
             if (checkSplit)
             {
-                CheckSplits(dirtyNodes);
+                CheckSplits(gridEuid, dirtyNodes);
             }
 
             // Foreach touched neighbor node we need to pathfind to every other neighbor

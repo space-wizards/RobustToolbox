@@ -159,11 +159,14 @@ namespace Robust.Server.Physics
             {
                 // We'll leave the biggest group as the original grid
                 // anything smaller gets split off.
-                // Do it in reverse order as we don't want to set the tiles on the original grid until last.
-                grids.Sort((x, y) => x.Count.CompareTo(y.Count));
+                grids.Sort((x, y) =>
+                    x.Sum(o => o.Indices.Count)
+                        .CompareTo(y.Sum(o => o.Indices.Count)));
+
                 var xformQuery = GetEntityQuery<TransformComponent>();
-                var (gridPos, gridRot) =
-                    xformQuery.GetComponent(mapGrid.GridEntityId).GetWorldPositionRotation(xformQuery);
+                var bodyQuery = GetEntityQuery<PhysicsComponent>();
+                var (gridPos, gridRot) = xformQuery.GetComponent(mapGrid.GridEntityId).GetWorldPositionRotation(xformQuery);
+                var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
@@ -172,6 +175,9 @@ namespace Robust.Server.Physics
 
                     splitGrid.WorldPosition = gridPos;
                     splitGrid.WorldRotation = gridRot;
+                    var splitBody = bodyQuery.GetComponent(splitGrid.GridEntityId);
+                    splitBody.LinearVelocity = mapBody.LinearVelocity;
+                    splitBody.AngularVelocity = mapBody.AngularVelocity;
 
                     var gridComp = Comp<IMapGridComponent>(splitGrid.GridEntityId);
 
@@ -217,7 +223,8 @@ namespace Robust.Server.Physics
                         }
                     }
 
-                    // TODO: Regenerate split nodes.
+                    GenerateSplitNodes((IMapGridInternal) splitGrid);
+                    SendNodeDebug(splitGrid.GridEntityId);
                 }
 
                 var toRemove = new RemQueue<ChunkNodeGroup>();
@@ -235,22 +242,28 @@ namespace Robust.Server.Physics
             }
 
             _splitting = false;
+            SendNodeDebug(mapGrid.GridEntityId);
         }
 
-        internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true)
+        private void GenerateSplitNodes(IMapGridInternal grid)
         {
-            if (_splitting) return;
+            foreach (var (_, chunk) in grid.GetMapChunks())
+            {
+                var group = CreateNodes(grid.GridEntityId, grid, chunk);
+                _nodes[grid.GridEntityId].Add(chunk.Indices, group);
+            }
+        }
 
-            var nodes = _nodes[gridEuid];
-            var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
-            var dirtyNodes = new HashSet<ChunkSplitNode>();
-
-            Cleanup(gridEuid, chunk, dirtyNodes);
-
-            var group = new ChunkNodeGroup()
+        /// <summary>
+        /// Creates all of the splitting nodes within this chunk; also consider neighbor chunks.
+        /// </summary>
+        private ChunkNodeGroup CreateNodes(EntityUid gridEuid, IMapGridInternal grid, MapChunk chunk)
+        {
+            var group = new ChunkNodeGroup
             {
                 Chunk = chunk,
             };
+
             var tiles = new HashSet<Vector2i>(chunk.ChunkSize * chunk.ChunkSize);
 
             for (var x = 0; x < chunk.ChunkSize; x++)
@@ -364,7 +377,19 @@ namespace Robust.Server.Physics
                 }
             }
 
-            nodes[chunk.Indices] = group;
+            return group;
+        }
+
+        internal override void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true)
+        {
+            if (_splitting) return;
+
+            var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
+            var dirtyNodes = new HashSet<ChunkSplitNode>();
+
+            Cleanup(gridEuid, chunk, dirtyNodes);
+            var group = CreateNodes(gridEuid, grid, chunk);
+            _nodes[grid.GridEntityId][chunk.Indices] = group;
 
             foreach (var chunkNode in group.Nodes)
             {
@@ -372,15 +397,7 @@ namespace Robust.Server.Physics
             }
 
             if (checkSplit)
-            {
                 CheckSplits(gridEuid, dirtyNodes);
-            }
-
-            // Foreach touched neighbor node we need to pathfind to every other neighbor
-            // For all nodes outstanding (including this chunks own nodes) we then pathfind each individually
-            // and determine the new grids.
-
-            SendNodeDebug(gridEuid);
         }
 
         /// <summary>

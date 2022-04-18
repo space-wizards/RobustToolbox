@@ -38,7 +38,7 @@ namespace Robust.Server.ViewVariables.Traits
                 {
                     var type = component.GetType();
                     list.Add(new ViewVariablesBlobEntityComponents.Entry
-                        {Stringified = TypeAbbreviation.Abbreviate(type), FullName = type.FullName, ComponentName = component.Name});
+                        {Stringified = PrettyPrint.PrintUserFacingTypeShort(type, 2), FullName = type.FullName, ComponentName = component.Name});
                 }
 
                 return new ViewVariablesBlobEntityComponents

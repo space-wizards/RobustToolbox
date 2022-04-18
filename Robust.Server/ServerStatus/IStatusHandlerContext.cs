@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -11,9 +12,17 @@ namespace Robust.Server.ServerStatus
     {
         HttpMethod RequestMethod { get; }
         IPEndPoint RemoteEndPoint { get; }
+
+        /// <summary>
+        /// Stream that reads the request body data,
+        /// </summary>
+        Stream RequestBody { get; }
         Uri Url { get; }
         bool IsGetLike { get; }
         IReadOnlyDictionary<string, StringValues> RequestHeaders { get; }
+
+        IDictionary<string, string> ResponseHeaders { get; }
+        bool KeepAlive { get; set; }
 
         [Obsolete("Use async versions instead")]
         T? RequestBodyJson<T>();
@@ -42,6 +51,8 @@ namespace Robust.Server.ServerStatus
             byte[] data,
             int code = 200,
             string contentType = "text/plain");
+
+        Task RespondNoContentAsync();
 
         Task RespondAsync(
             string text,
@@ -72,5 +83,7 @@ namespace Robust.Server.ServerStatus
         void RespondJson(object jsonData, HttpStatusCode code = HttpStatusCode.OK);
 
         Task RespondJsonAsync(object jsonData, HttpStatusCode code = HttpStatusCode.OK);
+
+        Task<Stream> RespondStreamAsync(HttpStatusCode code = HttpStatusCode.OK);
     }
 }

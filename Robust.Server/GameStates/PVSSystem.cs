@@ -546,7 +546,7 @@ internal sealed partial class PVSSystem : EntitySystem
             !AddToChunkSetRecursively(in parent, visMask, tree, set, transform, metadata)) //did we just fail to add the parent?
             return false; //we failed? suppose we dont get added either
 
-        //todo paul i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles, make this a simpl assignment at some point maybe idk
+        //i want it to crash here if it gets added double bc that shouldnt happen and will add alot of unneeded cycles
         tree.Set(uid, parent);
         set.Add(uid, mComp);
         return true;
@@ -639,7 +639,7 @@ internal sealed partial class PVSSystem : EntitySystem
 
             entityStates.Add(new EntityState(entityUid, new NetListAsArray<ComponentChange>(new []
             {
-                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponent.TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
+                ComponentChange.Changed(_stateManager.TransformNetId, new TransformComponentState(Vector2.Zero, Angle.Zero, EntityUid.Invalid, false, false)),
             }), true));
         }
 

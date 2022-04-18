@@ -89,7 +89,7 @@ namespace Robust.Client.Player
         {
             LocalPlayer = new LocalPlayer();
 
-            var msgList = _network.CreateNetMessage<MsgPlayerListReq>();
+            var msgList = new MsgPlayerListReq();
             // message is empty
             _network.ClientSendMessage(msgList);
         }

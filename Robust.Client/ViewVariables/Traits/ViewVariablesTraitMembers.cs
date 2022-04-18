@@ -45,7 +45,7 @@ namespace Robust.Client.ViewVariables.Traits
                 {
                     CreateMemberGroupHeader(
                         ref first,
-                        TypeAbbreviation.Abbreviate(group.Key),
+                        PrettyPrint.PrintUserFacingTypeShort(group.Key, 2),
                         _memberList);
 
                     foreach (var control in group)

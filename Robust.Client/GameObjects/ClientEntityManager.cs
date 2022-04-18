@@ -86,7 +86,7 @@ namespace Robust.Client.GameObjects
 
         public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
         {
-            var msg = _networkManager.CreateNetMessage<MsgEntity>();
+            var msg = new MsgEntity();
             msg.Type = EntityMessageType.SystemMessage;
             msg.SystemMessage = message;
             msg.SourceTick = _gameTiming.CurTick;

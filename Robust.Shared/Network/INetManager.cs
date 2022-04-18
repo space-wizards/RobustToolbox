@@ -138,6 +138,7 @@ namespace Robust.Shared.Network
         /// </remarks>
         /// <typeparam name="T">Type of NetMessage to send.</typeparam>
         /// <returns>Instance of the NetMessage.</returns>
-        T CreateNetMessage<T>() where T : NetMessage;
+        [Obsolete("Just new NetMessage directly")]
+        T CreateNetMessage<T>() where T : NetMessage, new();
     }
 }

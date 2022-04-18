@@ -99,11 +99,12 @@ entities:
             entMan.EnsureComponent<BroadphaseComponent>(mapUid);
 
             var mapLoad = IoCManager.Resolve<IMapLoader>();
-            var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml");
+            var grid = mapLoad.LoadBlueprint(mapId, "/TestMap.yml").gridId;
 
             Assert.That(grid, NUnit.Framework.Is.Not.Null);
 
-            var entity = entMan.GetComponent<TransformComponent>(grid!.GridEntityId).Children.Single().Owner;
+            var geid = map.GetGridEuid(grid!.Value);
+            var entity = entMan.GetComponent<TransformComponent>(geid).Children.Single().Owner;
             var c = entMan.GetComponent<MapDeserializeTestComponent>(entity);
 
             Assert.That(c.Bar, Is.EqualTo(2));

@@ -137,6 +137,12 @@ namespace Robust.Shared
             CVarDef.Create("net.pvs_budget", 50, CVar.ARCHIVE | CVar.REPLICATED);
 
         /// <summary>
+        /// ZSTD compression level to use when compressing game states.
+        /// </summary>
+        public static readonly CVarDef<int> NetPVSCompressLevel =
+            CVarDef.Create("net.pvs_compress_level", 3, CVar.SERVERONLY);
+
+        /// <summary>
         /// Log late input messages from clients.
         /// </summary>
         public static readonly CVarDef<bool> NetLogLateMsg =
@@ -188,6 +194,33 @@ namespace Robust.Shared
         public static readonly CVarDef<string> NetLidgrenAppIdentifier =
             CVarDef.Create("net.lidgren_app_identifier", "RobustToolbox");
 
+#if DEBUG
+        /// <summary>
+        /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
+        /// 0 = no packet loss, 1 = all packets dropped
+        /// </summary>
+        public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add fake extra delay to all outgoing UDP network packets, in seconds.
+        /// </summary>
+        /// <seealso cref="NetFakeLagRand"/>
+        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add fake extra random delay to all outgoing UDP network packets, in seconds.
+        /// The actual delay added for each packet is random between 0 and the specified value.
+        /// </summary>
+        /// <seealso cref="NetFakeLagMin"/>
+        public static readonly CVarDef<float> NetFakeLagRand = CVarDef.Create("net.fakelagrand", 0f, CVar.CHEAT);
+
+        /// <summary>
+        /// Add random fake duplicates to all outgoing UDP network packets, as a ratio of how many packets to duplicate.
+        /// 0 = no packets duplicated, 1 = all packets duplicated.
+        /// </summary>
+        public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
+#endif
+
         /**
          * SUS
          */
@@ -217,33 +250,6 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> SysGameThreadPriority =
             CVarDef.Create("sys.game_thread_priority", (int) ThreadPriority.AboveNormal);
-
-#if DEBUG
-        /// <summary>
-        /// Add random fake network loss to all outgoing UDP network packets, as a ratio of how many packets to drop.
-        /// 0 = no packet loss, 1 = all packets dropped
-        /// </summary>
-        public static readonly CVarDef<float> NetFakeLoss = CVarDef.Create("net.fakeloss", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add fake extra delay to all outgoing UDP network packets, in seconds.
-        /// </summary>
-        /// <seealso cref="NetFakeLagRand"/>
-        public static readonly CVarDef<float> NetFakeLagMin = CVarDef.Create("net.fakelagmin", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add fake extra random delay to all outgoing UDP network packets, in seconds.
-        /// The actual delay added for each packet is random between 0 and the specified value.
-        /// </summary>
-        /// <seealso cref="NetFakeLagMin"/>
-        public static readonly CVarDef<float> NetFakeLagRand = CVarDef.Create("net.fakelagrand", 0f, CVar.CHEAT);
-
-        /// <summary>
-        /// Add random fake duplicates to all outgoing UDP network packets, as a ratio of how many packets to duplicate.
-        /// 0 = no packets duplicated, 1 = all packets duplicated.
-        /// </summary>
-        public static readonly CVarDef<float> NetFakeDuplicates = CVarDef.Create("net.fakeduplicates", 0f, CVar.CHEAT);
-#endif
 
         /*
          * METRICS
@@ -427,10 +433,28 @@ namespace Robust.Shared
             CVarDef.Create("build.download_url", string.Empty, CVar.SERVERONLY);
 
         /// <summary>
+        /// URL of the content manifest the launcher should download to connect to this server.
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestUrl =
+            CVarDef.Create("build.manifest_url", string.Empty, CVar.SERVERONLY);
+
+        /// <summary>
+        /// URL at which the launcher can download the manifest game files.
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestDownloadUrl =
+            CVarDef.Create("build.manifest_download_url", string.Empty, CVar.SERVERONLY);
+
+        /// <summary>
         /// SHA-256 hash of the content pack hosted at <c>build.download_url</c>
         /// </summary>
         public static readonly CVarDef<string> BuildHash =
             CVarDef.Create("build.hash", "", CVar.SERVERONLY);
+
+        /// <summary>
+        /// SHA-256 hash of the manifest hosted at <c>build.manifest_url</c>
+        /// </summary>
+        public static readonly CVarDef<string> BuildManifestHash =
+            CVarDef.Create("build.manifest_hash", "", CVar.SERVERONLY);
 
         /*
          * WATCHDOG
@@ -1084,9 +1108,6 @@ namespace Robust.Shared
         public static readonly CVarDef<float> MidiVolume =
             CVarDef.Create("midi.volume", 0f, CVar.CLIENTONLY | CVar.ARCHIVE);
 
-        public static readonly CVarDef<string> MidiSoundfont =
-            CVarDef.Create("midi.soundfont", string.Empty, CVar.CLIENTONLY | CVar.ARCHIVE);
-
         /*
          * HUB
          * CVars related to public master server hub
@@ -1125,5 +1146,67 @@ namespace Robust.Shared
         /// </summary>
         public static readonly CVarDef<int> HubAdvertiseInterval =
             CVarDef.Create("hub.advertise_interval", 120, CVar.SERVERONLY);
+
+        /*
+         * ACZ
+         */
+
+        /// <summary>
+        /// Whether to use stream compression instead of per-file compression when transmitting ACZ data.
+        /// Enabling stream compression significantly reduces bandwidth usage of downloads,
+        /// but increases server and launcher CPU load. It also makes final files stored on the client compressed less.
+        /// </summary>
+        public static readonly CVarDef<bool> AczStreamCompress =
+            CVarDef.Create("acz.stream_compress", false, CVar.SERVERONLY);
+
+        /// <summary>
+        /// ZSTD Compression level to use when doing ACZ stream compressed.
+        /// </summary>
+        public static readonly CVarDef<int> AczStreamCompressLevel =
+            CVarDef.Create("acz.stream_compress_level", 3, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Whether to do compression on individual files for ACZ downloads.
+        /// Automatically forced off if stream compression is enabled.
+        /// </summary>
+        public static readonly CVarDef<bool> AczBlobCompress =
+            CVarDef.Create("acz.blob_compress", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// ZSTD Compression level to use for individual file compression.
+        /// </summary>
+        public static readonly CVarDef<int> AczBlobCompressLevel =
+            CVarDef.Create("acz.blob_compress_level", 14, CVar.SERVERONLY);
+
+        // Could consider using a ratio for this?
+        /// <summary>
+        /// Amount of bytes that need to be saved by compression for the compression to be "worth it".
+        /// </summary>
+        public static readonly CVarDef<int> AczBlobCompressSaveThreshold =
+            CVarDef.Create("acz.blob_compress_save_threshold", 14, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Whether to ZSTD compress the ACZ manifest.
+        /// If this is enabled (the default) then non-compressed manifest requests will be decompressed live.
+        /// </summary>
+        public static readonly CVarDef<bool> AczManifestCompress =
+            CVarDef.Create("acz.manifest_compress", true, CVar.SERVERONLY);
+
+        /// <summary>
+        /// Compression level for ACZ manifest compression.
+        /// </summary>
+        public static readonly CVarDef<int> AczManifestCompressLevel =
+            CVarDef.Create("acz.manifest_compress_level", 14, CVar.SERVERONLY);
+
+        /*
+         * THREAD
+         */
+
+        /// <summary>
+        /// The nominal parallel processing count to use for parallelized operations.
+        /// The default of 0 automatically selects the system's processor count.
+        /// </summary>
+        public static readonly CVarDef<int> ThreadParallelCount =
+            CVarDef.Create("thread.parallel_count", 0);
     }
 }

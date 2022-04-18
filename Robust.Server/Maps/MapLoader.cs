@@ -70,7 +70,7 @@ namespace Robust.Server.Maps
         }
 
         /// <inheritdoc />
-        public IMapGrid? LoadBlueprint(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, GridId? gridId) LoadBlueprint(MapId mapId, string path)
         {
             return LoadBlueprint(mapId, path, DefaultLoadOptions);
         }
@@ -80,13 +80,14 @@ namespace Robust.Server.Maps
             return new ResourcePath(path).ToRootedPath();
         }
 
-        public IMapGrid? LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, GridId? gridId) LoadBlueprint(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
-            if (!TryGetReader(resPath, out var reader)) return null;
+            if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), null);
 
-            IMapGrid grid;
+            IMapGrid? grid;
+            IReadOnlyList<EntityUid> entities;
             using (reader)
             {
                 Logger.InfoS("map", $"Loading Grid: {resPath}");
@@ -103,12 +104,13 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
-                grid = context.Grids[0];
+                grid = context.Grids.FirstOrDefault();
+                entities = context.Entities;
 
                 PostDeserialize(mapId, context);
             }
 
-            return grid;
+            return (entities, grid?.Index);
         }
 
         private void PostDeserialize(MapId mapId, MapContext context)
@@ -161,9 +163,9 @@ namespace Robust.Server.Maps
             Logger.InfoS("map", "Save completed!");
         }
 
-        public void LoadMap(MapId mapId, string path)
+        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<GridId> gridIds) LoadMap(MapId mapId, string path)
         {
-            LoadMap(mapId, path, DefaultLoadOptions);
+            return LoadMap(mapId, path, DefaultLoadOptions);
         }
 
         private bool TryGetReader(ResourcePath resPath, [NotNullWhen(true)] out TextReader? reader)
@@ -193,12 +195,14 @@ namespace Robust.Server.Maps
             return true;
         }
 
-        public void LoadMap(MapId mapId, string path, MapLoadOptions options)
+        public (IReadOnlyList<EntityUid> entities, IReadOnlyList<GridId> gridIds) LoadMap(MapId mapId, string path, MapLoadOptions options)
         {
             var resPath = Rooted(path);
 
-            if (!TryGetReader(resPath, out var reader)) return;
+            if (!TryGetReader(resPath, out var reader)) return (Array.Empty<EntityUid>(), Array.Empty<GridId>());
 
+            IReadOnlyList<GridId> grids;
+            IReadOnlyList<EntityUid> entities;
             using (reader)
             {
                 Logger.InfoS("map", $"Loading Map: {resPath}");
@@ -210,9 +214,13 @@ namespace Robust.Server.Maps
                 var context = new MapContext(_mapManager, _tileDefinitionManager, _serverEntityManager,
                     _prototypeManager, _serializationManager, data.RootNode.ToDataNodeCast<MappingDataNode>(), mapId, options);
                 context.Deserialize();
+                grids = context.Grids.Select(x => x.Index).ToArray(); // TODO: make context use grid IDs.
+                entities = context.Entities;
 
                 PostDeserialize(mapId, context);
             }
+
+            return (entities, grids);
         }
 
         /// <summary>
@@ -233,6 +241,7 @@ namespace Robust.Server.Maps
             private readonly Dictionary<GridId, int> GridIDMap = new();
             public readonly List<MapGrid> Grids = new();
             private readonly List<GridId> _readGridIndices = new();
+            private EntityQuery<TransformComponent>? _xformQuery = null;
 
             private readonly Dictionary<EntityUid, int> EntityUidMap = new();
             private readonly Dictionary<int, EntityUid> UidEntityMap = new();
@@ -347,11 +356,15 @@ namespace Robust.Server.Maps
                 // We have to fix the created grids up with the grid entities deserialized from the map.
                 FixMapEntities();
 
+                _xformQuery = _serverEntityManager.GetEntityQuery<TransformComponent>();
+
                 // We have to attach grids to the target map here.
                 // If we don't, initialization & startup can fail for some entities.
                 AttachMapEntities();
 
                 ApplyGridFixtures();
+
+                AdjustEntityTransforms();
 
                 // Run Initialize on all components.
                 FinishEntitiesInitialization();
@@ -571,7 +584,7 @@ namespace Robust.Server.Maps
 
                 foreach (var grid in Grids)
                 {
-                    var transform = _serverEntityManager.GetComponent<TransformComponent>(grid.GridEntityId);
+                    var transform = _xformQuery!.Value.GetComponent(grid.GridEntityId);
                     if (transform.Parent != null)
                         continue;
 
@@ -706,6 +719,25 @@ namespace Robust.Server.Maps
                     }
 
                     _serverEntityManager.FinishEntityLoad(entity, this);
+                }
+            }
+
+            private void AdjustEntityTransforms()
+            {
+                var map = _mapManager.GetMapEntityId(TargetMap);
+
+                if (_loadOptions is null || _loadOptions.TransformMatrix.EqualsApprox(Matrix3.Identity))
+                    return;
+
+                foreach (var entity in Entities)
+                {
+                    if (!_xformQuery!.Value.TryGetComponent(entity, out var transform) ||
+                        transform.ParentUid != map) continue;
+
+                    var off = _loadOptions.TransformMatrix.Transform(transform.Coordinates.Position);
+
+                    transform.Coordinates = transform.Coordinates.WithPosition(off);
+                    transform.WorldRotation += _loadOptions.Rotation;
                 }
             }
 
@@ -866,15 +898,16 @@ namespace Robust.Server.Maps
 
                     var md = metaQuery.GetComponent(entityUid);
 
+                    Dictionary<string, MappingDataNode>? cache = null;
                     if (md.EntityPrototype is {} prototype)
                     {
                         mapping.Add("type", prototype.ID);
-                        if (!prototypeCompCache.ContainsKey(prototype.ID))
+                        if (!prototypeCompCache.TryGetValue(prototype.ID, out cache))
                         {
-                            prototypeCompCache[prototype.ID] = new Dictionary<string, MappingDataNode>();
+                            prototypeCompCache[prototype.ID] = cache =  new Dictionary<string, MappingDataNode>();
                             foreach (var (compType, comp) in prototype.Components)
                             {
-                                prototypeCompCache[prototype.ID].Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
+                                cache.Add(compType, serializationManager.WriteValueAs<MappingDataNode>(comp.GetType(), comp));
                             }
                         }
                     }
@@ -892,8 +925,10 @@ namespace Robust.Server.Maps
                         CurrentWritingComponent = compName;
                         var compMapping = serializationManager.WriteValueAs<MappingDataNode>(compType, component, context: this);
 
-                        if (md.EntityPrototype != null && prototypeCompCache[md.EntityPrototype.ID].TryGetValue(compName, out var protMapping))
+                        if (cache != null && cache.TryGetValue(compName, out var protMapping))
                         {
+                            // This will NOT recursively call Except() on the values of the mapping. It will only remove
+                            // key-value pairs if both the keys and values are equal.
                             compMapping = compMapping.Except(protMapping);
                             if(compMapping == null) continue;
                         }

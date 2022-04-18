@@ -20,7 +20,7 @@ run(f"git checkout {args.commit}", shell=True)
 run("git submodule update --init --recursive", cwd="repo_dir", shell=True)
 run("dotnet restore", cwd="repo_dir/Robust.Benchmarks", shell=True)
 nice(20)
-run("dotnet run --filter '*AddBenchmark*' --configuration Release",
+run("dotnet run --filter '*' --configuration Release",
     cwd=f"repo_dir/{args.project}",
     shell=True,
     env=environ | {

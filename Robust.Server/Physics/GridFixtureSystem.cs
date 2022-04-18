@@ -175,12 +175,6 @@ namespace Robust.Server.Physics
 
                     var gridComp = Comp<IMapGridComponent>(splitGrid.GridEntityId);
 
-                    // TODO: Need to:
-                    // Set tiles on new grid (no split detection)
-                    // Update anchored ents
-                    // Update lookup ents
-                    // Set tiles on old grid.
-
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
                     {
@@ -208,8 +202,7 @@ namespace Robust.Server.Physics
                         _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
                     }
 
-                    // Update anchored ents
-
+                    // TODO
                     // Update lookup ents
 
                     // Set tiles on old grid

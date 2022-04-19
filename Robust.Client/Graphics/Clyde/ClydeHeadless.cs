@@ -412,6 +412,10 @@ namespace Robust.Client.Graphics.Clyde
             {
             }
 
+            private protected override void SetParameterImpl(string name, float[] value)
+            {
+            }
+
             private protected override void SetParameterImpl(string name, Vector2 value)
             {
             }

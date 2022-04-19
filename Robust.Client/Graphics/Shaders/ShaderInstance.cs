@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Robust.Shared.Maths;
 
 namespace Robust.Client.Graphics
@@ -113,6 +113,13 @@ namespace Robust.Client.Graphics
         }
 
         public void SetParameter(string name, float value)
+        {
+            EnsureAlive();
+            EnsureMutable();
+            SetParameterImpl(name, value);
+        }
+
+        public void SetParameter(string name, float[] value)
         {
             EnsureAlive();
             EnsureMutable();
@@ -244,6 +251,7 @@ namespace Robust.Client.Graphics
         private protected abstract ShaderInstance DuplicateImpl();
 
         private protected abstract void SetParameterImpl(string name, float value);
+        private protected abstract void SetParameterImpl(string name, float[] value);
         private protected abstract void SetParameterImpl(string name, Vector2 value);
         private protected abstract void SetParameterImpl(string name, Vector3 value);
         private protected abstract void SetParameterImpl(string name, Vector4 value);

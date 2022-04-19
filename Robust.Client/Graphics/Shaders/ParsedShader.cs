@@ -135,35 +135,41 @@ namespace Robust.Client.Graphics
 
     internal sealed class ShaderDataTypeFull
     {
-        public ShaderDataTypeFull(ShaderDataType type, ShaderPrecisionQualifier prec)
+        public ShaderDataTypeFull(ShaderDataType type, ShaderPrecisionQualifier prec, int? count = null)
         {
             Type = type;
             Precision = prec;
+            Count = count;
         }
 
         public ShaderDataType Type { get; }
         public ShaderPrecisionQualifier Precision { get; }
 
+        public int? Count;
+
+        public bool IsArray => Count != null;
+
         public string GetNativeType()
         {
-            if (Precision == ShaderPrecisionQualifier.Low)
+            string? precision = Precision switch
             {
-                return "lowp " + Type.GetNativeType();
-            }
-            else if (Precision == ShaderPrecisionQualifier.Medium)
-            {
-                return "mediump " + Type.GetNativeType();
-            }
-            else if (Precision == ShaderPrecisionQualifier.High)
-            {
-                return "highp " + Type.GetNativeType();
-            }
-            return Type.GetNativeType();
+                ShaderPrecisionQualifier.Low => "lowp ",
+                ShaderPrecisionQualifier.Medium => "mediump ",
+                ShaderPrecisionQualifier.High => "highp ",
+                _ => null,
+            };
+
+            return IsArray ? $"{precision}{Type.GetNativeType()}[{Count}]" : $"{precision}{Type.GetNativeType()}";
         }
 
         public bool TypePrecisionConsistent()
         {
             return Type.TypeHasPrecision() == (Precision != ShaderPrecisionQualifier.None);
+        }
+
+        public bool TypeCountConsistent()
+        {
+            return Count == null || Type.TypeSupportsArrays();
         }
     }
 
@@ -201,6 +207,12 @@ namespace Robust.Client.Graphics
                 (type == ShaderDataType.Mat2) ||
                 (type == ShaderDataType.Mat3) ||
                 (type == ShaderDataType.Mat4);
+        }
+
+        public static bool TypeSupportsArrays(this ShaderDataType type)
+        {
+            // TODO: add support for int, vec2/3/4 arrays
+            return type == ShaderDataType.Float;
         }
 
         [SuppressMessage("ReSharper", "StringLiteralTypo")]

@@ -504,17 +504,35 @@ namespace Robust.Client.Graphics
                     continue;
                 }
 
-                if (_shaderTypeMap.TryGetValue(wordType.Word, out var ret))
+                if (!_shaderTypeMap.TryGetValue(wordType.Word, out var ret))
+                    throw new ShaderParseException("Expected type", wordType.Position);
+
+                var result = new ShaderDataTypeFull(ret, precision);
+                if (!result.TypePrecisionConsistent())
                 {
-                    var result = new ShaderDataTypeFull(ret, precision);
-                    if (!result.TypePrecisionConsistent())
-                    {
-                        throw new ShaderParseException($"Type {ret} cannot accept precision {precision}", wordType.Position);
-                    }
-                    return result;
+                    throw new ShaderParseException($"Type {ret} cannot accept precision {precision}", wordType.Position);
                 }
 
-                throw new ShaderParseException("Expected type or precision", wordType.Position);
+                // is this type meant to be an array?
+                if (_peekToken() is TokenSymbol bracketOpen && bracketOpen.Symbol == Symbols.BracketOpen)
+                {
+                    _takeToken();
+                    if (_takeToken() is not TokenNumber number || !int.TryParse(number.Number, out var count))
+                        throw new ShaderParseException($"Failed to parse array length", bracketOpen.Position);
+
+                    if (_takeToken() is not TokenSymbol bracketClose || bracketClose.Symbol != Symbols.BracketClosed)
+                        throw new ShaderParseException($"Array length definition missing closing bracket", number.Position);
+
+                    result.Count = count;
+
+                    // are arrays supported by this type?
+                    if (!result.TypeCountConsistent())
+                        throw new ShaderParseException($"Type {ret} does not support arrays", wordType.Position);
+                }
+
+                return result;
+                
+
             }
         }
 

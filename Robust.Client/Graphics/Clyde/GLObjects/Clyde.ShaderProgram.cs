@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenToolkit.Graphics.OpenGL4;
@@ -232,6 +232,19 @@ namespace Robust.Client.Graphics.Clyde
             {
                 var uniformId = GetUniform(uniformName);
                 GL.Uniform1(uniformId, single);
+            }
+
+            public void SetUniform(string uniformName, float[] singles)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, singles.Length, singles);
+                _clyde.CheckGlError();
+            }
+
+            public void SetUniform(int uniformName, float[] singles)
+            {
+                var uniformId = GetUniform(uniformName);
+                GL.Uniform1(uniformId, singles.Length, singles);
             }
 
             public void SetUniform(string uniformName, in Matrix3 matrix)

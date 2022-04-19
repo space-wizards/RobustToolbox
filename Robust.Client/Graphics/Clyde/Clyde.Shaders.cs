@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -390,6 +390,12 @@ namespace Robust.Client.Graphics.Clyde
             // TODO: Verify that parameters actually exist before assigning them like this.
 
             private protected override void SetParameterImpl(string name, float value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
+            }
+
+            private protected override void SetParameterImpl(string name, float[] value)
             {
                 var data = Parent._shaderInstances[Handle];
                 data.Parameters[name] = value;

@@ -415,6 +415,9 @@ namespace Robust.Client.Graphics.Clyde
                     case float f:
                         program.SetUniform(name, f);
                         break;
+                    case float[] fs:
+                        program.SetUniform(name, fs);
+                        break;
                     case Vector2 vector2:
                         program.SetUniform(name, vector2);
                         break;

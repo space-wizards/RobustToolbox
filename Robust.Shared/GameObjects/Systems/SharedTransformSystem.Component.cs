@@ -14,7 +14,7 @@ public abstract partial class SharedTransformSystem
 
     internal void ReAnchor(TransformComponent xform, MapGridComponent oldGrid, MapGridComponent newGrid, Vector2i tilePos)
     {
-        var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex);
+        var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex, tilePos);
         oldGrid.UnanchorEntity(xform, false);
         newGrid.AnchorEntity(xform, tilePos, false);
         RaiseLocalEvent(xform.Owner, ref ev);

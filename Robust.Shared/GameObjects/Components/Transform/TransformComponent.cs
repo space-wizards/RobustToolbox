@@ -1068,11 +1068,17 @@ namespace Robust.Shared.GameObjects
         public readonly GridId OldGrid;
         public readonly GridId GridId;
 
-        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId)
+        /// <summary>
+        /// Tile on both the old and new grid being re-anchored.
+        /// </summary>
+        public readonly Vector2i TilePos;
+
+        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId, Vector2i tilePos)
         {
             Entity = uid;
             OldGrid = oldGrid;
             GridId = gridId;
+            TilePos = tilePos;
         }
     }
 }

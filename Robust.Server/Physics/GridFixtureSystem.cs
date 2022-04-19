@@ -5,9 +5,11 @@ using Robust.Server.Console;
 using Robust.Server.Player;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
+using Robust.Shared.Log;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.Players;
+using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
 namespace Robust.Server.Physics
@@ -21,6 +23,7 @@ namespace Robust.Server.Physics
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
         [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
+        private ISawmill _logger = default!;
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
         /// <summary>
@@ -36,6 +39,7 @@ namespace Robust.Server.Physics
         public override void Initialize()
         {
             base.Initialize();
+            _logger = Logger.GetSawmill("gsplit");
             SubscribeLocalEvent<GridInitializeEvent>(OnGridInit);
             SubscribeLocalEvent<GridRemovalEvent>(OnGridRemoval);
             SubscribeNetworkEvent<RequestGridNodesMessage>(OnDebugRequest);
@@ -208,6 +212,9 @@ namespace Robust.Server.Physics
             // Split time
             if (grids.Count > 1)
             {
+                var sw = new Stopwatch();
+                sw.Start();
+
                 // We'll leave the biggest group as the original grid
                 // anything smaller gets split off.
                 grids.Sort((x, y) =>
@@ -317,6 +324,8 @@ namespace Robust.Server.Physics
                 {
                     _nodes[mapGrid.GridEntityId].Remove(group.Chunk.Indices);
                 }
+
+                _logger.Debug($"Split {grids.Count} grids in {sw.Elapsed}");
             }
 
             _splitting = false;

@@ -277,8 +277,9 @@ namespace Robust.Shared.Map
             foreach (var chunk in chunks)
             {
                 chunk.SuppressCollisionRegeneration = false;
-                RegenerateCollision(chunk);
             }
+
+            RegenerateCollision(chunks);
         }
 
         /// <inheritdoc />
@@ -869,6 +870,51 @@ namespace Robust.Shared.Map
         }
 
         #endregion Transforms
+
+        /// <summary>
+        /// Regenerate collision for multiple chunks at once; faster than doing it individually.
+        /// </summary>
+        public void RegenerateCollision(IReadOnlySet<MapChunk> chunks, bool checkSplit = true)
+        {
+            var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
+
+            foreach (var mapChunk in chunks)
+            {
+                // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
+                if (mapChunk.FilledTiles == 0)
+                {
+                    RemoveChunk(mapChunk.Indices);
+                }
+
+                // generate collision rectangles for this chunk based on filled tiles.
+                GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
+                mapChunk.CachedBounds = localBounds;
+                chunkRectangles.Add(mapChunk, rectangles);
+            }
+
+            LocalBounds = new Box2();
+            foreach (var chunk in _chunks.Values)
+            {
+                var chunkBounds = chunk.CachedBounds;
+
+                if(chunkBounds.Size.Equals(Vector2i.Zero))
+                    continue;
+
+                if (LocalBounds.Size == Vector2.Zero)
+                {
+                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                    LocalBounds = gridBounds;
+                }
+                else
+                {
+                    var gridBounds = chunkBounds.Translated(chunk.Indices * chunk.ChunkSize);
+                    LocalBounds = LocalBounds.Union(gridBounds);
+                }
+            }
+
+            if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
+                system.RegenerateCollision(GridEntityId, chunkRectangles, checkSplit);
+        }
 
         /// <summary>
         /// Regenerates the chunk local bounds of this chunk.

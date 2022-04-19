@@ -18,6 +18,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly FixtureSystem _fixtures = default!;
 
+        private ISawmill _logger = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
 
@@ -26,6 +27,7 @@ namespace Robust.Shared.GameObjects
         public override void Initialize()
         {
             base.Initialize();
+            _logger = Logger.GetSawmill("physics");
             UpdatesBefore.Add(typeof(SharedBroadphaseSystem));
 
             var configManager = IoCManager.Resolve<IConfigurationManager>();
@@ -57,6 +59,36 @@ namespace Robust.Shared.GameObjects
             }
         }
 
+        internal void RegenerateCollision(EntityUid gridEuid, Dictionary<MapChunk, List<Box2i>> mapChunks, bool checkSplit = true)
+        {
+            if (!_enabled) return;
+
+            if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
+            {
+                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
+                return;
+            }
+
+            if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
+            {
+                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
+                return;
+            }
+
+            foreach (var (chunk, rectangles) in mapChunks)
+            {
+                UpdateFixture(chunk, rectangles, physicsComponent, fixturesComponent);
+            }
+
+            _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
+
+            foreach (var (chunk, _) in mapChunks)
+            {
+                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+                GenerateSplitNode(gridEuid, chunk, checkSplit);
+            }
+        }
+
         internal void RegenerateCollision(EntityUid gridEuid, MapChunk chunk, List<Box2i> rectangles, bool checkSplit = true)
         {
             if (!_enabled) return;
@@ -65,16 +97,26 @@ namespace Robust.Shared.GameObjects
 
             if (!EntityManager.TryGetComponent(gridEuid, out PhysicsComponent? physicsComponent))
             {
-                Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
+                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(physicsComponent)}");
                 return;
             }
 
             if (!EntityManager.TryGetComponent(gridEuid, out FixturesComponent? fixturesComponent))
             {
-                Logger.ErrorS("physics", $"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
+                _logger.Error($"Trying to regenerate collision for {gridEuid} that doesn't have {nameof(fixturesComponent)}");
                 return;
             }
 
+            if (UpdateFixture(chunk, rectangles, physicsComponent, fixturesComponent))
+            {
+                _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
+                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
+                GenerateSplitNode(gridEuid, chunk, checkSplit);
+            }
+        }
+
+        private bool UpdateFixture(MapChunk chunk, List<Box2i> rectangles, PhysicsComponent physicsComponent, FixturesComponent fixturesComponent)
+        {
             var origin = chunk.Indices * chunk.ChunkSize;
 
             // So we store a reference to the fixture on the chunk because it's easier to cross-reference it.
@@ -163,12 +205,7 @@ namespace Robust.Shared.GameObjects
                 _fixtures.CreateFixture(physicsComponent, fixture, false, fixturesComponent);
             }
 
-            if (updated)
-            {
-                _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
-                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
-                GenerateSplitNode(gridEuid, chunk, checkSplit);
-            }
+            return updated;
         }
 
         internal virtual void GenerateSplitNode(EntityUid gridEuid, MapChunk chunk, bool checkSplit = true) {}

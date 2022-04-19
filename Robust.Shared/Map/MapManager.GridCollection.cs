@@ -296,7 +296,7 @@ internal partial class MapManager
 
         TileChanged?.Invoke(this, new TileChangedEventArgs(tileRef, oldTile));
         var euid = GetGridEuid(tileRef.GridIndex);
-        EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(tileRef, oldTile));
+        EntityManager.EventBus.RaiseLocalEvent(euid, new TileChangedEvent(euid, tileRef, oldTile));
     }
 
     protected MapGrid CreateGrid(MapId currentMapId, GridId? forcedGridId, ushort chunkSize, EntityUid forcedGridEuid)

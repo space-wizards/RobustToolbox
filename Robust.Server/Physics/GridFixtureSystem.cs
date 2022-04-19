@@ -233,18 +233,30 @@ namespace Robust.Server.Physics
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
                     var gridComp = Comp<MapGridComponent>(splitGrid.GridEntityId);
+                    var tileData = new List<(Vector2i GridIndices, Tile Tile)>(group.Sum(o => o.Indices.Count));
+
+                    // Gather all tiles up front and set once to minimise fixture change events
+                    foreach (var node in group)
+                    {
+                        var offset = node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize;
+
+                        foreach (var index in node.Indices)
+                        {
+                            var tilePos = offset + index;
+                            tileData.Add((tilePos, mapGrid.GetTileRef(tilePos).Tile));
+                        }
+                    }
+
+                    splitGrid.SetTiles(tileData);
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
                     {
                         var offset = node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize;
 
-                        // TODO: Use the group version
                         foreach (var tile in node.Indices)
                         {
                             var tilePos = offset + tile;
-                            // TODO: Could be faster getting tile data.
-                            splitGrid.SetTile(tilePos, mapGrid.GetTileRef(tilePos).Tile);
 
                             // Access it directly because we're gonna be hammering it and want to keep allocs down.
                             var snapgrid = node.Group.Chunk.GetSnapGrid((ushort) tile.X, (ushort) tile.Y);
@@ -281,18 +293,14 @@ namespace Robust.Server.Physics
                         _nodes[mapGrid.GridEntityId][node.Group.Chunk.Indices].Nodes.Remove(node);
                     }
 
-                    // Set tiles on old grid
-                    foreach (var node in group)
+                    for (var j = 0; j < tileData.Count; j++)
                     {
-                        var offset = node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize;
-
-                        // TODO: Use the group version
-                        foreach (var tile in node.Indices)
-                        {
-                            mapGrid.SetTile(offset + tile, Tile.Empty);
-                        }
+                        var (index, _) = tileData[j];
+                        tileData[j] = (index, Tile.Empty);
                     }
 
+                    // Set tiles on old grid
+                    mapGrid.SetTiles(tileData);
                     GenerateSplitNodes((IMapGridInternal) splitGrid);
                     SendNodeDebug(splitGrid.GridEntityId);
                 }

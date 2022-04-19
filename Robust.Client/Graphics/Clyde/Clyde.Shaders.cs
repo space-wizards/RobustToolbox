@@ -407,6 +407,12 @@ namespace Robust.Client.Graphics.Clyde
                 data.Parameters[name] = value;
             }
 
+            private protected override void SetParameterImpl(string name, Vector2[] value)
+            {
+                var data = Parent._shaderInstances[Handle];
+                data.Parameters[name] = value;
+            }
+
             private protected override void SetParameterImpl(string name, Vector3 value)
             {
                 var data = Parent._shaderInstances[Handle];

@@ -531,8 +531,6 @@ namespace Robust.Client.Graphics
                 }
 
                 return result;
-                
-
             }
         }
 

@@ -388,6 +388,31 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
+            public void SetUniform(string uniformName, Vector2[] vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            public void SetUniform(int uniformName, Vector2[] vector)
+            {
+                var uniformId = GetUniform(uniformName);
+                SetUniformDirect(uniformId, vector);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetUniformDirect(int slot, Vector2[] vectors)
+            {
+                unsafe
+                {
+                    fixed (Vector2* ptr = &vectors[0])
+                    {
+                        GL.Uniform2(slot, vectors.Length, (float*)ptr);
+                        _clyde.CheckGlError();
+                    }
+                }
+            }
+
             public void SetUniformTexture(string uniformName, TextureUnit textureUnit)
             {
                 var uniformId = GetUniform(uniformName);

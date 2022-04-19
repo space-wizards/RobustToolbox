@@ -56,4 +56,25 @@ public sealed class GridSplit_Tests
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
     }
+
+    [Test]
+    public void TriSplit()
+    {
+        var sim = RobustServerSimulation.NewSimulation().InitializeInstance();
+        var mapManager = sim.Resolve<IMapManager>();
+        var mapId = mapManager.CreateMap();
+        var grid = mapManager.CreateGrid(mapId);
+
+        for (var x = 0; x < 3; x++)
+        {
+            grid.SetTile(new Vector2i(x, 0), new Tile(1));
+        }
+
+        grid.SetTile(Vector2i.One, new Tile(1));
+
+        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
+
+        grid.SetTile(new Vector2i(1, 0), Tile.Empty);
+        Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(3));
+    }
 }

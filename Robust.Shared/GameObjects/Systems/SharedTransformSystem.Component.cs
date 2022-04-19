@@ -10,6 +10,18 @@ namespace Robust.Shared.GameObjects;
 
 public abstract partial class SharedTransformSystem
 {
+    #region Anchoring
+
+    internal void ReAnchor(TransformComponent xform, MapGridComponent oldGrid, MapGridComponent newGrid, Vector2i tilePos)
+    {
+        var ev = new ReAnchorEvent(xform.Owner, oldGrid.GridIndex, newGrid.GridIndex);
+        oldGrid.UnanchorEntity(xform, false);
+        newGrid.AnchorEntity(xform, tilePos, false);
+        RaiseLocalEvent(xform.Owner, ref ev);
+    }
+
+    #endregion
+
     #region States
 
     private void ActivateLerp(TransformComponent xform)

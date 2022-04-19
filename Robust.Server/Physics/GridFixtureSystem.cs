@@ -19,6 +19,7 @@ namespace Robust.Server.Physics
     {
         [Dependency] private readonly IMapManager _mapManager = default!;
         [Dependency] private readonly EntityLookupSystem _lookup = default!;
+        [Dependency] private readonly SharedTransformSystem _xformSystem = default!;
 
         private readonly Dictionary<EntityUid, Dictionary<Vector2i, ChunkNodeGroup>> _nodes = new();
 
@@ -217,6 +218,7 @@ namespace Robust.Server.Physics
                 var bodyQuery = GetEntityQuery<PhysicsComponent>();
                 var (gridPos, gridRot) = xformQuery.GetComponent(mapGrid.GridEntityId).GetWorldPositionRotation(xformQuery);
                 var mapBody = bodyQuery.GetComponent(mapGrid.GridEntityId);
+                var oldGridComp = Comp<MapGridComponent>(mapGrid.GridEntityId);
 
                 for (var i = 0; i < grids.Count - 1; i++)
                 {
@@ -230,7 +232,7 @@ namespace Robust.Server.Physics
                     splitBody.LinearVelocity = mapBody.LinearVelocity;
                     splitBody.AngularVelocity = mapBody.AngularVelocity;
 
-                    var gridComp = Comp<IMapGridComponent>(splitGrid.GridEntityId);
+                    var gridComp = Comp<MapGridComponent>(splitGrid.GridEntityId);
 
                     // Set tiles on new grid + update anchored entities
                     foreach (var node in group)
@@ -252,8 +254,7 @@ namespace Robust.Server.Physics
                             {
                                 var ent = snapgrid[i];
                                 var xform = xformQuery.GetComponent(ent);
-                                xform.Anchored = false;
-                                gridComp.AnchorEntity(xform);
+                                _xformSystem.ReAnchor(xform, oldGridComp, gridComp, tilePos);
                             }
                         }
 

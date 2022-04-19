@@ -20,8 +20,9 @@ namespace Robust.Shared.GameObjects
         GridId GridIndex { get; }
         IMapGrid Grid { get; }
 
-        bool AnchorEntity(TransformComponent transform);
-        void UnanchorEntity(TransformComponent transform);
+        bool AnchorEntity(TransformComponent xform, Vector2i tileIndices, bool issueEvent = true);
+        bool AnchorEntity(TransformComponent transform, bool issueEvent = true);
+        void UnanchorEntity(TransformComponent transform, bool issueEvent = true);
     }
 
     /// <inheritdoc cref="IMapGridComponent"/>
@@ -61,11 +62,12 @@ namespace Robust.Shared.GameObjects
         protected override void Initialize()
         {
             base.Initialize();
-            var mapId = _entMan.GetComponent<TransformComponent>(Owner).MapID;
+            var xform = _entMan.GetComponent<TransformComponent>(Owner);
+            var mapId = xform.MapID;
 
             if (_mapManager.HasMapEntity(mapId))
             {
-                _entMan.GetComponent<TransformComponent>(Owner).AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
+                xform.AttachParent(_mapManager.GetMapEntityIdOrThrow(mapId));
             }
         }
 
@@ -77,11 +79,9 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public bool AnchorEntity(TransformComponent transform)
+        public bool AnchorEntity(TransformComponent xform, Vector2i tileIndices, bool issueEvent = true)
         {
-            var xform = transform;
-            var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
-            var result = Grid.AddToSnapGridCell(tileIndices, transform.Owner);
+            var result = Grid.AddToSnapGridCell(tileIndices, xform.Owner);
 
             if (result)
             {
@@ -89,8 +89,7 @@ namespace Robust.Shared.GameObjects
 
                 // anchor snapping
                 xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;
-
-                xform.SetAnchored(result);
+                xform.SetAnchored(result, issueEvent);
 
                 if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
                 {
@@ -102,7 +101,14 @@ namespace Robust.Shared.GameObjects
         }
 
         /// <inheritdoc />
-        public void UnanchorEntity(TransformComponent transform)
+        public bool AnchorEntity(TransformComponent xform, bool issueEvent = true)
+        {
+            var tileIndices = Grid.TileIndicesFor(xform.Coordinates);
+            return AnchorEntity(xform, tileIndices, issueEvent);
+        }
+
+        /// <inheritdoc />
+        public void UnanchorEntity(TransformComponent transform, bool issueEvent = true)
         {
             //HACK: Client grid pivot causes this.
             //TODO: make grid components the actual grid
@@ -112,7 +118,7 @@ namespace Robust.Shared.GameObjects
             var xform = transform;
             var tileIndices = Grid.TileIndicesFor(transform.Coordinates);
             Grid.RemoveFromSnapGridCell(tileIndices, transform.Owner);
-            xform.SetAnchored(false);
+            xform.SetAnchored(false, issueEvent);
             if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
             {
                 physicsComponent.BodyType = BodyType.Dynamic;

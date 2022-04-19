@@ -961,13 +961,16 @@ namespace Robust.Shared.GameObjects
             return $"pos/rot/wpos/wrot: {Coordinates}/{LocalRotation}/{WorldPosition}/{WorldRotation}";
         }
 
-        internal void SetAnchored(bool value)
+        internal void SetAnchored(bool value, bool issueEvent = true)
         {
             _anchored = value;
             Dirty(_entMan);
 
-            var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
-            _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+            if (issueEvent)
+            {
+                var anchorStateChangedEvent = new AnchorStateChangedEvent(Owner, value);
+                _entMan.EventBus.RaiseLocalEvent(Owner, ref anchorStateChangedEvent);
+            }
         }
     }
 
@@ -1046,13 +1049,30 @@ namespace Robust.Shared.GameObjects
     public readonly struct AnchorStateChangedEvent
     {
         public readonly EntityUid Entity;
-
         public readonly bool Anchored;
 
         public AnchorStateChangedEvent(EntityUid entity, bool anchored)
         {
             Entity = entity;
             Anchored = anchored;
+        }
+    }
+
+    /// <summary>
+    /// Raised when an entity is re-anchored to another grid.
+    /// </summary>
+    [ByRefEvent]
+    public readonly struct ReAnchorEvent
+    {
+        public readonly EntityUid Entity;
+        public readonly GridId OldGrid;
+        public readonly GridId GridId;
+
+        public ReAnchorEvent(EntityUid uid, GridId oldGrid, GridId gridId)
+        {
+            Entity = uid;
+            OldGrid = oldGrid;
+            GridId = gridId;
         }
     }
 }

@@ -881,15 +881,14 @@ namespace Robust.Shared.Map
             foreach (var mapChunk in chunks)
             {
                 // Even if the chunk is still removed still need to make sure bounds are updated (for now...)
-                if (mapChunk.FilledTiles == 0)
-                {
-                    RemoveChunk(mapChunk.Indices);
-                }
-
                 // generate collision rectangles for this chunk based on filled tiles.
                 GridChunkPartition.PartitionChunk(mapChunk, out var localBounds, out var rectangles);
                 mapChunk.CachedBounds = localBounds;
-                chunkRectangles.Add(mapChunk, rectangles);
+
+                if (mapChunk.FilledTiles > 0)
+                    chunkRectangles.Add(mapChunk, rectangles);
+                else
+                    RemoveChunk(mapChunk.Indices);
             }
 
             LocalBounds = new Box2();
@@ -912,7 +911,9 @@ namespace Robust.Shared.Map
                 }
             }
 
-            if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
+            if (chunkRectangles.Count == 0)
+                EntitySystem.Get<FixtureSystem>().FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
+            else if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
                 system.RegenerateCollision(GridEntityId, chunkRectangles, checkSplit);
         }
 
@@ -925,6 +926,13 @@ namespace Robust.Shared.Map
             if (mapChunk.FilledTiles == 0)
             {
                 RemoveChunk(mapChunk.Indices);
+
+                var fixtureSystem = EntitySystem.Get<FixtureSystem>();
+
+                foreach (var fixture in mapChunk.Fixtures)
+                {
+                    fixtureSystem.DestroyFixture(fixture);
+                }
             }
 
             // generate collision rectangles for this chunk based on filled tiles.

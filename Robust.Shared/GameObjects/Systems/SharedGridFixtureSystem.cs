@@ -75,16 +75,19 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
+            var fixtures = new List<Fixture>(mapChunks.Count);
+
             foreach (var (chunk, rectangles) in mapChunks)
             {
                 UpdateFixture(chunk, rectangles, physicsComponent, fixturesComponent);
+                fixtures.AddRange(chunk.Fixtures);
             }
 
             _fixtures.FixtureUpdate(fixturesComponent, physicsComponent);
+            EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = fixtures});
 
             foreach (var (chunk, _) in mapChunks)
             {
-                EntityManager.EventBus.RaiseLocalEvent(gridEuid,new GridFixtureChangeEvent {NewFixtures = chunk.Fixtures});
                 GenerateSplitNode(gridEuid, chunk, checkSplit);
             }
         }

@@ -41,21 +41,6 @@ namespace Robust.Server.Physics
             SubscribeNetworkEvent<StopGridNodesMessage>(OnDebugStopRequest);
         }
 
-        private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
-        {
-            var adminManager = IoCManager.Resolve<IConGroupController>();
-            var pSession = (PlayerSession)args.SenderSession;
-
-            if (!adminManager.CanCommand(pSession, ShowGridNodesCommand)) return;
-
-            AddDebugSubscriber(args.SenderSession);
-        }
-
-        private void OnDebugStopRequest(StopGridNodesMessage msg, EntitySessionEventArgs args)
-        {
-            RemoveDebugSubscriber(args.SenderSession);
-        }
-
         public override void Shutdown()
         {
             base.Shutdown();
@@ -81,6 +66,23 @@ namespace Robust.Server.Physics
             _nodes.Remove(ev.EntityUid);
         }
 
+        #region Debug
+
+        private void OnDebugRequest(RequestGridNodesMessage msg, EntitySessionEventArgs args)
+        {
+            var adminManager = IoCManager.Resolve<IConGroupController>();
+            var pSession = (PlayerSession) args.SenderSession;
+
+            if (!adminManager.CanCommand(pSession, ShowGridNodesCommand)) return;
+
+            AddDebugSubscriber(args.SenderSession);
+        }
+
+        private void OnDebugStopRequest(StopGridNodesMessage msg, EntitySessionEventArgs args)
+        {
+            RemoveDebugSubscriber(args.SenderSession);
+        }
+
         public bool IsSubscribed(ICommonSession session)
         {
             return _subscribedSessions.Contains(session);
@@ -101,6 +103,50 @@ namespace Robust.Server.Physics
             _subscribedSessions.Remove(session);
         }
 
+        private void SendNodeDebug(EntityUid uid)
+        {
+            if (_subscribedSessions.Count == 0) return;
+
+            var msg = new ChunkSplitDebugMessage
+            {
+                Grid = uid,
+            };
+
+            foreach (var (index, group) in _nodes[uid])
+            {
+                var list = new List<List<Vector2i>>();
+                // To avoid double-sending connections.
+                var conns = new HashSet<ChunkSplitNode>();
+
+                foreach (var node in group.Nodes)
+                {
+                    conns.Add(node);
+                    list.Add(node.Indices.ToList());
+
+                    foreach (var neighbor in node.Neighbors)
+                    {
+                        if (conns.Contains(neighbor)) continue;
+
+                        msg.Connections.Add((
+                            node.GetCentre() + node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize,
+                            neighbor.GetCentre() + neighbor.Group.Chunk.Indices * neighbor.Group.Chunk.ChunkSize));
+                    }
+                }
+
+                msg.Nodes.Add(index, list);
+            }
+
+            foreach (var session in _subscribedSessions)
+            {
+                RaiseNetworkEvent(msg, session.ConnectedClient);
+            }
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Check for any potential splits after maploading is done.
+        /// </summary>
         internal void CheckSplits(EntityUid uid)
         {
             var nodes = _nodes[uid];
@@ -117,6 +163,9 @@ namespace Robust.Server.Physics
             CheckSplits(uid, dirtyNodes);
         }
 
+        /// <summary>
+        /// Check for splits on the specified nodes.
+        /// </summary>
         private void CheckSplits(EntityUid uid, HashSet<ChunkSplitNode> dirtyNodes)
         {
             if (_splitting) return;
@@ -192,15 +241,16 @@ namespace Robust.Server.Physics
                         foreach (var tile in node.Indices)
                         {
                             var tilePos = offset + tile;
-
                             // TODO: Could be faster getting tile data.
                             splitGrid.SetTile(tilePos, mapGrid.GetTileRef(tilePos).Tile);
 
-                            // TODO: This is gonna allocate out the ass.
-                            var anchored = mapGrid.GetAnchoredEntities(tilePos).ToArray();
+                            // Access it directly because we're gonna be hammering it and want to keep allocs down.
+                            var snapgrid = node.Group.Chunk.GetSnapGrid((ushort) tile.X, (ushort) tile.Y);
+                            if (snapgrid == null || snapgrid.Count == 0) continue;
 
-                            foreach (var ent in anchored)
+                            for (var j = snapgrid.Count - 1; j >= 0; j--)
                             {
+                                var ent = snapgrid[i];
                                 var xform = xformQuery.GetComponent(ent);
                                 xform.Anchored = false;
                                 gridComp.AnchorEntity(xform);
@@ -403,7 +453,7 @@ namespace Robust.Server.Physics
         {
             if (_splitting) return;
 
-            var grid = (IMapGridInternal) IoCManager.Resolve<IMapManager>().GetGrid(gridEuid);
+            var grid = (IMapGridInternal) _mapManager.GetGrid(gridEuid);
             var dirtyNodes = new HashSet<ChunkSplitNode>();
 
             Cleanup(gridEuid, chunk, dirtyNodes);
@@ -461,45 +511,6 @@ namespace Robust.Server.Physics
             }
 
             _nodes[gridEuid].Remove(chunk.Indices);
-        }
-
-        private void SendNodeDebug(EntityUid uid)
-        {
-            if (_subscribedSessions.Count == 0) return;
-
-            var msg = new ChunkSplitDebugMessage
-            {
-                Grid = uid,
-            };
-
-            foreach (var (index, group) in _nodes[uid])
-            {
-                var list = new List<List<Vector2i>>();
-                // To avoid double-sending connections.
-                var conns = new HashSet<ChunkSplitNode>();
-
-                foreach (var node in group.Nodes)
-                {
-                    conns.Add(node);
-                    list.Add(node.Indices.ToList());
-
-                    foreach (var neighbor in node.Neighbors)
-                    {
-                        if (conns.Contains(neighbor)) continue;
-
-                        msg.Connections.Add((
-                            node.GetCentre() + (node.Group.Chunk.Indices * node.Group.Chunk.ChunkSize),
-                            neighbor.GetCentre() + (neighbor.Group.Chunk.Indices * neighbor.Group.Chunk.ChunkSize)));
-                    }
-                }
-
-                msg.Nodes.Add(index, list);
-            }
-
-            foreach (var session in _subscribedSessions)
-            {
-                RaiseNetworkEvent(msg, session.ConnectedClient);
-            }
         }
 
         private sealed class ChunkNodeGroup

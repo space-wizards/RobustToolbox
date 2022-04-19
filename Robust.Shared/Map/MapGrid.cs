@@ -498,6 +498,17 @@ namespace Robust.Shared.Map
         #region SnapGridAccess
 
         /// <inheritdoc />
+        public int AnchoredEntityCount(Vector2i pos)
+        {
+            var gridChunkPos = GridTileToChunkIndices(pos);
+
+            if (!_chunks.TryGetValue(gridChunkPos, out var chunk)) return 0;
+
+            var (x, y) = chunk.GridTileToChunkTile(pos);
+            return chunk.GetSnapGrid((ushort) x, (ushort) y)?.Count ?? 0; // ?
+        }
+
+        /// <inheritdoc />
         public IEnumerable<EntityUid> GetAnchoredEntities(MapCoordinates coords)
         {
             return GetAnchoredEntities(TileIndicesFor(coords));

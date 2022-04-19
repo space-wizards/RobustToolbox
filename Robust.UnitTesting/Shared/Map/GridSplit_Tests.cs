@@ -25,8 +25,10 @@ public sealed class GridSplit_Tests
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(1));
 
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
-
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
+
+        mapManager.DeleteGrid(grid.Index);
+        mapManager.DeleteMap(mapId);
     }
 
     [Test]
@@ -55,6 +57,9 @@ public sealed class GridSplit_Tests
 
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(2));
+
+        mapManager.DeleteGrid(grid.Index);
+        mapManager.DeleteMap(mapId);
     }
 
     [Test]
@@ -76,5 +81,8 @@ public sealed class GridSplit_Tests
 
         grid.SetTile(new Vector2i(1, 0), Tile.Empty);
         Assert.That(mapManager.GetAllMapGrids(mapId).Count(), Is.EqualTo(3));
+
+        mapManager.DeleteGrid(grid.Index);
+                mapManager.DeleteMap(mapId);
     }
 }

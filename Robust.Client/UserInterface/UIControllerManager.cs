@@ -86,11 +86,6 @@ internal sealed class UIControllerManager : IUIControllerManagerInternal
         return method.CreateDelegate<StateChangedCaller>();
     }
 
-    private static void Test(object a, State.State state)
-    {
-        ((IOnStateChanged<DefaultState>) a).OnStateChanged((DefaultState) state);
-    }
-
     // TODO hud refactor BEFORE MERGE optimize this to use an array
     // TODO hud refactor BEFORE MERGE cleanup subscriptions for all implementations when switching out of gameplay state
     private void OnStateChanged(StateChangedEventArgs args)

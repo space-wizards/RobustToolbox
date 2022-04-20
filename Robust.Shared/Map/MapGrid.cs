@@ -198,22 +198,21 @@ namespace Robust.Shared.Map
             if (!_chunks.TryGetValue(chunkIndices, out var output))
             {
                 // Chunk doesn't exist, return a tileRef to an empty (space) tile.
-                return new TileRef(ParentMapId, Index, tileCoordinates.X, tileCoordinates.Y, default);
+                return new TileRef(Index, tileCoordinates.X, tileCoordinates.Y, default);
             }
 
             var chunkTileIndices = output.GridTileToChunkTile(tileCoordinates);
-            return GetTileRef(ParentMapId, output, (ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
+            return GetTileRef(output, (ushort)chunkTileIndices.X, (ushort)chunkTileIndices.Y);
         }
 
         /// <summary>
         ///     Returns the tile at the given chunk indices.
         /// </summary>
-        /// <param name="mapId">The MapId of the tile. Passed in as this isn't cached on grids.</param>
         /// <param name="mapChunk"></param>
         /// <param name="xIndex">The X tile index relative to the chunk origin.</param>
         /// <param name="yIndex">The Y tile index relative to the chunk origin.</param>
         /// <returns>A reference to a tile.</returns>
-        public TileRef GetTileRef(MapId mapId, MapChunk mapChunk, ushort xIndex, ushort yIndex)
+        public TileRef GetTileRef(MapChunk mapChunk, ushort xIndex, ushort yIndex)
         {
             if (xIndex >= mapChunk.ChunkSize)
                 throw new ArgumentOutOfRangeException(nameof(xIndex), "Tile indices out of bounds.");
@@ -222,7 +221,7 @@ namespace Robust.Shared.Map
                 throw new ArgumentOutOfRangeException(nameof(yIndex), "Tile indices out of bounds.");
 
             var indices = mapChunk.ChunkTileToGridTile(new Vector2i(xIndex, yIndex));
-            return new TileRef(ParentMapId, Index, indices, mapChunk.GetTile(xIndex, yIndex));
+            return new TileRef(Index, indices, mapChunk.GetTile(xIndex, yIndex));
         }
 
         /// <inheritdoc />
@@ -241,7 +240,7 @@ namespace Robust.Shared.Map
                             continue;
 
                         var (gridX, gridY) = new Vector2i(x, y) + chunk.Indices * ChunkSize;
-                        yield return new TileRef(ParentMapId, Index, gridX, gridY, tile);
+                        yield return new TileRef(Index, gridX, gridY, tile);
                     }
                 }
             }
@@ -311,7 +310,6 @@ namespace Robust.Shared.Map
         {
             // TODO: Should move the intersecting calls onto mapmanager system and then allow people to pass in xform / xformquery
             // that way we can avoid the GetComp here.
-            var mapId = ParentMapId;
             var gridTileLb = new Vector2i((int)Math.Floor(localArea.Left), (int)Math.Floor(localArea.Bottom));
             var gridTileRt = new Vector2i((int)Math.Floor(localArea.Right), (int)Math.Floor(localArea.Top));
 
@@ -324,7 +322,7 @@ namespace Robust.Shared.Map
                     if (_chunks.TryGetValue(gridChunk, out var chunk))
                     {
                         var chunkTile = chunk.GridTileToChunkTile(new Vector2i(x, y));
-                        var tile = GetTileRef(mapId, chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
+                        var tile = GetTileRef(chunk, (ushort)chunkTile.X, (ushort)chunkTile.Y);
 
                         if (ignoreEmpty && tile.Tile.IsEmpty)
                             continue;
@@ -334,7 +332,7 @@ namespace Robust.Shared.Map
                     }
                     else if (!ignoreEmpty)
                     {
-                        var tile = new TileRef(mapId, Index, x, y, new Tile());
+                        var tile = new TileRef(Index, x, y, new Tile());
 
                         if (predicate == null || predicate(tile))
                             yield return tile;
@@ -853,7 +851,7 @@ namespace Robust.Shared.Map
             }
 
             var cTileIndices = chunk.GridTileToChunkTile(indices);
-            tile = GetTileRef(ParentMapId, chunk, (ushort)cTileIndices.X, (ushort)cTileIndices.Y);
+            tile = GetTileRef(chunk, (ushort)cTileIndices.X, (ushort)cTileIndices.Y);
             return true;
         }
 
@@ -1003,7 +1001,7 @@ namespace Robust.Shared.Map
             // ParentMapId is not able to be accessed on unbound grids, so we can't even call this function for unbound grids.
             if(!_mapManager.SuppressOnTileChanged)
             {
-                var newTileRef = new TileRef(ParentMapId, Index, gridTile, newTile);
+                var newTileRef = new TileRef(Index, gridTile, newTile);
                 _mapManager.RaiseOnTileChanged(newTileRef, oldTile);
             }
 

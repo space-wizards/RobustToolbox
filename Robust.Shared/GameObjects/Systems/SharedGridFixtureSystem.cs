@@ -21,6 +21,7 @@ namespace Robust.Shared.GameObjects
         private ISawmill _logger = default!;
         private bool _enabled;
         private float _fixtureEnlargement;
+        private bool _convexHulls = true;
 
         internal const string ShowGridNodesCommand = "showgridnodes";
 
@@ -34,6 +35,7 @@ namespace Robust.Shared.GameObjects
 
             configManager.OnValueChanged(CVars.GenerateGridFixtures, SetEnabled, true);
             configManager.OnValueChanged(CVars.GridFixtureEnlargement, SetEnlargement, true);
+            configManager.OnValueChanged(CVars.ConvexHullPolygons, SetConvexHulls, true);
         }
 
         public override void Shutdown()
@@ -44,11 +46,14 @@ namespace Robust.Shared.GameObjects
 
             configManager.UnsubValueChanged(CVars.GenerateGridFixtures, SetEnabled);
             configManager.UnsubValueChanged(CVars.GridFixtureEnlargement, SetEnlargement);
+            configManager.UnsubValueChanged(CVars.ConvexHullPolygons, SetConvexHulls);
         }
 
         private void SetEnabled(bool value) => _enabled = value;
 
         private void SetEnlargement(float value) => _fixtureEnlargement = value;
+
+        private void SetConvexHulls(bool value) => _convexHulls = value;
 
         internal void ProcessGrid(IMapGridInternal gridInternal)
         {
@@ -144,7 +149,7 @@ namespace Robust.Shared.GameObjects
                 vertices[2] = bounds.TopRight;
                 vertices[3] = bounds.TopLeft;
 
-                poly.SetVertices(vertices);
+                poly.SetVertices(vertices, _convexHulls);
 
                 var newFixture = new Fixture(
                     poly,

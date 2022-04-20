@@ -89,10 +89,14 @@ namespace Robust.Shared.Physics.Collision.Shapes
         {
             var configManager = IoCManager.Resolve<IConfigurationManager>();
             DebugTools.Assert(vertices.Length >= 3 && vertices.Length <= configManager.GetCVar(CVars.MaxPolygonVertices));
+            SetVertices(vertices, configManager.GetCVar(CVars.ConvexHullPolygons));
+        }
 
+        public void SetVertices(Span<Vector2> vertices, bool convexHulls)
+        {
             var vertexCount = vertices.Length;
 
-            if (configManager.GetCVar(CVars.ConvexHullPolygons))
+            if (convexHulls)
             {
                 //FPE note: This check is required as the GiftWrap algorithm early exits on triangles
                 //So instead of giftwrapping a triangle, we just force it to be clock wise.

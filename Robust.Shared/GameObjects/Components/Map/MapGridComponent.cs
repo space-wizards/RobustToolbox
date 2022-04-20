@@ -85,16 +85,17 @@ namespace Robust.Shared.GameObjects
 
             if (result)
             {
+                // Mark as static first to avoid the velocity change on parent change.
+                if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
+                {
+                    physicsComponent.BodyType = BodyType.Static;
+                }
+
                 xform.ParentUid = Owner;
 
                 // anchor snapping
                 xform.LocalPosition = Grid.GridTileToLocal(tileIndices).Position;
                 xform.SetAnchored(result, issueEvent);
-
-                if (_entMan.TryGetComponent<PhysicsComponent?>(xform.Owner, out var physicsComponent))
-                {
-                    physicsComponent.BodyType = BodyType.Static;
-                }
             }
 
             return result;

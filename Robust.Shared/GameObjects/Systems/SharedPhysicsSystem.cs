@@ -121,7 +121,7 @@ namespace Robust.Shared.GameObjects
                 return;
             }
 
-            if (body.CanCollide)
+            if (body._canCollide)
                 _broadphase.UpdateBroadphase(body, xform: xform);
 
             // Handle map change
@@ -130,7 +130,7 @@ namespace Robust.Shared.GameObjects
             if (args.OldMapId != mapId)
                 HandleMapChange(body, xform, args.OldMapId, mapId);
 
-            if (mapId != MapId.Nullspace && body._canCollide)
+            if (body.BodyType != BodyType.Static && mapId != MapId.Nullspace && body._canCollide)
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 

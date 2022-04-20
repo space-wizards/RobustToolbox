@@ -877,6 +877,7 @@ namespace Robust.Shared.Map
         public void RegenerateCollision(IReadOnlySet<MapChunk> chunks, bool checkSplit = true)
         {
             var chunkRectangles = new Dictionary<MapChunk, List<Box2i>>(chunks.Count);
+            var fixtureSystem = EntitySystem.Get<FixtureSystem>();
 
             foreach (var mapChunk in chunks)
             {
@@ -888,7 +889,14 @@ namespace Robust.Shared.Map
                 if (mapChunk.FilledTiles > 0)
                     chunkRectangles.Add(mapChunk, rectangles);
                 else
+                {
                     RemoveChunk(mapChunk.Indices);
+                    // Gone. Reduced to atoms
+                    foreach (var fixture in mapChunk.Fixtures)
+                    {
+                        fixtureSystem.DestroyFixture(fixture, false);
+                    }
+                }
             }
 
             LocalBounds = new Box2();
@@ -912,7 +920,7 @@ namespace Robust.Shared.Map
             }
 
             if (chunkRectangles.Count == 0)
-                EntitySystem.Get<FixtureSystem>().FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
+                fixtureSystem.FixtureUpdate(_entityManager.GetComponent<FixturesComponent>(GridEntityId));
             else if (_entityManager.EntitySysManager.TryGetEntitySystem(out SharedGridFixtureSystem? system))
                 system.RegenerateCollision(GridEntityId, chunkRectangles, checkSplit);
         }
@@ -928,7 +936,6 @@ namespace Robust.Shared.Map
                 RemoveChunk(mapChunk.Indices);
 
                 var fixtureSystem = EntitySystem.Get<FixtureSystem>();
-
                 foreach (var fixture in mapChunk.Fixtures)
                 {
                     fixtureSystem.DestroyFixture(fixture);

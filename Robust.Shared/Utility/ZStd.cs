@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Buffers;
 using System.IO;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using SharpZstd.Interop;
+using static Robust.Shared.Native.Libc;
 using static SharpZstd.Interop.Zstd;
 
 namespace Robust.Shared.Utility;
@@ -29,6 +31,61 @@ public static class ZStd
             ZStdException.ThrowIfError(result);
             return (int) result;
         }
+    }
+
+#pragma warning disable CA2255
+    [ModuleInitializer]
+#pragma warning restore CA2255
+    internal static void InitZStd()
+    {
+        try
+        {
+            NativeLibrary.SetDllImportResolver(
+                typeof(Zstd).Assembly,
+                ResolveZstd
+            );
+        }
+        catch (InvalidOperationException)
+        {
+            // Launcher loader probably already set this, ignore.
+        }
+    }
+
+    private static IntPtr ResolveZstd(string name, Assembly assembly, DllImportSearchPath? path)
+    {
+        if (name == "zstd" && OperatingSystem.IsLinux())
+        {
+            try
+            {
+                var paths = (string)AppContext.GetData("NATIVE_DLL_SEARCH_DIRECTORIES")!;
+                foreach (var p in paths.Split(':', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var tryPath = Path.Join(p, "zstd.so");
+                    // Console.WriteLine($"TRYING: {tryPath}");
+                    var result = dlopen(tryPath, RTLD_LOCAL | RTLD_DEEPBIND | RTLD_LAZY);
+                    // Console.WriteLine(result);
+                    if (result != IntPtr.Zero)
+                    {
+                        // Console.WriteLine($"FOUND: {tryPath}");
+                        return result;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Catch and at least provide some way of retrieving this.
+                System.Console.Error.WriteLine($"Exception during ZStd libdl search: {ex}");
+            }
+
+            // Try some extra paths too worst case.
+            if (NativeLibrary.TryLoad("libzstd.so.1", out var handle))
+                return handle;
+
+            if (NativeLibrary.TryLoad("libzstd.so", out handle))
+                return handle;
+        }
+
+        return IntPtr.Zero;
     }
 }
 

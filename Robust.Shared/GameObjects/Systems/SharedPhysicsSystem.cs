@@ -130,7 +130,7 @@ namespace Robust.Shared.GameObjects
             if (args.OldMapId != mapId)
                 HandleMapChange(body, xform, args.OldMapId, mapId);
 
-            if (mapId != MapId.Nullspace && !_container.IsEntityInContainer(uid, meta))
+            if (mapId != MapId.Nullspace && body._canCollide)
                 HandleParentChangeVelocity(uid, body, ref args, xform);
         }
 

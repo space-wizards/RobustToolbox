@@ -70,7 +70,7 @@ public static class ParallelManagerExt
             resources.Length >= parallelCount,
             "Resources buffer is too small to fit maximum thread count.");
 
-        var threadIndex = 0;
+        var threadIndex = -1;
 
         Parallel.For(
             fromInclusive, toExclusive,

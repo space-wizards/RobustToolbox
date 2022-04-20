@@ -84,7 +84,18 @@ public abstract partial class SharedTransformSystem
             component._prevPosition = newState.LocalPosition;
             component._prevRotation = newState.Rotation;
 
-            component.Anchored = newState.Anchored;
+            // Anchored currently does a TryFindGridAt internally which may fail in particularly... violent situations.
+            if (newState.Anchored && !component.Anchored)
+            {
+                var iGrid = Comp<MapGridComponent>(_mapManager.GetGridEuid(component.GridID));
+                iGrid.AnchorEntity(component);
+                component.SetAnchored(true);
+            }
+            else
+            {
+                component.Anchored = newState.Anchored;
+            }
+
             component._noLocalRotation = newState.NoLocalRotation;
 
             // This is not possible, because client entities don't exist on the server, so the parent HAS to be a shared entity.

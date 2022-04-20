@@ -24,8 +24,7 @@ namespace Robust.Shared.GameObjects
     {
         [Dependency] private readonly IEntityManager _entMan = default!;
 
-        [DataField("parent")]
-        private EntityUid _parent;
+        [DataField("parent")] internal EntityUid _parent;
         [DataField("pos")] internal Vector2 _localPosition = Vector2.Zero; // holds offset from grid, or offset from parent
         [DataField("rot")] internal Angle _localRotation; // local rotation
         [DataField("noRot")] internal bool _noLocalRotation;

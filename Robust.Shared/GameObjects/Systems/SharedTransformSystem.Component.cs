@@ -133,6 +133,33 @@ public abstract partial class SharedTransformSystem
 
     #endregion
 
+    #region Parent
+
+    public void SetParent(TransformComponent xform, EntityUid parent, bool move = true)
+    {
+        if (xform.ParentUid == parent) return;
+
+        if (!parent.IsValid())
+        {
+            xform.AttachToGridOrMap();
+            return;
+        }
+
+        if (xform.Anchored)
+        {
+            xform.Anchored = false;
+        }
+
+        if (move)
+            xform.AttachParent(parent);
+        else
+            xform._parent = parent;
+
+        Dirty(xform);
+    }
+
+    #endregion
+
     #region World Matrix
 
     [Pure]

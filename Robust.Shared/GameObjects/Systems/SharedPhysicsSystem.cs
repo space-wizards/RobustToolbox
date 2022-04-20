@@ -70,8 +70,8 @@ namespace Robust.Shared.GameObjects
 
             SubscribeLocalEvent<GridInitializeEvent>(HandleGridInit);
             SubscribeLocalEvent<CollisionChangeMessage>(HandlePhysicsUpdateMessage);
-            SubscribeLocalEvent<PhysicsWakeMessage>(HandleWakeMessage);
-            SubscribeLocalEvent<PhysicsSleepMessage>(HandleSleepMessage);
+            SubscribeLocalEvent<PhysicsWakeEvent>(OnWake);
+            SubscribeLocalEvent<PhysicsSleepEvent>(OnSleep);
             SubscribeLocalEvent<EntInsertedIntoContainerMessage>(HandleContainerInserted);
             SubscribeLocalEvent<EntRemovedFromContainerMessage>(HandleContainerRemoved);
             SubscribeLocalEvent<PhysicsComponent, EntParentChangedMessage>(OnParentChange);
@@ -232,26 +232,26 @@ namespace Robust.Shared.GameObjects
             }
         }
 
-        private void HandleWakeMessage(PhysicsWakeMessage message)
+        private void OnWake(ref PhysicsWakeEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(message.Body);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).AddAwakeBody(@event.Body);
         }
 
-        private void HandleSleepMessage(PhysicsSleepMessage message)
+        private void OnSleep(ref PhysicsSleepEvent @event)
         {
-            var mapId = EntityManager.GetComponent<TransformComponent>(message.Body.Owner).MapID;
+            var mapId = EntityManager.GetComponent<TransformComponent>(@event.Body.Owner).MapID;
 
             if (mapId == MapId.Nullspace)
                 return;
 
             EntityUid tempQualifier = MapManager.GetMapEntityId(mapId);
-            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(message.Body);
+            EntityManager.GetComponent<SharedPhysicsMapComponent>(tempQualifier).RemoveSleepBody(@event.Body);
         }
 
         private void HandleContainerInserted(EntInsertedIntoContainerMessage message)

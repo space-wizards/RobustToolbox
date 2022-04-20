@@ -274,6 +274,7 @@ namespace Robust.Server.Physics
                                 var ent = snapgrid[i];
                                 var xform = xformQuery.GetComponent(ent);
                                 _xformSystem.ReAnchor(xform, oldGridComp, gridComp, tilePos);
+                                DebugTools.Assert(xform.Anchored);
                             }
                         }
 
